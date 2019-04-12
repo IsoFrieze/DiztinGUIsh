@@ -28,19 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle130 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle118 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle119 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle120 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle121 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle122 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle123 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle124 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle125 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle126 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle127 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle128 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle129 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle247 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle235 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle236 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle237 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle238 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle239 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle240 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle241 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle242 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle243 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle244 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle245 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle246 = new System.Windows.Forms.DataGridViewCellStyle();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.ColumnAlias = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnPC = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -114,6 +114,10 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -138,14 +142,14 @@
             this.ColumnM,
             this.ColumnX,
             this.ColumnComment});
-            dataGridViewCellStyle130.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle130.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle130.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle130.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle130.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle130.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle130.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle130;
+            dataGridViewCellStyle247.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle247.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle247.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle247.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle247.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle247.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle247.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle247;
             this.dataGridView1.Location = new System.Drawing.Point(0, 24);
             this.dataGridView1.Margin = new System.Windows.Forms.Padding(0);
             this.dataGridView1.Name = "dataGridView1";
@@ -156,9 +160,9 @@
             // 
             // ColumnAlias
             // 
-            dataGridViewCellStyle118.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle118.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnAlias.DefaultCellStyle = dataGridViewCellStyle118;
+            dataGridViewCellStyle235.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle235.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnAlias.DefaultCellStyle = dataGridViewCellStyle235;
             this.ColumnAlias.HeaderText = "Alias";
             this.ColumnAlias.MaxInputLength = 20;
             this.ColumnAlias.Name = "ColumnAlias";
@@ -166,9 +170,9 @@
             // 
             // ColumnPC
             // 
-            dataGridViewCellStyle119.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle119.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnPC.DefaultCellStyle = dataGridViewCellStyle119;
+            dataGridViewCellStyle236.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle236.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnPC.DefaultCellStyle = dataGridViewCellStyle236;
             this.ColumnPC.HeaderText = "PC";
             this.ColumnPC.MaxInputLength = 6;
             this.ColumnPC.Name = "ColumnPC";
@@ -178,9 +182,9 @@
             // 
             // ColumnChar
             // 
-            dataGridViewCellStyle120.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle120.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnChar.DefaultCellStyle = dataGridViewCellStyle120;
+            dataGridViewCellStyle237.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle237.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnChar.DefaultCellStyle = dataGridViewCellStyle237;
             this.ColumnChar.HeaderText = "@";
             this.ColumnChar.MaxInputLength = 1;
             this.ColumnChar.Name = "ColumnChar";
@@ -190,9 +194,9 @@
             // 
             // ColumnHex
             // 
-            dataGridViewCellStyle121.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle121.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnHex.DefaultCellStyle = dataGridViewCellStyle121;
+            dataGridViewCellStyle238.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle238.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnHex.DefaultCellStyle = dataGridViewCellStyle238;
             this.ColumnHex.HeaderText = "#";
             this.ColumnHex.MaxInputLength = 3;
             this.ColumnHex.Name = "ColumnHex";
@@ -202,9 +206,9 @@
             // 
             // ColumnInstruction
             // 
-            dataGridViewCellStyle122.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle122.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnInstruction.DefaultCellStyle = dataGridViewCellStyle122;
+            dataGridViewCellStyle239.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle239.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnInstruction.DefaultCellStyle = dataGridViewCellStyle239;
             this.ColumnInstruction.HeaderText = "Instruction";
             this.ColumnInstruction.MaxInputLength = 64;
             this.ColumnInstruction.Name = "ColumnInstruction";
@@ -213,9 +217,9 @@
             // 
             // ColumnEA
             // 
-            dataGridViewCellStyle123.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle123.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnEA.DefaultCellStyle = dataGridViewCellStyle123;
+            dataGridViewCellStyle240.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle240.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnEA.DefaultCellStyle = dataGridViewCellStyle240;
             this.ColumnEA.HeaderText = "EA";
             this.ColumnEA.MaxInputLength = 6;
             this.ColumnEA.Name = "ColumnEA";
@@ -225,8 +229,8 @@
             // 
             // ColumnFlag
             // 
-            dataGridViewCellStyle124.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnFlag.DefaultCellStyle = dataGridViewCellStyle124;
+            dataGridViewCellStyle241.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnFlag.DefaultCellStyle = dataGridViewCellStyle241;
             this.ColumnFlag.HeaderText = "Flag";
             this.ColumnFlag.Name = "ColumnFlag";
             this.ColumnFlag.ReadOnly = true;
@@ -234,9 +238,9 @@
             // 
             // ColumnDB
             // 
-            dataGridViewCellStyle125.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle125.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnDB.DefaultCellStyle = dataGridViewCellStyle125;
+            dataGridViewCellStyle242.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle242.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnDB.DefaultCellStyle = dataGridViewCellStyle242;
             this.ColumnDB.HeaderText = "B";
             this.ColumnDB.MaxInputLength = 2;
             this.ColumnDB.Name = "ColumnDB";
@@ -245,9 +249,9 @@
             // 
             // ColumnDP
             // 
-            dataGridViewCellStyle126.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle126.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnDP.DefaultCellStyle = dataGridViewCellStyle126;
+            dataGridViewCellStyle243.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle243.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnDP.DefaultCellStyle = dataGridViewCellStyle243;
             this.ColumnDP.HeaderText = "D";
             this.ColumnDP.MaxInputLength = 4;
             this.ColumnDP.Name = "ColumnDP";
@@ -256,16 +260,16 @@
             // 
             // ColumnM
             // 
-            dataGridViewCellStyle127.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnM.DefaultCellStyle = dataGridViewCellStyle127;
+            dataGridViewCellStyle244.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnM.DefaultCellStyle = dataGridViewCellStyle244;
             this.ColumnM.HeaderText = "M";
             this.ColumnM.Name = "ColumnM";
             this.ColumnM.Width = 20;
             // 
             // ColumnX
             // 
-            dataGridViewCellStyle128.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnX.DefaultCellStyle = dataGridViewCellStyle128;
+            dataGridViewCellStyle245.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnX.DefaultCellStyle = dataGridViewCellStyle245;
             this.ColumnX.HeaderText = "X";
             this.ColumnX.Name = "ColumnX";
             this.ColumnX.Width = 20;
@@ -273,9 +277,9 @@
             // ColumnComment
             // 
             this.ColumnComment.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewCellStyle129.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle129.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnComment.DefaultCellStyle = dataGridViewCellStyle129;
+            dataGridViewCellStyle246.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle246.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnComment.DefaultCellStyle = dataGridViewCellStyle246;
             this.ColumnComment.HeaderText = "Comment";
             this.ColumnComment.Name = "ColumnComment";
             this.ColumnComment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
@@ -302,7 +306,9 @@
             this.saveProjectAsToolStripMenuItem,
             this.toolStripSeparator1,
             this.exportLogToolStripMenuItem,
-            this.importCDLToolStripMenuItem});
+            this.importCDLToolStripMenuItem,
+            this.toolStripSeparator7,
+            this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -316,10 +322,10 @@
             // 
             // openProjectToolStripMenuItem
             // 
-            this.openProjectToolStripMenuItem.Enabled = false;
             this.openProjectToolStripMenuItem.Name = "openProjectToolStripMenuItem";
             this.openProjectToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
             this.openProjectToolStripMenuItem.Text = "Open Project...";
+            this.openProjectToolStripMenuItem.Click += new System.EventHandler(this.openProjectToolStripMenuItem_Click);
             // 
             // saveProjectToolStripMenuItem
             // 
@@ -327,6 +333,7 @@
             this.saveProjectToolStripMenuItem.Name = "saveProjectToolStripMenuItem";
             this.saveProjectToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
             this.saveProjectToolStripMenuItem.Text = "Save Project";
+            this.saveProjectToolStripMenuItem.Click += new System.EventHandler(this.saveProjectToolStripMenuItem_Click);
             // 
             // saveProjectAsToolStripMenuItem
             // 
@@ -334,6 +341,7 @@
             this.saveProjectAsToolStripMenuItem.Name = "saveProjectAsToolStripMenuItem";
             this.saveProjectAsToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
             this.saveProjectAsToolStripMenuItem.Text = "Save Project As...";
+            this.saveProjectAsToolStripMenuItem.Click += new System.EventHandler(this.saveProjectAsToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
@@ -683,7 +691,6 @@
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.viewHelpToolStripMenuItem,
             this.aboutToolStripMenuItem});
-            this.helpToolStripMenuItem.Enabled = false;
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
@@ -693,12 +700,14 @@
             this.viewHelpToolStripMenuItem.Name = "viewHelpToolStripMenuItem";
             this.viewHelpToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewHelpToolStripMenuItem.Text = "View Help";
+            this.viewHelpToolStripMenuItem.Click += new System.EventHandler(this.viewHelpToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // toolStripStatusLabel1
             // 
@@ -708,7 +717,28 @@
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.Filter = "SNES ROM Images|*.smc,*.sfc|All files|*.*";
+            this.openFileDialog1.Filter = "SNES ROM Images|*.smc;*.sfc|All files|*.*";
+            // 
+            // openFileDialog2
+            // 
+            this.openFileDialog2.Filter = "DiztinGUIsh Project Files|*.diz";
+            // 
+            // saveFileDialog1
+            // 
+            this.saveFileDialog1.Filter = "DiztinGUIsh Project Files|*.diz|All Files|*.*";
+            this.saveFileDialog1.Title = "New Project.diz";
+            // 
+            // toolStripSeparator7
+            // 
+            this.toolStripSeparator7.Name = "toolStripSeparator7";
+            this.toolStripSeparator7.Size = new System.Drawing.Size(181, 6);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // MainWindow
             // 
@@ -809,6 +839,10 @@
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.OpenFileDialog openFileDialog2;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
     }
 }
 

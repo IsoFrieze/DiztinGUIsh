@@ -27,6 +27,14 @@ namespace DiztinGUIsh
         {
         }
 
+        public void UpdateWindowTitle()
+        {
+            this.Text =
+                (Project.unsavedChanges ? "*" : "") + 
+                (Project.currentFile == null ? "New Project" : Project.currentFile) +
+                " - DiztinGUIsh";
+        }
+
         private bool ContinueUnsavedChanges()
         {
             if (Project.unsavedChanges)
@@ -37,6 +45,12 @@ namespace DiztinGUIsh
             return true;
         }
 
+        public void TriggerSaveOptions(bool save, bool saveas)
+        {
+            saveProjectToolStripMenuItem.Enabled = save;
+            saveProjectAsToolStripMenuItem.Enabled = saveas;
+        }
+
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (ContinueUnsavedChanges())
@@ -45,7 +59,61 @@ namespace DiztinGUIsh
                 if (result == DialogResult.OK)
                 {
                     Project.NewProject(openFileDialog1.FileName);
+                    TriggerSaveOptions(false, true);
+                    UpdateWindowTitle();
                 }
+            }
+        }
+
+        private void openProjectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (ContinueUnsavedChanges())
+            {
+                DialogResult result = openFileDialog2.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    if (Project.TryOpenProject(openFileDialog2.FileName))
+                    {
+                        TriggerSaveOptions(true, true);
+                        UpdateWindowTitle();
+                    }
+                }
+            }
+        }
+
+        private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Project.SaveProject(Project.currentFile);
+            UpdateWindowTitle();
+        }
+
+        private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DialogResult result = saveFileDialog1.ShowDialog();
+            if (result == DialogResult.OK && saveFileDialog1.FileName != "")
+            {
+                Project.SaveProject(saveFileDialog1.FileName);
+                TriggerSaveOptions(true, true);
+                UpdateWindowTitle();
+            }
+        }
+
+        private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            About about = new About();
+            about.ShowDialog();
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (ContinueUnsavedChanges())
+            {
+                Application.Exit();
             }
         }
     }

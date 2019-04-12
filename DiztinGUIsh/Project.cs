@@ -11,6 +11,8 @@ namespace DiztinGUIsh
 {
     public static class Project
     {
+        public const int HEADER_SIZE = 0x100;
+
         public static string currentFile = null;
         public static bool unsavedChanges = false;
         public static byte[] watermark = new byte[] { 0x44, 0x69, 0x7A, 0x74, 0x69, 0x6E, 0x47, 0x55, 0x49, 0x73, 0x68 };
@@ -19,7 +21,6 @@ namespace DiztinGUIsh
         {
             try
             {
-                currentFile = filename;
                 byte[] smc = File.ReadAllBytes(filename);
                 byte[] rom = new byte[smc.Length & 0x7FFFFC00];
 
@@ -47,12 +48,11 @@ namespace DiztinGUIsh
         {
             try
             {
-                int headerSize = 0x100;
                 byte[] data = SaveVersion0();
-                byte[] everything = new byte[headerSize + data.Length];
+                byte[] everything = new byte[HEADER_SIZE + data.Length];
                 everything[0] = 0; // version
                 watermark.CopyTo(everything, 1);
-                data.CopyTo(everything, headerSize);
+                data.CopyTo(everything, HEADER_SIZE);
 
                 File.WriteAllBytes(filename, TryZip(everything));
                 unsavedChanges = false;
@@ -112,20 +112,22 @@ namespace DiztinGUIsh
             try
             {
                 byte[] raw = File.ReadAllBytes(filename);
+                byte[] unzipped = TryUnzip(raw);
+                File.WriteAllBytes("C:/Users/Alex/Desktop/test.bin", unzipped);
 
                 for (int i = 0; i < watermark.Length; i++)
                 {
-                    if (raw[i + 1] != watermark[i])
+                    if (unzipped[i + 1] != watermark[i])
                     {
                         throw new Exception("This is not a valid DiztinGUIsh file!");
                     }
                 }
 
-                byte version = raw[0];
+                byte version = unzipped[0];
 
                 switch (version)
                 {
-                    case 0: OpenVersion0(raw); break;
+                    case 0: OpenVersion0(unzipped); break;
                     default: throw new Exception("This is not a valid DiztinGUIsh file!");
                 }
 
@@ -140,50 +142,50 @@ namespace DiztinGUIsh
             }
         }
 
-        private static void OpenVersion0(byte[] raw)
+        private static void OpenVersion0(byte[] unzipped)
         {
-            Data.ROMMapMode mode = (Data.ROMMapMode)raw[0];
-            Data.ROMSpeed speed = (Data.ROMSpeed)raw[1];
-            int size = Util.ByteArrayToInteger(raw, 2);
+            Data.ROMMapMode mode = (Data.ROMMapMode)unzipped[HEADER_SIZE];
+            Data.ROMSpeed speed = (Data.ROMSpeed)unzipped[HEADER_SIZE + 1];
+            int size = Util.ByteArrayToInteger(unzipped, HEADER_SIZE + 2);
             
             byte[] rom = new byte[size];
-            for (int i = 0; i < size; i++) rom[i] = raw[6 + i];
+            for (int i = 0; i < size; i++) rom[i] = unzipped[HEADER_SIZE + 6 + i];
 
             Data.Initiate(rom, mode, speed);
 
-            for (int i = 0; i < size; i++) Data.SetDataBank(i, raw[6 + size + i]);
-            for (int i = 0; i < size; i++) Data.SetDirectPage(i, raw[6 + 2 * size + i] | (raw[6 + 3 * size + i] << 8));
-            for (int i = 0; i < size; i++) Data.SetXFlag(i, raw[6 + 4 * size + i] != 0);
-            for (int i = 0; i < size; i++) Data.SetMFlag(i, raw[6 + 5 * size + i] != 0);
-            for (int i = 0; i < size; i++) Data.SetFlag(i, (Data.FlagType)raw[6 + 6 * size + i]);
-            for (int i = 0; i < size; i++) Data.SetArchitechture(i, (Data.Architechture)raw[6 + 7 * size + i]);
+            for (int i = 0; i < size; i++) Data.SetDataBank(i, unzipped[HEADER_SIZE + 6 + size + i]);
+            for (int i = 0; i < size; i++) Data.SetDirectPage(i, unzipped[HEADER_SIZE + 6 + 2 * size + i] | (unzipped[HEADER_SIZE + 6 + 3 * size + i] << 8));
+            for (int i = 0; i < size; i++) Data.SetXFlag(i, unzipped[HEADER_SIZE + 6 + 4 * size + i] != 0);
+            for (int i = 0; i < size; i++) Data.SetMFlag(i, unzipped[HEADER_SIZE + 6 + 5 * size + i] != 0);
+            for (int i = 0; i < size; i++) Data.SetFlag(i, (Data.FlagType)unzipped[HEADER_SIZE + 6 + 6 * size + i]);
+            for (int i = 0; i < size; i++) Data.SetArchitechture(i, (Data.Architechture)unzipped[HEADER_SIZE + 6 + 7 * size + i]);
 
-            int pointer = 6 + 8 * size;
-            int label_count = Util.ByteArrayToInteger(raw, pointer);
+            int pointer = HEADER_SIZE + 6 + 8 * size;
+            int label_count = Util.ByteArrayToInteger(unzipped, pointer);
             pointer += 4;
 
             for (int i = 0; i < label_count; i++)
             {
-                int offset = Util.ByteArrayToInteger(raw, pointer);
+                int offset = Util.ByteArrayToInteger(unzipped, pointer);
                 pointer += 4;
 
                 string label = "";
-                while (raw[pointer] != 0) label += (char)raw[pointer++];
+                while (unzipped[pointer] != 0) label += (char)unzipped[pointer++];
                 pointer++;
 
                 Data.AddLabel(offset, label);
             }
 
-            int comment_count = Util.ByteArrayToInteger(raw, pointer);
+            int comment_count = Util.ByteArrayToInteger(unzipped, pointer);
             pointer += 4;
 
             for (int i = 0; i < comment_count; i++)
             {
-                int offset = Util.ByteArrayToInteger(raw, pointer);
+                int offset = Util.ByteArrayToInteger(unzipped, pointer);
                 pointer += 4;
 
                 string comment = "";
-                while (raw[pointer] != 0) comment += (char)raw[pointer++];
+                while (unzipped[pointer] != 0) comment += (char)unzipped[pointer++];
                 pointer++;
 
                 Data.AddComment(offset, comment);
@@ -213,12 +215,12 @@ namespace DiztinGUIsh
         {
             try
             {
-                using (MemoryStream comp = new MemoryStream(data))
+                using (MemoryStream comp = new MemoryStream())
                 using (GZipStream gzip = new GZipStream(comp, CompressionMode.Compress))
-                using (MemoryStream res = new MemoryStream())
                 {
-                    gzip.CopyTo(res);
-                    return res.ToArray();
+                    gzip.Write(data, 0, data.Length);
+                    gzip.Close();
+                    return comp.ToArray();
                 }
             }
             catch (Exception e)

@@ -12,11 +12,17 @@ namespace DiztinGUIsh
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainWindow());
+            MainWindow window = new MainWindow();
+            Application.Run(window);
+            if (args.Length > 0 && Project.TryOpenProject(args[0]))
+            {
+                window.TriggerSaveOptions(true, true);
+                window.UpdateWindowTitle();
+            }
         }
     }
 }
