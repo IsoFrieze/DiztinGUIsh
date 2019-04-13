@@ -190,6 +190,7 @@
             this.Controls.Add(this.checkData);
             this.Controls.Add(this.detectMessage);
             this.Name = "ImportROMDialog";
+            this.ShowIcon = false;
             this.Text = "New Project";
             this.Load += new System.EventHandler(this.ImportROMDialog_Load);
             this.groupBox1.ResumeLayout(false);

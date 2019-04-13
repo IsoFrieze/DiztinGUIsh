@@ -17,7 +17,7 @@ namespace DiztinGUIsh
         public static bool unsavedChanges = false;
         public static byte[] watermark = new byte[] { 0x44, 0x69, 0x7A, 0x74, 0x69, 0x6E, 0x47, 0x55, 0x49, 0x73, 0x68 };
 
-        public static void NewProject(string filename)
+        public static bool NewProject(string filename)
         {
             try
             {
@@ -36,12 +36,14 @@ namespace DiztinGUIsh
                 {
                     Data.Initiate(rom, import.GetROMMapMode(), import.GetROMSpeed());
                     unsavedChanges = false;
+                    return true;
                 }
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            return false;
         }
 
         public static void SaveProject(string filename)
@@ -101,8 +103,9 @@ namespace DiztinGUIsh
             for (int i = 0; i < size; i++) data[romSettings.Length + 5 * size + i] = (byte)(Data.GetMFlag(i) ? 1 : 0);
             for (int i = 0; i < size; i++) data[romSettings.Length + 6 * size + i] = (byte)Data.GetFlag(i);
             for (int i = 0; i < size; i++) data[romSettings.Length + 7 * size + i] = (byte)Data.GetArchitechture(i);
-            label.CopyTo(data, romSettings.Length + 8 * size);
-            comment.CopyTo(data, romSettings.Length + 8 * size + label.Count);
+            for (int i = 0; i < size; i++) data[romSettings.Length + 8 * size + i] = (byte)Data.GetInOutPoint(i);
+            label.CopyTo(data, romSettings.Length + 9 * size);
+            comment.CopyTo(data, romSettings.Length + 9 * size + label.Count);
 
             return data;
         }
@@ -159,8 +162,9 @@ namespace DiztinGUIsh
             for (int i = 0; i < size; i++) Data.SetMFlag(i, unzipped[HEADER_SIZE + 6 + 5 * size + i] != 0);
             for (int i = 0; i < size; i++) Data.SetFlag(i, (Data.FlagType)unzipped[HEADER_SIZE + 6 + 6 * size + i]);
             for (int i = 0; i < size; i++) Data.SetArchitechture(i, (Data.Architechture)unzipped[HEADER_SIZE + 6 + 7 * size + i]);
+            for (int i = 0; i < size; i++) Data.SetInOutPoint(i, (Data.InOutPoint)unzipped[HEADER_SIZE + 6 + 8 * size + i]);
 
-            int pointer = HEADER_SIZE + 6 + 8 * size;
+            int pointer = HEADER_SIZE + 6 + 9 * size;
             int label_count = Util.ByteArrayToInteger(unzipped, pointer);
             pointer += 4;
 

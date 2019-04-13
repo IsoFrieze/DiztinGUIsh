@@ -58,9 +58,11 @@ namespace DiztinGUIsh
                 DialogResult result = openFileDialog1.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    Project.NewProject(openFileDialog1.FileName);
-                    TriggerSaveOptions(false, true);
-                    UpdateWindowTitle();
+                    if (Project.NewProject(openFileDialog1.FileName))
+                    {
+                        TriggerSaveOptions(false, true);
+                        UpdateWindowTitle();
+                    }
                 }
             }
         }
@@ -115,6 +117,10 @@ namespace DiztinGUIsh
             {
                 Application.Exit();
             }
+        }
+
+        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
+        {
         }
     }
 }

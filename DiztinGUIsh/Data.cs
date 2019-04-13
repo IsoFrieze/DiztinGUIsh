@@ -33,6 +33,15 @@ namespace DiztinGUIsh
             GPUSuperFX = 0x02
         }
 
+        [Flags]
+        public enum InOutPoint : byte
+        {
+            InPoint = 0x01,
+            OutPoint = 0x02,
+            EndPoint = 0x04,
+            ReadPoint = 0x08
+        }
+
         public enum ROMMapMode : byte
         {
             LoROM, HiROM, ExHiROM
@@ -53,6 +62,7 @@ namespace DiztinGUIsh
         private static byte[] rom, data_bank, direct_page_hi, direct_page_low, x_flag, m_flag;
         private static FlagType[] flags;
         private static Architechture[] architechture;
+        private static InOutPoint[] points;
         private static Dictionary<int, string> labels, comments;
 
         public static void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
@@ -68,6 +78,7 @@ namespace DiztinGUIsh
             m_flag = new byte[size];
             flags = new FlagType[size];
             architechture = new Architechture[size];
+            points = new InOutPoint[size];
             labels = new Dictionary<int, string>();
             comments = new Dictionary<int, string>();
         }
@@ -110,6 +121,21 @@ namespace DiztinGUIsh
         public static void SetArchitechture(int i, Architechture arch)
         {
             architechture[i] = arch;
+        }
+
+        public static InOutPoint GetInOutPoint(int i)
+        {
+            return points[i];
+        }
+
+        public static void SetInOutPoint(int i, InOutPoint point)
+        {
+            points[i] |= point;
+        }
+
+        public static void FlipInOutPoint(int i, InOutPoint point)
+        {
+            points[i] ^= point;
         }
 
         public static int GetDataBank(int i)
