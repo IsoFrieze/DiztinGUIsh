@@ -8,6 +8,11 @@ namespace DiztinGUIsh
 {
     public static class Util
     {
+        public enum NumberBase
+        {
+            Decimal = 3, Hexadecimal = 2, Binary = 8
+        }
+
         public static int GetEffectiveAddress(int offset)
         {
             return 0;
@@ -115,6 +120,83 @@ namespace DiztinGUIsh
                 (data[offset + 1] << 8) |
                 (data[offset + 2] << 16) |
                 (data[offset + 3] << 24);
+        }
+
+        public static string TypeToString(Data.FlagType flag)
+        {
+            switch (flag)
+            {
+                case Data.FlagType.Unreached: return "Unreached";
+                case Data.FlagType.Opcode: return "Opcode";
+                case Data.FlagType.Operand: return "Operand";
+                case Data.FlagType.Data8Bit: return "Data (8-bit)";
+                case Data.FlagType.Graphics: return "Graphics";
+                case Data.FlagType.Music: return "Music";
+                case Data.FlagType.Empty: return "Empty";
+                case Data.FlagType.Data16Bit: return "Data (16-bit)";
+                case Data.FlagType.Pointer16Bit: return "Pointer (16-bit)";
+                case Data.FlagType.Data24Bit: return "Data (24-bit)";
+                case Data.FlagType.Pointer24Bit: return "Pointer (24-bit)";
+                case Data.FlagType.Data32Bit: return "Data (32-bit)";
+                case Data.FlagType.Pointer32Bit: return "Pointer (32-bit)";
+                case Data.FlagType.Text: return "Text";
+            }
+            return "";
+        }
+
+        public static string ArchToString(Data.Architechture arch)
+        {
+            switch (arch)
+            {
+                case Data.Architechture.CPU65C816: return "65C816";
+                case Data.Architechture.APUSPC700: return "SPC700";
+                case Data.Architechture.GPUSuperFX: return "SuperFX";
+            }
+            return "";
+        }
+
+        public static string PointToString(Data.InOutPoint point)
+        {
+            string result;
+
+            if ((point & Data.InOutPoint.EndPoint) == Data.InOutPoint.EndPoint) result = "X";
+            else if ((point & Data.InOutPoint.OutPoint) == Data.InOutPoint.OutPoint) result = "<";
+            else result = " ";
+
+            result += ((point & Data.InOutPoint.ReadPoint) == Data.InOutPoint.ReadPoint) ? "*" : " ";
+            result += ((point & Data.InOutPoint.InPoint) == Data.InOutPoint.InPoint) ? ">" : " ";
+
+            return result;
+        }
+
+        public static string BoolToSize(bool b)
+        {
+            return b ? "8" : "16";
+        }
+
+        public static string NumberToBaseString(int v, NumberBase noBase, int d = -1)
+        {
+            int digits = d < 0 ? (int)noBase : d;
+            switch (noBase)
+            {
+                case NumberBase.Decimal:
+                    if (digits == 0) return v.ToString("D");
+                    return v.ToString("D" + digits);
+                case NumberBase.Hexadecimal:
+                    if (digits == 0) return v.ToString("X");
+                    return v.ToString("X" + digits);
+                case NumberBase.Binary:
+                    string b = "";
+                    int i = 0;
+                    while (digits == 0 ? v > 0 : i < digits)
+                    {
+                        b += (v & 1);
+                        v >>= 1;
+                        i++;
+                    }
+                    return b;
+            }
+            return "";
         }
     }
 }

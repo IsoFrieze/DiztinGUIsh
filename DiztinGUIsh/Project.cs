@@ -93,7 +93,7 @@ namespace DiztinGUIsh
                 comment.Add(0);
             }
 
-            byte[] data = new byte[romSettings.Length + 8 * size + label.Count + comment.Count];
+            byte[] data = new byte[romSettings.Length + 9 * size + label.Count + comment.Count];
             romSettings.CopyTo(data, 0);
             for (int i = 0; i < size; i++) data[romSettings.Length + i] = (byte)Data.GetROMByte(i);
             for (int i = 0; i < size; i++) data[romSettings.Length + size + i] = (byte)Data.GetDataBank(i);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -59,28 +60,29 @@ namespace DiztinGUIsh
 
         private static ROMMapMode rom_map_mode;
         private static ROMSpeed rom_speed;
-        private static byte[] rom, data_bank, direct_page_hi, direct_page_low, x_flag, m_flag;
-        private static FlagType[] flags;
-        private static Architechture[] architechture;
-        private static InOutPoint[] points;
-        private static Dictionary<int, string> labels, comments;
+        private static BindingList<ROMByte> table;
 
         public static void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
         {
             rom_map_mode = mode;
             rom_speed = speed;
-            rom = data;
-            int size = rom.Length;
-            data_bank = new byte[size];
-            direct_page_hi = new byte[size];
-            direct_page_low = new byte[size];
-            x_flag = new byte[size];
-            m_flag = new byte[size];
-            flags = new FlagType[size];
-            architechture = new Architechture[size];
-            points = new InOutPoint[size];
-            labels = new Dictionary<int, string>();
-            comments = new Dictionary<int, string>();
+            int size = data.Length;
+            table = new BindingList<ROMByte>();
+            for (int i = 0; i < size; i++)
+            {
+                ROMByte r = new ROMByte();
+                r.Rom = data[i];
+                r.DataBank = 0;
+                r.DirectPage = 0;
+                r.XFlag = false;
+                r.MFlag = false;
+                r.TypeFlag = FlagType.Unreached;
+                r.Arch = Architechture.CPU65C816;
+                r.Point = 0;
+                r.Label = null;
+                r.Comment = null;
+                table.Add(r);
+            }
         }
 
         public static ROMMapMode GetROMMapMode()
@@ -93,124 +95,136 @@ namespace DiztinGUIsh
             return rom_speed;
         }
 
+        public static BindingList<ROMByte> GetTable()
+        {
+            return table;
+        }
+
         public static int GetROMByte(int i)
         {
-            return 0xFF & rom[i];
+            return table[i].Rom;
         }
 
         public static int GetROMSize()
         {
-            return rom.Length;
+            return table == null ? 0 : table.Count;
         }
 
         public static FlagType GetFlag(int i)
         {
-            return flags[i];
+            return table[i].TypeFlag;
         }
 
         public static void SetFlag(int i, FlagType flag)
         {
-            flags[i] = flag;
+            table[i].TypeFlag = flag;
         }
 
         public static Architechture GetArchitechture(int i)
         {
-            return architechture[i];
+            return table[i].Arch;
         }
 
         public static void SetArchitechture(int i, Architechture arch)
         {
-            architechture[i] = arch;
+            table[i].Arch = arch;
         }
 
         public static InOutPoint GetInOutPoint(int i)
         {
-            return points[i];
+            return table[i].Point;
         }
 
         public static void SetInOutPoint(int i, InOutPoint point)
         {
-            points[i] |= point;
+            table[i].Point |= point;
         }
 
         public static void FlipInOutPoint(int i, InOutPoint point)
         {
-            points[i] ^= point;
+            table[i].Point ^= point;
         }
 
         public static int GetDataBank(int i)
         {
-            return 0xFF & data_bank[i];
+            return table[i].DataBank;
         }
 
         public static void SetDataBank(int i, int dbank)
         {
-            data_bank[i] = (byte)dbank;
+            table[i].DataBank = (byte)dbank;
         }
 
         public static int GetDirectPage(int i)
         {
-            return ((0xFF & direct_page_hi[i]) << 8) | (0xFF & direct_page_low[i]);
+            return table[i].DirectPage;
         }
 
         public static void SetDirectPage(int i, int dpage)
         {
-            direct_page_hi[i] = (byte)(dpage >> 8);
-            direct_page_low[i] = (byte)dpage;
+            table[i].DirectPage = 0xFFFF & dpage;
         }
 
         public static bool GetXFlag(int i)
         {
-            return x_flag[i] != 0;
+            return table[i].XFlag;
         }
 
         public static void SetXFlag(int i, bool x)
         {
-            x_flag[i] = (byte)(x ? 1 : 0);
+            table[i].XFlag = x;
         }
 
         public static bool GetMFlag(int i)
         {
-            return m_flag[i] != 0;
+            return table[i].MFlag;
         }
 
         public static void SetMFlag(int i, bool m)
         {
-            m_flag[i] = (byte)(m ? 1 : 0);
+            table[i].MFlag = m;
         }
 
         public static string GetLabel(int i)
         {
-            if (labels.TryGetValue(i, out string val)) return val;
-            return "";
+            string label = table[i].Label;
+            return label == null ? "" : label;
         }
 
         public static void AddLabel(int i, string v)
         {
-            if (labels.ContainsKey(i)) labels.Remove(i);
-            labels.Add(i, v);
+            table[i].Label = v;
         }
 
         public static Dictionary<int, string> GetAllLabels()
         {
-            return labels;
+            Dictionary<int, string> map = new Dictionary<int, string>();
+            for (int i = 0; i < GetROMSize(); i++)
+            {
+                if (table[i].Label != null) map.Add(i, table[i].Label);
+            }
+            return map;
         }
 
         public static string GetComment(int i)
         {
-            if (comments.TryGetValue(i, out string val)) return val;
-            return "";
+            string comment = table[i].Comment;
+            return comment == null ? "" : comment;
         }
 
         public static void AddComment(int i, string v)
         {
-            if (comments.ContainsKey(i)) comments.Remove(i);
-            comments.Add(i, v);
+            table[i].Comment = v;
         }
 
         public static Dictionary<int, string> GetAllComments()
         {
-            return comments;
+            Dictionary<int, string> map = new Dictionary<int, string>();
+            for (int i = 0; i < GetROMSize(); i++)
+            {
+                if (table[i].Comment != null) map.Add(i, table[i].Comment);
+            }
+            return map;
         }
     }
 }
