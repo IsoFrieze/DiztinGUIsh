@@ -13,9 +13,40 @@ namespace DiztinGUIsh
             Decimal = 3, Hexadecimal = 2, Binary = 8
         }
 
+        public static int GetROMWord(int offset)
+        {
+            if (offset + 1 < Data.GetROMSize())
+                return Data.GetROMByte(offset) + (Data.GetROMByte(offset + 1) << 8);
+            return -1;
+        }
+
+        public static int GetROMLong(int offset)
+        {
+            if (offset + 2 < Data.GetROMSize())
+                return Data.GetROMByte(offset) + (Data.GetROMByte(offset + 1) << 8) + (Data.GetROMByte(offset + 2) << 16);
+            return -1;
+        }
+
         public static int GetEffectiveAddress(int offset)
         {
-            return 0;
+            switch (Data.GetArchitechture(offset))
+            {
+                case Data.Architechture.CPU65C816: return CPU65C816.GetEffectiveAddress(offset);
+                case Data.Architechture.APUSPC700: return -1;
+                case Data.Architechture.GPUSuperFX: return -1;
+            }
+            return -1;
+        }
+
+        public static string GetInstruction(int offset)
+        {
+            switch (Data.GetArchitechture(offset))
+            {
+                case Data.Architechture.CPU65C816: return CPU65C816.GetInstruction(offset);
+                case Data.Architechture.APUSPC700: return "";
+                case Data.Architechture.GPUSuperFX: return "";
+            }
+            return "";
         }
 
         public static int ConvertPCtoSNES(int offset)
@@ -174,7 +205,7 @@ namespace DiztinGUIsh
             return b ? "8" : "16";
         }
 
-        public static string NumberToBaseString(int v, NumberBase noBase, int d = -1)
+        public static string NumberToBaseString(int v, NumberBase noBase, int d = -1, bool showPrefix = false)
         {
             int digits = d < 0 ? (int)noBase : d;
             switch (noBase)
@@ -184,7 +215,7 @@ namespace DiztinGUIsh
                     return v.ToString("D" + digits);
                 case NumberBase.Hexadecimal:
                     if (digits == 0) return v.ToString("X");
-                    return v.ToString("X" + digits);
+                    return (showPrefix ? "$" : "") + v.ToString("X" + digits);
                 case NumberBase.Binary:
                     string b = "";
                     int i = 0;
@@ -194,7 +225,7 @@ namespace DiztinGUIsh
                         v >>= 1;
                         i++;
                     }
-                    return b;
+                    return (showPrefix ? "%" : "") + b;
             }
             return "";
         }
