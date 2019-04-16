@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -20,8 +22,8 @@ namespace DiztinGUIsh
 
         private void MainWindow_SizeChanged(object sender, EventArgs e)
         {
-            dataGridView1.Height = this.Height - 85;
-            dataGridView1.Width = this.Width - 33;
+            table.Height = this.Height - 85;
+            table.Width = this.Width - 33;
             vScrollBar1.Height = this.Height - 85;
             vScrollBar1.Left = this.Width - 33;
             if (WindowState == FormWindowState.Maximized) UpdateDataGridView();
@@ -34,15 +36,15 @@ namespace DiztinGUIsh
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            dataGridView1.CellValueNeeded += new DataGridViewCellValueEventHandler(dataGridView1_CellValueNeeded);
-            dataGridView1.CellValuePushed += new DataGridViewCellValueEventHandler(dataGridView1_CellValuePushed);
+            table.CellValueNeeded += new DataGridViewCellValueEventHandler(dataGridView1_CellValueNeeded);
+            table.CellValuePushed += new DataGridViewCellValueEventHandler(dataGridView1_CellValuePushed);
             viewOffset = 0;
-            rowsToShow = (dataGridView1.Height / dataGridView1.RowTemplate.Height) + 1;
+            rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
             typeof(DataGridView).InvokeMember(
                 "DoubleBuffered",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
                 null,
-                dataGridView1,
+                table,
                 new object[] { true });
         }
 
@@ -82,7 +84,7 @@ namespace DiztinGUIsh
                         TriggerSaveOptions(false, true);
                         UpdateWindowTitle();
                         UpdateDataGridView();
-                        dataGridView1.Invalidate();
+                        table.Invalidate();
                     }
                 }
             }
@@ -100,7 +102,7 @@ namespace DiztinGUIsh
                         TriggerSaveOptions(true, true);
                         UpdateWindowTitle();
                         UpdateDataGridView();
-                        dataGridView1.Invalidate();
+                        table.Invalidate();
                     }
                 }
             }
@@ -125,8 +127,7 @@ namespace DiztinGUIsh
 
         private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // open help page
+            Help.ShowHelp(this, Application.StartupPath + @"\" + "Help.chm");
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
@@ -167,7 +168,7 @@ namespace DiztinGUIsh
             decimalToolStripMenuItem.Checked = noBase == Util.NumberBase.Decimal;
             hexadecimalToolStripMenuItem.Checked = noBase == Util.NumberBase.Hexadecimal;
             binaryToolStripMenuItem.Checked = noBase == Util.NumberBase.Binary;
-            dataGridView1.Invalidate();
+            table.Invalidate();
         }
 
         public void UpdatePercent()
@@ -186,95 +187,112 @@ namespace DiztinGUIsh
         {
             if (Data.GetROMSize() > 0)
             {
-                rowsToShow = (dataGridView1.Height / dataGridView1.RowTemplate.Height) + 1;
+                rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
                 if (viewOffset + rowsToShow > Data.GetROMSize()) viewOffset = Data.GetROMSize() - rowsToShow;
                 if (viewOffset < 0) viewOffset = 0;
                 vScrollBar1.Enabled = true;
                 vScrollBar1.Maximum = Data.GetROMSize() - rowsToShow;
                 vScrollBar1.Value = viewOffset;
-                dataGridView1.RowCount = rowsToShow;
+                table.RowCount = rowsToShow;
             }
         }
 
         private void dataGridView1_MouseWheel(object sender, MouseEventArgs e)
         {
-            viewOffset -= e.Delta / 0x18;
+            int selRow = table.CurrentCell.RowIndex + viewOffset, selCol = table.CurrentCell.ColumnIndex;
+            int amount = e.Delta / 0x18;
+            viewOffset -= amount;
             UpdateDataGridView();
-            dataGridView1.Invalidate();
+            if (selRow < viewOffset) selRow = viewOffset;
+            else if (selRow >= viewOffset + rowsToShow) selRow = viewOffset + rowsToShow - 1;
+            table.CurrentCell = table.Rows[selRow - viewOffset].Cells[selCol];
+            table.Invalidate();
         }
 
         private void vScrollBar1_ValueChanged(object sender, EventArgs e)
         {
+            int selOffset = table.CurrentCell.RowIndex + viewOffset;
             viewOffset = vScrollBar1.Value;
             UpdateDataGridView();
-            dataGridView1.Invalidate();
+
+            if (selOffset < viewOffset) table.CurrentCell = table.Rows[0].Cells[table.CurrentCell.ColumnIndex];
+            else if (selOffset >= viewOffset + rowsToShow) table.CurrentCell = table.Rows[rowsToShow - 1].Cells[table.CurrentCell.ColumnIndex];
+            else table.CurrentCell = table.Rows[selOffset - viewOffset].Cells[table.CurrentCell.ColumnIndex];
+
+            table.Invalidate();
         }
 
         private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (dataGridView1.SelectedRows.Count < 0) return;
-            int offset = dataGridView1.SelectedRows[0].Index + viewOffset;
+            if (Data.GetROMSize() <= 0) return;
+
+            int offset = table.CurrentCell.RowIndex + viewOffset;
+            int newOffset = offset;
             int amount = 0x01;
+
+            Console.WriteLine(e.KeyCode);
             switch (e.KeyCode)
             {
+                case Keys.Home:
                 case Keys.PageUp:
                 case Keys.Up:
-                    amount = e.KeyCode == Keys.Up ? 0x01 : 0x10;
-                    int undershot = dataGridView1.SelectedCells[0].RowIndex - amount;
-                    if (undershot < 0) viewOffset += undershot;
-                    if (viewOffset < 0) viewOffset = 0;
-                    UpdateDataGridView();
+                    amount = e.KeyCode == Keys.Up ? 0x01 : e.KeyCode == Keys.PageUp ? 0x10 : 0x100;
+                    newOffset = offset - amount;
+                    if (newOffset < 0) newOffset = 0;
+                    SelectOffset(newOffset);
                     break;
+                case Keys.End:
                 case Keys.PageDown:
                 case Keys.Down:
-                    amount = e.KeyCode == Keys.Down ? 0x01 : 0x10;
-                    int overshot = dataGridView1.SelectedCells[0].RowIndex + amount - rowsToShow + 1;
-                    if (overshot > 0) viewOffset += overshot;
-                    if (viewOffset + rowsToShow > Data.GetROMSize()) viewOffset = Data.GetROMSize() - rowsToShow;
-                    UpdateDataGridView();
+                    amount = e.KeyCode == Keys.Down ? 0x01 : e.KeyCode == Keys.PageDown ? 0x10 : 0x100;
+                    newOffset = offset + amount;
+                    if (newOffset >= Data.GetROMSize()) newOffset = Data.GetROMSize() - 1;
+                    SelectOffset(newOffset);
                     break;
-                case Keys.S: Manager.Step(offset, false); break;
-                case Keys.I: Manager.Step(offset, true); break;
-                case Keys.A: Manager.AutoStep(offset, false); break;
-                case Keys.F:
-                    // TODO
-                    // goto effective address
+                case Keys.Left:
+                    amount = table.CurrentCell.ColumnIndex;
+                    amount = amount - 1 < 0 ? 0 : amount - 1;
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[amount];
                     break;
-                case Keys.U:
-                    // TODO
-                    // goto first unreached
+                case Keys.Right:
+                    amount = table.CurrentCell.ColumnIndex;
+                    amount = amount + 1 >= table.ColumnCount ? table.ColumnCount - 1 : amount + 1;
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[amount];
                     break;
-                case Keys.N:
-                    // TODO
-                    // goto near unreached
-                    break;
-                case Keys.K: Manager.Mark(offset, markFlag, 1); break;
+                case Keys.S: Step(offset); break;
+                case Keys.I: StepIn(offset); break;
+                case Keys.A: AutoStepSafe(offset); break;
+                case Keys.F: GoToEffectiveAddress(offset); break;
+                case Keys.U: GoToUnreached(true); break;
+                case Keys.N: GoToUnreached(false); break;
+                case Keys.K: Mark(offset, 1); break;
                 case Keys.L:
-                    // TODO
-                    // jump to label box
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[0];
+                    table.BeginEdit(true);
                     break;
                 case Keys.B:
-                    // TODO
-                    // jump to data bank box
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[8];
+                    table.BeginEdit(true);
                     break;
                 case Keys.D:
-                    // TODO
-                    // jump to direct page box
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[9];
+                    table.BeginEdit(true);
                     break;
                 case Keys.M:
-                    // TODO
-                    // jump to M flag box
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[10];
+                    table.BeginEdit(true);
                     break;
                 case Keys.X:
-                    // TODO
-                    // jump to X flag box
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[11];
+                    table.BeginEdit(true);
                     break;
                 case Keys.C:
-                    // TODO
-                    // jump to comment box
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
+                    table.BeginEdit(true);
                     break;
             }
-            dataGridView1.Invalidate();
+            e.Handled = true;
+            table.Invalidate();
         }
 
         private void dataGridView1_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
@@ -318,7 +336,93 @@ namespace DiztinGUIsh
                 case 11: Data.SetXFlag(row, (value == "8" || value == "X")); break;
                 case 12: Data.AddComment(row, value); break;
             }
-            dataGridView1.InvalidateRow(e.RowIndex);
+            table.InvalidateRow(e.RowIndex);
+        }
+
+        private void SelectOffset(int offset, int column = -1)
+        {
+            int col = column == -1 ? table.CurrentCell.ColumnIndex : column;
+            if (offset < viewOffset)
+            {
+                viewOffset = offset;
+                UpdateDataGridView();
+                table.CurrentCell = table.Rows[0].Cells[col];
+            } else if (offset >= viewOffset + rowsToShow)
+            {
+                viewOffset = offset - rowsToShow + 1;
+                UpdateDataGridView();
+                table.CurrentCell = table.Rows[rowsToShow - 1].Cells[col];
+            } else
+            {
+                table.CurrentCell = table.Rows[offset - viewOffset].Cells[col];
+            }
+        }
+
+        private void Step(int offset)
+        {
+            SelectOffset(Manager.Step(offset, false));
+        }
+
+        private void StepIn(int offset)
+        {
+            SelectOffset(Manager.Step(offset, true));
+        }
+
+        private void AutoStepSafe(int offset)
+        {
+            SelectOffset(Manager.AutoStep(offset, false));
+        }
+
+        private void AutoStepHarsh(int offset)
+        {
+            SelectOffset(Manager.AutoStep(offset, true));
+        }
+
+        private void Mark(int offset, int count)
+        {
+            SelectOffset(Manager.Mark(offset, markFlag, count));
+        }
+
+        private void GoToEffectiveAddress(int offset)
+        {
+            int ea = Util.GetEffectiveAddress(offset);
+            if (ea >= 0)
+            {
+                int pc = Util.ConvertSNEStoPC(ea);
+                if (pc >= 0)
+                {
+                    SelectOffset(pc, 1);
+                }
+            }
+        }
+
+        private void GoToUnreached(bool first)
+        {
+            int unreached = 0;
+            if (first)
+            {
+                for (int i = 0; i < Data.GetROMSize(); i++)
+                {
+                    if (Data.GetFlag(i) == Data.FlagType.Unreached)
+                    {
+                        unreached = i;
+                        break;
+                    }
+                }
+            } else
+            {
+                bool inBlock = false;
+                for (int i = table.CurrentCell.RowIndex + viewOffset; i >= 0; i--)
+                {
+                    if (inBlock && Data.GetFlag(i) != Data.FlagType.Unreached)
+                    {
+                        unreached = i - 1;
+                        break;
+                    }
+                    if (Data.GetFlag(i) == Data.FlagType.Unreached && !inBlock) inBlock = true;
+                }
+            }
+            SelectOffset(unreached, 1);
         }
 
         private void visualMapToolStripMenuItem_Click(object sender, EventArgs e)
@@ -335,30 +439,26 @@ namespace DiztinGUIsh
 
         private void stepOverToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedRows.Count < 0) return;
-            int offset = dataGridView1.SelectedRows[0].Index + viewOffset;
-            Manager.Step(offset, false);
+            if (Data.GetROMSize() <= 0) return;
+            Step(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void stepInToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedRows.Count < 0) return;
-            int offset = dataGridView1.SelectedRows[0].Index + viewOffset;
-            Manager.Step(offset, true);
+            if (Data.GetROMSize() <= 0) return;
+            StepIn(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void autoStepSafeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedRows.Count < 0) return;
-            int offset = dataGridView1.SelectedRows[0].Index + viewOffset;
-            Manager.AutoStep(offset, false);
+            if (Data.GetROMSize() <= 0) return;
+            AutoStepSafe(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void autoStepHarshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedRows.Count < 0) return;
-            int offset = dataGridView1.SelectedRows[0].Index + viewOffset;
-            Manager.AutoStep(offset, true);
+            if (Data.GetROMSize() <= 0) return;
+            AutoStepHarsh(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void gotoToolStripMenuItem_Click(object sender, EventArgs e)
@@ -369,27 +469,24 @@ namespace DiztinGUIsh
 
         private void gotoEffectiveAddressToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // goto effective address
+            if (Data.GetROMSize() <= 0) return;
+            GoToEffectiveAddress(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void gotoFirstUnreachedToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // goto first unreached
+            GoToUnreached(true);
         }
 
         private void gotoNearUnreachedToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // goto near unreached
+            GoToUnreached(false);
         }
 
         private void markOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedRows.Count < 0) return;
-            int offset = dataGridView1.SelectedRows[0].Index + viewOffset;
-            Manager.Mark(offset, markFlag, 1);
+            if (Data.GetROMSize() <= 0) return;
+            Mark(table.CurrentCell.RowIndex + viewOffset, 1);
         }
 
         private void markManyToolStripMenuItem_Click(object sender, EventArgs e)
@@ -400,8 +497,8 @@ namespace DiztinGUIsh
 
         private void addLabelToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // jump to label box
+            table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[0];
+            table.BeginEdit(true);
         }
 
         private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e)
@@ -430,8 +527,8 @@ namespace DiztinGUIsh
 
         private void addCommentToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // jump to comment box
+            table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
+            table.BeginEdit(true);
         }
 
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e)

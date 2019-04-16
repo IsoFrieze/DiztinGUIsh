@@ -8,19 +8,25 @@ namespace DiztinGUIsh
 {
     public class Manager
     {
-        public static void Step(int offset, bool branch)
+        public static int Step(int offset, bool branch)
         {
-
+            switch (Data.GetArchitechture(offset))
+            {
+                case Data.Architechture.CPU65C816: return CPU65C816.Step(offset, branch);
+                case Data.Architechture.APUSPC700: return offset;
+                case Data.Architechture.GPUSuperFX: return offset;
+            }
+            return offset;
         }
 
-        public static void AutoStep(int offset, bool harsh)
+        public static int AutoStep(int offset, bool harsh)
         {
-
+            return offset;
         }
 
-        public static void Mark(int offset, Data.FlagType type, int count)
+        public static int Mark(int offset, Data.FlagType type, int count)
         {
-
+            return offset;
         }
     }
 }

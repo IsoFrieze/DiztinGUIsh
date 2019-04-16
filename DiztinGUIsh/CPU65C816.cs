@@ -8,6 +8,84 @@ namespace DiztinGUIsh
 {
     public static class CPU65C816
     {
+        public static int Step(int offset, bool branch)
+        {
+            int opcode = Data.GetROMByte(offset);
+            int length = GetInstructionLength(offset);
+            int prevDirectPage = Data.GetDirectPage(offset);
+            int prevDataBank = Data.GetDataBank(offset);
+            bool prevX = Data.GetXFlag(offset), prevM = Data.GetMFlag(offset);
+            int prevOffset = offset - 1;
+            while (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
+            if (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Opcode)
+            {
+                prevDirectPage = Data.GetDirectPage(prevOffset);
+                prevDataBank = Data.GetDataBank(prevOffset);
+                prevX = Data.GetXFlag(prevOffset);
+                prevM = Data.GetMFlag(prevOffset);
+            }
+
+            if (opcode == 0xC2) // REP
+            {
+                prevX = (Data.GetROMByte(offset + 1) & 0x10) != 0 ? false : prevX;
+                prevM = (Data.GetROMByte(offset + 1) & 0x20) != 0 ? false : prevM;
+            }
+            else if (opcode == 0xE2) // SEP
+            {
+                prevX = (Data.GetROMByte(offset + 1) & 0x10) != 0 ? true : prevX;
+                prevM = (Data.GetROMByte(offset + 1) & 0x20) != 0 ? true : prevM;
+            }
+
+            for (int i = 0; i < length; i++)
+            {
+                Data.SetFlag(offset + i, i == 0 ? Data.FlagType.Opcode : Data.FlagType.Operand);
+                Data.SetDataBank(offset + i, prevDataBank);
+                Data.SetDirectPage(offset + i, prevDirectPage);
+                Data.SetXFlag(offset + i, prevX);
+                Data.SetMFlag(offset + i, prevM);
+            }
+
+            // set read point on EA
+            int eaOffsetPC = Util.ConvertSNEStoPC(Util.GetEffectiveAddress(offset));
+            if (eaOffsetPC >= 0 && ( // these are all read/write/math instructions
+                ((opcode & 0x04) != 0) || ((opcode & 0x0F) == 0x01) || ((opcode & 0x0F) == 0x03) ||
+                ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
+                (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
+                (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC))
+            {
+                Data.SetInOutPoint(eaOffsetPC, Data.InOutPoint.ReadPoint);
+            }
+
+            // set end point on offset
+            if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
+                || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
+                || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC)
+            { // BRL STP JML
+                Data.SetInOutPoint(offset, Data.InOutPoint.EndPoint);
+            }
+
+            int nextOffset = offset + length;
+
+            if (opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
+                || (branch && (opcode == 0x10 || opcode == 0x30 || opcode == 0x50 // BPL BMI BVC
+                || opcode == 0x70 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 // BVS BCC BCS BNE
+                || opcode == 0xF0 || opcode == 0x20 || opcode == 0x22 // BEQ JSR JSL
+            )))
+            {
+                int eaNextOffsetPC = Util.ConvertSNEStoPC(Util.GetEffectiveAddress(offset));
+                if (eaNextOffsetPC >= 0)
+                {
+                    nextOffset = eaNextOffsetPC;
+                    // set out point on offset
+                    // set in point on EA
+                    Data.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
+                    Data.SetInOutPoint(nextOffset, Data.InOutPoint.InPoint);
+                }
+            }
+
+            return nextOffset;
+        }
+
         public static int GetEffectiveAddress(int offset)
         {
             int bank, directPage, operand, programCounter;

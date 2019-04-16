@@ -43,7 +43,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.table = new System.Windows.Forms.DataGridView();
             this.ColumnAlias = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnPC = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnChar = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -122,20 +122,20 @@
             this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView1
             // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.AllowUserToResizeRows = false;
-            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridView1.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.table.AllowUserToAddRows = false;
+            this.table.AllowUserToDeleteRows = false;
+            this.table.AllowUserToResizeRows = false;
+            this.table.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.table.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            this.table.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.table.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ColumnAlias,
             this.ColumnPC,
             this.ColumnChar,
@@ -156,23 +156,24 @@
             dataGridViewCellStyle14.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             dataGridViewCellStyle14.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle14.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle14;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 24);
-            this.dataGridView1.Margin = new System.Windows.Forms.Padding(0);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.RowHeadersVisible = false;
-            this.dataGridView1.RowHeadersWidth = 4;
-            this.dataGridView1.RowTemplate.Height = 15;
-            this.dataGridView1.ScrollBars = System.Windows.Forms.ScrollBars.None;
-            this.dataGridView1.ShowCellErrors = false;
-            this.dataGridView1.ShowCellToolTips = false;
-            this.dataGridView1.ShowEditingIcon = false;
-            this.dataGridView1.ShowRowErrors = false;
-            this.dataGridView1.Size = new System.Drawing.Size(700, 500);
-            this.dataGridView1.TabIndex = 0;
-            this.dataGridView1.VirtualMode = true;
-            this.dataGridView1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridView1_KeyDown);
-            this.dataGridView1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseWheel);
+            this.table.DefaultCellStyle = dataGridViewCellStyle14;
+            this.table.Location = new System.Drawing.Point(0, 24);
+            this.table.Margin = new System.Windows.Forms.Padding(0);
+            this.table.MultiSelect = false;
+            this.table.Name = "dataGridView1";
+            this.table.RowHeadersVisible = false;
+            this.table.RowHeadersWidth = 4;
+            this.table.RowTemplate.Height = 15;
+            this.table.ScrollBars = System.Windows.Forms.ScrollBars.None;
+            this.table.ShowCellErrors = false;
+            this.table.ShowCellToolTips = false;
+            this.table.ShowEditingIcon = false;
+            this.table.ShowRowErrors = false;
+            this.table.Size = new System.Drawing.Size(700, 500);
+            this.table.TabIndex = 0;
+            this.table.VirtualMode = true;
+            this.table.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridView1_KeyDown);
+            this.table.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseWheel);
             // 
             // ColumnAlias
             // 
@@ -860,7 +861,7 @@
             this.ClientSize = new System.Drawing.Size(717, 546);
             this.Controls.Add(this.vScrollBar1);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.dataGridView1);
+            this.Controls.Add(this.table);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
@@ -870,7 +871,7 @@
             this.Load += new System.EventHandler(this.MainWindow_Load);
             this.ResizeEnd += new System.EventHandler(this.MainWindow_ResizeEnd);
             this.SizeChanged += new System.EventHandler(this.MainWindow_SizeChanged);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.table)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
@@ -882,7 +883,7 @@
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView table;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
