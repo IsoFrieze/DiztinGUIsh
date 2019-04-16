@@ -74,6 +74,12 @@
       <DependentUpon>About.cs</DependentUpon>
     </Compile>
     <Compile Include="Data.cs" />
+    <Compile Include="GotoDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GotoDialog.Designer.cs">
+      <DependentUpon>GotoDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="ImportROMDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -87,6 +93,12 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Manager.cs" />
+    <Compile Include="MarkManyDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MarkManyDialog.Designer.cs">
+      <DependentUpon>MarkManyDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Project.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -96,11 +108,17 @@
     <EmbeddedResource Include="About.resx">
       <DependentUpon>About.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="GotoDialog.resx">
+      <DependentUpon>GotoDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ImportROMDialog.resx">
       <DependentUpon>ImportROMDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarkManyDialog.resx">
+      <DependentUpon>MarkManyDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

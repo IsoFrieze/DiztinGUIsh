@@ -418,6 +418,40 @@ namespace DiztinGUIsh
             UpdateWindowTitle();
         }
 
+        private void MarkMany(int offset, int column)
+        {
+            MarkManyDialog mark = new MarkManyDialog(offset, column);
+            DialogResult result = mark.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                int col = mark.GetProperty();
+                switch (col)
+                {
+                    case 0:
+                        SelectOffset(Manager.Mark(mark.GetOffset(), (Data.FlagType)mark.GetValue(), mark.GetCount()));
+                        break;
+                    case 1:
+                        SelectOffset(Manager.MarkDataBank(mark.GetOffset(), (int)mark.GetValue(), mark.GetCount()));
+                        break;
+                    case 2:
+                        SelectOffset(Manager.MarkDirectPage(mark.GetOffset(), (int)mark.GetValue(), mark.GetCount()));
+                        break;
+                    case 3:
+                        SelectOffset(Manager.MarkMFlag(mark.GetOffset(), (bool)mark.GetValue(), mark.GetCount()));
+                        break;
+                    case 4:
+                        SelectOffset(Manager.MarkXFlag(mark.GetOffset(), (bool)mark.GetValue(), mark.GetCount()));
+                        break;
+                    case 5:
+                        SelectOffset(Manager.MarkArchitechture(mark.GetOffset(), (Data.Architechture)mark.GetValue(), mark.GetCount()));
+                        break;
+                }
+                UpdatePercent();
+                UpdateWindowTitle();
+                table.Invalidate();
+            }
+        }
+
         private void GoToEffectiveAddress(int offset)
         {
             int ea = Util.GetEffectiveAddress(offset);
@@ -498,8 +532,15 @@ namespace DiztinGUIsh
 
         private void gotoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // goto window
+            if (Data.GetROMSize() <= 0) return;
+            GotoDialog go = new GotoDialog(viewOffset + table.CurrentCell.RowIndex);
+            DialogResult result = go.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                int offset = go.GetOffset();
+                if (offset >= 0 && offset < Data.GetROMSize()) SelectOffset(offset); 
+                else MessageBox.Show("That offset is out of range.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void gotoEffectiveAddressToolStripMenuItem_Click(object sender, EventArgs e)
@@ -526,8 +567,8 @@ namespace DiztinGUIsh
 
         private void markManyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // mark many window
+            if (Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + viewOffset, 7);
         }
 
         private void addLabelToolStripMenuItem_Click(object sender, EventArgs e)
@@ -538,26 +579,26 @@ namespace DiztinGUIsh
 
         private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // set many data bank window
+            if (Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + viewOffset, 8);
         }
 
         private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // set many direct page window
+            if (Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + viewOffset, 9);
         }
 
         private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // set many M flag window
+            if (Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + viewOffset, 10);
         }
 
         private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // set many X flag window
+            if (Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + viewOffset, 11);
         }
 
         private void addCommentToolStripMenuItem_Click(object sender, EventArgs e)

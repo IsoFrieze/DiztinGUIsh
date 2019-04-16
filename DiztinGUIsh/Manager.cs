@@ -120,5 +120,45 @@ namespace DiztinGUIsh
             for (i = 0; i < count && offset + i < size; i++) Data.SetFlag(offset + i, type);
             return offset + i < size ? offset + i : size - 1;
         }
+
+        public static int MarkDataBank(int offset, int db, int count)
+        {
+            Project.unsavedChanges = true;
+            int i, size = Data.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.SetDataBank(offset + i, db);
+            return offset + i < size ? offset + i : size - 1;
+        }
+
+        public static int MarkDirectPage(int offset, int dp, int count)
+        {
+            Project.unsavedChanges = true;
+            int i, size = Data.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.SetDirectPage(offset + i, dp);
+            return offset + i < size ? offset + i : size - 1;
+        }
+
+        public static int MarkXFlag(int offset, bool x, int count)
+        {
+            Project.unsavedChanges = true;
+            int i, size = Data.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.SetXFlag(offset + i, x);
+            return offset + i < size ? offset + i : size - 1;
+        }
+
+        public static int MarkMFlag(int offset, bool m, int count)
+        {
+            Project.unsavedChanges = true;
+            int i, size = Data.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.SetMFlag(offset + i, m);
+            return offset + i < size ? offset + i : size - 1;
+        }
+
+        public static int MarkArchitechture(int offset, Data.Architechture arch, int count)
+        {
+            Project.unsavedChanges = true;
+            int i, size = Data.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.SetArchitechture(offset + i, arch);
+            return offset + i < size ? offset + i : size - 1;
+        }
     }
 }
