@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace DiztinGUIsh
 {
@@ -228,6 +230,95 @@ namespace DiztinGUIsh
                     return (showPrefix ? "%" : "") + b;
             }
             return "";
+        }
+
+        public static void PaintCell(int offset, DataGridViewCellStyle style, int column, int selOffset)
+        {
+            // editable cells show up green
+            if (column == 0 || column == 8 || column == 9 || column == 12) style.SelectionBackColor = Color.Chartreuse;
+
+            switch (Data.GetFlag(offset))
+            {
+                case Data.FlagType.Unreached:
+                    style.BackColor = Color.LightGray;
+                    style.ForeColor = Color.DarkSlateGray;
+                    break;
+                case Data.FlagType.Opcode:
+                    int opcode = Data.GetROMByte(offset);
+                    switch (column)
+                    {
+                        case 4: // <*>
+                            Data.InOutPoint point = Data.GetInOutPoint(offset);
+                            int r = 255, g = 255, b = 255;
+                            if ((point & (Data.InOutPoint.EndPoint | Data.InOutPoint.OutPoint)) != 0) g -= 50;
+                            if ((point & (Data.InOutPoint.InPoint)) != 0) r -= 50;
+                            if ((point & (Data.InOutPoint.ReadPoint)) != 0) b -= 50;
+                            style.BackColor = Color.FromArgb(r, g, b);
+                            break;
+                        case 8: // Data Bank
+                            if (opcode == 0xAB) // PLB
+                                style.BackColor = Color.OrangeRed;
+                            else if (opcode == 0x8B) // PHB
+                                style.BackColor = Color.Yellow;
+                            break;
+                        case 9: // Direct Page
+                            if (opcode == 0x2B || opcode == 0x5B) // PLD TCD
+                                style.BackColor = Color.OrangeRed;
+                            if (opcode == 0x0B || opcode == 0x7B) // PHD TDC
+                                style.BackColor = Color.Yellow;
+                            break;
+                        case 10: // M Flag
+                        case 11: // X Flag
+                            int mask = column == 10 ? 0x20 : 0x10;
+                            if (opcode == 0x28 || ((opcode == 0xC2 || opcode == 0xE2) // PLP SEP REP
+                                && (Data.GetROMByte(offset + 1) & mask) != 0)) // relevant bit set
+                                style.BackColor = Color.OrangeRed;
+                            if (opcode == 0x08) // PHP
+                                style.BackColor = Color.Yellow;
+                            break;
+                    }
+                    break;
+                case Data.FlagType.Operand:
+                    style.ForeColor = Color.LightGray;
+                    break;
+                case Data.FlagType.Graphics:
+                    style.BackColor = Color.LightPink;
+                    break;
+                case Data.FlagType.Music:
+                    style.BackColor = Color.PowderBlue;
+                    break;
+                case Data.FlagType.Data8Bit:
+                case Data.FlagType.Data16Bit:
+                case Data.FlagType.Data24Bit:
+                case Data.FlagType.Data32Bit:
+                    style.BackColor = Color.NavajoWhite;
+                    break;
+                case Data.FlagType.Pointer16Bit:
+                case Data.FlagType.Pointer24Bit:
+                case Data.FlagType.Pointer32Bit:
+                    style.BackColor = Color.Orchid;
+                    break;
+                case Data.FlagType.Text:
+                    style.BackColor = Color.Aquamarine;
+                    break;
+                case Data.FlagType.Empty:
+                    style.BackColor = Color.DarkSlateGray;
+                    style.ForeColor = Color.LightGray;
+                    break;
+            }
+
+            if (selOffset >= 0 && selOffset < Data.GetROMSize())
+            {
+                if (column == 1
+                    && Data.GetFlag(offset) == Data.FlagType.Opcode
+                    && ConvertSNEStoPC(GetEffectiveAddress(selOffset)) == offset
+                ) style.BackColor = Color.DeepPink;
+
+                if (column == 6
+                    && Data.GetFlag(selOffset) == Data.FlagType.Opcode
+                    && ConvertSNEStoPC(GetEffectiveAddress(offset)) == selOffset
+                ) style.BackColor = Color.DeepPink;
+            }
         }
     }
 }

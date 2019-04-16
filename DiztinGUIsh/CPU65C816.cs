@@ -8,15 +8,13 @@ namespace DiztinGUIsh
 {
     public static class CPU65C816
     {
-        public static int Step(int offset, bool branch)
+        public static int Step(int offset, bool branch, bool force, int prevOffset)
         {
             int opcode = Data.GetROMByte(offset);
-            int length = GetInstructionLength(offset);
             int prevDirectPage = Data.GetDirectPage(offset);
             int prevDataBank = Data.GetDataBank(offset);
             bool prevX = Data.GetXFlag(offset), prevM = Data.GetMFlag(offset);
-            int prevOffset = offset - 1;
-            while (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
+
             if (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Opcode)
             {
                 prevDirectPage = Data.GetDirectPage(prevOffset);
@@ -36,9 +34,18 @@ namespace DiztinGUIsh
                 prevM = (Data.GetROMByte(offset + 1) & 0x20) != 0 ? true : prevM;
             }
 
-            for (int i = 0; i < length; i++)
+            // set first byte first, so the instruction length is correct
+            Data.SetFlag(offset, Data.FlagType.Opcode);
+            Data.SetDataBank(offset, prevDataBank);
+            Data.SetDirectPage(offset, prevDirectPage);
+            Data.SetXFlag(offset, prevX);
+            Data.SetMFlag(offset, prevM);
+
+            int length = GetInstructionLength(offset);
+
+            for (int i = 1; i < length; i++)
             {
-                Data.SetFlag(offset + i, i == 0 ? Data.FlagType.Opcode : Data.FlagType.Operand);
+                Data.SetFlag(offset + i, Data.FlagType.Operand);
                 Data.SetDataBank(offset + i, prevDataBank);
                 Data.SetDirectPage(offset + i, prevDirectPage);
                 Data.SetXFlag(offset + i, prevX);
@@ -66,11 +73,11 @@ namespace DiztinGUIsh
 
             int nextOffset = offset + length;
 
-            if (opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
+            if (!force && (opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
                 || (branch && (opcode == 0x10 || opcode == 0x30 || opcode == 0x50 // BPL BMI BVC
                 || opcode == 0x70 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 // BVS BCC BCS BNE
                 || opcode == 0xF0 || opcode == 0x20 || opcode == 0x22 // BEQ JSR JSL
-            )))
+            ))))
             {
                 int eaNextOffsetPC = Util.ConvertSNEStoPC(Util.GetEffectiveAddress(offset));
                 if (eaNextOffsetPC >= 0)
@@ -89,6 +96,7 @@ namespace DiztinGUIsh
         public static int GetEffectiveAddress(int offset)
         {
             int bank, directPage, operand, programCounter;
+            int opcode = Data.GetROMByte(offset);
 
             AddressMode mode = GetAddressMode(offset);
             switch (mode)
@@ -110,12 +118,16 @@ namespace DiztinGUIsh
                 case AddressMode.ADDRESS:
                 case AddressMode.ADDRESS_X_INDEX:
                 case AddressMode.ADDRESS_Y_INDEX:
-                case AddressMode.ADDRESS_INDIRECT:
                 case AddressMode.ADDRESS_X_INDEX_INDIRECT:
-                case AddressMode.ADDRESS_LONG_INDIRECT:
-                    bank = Data.GetDataBank(offset);
+                    bank = (opcode == 0x20 || opcode == 0x4C) ?
+                        Util.ConvertPCtoSNES(offset) >> 16 :
+                        Data.GetDataBank(offset);
                     operand = Util.GetROMWord(offset + 1);
                     return (bank << 16) | operand;
+                case AddressMode.ADDRESS_INDIRECT:
+                case AddressMode.ADDRESS_LONG_INDIRECT:
+                    operand = Util.GetROMWord(offset + 1);
+                    return operand;
                 case AddressMode.LONG:
                 case AddressMode.LONG_X_INDEX:
                     operand = Util.GetROMLong(offset + 1);

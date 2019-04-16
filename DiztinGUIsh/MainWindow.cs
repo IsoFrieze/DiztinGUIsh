@@ -20,6 +20,11 @@ namespace DiztinGUIsh
             InitializeComponent();
         }
 
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            e.Cancel = !ContinueUnsavedChanges();
+        }
+
         private void MainWindow_SizeChanged(object sender, EventArgs e)
         {
             table.Height = this.Height - 85;
@@ -36,10 +41,13 @@ namespace DiztinGUIsh
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            table.CellValueNeeded += new DataGridViewCellValueEventHandler(dataGridView1_CellValueNeeded);
-            table.CellValuePushed += new DataGridViewCellValueEventHandler(dataGridView1_CellValuePushed);
+            table.CellValueNeeded += new DataGridViewCellValueEventHandler(table_CellValueNeeded);
+            table.CellValuePushed += new DataGridViewCellValueEventHandler(table_CellValuePushed);
+            table.CellPainting += new DataGridViewCellPaintingEventHandler(table_CellPainting);
             viewOffset = 0;
             rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
+
+            // https://stackoverflow.com/a/1506066
             typeof(DataGridView).InvokeMember(
                 "DoubleBuffered",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
@@ -84,6 +92,7 @@ namespace DiztinGUIsh
                         TriggerSaveOptions(false, true);
                         UpdateWindowTitle();
                         UpdateDataGridView();
+                        UpdatePercent();
                         table.Invalidate();
                     }
                 }
@@ -102,6 +111,7 @@ namespace DiztinGUIsh
                         TriggerSaveOptions(true, true);
                         UpdateWindowTitle();
                         UpdateDataGridView();
+                        UpdatePercent();
                         table.Invalidate();
                     }
                 }
@@ -127,7 +137,8 @@ namespace DiztinGUIsh
 
         private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Help.ShowHelp(this, Application.StartupPath + @"\" + "Help.chm");
+            // TODO
+            // Create help document and open it here
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
@@ -138,10 +149,7 @@ namespace DiztinGUIsh
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (ContinueUnsavedChanges())
-            {
-                Application.Exit();
-            }
+            Application.Exit();
         }
 
         private Util.NumberBase DisplayBase = Util.NumberBase.Hexadecimal;
@@ -175,7 +183,13 @@ namespace DiztinGUIsh
         {
             int totalUnreached = 0, size = Data.GetROMSize();
             for (int i = 0; i < size; i++) if (Data.GetFlag(i) == Data.FlagType.Unreached) totalUnreached++;
-            percentComplete.Text = string.Format("{0:N3}%", (size - totalUnreached) * 100.0 / size);
+            int reached = size - totalUnreached;
+            percentComplete.Text = string.Format("{0:N3}% ({1:D}/{2:D})", reached * 100.0 / size, reached, size);
+        }
+
+        public void UpdateMarkerLabel()
+        {
+            currentMarker.Text = string.Format("Marker: {0}", markFlag.ToString());
         }
 
         // DataGridView
@@ -197,7 +211,7 @@ namespace DiztinGUIsh
             }
         }
 
-        private void dataGridView1_MouseWheel(object sender, MouseEventArgs e)
+        private void table_MouseWheel(object sender, MouseEventArgs e)
         {
             int selRow = table.CurrentCell.RowIndex + viewOffset, selCol = table.CurrentCell.ColumnIndex;
             int amount = e.Delta / 0x18;
@@ -222,7 +236,12 @@ namespace DiztinGUIsh
             table.Invalidate();
         }
 
-        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
+        private void table_MouseDown(object sender, MouseEventArgs e)
+        {
+            table.Invalidate();
+        }
+
+        private void table_KeyDown(object sender, KeyEventArgs e)
         {
             if (Data.GetROMSize() <= 0) return;
 
@@ -279,12 +298,10 @@ namespace DiztinGUIsh
                     table.BeginEdit(true);
                     break;
                 case Keys.M:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[10];
-                    table.BeginEdit(true);
+                    Data.SetMFlag(offset, !Data.GetMFlag(offset));
                     break;
                 case Keys.X:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[11];
-                    table.BeginEdit(true);
+                    Data.SetXFlag(offset, !Data.GetXFlag(offset));
                     break;
                 case Keys.C:
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
@@ -295,7 +312,7 @@ namespace DiztinGUIsh
             table.Invalidate();
         }
 
-        private void dataGridView1_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
+        private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
             int row = e.RowIndex + viewOffset;
             if (row >= Data.GetROMSize()) return;
@@ -321,7 +338,7 @@ namespace DiztinGUIsh
             }
         }
 
-        private void dataGridView1_CellValuePushed(object sender, DataGridViewCellValueEventArgs e)
+        private void table_CellValuePushed(object sender, DataGridViewCellValueEventArgs e)
         {
             string value = e.Value as string;
             int result;
@@ -337,6 +354,13 @@ namespace DiztinGUIsh
                 case 12: Data.AddComment(row, value); break;
             }
             table.InvalidateRow(e.RowIndex);
+        }
+
+        private void table_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            int row = e.RowIndex + viewOffset;
+            if (row < 0 || row >= Data.GetROMSize()) return;
+            Util.PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void SelectOffset(int offset, int column = -1)
@@ -360,27 +384,38 @@ namespace DiztinGUIsh
 
         private void Step(int offset)
         {
-            SelectOffset(Manager.Step(offset, false));
+            SelectOffset(Manager.Step(offset, false, false, offset - 1));
+            UpdatePercent();
+            UpdateWindowTitle();
         }
 
         private void StepIn(int offset)
         {
-            SelectOffset(Manager.Step(offset, true));
+            SelectOffset(Manager.Step(offset, true, false, offset - 1));
+            UpdatePercent();
+            UpdateWindowTitle();
         }
 
         private void AutoStepSafe(int offset)
         {
-            SelectOffset(Manager.AutoStep(offset, false));
+            SelectOffset(Manager.AutoStep(offset, false, 0));
+            UpdatePercent();
+            UpdateWindowTitle();
         }
 
         private void AutoStepHarsh(int offset)
         {
-            SelectOffset(Manager.AutoStep(offset, true));
+            int amount = 0x100; // TODO bring up a window to type this box
+            SelectOffset(Manager.AutoStep(offset, true, amount));
+            UpdatePercent();
+            UpdateWindowTitle();
         }
 
         private void Mark(int offset, int count)
         {
             SelectOffset(Manager.Mark(offset, markFlag, count));
+            UpdatePercent();
+            UpdateWindowTitle();
         }
 
         private void GoToEffectiveAddress(int offset)
@@ -416,7 +451,7 @@ namespace DiztinGUIsh
                 {
                     if (inBlock && Data.GetFlag(i) != Data.FlagType.Unreached)
                     {
-                        unreached = i - 1;
+                        unreached = i + 1;
                         break;
                     }
                     if (Data.GetFlag(i) == Data.FlagType.Unreached && !inBlock) inBlock = true;
@@ -540,71 +575,85 @@ namespace DiztinGUIsh
         private void unreachedToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Unreached;
+            UpdateMarkerLabel();
         }
 
         private void opcodeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Opcode;
+            UpdateMarkerLabel();
         }
 
         private void operandToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Operand;
+            UpdateMarkerLabel();
         }
 
         private void bitDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Data8Bit;
+            UpdateMarkerLabel();
         }
 
         private void graphicsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Graphics;
+            UpdateMarkerLabel();
         }
 
         private void musicToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Music;
+            UpdateMarkerLabel();
         }
 
         private void emptyToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Empty;
+            UpdateMarkerLabel();
         }
 
         private void bitDataToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Data16Bit;
+            UpdateMarkerLabel();
         }
 
         private void wordPointerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Pointer16Bit;
+            UpdateMarkerLabel();
         }
 
         private void bitDataToolStripMenuItem2_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Data24Bit;
+            UpdateMarkerLabel();
         }
 
         private void longPointerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Pointer24Bit;
+            UpdateMarkerLabel();
         }
 
         private void bitDataToolStripMenuItem3_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Data32Bit;
+            UpdateMarkerLabel();
         }
 
         private void dWordPointerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Pointer32Bit;
+            UpdateMarkerLabel();
         }
 
         private void textToolStripMenuItem_Click(object sender, EventArgs e)
         {
             markFlag = Data.FlagType.Text;
+            UpdateMarkerLabel();
         }
     }
 }

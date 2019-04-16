@@ -185,6 +185,17 @@ namespace DiztinGUIsh
             table[i].MFlag = m;
         }
 
+        public static int GetMXFlags(int i)
+        {
+            return (table[i].MFlag ? 0x20 : 0) | (table[i].XFlag ? 0x10 : 0);
+        }
+
+        public static void SetMXFlags(int i, int mx)
+        {
+            table[i].MFlag = ((mx & 0x20) != 0);
+            table[i].XFlag = ((mx & 0x10) != 0);
+        }
+
         public static string GetLabel(int i)
         {
             string label = table[i].Label;

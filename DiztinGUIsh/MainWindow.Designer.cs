@@ -99,8 +99,8 @@
             this.markManyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.addLabelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.setDirectPageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setDataBankToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.setDirectPageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleAccumulatorSizeMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleIndexSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addCommentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -118,6 +118,8 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.percentComplete = new System.Windows.Forms.ToolStripStatusLabel();
+            this.seperator1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.currentMarker = new System.Windows.Forms.ToolStripStatusLabel();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
@@ -127,7 +129,7 @@
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // dataGridView1
+            // table
             // 
             this.table.AllowUserToAddRows = false;
             this.table.AllowUserToDeleteRows = false;
@@ -153,14 +155,14 @@
             dataGridViewCellStyle14.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle14.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dataGridViewCellStyle14.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle14.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle14.SelectionBackColor = System.Drawing.Color.CornflowerBlue;
             dataGridViewCellStyle14.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle14.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.table.DefaultCellStyle = dataGridViewCellStyle14;
             this.table.Location = new System.Drawing.Point(0, 24);
             this.table.Margin = new System.Windows.Forms.Padding(0);
             this.table.MultiSelect = false;
-            this.table.Name = "dataGridView1";
+            this.table.Name = "table";
             this.table.RowHeadersVisible = false;
             this.table.RowHeadersWidth = 4;
             this.table.RowTemplate.Height = 15;
@@ -172,8 +174,9 @@
             this.table.Size = new System.Drawing.Size(700, 500);
             this.table.TabIndex = 0;
             this.table.VirtualMode = true;
-            this.table.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridView1_KeyDown);
-            this.table.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseWheel);
+            this.table.KeyDown += new System.Windows.Forms.KeyEventHandler(this.table_KeyDown);
+            this.table.MouseDown += new System.Windows.Forms.MouseEventHandler(this.table_MouseDown);
+            this.table.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.table_MouseWheel);
             // 
             // ColumnAlias
             // 
@@ -219,7 +222,7 @@
             this.ColumnHex.Name = "ColumnHex";
             this.ColumnHex.ReadOnly = true;
             this.ColumnHex.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.ColumnHex.Width = 26;
+            this.ColumnHex.Width = 20;
             // 
             // ColumnPoints
             // 
@@ -288,18 +291,24 @@
             // 
             // ColumnM
             // 
+            dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
             dataGridViewCellStyle11.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ColumnM.DefaultCellStyle = dataGridViewCellStyle11;
             this.ColumnM.HeaderText = "M";
+            this.ColumnM.MaxInputLength = 2;
             this.ColumnM.Name = "ColumnM";
+            this.ColumnM.ReadOnly = true;
             this.ColumnM.Width = 20;
             // 
             // ColumnX
             // 
+            dataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
             dataGridViewCellStyle12.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ColumnX.DefaultCellStyle = dataGridViewCellStyle12;
             this.ColumnX.HeaderText = "X";
+            this.ColumnX.MaxInputLength = 2;
             this.ColumnX.Name = "ColumnX";
+            this.ColumnX.ReadOnly = true;
             this.ColumnX.Width = 20;
             // 
             // ColumnComment
@@ -674,14 +683,6 @@
             this.addLabelToolStripMenuItem.Text = "Add &Label";
             this.addLabelToolStripMenuItem.Click += new System.EventHandler(this.addLabelToolStripMenuItem_Click);
             // 
-            // setDirectPageToolStripMenuItem
-            // 
-            this.setDirectPageToolStripMenuItem.Name = "setDirectPageToolStripMenuItem";
-            this.setDirectPageToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.D)));
-            this.setDirectPageToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.setDirectPageToolStripMenuItem.Text = "Set &Direct Page...";
-            this.setDirectPageToolStripMenuItem.Click += new System.EventHandler(this.setDirectPageToolStripMenuItem_Click);
-            // 
             // setDataBankToolStripMenuItem
             // 
             this.setDataBankToolStripMenuItem.Name = "setDataBankToolStripMenuItem";
@@ -689,6 +690,14 @@
             this.setDataBankToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
             this.setDataBankToolStripMenuItem.Text = "Set Data &Bank...";
             this.setDataBankToolStripMenuItem.Click += new System.EventHandler(this.setDataBankToolStripMenuItem_Click);
+            // 
+            // setDirectPageToolStripMenuItem
+            // 
+            this.setDirectPageToolStripMenuItem.Name = "setDirectPageToolStripMenuItem";
+            this.setDirectPageToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.D)));
+            this.setDirectPageToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.setDirectPageToolStripMenuItem.Text = "Set &Direct Page...";
+            this.setDirectPageToolStripMenuItem.Click += new System.EventHandler(this.setDirectPageToolStripMenuItem_Click);
             // 
             // toggleAccumulatorSizeMToolStripMenuItem
             // 
@@ -803,21 +812,23 @@
             // 
             this.viewHelpToolStripMenuItem.Name = "viewHelpToolStripMenuItem";
             this.viewHelpToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
-            this.viewHelpToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.viewHelpToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.viewHelpToolStripMenuItem.Text = "View Help";
             this.viewHelpToolStripMenuItem.Click += new System.EventHandler(this.viewHelpToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.percentComplete});
+            this.percentComplete,
+            this.seperator1,
+            this.currentMarker});
             this.statusStrip1.Location = new System.Drawing.Point(0, 524);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(717, 22);
@@ -828,8 +839,20 @@
             // 
             this.percentComplete.Name = "percentComplete";
             this.percentComplete.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.percentComplete.Size = new System.Drawing.Size(56, 17);
-            this.percentComplete.Text = "000.000%";
+            this.percentComplete.Size = new System.Drawing.Size(72, 17);
+            this.percentComplete.Text = "0.000% (0/0)";
+            // 
+            // seperator1
+            // 
+            this.seperator1.Name = "seperator1";
+            this.seperator1.Size = new System.Drawing.Size(10, 17);
+            this.seperator1.Text = "|";
+            // 
+            // currentMarker
+            // 
+            this.currentMarker.Name = "currentMarker";
+            this.currentMarker.Size = new System.Drawing.Size(110, 17);
+            this.currentMarker.Text = "Marker: Data (8-bit)";
             // 
             // openFileDialog1
             // 
@@ -868,6 +891,7 @@
             this.MinimumSize = new System.Drawing.Size(733, 200);
             this.Name = "MainWindow";
             this.Text = "DiztinGUIsh";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.Load += new System.EventHandler(this.MainWindow_Load);
             this.ResizeEnd += new System.EventHandler(this.MainWindow_ResizeEnd);
             this.SizeChanged += new System.EventHandler(this.MainWindow_SizeChanged);
@@ -949,6 +973,8 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.VScrollBar vScrollBar1;
+        private System.Windows.Forms.ToolStripStatusLabel seperator1;
+        private System.Windows.Forms.ToolStripStatusLabel currentMarker;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnAlias;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnPC;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnChar;
