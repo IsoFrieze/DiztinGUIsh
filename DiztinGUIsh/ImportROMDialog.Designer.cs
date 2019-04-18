@@ -42,39 +42,40 @@
             this.label6 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
-            this.textNativeCOP = new System.Windows.Forms.TextBox();
-            this.textNativeBRK = new System.Windows.Forms.TextBox();
-            this.textNativeABORT = new System.Windows.Forms.TextBox();
-            this.textNativeIRQ = new System.Windows.Forms.TextBox();
-            this.textNativeRESET = new System.Windows.Forms.TextBox();
-            this.textNativeNMI = new System.Windows.Forms.TextBox();
-            this.textEmuIRQ = new System.Windows.Forms.TextBox();
-            this.textEmuRESET = new System.Windows.Forms.TextBox();
-            this.textEmuNMI = new System.Windows.Forms.TextBox();
-            this.textEmuABORT = new System.Windows.Forms.TextBox();
-            this.textEmuBRK = new System.Windows.Forms.TextBox();
-            this.textEmuCOP = new System.Windows.Forms.TextBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.label12 = new System.Windows.Forms.Label();
-            this.checkboxNativeCOP = new System.Windows.Forms.CheckBox();
-            this.checkboxNativeBRK = new System.Windows.Forms.CheckBox();
-            this.checkboxNativeABORT = new System.Windows.Forms.CheckBox();
-            this.checkboxNativeIRQ = new System.Windows.Forms.CheckBox();
-            this.checkboxNativeRESET = new System.Windows.Forms.CheckBox();
-            this.checkboxNativeNMI = new System.Windows.Forms.CheckBox();
+            this.label13 = new System.Windows.Forms.Label();
             this.checkboxEmuIRQ = new System.Windows.Forms.CheckBox();
             this.checkboxEmuRESET = new System.Windows.Forms.CheckBox();
             this.checkboxEmuNMI = new System.Windows.Forms.CheckBox();
             this.checkboxEmuABORT = new System.Windows.Forms.CheckBox();
             this.checkboxEmuBRK = new System.Windows.Forms.CheckBox();
             this.checkboxEmuCOP = new System.Windows.Forms.CheckBox();
-            this.label13 = new System.Windows.Forms.Label();
+            this.checkboxNativeIRQ = new System.Windows.Forms.CheckBox();
+            this.checkboxNativeRESET = new System.Windows.Forms.CheckBox();
+            this.checkboxNativeNMI = new System.Windows.Forms.CheckBox();
+            this.checkboxNativeABORT = new System.Windows.Forms.CheckBox();
+            this.checkboxNativeBRK = new System.Windows.Forms.CheckBox();
+            this.checkboxNativeCOP = new System.Windows.Forms.CheckBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.textEmuIRQ = new System.Windows.Forms.TextBox();
+            this.textEmuRESET = new System.Windows.Forms.TextBox();
+            this.textEmuNMI = new System.Windows.Forms.TextBox();
+            this.textEmuABORT = new System.Windows.Forms.TextBox();
+            this.textEmuBRK = new System.Windows.Forms.TextBox();
+            this.textEmuCOP = new System.Windows.Forms.TextBox();
+            this.textNativeIRQ = new System.Windows.Forms.TextBox();
+            this.textNativeRESET = new System.Windows.Forms.TextBox();
+            this.textNativeNMI = new System.Windows.Forms.TextBox();
+            this.textNativeABORT = new System.Windows.Forms.TextBox();
+            this.textNativeBRK = new System.Windows.Forms.TextBox();
+            this.textNativeCOP = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.checkHeader = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -141,7 +142,8 @@
             // 
             // cancel
             // 
-            this.cancel.Location = new System.Drawing.Point(12, 364);
+            this.cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.cancel.Location = new System.Drawing.Point(12, 388);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
             this.cancel.TabIndex = 6;
@@ -151,7 +153,7 @@
             // 
             // okay
             // 
-            this.okay.Location = new System.Drawing.Point(172, 364);
+            this.okay.Location = new System.Drawing.Point(172, 388);
             this.okay.Name = "okay";
             this.okay.Size = new System.Drawing.Size(75, 23);
             this.okay.TabIndex = 7;
@@ -254,119 +256,151 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Vectors @ $00FFE0";
             // 
-            // label1
+            // label13
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(39, 36);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(29, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "COP";
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(10, 168);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(214, 13);
+            this.label13.TabIndex = 14;
+            this.label13.Text = "Select vectors to generate automatic labels.";
+            this.label13.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
-            // label2
+            // checkboxEmuIRQ
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(38, 58);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(29, 13);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "BRK";
+            this.checkboxEmuIRQ.AutoSize = true;
+            this.checkboxEmuIRQ.Location = new System.Drawing.Point(197, 146);
+            this.checkboxEmuIRQ.Name = "checkboxEmuIRQ";
+            this.checkboxEmuIRQ.Size = new System.Drawing.Size(15, 14);
+            this.checkboxEmuIRQ.TabIndex = 31;
+            this.checkboxEmuIRQ.UseVisualStyleBackColor = true;
             // 
-            // label7
+            // checkboxEmuRESET
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(24, 80);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(44, 13);
-            this.label7.TabIndex = 2;
-            this.label7.Text = "ABORT";
+            this.checkboxEmuRESET.AutoSize = true;
+            this.checkboxEmuRESET.Checked = true;
+            this.checkboxEmuRESET.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkboxEmuRESET.Location = new System.Drawing.Point(197, 124);
+            this.checkboxEmuRESET.Name = "checkboxEmuRESET";
+            this.checkboxEmuRESET.Size = new System.Drawing.Size(15, 14);
+            this.checkboxEmuRESET.TabIndex = 30;
+            this.checkboxEmuRESET.UseVisualStyleBackColor = true;
             // 
-            // label8
+            // checkboxEmuNMI
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(40, 102);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(27, 13);
-            this.label8.TabIndex = 3;
-            this.label8.Text = "NMI";
+            this.checkboxEmuNMI.AutoSize = true;
+            this.checkboxEmuNMI.Location = new System.Drawing.Point(197, 102);
+            this.checkboxEmuNMI.Name = "checkboxEmuNMI";
+            this.checkboxEmuNMI.Size = new System.Drawing.Size(15, 14);
+            this.checkboxEmuNMI.TabIndex = 29;
+            this.checkboxEmuNMI.UseVisualStyleBackColor = true;
             // 
-            // label9
+            // checkboxEmuABORT
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(25, 124);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(43, 13);
-            this.label9.TabIndex = 4;
-            this.label9.Text = "RESET";
+            this.checkboxEmuABORT.AutoSize = true;
+            this.checkboxEmuABORT.Location = new System.Drawing.Point(197, 80);
+            this.checkboxEmuABORT.Name = "checkboxEmuABORT";
+            this.checkboxEmuABORT.Size = new System.Drawing.Size(15, 14);
+            this.checkboxEmuABORT.TabIndex = 28;
+            this.checkboxEmuABORT.UseVisualStyleBackColor = true;
             // 
-            // label10
+            // checkboxEmuBRK
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(41, 146);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(26, 13);
-            this.label10.TabIndex = 5;
-            this.label10.Text = "IRQ";
+            this.checkboxEmuBRK.AutoSize = true;
+            this.checkboxEmuBRK.Location = new System.Drawing.Point(197, 58);
+            this.checkboxEmuBRK.Name = "checkboxEmuBRK";
+            this.checkboxEmuBRK.Size = new System.Drawing.Size(15, 14);
+            this.checkboxEmuBRK.TabIndex = 27;
+            this.checkboxEmuBRK.UseVisualStyleBackColor = true;
             // 
-            // textNativeCOP
+            // checkboxEmuCOP
             // 
-            this.textNativeCOP.Location = new System.Drawing.Point(79, 33);
-            this.textNativeCOP.MaxLength = 4;
-            this.textNativeCOP.Name = "textNativeCOP";
-            this.textNativeCOP.ReadOnly = true;
-            this.textNativeCOP.Size = new System.Drawing.Size(34, 20);
-            this.textNativeCOP.TabIndex = 6;
-            this.textNativeCOP.Text = "FFFF";
+            this.checkboxEmuCOP.AutoSize = true;
+            this.checkboxEmuCOP.Location = new System.Drawing.Point(197, 36);
+            this.checkboxEmuCOP.Name = "checkboxEmuCOP";
+            this.checkboxEmuCOP.Size = new System.Drawing.Size(15, 14);
+            this.checkboxEmuCOP.TabIndex = 26;
+            this.checkboxEmuCOP.UseVisualStyleBackColor = true;
             // 
-            // textNativeBRK
+            // checkboxNativeIRQ
             // 
-            this.textNativeBRK.Location = new System.Drawing.Point(79, 55);
-            this.textNativeBRK.MaxLength = 4;
-            this.textNativeBRK.Name = "textNativeBRK";
-            this.textNativeBRK.ReadOnly = true;
-            this.textNativeBRK.Size = new System.Drawing.Size(34, 20);
-            this.textNativeBRK.TabIndex = 7;
-            this.textNativeBRK.Text = "FFFF";
+            this.checkboxNativeIRQ.AutoSize = true;
+            this.checkboxNativeIRQ.Checked = true;
+            this.checkboxNativeIRQ.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkboxNativeIRQ.Location = new System.Drawing.Point(120, 146);
+            this.checkboxNativeIRQ.Name = "checkboxNativeIRQ";
+            this.checkboxNativeIRQ.Size = new System.Drawing.Size(15, 14);
+            this.checkboxNativeIRQ.TabIndex = 25;
+            this.checkboxNativeIRQ.UseVisualStyleBackColor = true;
             // 
-            // textNativeABORT
+            // checkboxNativeRESET
             // 
-            this.textNativeABORT.Location = new System.Drawing.Point(79, 77);
-            this.textNativeABORT.MaxLength = 4;
-            this.textNativeABORT.Name = "textNativeABORT";
-            this.textNativeABORT.ReadOnly = true;
-            this.textNativeABORT.Size = new System.Drawing.Size(34, 20);
-            this.textNativeABORT.TabIndex = 8;
-            this.textNativeABORT.Text = "FFFF";
+            this.checkboxNativeRESET.AutoSize = true;
+            this.checkboxNativeRESET.Location = new System.Drawing.Point(120, 124);
+            this.checkboxNativeRESET.Name = "checkboxNativeRESET";
+            this.checkboxNativeRESET.Size = new System.Drawing.Size(15, 14);
+            this.checkboxNativeRESET.TabIndex = 24;
+            this.checkboxNativeRESET.UseVisualStyleBackColor = true;
             // 
-            // textNativeIRQ
+            // checkboxNativeNMI
             // 
-            this.textNativeIRQ.Location = new System.Drawing.Point(79, 143);
-            this.textNativeIRQ.MaxLength = 4;
-            this.textNativeIRQ.Name = "textNativeIRQ";
-            this.textNativeIRQ.ReadOnly = true;
-            this.textNativeIRQ.Size = new System.Drawing.Size(34, 20);
-            this.textNativeIRQ.TabIndex = 11;
-            this.textNativeIRQ.Text = "FFFF";
+            this.checkboxNativeNMI.AutoSize = true;
+            this.checkboxNativeNMI.Checked = true;
+            this.checkboxNativeNMI.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkboxNativeNMI.Location = new System.Drawing.Point(120, 102);
+            this.checkboxNativeNMI.Name = "checkboxNativeNMI";
+            this.checkboxNativeNMI.Size = new System.Drawing.Size(15, 14);
+            this.checkboxNativeNMI.TabIndex = 23;
+            this.checkboxNativeNMI.UseVisualStyleBackColor = true;
             // 
-            // textNativeRESET
+            // checkboxNativeABORT
             // 
-            this.textNativeRESET.Location = new System.Drawing.Point(79, 121);
-            this.textNativeRESET.MaxLength = 4;
-            this.textNativeRESET.Name = "textNativeRESET";
-            this.textNativeRESET.ReadOnly = true;
-            this.textNativeRESET.Size = new System.Drawing.Size(34, 20);
-            this.textNativeRESET.TabIndex = 10;
-            this.textNativeRESET.Text = "FFFF";
+            this.checkboxNativeABORT.AutoSize = true;
+            this.checkboxNativeABORT.Location = new System.Drawing.Point(120, 80);
+            this.checkboxNativeABORT.Name = "checkboxNativeABORT";
+            this.checkboxNativeABORT.Size = new System.Drawing.Size(15, 14);
+            this.checkboxNativeABORT.TabIndex = 22;
+            this.checkboxNativeABORT.UseVisualStyleBackColor = true;
             // 
-            // textNativeNMI
+            // checkboxNativeBRK
             // 
-            this.textNativeNMI.Location = new System.Drawing.Point(79, 99);
-            this.textNativeNMI.MaxLength = 4;
-            this.textNativeNMI.Name = "textNativeNMI";
-            this.textNativeNMI.ReadOnly = true;
-            this.textNativeNMI.Size = new System.Drawing.Size(34, 20);
-            this.textNativeNMI.TabIndex = 9;
-            this.textNativeNMI.Text = "FFFF";
+            this.checkboxNativeBRK.AutoSize = true;
+            this.checkboxNativeBRK.Checked = true;
+            this.checkboxNativeBRK.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkboxNativeBRK.Location = new System.Drawing.Point(120, 58);
+            this.checkboxNativeBRK.Name = "checkboxNativeBRK";
+            this.checkboxNativeBRK.Size = new System.Drawing.Size(15, 14);
+            this.checkboxNativeBRK.TabIndex = 21;
+            this.checkboxNativeBRK.UseVisualStyleBackColor = true;
+            // 
+            // checkboxNativeCOP
+            // 
+            this.checkboxNativeCOP.AutoSize = true;
+            this.checkboxNativeCOP.Checked = true;
+            this.checkboxNativeCOP.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkboxNativeCOP.Location = new System.Drawing.Point(120, 36);
+            this.checkboxNativeCOP.Name = "checkboxNativeCOP";
+            this.checkboxNativeCOP.Size = new System.Drawing.Size(15, 14);
+            this.checkboxNativeCOP.TabIndex = 20;
+            this.checkboxNativeCOP.UseVisualStyleBackColor = true;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(158, 17);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(53, 13);
+            this.label12.TabIndex = 19;
+            this.label12.Text = "Emulation";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(86, 17);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(38, 13);
+            this.label11.TabIndex = 18;
+            this.label11.Text = "Native";
             // 
             // textEmuIRQ
             // 
@@ -428,158 +462,139 @@
             this.textEmuCOP.TabIndex = 12;
             this.textEmuCOP.Text = "FFFF";
             // 
-            // label11
+            // textNativeIRQ
             // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(86, 17);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(38, 13);
-            this.label11.TabIndex = 18;
-            this.label11.Text = "Native";
+            this.textNativeIRQ.Location = new System.Drawing.Point(79, 143);
+            this.textNativeIRQ.MaxLength = 4;
+            this.textNativeIRQ.Name = "textNativeIRQ";
+            this.textNativeIRQ.ReadOnly = true;
+            this.textNativeIRQ.Size = new System.Drawing.Size(34, 20);
+            this.textNativeIRQ.TabIndex = 11;
+            this.textNativeIRQ.Text = "FFFF";
             // 
-            // label12
+            // textNativeRESET
             // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(158, 17);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(53, 13);
-            this.label12.TabIndex = 19;
-            this.label12.Text = "Emulation";
+            this.textNativeRESET.Location = new System.Drawing.Point(79, 121);
+            this.textNativeRESET.MaxLength = 4;
+            this.textNativeRESET.Name = "textNativeRESET";
+            this.textNativeRESET.ReadOnly = true;
+            this.textNativeRESET.Size = new System.Drawing.Size(34, 20);
+            this.textNativeRESET.TabIndex = 10;
+            this.textNativeRESET.Text = "FFFF";
             // 
-            // checkboxNativeCOP
+            // textNativeNMI
             // 
-            this.checkboxNativeCOP.AutoSize = true;
-            this.checkboxNativeCOP.Checked = true;
-            this.checkboxNativeCOP.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkboxNativeCOP.Location = new System.Drawing.Point(120, 36);
-            this.checkboxNativeCOP.Name = "checkboxNativeCOP";
-            this.checkboxNativeCOP.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeCOP.TabIndex = 20;
-            this.checkboxNativeCOP.UseVisualStyleBackColor = true;
+            this.textNativeNMI.Location = new System.Drawing.Point(79, 99);
+            this.textNativeNMI.MaxLength = 4;
+            this.textNativeNMI.Name = "textNativeNMI";
+            this.textNativeNMI.ReadOnly = true;
+            this.textNativeNMI.Size = new System.Drawing.Size(34, 20);
+            this.textNativeNMI.TabIndex = 9;
+            this.textNativeNMI.Text = "FFFF";
             // 
-            // checkboxNativeBRK
+            // textNativeABORT
             // 
-            this.checkboxNativeBRK.AutoSize = true;
-            this.checkboxNativeBRK.Checked = true;
-            this.checkboxNativeBRK.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkboxNativeBRK.Location = new System.Drawing.Point(120, 58);
-            this.checkboxNativeBRK.Name = "checkboxNativeBRK";
-            this.checkboxNativeBRK.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeBRK.TabIndex = 21;
-            this.checkboxNativeBRK.UseVisualStyleBackColor = true;
+            this.textNativeABORT.Location = new System.Drawing.Point(79, 77);
+            this.textNativeABORT.MaxLength = 4;
+            this.textNativeABORT.Name = "textNativeABORT";
+            this.textNativeABORT.ReadOnly = true;
+            this.textNativeABORT.Size = new System.Drawing.Size(34, 20);
+            this.textNativeABORT.TabIndex = 8;
+            this.textNativeABORT.Text = "FFFF";
             // 
-            // checkboxNativeABORT
+            // textNativeBRK
             // 
-            this.checkboxNativeABORT.AutoSize = true;
-            this.checkboxNativeABORT.Location = new System.Drawing.Point(120, 80);
-            this.checkboxNativeABORT.Name = "checkboxNativeABORT";
-            this.checkboxNativeABORT.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeABORT.TabIndex = 22;
-            this.checkboxNativeABORT.UseVisualStyleBackColor = true;
+            this.textNativeBRK.Location = new System.Drawing.Point(79, 55);
+            this.textNativeBRK.MaxLength = 4;
+            this.textNativeBRK.Name = "textNativeBRK";
+            this.textNativeBRK.ReadOnly = true;
+            this.textNativeBRK.Size = new System.Drawing.Size(34, 20);
+            this.textNativeBRK.TabIndex = 7;
+            this.textNativeBRK.Text = "FFFF";
             // 
-            // checkboxNativeIRQ
+            // textNativeCOP
             // 
-            this.checkboxNativeIRQ.AutoSize = true;
-            this.checkboxNativeIRQ.Checked = true;
-            this.checkboxNativeIRQ.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkboxNativeIRQ.Location = new System.Drawing.Point(120, 146);
-            this.checkboxNativeIRQ.Name = "checkboxNativeIRQ";
-            this.checkboxNativeIRQ.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeIRQ.TabIndex = 25;
-            this.checkboxNativeIRQ.UseVisualStyleBackColor = true;
+            this.textNativeCOP.Location = new System.Drawing.Point(79, 33);
+            this.textNativeCOP.MaxLength = 4;
+            this.textNativeCOP.Name = "textNativeCOP";
+            this.textNativeCOP.ReadOnly = true;
+            this.textNativeCOP.Size = new System.Drawing.Size(34, 20);
+            this.textNativeCOP.TabIndex = 6;
+            this.textNativeCOP.Text = "FFFF";
             // 
-            // checkboxNativeRESET
+            // label10
             // 
-            this.checkboxNativeRESET.AutoSize = true;
-            this.checkboxNativeRESET.Location = new System.Drawing.Point(120, 124);
-            this.checkboxNativeRESET.Name = "checkboxNativeRESET";
-            this.checkboxNativeRESET.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeRESET.TabIndex = 24;
-            this.checkboxNativeRESET.UseVisualStyleBackColor = true;
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(41, 146);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(26, 13);
+            this.label10.TabIndex = 5;
+            this.label10.Text = "IRQ";
             // 
-            // checkboxNativeNMI
+            // label9
             // 
-            this.checkboxNativeNMI.AutoSize = true;
-            this.checkboxNativeNMI.Checked = true;
-            this.checkboxNativeNMI.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkboxNativeNMI.Location = new System.Drawing.Point(120, 102);
-            this.checkboxNativeNMI.Name = "checkboxNativeNMI";
-            this.checkboxNativeNMI.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeNMI.TabIndex = 23;
-            this.checkboxNativeNMI.UseVisualStyleBackColor = true;
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(25, 124);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(43, 13);
+            this.label9.TabIndex = 4;
+            this.label9.Text = "RESET";
             // 
-            // checkboxEmuIRQ
+            // label8
             // 
-            this.checkboxEmuIRQ.AutoSize = true;
-            this.checkboxEmuIRQ.Location = new System.Drawing.Point(197, 146);
-            this.checkboxEmuIRQ.Name = "checkboxEmuIRQ";
-            this.checkboxEmuIRQ.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuIRQ.TabIndex = 31;
-            this.checkboxEmuIRQ.UseVisualStyleBackColor = true;
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(40, 102);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(27, 13);
+            this.label8.TabIndex = 3;
+            this.label8.Text = "NMI";
             // 
-            // checkboxEmuRESET
+            // label7
             // 
-            this.checkboxEmuRESET.AutoSize = true;
-            this.checkboxEmuRESET.Checked = true;
-            this.checkboxEmuRESET.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkboxEmuRESET.Location = new System.Drawing.Point(197, 124);
-            this.checkboxEmuRESET.Name = "checkboxEmuRESET";
-            this.checkboxEmuRESET.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuRESET.TabIndex = 30;
-            this.checkboxEmuRESET.UseVisualStyleBackColor = true;
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(24, 80);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(44, 13);
+            this.label7.TabIndex = 2;
+            this.label7.Text = "ABORT";
             // 
-            // checkboxEmuNMI
+            // label2
             // 
-            this.checkboxEmuNMI.AutoSize = true;
-            this.checkboxEmuNMI.Location = new System.Drawing.Point(197, 102);
-            this.checkboxEmuNMI.Name = "checkboxEmuNMI";
-            this.checkboxEmuNMI.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuNMI.TabIndex = 29;
-            this.checkboxEmuNMI.UseVisualStyleBackColor = true;
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(38, 58);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(29, 13);
+            this.label2.TabIndex = 1;
+            this.label2.Text = "BRK";
             // 
-            // checkboxEmuABORT
+            // label1
             // 
-            this.checkboxEmuABORT.AutoSize = true;
-            this.checkboxEmuABORT.Location = new System.Drawing.Point(197, 80);
-            this.checkboxEmuABORT.Name = "checkboxEmuABORT";
-            this.checkboxEmuABORT.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuABORT.TabIndex = 28;
-            this.checkboxEmuABORT.UseVisualStyleBackColor = true;
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(39, 36);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(29, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "COP";
             // 
-            // checkboxEmuBRK
+            // checkHeader
             // 
-            this.checkboxEmuBRK.AutoSize = true;
-            this.checkboxEmuBRK.Location = new System.Drawing.Point(197, 58);
-            this.checkboxEmuBRK.Name = "checkboxEmuBRK";
-            this.checkboxEmuBRK.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuBRK.TabIndex = 27;
-            this.checkboxEmuBRK.UseVisualStyleBackColor = true;
-            // 
-            // checkboxEmuCOP
-            // 
-            this.checkboxEmuCOP.AutoSize = true;
-            this.checkboxEmuCOP.Location = new System.Drawing.Point(197, 36);
-            this.checkboxEmuCOP.Name = "checkboxEmuCOP";
-            this.checkboxEmuCOP.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuCOP.TabIndex = 26;
-            this.checkboxEmuCOP.UseVisualStyleBackColor = true;
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(10, 168);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(214, 13);
-            this.label13.TabIndex = 14;
-            this.label13.Text = "Select vectors to generate automatic labels.";
-            this.label13.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.checkHeader.AutoSize = true;
+            this.checkHeader.Checked = true;
+            this.checkHeader.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkHeader.Location = new System.Drawing.Point(12, 365);
+            this.checkHeader.Name = "checkHeader";
+            this.checkHeader.Size = new System.Drawing.Size(237, 17);
+            this.checkHeader.TabIndex = 14;
+            this.checkHeader.Text = "Auto generate flags for Internal ROM Header";
+            this.checkHeader.UseVisualStyleBackColor = true;
             // 
             // ImportROMDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
-            this.ClientSize = new System.Drawing.Size(261, 398);
+            this.ClientSize = new System.Drawing.Size(261, 424);
+            this.Controls.Add(this.checkHeader);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label6);
@@ -652,5 +667,6 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox checkHeader;
     }
 }

@@ -38,6 +38,8 @@ Planned stuff:
 
 * SPC700 & SuperFX architechtures
 * Importing CDL files from emulators
+* Importing trace logs from emulators
+* Merging multiple project files together
 * Labelling effective addresses that aren't ROM
 * Visual map of the entire ROM; seeing what is/isn't disassembled
 * Programmable data viewer to locate graphics easily

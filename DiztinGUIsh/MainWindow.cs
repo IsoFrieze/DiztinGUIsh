@@ -106,7 +106,7 @@ namespace DiztinGUIsh
                 DialogResult result = openFileDialog2.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    if (Project.TryOpenProject(openFileDialog2.FileName))
+                    if (Project.TryOpenProject(openFileDialog2.FileName, openFileDialog1))
                     {
                         TriggerSaveOptions(true, true);
                         UpdateWindowTitle();
@@ -713,6 +713,11 @@ namespace DiztinGUIsh
         {
             markFlag = Data.FlagType.Text;
             UpdateMarkerLabel();
+        }
+
+        public OpenFileDialog GetRomOpenFileDialog()
+        {
+            return openFileDialog1;
         }
     }
 }

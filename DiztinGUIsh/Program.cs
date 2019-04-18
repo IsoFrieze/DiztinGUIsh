@@ -18,7 +18,7 @@ namespace DiztinGUIsh
             Application.SetCompatibleTextRenderingDefault(false);
             MainWindow window = new MainWindow();
             Application.Run(window);
-            if (args.Length > 0 && Project.TryOpenProject(args[0]))
+            if (args.Length > 0 && Project.TryOpenProject(args[0], window.GetRomOpenFileDialog()))
             {
                 window.TriggerSaveOptions(true, true);
                 window.UpdateWindowTitle();

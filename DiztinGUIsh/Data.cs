@@ -237,5 +237,16 @@ namespace DiztinGUIsh
             }
             return map;
         }
+
+        public static int GetRomSettingOffset(ROMMapMode mode)
+        {
+            switch (mode)
+            {
+                case ROMMapMode.LoROM: return LOROM_SETTING_OFFSET;
+                case ROMMapMode.HiROM: return HIROM_SETTING_OFFSET;
+                case ROMMapMode.ExHiROM: return EXHIROM_SETTING_OFFSET;
+            }
+            return LOROM_SETTING_OFFSET;
+        }
     }
 }

@@ -64,6 +64,33 @@ namespace DiztinGUIsh
             return labels;
         }
 
+        public Dictionary<int, Data.FlagType> GetHeaderFlags()
+        {
+            Dictionary<int, Data.FlagType> flags = new Dictionary<int, Data.FlagType>();
+
+            if (checkHeader.Checked)
+            {
+                for (int i = 0; i < 0x15; i++) flags.Add(offset - 0x15 + i, Data.FlagType.Text);
+                for (int i = 0; i < 7; i++) flags.Add(offset + i, Data.FlagType.Data8Bit);
+                for (int i = 0; i < 4; i++) flags.Add(offset + 7 + i, Data.FlagType.Data16Bit);
+                for (int i = 0; i < 0x20; i++) flags.Add(offset + 11 + i, Data.FlagType.Pointer16Bit);
+
+                if (data[offset - 1] == 0)
+                {
+                    flags.Remove(offset - 1);
+                    flags.Add(offset - 1, Data.FlagType.Data8Bit);
+                    for (int i = 0; i < 0x10; i++) flags.Add(offset - 0x25 + i, Data.FlagType.Data8Bit);
+                }
+                else if (data[offset + 5] == 0x33)
+                {
+                    for (int i = 0; i < 6; i++) flags.Add(offset - 0x25 + i, Data.FlagType.Text);
+                    for (int i = 0; i < 10; i++) flags.Add(offset - 0x1F + i, Data.FlagType.Data8Bit);
+                }
+            }
+
+            return flags;
+        }
+
         private Data.ROMMapMode DetectROMMapMode()
         {
             if ((data[Data.LOROM_SETTING_OFFSET] & 0xEC) == 0x20)
@@ -104,7 +131,7 @@ namespace DiztinGUIsh
 
         private void UpdateOffsetAndSpeed()
         {
-            offset = mode == Data.ROMMapMode.LoROM ? Data.LOROM_SETTING_OFFSET : mode == Data.ROMMapMode.HiROM ? Data.HIROM_SETTING_OFFSET : Data.EXHIROM_SETTING_OFFSET;
+            offset = Data.GetRomSettingOffset(mode);
             if (offset >= data.Length)
             {
                 speed = Data.ROMSpeed.Unknown;
