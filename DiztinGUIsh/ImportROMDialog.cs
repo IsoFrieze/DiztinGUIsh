@@ -17,13 +17,51 @@ namespace DiztinGUIsh
         private string title;
         private byte[] data;
         private int offset;
+        private string[,] vectorNames = new string[2, 6]
+        {
+            { "Native_COP", "Native_BRK", "Native_ABORT", "Native_NMI", "Native_RESET", "Native_IRQ"},
+            { "Emulation_COP", "Emulation_Unknown", "Emulation_ABORT", "Emulation_NMI", "Emulation_RESET", "Emulation_IRQBRK"}
+        };
+        private TextBox[,] vectors;
+        private CheckBox[,] checkboxes;
 
         public ImportROMDialog(byte [] rom)
         {
             InitializeComponent();
+            vectors = new TextBox[2, 6]
+            {
+                { textNativeCOP, textNativeBRK, textNativeABORT, textNativeNMI, textNativeRESET, textNativeIRQ },
+                { textEmuCOP, textEmuBRK, textEmuABORT, textEmuNMI, textEmuRESET, textEmuIRQ },
+            };
+            checkboxes = new CheckBox[2, 6]
+            {
+                { checkboxNativeCOP, checkboxNativeBRK, checkboxNativeABORT, checkboxNativeNMI, checkboxNativeRESET, checkboxNativeIRQ },
+                { checkboxEmuCOP, checkboxEmuBRK, checkboxEmuABORT, checkboxEmuNMI, checkboxEmuRESET, checkboxEmuIRQ },
+            };
             data = rom;
             mode = DetectROMMapMode();
             UpdateOffsetAndSpeed();
+        }
+
+        public Dictionary<int, string> GetGeneratedLabels()
+        {
+            Dictionary<int, string> labels = new Dictionary<int, string>();
+            
+            for (int i = 0; i < checkboxes.GetLength(0); i++)
+            {
+                for (int j = 0; j < checkboxes.GetLength(1); j++)
+                {
+                    if (checkboxes[i, j].Checked)
+                    {
+                        int index = offset + 15 + 0x10 * i + 2 * j;
+                        int val = data[index] + (data[index + 1] << 8);
+                        int pc = Util.ConvertSNEStoPC(val);
+                        if (pc >= 0 && pc < data.Length) labels.Add(pc, vectorNames[i, j]);
+                    }
+                }
+            }
+
+            return labels;
         }
 
         private Data.ROMMapMode DetectROMMapMode()
@@ -84,6 +122,7 @@ namespace DiztinGUIsh
             {
                 romspeed.Text = "????";
                 romtitle.Text = "?????????????????????";
+                for (int i = 0; i < vectors.GetLength(0); i++) for (int j = 0; j < vectors.GetLength(1); j++) vectors[i, j].Text = "????";
             } else
             {
                 if (speed == Data.ROMSpeed.SlowROM) romspeed.Text = "SlowROM";
@@ -92,6 +131,25 @@ namespace DiztinGUIsh
                 title = "";
                 for (int i = 0; i < 0x15; i++) title += (char)data[offset - 0x15 + i];
                 romtitle.Text = title;
+
+                for (int i = 0; i < vectors.GetLength(0); i++)
+                {
+                    for (int j = 0; j < vectors.GetLength(1); j++)
+                    {
+                        int index = offset + 15 + 0x10 * i + 2 * j;
+                        int val = data[index] + (data[index + 1] << 8);
+                        vectors[i, j].Text = Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal, 4);
+
+                        if (val < 0x8000)
+                        {
+                            checkboxes[i, j].Checked = false;
+                            checkboxes[i, j].Enabled = false;
+                        } else
+                        {
+                            checkboxes[i, j].Enabled = true;
+                        }
+                    }
+                }
             }
         }
 

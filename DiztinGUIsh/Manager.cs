@@ -160,5 +160,63 @@ namespace DiztinGUIsh
             for (i = 0; i < count && offset + i < size; i++) Data.SetArchitechture(offset + i, arch);
             return offset + i < size ? offset + i : size - 1;
         }
+
+        public static int GetInstructionLength(int offset)
+        {
+            switch (Data.GetArchitechture(offset))
+            {
+                case Data.Architechture.CPU65C816: return CPU65C816.GetInstructionLength(offset);
+                case Data.Architechture.APUSPC700: return 1;
+                case Data.Architechture.GPUSuperFX: return 1;
+            }
+            return 1;
+        }
+
+        public static int FixMisalignedInstructions()
+        {
+            int count = 0, size = Data.GetROMSize();
+
+            for (int i = 0; i < size; i++)
+            {
+                if (Data.GetFlag(i) == Data.FlagType.Opcode)
+                {
+                    int len = GetInstructionLength(i);
+                    for (int j = 1; j < len && i + j < size; j++)
+                    {
+                        if (Data.GetFlag(i + j) != Data.FlagType.Operand)
+                        {
+                            Data.SetFlag(i + j, Data.FlagType.Operand);
+                            count++;
+                        }
+                    }
+                    i += len - 1;
+                } else if (Data.GetFlag(i) == Data.FlagType.Operand)
+                {
+                    Data.SetFlag(i, Data.FlagType.Opcode);
+                    count++;
+                    i--;
+                }
+            }
+
+            return count;
+        }
+
+        public static void RescanInOutPoints()
+        {
+            for (int i = 0; i < Data.GetROMSize(); i++) Data.ClearInOutPoint(i);
+
+            for (int i = 0; i < Data.GetROMSize(); i++)
+            {
+                if (Data.GetFlag(i) == Data.FlagType.Opcode)
+                {
+                    switch (Data.GetArchitechture(i))
+                    {
+                        case Data.Architechture.CPU65C816: CPU65C816.MarkInOutPoints(i); break;
+                        case Data.Architechture.APUSPC700: break;
+                        case Data.Architechture.GPUSuperFX: break;
+                    }
+                }
+            }
+        }
     }
 }

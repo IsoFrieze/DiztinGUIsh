@@ -310,12 +310,12 @@ namespace DiztinGUIsh
             if (selOffset >= 0 && selOffset < Data.GetROMSize())
             {
                 if (column == 1
-                    && Data.GetFlag(offset) == Data.FlagType.Opcode
+                    && (Data.GetFlag(selOffset) == Data.FlagType.Opcode || Data.GetFlag(selOffset) == Data.FlagType.Unreached)
                     && ConvertSNEStoPC(GetEffectiveAddress(selOffset)) == offset
                 ) style.BackColor = Color.DeepPink;
 
                 if (column == 6
-                    && Data.GetFlag(selOffset) == Data.FlagType.Opcode
+                    && (Data.GetFlag(offset) == Data.FlagType.Opcode || Data.GetFlag(offset) == Data.FlagType.Unreached)
                     && ConvertSNEStoPC(GetEffectiveAddress(offset)) == selOffset
                 ) style.BackColor = Color.DeepPink;
             }

@@ -141,6 +141,11 @@ namespace DiztinGUIsh
             // Create help document and open it here
         }
 
+        private void githubToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://github.com/Dotsarecool/DiztinGUIsh");
+        }
+
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             About about = new About();
@@ -282,8 +287,9 @@ namespace DiztinGUIsh
                 case Keys.I: StepIn(offset); break;
                 case Keys.A: AutoStepSafe(offset); break;
                 case Keys.F: GoToEffectiveAddress(offset); break;
-                case Keys.U: GoToUnreached(true); break;
-                case Keys.N: GoToUnreached(false); break;
+                case Keys.U: GoToUnreached(true, true); break;
+                case Keys.H: GoToUnreached(false, false); break;
+                case Keys.N: GoToUnreached(false, true); break;
                 case Keys.K: Mark(offset, 1); break;
                 case Keys.L:
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[0];
@@ -405,10 +411,14 @@ namespace DiztinGUIsh
 
         private void AutoStepHarsh(int offset)
         {
-            int amount = 0x100; // TODO bring up a window to type this box
-            SelectOffset(Manager.AutoStep(offset, true, amount));
-            UpdatePercent();
-            UpdateWindowTitle();
+            HarshAutoStep harsh = new HarshAutoStep(offset);
+            DialogResult result = harsh.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                SelectOffset(Manager.AutoStep(harsh.GetOffset(), true, harsh.GetCount()));
+                UpdatePercent();
+                UpdateWindowTitle();
+            }
         }
 
         private void Mark(int offset, int count)
@@ -465,33 +475,16 @@ namespace DiztinGUIsh
             }
         }
 
-        private void GoToUnreached(bool first)
+        private void GoToUnreached(bool end, bool direction)
         {
-            int unreached = 0;
-            if (first)
-            {
-                for (int i = 0; i < Data.GetROMSize(); i++)
-                {
-                    if (Data.GetFlag(i) == Data.FlagType.Unreached)
-                    {
-                        unreached = i;
-                        break;
-                    }
-                }
-            } else
-            {
-                bool inBlock = false;
-                for (int i = table.CurrentCell.RowIndex + viewOffset; i >= 0; i--)
-                {
-                    if (inBlock && Data.GetFlag(i) != Data.FlagType.Unreached)
-                    {
-                        unreached = i + 1;
-                        break;
-                    }
-                    if (Data.GetFlag(i) == Data.FlagType.Unreached && !inBlock) inBlock = true;
-                }
-            }
-            SelectOffset(unreached, 1);
+            int offset = table.CurrentCell.RowIndex + viewOffset;
+            int size = Data.GetROMSize();
+            int unreached = end ? (direction ? 0 : size - 1) : offset;
+
+            while (unreached >= 0 && unreached < size && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached += direction ? 1 : -1;
+            while (unreached > 0 && Data.GetFlag(unreached - 1) == Data.FlagType.Unreached) unreached--;
+
+            if (Data.GetFlag(unreached) == Data.FlagType.Unreached) SelectOffset(unreached, 1);
         }
 
         private void visualMapToolStripMenuItem_Click(object sender, EventArgs e)
@@ -551,12 +544,17 @@ namespace DiztinGUIsh
 
         private void gotoFirstUnreachedToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            GoToUnreached(true);
+            GoToUnreached(true, true);
         }
 
         private void gotoNearUnreachedToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            GoToUnreached(false);
+            GoToUnreached(false, false);
+        }
+
+        private void gotoNextUnreachedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GoToUnreached(false, true);
         }
 
         private void markOneToolStripMenuItem_Click(object sender, EventArgs e)
@@ -609,8 +607,28 @@ namespace DiztinGUIsh
 
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // fix misaligned instructions dialog
+            if (Data.GetROMSize() <= 0) return;
+            MisalignmentChecker mis = new MisalignmentChecker();
+            DialogResult result = mis.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                int count = Manager.FixMisalignedInstructions();
+                table.Invalidate();
+                MessageBox.Show(string.Format("Modified {0} flags!", count), "Done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Data.GetROMSize() <= 0) return;
+            InOutPointChecker point = new InOutPointChecker();
+            DialogResult result = point.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                Manager.RescanInOutPoints();
+                table.Invalidate();
+                MessageBox.Show("Scan complete!", "Done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private void unreachedToolStripMenuItem_Click(object sender, EventArgs e)

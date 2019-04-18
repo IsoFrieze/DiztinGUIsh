@@ -36,6 +36,14 @@ namespace DiztinGUIsh
                 {
                     Data.Initiate(rom, import.GetROMMapMode(), import.GetROMSpeed());
                     unsavedChanges = false;
+
+                    Dictionary<int, string> generatedLabels = import.GetGeneratedLabels();
+                    if (generatedLabels.Count > 0)
+                    {
+                        foreach (KeyValuePair<int, string> pair in generatedLabels) Data.AddLabel(pair.Key, pair.Value);
+                        unsavedChanges = true;
+                    }
+
                     return true;
                 }
             }

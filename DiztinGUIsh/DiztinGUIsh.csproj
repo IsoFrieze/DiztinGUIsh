@@ -80,11 +80,23 @@
     <Compile Include="GotoDialog.Designer.cs">
       <DependentUpon>GotoDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="HarshAutoStep.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HarshAutoStep.Designer.cs">
+      <DependentUpon>HarshAutoStep.cs</DependentUpon>
+    </Compile>
     <Compile Include="ImportROMDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="ImportROMDialog.Designer.cs">
       <DependentUpon>ImportROMDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InOutPointChecker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InOutPointChecker.Designer.cs">
+      <DependentUpon>InOutPointChecker.cs</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
@@ -99,6 +111,12 @@
     <Compile Include="MarkManyDialog.Designer.cs">
       <DependentUpon>MarkManyDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="MisalignmentChecker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MisalignmentChecker.Designer.cs">
+      <DependentUpon>MisalignmentChecker.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Project.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -111,14 +129,23 @@
     <EmbeddedResource Include="GotoDialog.resx">
       <DependentUpon>GotoDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="HarshAutoStep.resx">
+      <DependentUpon>HarshAutoStep.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ImportROMDialog.resx">
       <DependentUpon>ImportROMDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InOutPointChecker.resx">
+      <DependentUpon>InOutPointChecker.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MarkManyDialog.resx">
       <DependentUpon>MarkManyDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MisalignmentChecker.resx">
+      <DependentUpon>MisalignmentChecker.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

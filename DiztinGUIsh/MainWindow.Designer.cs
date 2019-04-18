@@ -124,6 +124,10 @@
             this.openFileDialog2 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
+            this.rescanForInOutPointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.githubToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importTraceLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gotoNextUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -344,6 +348,7 @@
             this.toolStripSeparator1,
             this.exportLogToolStripMenuItem,
             this.importCDLToolStripMenuItem,
+            this.importTraceLogToolStripMenuItem,
             this.toolStripSeparator7,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -433,6 +438,7 @@
             this.gotoEffectiveAddressToolStripMenuItem,
             this.gotoFirstUnreachedToolStripMenuItem,
             this.gotoNearUnreachedToolStripMenuItem,
+            this.gotoNextUnreachedToolStripMenuItem,
             this.toolStripSeparator4,
             this.selectMarkerToolStripMenuItem,
             this.markOneToolStripMenuItem,
@@ -445,7 +451,8 @@
             this.toggleIndexSizeToolStripMenuItem,
             this.addCommentToolStripMenuItem,
             this.toolStripSeparator6,
-            this.fixMisalignedInstructionsToolStripMenuItem});
+            this.fixMisalignedInstructionsToolStripMenuItem,
+            this.rescanForInOutPointsToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "&Edit";
@@ -453,26 +460,26 @@
             // stepOverToolStripMenuItem
             // 
             this.stepOverToolStripMenuItem.Name = "stepOverToolStripMenuItem";
-            this.stepOverToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.stepOverToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.stepOverToolStripMenuItem.Text = "&Step";
             this.stepOverToolStripMenuItem.Click += new System.EventHandler(this.stepOverToolStripMenuItem_Click);
             // 
             // stepInToolStripMenuItem
             // 
             this.stepInToolStripMenuItem.Name = "stepInToolStripMenuItem";
-            this.stepInToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.stepInToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.stepInToolStripMenuItem.Text = "Step &In";
             this.stepInToolStripMenuItem.Click += new System.EventHandler(this.stepInToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(251, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(260, 6);
             // 
             // autoStepSafeToolStripMenuItem
             // 
             this.autoStepSafeToolStripMenuItem.Name = "autoStepSafeToolStripMenuItem";
-            this.autoStepSafeToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.autoStepSafeToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.autoStepSafeToolStripMenuItem.Text = "&Auto Step (Safe)";
             this.autoStepSafeToolStripMenuItem.Click += new System.EventHandler(this.autoStepSafeToolStripMenuItem_Click);
             // 
@@ -480,48 +487,48 @@
             // 
             this.autoStepHarshToolStripMenuItem.Name = "autoStepHarshToolStripMenuItem";
             this.autoStepHarshToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
-            this.autoStepHarshToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.autoStepHarshToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.autoStepHarshToolStripMenuItem.Text = "Auto Step (Harsh)";
             this.autoStepHarshToolStripMenuItem.Click += new System.EventHandler(this.autoStepHarshToolStripMenuItem_Click);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(251, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(260, 6);
             // 
             // gotoToolStripMenuItem
             // 
             this.gotoToolStripMenuItem.Name = "gotoToolStripMenuItem";
             this.gotoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.G)));
-            this.gotoToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.gotoToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.gotoToolStripMenuItem.Text = "Goto...";
             this.gotoToolStripMenuItem.Click += new System.EventHandler(this.gotoToolStripMenuItem_Click);
             // 
             // gotoEffectiveAddressToolStripMenuItem
             // 
             this.gotoEffectiveAddressToolStripMenuItem.Name = "gotoEffectiveAddressToolStripMenuItem";
-            this.gotoEffectiveAddressToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.gotoEffectiveAddressToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.gotoEffectiveAddressToolStripMenuItem.Text = "Goto E&ffective Address";
             this.gotoEffectiveAddressToolStripMenuItem.Click += new System.EventHandler(this.gotoEffectiveAddressToolStripMenuItem_Click);
             // 
             // gotoFirstUnreachedToolStripMenuItem
             // 
             this.gotoFirstUnreachedToolStripMenuItem.Name = "gotoFirstUnreachedToolStripMenuItem";
-            this.gotoFirstUnreachedToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.gotoFirstUnreachedToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.gotoFirstUnreachedToolStripMenuItem.Text = "Goto First &Unreached";
             this.gotoFirstUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoFirstUnreachedToolStripMenuItem_Click);
             // 
             // gotoNearUnreachedToolStripMenuItem
             // 
             this.gotoNearUnreachedToolStripMenuItem.Name = "gotoNearUnreachedToolStripMenuItem";
-            this.gotoNearUnreachedToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.gotoNearUnreachedToolStripMenuItem.Text = "Goto &Near Unreached";
+            this.gotoNearUnreachedToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
+            this.gotoNearUnreachedToolStripMenuItem.Text = "Goto Previous Unreac&hed";
             this.gotoNearUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNearUnreachedToolStripMenuItem_Click);
             // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(251, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(260, 6);
             // 
             // selectMarkerToolStripMenuItem
             // 
@@ -541,7 +548,7 @@
             this.dWordPointerToolStripMenuItem,
             this.textToolStripMenuItem});
             this.selectMarkerToolStripMenuItem.Name = "selectMarkerToolStripMenuItem";
-            this.selectMarkerToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.selectMarkerToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.selectMarkerToolStripMenuItem.Text = "Select Marker";
             // 
             // unreachedToolStripMenuItem
@@ -659,7 +666,7 @@
             // markOneToolStripMenuItem
             // 
             this.markOneToolStripMenuItem.Name = "markOneToolStripMenuItem";
-            this.markOneToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.markOneToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.markOneToolStripMenuItem.Text = "Mar&k One";
             this.markOneToolStripMenuItem.Click += new System.EventHandler(this.markOneToolStripMenuItem_Click);
             // 
@@ -667,19 +674,19 @@
             // 
             this.markManyToolStripMenuItem.Name = "markManyToolStripMenuItem";
             this.markManyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.K)));
-            this.markManyToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.markManyToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.markManyToolStripMenuItem.Text = "Mark Many...";
             this.markManyToolStripMenuItem.Click += new System.EventHandler(this.markManyToolStripMenuItem_Click);
             // 
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(251, 6);
+            this.toolStripSeparator5.Size = new System.Drawing.Size(260, 6);
             // 
             // addLabelToolStripMenuItem
             // 
             this.addLabelToolStripMenuItem.Name = "addLabelToolStripMenuItem";
-            this.addLabelToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.addLabelToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.addLabelToolStripMenuItem.Text = "Add &Label";
             this.addLabelToolStripMenuItem.Click += new System.EventHandler(this.addLabelToolStripMenuItem_Click);
             // 
@@ -687,7 +694,7 @@
             // 
             this.setDataBankToolStripMenuItem.Name = "setDataBankToolStripMenuItem";
             this.setDataBankToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.B)));
-            this.setDataBankToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.setDataBankToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.setDataBankToolStripMenuItem.Text = "Set Data &Bank...";
             this.setDataBankToolStripMenuItem.Click += new System.EventHandler(this.setDataBankToolStripMenuItem_Click);
             // 
@@ -695,7 +702,7 @@
             // 
             this.setDirectPageToolStripMenuItem.Name = "setDirectPageToolStripMenuItem";
             this.setDirectPageToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.D)));
-            this.setDirectPageToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.setDirectPageToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.setDirectPageToolStripMenuItem.Text = "Set &Direct Page...";
             this.setDirectPageToolStripMenuItem.Click += new System.EventHandler(this.setDirectPageToolStripMenuItem_Click);
             // 
@@ -703,7 +710,7 @@
             // 
             this.toggleAccumulatorSizeMToolStripMenuItem.Name = "toggleAccumulatorSizeMToolStripMenuItem";
             this.toggleAccumulatorSizeMToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.M)));
-            this.toggleAccumulatorSizeMToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.toggleAccumulatorSizeMToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.toggleAccumulatorSizeMToolStripMenuItem.Text = "Set Accu&mulator Size...";
             this.toggleAccumulatorSizeMToolStripMenuItem.Click += new System.EventHandler(this.toggleAccumulatorSizeMToolStripMenuItem_Click);
             // 
@@ -711,28 +718,28 @@
             // 
             this.toggleIndexSizeToolStripMenuItem.Name = "toggleIndexSizeToolStripMenuItem";
             this.toggleIndexSizeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
-            this.toggleIndexSizeToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.toggleIndexSizeToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.toggleIndexSizeToolStripMenuItem.Text = "Set Inde&x Size...";
             this.toggleIndexSizeToolStripMenuItem.Click += new System.EventHandler(this.toggleIndexSizeToolStripMenuItem_Click);
             // 
             // addCommentToolStripMenuItem
             // 
             this.addCommentToolStripMenuItem.Name = "addCommentToolStripMenuItem";
-            this.addCommentToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
+            this.addCommentToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
             this.addCommentToolStripMenuItem.Text = "Add &Comment";
             this.addCommentToolStripMenuItem.Click += new System.EventHandler(this.addCommentToolStripMenuItem_Click);
             // 
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(251, 6);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(260, 6);
             // 
             // fixMisalignedInstructionsToolStripMenuItem
             // 
             this.fixMisalignedInstructionsToolStripMenuItem.Name = "fixMisalignedInstructionsToolStripMenuItem";
             this.fixMisalignedInstructionsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
-            this.fixMisalignedInstructionsToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.fixMisalignedInstructionsToolStripMenuItem.Text = "Fix Misaligned Instructions";
+            this.fixMisalignedInstructionsToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
+            this.fixMisalignedInstructionsToolStripMenuItem.Text = "Fix Misaligned Instructions...";
             this.fixMisalignedInstructionsToolStripMenuItem.Click += new System.EventHandler(this.fixMisalignedInstructionsToolStripMenuItem_Click);
             // 
             // viewToolStripMenuItem
@@ -803,6 +810,7 @@
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.viewHelpToolStripMenuItem,
+            this.githubToolStripMenuItem,
             this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
@@ -812,14 +820,14 @@
             // 
             this.viewHelpToolStripMenuItem.Name = "viewHelpToolStripMenuItem";
             this.viewHelpToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
-            this.viewHelpToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.viewHelpToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewHelpToolStripMenuItem.Text = "View Help";
             this.viewHelpToolStripMenuItem.Click += new System.EventHandler(this.viewHelpToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -876,6 +884,35 @@
             this.vScrollBar1.Size = new System.Drawing.Size(17, 500);
             this.vScrollBar1.TabIndex = 3;
             this.vScrollBar1.ValueChanged += new System.EventHandler(this.vScrollBar1_ValueChanged);
+            // 
+            // rescanForInOutPointsToolStripMenuItem
+            // 
+            this.rescanForInOutPointsToolStripMenuItem.Name = "rescanForInOutPointsToolStripMenuItem";
+            this.rescanForInOutPointsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
+            this.rescanForInOutPointsToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
+            this.rescanForInOutPointsToolStripMenuItem.Text = "Rescan for In/Out Points...";
+            this.rescanForInOutPointsToolStripMenuItem.Click += new System.EventHandler(this.rescanForInOutPointsToolStripMenuItem_Click);
+            // 
+            // githubToolStripMenuItem
+            // 
+            this.githubToolStripMenuItem.Name = "githubToolStripMenuItem";
+            this.githubToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.githubToolStripMenuItem.Text = "Github";
+            this.githubToolStripMenuItem.Click += new System.EventHandler(this.githubToolStripMenuItem_Click);
+            // 
+            // importTraceLogToolStripMenuItem
+            // 
+            this.importTraceLogToolStripMenuItem.Enabled = false;
+            this.importTraceLogToolStripMenuItem.Name = "importTraceLogToolStripMenuItem";
+            this.importTraceLogToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
+            this.importTraceLogToolStripMenuItem.Text = "Import Trace Log...";
+            // 
+            // gotoNextUnreachedToolStripMenuItem
+            // 
+            this.gotoNextUnreachedToolStripMenuItem.Name = "gotoNextUnreachedToolStripMenuItem";
+            this.gotoNextUnreachedToolStripMenuItem.Size = new System.Drawing.Size(263, 22);
+            this.gotoNextUnreachedToolStripMenuItem.Text = "Goto &Next Unreached";
+            this.gotoNextUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNextUnreachedToolStripMenuItem_Click);
             // 
             // MainWindow
             // 
@@ -988,6 +1025,10 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnM;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnX;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnComment;
+        private System.Windows.Forms.ToolStripMenuItem rescanForInOutPointsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem githubToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importTraceLogToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gotoNextUnreachedToolStripMenuItem;
     }
 }
 

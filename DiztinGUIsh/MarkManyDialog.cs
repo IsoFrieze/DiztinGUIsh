@@ -27,7 +27,8 @@ namespace DiztinGUIsh
                 default: property.SelectedIndex = 0; break;
             }
             start = offset;
-            count = 0x10;
+            int rest = Data.GetROMSize() - start;
+            count = rest < 0x10 ? rest : 0x10;
             end = start + count;
 
             flagCombo.SelectedIndex = 3;

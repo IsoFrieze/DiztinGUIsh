@@ -140,9 +140,9 @@ namespace DiztinGUIsh
             table[i].Point |= point;
         }
 
-        public static void FlipInOutPoint(int i, InOutPoint point)
+        public static void ClearInOutPoint(int i)
         {
-            table[i].Point ^= point;
+            table[i].Point = 0;
         }
 
         public static int GetDataBank(int i)

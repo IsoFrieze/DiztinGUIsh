@@ -48,20 +48,7 @@ namespace DiztinGUIsh
                 Data.SetMFlag(offset + i, prevM);
             }
 
-            // set read point on EA
-            int eaOffsetPC = Util.ConvertSNEStoPC(Util.GetEffectiveAddress(offset));
-            if (eaOffsetPC >= 0 && ( // these are all read/write/math instructions
-                ((opcode & 0x04) != 0) || ((opcode & 0x0F) == 0x01) || ((opcode & 0x0F) == 0x03) ||
-                ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
-                (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
-                (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
-            ) Data.SetInOutPoint(eaOffsetPC, Data.InOutPoint.ReadPoint);
-
-            // set end point on offset
-            if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
-                || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
-                || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC // BRL STP JML
-            ) Data.SetInOutPoint(offset, Data.InOutPoint.EndPoint);
+            MarkInOutPoints(offset);
 
             int nextOffset = offset + length;
 
@@ -71,14 +58,7 @@ namespace DiztinGUIsh
                 || opcode == 0xF0 || opcode == 0x20 || opcode == 0x22)))) // BEQ JSR JSL
             {
                 int eaNextOffsetPC = Util.ConvertSNEStoPC(Util.GetEffectiveAddress(offset));
-                if (eaNextOffsetPC >= 0)
-                {
-                    nextOffset = eaNextOffsetPC;
-                    // set out point on offset
-                    // set in point on EA
-                    Data.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
-                    Data.SetInOutPoint(nextOffset, Data.InOutPoint.InPoint);
-                }
+                if (eaNextOffsetPC >= 0) nextOffset = eaNextOffsetPC;
             }
 
             return nextOffset;
@@ -200,6 +180,38 @@ namespace DiztinGUIsh
                     return 4;
             }
             return 1;
+        }
+
+        public static void MarkInOutPoints(int offset)
+        {
+            int opcode = Data.GetROMByte(offset);
+            int eaOffsetPC = Util.ConvertSNEStoPC(Util.GetEffectiveAddress(offset));
+
+            // set read point on EA
+            if (eaOffsetPC >= 0 && ( // these are all read/write/math instructions
+                ((opcode & 0x04) != 0) || ((opcode & 0x0F) == 0x01) || ((opcode & 0x0F) == 0x03) ||
+                ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
+                (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
+                (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
+            ) Data.SetInOutPoint(eaOffsetPC, Data.InOutPoint.ReadPoint);
+
+            // set end point on offset
+            if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
+                || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
+                || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC // BRL STP JML
+            ) Data.SetInOutPoint(offset, Data.InOutPoint.EndPoint);
+
+            // set out point on offset
+            // set in point on EA
+            if (eaOffsetPC >= 0 && (
+                opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
+                || opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70  // BPL BMI BVC BVS
+                || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0  // BCC BCS BNE BEQ
+                || opcode == 0x20 || opcode == 0x22)) // JSR JSL
+            {
+                Data.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
+                Data.SetInOutPoint(eaOffsetPC, Data.InOutPoint.InPoint);
+            }
         }
 
         private static string FormatOperandAddress(int address, AddressMode mode)
