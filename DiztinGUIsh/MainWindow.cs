@@ -85,6 +85,7 @@ namespace DiztinGUIsh
         {
             if (ContinueUnsavedChanges())
             {
+                openROMFile.InitialDirectory = Project.currentFile;
                 DialogResult result = openROMFile.ShowDialog();
                 if (result == DialogResult.OK)
                 {
@@ -104,6 +105,7 @@ namespace DiztinGUIsh
         {
             if (ContinueUnsavedChanges())
             {
+                openProjectFile.InitialDirectory = Project.currentFile;
                 DialogResult result = openProjectFile.ShowDialog();
                 if (result == DialogResult.OK)
                 {
@@ -127,6 +129,7 @@ namespace DiztinGUIsh
 
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            saveProjectFile.InitialDirectory = Project.currentROMFile;
             DialogResult result = saveProjectFile.ShowDialog();
             if (result == DialogResult.OK && saveProjectFile.FileName != "")
             {
@@ -145,6 +148,7 @@ namespace DiztinGUIsh
                 string file = null, error = null;
                 if (LogCreator.structure == LogCreator.FormatStructure.SingleFile)
                 {
+                    saveLogSingleFile.InitialDirectory = Project.currentFile;
                     result = saveLogSingleFile.ShowDialog();
                     if (result == DialogResult.OK && saveLogSingleFile.FileName != "")
                     {
@@ -153,23 +157,26 @@ namespace DiztinGUIsh
                     }
                 } else
                 {
+                    chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.currentFile);
                     result = chooseLogFolder.ShowDialog();
                     if (result == DialogResult.OK && chooseLogFolder.SelectedPath != "")
                     {
-                        file = chooseLogFolder.SelectedPath;
-                        error = file + "/error.txt";
+                        file = chooseLogFolder.SelectedPath + "/main.asm";
+                        error = Path.GetDirectoryName(file) + "/error.txt";
                     }
                 }
 
                 if (file != null)
                 {
+                    int errors = 0;
                     using (StreamWriter sw = new StreamWriter(file))
                     using (StreamWriter er = new StreamWriter(error))
                     {
-                        bool errors = LogCreator.CreateLog(sw, er);
-                        if (errors) MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        errors = LogCreator.CreateLog(sw, er);
+                        if (errors > 0) MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         else MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK, MessageBoxIcon.None);
                     }
+                    if (errors == 0) File.Delete(error);
                 }
             }
         }
@@ -330,7 +337,7 @@ namespace DiztinGUIsh
                 case Keys.U: GoToUnreached(true, true); break;
                 case Keys.H: GoToUnreached(false, false); break;
                 case Keys.N: GoToUnreached(false, true); break;
-                case Keys.K: Mark(offset, 1); break;
+                case Keys.K: Mark(offset); break;
                 case Keys.L:
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[0];
                     table.BeginEdit(true);
@@ -461,9 +468,9 @@ namespace DiztinGUIsh
             }
         }
 
-        private void Mark(int offset, int count)
+        private void Mark(int offset)
         {
-            SelectOffset(Manager.Mark(offset, markFlag, count));
+            SelectOffset(Manager.Mark(offset, markFlag, Util.TypeStepSize(markFlag)));
             UpdatePercent();
             UpdateWindowTitle();
         }
@@ -600,7 +607,7 @@ namespace DiztinGUIsh
         private void markOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (Data.GetROMSize() <= 0) return;
-            Mark(table.CurrentCell.RowIndex + viewOffset, 1);
+            Mark(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void markManyToolStripMenuItem_Click(object sender, EventArgs e)
@@ -652,7 +659,7 @@ namespace DiztinGUIsh
             DialogResult result = mis.ShowDialog();
             if (result == DialogResult.OK)
             {
-                int count = Manager.FixMisalignedInstructions();
+                int count = Manager.FixMisalignedFlags();
                 table.Invalidate();
                 MessageBox.Show(string.Format("Modified {0} flags!", count), "Done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

@@ -118,12 +118,12 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="label1.Text" xml:space="preserve">
-    <value>Check for misaligned instructions and misplaced
-operands.
+    <value>Check for misaligned flags, including desynched
+instructions and misaligned data and pointers.
 Clicking "Scan" will locate all errors and dump the
 first 500 in the box below.
 You can fix them manually and rescan, or click the
 "Fix" button. DiztinGUIsh will attempt to reassign
-Opcode and Operand flags for every misalignment.</value>
+the appropriate flags for every misalignment.</value>
   </data>
 </root>

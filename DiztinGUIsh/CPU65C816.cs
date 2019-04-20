@@ -326,7 +326,7 @@ namespace DiztinGUIsh
                 case AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX:
                     return "{0} [{1}],Y";
                 case AddressMode.BLOCK_MOVE:
-                    return "{0} {2},{1}";
+                    return "{0} {1},{2}";
             }
             return "";
         }
@@ -401,7 +401,7 @@ namespace DiztinGUIsh
             AddressMode.IMPLIED, AddressMode.ADDRESS_Y_INDEX, AddressMode.IMPLIED, AddressMode.IMPLIED,
             AddressMode.LONG, AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.LONG_X_INDEX,
 
-            AddressMode.IMPLIED, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_S_INDEX,
+            AddressMode.IMPLIED, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.RELATIVE_16, AddressMode.DIRECT_PAGE_S_INDEX,
             AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
             AddressMode.IMPLIED, AddressMode.IMMEDIATE_M_FLAG_DEPENDENT, AddressMode.ACCUMULATOR, AddressMode.IMPLIED,
             AddressMode.ADDRESS_INDIRECT, AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.LONG,

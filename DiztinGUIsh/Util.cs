@@ -246,6 +246,32 @@ namespace DiztinGUIsh
             return "";
         }
 
+        public static int TypeStepSize(Data.FlagType flag)
+        {
+            switch (flag)
+            {
+                case Data.FlagType.Unreached:
+                case Data.FlagType.Opcode:
+                case Data.FlagType.Operand:
+                case Data.FlagType.Data8Bit:
+                case Data.FlagType.Graphics:
+                case Data.FlagType.Music:
+                case Data.FlagType.Empty:
+                case Data.FlagType.Text:
+                    return 1;
+                case Data.FlagType.Data16Bit:
+                case Data.FlagType.Pointer16Bit:
+                    return 2;
+                case Data.FlagType.Data24Bit:
+                case Data.FlagType.Pointer24Bit:
+                    return 3;
+                case Data.FlagType.Data32Bit:
+                case Data.FlagType.Pointer32Bit:
+                    return 4;
+            }
+            return 0;
+        }
+
         public static string ArchToString(Data.Architechture arch)
         {
             switch (arch)

@@ -29,35 +29,35 @@ namespace DiztinGUIsh
 
             while (found < 500 && offset < Data.GetROMSize())
             {
-                if (Data.GetFlag(offset) == Data.FlagType.Opcode)
-                {
-                    int len = Manager.GetInstructionLength(offset);
-                    for (int i = 1; i < len; i++)
-                    {
-                        if (Data.GetFlag(offset + i) != Data.FlagType.Operand)
-                        {
-                            found++;
-                            textLog.Text += string.Format("{0} (0x{1}): {2} is not Operand\r\n",
-                                Util.NumberToBaseString(Util.ConvertPCtoSNES(offset + i), Util.NumberBase.Hexadecimal, 6, true),
-                                Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0),
-                                Data.GetFlag(offset + i).ToString());
-                        }
-                    }
-                    offset += len;
-                } else if (Data.GetFlag(offset) == Data.FlagType.Operand)
+                Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
+                int step = flag == Data.FlagType.Opcode ? Manager.GetInstructionLength(offset) : Util.TypeStepSize(flag);
+
+                if (flag == Data.FlagType.Operand)
                 {
                     found++;
                     textLog.Text += string.Format("{0} (0x{1}): Operand without Opcode\r\n",
                         Util.NumberToBaseString(Util.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6, true),
                         Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0));
-                    offset++;
-                } else
+                } else if (step > 1)
                 {
-                    offset++;
+                    for (int i = 1; i < step; i++)
+                    {
+                        if (Data.GetFlag(offset + i) != check)
+                        {
+                            found++;
+                            textLog.Text += string.Format("{0} (0x{1}): {2} is not {3}\r\n",
+                                Util.NumberToBaseString(Util.ConvertPCtoSNES(offset + i), Util.NumberBase.Hexadecimal, 6, true),
+                                Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0),
+                                Util.TypeToString(Data.GetFlag(offset + i)),
+                                Util.TypeToString(check));
+                        }
+                    }
                 }
+
+                offset += step;
             }
 
-            if (found == 0) textLog.Text = "No misaligned instructions found!";
+            if (found == 0) textLog.Text = "No misaligned flags found!";
         }
 
         private void buttonFix_Click(object sender, EventArgs e)

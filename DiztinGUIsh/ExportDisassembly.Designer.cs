@@ -88,7 +88,6 @@
             // 
             // comboStructure
             // 
-            this.comboStructure.Enabled = false;
             this.comboStructure.FormattingEnabled = true;
             this.comboStructure.Items.AddRange(new object[] {
             "All in one file",

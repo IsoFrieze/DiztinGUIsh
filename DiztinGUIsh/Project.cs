@@ -38,6 +38,7 @@ namespace DiztinGUIsh
                 {
                     Data.Initiate(rom, import.GetROMMapMode(), import.GetROMSpeed());
                     unsavedChanges = false;
+                    currentFile = null;
 
                     Dictionary<int, string> generatedLabels = import.GetGeneratedLabels();
                     if (generatedLabels.Count > 0)
@@ -234,6 +235,7 @@ namespace DiztinGUIsh
         {
             bool validFile = false, matchingROM = false;
             rom = null;
+            open.InitialDirectory = currentFile;
 
             while (!matchingROM)
             {

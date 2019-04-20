@@ -98,9 +98,14 @@ namespace DiztinGUIsh
                 List<ROMByte> tempTable = Data.GetTable();
                 Data.ROMMapMode tempMode = Data.GetROMMapMode();
                 Data.ROMSpeed tempSpeed = Data.GetROMSpeed();
+                LogCreator.FormatStructure tempStructure = LogCreator.structure;
                 Data.Restore(sample, Data.ROMMapMode.LoROM, Data.ROMSpeed.FastROM);
+                LogCreator.structure = LogCreator.FormatStructure.SingleFile;
+
                 LogCreator.CreateLog(sw, StreamWriter.Null);
+
                 Data.Restore(tempTable, tempMode, tempSpeed);
+                LogCreator.structure = tempStructure;
 
                 sw.Flush();
                 mem.Seek(0, SeekOrigin.Begin);

@@ -37,18 +37,28 @@ namespace DiztinGUIsh
             { "d", Tuple.Create<Func<int, int, string>, int>(GetDirectPage, 4) },
             { "m", Tuple.Create<Func<int, int, string>, int>(GetMFlag, 1) },
             { "x", Tuple.Create<Func<int, int, string>, int>(GetXFlag, 1) },
+            { "%org", Tuple.Create<Func<int, int, string>, int>(GetORG, 37) },
+            { "%map", Tuple.Create<Func<int, int, string>, int>(GetMap, 37) },
+            { "%empty", Tuple.Create<Func<int, int, string>, int>(GetEmpty, 1) },
+            { "%incsrc", Tuple.Create<Func<int, int, string>, int>(GetIncSrc, 1) },
+            { "%bankcross", Tuple.Create<Func<int, int, string>, int>(GetBankCross, 1) },
         };
 
         public static string format = "%label:-22% %code:37%;%pc%|%bytes%|%ea%; %comment%";
         public static int dataPerLine = 8;
         public static FormatUnlabeled unlabeled = FormatUnlabeled.ShowNone;
-        public static FormatStructure structure = FormatStructure.SingleFile;
+        public static FormatStructure structure = FormatStructure.OneBankPerFile;
 
         private static List<Tuple<string, int>> list;
+        private static StreamWriter err;
+        private static int errorCount, bankSize;
+        private static string folder;
 
-        public static bool CreateLog(StreamWriter sw, StreamWriter er)
+        public static int CreateLog(StreamWriter sw, StreamWriter er)
         {
             string[] split = format.Split('%');
+            err = er;
+            errorCount = 0;
 
             list = new List<Tuple<string, int>>();
             for (int i = 0; i < split.Length; i++)
@@ -62,33 +72,102 @@ namespace DiztinGUIsh
                 }
             }
 
-            int pointer = 0, size = (Data.GetTable() == ExportDisassembly.sample) ? 0x7B : Data.GetROMSize();
+            int pointer = 0, size = (Data.GetTable() == ExportDisassembly.sample) ? 0x7B : Data.GetROMSize(), bank = -1;
+            bankSize = Data.GetROMMapMode() == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000;
+
+            if (structure == FormatStructure.OneBankPerFile)
+            {
+                folder = Path.GetDirectoryName(((FileStream)sw.BaseStream).Name);
+                sw.WriteLine(GetLine(pointer, "map"));
+                sw.WriteLine(GetLine(pointer, "bankcross"));
+                sw.WriteLine(GetLine(pointer, "empty"));
+                for (int i = 0; i < size; i += bankSize) sw.WriteLine(GetLine(i, "incsrc"));
+            } else
+            {
+                sw.WriteLine(GetLine(pointer, "map"));
+                sw.WriteLine(GetLine(pointer, "bankcross"));
+                sw.WriteLine(GetLine(pointer, "empty"));
+            }
+
             while (pointer < size)
             {
-                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint | Data.InOutPoint.InPoint)) != 0 || (Data.GetLabel(pointer).Length > 0)) sw.WriteLine(GetLine(pointer, true));
-                sw.WriteLine(GetLine(pointer, false));
-                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint | Data.InOutPoint.OutPoint)) != 0) sw.WriteLine(GetLine(pointer, true));
+                int snes = Util.ConvertPCtoSNES(pointer);
+                if ((snes >> 16) != bank)
+                {
+                    if (structure == FormatStructure.OneBankPerFile)
+                    {
+                        sw.Close();
+                        sw = new StreamWriter(string.Format("{0}/bank_{1}.asm", folder, Util.NumberToBaseString((snes >> 16), Util.NumberBase.Hexadecimal, 2)));
+                    }
+
+                    sw.WriteLine(GetLine(pointer, "empty"));
+                    sw.WriteLine(GetLine(pointer, "org"));
+                    sw.WriteLine(GetLine(pointer, "empty"));
+                    if ((snes % bankSize) != 0) err.WriteLine("({0,03}) Offset 0x{1:X}: An instruction crossed a bank boundary.", ++errorCount, pointer);
+                    bank = snes >> 16;
+                }
+
+                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0 || (Data.GetLabel(pointer).Length > 0)) sw.WriteLine(GetLine(pointer, "empty"));
+                sw.WriteLine(GetLine(pointer, null));
+                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) sw.WriteLine(GetLine(pointer, "empty"));
                 pointer += GetLineByteLength(pointer);
             }
 
-            return false;
+            if (structure == FormatStructure.OneBankPerFile) sw.Close();
+            return errorCount;
         }
 
-        private static string GetLine(int offset, bool empty)
+        private static string GetLine(int offset, string special)
         {
             string line = "";
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i].Item2 == int.MaxValue) line += list[i].Item1;
-                else if (empty) line += string.Format("{0," + list[i].Item2 + "}", "");
-                else line += GetParameter(offset, list[i].Item1, list[i].Item2);
+                if (list[i].Item2 == int.MaxValue) // string literal
+                {
+                    line += list[i].Item1;
+                }
+                else if (special != null) // special parameter (replaces code & everything else = empty)
+                {
+                    line += GetParameter(offset, "%" + (list[i].Item1 == "code" ? special : "empty"), list[i].Item2);
+                }
+                else // normal parameter
+                {
+                    line += GetParameter(offset, list[i].Item1, list[i].Item2);
+                }
             }
+
+            if (special == null)
+            {
+                // throw out some errors if stuff looks fishy
+                Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
+                int step = flag == Data.FlagType.Opcode ? GetLineByteLength(offset) : Util.TypeStepSize(flag), size = Data.GetROMSize();
+                if (flag == Data.FlagType.Operand) err.WriteLine("({0,03}) Offset 0x{1:X}: Bytes marked as operands formatted as data.", ++errorCount, offset);
+                else if (step > 1)
+                {
+                    for (int i = 1; i < step; i++)
+                    {
+                        if (offset + i >= size)
+                        {
+                            err.WriteLine("({0,03}) Offset 0x{1:X}: {2} extends past the end of the ROM.", ++errorCount, offset, Util.TypeToString(check));
+                            break;
+                        }
+                        else if (Data.GetFlag(offset + i) != check)
+                        {
+                            err.WriteLine("({0,03}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, Util.TypeToString(check), Util.TypeToString(Data.GetFlag(offset + i)));
+                            break;
+                        }
+                    }
+                }
+            }
+
             return line;
         }
 
         private static int GetLineByteLength(int offset)
         {
             int max = 1, step = 1;
+            int size = Data.GetROMSize();
+
             switch (Data.GetFlag(offset))
             {
                 case Data.FlagType.Opcode:
@@ -136,8 +215,13 @@ namespace DiztinGUIsh
                     break;
             }
 
-            int min = step;
-            while (min < max && offset + min < Data.GetROMSize() && Data.GetFlag(offset + min) == Data.GetFlag(offset)) min += step;
+            int min = step, myBank = offset / bankSize;
+            while (
+                min < max &&
+                offset + min < size &&
+                Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
+                (offset + min) / bankSize == myBank
+            ) min += step;
             return min;
         }
 
@@ -151,6 +235,12 @@ namespace DiztinGUIsh
         private static string GetPercent(int offset, int length)
         {
             return "%";
+        }
+
+        // all spaces
+        private static string GetEmpty(int offset, int length)
+        {
+            return string.Format("{0," + length + "}", "");
         }
 
         // trim to length
@@ -204,6 +294,37 @@ namespace DiztinGUIsh
             }
 
             return string.Format("{0," + (length * -1) + "}", code);
+        }
+
+        private static string GetORG(int offset, int length)
+        {
+            string org = "ORG " + Util.NumberToBaseString(Util.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6, true);
+            return string.Format("{0," + (length * -1) + "}", org);
+        }
+
+        private static string GetMap(int offset, int length)
+        {
+            string s = "";
+            switch (Data.GetROMMapMode())
+            {
+                case Data.ROMMapMode.LoROM: s = "lorom"; break;
+                case Data.ROMMapMode.HiROM: s = "hirom"; break;
+                case Data.ROMMapMode.ExHiROM: s = "exhirom"; break;
+            }
+            return string.Format("{0," + (length * -1) + "}", s);
+        }
+
+        private static string GetIncSrc(int offset, int length)
+        {
+            int bank = Util.ConvertPCtoSNES(offset) >> 16;
+            string s = string.Format("incsrc \"bank_{0}.asm\"", Util.NumberToBaseString(bank, Util.NumberBase.Hexadecimal, 2));
+            return string.Format("{0," + (length * -1) + "}", s);
+        }
+
+        private static string GetBankCross(int offset, int length)
+        {
+            string s = "check bankcross off";
+            return string.Format("{0," + (length * -1) + "}", s);
         }
 
         // length forced to 6

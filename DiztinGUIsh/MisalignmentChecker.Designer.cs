@@ -61,7 +61,7 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(10, 11);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(245, 91);
+            this.label1.Size = new System.Drawing.Size(244, 91);
             this.label1.TabIndex = 2;
             this.label1.Text = resources.GetString("label1.Text");
             // 
@@ -100,7 +100,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "MisalignmentChecker";
             this.ShowInTaskbar = false;
-            this.Text = "Misaligned Instructions";
+            this.Text = "Misaligned Flags";
             this.ResumeLayout(false);
             this.PerformLayout();
 

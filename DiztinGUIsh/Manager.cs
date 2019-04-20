@@ -172,13 +172,15 @@ namespace DiztinGUIsh
             return 1;
         }
 
-        public static int FixMisalignedInstructions()
+        public static int FixMisalignedFlags()
         {
             int count = 0, size = Data.GetROMSize();
 
             for (int i = 0; i < size; i++)
             {
-                if (Data.GetFlag(i) == Data.FlagType.Opcode)
+                Data.FlagType flag = Data.GetFlag(i);
+
+                if (flag == Data.FlagType.Opcode)
                 {
                     int len = GetInstructionLength(i);
                     for (int j = 1; j < len && i + j < size; j++)
@@ -190,11 +192,23 @@ namespace DiztinGUIsh
                         }
                     }
                     i += len - 1;
-                } else if (Data.GetFlag(i) == Data.FlagType.Operand)
+                } else if (flag == Data.FlagType.Operand)
                 {
                     Data.SetFlag(i, Data.FlagType.Opcode);
                     count++;
                     i--;
+                } else if (Util.TypeStepSize(flag) > 1)
+                {
+                    int step = Util.TypeStepSize(flag);
+                    for (int j = 1; j < step; j++)
+                    {
+                        if (Data.GetFlag(i + j) != flag)
+                        {
+                            Data.SetFlag(i + j, flag);
+                            count++;
+                        }
+                    }
+                    i += step - 1;
                 }
             }
 
