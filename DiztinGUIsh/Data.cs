@@ -60,29 +60,38 @@ namespace DiztinGUIsh
 
         private static ROMMapMode rom_map_mode;
         private static ROMSpeed rom_speed;
-        private static BindingList<ROMByte> table;
+        private static List<ROMByte> table;
 
         public static void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
         {
             rom_map_mode = mode;
             rom_speed = speed;
             int size = data.Length;
-            table = new BindingList<ROMByte>();
+            table = new List<ROMByte>();
             for (int i = 0; i < size; i++)
             {
-                ROMByte r = new ROMByte();
-                r.Rom = data[i];
-                r.DataBank = 0;
-                r.DirectPage = 0;
-                r.XFlag = false;
-                r.MFlag = false;
-                r.TypeFlag = FlagType.Unreached;
-                r.Arch = Architechture.CPU65C816;
-                r.Point = 0;
-                r.Label = null;
-                r.Comment = null;
+                ROMByte r = new ROMByte
+                {
+                    Rom = data[i],
+                    DataBank = 0,
+                    DirectPage = 0,
+                    XFlag = false,
+                    MFlag = false,
+                    TypeFlag = FlagType.Unreached,
+                    Arch = Architechture.CPU65C816,
+                    Point = 0,
+                    Label = null,
+                    Comment = null
+                };
                 table.Add(r);
             }
+        }
+
+        public static void Restore(List<ROMByte> l, ROMMapMode m, ROMSpeed s)
+        {
+            table = l;
+            rom_map_mode = m;
+            rom_speed = s;
         }
 
         public static ROMMapMode GetROMMapMode()
@@ -95,7 +104,7 @@ namespace DiztinGUIsh
             return rom_speed;
         }
 
-        public static BindingList<ROMByte> GetTable()
+        public static List<ROMByte> GetTable()
         {
             return table;
         }
@@ -198,8 +207,7 @@ namespace DiztinGUIsh
 
         public static string GetLabel(int i)
         {
-            string label = table[i].Label;
-            return label == null ? "" : label;
+            return table[i].Label ?? "";
         }
 
         public static void AddLabel(int i, string v)
@@ -219,8 +227,7 @@ namespace DiztinGUIsh
 
         public static string GetComment(int i)
         {
-            string comment = table[i].Comment;
-            return comment == null ? "" : comment;
+            return table[i].Comment ?? "";
         }
 
         public static void AddComment(int i, string v)

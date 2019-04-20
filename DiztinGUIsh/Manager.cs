@@ -198,6 +198,8 @@ namespace DiztinGUIsh
                 }
             }
 
+            if (count > 0) Project.unsavedChanges = true;
+
             return count;
         }
 
@@ -217,6 +219,8 @@ namespace DiztinGUIsh
                     }
                 }
             }
+
+            Project.unsavedChanges = true;
         }
     }
 }

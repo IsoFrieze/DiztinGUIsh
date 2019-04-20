@@ -29,6 +29,13 @@ namespace DiztinGUIsh
             return -1;
         }
 
+        public static int GetROMDoubleWord(int offset)
+        {
+            if (offset + 3 < Data.GetROMSize())
+                return Data.GetROMByte(offset) + (Data.GetROMByte(offset + 1) << 8) + (Data.GetROMByte(offset + 2) << 16) + (Data.GetROMByte(offset + 3) << 24);
+            return -1;
+        }
+
         public static int GetEffectiveAddress(int offset)
         {
             switch (Data.GetArchitechture(offset))
@@ -49,6 +56,68 @@ namespace DiztinGUIsh
                 case Data.Architechture.GPUSuperFX: return "";
             }
             return "";
+        }
+
+        public static string GetFormattedBytes(int offset, int step, int bytes)
+        {
+            string res = "";
+            switch (step)
+            {
+                case 1: res = "db "; break;
+                case 2: res = "dw "; break;
+                case 3: res = "dl "; break;
+                case 4: res = "dd "; break;
+            }
+
+            for (int i = 0; i < bytes; i += step)
+            {
+                if (i > 0) res += ",";
+
+                switch (step)
+                {
+                    case 1: res += NumberToBaseString(Data.GetROMByte(offset + i), NumberBase.Hexadecimal, 2, true); break;
+                    case 2: res += NumberToBaseString(GetROMWord(offset + i), NumberBase.Hexadecimal, 4, true); break;
+                    case 3: res += NumberToBaseString(GetROMLong(offset + i), NumberBase.Hexadecimal, 6, true); break;
+                    case 4: res += NumberToBaseString(GetROMDoubleWord(offset + i), NumberBase.Hexadecimal, 8, true); break;
+                }
+            }
+
+            return res;
+        }
+
+        public static string GetPointer(int offset, int bytes)
+        {
+            int ea = -1;
+            string format = "", param = "";
+            switch (bytes)
+            {
+                case 2:
+                    ea = (Data.GetDataBank(offset) << 16) | GetROMWord(offset);
+                    format = "dw {0}";
+                    param = NumberToBaseString(GetROMWord(offset), NumberBase.Hexadecimal, 4, true);
+                    break;
+                case 3:
+                    ea = GetROMLong(offset);
+                    format = "dl {0}";
+                    param = NumberToBaseString(GetROMLong(offset), NumberBase.Hexadecimal, 6, true);
+                    break;
+                case 4:
+                    ea = GetROMLong(offset);
+                    format = "dl {0}" + string.Format(" : db {0}", NumberToBaseString(offset + 3, NumberBase.Hexadecimal, 2, true));
+                    param = NumberToBaseString(GetROMLong(offset), NumberBase.Hexadecimal, 6, true);
+                    break;
+            }
+
+            int pc = ConvertSNEStoPC(ea);
+            if (pc >= 0 && Data.GetLabel(pc) != "") param = Data.GetLabel(pc);
+            return string.Format(format, param);
+        }
+
+        public static string GetFormattedText(int offset, int bytes)
+        {
+            string text = "db \"";
+            for (int i = 0; i < bytes; i++) text += (char)Data.GetROMByte(offset + i);
+            return text + "\"";
         }
 
         public static int ConvertPCtoSNES(int offset)
@@ -262,6 +331,11 @@ namespace DiztinGUIsh
                             if ((point & (Data.InOutPoint.InPoint)) != 0) r -= 50;
                             if ((point & (Data.InOutPoint.ReadPoint)) != 0) b -= 50;
                             style.BackColor = Color.FromArgb(r, g, b);
+                            break;
+                        case 5: // Instruction
+                            if (opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 // RTI WAI STP SED
+                                || opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42 // XCE BRK COP WDM
+                            ) style.BackColor = Color.Yellow;
                             break;
                         case 8: // Data Bank
                             if (opcode == 0xAB) // PLB

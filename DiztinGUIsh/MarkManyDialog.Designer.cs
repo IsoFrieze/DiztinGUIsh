@@ -296,6 +296,7 @@
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "MarkManyDialog";
+            this.ShowInTaskbar = false;
             this.Text = "Mark Many";
             this.group.ResumeLayout(false);
             this.group.PerformLayout();

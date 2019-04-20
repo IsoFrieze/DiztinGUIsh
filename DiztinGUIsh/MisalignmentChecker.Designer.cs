@@ -99,6 +99,7 @@
             this.Controls.Add(this.buttonScan);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "MisalignmentChecker";
+            this.ShowInTaskbar = false;
             this.Text = "Misaligned Instructions";
             this.ResumeLayout(false);
             this.PerformLayout();

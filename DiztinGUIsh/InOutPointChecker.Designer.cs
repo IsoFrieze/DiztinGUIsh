@@ -45,6 +45,7 @@
             // 
             // cancel
             // 
+            this.cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.cancel.Location = new System.Drawing.Point(12, 237);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
@@ -74,6 +75,7 @@
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "InOutPointChecker";
+            this.ShowInTaskbar = false;
             this.Text = "Rescan for In/Out/End/Read Points";
             this.ResumeLayout(false);
             this.PerformLayout();

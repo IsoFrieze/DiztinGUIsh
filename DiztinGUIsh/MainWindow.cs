@@ -78,16 +78,17 @@ namespace DiztinGUIsh
         {
             saveProjectToolStripMenuItem.Enabled = save;
             saveProjectAsToolStripMenuItem.Enabled = saveas;
+            exportLogToolStripMenuItem.Enabled = true;
         }
 
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (ContinueUnsavedChanges())
             {
-                DialogResult result = openFileDialog1.ShowDialog();
+                DialogResult result = openROMFile.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    if (Project.NewProject(openFileDialog1.FileName))
+                    if (Project.NewProject(openROMFile.FileName))
                     {
                         TriggerSaveOptions(false, true);
                         UpdateWindowTitle();
@@ -103,10 +104,10 @@ namespace DiztinGUIsh
         {
             if (ContinueUnsavedChanges())
             {
-                DialogResult result = openFileDialog2.ShowDialog();
+                DialogResult result = openProjectFile.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    if (Project.TryOpenProject(openFileDialog2.FileName, openFileDialog1))
+                    if (Project.TryOpenProject(openProjectFile.FileName, openROMFile))
                     {
                         TriggerSaveOptions(true, true);
                         UpdateWindowTitle();
@@ -126,12 +127,50 @@ namespace DiztinGUIsh
 
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DialogResult result = saveFileDialog1.ShowDialog();
-            if (result == DialogResult.OK && saveFileDialog1.FileName != "")
+            DialogResult result = saveProjectFile.ShowDialog();
+            if (result == DialogResult.OK && saveProjectFile.FileName != "")
             {
-                Project.SaveProject(saveFileDialog1.FileName);
+                Project.SaveProject(saveProjectFile.FileName);
                 TriggerSaveOptions(true, true);
                 UpdateWindowTitle();
+            }
+        }
+
+        private void exportLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExportDisassembly export = new ExportDisassembly();
+            DialogResult result = export.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                string file = null, error = null;
+                if (LogCreator.structure == LogCreator.FormatStructure.SingleFile)
+                {
+                    result = saveLogSingleFile.ShowDialog();
+                    if (result == DialogResult.OK && saveLogSingleFile.FileName != "")
+                    {
+                        file = saveLogSingleFile.FileName;
+                        error = Path.GetDirectoryName(file) + "/error.txt";
+                    }
+                } else
+                {
+                    result = chooseLogFolder.ShowDialog();
+                    if (result == DialogResult.OK && chooseLogFolder.SelectedPath != "")
+                    {
+                        file = chooseLogFolder.SelectedPath;
+                        error = file + "/error.txt";
+                    }
+                }
+
+                if (file != null)
+                {
+                    using (StreamWriter sw = new StreamWriter(file))
+                    using (StreamWriter er = new StreamWriter(error))
+                    {
+                        bool errors = LogCreator.CreateLog(sw, er);
+                        if (errors) MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        else MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK, MessageBoxIcon.None);
+                    }
+                }
             }
         }
 
@@ -218,6 +257,7 @@ namespace DiztinGUIsh
 
         private void table_MouseWheel(object sender, MouseEventArgs e)
         {
+            if (Data.GetROMSize() <= 0) return;
             int selRow = table.CurrentCell.RowIndex + viewOffset, selCol = table.CurrentCell.ColumnIndex;
             int amount = e.Delta / 0x18;
             viewOffset -= amount;
@@ -717,7 +757,7 @@ namespace DiztinGUIsh
 
         public OpenFileDialog GetRomOpenFileDialog()
         {
-            return openFileDialog1;
+            return openROMFile;
         }
     }
 }

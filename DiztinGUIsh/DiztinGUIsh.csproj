@@ -74,6 +74,12 @@
       <DependentUpon>About.cs</DependentUpon>
     </Compile>
     <Compile Include="Data.cs" />
+    <Compile Include="ExportDisassembly.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ExportDisassembly.Designer.cs">
+      <DependentUpon>ExportDisassembly.cs</DependentUpon>
+    </Compile>
     <Compile Include="GotoDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -98,6 +104,7 @@
     <Compile Include="InOutPointChecker.Designer.cs">
       <DependentUpon>InOutPointChecker.cs</DependentUpon>
     </Compile>
+    <Compile Include="LogCreator.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -125,6 +132,9 @@
     <Compile Include="Util.cs" />
     <EmbeddedResource Include="About.resx">
       <DependentUpon>About.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ExportDisassembly.resx">
+      <DependentUpon>ExportDisassembly.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="GotoDialog.resx">
       <DependentUpon>GotoDialog.cs</DependentUpon>

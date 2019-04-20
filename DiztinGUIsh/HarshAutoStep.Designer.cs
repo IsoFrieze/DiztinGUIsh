@@ -207,6 +207,7 @@
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "HarshAutoStep";
+            this.ShowInTaskbar = false;
             this.Text = "Harsh Auto Step";
             this.group.ResumeLayout(false);
             this.group.PerformLayout();
