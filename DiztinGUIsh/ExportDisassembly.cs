@@ -90,7 +90,7 @@ namespace DiztinGUIsh
         private void UpdateSample()
         {
             // cheeky way of using the same methods for disassembling a different set of data :^)
-            while (sample.Count < 0x8000) sample.Add(new ROMByte());
+            while (sampleTable.Count < 0x8000) sampleTable.Add(new ROMByte());
 
             using (MemoryStream mem = new MemoryStream())
             using (StreamWriter sw = new StreamWriter(mem))
@@ -98,13 +98,14 @@ namespace DiztinGUIsh
                 List<ROMByte> tempTable = Data.GetTable();
                 Data.ROMMapMode tempMode = Data.GetROMMapMode();
                 Data.ROMSpeed tempSpeed = Data.GetROMSpeed();
+                Dictionary<int, string> tempAlias = Data.GetAllLabels(), tempComment = Data.GetAllComments();
                 LogCreator.FormatStructure tempStructure = LogCreator.structure;
-                Data.Restore(sample, Data.ROMMapMode.LoROM, Data.ROMSpeed.FastROM);
+                Data.Restore(sampleTable, Data.ROMMapMode.LoROM, Data.ROMSpeed.FastROM, sampleAlias, sampleComment);
                 LogCreator.structure = LogCreator.FormatStructure.SingleFile;
 
                 LogCreator.CreateLog(sw, StreamWriter.Null);
 
-                Data.Restore(tempTable, tempMode, tempSpeed);
+                Data.Restore(tempTable, tempMode, tempSpeed, tempAlias, tempComment);
                 LogCreator.structure = tempStructure;
 
                 sw.Flush();
@@ -116,24 +117,24 @@ namespace DiztinGUIsh
 
         // random sample code I made up; hopefully it shows a little bit of
         // everything so you can see how the settings will effect the output
-        public static List<ROMByte> sample = new List<ROMByte>
+        public static List<ROMByte> sampleTable = new List<ROMByte>
         {
-            new ROMByte {Rom = 0x78, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.InPoint, Label = "Emulation_RESET"},
+            new ROMByte {Rom = 0x78, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.InPoint},
             new ROMByte {Rom = 0xA9, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true},
             new ROMByte {Rom = 0x01, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0x8D, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Comment = "this sets FastROM"},
+            new ROMByte {Rom = 0x8D, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true},
             new ROMByte {Rom = 0x0D, TypeFlag = Data.FlagType.Operand},
             new ROMByte {Rom = 0x42, TypeFlag = Data.FlagType.Operand},
             new ROMByte {Rom = 0x5C, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.EndPoint},
             new ROMByte {Rom = 0x0A, TypeFlag = Data.FlagType.Operand},
             new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Operand},
             new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0xC2, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.InPoint, Label = "FastRESET"},
+            new ROMByte {Rom = 0xC2, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.InPoint},
             new ROMByte {Rom = 0x30, TypeFlag = Data.FlagType.Operand},
             new ROMByte {Rom = 0xA9, TypeFlag = Data.FlagType.Opcode},
             new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand},
             new ROMByte {Rom = 0x21, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0x5B, TypeFlag = Data.FlagType.Opcode, Comment = "direct page = $2100"},
+            new ROMByte {Rom = 0x5B, TypeFlag = Data.FlagType.Opcode},
             new ROMByte {Rom = 0x4B, TypeFlag = Data.FlagType.Opcode, DirectPage = 0x2100},
             new ROMByte {Rom = 0xAB, TypeFlag = Data.FlagType.Opcode, DirectPage = 0x2100},
             new ROMByte {Rom = 0xA2, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
@@ -151,7 +152,7 @@ namespace DiztinGUIsh
             new ROMByte {Rom = 0xCA, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x10, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.OutPoint, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0xF4, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x64, TypeFlag = Data.FlagType.Opcode, Comment = "clear APU regs", DataBank = 0x80, DirectPage = 0x2100},
+            new ROMByte {Rom = 0x64, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x40, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x64, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x41, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
@@ -168,7 +169,7 @@ namespace DiztinGUIsh
             new ROMByte {Rom = 0x4C, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.EndPoint, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0xC0, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, Point = Data.InOutPoint.ReadPoint, DataBank = 0x80, DirectPage = 0x2100, Label = "Test_Indices"},
+            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, Point = Data.InOutPoint.ReadPoint, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x08, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
@@ -176,7 +177,7 @@ namespace DiztinGUIsh
             new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x20, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x44, TypeFlag = Data.FlagType.Pointer16Bit, Point = Data.InOutPoint.ReadPoint, DataBank = 0x80, DirectPage = 0x2100, Label = "Pointer_Table"},
+            new ROMByte {Rom = 0x44, TypeFlag = Data.FlagType.Pointer16Bit, Point = Data.InOutPoint.ReadPoint, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x7B, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
@@ -186,7 +187,7 @@ namespace DiztinGUIsh
             new ROMByte {Rom = 0x81, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x0A, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x82, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x08, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.InPoint, Label = "First_Routine", Comment = "this routine copies Test_Data to $7E0100", DataBank = 0x80, DirectPage = 0x2100},
+            new ROMByte {Rom = 0x08, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.InPoint, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x8B, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x4B, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0xAB, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
@@ -209,7 +210,7 @@ namespace DiztinGUIsh
             new ROMByte {Rom = 0xAB, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x28, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x60, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.EndPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x45, TypeFlag = Data.FlagType.Data8Bit, Point = Data.InOutPoint.ReadPoint, Label = "Test_Data", DataBank = 0x80, DirectPage = 0x2100},
+            new ROMByte {Rom = 0x45, TypeFlag = Data.FlagType.Data8Bit, Point = Data.InOutPoint.ReadPoint, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x8D, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x69, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x83, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
@@ -241,6 +242,24 @@ namespace DiztinGUIsh
             new ROMByte {Rom = 0x83, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x34, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x6D, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
+        };
+
+        public static Dictionary<int, string> sampleAlias = new Dictionary<int, string>
+        {
+            { 0x00, "Emulation_RESET" },
+            { 0x0A, "FastRESET" },
+            { 0x32, "Test_Indices" },
+            { 0x3A, "Pointer_Table" },
+            { 0x44, "First_Routine" },
+            { 0x5B, "Test_Data" }
+        };
+
+        public static Dictionary<int, string> sampleComment = new Dictionary<int, string>
+        {
+            { 0x03, "this sets FastROM" },
+            { 0x0F, "direct page = $2100" },
+            { 0x21, "clear APU regs" },
+            { 0x44, "this routine copies Test_Data to $7E0100" }
         };
     }
 }

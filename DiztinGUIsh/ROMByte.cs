@@ -16,7 +16,5 @@ namespace DiztinGUIsh
         public Data.FlagType TypeFlag { get; set; }
         public Data.Architechture Arch { get; set; }
         public Data.InOutPoint Point { get; set; }
-        public string Label { get; set; }
-        public string Comment { get; set; }
     }
 }

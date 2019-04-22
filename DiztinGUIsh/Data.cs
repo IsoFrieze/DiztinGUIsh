@@ -61,12 +61,15 @@ namespace DiztinGUIsh
         private static ROMMapMode rom_map_mode;
         private static ROMSpeed rom_speed;
         private static List<ROMByte> table;
+        private static Dictionary<int, string> alias, comment;
 
         public static void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
         {
             rom_map_mode = mode;
             rom_speed = speed;
             int size = data.Length;
+            alias = new Dictionary<int, string>();
+            comment = new Dictionary<int, string>();
             table = new List<ROMByte>();
             for (int i = 0; i < size; i++)
             {
@@ -79,19 +82,19 @@ namespace DiztinGUIsh
                     MFlag = false,
                     TypeFlag = FlagType.Unreached,
                     Arch = Architechture.CPU65C816,
-                    Point = 0,
-                    Label = null,
-                    Comment = null
+                    Point = 0
                 };
                 table.Add(r);
             }
         }
 
-        public static void Restore(List<ROMByte> l, ROMMapMode m, ROMSpeed s)
+        public static void Restore(List<ROMByte> l = null, ROMMapMode m = ROMMapMode.LoROM, ROMSpeed s = ROMSpeed.Unknown, Dictionary<int, string> a = null, Dictionary<int, string> c = null)
         {
-            table = l;
-            rom_map_mode = m;
-            rom_speed = s;
+            table = l ?? table;
+            rom_map_mode = s == ROMSpeed.Unknown ? rom_map_mode : m;
+            rom_speed = s == ROMSpeed.Unknown ? rom_speed : s;
+            alias = a ?? alias;
+            comment = c ?? comment;
         }
 
         public static ROMMapMode GetROMMapMode()
@@ -207,42 +210,36 @@ namespace DiztinGUIsh
 
         public static string GetLabel(int i)
         {
-            return table[i].Label ?? "";
+            if (alias.TryGetValue(i, out string val)) return val;
+            return "";
         }
 
-        public static void AddLabel(int i, string v)
+        public static void AddLabel(int i, string v, bool overwrite)
         {
-            table[i].Label = v;
+            if (alias.ContainsKey(i) && overwrite) alias.Remove(i);
+            if (!alias.ContainsKey(i)) alias.Add(i, v);
         }
 
         public static Dictionary<int, string> GetAllLabels()
         {
-            Dictionary<int, string> map = new Dictionary<int, string>();
-            for (int i = 0; i < GetROMSize(); i++)
-            {
-                if (table[i].Label != null) map.Add(i, table[i].Label);
-            }
-            return map;
+            return alias;
         }
 
         public static string GetComment(int i)
         {
-            return table[i].Comment ?? "";
+            if (comment.TryGetValue(i, out string val)) return val;
+            return "";
         }
 
-        public static void AddComment(int i, string v)
+        public static void AddComment(int i, string v, bool overwrite)
         {
-            table[i].Comment = v;
+            if (comment.ContainsKey(i) && overwrite) comment.Remove(i);
+            if (!comment.ContainsKey(i)) comment.Add(i, v);
         }
 
         public static Dictionary<int, string> GetAllComments()
         {
-            Dictionary<int, string> map = new Dictionary<int, string>();
-            for (int i = 0; i < GetROMSize(); i++)
-            {
-                if (table[i].Comment != null) map.Add(i, table[i].Comment);
-            }
-            return map;
+            return comment;
         }
 
         public static int GetRomSettingOffset(ROMMapMode mode)

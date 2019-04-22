@@ -43,7 +43,7 @@ namespace DiztinGUIsh
                     Dictionary<int, string> generatedLabels = import.GetGeneratedLabels();
                     if (generatedLabels.Count > 0)
                     {
-                        foreach (KeyValuePair<int, string> pair in generatedLabels) Data.AddLabel(pair.Key, pair.Value);
+                        foreach (KeyValuePair<int, string> pair in generatedLabels) Data.AddLabel(pair.Key, pair.Value, true);
                         unsavedChanges = true;
                     }
 
@@ -208,7 +208,7 @@ namespace DiztinGUIsh
                     while (unzipped[pointer] != 0) label += (char)unzipped[pointer++];
                     pointer++;
 
-                    Data.AddLabel(offset, label);
+                    Data.AddLabel(offset, label, true);
                 }
 
                 int comment_count = Util.ByteArrayToInteger(unzipped, pointer);
@@ -223,7 +223,7 @@ namespace DiztinGUIsh
                     while (unzipped[pointer] != 0) comment += (char)unzipped[pointer++];
                     pointer++;
 
-                    Data.AddComment(offset, comment);
+                    Data.AddComment(offset, comment, true);
                 }
             } else
             {

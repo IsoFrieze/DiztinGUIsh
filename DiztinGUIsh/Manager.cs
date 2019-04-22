@@ -40,7 +40,7 @@ namespace DiztinGUIsh
 
                 while (keepGoing)
                 {
-                    switch (Data.GetArchitechture(offset))
+                    switch (Data.GetArchitechture(newOffset))
                     {
                         case Data.Architechture.CPU65C816:
                             if (seenBranches.Contains(newOffset))
@@ -108,6 +108,9 @@ namespace DiztinGUIsh
                             newOffset = nextOffset;
                             break;
                     }
+
+                    Data.FlagType flag = Data.GetFlag(newOffset);
+                    if (!(flag == Data.FlagType.Unreached || flag == Data.FlagType.Opcode || flag == Data.FlagType.Operand)) keepGoing = false;
                 }
             }
             return newOffset;

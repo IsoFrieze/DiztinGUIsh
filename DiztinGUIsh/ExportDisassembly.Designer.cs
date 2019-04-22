@@ -100,12 +100,10 @@
             // 
             // comboUnlabeled
             // 
-            this.comboUnlabeled.Enabled = false;
             this.comboUnlabeled.FormattingEnabled = true;
             this.comboUnlabeled.Items.AddRange(new object[] {
             "Create All",
             "In points only",
-            "In points only (+/-)",
             "None"});
             this.comboUnlabeled.Location = new System.Drawing.Point(479, 12);
             this.comboUnlabeled.Name = "comboUnlabeled";

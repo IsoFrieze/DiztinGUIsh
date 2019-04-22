@@ -174,7 +174,7 @@ namespace DiztinGUIsh
                     {
                         errors = LogCreator.CreateLog(sw, er);
                         if (errors > 0) MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        else MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK, MessageBoxIcon.None);
+                        else MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                     }
                     if (errors == 0) File.Delete(error);
                 }
@@ -183,8 +183,13 @@ namespace DiztinGUIsh
 
         private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // Create help document and open it here
+            try
+            {
+                System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "/help.html");
+            } catch (Exception ex)
+            {
+                MessageBox.Show("Can't find the help file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void githubToolStripMenuItem_Click(object sender, EventArgs e)
@@ -376,7 +381,7 @@ namespace DiztinGUIsh
                 case 2: e.Value = (char)Data.GetROMByte(row); break;
                 case 3: e.Value = Util.NumberToBaseString(Data.GetROMByte(row), DisplayBase); break;
                 case 4: e.Value = Util.PointToString(Data.GetInOutPoint(row)); break;
-                case 5: e.Value = Util.GetInstruction(row); break; // TODO
+                case 5: e.Value = Util.GetInstruction(row); break;
                 case 6:
                     int ea = Util.GetEffectiveAddress(row);
                     if (ea >= 0) e.Value = Util.NumberToBaseString(ea, Util.NumberBase.Hexadecimal, 6);
@@ -399,12 +404,12 @@ namespace DiztinGUIsh
             if (row >= Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
-                case 0: Data.AddLabel(row, value); break;
+                case 0: Data.AddLabel(row, value, true); break;
                 case 8: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDataBank(row, result); break;
                 case 9: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDirectPage(row, result); break;
                 case 10: Data.SetMFlag(row, (value == "8" || value == "M")); break;
                 case 11: Data.SetXFlag(row, (value == "8" || value == "X")); break;
-                case 12: Data.AddComment(row, value); break;
+                case 12: Data.AddComment(row, value, true); break;
             }
             table.InvalidateRow(e.RowIndex);
         }

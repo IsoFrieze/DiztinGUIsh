@@ -138,7 +138,7 @@ namespace DiztinGUIsh
             }
             else
             {
-                op1 = FormatOperandAddress(Util.GetROMLong(offset + 1), mode);
+                op1 = FormatOperandAddress(Util.GetEffectiveAddress(offset), mode);
             }
             return string.Format(format, mnemonic, op1, op2);
         }

@@ -41,40 +41,42 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(23, 15);
+            this.label1.Location = new System.Drawing.Point(25, 15);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(88, 13);
+            this.label1.Size = new System.Drawing.Size(76, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "ROM Address:  $";
+            this.label1.Text = "ROM Address:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(44, 41);
+            this.label2.Location = new System.Drawing.Point(46, 41);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(69, 13);
+            this.label2.Size = new System.Drawing.Size(55, 13);
             this.label2.TabIndex = 1;
-            this.label2.Text = "PC Offset: 0x";
+            this.label2.Text = "PC Offset:";
             // 
             // textROM
             // 
-            this.textROM.Location = new System.Drawing.Point(110, 12);
+            this.textROM.Location = new System.Drawing.Point(103, 12);
             this.textROM.MaxLength = 6;
             this.textROM.Name = "textROM";
             this.textROM.Size = new System.Drawing.Size(46, 20);
             this.textROM.TabIndex = 2;
             this.textROM.Text = "000000";
+            this.textROM.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textROM.TextChanged += new System.EventHandler(this.textROM_TextChanged);
             this.textROM.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textROM_KeyDown);
             // 
             // textPC
             // 
-            this.textPC.Location = new System.Drawing.Point(110, 38);
+            this.textPC.Location = new System.Drawing.Point(103, 38);
             this.textPC.MaxLength = 6;
             this.textPC.Name = "textPC";
             this.textPC.Size = new System.Drawing.Size(46, 20);
             this.textPC.TabIndex = 3;
             this.textPC.Text = "00000";
+            this.textPC.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textPC.TextChanged += new System.EventHandler(this.textPC_TextChanged);
             this.textPC.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textPC_KeyDown);
             // 

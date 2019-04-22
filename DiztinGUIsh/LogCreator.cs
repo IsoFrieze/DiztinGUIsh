@@ -12,9 +12,8 @@ namespace DiztinGUIsh
         public enum FormatUnlabeled
         {
             ShowAll = 0,
-            ShowInPoints = 1,
-            ShowInPointsPlusMinus = 2,
-            ShowNone = 3
+            ShowInPoints = 1, // TODO Add Show In Points with +/- labels
+            ShowNone = 2
         }
 
         public enum FormatStructure
@@ -46,7 +45,7 @@ namespace DiztinGUIsh
 
         public static string format = "%label:-22% %code:37%;%pc%|%bytes%|%ea%; %comment%";
         public static int dataPerLine = 8;
-        public static FormatUnlabeled unlabeled = FormatUnlabeled.ShowNone;
+        public static FormatUnlabeled unlabeled = FormatUnlabeled.ShowInPoints;
         public static FormatStructure structure = FormatStructure.OneBankPerFile;
 
         private static List<Tuple<string, int>> list;
@@ -56,6 +55,12 @@ namespace DiztinGUIsh
 
         public static int CreateLog(StreamWriter sw, StreamWriter er)
         {
+            Dictionary<int, string> tempAlias = Data.GetAllLabels();
+            Data.Restore(a: new Dictionary<int, string>(tempAlias));
+            bankSize = Data.GetROMMapMode() == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000;
+
+            AddTemporaryLabels();
+
             string[] split = format.Split('%');
             err = er;
             errorCount = 0;
@@ -72,8 +77,7 @@ namespace DiztinGUIsh
                 }
             }
 
-            int pointer = 0, size = (Data.GetTable() == ExportDisassembly.sample) ? 0x7B : Data.GetROMSize(), bank = -1;
-            bankSize = Data.GetROMMapMode() == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000;
+            int pointer = 0, size = (Data.GetTable() == ExportDisassembly.sampleTable) ? 0x7B : Data.GetROMSize(), bank = -1;
 
             if (structure == FormatStructure.OneBankPerFile)
             {
@@ -103,18 +107,43 @@ namespace DiztinGUIsh
                     sw.WriteLine(GetLine(pointer, "empty"));
                     sw.WriteLine(GetLine(pointer, "org"));
                     sw.WriteLine(GetLine(pointer, "empty"));
-                    if ((snes % bankSize) != 0) err.WriteLine("({0,03}) Offset 0x{1:X}: An instruction crossed a bank boundary.", ++errorCount, pointer);
+                    if ((snes % bankSize) != 0) err.WriteLine("({0}) Offset 0x{1:X}: An instruction crossed a bank boundary.", ++errorCount, pointer);
                     bank = snes >> 16;
                 }
 
-                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0 || (Data.GetLabel(pointer).Length > 0)) sw.WriteLine(GetLine(pointer, "empty"));
+                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0 || (tempAlias.TryGetValue(pointer, out string label) && label.Length > 0)) sw.WriteLine(GetLine(pointer, "empty"));
                 sw.WriteLine(GetLine(pointer, null));
                 if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) sw.WriteLine(GetLine(pointer, "empty"));
                 pointer += GetLineByteLength(pointer);
             }
 
             if (structure == FormatStructure.OneBankPerFile) sw.Close();
+            Data.Restore(a: tempAlias);
             return errorCount;
+        }
+
+        private static void AddTemporaryLabels()
+        {
+            List<int> addMe = new List<int>();
+            int pointer = 0;
+
+            while (pointer < Data.GetROMSize())
+            {
+                int length = GetLineByteLength(pointer);
+
+                if (unlabeled == FormatUnlabeled.ShowAll) addMe.Add(pointer);
+                else if (unlabeled != FormatUnlabeled.ShowNone)
+                {
+                    int ea = Util.GetEffectiveAddressOrPointer(pointer);
+                    int pc = Util.ConvertSNEStoPC(ea);
+                    if (pc >= 0) addMe.Add(pc);
+                }
+
+                pointer += length;
+            }
+
+            // TODO +/- labels
+            for (int i = 0; i < addMe.Count; i++) Data.AddLabel(addMe[i], Util.GetDefaultLabel(addMe[i]), false);
         }
 
         private static string GetLine(int offset, string special)
@@ -141,22 +170,27 @@ namespace DiztinGUIsh
                 // throw out some errors if stuff looks fishy
                 Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
                 int step = flag == Data.FlagType.Opcode ? GetLineByteLength(offset) : Util.TypeStepSize(flag), size = Data.GetROMSize();
-                if (flag == Data.FlagType.Operand) err.WriteLine("({0,03}) Offset 0x{1:X}: Bytes marked as operands formatted as data.", ++errorCount, offset);
+                if (flag == Data.FlagType.Operand) err.WriteLine("({0}) Offset 0x{1:X}: Bytes marked as operands formatted as data.", ++errorCount, offset);
                 else if (step > 1)
                 {
                     for (int i = 1; i < step; i++)
                     {
                         if (offset + i >= size)
                         {
-                            err.WriteLine("({0,03}) Offset 0x{1:X}: {2} extends past the end of the ROM.", ++errorCount, offset, Util.TypeToString(check));
+                            err.WriteLine("({0}) Offset 0x{1:X}: {2} extends past the end of the ROM.", ++errorCount, offset, Util.TypeToString(check));
                             break;
                         }
                         else if (Data.GetFlag(offset + i) != check)
                         {
-                            err.WriteLine("({0,03}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, Util.TypeToString(check), Util.TypeToString(Data.GetFlag(offset + i)));
+                            err.WriteLine("({0}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, Util.TypeToString(check), Util.TypeToString(Data.GetFlag(offset + i)));
                             break;
                         }
                     }
+                }
+                int ea = Util.GetEffectiveAddress(offset);
+                if (ea >= 0 && flag == Data.FlagType.Opcode && Data.GetInOutPoint(offset) == Data.InOutPoint.OutPoint && Data.GetFlag(Util.ConvertSNEStoPC(ea)) != Data.FlagType.Opcode)
+                {
+                    err.WriteLine("({0}) Offset 0x{1:X}: Branch or jump instruction to a non-instruction.", ++errorCount, offset);
                 }
             }
 
@@ -220,6 +254,7 @@ namespace DiztinGUIsh
                 min < max &&
                 offset + min < size &&
                 Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
+                Data.GetLabel(offset + min) == "" &&
                 (offset + min) / bankSize == myBank
             ) min += step;
             return min;
@@ -248,7 +283,8 @@ namespace DiztinGUIsh
         private static string GetLabel(int offset, int length)
         {
             string label = Data.GetLabel(offset);
-            return string.Format("{0," + (length * -1) + "}", label + (label.Length > 0 ? ":" : ""));
+            bool noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
+            return string.Format("{0," + (length * -1) + "}", label + (noColon ? "" : ":"));
         }
 
         // trim to length
@@ -330,21 +366,7 @@ namespace DiztinGUIsh
         // length forced to 6
         private static string GetEffectiveAddress(int offset, int length)
         {
-            int ea = -1;
-            switch (Data.GetFlag(offset))
-            {
-                case Data.FlagType.Opcode:
-                    ea = Util.GetEffectiveAddress(offset);
-                    break;
-                case Data.FlagType.Pointer16Bit:
-                    int ptr = Util.GetROMWord(offset);
-                    ea = (Data.GetDataBank(offset) << 16) | ptr;
-                    break;
-                case Data.FlagType.Pointer24Bit:
-                case Data.FlagType.Pointer32Bit:
-                    ea = Util.GetROMLong(offset);
-                    break;
-            }
+            int ea = Util.GetEffectiveAddressOrPointer(offset);
             return ea >= 0 ? Util.NumberToBaseString(ea, Util.NumberBase.Hexadecimal, 6) : "      ";
         }
 

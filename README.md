@@ -44,3 +44,5 @@ Planned stuff:
 * Visual map of the entire ROM; seeing what is/isn't disassembled
 * Programmable data viewer to locate graphics easily
 * Setting a "base" per instruction for relocateable code
+* Option to put large data blocks into separate .bin files intead of in the .asm
+* Scripting engine & API

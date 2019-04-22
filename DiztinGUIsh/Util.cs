@@ -36,6 +36,22 @@ namespace DiztinGUIsh
             return -1;
         }
 
+        public static int GetEffectiveAddressOrPointer(int offset)
+        {
+            switch (Data.GetFlag(offset))
+            {
+                case Data.FlagType.Opcode:
+                    return GetEffectiveAddress(offset);
+                case Data.FlagType.Pointer16Bit:
+                    int bank = Data.GetDataBank(offset);
+                    return (bank << 16) | GetROMWord(offset);
+                case Data.FlagType.Pointer24Bit:
+                case Data.FlagType.Pointer32Bit:
+                    return GetROMLong(offset);
+            }
+            return -1;
+        }
+
         public static int GetEffectiveAddress(int offset)
         {
             switch (Data.GetArchitechture(offset))
@@ -118,6 +134,12 @@ namespace DiztinGUIsh
             string text = "db \"";
             for (int i = 0; i < bytes; i++) text += (char)Data.GetROMByte(offset + i);
             return text + "\"";
+        }
+
+        public static string GetDefaultLabel(int offset)
+        {
+            int snes = ConvertPCtoSNES(offset);
+            return string.Format("{0}_{1}", TypeToLabel(Data.GetFlag(offset)), NumberToBaseString(snes, NumberBase.Hexadecimal, 6));
         }
 
         public static int ConvertPCtoSNES(int offset)
@@ -242,6 +264,28 @@ namespace DiztinGUIsh
                 case Data.FlagType.Data32Bit: return "Data (32-bit)";
                 case Data.FlagType.Pointer32Bit: return "Pointer (32-bit)";
                 case Data.FlagType.Text: return "Text";
+            }
+            return "";
+        }
+
+        public static string TypeToLabel(Data.FlagType flag)
+        {
+            switch (flag)
+            {
+                case Data.FlagType.Unreached: return "UNREACH";
+                case Data.FlagType.Opcode: return "CODE";
+                case Data.FlagType.Operand: return "LOOSE_OP";
+                case Data.FlagType.Data8Bit: return "DATA8";
+                case Data.FlagType.Graphics: return "GFX";
+                case Data.FlagType.Music: return "MUSIC";
+                case Data.FlagType.Empty: return "EMPTY";
+                case Data.FlagType.Data16Bit: return "DATA16";
+                case Data.FlagType.Pointer16Bit: return "PTR16";
+                case Data.FlagType.Data24Bit: return "DATA24";
+                case Data.FlagType.Pointer24Bit: return "PTR24";
+                case Data.FlagType.Data32Bit: return "DATA32";
+                case Data.FlagType.Pointer32Bit: return "PTR32";
+                case Data.FlagType.Text: return "TEXT";
             }
             return "";
         }
