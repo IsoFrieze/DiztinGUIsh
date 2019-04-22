@@ -138,7 +138,7 @@ namespace DiztinGUIsh
             }
             else
             {
-                op1 = FormatOperandAddress(Util.GetEffectiveAddress(offset), mode);
+                op1 = FormatOperandAddress(offset, mode);
             }
             return string.Format(format, mnemonic, op1, op2);
         }
@@ -214,13 +214,15 @@ namespace DiztinGUIsh
             }
         }
 
-        private static string FormatOperandAddress(int address, AddressMode mode)
+        private static string FormatOperandAddress(int offset, AddressMode mode)
         {
+            int address = Util.GetEffectiveAddress(offset);
             if (address < 0) return "";
             int pc = Util.ConvertSNEStoPC(address);
             if (pc >= 0 && Data.GetLabel(pc) != "") return Data.GetLabel(pc);
 
             int count = BytesToShow(mode);
+            if (mode == AddressMode.RELATIVE_8 || mode == AddressMode.RELATIVE_16) address = Util.GetROMWord(offset + 1);
             address &= ~(-1 << (8 * count));
             return Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 2 * count, true);
         }

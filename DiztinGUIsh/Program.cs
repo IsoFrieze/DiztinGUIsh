@@ -17,12 +17,10 @@ namespace DiztinGUIsh
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             MainWindow window = new MainWindow();
+
+            if (args.Length > 0) window.openProject(args[0]);
+
             Application.Run(window);
-            if (args.Length > 0 && Project.TryOpenProject(args[0], window.GetRomOpenFileDialog()))
-            {
-                window.TriggerSaveOptions(true, true);
-                window.UpdateWindowTitle();
-            }
         }
     }
 }

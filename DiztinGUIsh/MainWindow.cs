@@ -109,15 +109,20 @@ namespace DiztinGUIsh
                 DialogResult result = openProjectFile.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    if (Project.TryOpenProject(openProjectFile.FileName, openROMFile))
-                    {
-                        TriggerSaveOptions(true, true);
-                        UpdateWindowTitle();
-                        UpdateDataGridView();
-                        UpdatePercent();
-                        table.Invalidate();
-                    }
+                    openProject(openProjectFile.FileName);
                 }
+            }
+        }
+
+        public void openProject(string filename)
+        {
+            if (Project.TryOpenProject(filename, openROMFile))
+            {
+                TriggerSaveOptions(true, true);
+                UpdateWindowTitle();
+                UpdateDataGridView();
+                UpdatePercent();
+                table.Invalidate();
             }
         }
 
@@ -383,7 +388,7 @@ namespace DiztinGUIsh
                 case 4: e.Value = Util.PointToString(Data.GetInOutPoint(row)); break;
                 case 5: e.Value = Util.GetInstruction(row); break;
                 case 6:
-                    int ea = Util.GetEffectiveAddress(row);
+                    int ea = Util.GetEffectiveAddressOrPointer(row);
                     if (ea >= 0) e.Value = Util.NumberToBaseString(ea, Util.NumberBase.Hexadecimal, 6);
                     else e.Value = "";
                     break;
