@@ -60,7 +60,7 @@ namespace DiztinGUIsh
         {
             this.Text =
                 (Project.unsavedChanges ? "*" : "") + 
-                (Project.currentFile == null ? "New Project" : Project.currentFile) +
+                (Project.currentFile ?? "New Project") +
                 " - DiztinGUIsh";
         }
 
@@ -191,7 +191,7 @@ namespace DiztinGUIsh
             try
             {
                 System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "/help.html");
-            } catch (Exception ex)
+            } catch (FileNotFoundException)
             {
                 MessageBox.Show("Can't find the help file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }

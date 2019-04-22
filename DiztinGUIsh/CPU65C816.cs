@@ -8,6 +8,7 @@ namespace DiztinGUIsh
 {
     public static class CPU65C816
     {
+        //TODO: Rewrite?
         public static int Step(int offset, bool branch, bool force, int prevOffset)
         {
             int opcode = Data.GetROMByte(offset);
@@ -182,6 +183,7 @@ namespace DiztinGUIsh
             return 1;
         }
 
+        //TODO: Rewrite, cyclomatic complexity of 42 (no good very bad bad)
         public static void MarkInOutPoints(int offset)
         {
             int opcode = Data.GetROMByte(offset);
@@ -219,7 +221,7 @@ namespace DiztinGUIsh
             int address = Util.GetEffectiveAddress(offset);
             if (address < 0) return "";
             int pc = Util.ConvertSNEStoPC(address);
-            if (pc >= 0 && Data.GetLabel(pc) != "") return Data.GetLabel(pc);
+            if (pc >= 0 && !string.IsNullOrEmpty(Data.GetLabel(pc))) return Data.GetLabel(pc);
 
             int count = BytesToShow(mode);
             if (mode == AddressMode.RELATIVE_8 || mode == AddressMode.RELATIVE_16) address = Util.GetROMWord(offset + 1);
@@ -354,7 +356,7 @@ namespace DiztinGUIsh
             LONG, LONG_X_INDEX, BLOCK_MOVE, RELATIVE_8, RELATIVE_16
         }
 
-        private static string[] mnemonics =
+        private static readonly string[] mnemonics =
         {
             "BRK", "ORA", "COP", "ORA", "TSB", "ORA", "ASL", "ORA", "PHP", "ORA", "ASL", "PHD", "TSB", "ORA", "ASL", "ORA",
             "BPL", "ORA", "ORA", "ORA", "TRB", "ORA", "ASL", "ORA", "CLC", "ORA", "INC", "TCS", "TRB", "ORA", "ASL", "ORA",
@@ -374,7 +376,7 @@ namespace DiztinGUIsh
             "BEQ", "SBC", "SBC", "SBC", "PEA", "SBC", "INC", "SBC", "SED", "SBC", "PLX", "XCE", "JSR", "SBC", "INC", "SBC"
         };
 
-        private static AddressMode[] addressingModes =
+        private static readonly AddressMode[] addressingModes =
         {
             AddressMode.CONSTANT_8, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.CONSTANT_8, AddressMode.DIRECT_PAGE_S_INDEX,
             AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,

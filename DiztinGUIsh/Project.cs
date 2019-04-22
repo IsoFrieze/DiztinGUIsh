@@ -260,7 +260,7 @@ namespace DiztinGUIsh
 
                         if (error == null) validFile = true;
                     }
-                    catch (Exception e)
+                    catch (FileNotFoundException)
                     {
                         error = string.Format("The linked ROM file '{0}' couldn't be found.", filename);
                     }
@@ -319,7 +319,7 @@ namespace DiztinGUIsh
                     return res.ToArray();
                 }
             }
-            catch (Exception e)
+            catch
             {
                 return null;
             }
@@ -337,7 +337,7 @@ namespace DiztinGUIsh
                     return comp.ToArray();
                 }
             }
-            catch (Exception e)
+            catch
             {
                 return null;
             }

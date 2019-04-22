@@ -136,8 +136,7 @@ namespace DiztinGUIsh
                 updatingText = true;
                 NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
-                int result = 0;
-                if (int.TryParse(textCount.Text, style, null, out result))
+                if (int.TryParse(textCount.Text, style, null, out int result))
                 {
                     count = result;
                     end = start + count;
@@ -154,8 +153,7 @@ namespace DiztinGUIsh
                 updatingText = true;
                 NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
-                int result = 0;
-                if (int.TryParse(textEnd.Text, style, null, out result))
+                if (int.TryParse(textEnd.Text, style, null, out int result))
                 {
                     if (radioROM.Checked) result = Util.ConvertSNEStoPC(result);
                     end = result;
@@ -175,8 +173,7 @@ namespace DiztinGUIsh
         {
             NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
-            int result = 0;
-            if (int.TryParse(regValue.Text, style, null, out result))
+            if (int.TryParse(regValue.Text, style, null, out int result))
             {
                 value = result;
             }
@@ -199,8 +196,7 @@ namespace DiztinGUIsh
                 updatingText = true;
                 NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
-                int result = 0;
-                if (int.TryParse(textStart.Text, style, null, out result))
+                if (int.TryParse(textStart.Text, style, null, out int result))
                 {
                     if (radioROM.Checked) result = Util.ConvertSNEStoPC(result);
                     start = result;

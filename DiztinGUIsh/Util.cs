@@ -410,6 +410,7 @@ namespace DiztinGUIsh
             return array;
         }
 
+        //TODO: Rewrite?
         public static void PaintCell(int offset, DataGridViewCellStyle style, int column, int selOffset)
         {
             // editable cells show up green
