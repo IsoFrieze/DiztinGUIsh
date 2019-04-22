@@ -120,14 +120,17 @@ namespace DiztinGUIsh
             byte[] data = new byte[romSettings.Length + romLocation.Length + 8 * size + label.Count + comment.Count];
             romSettings.CopyTo(data, 0);
             for (int i = 0; i < romLocation.Length; i++) data[romSettings.Length + i] = romLocation[i];
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + i] = (byte)Data.GetDataBank(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + size + i] = (byte)Data.GetDirectPage(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 2 * size + i] = (byte)(Data.GetDirectPage(i) >> 8);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 3 * size + i] = (byte)(Data.GetXFlag(i) ? 1 : 0);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 4 * size + i] = (byte)(Data.GetMFlag(i) ? 1 : 0);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 5 * size + i] = (byte)Data.GetFlag(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 6 * size + i] = (byte)Data.GetArchitechture(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 7 * size + i] = (byte)Data.GetInOutPoint(i);
+            for (int i = 0; i < size; i++)
+            {
+                data[romSettings.Length + romLocation.Length + i] = (byte)Data.GetDataBank(i);
+                data[romSettings.Length + romLocation.Length + size + i] = (byte)Data.GetDirectPage(i);
+                data[romSettings.Length + romLocation.Length + 2 * size + i] = (byte)(Data.GetDirectPage(i) >> 8);
+                data[romSettings.Length + romLocation.Length + 3 * size + i] = (byte)(Data.GetXFlag(i) ? 1 : 0);
+                data[romSettings.Length + romLocation.Length + 4 * size + i] = (byte)(Data.GetMFlag(i) ? 1 : 0);
+                data[romSettings.Length + romLocation.Length + 5 * size + i] = (byte)Data.GetFlag(i);
+                data[romSettings.Length + romLocation.Length + 6 * size + i] = (byte)Data.GetArchitechture(i);
+                data[romSettings.Length + romLocation.Length + 7 * size + i] = (byte)Data.GetInOutPoint(i);
+            }
             label.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size);
             comment.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size + label.Count);
 
@@ -170,6 +173,8 @@ namespace DiztinGUIsh
 
         private static void OpenVersion0(byte[] unzipped, OpenFileDialog open)
         {
+            // I think we should refactor this to use a BinaryReader, to remove the (sort-of) ugly indexing into the file data.
+
             Data.ROMMapMode mode = (Data.ROMMapMode)unzipped[HEADER_SIZE];
             Data.ROMSpeed speed = (Data.ROMSpeed)unzipped[HEADER_SIZE + 1];
             int size = Util.ByteArrayToInteger(unzipped, HEADER_SIZE + 2);
@@ -187,7 +192,8 @@ namespace DiztinGUIsh
             {
                 Data.Initiate(rom, mode, speed);
 
-                for (int i = 0; i < size; i++) {
+                for (int i = 0; i < size; i++)
+                {
                     Data.SetDataBank(i, unzipped[pointer + i]);
                     Data.SetDirectPage(i, unzipped[pointer + size + i] | (unzipped[pointer + 2 * size + i] << 8));
                     Data.SetXFlag(i, unzipped[pointer + 3 * size + i] != 0);
