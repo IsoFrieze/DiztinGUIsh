@@ -154,10 +154,22 @@ namespace DiztinGUIsh
                 offset |= 0x400000;
                 if (Data.GetROMSpeed() == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
             }
-            else // if (Data.GetROMMapMode() == Data.ROMMapMode.ExHiROM)
+            else if (Data.GetROMMapMode() == Data.ROMMapMode.ExHiROM)
             {
                 if (offset < 0x40000) offset |= 0xC00000;
                 else if (offset >= 0x7E0000) offset &= 0x3FFFFF;
+            }
+            else
+            {
+                if (offset >= 0x400000 && Data.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM)
+                {
+                    offset += 0x800000;
+                }
+                else
+                {
+                    offset = ((offset & 0x3F8000) << 1) | 0x8000 | (offset & 0x7FFF);
+                    if (offset >= 0x400000) offset += 0x400000;
+                }
             }
             return offset;
         }
@@ -179,9 +191,28 @@ namespace DiztinGUIsh
             } else if (Data.GetROMMapMode() == Data.ROMMapMode.HiROM)
             {
                 return UnmirroredOffset(address & 0x3FFFFF);
-            } else // if (Data.GetROMMapMode() == Data.ROMMapMode.ExHiROM)
+            } else if (Data.GetROMMapMode() == Data.ROMMapMode.ExHiROM)
             {
                 return UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
+            } else
+            {
+                // BW-RAM is N/A to PC addressing
+                if (address >= 0x400000 && address <= 0x7FFFFF) return -1;
+
+                if (address >= 0xC00000)
+                {
+                    if (Data.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM) return UnmirroredOffset(address & 0x7FFFFF);
+                    else return UnmirroredOffset(address & 0x3FFFFF);
+                }
+                else
+                {
+                    if (address >= 0x800000) address -= 0x400000;
+
+                    // SRAM is N/A to PC addressing
+                    if (((address & 0x8000) == 0)) return -1;
+
+                    return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                }
             }
         }
 

@@ -45,7 +45,7 @@ namespace DiztinGUIsh
 
         public enum ROMMapMode : byte
         {
-            LoROM, HiROM, ExHiROM
+            LoROM, HiROM, ExHiROM, SA1ROM, ExSA1ROM
         }
 
         public enum ROMSpeed : byte
