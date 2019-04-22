@@ -27,9 +27,8 @@ namespace DiztinGUIsh
 
         public int GetOffset()
         {
-            int offset;
             NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-            if (int.TryParse(textPC.Text, style, null, out offset)) return offset;
+            if (int.TryParse(textPC.Text, style, null, out int offset)) return offset;
             return -1;
         }
 
@@ -46,10 +45,9 @@ namespace DiztinGUIsh
             {
                 updatingText = true;
 
-                int address;
                 NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
                 Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-                if (int.TryParse(textROM.Text, style, null, out address))
+                if (int.TryParse(textROM.Text, style, null, out int address))
                 {
                     int pc = Util.ConvertSNEStoPC(address);
                     if (pc >= 0 && pc < Data.GetROMSize()) textPC.Text = Util.NumberToBaseString(pc, noBase, 0);
@@ -66,8 +64,7 @@ namespace DiztinGUIsh
 
                 NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
                 Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-                int offset;
-                if (int.TryParse(textPC.Text, style, null, out offset))
+                if (int.TryParse(textPC.Text, style, null, out int offset))
                 {
                     int addr = Util.ConvertPCtoSNES(offset);
                     if (addr >= 0) textROM.Text = Util.NumberToBaseString(addr, noBase, 6);
@@ -100,15 +97,13 @@ namespace DiztinGUIsh
         {
             if (radioHex.Checked)
             {
-                int result;
-                if (int.TryParse(textPC.Text, out result))
+                if (int.TryParse(textPC.Text, out int result))
                 {
                     textPC.Text = Util.NumberToBaseString(result, Util.NumberBase.Hexadecimal, 0);
                 }
             } else
             {
-                int result;
-                if (int.TryParse(textPC.Text, NumberStyles.HexNumber, null, out result))
+                if (int.TryParse(textPC.Text, NumberStyles.HexNumber, null, out int result))
                 {
                     textPC.Text = result.ToString();
                 }

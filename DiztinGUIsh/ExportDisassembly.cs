@@ -80,8 +80,7 @@ namespace DiztinGUIsh
                 if (!LogCreator.parameters.ContainsKey(kind)) return false;
 
                 // not valid if parameter isn't an integer
-                int oof;
-                if (indexOfColon >= 0 && !int.TryParse(tokens[i].Substring(indexOfColon + 1), out oof)) return false;
+                if (indexOfColon >= 0 && !int.TryParse(tokens[i].Substring(indexOfColon + 1), out int oof)) return false;
             }
 
             return true;

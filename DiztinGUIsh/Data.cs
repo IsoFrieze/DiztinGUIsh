@@ -210,8 +210,7 @@ namespace DiztinGUIsh
 
         public static string GetLabel(int i)
         {
-            string val;
-            if (alias.TryGetValue(i, out val)) return val;
+            if (alias.TryGetValue(i, out string val)) return val;
             return "";
         }
 
@@ -228,8 +227,7 @@ namespace DiztinGUIsh
 
         public static string GetComment(int i)
         {
-            string val;
-            if (comment.TryGetValue(i, out val)) return val;
+            if (comment.TryGetValue(i, out string val)) return val;
             return "";
         }
 

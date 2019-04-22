@@ -111,8 +111,7 @@ namespace DiztinGUIsh
                     bank = snes >> 16;
                 }
 
-                string label;
-                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0 || (tempAlias.TryGetValue(pointer, out label) && label.Length > 0)) sw.WriteLine(GetLine(pointer, "empty"));
+                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0 || (tempAlias.TryGetValue(pointer, out string label) && label.Length > 0)) sw.WriteLine(GetLine(pointer, "empty"));
                 sw.WriteLine(GetLine(pointer, null));
                 if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) sw.WriteLine(GetLine(pointer, "empty"));
                 pointer += GetLineByteLength(pointer);
@@ -263,8 +262,7 @@ namespace DiztinGUIsh
 
         public static string GetParameter(int offset, string parameter, int length)
         {
-            Tuple<Func<int, int, string>, int> tup;
-            if (parameters.TryGetValue(parameter, out tup)) return tup.Item1.Invoke(offset, length);
+            if (parameters.TryGetValue(parameter, out Tuple<Func<int, int, string>, int> tup)) return tup.Item1.Invoke(offset, length);
             return "";
         }
 
