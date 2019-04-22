@@ -386,7 +386,11 @@ namespace DiztinGUIsh
                 case 2: e.Value = (char)Data.GetROMByte(row); break;
                 case 3: e.Value = Util.NumberToBaseString(Data.GetROMByte(row), DisplayBase); break;
                 case 4: e.Value = Util.PointToString(Data.GetInOutPoint(row)); break;
-                case 5: e.Value = Util.GetInstruction(row); break;
+                case 5:
+                    int len = Manager.GetInstructionLength(row);
+                    if (row + len <= Data.GetROMSize()) e.Value = Util.GetInstruction(row);
+                    else e.Value = "";
+                    break;
                 case 6:
                     int ea = Util.GetEffectiveAddressOrPointer(row);
                     if (ea >= 0) e.Value = Util.NumberToBaseString(ea, Util.NumberBase.Hexadecimal, 6);

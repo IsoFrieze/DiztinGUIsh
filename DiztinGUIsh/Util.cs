@@ -40,6 +40,7 @@ namespace DiztinGUIsh
         {
             switch (Data.GetFlag(offset))
             {
+                case Data.FlagType.Unreached:
                 case Data.FlagType.Opcode:
                     return GetEffectiveAddress(offset);
                 case Data.FlagType.Pointer16Bit:
@@ -232,14 +233,8 @@ namespace DiztinGUIsh
             if (repeatedOffset < size) return repeatedOffset;
 
             // for ROM sizes not powers of 2, it's kinda ugly
-            int i = 0;
-            int sizeOfSmallerSection = repeatSize / (4 << i);
-
-            while (repeatedOffset >= repeatSize / 2 + sizeOfSmallerSection)
-            {
-                i++;
-                sizeOfSmallerSection = repeatSize / (4 << i);
-            }
+            int sizeOfSmallerSection = 0x8000;
+            while (size % (sizeOfSmallerSection << 1) == 0) sizeOfSmallerSection <<= 1;
 
             while (repeatedOffset >= size) repeatedOffset -= sizeOfSmallerSection;
             return repeatedOffset;

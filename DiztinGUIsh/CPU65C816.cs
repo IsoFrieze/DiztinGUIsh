@@ -75,22 +75,23 @@ namespace DiztinGUIsh
                 case AddressMode.DIRECT_PAGE:
                 case AddressMode.DIRECT_PAGE_X_INDEX:
                 case AddressMode.DIRECT_PAGE_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_S_INDEX:
                 case AddressMode.DIRECT_PAGE_INDIRECT:
                 case AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT:
                 case AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
                 case AddressMode.DIRECT_PAGE_LONG_INDIRECT:
                 case AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX:
                     bank = Data.GetDataBank(offset);
                     directPage = Data.GetDirectPage(offset);
                     operand = Data.GetROMByte(offset + 1);
                     return (bank << 16) | ((directPage + operand) & 0xFFFF);
+                case AddressMode.DIRECT_PAGE_S_INDEX:
+                case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
+                    return Data.GetROMByte(offset + 1);
                 case AddressMode.ADDRESS:
                 case AddressMode.ADDRESS_X_INDEX:
                 case AddressMode.ADDRESS_Y_INDEX:
                 case AddressMode.ADDRESS_X_INDEX_INDIRECT:
-                    bank = (opcode == 0x20 || opcode == 0x4C) ?
+                    bank = (opcode == 0x20 || opcode == 0x4C || opcode == 0x7C || opcode == 0xFC) ?
                         Util.ConvertPCtoSNES(offset) >> 16 :
                         Data.GetDataBank(offset);
                     operand = Util.GetROMWord(offset + 1);
