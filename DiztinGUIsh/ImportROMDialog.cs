@@ -93,7 +93,22 @@ namespace DiztinGUIsh
 
         private Data.ROMMapMode DetectROMMapMode()
         {
-            if ((data[Data.LOROM_SETTING_OFFSET] & 0xEC) == 0x20)
+            if ((data[Data.LOROM_SETTING_OFFSET] == 0x23))
+            {
+                if (data.Length > 0x400000)
+                {
+                    detectMessage.Text = "ROM Map Mode Detected: SA-1 ROM (FuSoYa's 8MB mapper)";
+                    comboBox1.SelectedIndex = 4;
+                    return Data.ROMMapMode.ExSA1ROM;
+                }
+                else
+                {
+                    detectMessage.Text = "ROM Map Mode Detected: SA-1 ROM";
+                    comboBox1.SelectedIndex = 3;
+                    return Data.ROMMapMode.SA1ROM;
+                }
+            }
+            else if ((data[Data.LOROM_SETTING_OFFSET] & 0xEC) == 0x20)
             {
                 detectMessage.Text = "ROM Map Mode Detected: LoROM";
                 comboBox1.SelectedIndex = 0;
@@ -202,6 +217,8 @@ namespace DiztinGUIsh
                 case 0: mode = Data.ROMMapMode.LoROM; break;
                 case 1: mode = Data.ROMMapMode.HiROM; break;
                 case 2: mode = Data.ROMMapMode.ExHiROM; break;
+                case 3: mode = Data.ROMMapMode.SA1ROM; break;
+                case 4: mode = Data.ROMMapMode.ExSA1ROM; break;
             }
             UpdateOffsetAndSpeed();
             UpdateTextboxes();
