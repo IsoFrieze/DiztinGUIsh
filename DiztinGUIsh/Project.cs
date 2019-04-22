@@ -187,13 +187,15 @@ namespace DiztinGUIsh
             {
                 Data.Initiate(rom, mode, speed);
 
-                for (int i = 0; i < size; i++) Data.SetDataBank(i, unzipped[pointer + i]);
-                for (int i = 0; i < size; i++) Data.SetDirectPage(i, unzipped[pointer + size + i] | (unzipped[pointer + 2 * size + i] << 8));
-                for (int i = 0; i < size; i++) Data.SetXFlag(i, unzipped[pointer + 3 * size + i] != 0);
-                for (int i = 0; i < size; i++) Data.SetMFlag(i, unzipped[pointer + 4 * size + i] != 0);
-                for (int i = 0; i < size; i++) Data.SetFlag(i, (Data.FlagType)unzipped[pointer + 5 * size + i]);
-                for (int i = 0; i < size; i++) Data.SetArchitechture(i, (Data.Architechture)unzipped[pointer + 6 * size + i]);
-                for (int i = 0; i < size; i++) Data.SetInOutPoint(i, (Data.InOutPoint)unzipped[pointer + 7 * size + i]);
+                for (int i = 0; i < size; i++) {
+                    Data.SetDataBank(i, unzipped[pointer + i]);
+                    Data.SetDirectPage(i, unzipped[pointer + size + i] | (unzipped[pointer + 2 * size + i] << 8));
+                    Data.SetXFlag(i, unzipped[pointer + 3 * size + i] != 0);
+                    Data.SetMFlag(i, unzipped[pointer + 4 * size + i] != 0);
+                    Data.SetFlag(i, (Data.FlagType)unzipped[pointer + 5 * size + i]);
+                    Data.SetArchitechture(i, (Data.Architechture)unzipped[pointer + 6 * size + i]);
+                    Data.SetInOutPoint(i, (Data.InOutPoint)unzipped[pointer + 7 * size + i]);
+                }
 
                 pointer += 8 * size;
                 int label_count = Util.ByteArrayToInteger(unzipped, pointer);
