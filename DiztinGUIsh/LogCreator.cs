@@ -27,7 +27,7 @@ namespace DiztinGUIsh
             { "", Tuple.Create<Func<int, int, string>, int>(GetPercent, 1) },
             { "label", Tuple.Create<Func<int, int, string>, int>(GetLabel, -22) },
             { "code", Tuple.Create<Func<int, int, string>, int>(GetCode, 37) },
-            { "ea", Tuple.Create<Func<int, int, string>, int>(GetEffectiveAddress, 6) },
+            { "ia", Tuple.Create<Func<int, int, string>, int>(GetIntermediateAddress, 6) },
             { "pc", Tuple.Create<Func<int, int, string>, int>(GetProgramCounter, 6) },
             { "offset", Tuple.Create<Func<int, int, string>, int>(GetOffset, -6) },
             { "bytes", Tuple.Create<Func<int, int, string>, int>(GetRawBytes, 8) },
@@ -43,7 +43,7 @@ namespace DiztinGUIsh
             { "%bankcross", Tuple.Create<Func<int, int, string>, int>(GetBankCross, 1) },
         };
 
-        public static string format = "%label:-22% %code:37%;%pc%|%bytes%|%ea%; %comment%";
+        public static string format = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
         public static int dataPerLine = 8;
         public static FormatUnlabeled unlabeled = FormatUnlabeled.ShowInPoints;
         public static FormatStructure structure = FormatStructure.OneBankPerFile;
@@ -134,8 +134,8 @@ namespace DiztinGUIsh
                 if (unlabeled == FormatUnlabeled.ShowAll) addMe.Add(pointer);
                 else if (unlabeled != FormatUnlabeled.ShowNone)
                 {
-                    int ea = Util.GetEffectiveAddressOrPointer(pointer);
-                    int pc = Util.ConvertSNEStoPC(ea);
+                    int ia = Util.GetIntermediateAddressOrPointer(pointer);
+                    int pc = Util.ConvertSNEStoPC(ia);
                     if (pc >= 0) addMe.Add(pc);
                 }
 
@@ -187,8 +187,8 @@ namespace DiztinGUIsh
                         }
                     }
                 }
-                int ea = Util.GetEffectiveAddress(offset);
-                if (ea >= 0 && flag == Data.FlagType.Opcode && Data.GetInOutPoint(offset) == Data.InOutPoint.OutPoint && Data.GetFlag(Util.ConvertSNEStoPC(ea)) != Data.FlagType.Opcode)
+                int ia = Util.GetIntermediateAddress(offset);
+                if (ia >= 0 && flag == Data.FlagType.Opcode && Data.GetInOutPoint(offset) == Data.InOutPoint.OutPoint && Data.GetFlag(Util.ConvertSNEStoPC(ia)) != Data.FlagType.Opcode)
                 {
                     err.WriteLine("({0}) Offset 0x{1:X}: Branch or jump instruction to a non-instruction.", ++errorCount, offset);
                 }
@@ -366,10 +366,10 @@ namespace DiztinGUIsh
         }
 
         // length forced to 6
-        private static string GetEffectiveAddress(int offset, int length)
+        private static string GetIntermediateAddress(int offset, int length)
         {
-            int ea = Util.GetEffectiveAddressOrPointer(offset);
-            return ea >= 0 ? Util.NumberToBaseString(ea, Util.NumberBase.Hexadecimal, 6) : "      ";
+            int ia = Util.GetIntermediateAddressOrPointer(offset);
+            return ia >= 0 ? Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6) : "      ";
         }
 
         // length forced to 6

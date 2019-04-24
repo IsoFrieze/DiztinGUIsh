@@ -129,7 +129,7 @@ after it in the ROM. (e.g. branch)
 End points are special out points where execution
 cannot proceed to the instruction directly after it
 in the ROM. (e.g. jump, return)
-Read points are locations that are the effective
+Read points are locations that are the intermediate
 address of any other load or math instruction.
 (e.g. data tables)
 This data is used mainly when formatting the

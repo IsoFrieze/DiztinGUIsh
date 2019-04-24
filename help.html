@@ -104,15 +104,15 @@
     <li>In points are locations in ROM where execution can jump to from somewhere other than the instruction directly before it. These are denoted by a "&gt;" symbol. In points are usually the result of a branch, jump, or call instruction.</li>
     <li>Out points are locations where execution can jump elsewhere other than the instruction directly after it. These are denoted by a "&lt;" symbol. Out points are usually the result of a branch, jump, call, or return instruction.</li>
     <li>End points are special out points where execution cannot directly flow from this instruction to the next directly after. These are denoted by a "X" symbol. End points are usually the result of a jump or return instruction.</li>
-    <li>Finally, read points are locations in ROM that are the effective address of some other load/store/math instruction in the ROM. These are denoted by a "*" symbol. Read points are often the start of a table of data.</li>
+    <li>Finally, read points are locations in ROM that are the intermediate address of some other load/store/math instruction in the ROM. These are denoted by a "*" symbol. Read points are often the start of a table of data.</li>
 </ul>
 <h4>Instruction</h4>
 <p>This column shows what instruction this byte would be disassembled to if it were treated as an opcode.</p>
 <p>The instruction may be highlighted in yellow if DiztinGUIsh thinks the instruction is risky. That is, a rarely used instruction that more likely than not means that the code is desynched.</p>
-<h4>EA</h4>
-<p>This column shows the effective address of the instruction or pointer located at this byte. The effective address is basically the "address of importance" of an instruction--what address is actually being read/stored/jumped to, etc. Often, the instruction operands only specify a small chunk of the effective address, and the rest of it has to be inferred by other registers such as the program counter, data bank register, or direct page register. This column does all the math for you and spits out the effective address of the instruction.</p>
-<p>The effective address will be calculated assuming this byte is marked as an opcode--UNLESS it is marked as some sort of pointer. Then, the effective address will just be the value of the pointer.</p>
-<p><em>Note: If the byte is marked as a 16-bit pointer, the bank of the effective address will be derived from the Data Bank register (B).</em></p>
+<h4>IA</h4>
+<p>This column shows the intermediate address of the instruction or pointer located at this byte. The intermediate address is basically the "address of importance" of an instruction--what address is actually being read/stored/jumped to, etc. Often, the instruction operands only specify a small chunk of the intermediate address, and the rest of it has to be inferred by other registers such as the program counter, data bank register, or direct page register. This column does all the math for you and spits out the intermediate address of the instruction. Note that this is not to be confused with the <em>effective address</em>, which is the "final result" address after locating indirect operands and/or adding index registers.</p>
+<p>The intermediate address will be calculated assuming this byte is marked as an opcode--UNLESS it is marked as some sort of pointer. Then, the intermediate address will just be the value of the pointer.</p>
+<p><em>Note: If the byte is marked as a 16-bit pointer, the bank of the intermediate address will be derived from the Data Bank register (B).</em></p>
 <h4>Flag</h4>
 <p>This column displays what kind of data this byte will be treated as.</p>
 <ul>
@@ -124,7 +124,7 @@
     <li><strong>Music</strong>: Special 8-bit data specifically used as music. Isn't treated any differently than plain 8-bit data (<em>yet</em>).</li>
     <li><strong>Empty</strong>: Special 8-bit data specifically used as empty filler. Isn't treated any differently than plain 8-bit data (<em>yet</em>).</li>
     <li><strong>Data (16-bit)</strong>: Generic 16-bit (2-byte) long data.</li>
-    <li><strong>Pointer (16-bit)</strong>: The lower 16-bits of a pointer. The bank of the effective address is derived from the Data Bank register (B).</li>
+    <li><strong>Pointer (16-bit)</strong>: The lower 16-bits of a pointer. The bank of the intermediate address is derived from the Data Bank register (B).</li>
     <li><strong>Data (24-bit)</strong>: Generic 24-bit (3-byte) long data.</li>
     <li><strong>Pointer (24-bit)</strong>: A full 24-bit pointer.</li>
     <li><strong>Data (32-bit)</strong>: Generic 32-bit (4-byte) long data.</li>
@@ -132,10 +132,10 @@
     <li><strong>Text</strong>: Special 8-bit data specifically used as ASCII text. This will be disassembled into a human-readable string.</li>
 </ul>
 <h4>B</h4>
-<p>The value of the <em>Data Bank register</em> during execution of this code. Some instructions derive their effective address using the value of the data bank register. The data bank register is also used as the bank byte of a 16-bit pointer.</p>
+<p>The value of the <em>Data Bank register</em> during execution of this code. Some instructions derive their intermediate address using the value of the data bank register. The data bank register is also used as the bank byte of a 16-bit pointer.</p>
 <p>The value will be highlighted in yellow if the instruction at this location stores the data bank register (<tt>PHB</tt>). It will be highlighted in red if the instruction writes to the data bank register (<tt>PLB</tt>). This way you can be on a lookout for changes to this register.</p>
 <h4>D</h4>
-<p>The value of the <em>Direct Page register</em> during execution of this code. Some instructions derive their effective address using the value of the direct page register.</p>
+<p>The value of the <em>Direct Page register</em> during execution of this code. Some instructions derive their intermediate address using the value of the direct page register.</p>
 <p>The value will be highlighted in yellow if the instruction at this location stores the direct page register (<tt>PHD : TDC</tt>). It will be highlighted in red if the instruction writes to the direct page register (<tt>PLD : TCD</tt>). This way you can be on a lookout for changes to this register.</p>
 <h4>M</h4>
 <p>The current state of the M flag in the program status register (P). When the flag is cleared (m = 0), the accumulator A is 16 bits wide. When it is set (M = 1), the accumulator A is 8 bits wide. Some instructions interpret their operands differently according to the state of the M flag. If some code is desynched or doesn't make since, try toggling the M flag.</p>
@@ -152,7 +152,7 @@
 <h4>Navigation</h4>
 <p>Use the arrow keys to move to different cells. Page Up &amp; Page Down will move 16 rows at a time, and Home &amp; End will move 256 rows at a time.</p>
 <p>Cells you can type in are highlighted in green.</p>
-<p>Effective addresses of the currently selected cell will be highlighted in pink. So will instructions whose effective addresses are the currently selected cell.</p>
+<p>Intermediate addresses of the currently selected cell will be highlighted in pink. So will instructions whose intermediate addresses are the currently selected cell.</p>
 
 <hr />
 
@@ -162,7 +162,7 @@
 <p>Stepping is the method of marking bytes as code. Instead of marking each byte as opcode and operand separately, you can step through the instruction, and DiztinGUIsh will automatically assign opcode and operand flags as necessary.</p>
 <p>Stepping an instruction will automatically copy the D, B, M, &amp; X values from the previous instruction. If a <tt>REP</tt> or <tt>SEP</tt> instruction is stepped, the M and X values will be modified as necessary.</p>
 <p><em>Note: Most trace logs will reflect changes to the D, B, M, &amp; X values on the instruction after the one that modifies the register. However, DiztinGUIsh likes to show the updated values on the same row as the instruction that updates the values.</em></p>
-<p>There are two stepping commands: step, and step in. Step will advance the selector to the instruction directly following this instruction. Step in will advance to the effective address of this instruction. This is useful for taking a branch or jumping into a routine call. Note that plain step will still step in if the instruction is a jump instruction.</p>
+<p>There are two stepping commands: step, and step in. Step will advance the selector to the instruction directly following this instruction. Step in will advance to the intermediate address of this instruction. This is useful for taking a branch or jumping into a routine call. Note that plain step will still step in if the instruction is a jump instruction.</p>
 
 <hr />
 
@@ -182,10 +182,10 @@
 
 <h3 id="goto">Goto</h3>
 
-<p><strong>Hotkey: CtrL + G, F, U, H, N</strong></p>
+<p><strong>Hotkey: CtrL + G, T, U, H, N</strong></p>
 <p>This is an easy way to hop around the ROM without having to scroll all the way to where you want.</p>
 <p>Hitting Ctrl + G will bring up the <a href="#gotowindow">Goto window</a>. You can type in a ROM address or PC offset in decimal or hex to go directly to that location.</p>
-<p>You can press F to jump to the effective address of the currently selected instruction. Only if the effective address refers to ROM of course.</p>
+<p>You can press T to jump to the intermediate address of the currently selected instruction. Only if the intermediate address refers to ROM of course.</p>
 <p>You can press U, H, or N to jump to the first unreached byte of the project, the nearest unreached block behind the selected address, or the neareste unreached block ahead of the selected address. These are useful just to get somewhere you haven't been yet.</p>
 
 <hr />
@@ -244,7 +244,7 @@
     <li><strong>A</strong>: Auto Step (Safe)</li>
     <li><strong>Ctrl + A</strong>: Auto Step (Harsh)</li>
     <li><strong>Ctrl + G</strong>: Goto</li>
-    <li><strong>F</strong>: Goto Effective Address</li>
+    <li><strong>T</strong>: Goto Intermediate Address</li>
     <li><strong>U</strong>: Goto First Unreached</li>
     <li><strong>H</strong>: Goto Previous Unreached</li>
     <li><strong>N</strong>: Goto Next Unreached</li>
@@ -353,7 +353,7 @@
     <li><strong>%%</strong>: Output a percent sign.</li>
     <li><strong>%label:length%</strong>: Output the label for this line. Default length of -22.</li>
     <li><strong>%code:length%</strong>: Output the instruction, data, pointer, etc. for this line. This is where assembler directives will appear as well. Default length of 37.</li>
-    <li><strong>%ea%</strong>: Output the effective address of this instruction or pointer if applicable. Forced length of 6.</li>
+    <li><strong>%ia%</strong>: Output the intermediate address of this instruction or pointer if applicable. Forced length of 6.</li>
     <li><strong>%pc%</strong>: Output the ROM address of this code. Forced length of 6.</li>
     <li><strong>%offset%</strong>: Output the PC offset of this code. Forced length of -6.</li>
     <li><strong>%bytes%</strong>: Output the bytecode of this instruction. Forced length of 8.</li>
@@ -398,7 +398,7 @@
 
 <p>If DiztinGUIsh outputs a disassembly without any warnings, it should <em>always</em> be assemblable with Asar. The code may be desynched or flagged incorrectly, but it should still assemble at least. You can assemble a disassembly via the command <tt>asar.exe [name].asm [output].sfc</tt>, where [name] is the disassembly file (or main.asm if output to multiple files).</p>
 <p>In theory if the world were perfect, the reassembled ROM should match the original ROM. Sometimes it will, and sometimes it won't. It depends on the code itself. The output should always <em>run</em> similarly (unless the ROM has built-in modification or checksum detection).</p>
-<p>The reason this may not be the case is due to mirroring, and the way DiztinGUIsh deals with labels. Take the following two code snippets: <tt>JML $C00054 : JML $400054</tt>. One has an effective address of <tt>$C00054</tt> and the other has effective address <tt>$400054</tt>. These two addresses refer to the same byte in the ROM due to memory mapping mirroring. That is, they both refer to PC offset <tt>0x54</tt>. Currently, DiztinGUIsh stores labels according to PC offset, not ROM address. So when disassembled, these instructions will be given the same label, and they will be assembled to the exact same instruction.</p>
+<p>The reason this may not be the case is due to mirroring, and the way DiztinGUIsh deals with labels. Take the following two code snippets: <tt>JML $C00054 : JML $400054</tt>. One has an intermediate address of <tt>$C00054</tt> and the other has intermediate address <tt>$400054</tt>. These two addresses refer to the same byte in the ROM due to memory mapping mirroring. That is, they both refer to PC offset <tt>0x54</tt>. Currently, DiztinGUIsh stores labels according to PC offset, not ROM address. So when disassembled, these instructions will be given the same label, and they will be assembled to the exact same instruction.</p>
 <p>This will be changed in a future update, along with the ability to assign labels to non-ROM addresses (addresses that don't refer to a PC offset). So sit tight, this will be fixed soon.</p>
 
 <hr />

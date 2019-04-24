@@ -343,7 +343,7 @@ namespace DiztinGUIsh
                 case Keys.S: Step(offset); break;
                 case Keys.I: StepIn(offset); break;
                 case Keys.A: AutoStepSafe(offset); break;
-                case Keys.F: GoToEffectiveAddress(offset); break;
+                case Keys.T: GoToIntermediateAddress(offset); break;
                 case Keys.U: GoToUnreached(true, true); break;
                 case Keys.H: GoToUnreached(false, false); break;
                 case Keys.N: GoToUnreached(false, true); break;
@@ -392,8 +392,8 @@ namespace DiztinGUIsh
                     else e.Value = "";
                     break;
                 case 6:
-                    int ea = Util.GetEffectiveAddressOrPointer(row);
-                    if (ea >= 0) e.Value = Util.NumberToBaseString(ea, Util.NumberBase.Hexadecimal, 6);
+                    int ia = Util.GetIntermediateAddressOrPointer(row);
+                    if (ia >= 0) e.Value = Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6);
                     else e.Value = "";
                     break;
                 case 7: e.Value = Util.TypeToString(Data.GetFlag(row)); break;
@@ -523,12 +523,12 @@ namespace DiztinGUIsh
             }
         }
 
-        private void GoToEffectiveAddress(int offset)
+        private void GoToIntermediateAddress(int offset)
         {
-            int ea = Util.GetEffectiveAddress(offset);
-            if (ea >= 0)
+            int ia = Util.GetIntermediateAddressOrPointer(offset);
+            if (ia >= 0)
             {
-                int pc = Util.ConvertSNEStoPC(ea);
+                int pc = Util.ConvertSNEStoPC(ia);
                 if (pc >= 0)
                 {
                     SelectOffset(pc, 1);
@@ -597,10 +597,10 @@ namespace DiztinGUIsh
             }
         }
 
-        private void gotoEffectiveAddressToolStripMenuItem_Click(object sender, EventArgs e)
+        private void gotoIntermediateAddressToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (Data.GetROMSize() <= 0) return;
-            GoToEffectiveAddress(table.CurrentCell.RowIndex + viewOffset);
+            GoToIntermediateAddress(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void gotoFirstUnreachedToolStripMenuItem_Click(object sender, EventArgs e)
