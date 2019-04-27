@@ -217,8 +217,14 @@ namespace DiztinGUIsh
 
         public static void AddLabel(int i, string v, bool overwrite)
         {
-            if (alias.ContainsKey(i) && overwrite) alias.Remove(i);
-            if (!alias.ContainsKey(i)) alias.Add(i, v);
+            if (v == null)
+            {
+                if (alias.ContainsKey(i)) alias.Remove(i);
+            } else
+            {
+                if (alias.ContainsKey(i) && overwrite) alias.Remove(i);
+                if (!alias.ContainsKey(i)) alias.Add(i, v);
+            }
         }
 
         public static Dictionary<int, string> GetAllLabels()

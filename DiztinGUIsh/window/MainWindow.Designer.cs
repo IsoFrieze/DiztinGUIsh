@@ -53,6 +53,7 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exportLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importCDLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importTraceLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -63,9 +64,10 @@
             this.autoStepHarshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.gotoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.gotoEffectiveAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gotoIntermediateAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gotoFirstUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gotoNearUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gotoNextUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.selectMarkerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.unreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -93,6 +95,7 @@
             this.addCommentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.fixMisalignedInstructionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rescanForInOutPointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.visualMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphicsWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -102,6 +105,7 @@
             this.binaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewHelpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.githubToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.percentComplete = new System.Windows.Forms.ToolStripStatusLabel();
@@ -111,10 +115,6 @@
             this.openProjectFile = new System.Windows.Forms.OpenFileDialog();
             this.saveProjectFile = new System.Windows.Forms.SaveFileDialog();
             this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
-            this.rescanForInOutPointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.githubToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importTraceLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.gotoNextUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveLogSingleFile = new System.Windows.Forms.SaveFileDialog();
             this.chooseLogFolder = new System.Windows.Forms.FolderBrowserDialog();
             this.ColumnAlias = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -123,13 +123,15 @@
             this.ColumnHex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnPoints = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnInstruction = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnEA = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnIA = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnFlag = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnDB = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnDP = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnM = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnX = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnComment = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.moveWithStepToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -150,7 +152,7 @@
             this.ColumnHex,
             this.ColumnPoints,
             this.ColumnInstruction,
-            this.ColumnEA,
+            this.ColumnIA,
             this.ColumnFlag,
             this.ColumnDB,
             this.ColumnDP,
@@ -271,6 +273,13 @@
             this.importCDLToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.importCDLToolStripMenuItem.Text = "Import CDL...";
             // 
+            // importTraceLogToolStripMenuItem
+            // 
+            this.importTraceLogToolStripMenuItem.Enabled = false;
+            this.importTraceLogToolStripMenuItem.Name = "importTraceLogToolStripMenuItem";
+            this.importTraceLogToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
+            this.importTraceLogToolStripMenuItem.Text = "Import Trace Log...";
+            // 
             // toolStripSeparator7
             // 
             this.toolStripSeparator7.Name = "toolStripSeparator7";
@@ -295,7 +304,7 @@
             this.autoStepHarshToolStripMenuItem,
             this.toolStripSeparator3,
             this.gotoToolStripMenuItem,
-            this.gotoEffectiveAddressToolStripMenuItem,
+            this.gotoIntermediateAddressToolStripMenuItem,
             this.gotoFirstUnreachedToolStripMenuItem,
             this.gotoNearUnreachedToolStripMenuItem,
             this.gotoNextUnreachedToolStripMenuItem,
@@ -364,12 +373,12 @@
             this.gotoToolStripMenuItem.Text = "Goto...";
             this.gotoToolStripMenuItem.Click += new System.EventHandler(this.gotoToolStripMenuItem_Click);
             // 
-            // gotoEffectiveAddressToolStripMenuItem
+            // gotoIntermediateAddressToolStripMenuItem
             // 
-            this.gotoEffectiveAddressToolStripMenuItem.Name = "gotoEffectiveAddressToolStripMenuItem";
-            this.gotoEffectiveAddressToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.gotoEffectiveAddressToolStripMenuItem.Text = "Goto E&ffective Address";
-            this.gotoEffectiveAddressToolStripMenuItem.Click += new System.EventHandler(this.gotoEffectiveAddressToolStripMenuItem_Click);
+            this.gotoIntermediateAddressToolStripMenuItem.Name = "gotoIntermediateAddressToolStripMenuItem";
+            this.gotoIntermediateAddressToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
+            this.gotoIntermediateAddressToolStripMenuItem.Text = "Goto In&termediate Address";
+            this.gotoIntermediateAddressToolStripMenuItem.Click += new System.EventHandler(this.gotoIntermediateAddressToolStripMenuItem_Click);
             // 
             // gotoFirstUnreachedToolStripMenuItem
             // 
@@ -384,6 +393,13 @@
             this.gotoNearUnreachedToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.gotoNearUnreachedToolStripMenuItem.Text = "Goto Previous Unreac&hed";
             this.gotoNearUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNearUnreachedToolStripMenuItem_Click);
+            // 
+            // gotoNextUnreachedToolStripMenuItem
+            // 
+            this.gotoNextUnreachedToolStripMenuItem.Name = "gotoNextUnreachedToolStripMenuItem";
+            this.gotoNextUnreachedToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
+            this.gotoNextUnreachedToolStripMenuItem.Text = "Goto &Next Unreached";
+            this.gotoNextUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNextUnreachedToolStripMenuItem_Click);
             // 
             // toolStripSeparator4
             // 
@@ -602,15 +618,24 @@
             this.fixMisalignedInstructionsToolStripMenuItem.Text = "Fix Misaligned Flags...";
             this.fixMisalignedInstructionsToolStripMenuItem.Click += new System.EventHandler(this.fixMisalignedInstructionsToolStripMenuItem_Click);
             // 
+            // rescanForInOutPointsToolStripMenuItem
+            // 
+            this.rescanForInOutPointsToolStripMenuItem.Name = "rescanForInOutPointsToolStripMenuItem";
+            this.rescanForInOutPointsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
+            this.rescanForInOutPointsToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
+            this.rescanForInOutPointsToolStripMenuItem.Text = "Rescan for In/Out Points...";
+            this.rescanForInOutPointsToolStripMenuItem.Click += new System.EventHandler(this.rescanForInOutPointsToolStripMenuItem_Click);
+            // 
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.visualMapToolStripMenuItem,
             this.graphicsWindowToolStripMenuItem,
-            this.constantsToolStripMenuItem});
+            this.constantsToolStripMenuItem,
+            this.optionsToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.viewToolStripMenuItem.Text = "&View";
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
+            this.viewToolStripMenuItem.Text = "&Tools";
             // 
             // visualMapToolStripMenuItem
             // 
@@ -684,6 +709,13 @@
             this.viewHelpToolStripMenuItem.Text = "View Help";
             this.viewHelpToolStripMenuItem.Click += new System.EventHandler(this.viewHelpToolStripMenuItem_Click);
             // 
+            // githubToolStripMenuItem
+            // 
+            this.githubToolStripMenuItem.Name = "githubToolStripMenuItem";
+            this.githubToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.githubToolStripMenuItem.Text = "Github";
+            this.githubToolStripMenuItem.Click += new System.EventHandler(this.githubToolStripMenuItem_Click);
+            // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
@@ -744,35 +776,6 @@
             this.vScrollBar1.Size = new System.Drawing.Size(17, 500);
             this.vScrollBar1.TabIndex = 3;
             this.vScrollBar1.ValueChanged += new System.EventHandler(this.vScrollBar1_ValueChanged);
-            // 
-            // rescanForInOutPointsToolStripMenuItem
-            // 
-            this.rescanForInOutPointsToolStripMenuItem.Name = "rescanForInOutPointsToolStripMenuItem";
-            this.rescanForInOutPointsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
-            this.rescanForInOutPointsToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.rescanForInOutPointsToolStripMenuItem.Text = "Rescan for In/Out Points...";
-            this.rescanForInOutPointsToolStripMenuItem.Click += new System.EventHandler(this.rescanForInOutPointsToolStripMenuItem_Click);
-            // 
-            // githubToolStripMenuItem
-            // 
-            this.githubToolStripMenuItem.Name = "githubToolStripMenuItem";
-            this.githubToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.githubToolStripMenuItem.Text = "Github";
-            this.githubToolStripMenuItem.Click += new System.EventHandler(this.githubToolStripMenuItem_Click);
-            // 
-            // importTraceLogToolStripMenuItem
-            // 
-            this.importTraceLogToolStripMenuItem.Enabled = false;
-            this.importTraceLogToolStripMenuItem.Name = "importTraceLogToolStripMenuItem";
-            this.importTraceLogToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
-            this.importTraceLogToolStripMenuItem.Text = "Import Trace Log...";
-            // 
-            // gotoNextUnreachedToolStripMenuItem
-            // 
-            this.gotoNextUnreachedToolStripMenuItem.Name = "gotoNextUnreachedToolStripMenuItem";
-            this.gotoNextUnreachedToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.gotoNextUnreachedToolStripMenuItem.Text = "Goto &Next Unreached";
-            this.gotoNextUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNextUnreachedToolStripMenuItem_Click);
             // 
             // saveLogSingleFile
             // 
@@ -846,17 +849,17 @@
             this.ColumnInstruction.ReadOnly = true;
             this.ColumnInstruction.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
-            // ColumnEA
+            // ColumnIA
             // 
             dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle7.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnEA.DefaultCellStyle = dataGridViewCellStyle7;
-            this.ColumnEA.HeaderText = "EA";
-            this.ColumnEA.MaxInputLength = 6;
-            this.ColumnEA.Name = "ColumnEA";
-            this.ColumnEA.ReadOnly = true;
-            this.ColumnEA.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.ColumnEA.Width = 45;
+            this.ColumnIA.DefaultCellStyle = dataGridViewCellStyle7;
+            this.ColumnIA.HeaderText = "IA";
+            this.ColumnIA.MaxInputLength = 6;
+            this.ColumnIA.Name = "ColumnIA";
+            this.ColumnIA.ReadOnly = true;
+            this.ColumnIA.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.ColumnIA.Width = 45;
             // 
             // ColumnFlag
             // 
@@ -921,6 +924,23 @@
             this.ColumnComment.Name = "ColumnComment";
             this.ColumnComment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.moveWithStepToolStripMenuItem});
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.optionsToolStripMenuItem.Text = "Options";
+            // 
+            // moveWithStepToolStripMenuItem
+            // 
+            this.moveWithStepToolStripMenuItem.Checked = true;
+            this.moveWithStepToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.moveWithStepToolStripMenuItem.Name = "moveWithStepToolStripMenuItem";
+            this.moveWithStepToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.moveWithStepToolStripMenuItem.Text = "Move With Step";
+            this.moveWithStepToolStripMenuItem.Click += new System.EventHandler(this.moveWithStepToolStripMenuItem_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -970,7 +990,7 @@
         private System.Windows.Forms.ToolStripMenuItem autoStepHarshToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem gotoToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem gotoEffectiveAddressToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gotoIntermediateAddressToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gotoFirstUnreachedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gotoNearUnreachedToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
@@ -1031,13 +1051,15 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnHex;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnPoints;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnInstruction;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnEA;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnIA;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnFlag;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnDB;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnDP;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnM;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnX;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnComment;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem moveWithStepToolStripMenuItem;
     }
 }
 

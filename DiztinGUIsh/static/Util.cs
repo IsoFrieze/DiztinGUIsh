@@ -36,12 +36,13 @@ namespace DiztinGUIsh
             return -1;
         }
 
-        public static int GetEffectiveAddressOrPointer(int offset)
+        public static int GetIntermediateAddressOrPointer(int offset)
         {
             switch (Data.GetFlag(offset))
             {
+                case Data.FlagType.Unreached:
                 case Data.FlagType.Opcode:
-                    return GetEffectiveAddress(offset);
+                    return GetIntermediateAddress(offset);
                 case Data.FlagType.Pointer16Bit:
                     int bank = Data.GetDataBank(offset);
                     return (bank << 16) | GetROMWord(offset);
@@ -52,11 +53,11 @@ namespace DiztinGUIsh
             return -1;
         }
 
-        public static int GetEffectiveAddress(int offset)
+        public static int GetIntermediateAddress(int offset)
         {
             switch (Data.GetArchitechture(offset))
             {
-                case Data.Architechture.CPU65C816: return CPU65C816.GetEffectiveAddress(offset);
+                case Data.Architechture.CPU65C816: return CPU65C816.GetIntermediateAddress(offset);
                 case Data.Architechture.APUSPC700: return -1;
                 case Data.Architechture.GPUSuperFX: return -1;
             }
@@ -103,28 +104,28 @@ namespace DiztinGUIsh
 
         public static string GetPointer(int offset, int bytes)
         {
-            int ea = -1;
+            int ia = -1;
             string format = "", param = "";
             switch (bytes)
             {
                 case 2:
-                    ea = (Data.GetDataBank(offset) << 16) | GetROMWord(offset);
+                    ia = (Data.GetDataBank(offset) << 16) | GetROMWord(offset);
                     format = "dw {0}";
                     param = NumberToBaseString(GetROMWord(offset), NumberBase.Hexadecimal, 4, true);
                     break;
                 case 3:
-                    ea = GetROMLong(offset);
+                    ia = GetROMLong(offset);
                     format = "dl {0}";
                     param = NumberToBaseString(GetROMLong(offset), NumberBase.Hexadecimal, 6, true);
                     break;
                 case 4:
-                    ea = GetROMLong(offset);
-                    format = "dl {0}" + string.Format(" : db {0}", NumberToBaseString(offset + 3, NumberBase.Hexadecimal, 2, true));
+                    ia = GetROMLong(offset);
+                    format = "dl {0}" + string.Format(" : db {0}", NumberToBaseString(Data.GetROMByte(offset + 3), NumberBase.Hexadecimal, 2, true));
                     param = NumberToBaseString(GetROMLong(offset), NumberBase.Hexadecimal, 6, true);
                     break;
             }
 
-            int pc = ConvertSNEStoPC(ea);
+            int pc = ConvertSNEStoPC(ia);
             if (pc >= 0 && Data.GetLabel(pc) != "") param = Data.GetLabel(pc);
             return string.Format(format, param);
         }
@@ -232,14 +233,8 @@ namespace DiztinGUIsh
             if (repeatedOffset < size) return repeatedOffset;
 
             // for ROM sizes not powers of 2, it's kinda ugly
-            int i = 0;
-            int sizeOfSmallerSection = repeatSize / (4 << i);
-
-            while (repeatedOffset >= repeatSize / 2 + sizeOfSmallerSection)
-            {
-                i++;
-                sizeOfSmallerSection = repeatSize / (4 << i);
-            }
+            int sizeOfSmallerSection = 0x8000;
+            while (size % (sizeOfSmallerSection << 1) == 0) sizeOfSmallerSection <<= 1;
 
             while (repeatedOffset >= size) repeatedOffset -= sizeOfSmallerSection;
             return repeatedOffset;
@@ -493,13 +488,13 @@ namespace DiztinGUIsh
             if (selOffset >= 0 && selOffset < Data.GetROMSize())
             {
                 if (column == 1
-                    && (Data.GetFlag(selOffset) == Data.FlagType.Opcode || Data.GetFlag(selOffset) == Data.FlagType.Unreached)
-                    && ConvertSNEStoPC(GetEffectiveAddress(selOffset)) == offset
+                    //&& (Data.GetFlag(selOffset) == Data.FlagType.Opcode || Data.GetFlag(selOffset) == Data.FlagType.Unreached)
+                    && ConvertSNEStoPC(GetIntermediateAddressOrPointer(selOffset)) == offset
                 ) style.BackColor = Color.DeepPink;
 
                 if (column == 6
-                    && (Data.GetFlag(offset) == Data.FlagType.Opcode || Data.GetFlag(offset) == Data.FlagType.Unreached)
-                    && ConvertSNEStoPC(GetEffectiveAddress(offset)) == selOffset
+                    //&& (Data.GetFlag(offset) == Data.FlagType.Opcode || Data.GetFlag(offset) == Data.FlagType.Unreached)
+                    && ConvertSNEStoPC(GetIntermediateAddressOrPointer(offset)) == selOffset
                 ) style.BackColor = Color.DeepPink;
             }
         }

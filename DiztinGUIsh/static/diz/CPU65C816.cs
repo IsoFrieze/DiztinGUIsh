@@ -57,14 +57,14 @@ namespace DiztinGUIsh
                 || opcode == 0x70 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 // BVS BCC BCS BNE
                 || opcode == 0xF0 || opcode == 0x20 || opcode == 0x22)))) // BEQ JSR JSL
             {
-                int eaNextOffsetPC = Util.ConvertSNEStoPC(Util.GetEffectiveAddress(offset));
-                if (eaNextOffsetPC >= 0) nextOffset = eaNextOffsetPC;
+                int iaNextOffsetPC = Util.ConvertSNEStoPC(Util.GetIntermediateAddress(offset));
+                if (iaNextOffsetPC >= 0) nextOffset = iaNextOffsetPC;
             }
 
             return nextOffset;
         }
 
-        public static int GetEffectiveAddress(int offset)
+        public static int GetIntermediateAddress(int offset)
         {
             int bank, directPage, operand, programCounter;
             int opcode = Data.GetROMByte(offset);
@@ -75,22 +75,22 @@ namespace DiztinGUIsh
                 case AddressMode.DIRECT_PAGE:
                 case AddressMode.DIRECT_PAGE_X_INDEX:
                 case AddressMode.DIRECT_PAGE_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_S_INDEX:
                 case AddressMode.DIRECT_PAGE_INDIRECT:
                 case AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT:
                 case AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
                 case AddressMode.DIRECT_PAGE_LONG_INDIRECT:
                 case AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX:
-                    bank = Data.GetDataBank(offset);
                     directPage = Data.GetDirectPage(offset);
                     operand = Data.GetROMByte(offset + 1);
-                    return (bank << 16) | ((directPage + operand) & 0xFFFF);
+                    return (directPage + operand) & 0xFFFF;
+                case AddressMode.DIRECT_PAGE_S_INDEX:
+                case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
+                    return Data.GetROMByte(offset + 1);
                 case AddressMode.ADDRESS:
                 case AddressMode.ADDRESS_X_INDEX:
                 case AddressMode.ADDRESS_Y_INDEX:
                 case AddressMode.ADDRESS_X_INDEX_INDIRECT:
-                    bank = (opcode == 0x20 || opcode == 0x4C) ?
+                    bank = (opcode == 0x20 || opcode == 0x4C || opcode == 0x7C || opcode == 0xFC) ?
                         Util.ConvertPCtoSNES(offset) >> 16 :
                         Data.GetDataBank(offset);
                     operand = Util.GetROMWord(offset + 1);
@@ -185,15 +185,15 @@ namespace DiztinGUIsh
         public static void MarkInOutPoints(int offset)
         {
             int opcode = Data.GetROMByte(offset);
-            int eaOffsetPC = Util.ConvertSNEStoPC(Util.GetEffectiveAddress(offset));
+            int iaOffsetPC = Util.ConvertSNEStoPC(Util.GetIntermediateAddress(offset));
 
             // set read point on EA
-            if (eaOffsetPC >= 0 && ( // these are all read/write/math instructions
+            if (iaOffsetPC >= 0 && ( // these are all read/write/math instructions
                 ((opcode & 0x04) != 0) || ((opcode & 0x0F) == 0x01) || ((opcode & 0x0F) == 0x03) ||
                 ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
                 (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
                 (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
-            ) Data.SetInOutPoint(eaOffsetPC, Data.InOutPoint.ReadPoint);
+            ) Data.SetInOutPoint(iaOffsetPC, Data.InOutPoint.ReadPoint);
 
             // set end point on offset
             if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
@@ -203,20 +203,20 @@ namespace DiztinGUIsh
 
             // set out point on offset
             // set in point on EA
-            if (eaOffsetPC >= 0 && (
+            if (iaOffsetPC >= 0 && (
                 opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
                 || opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70  // BPL BMI BVC BVS
                 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0  // BCC BCS BNE BEQ
                 || opcode == 0x20 || opcode == 0x22)) // JSR JSL
             {
                 Data.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
-                Data.SetInOutPoint(eaOffsetPC, Data.InOutPoint.InPoint);
+                Data.SetInOutPoint(iaOffsetPC, Data.InOutPoint.InPoint);
             }
         }
 
         private static string FormatOperandAddress(int offset, AddressMode mode)
         {
-            int address = Util.GetEffectiveAddress(offset);
+            int address = Util.GetIntermediateAddress(offset);
             if (address < 0) return "";
             int pc = Util.ConvertSNEStoPC(address);
             if (pc >= 0 && Data.GetLabel(pc) != "") return Data.GetLabel(pc);
@@ -282,7 +282,7 @@ namespace DiztinGUIsh
         }
 
         // {0} = mnemonic
-        // {1} = effective address / label OR operand 1 for block move
+        // {1} = intermediate address / label OR operand 1 for block move
         // {2} = operand 2 for block move
         private static string GetInstructionFormatString(int offset)
         {

@@ -48,7 +48,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>diz.ico</ApplicationIcon>
+    <ApplicationIcon>resource\diz.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>DiztinGUIsh.Program</StartupObject>
@@ -67,94 +67,94 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="About.cs">
+    <Compile Include="window\dialog\About.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="About.Designer.cs">
+    <Compile Include="window\dialog\About.Designer.cs">
       <DependentUpon>About.cs</DependentUpon>
     </Compile>
-    <Compile Include="Data.cs" />
-    <Compile Include="ExportDisassembly.cs">
+    <Compile Include="static\Data.cs" />
+    <Compile Include="window\dialog\ExportDisassembly.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ExportDisassembly.Designer.cs">
+    <Compile Include="window\dialog\ExportDisassembly.Designer.cs">
       <DependentUpon>ExportDisassembly.cs</DependentUpon>
     </Compile>
-    <Compile Include="GotoDialog.cs">
+    <Compile Include="window\dialog\GotoDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="GotoDialog.Designer.cs">
+    <Compile Include="window\dialog\GotoDialog.Designer.cs">
       <DependentUpon>GotoDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="HarshAutoStep.cs">
+    <Compile Include="window\dialog\HarshAutoStep.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="HarshAutoStep.Designer.cs">
+    <Compile Include="window\dialog\HarshAutoStep.Designer.cs">
       <DependentUpon>HarshAutoStep.cs</DependentUpon>
     </Compile>
-    <Compile Include="ImportROMDialog.cs">
+    <Compile Include="window\dialog\ImportROMDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ImportROMDialog.Designer.cs">
+    <Compile Include="window\dialog\ImportROMDialog.Designer.cs">
       <DependentUpon>ImportROMDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="InOutPointChecker.cs">
+    <Compile Include="window\dialog\InOutPointChecker.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="InOutPointChecker.Designer.cs">
+    <Compile Include="window\dialog\InOutPointChecker.Designer.cs">
       <DependentUpon>InOutPointChecker.cs</DependentUpon>
     </Compile>
-    <Compile Include="LogCreator.cs" />
-    <Compile Include="MainWindow.cs">
+    <Compile Include="static\LogCreator.cs" />
+    <Compile Include="window\MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MainWindow.Designer.cs">
+    <Compile Include="window\MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Manager.cs" />
-    <Compile Include="MarkManyDialog.cs">
+    <Compile Include="static\diz\Manager.cs" />
+    <Compile Include="window\dialog\MarkManyDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MarkManyDialog.Designer.cs">
+    <Compile Include="window\dialog\MarkManyDialog.Designer.cs">
       <DependentUpon>MarkManyDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="MisalignmentChecker.cs">
+    <Compile Include="window\dialog\MisalignmentChecker.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MisalignmentChecker.Designer.cs">
+    <Compile Include="window\dialog\MisalignmentChecker.Designer.cs">
       <DependentUpon>MisalignmentChecker.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="Project.cs" />
+    <Compile Include="static\Project.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ROMByte.cs" />
-    <Compile Include="CPU65C816.cs" />
-    <Compile Include="Util.cs" />
-    <EmbeddedResource Include="About.resx">
+    <Compile Include="static\diz\CPU65C816.cs" />
+    <Compile Include="static\Util.cs" />
+    <EmbeddedResource Include="window\dialog\About.resx">
       <DependentUpon>About.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ExportDisassembly.resx">
+    <EmbeddedResource Include="window\dialog\ExportDisassembly.resx">
       <DependentUpon>ExportDisassembly.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="GotoDialog.resx">
+    <EmbeddedResource Include="window\dialog\GotoDialog.resx">
       <DependentUpon>GotoDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="HarshAutoStep.resx">
+    <EmbeddedResource Include="window\dialog\HarshAutoStep.resx">
       <DependentUpon>HarshAutoStep.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ImportROMDialog.resx">
+    <EmbeddedResource Include="window\dialog\ImportROMDialog.resx">
       <DependentUpon>ImportROMDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="InOutPointChecker.resx">
+    <EmbeddedResource Include="window\dialog\InOutPointChecker.resx">
       <DependentUpon>InOutPointChecker.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MainWindow.resx">
+    <EmbeddedResource Include="window\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MarkManyDialog.resx">
+    <EmbeddedResource Include="window\dialog\MarkManyDialog.resx">
       <DependentUpon>MarkManyDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MisalignmentChecker.resx">
+    <EmbeddedResource Include="window\dialog\MisalignmentChecker.resx">
       <DependentUpon>MisalignmentChecker.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -181,7 +181,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="diz.ico" />
+    <Content Include="resource\diz.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
