@@ -120,7 +120,7 @@ namespace DiztinGUIsh
                     break;
                 case 4:
                     ia = GetROMLong(offset);
-                    format = "dl {0}" + string.Format(" : db {0}", NumberToBaseString(offset + 3, NumberBase.Hexadecimal, 2, true));
+                    format = "dl {0}" + string.Format(" : db {0}", NumberToBaseString(Data.GetROMByte(offset + 3), NumberBase.Hexadecimal, 2, true));
                     param = NumberToBaseString(GetROMLong(offset), NumberBase.Hexadecimal, 6, true);
                     break;
             }

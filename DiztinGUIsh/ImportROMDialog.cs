@@ -56,7 +56,7 @@ namespace DiztinGUIsh
                         int index = offset + 15 + 0x10 * i + 2 * j;
                         int val = data[index] + (data[index + 1] << 8);
                         int pc = Util.ConvertSNEStoPC(val);
-                        if (pc >= 0 && pc < data.Length) labels.Add(pc, vectorNames[i, j]);
+                        if (pc >= 0 && pc < data.Length && !labels.ContainsKey(pc)) labels.Add(pc, vectorNames[i, j]);
                     }
                 }
             }

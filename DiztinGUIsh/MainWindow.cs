@@ -215,6 +215,7 @@ namespace DiztinGUIsh
 
         private Util.NumberBase DisplayBase = Util.NumberBase.Hexadecimal;
         private Data.FlagType markFlag = Data.FlagType.Data8Bit;
+        private bool MoveWithStep = true;
 
         private void decimalToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -465,7 +466,8 @@ namespace DiztinGUIsh
 
         private void AutoStepSafe(int offset)
         {
-            SelectOffset(Manager.AutoStep(offset, false, 0));
+            int destination = Manager.AutoStep(offset, false, 0);
+            if (MoveWithStep) SelectOffset(destination);
             UpdatePercent();
             UpdateWindowTitle();
         }
@@ -476,7 +478,8 @@ namespace DiztinGUIsh
             DialogResult result = harsh.ShowDialog();
             if (result == DialogResult.OK)
             {
-                SelectOffset(Manager.AutoStep(harsh.GetOffset(), true, harsh.GetCount()));
+                int destination = Manager.AutoStep(harsh.GetOffset(), true, harsh.GetCount());
+                if (MoveWithStep) SelectOffset(destination);
                 UpdatePercent();
                 UpdateWindowTitle();
             }
@@ -495,28 +498,30 @@ namespace DiztinGUIsh
             DialogResult result = mark.ShowDialog();
             if (result == DialogResult.OK)
             {
+                int destination = 0;
                 int col = mark.GetProperty();
                 switch (col)
                 {
                     case 0:
-                        SelectOffset(Manager.Mark(mark.GetOffset(), (Data.FlagType)mark.GetValue(), mark.GetCount()));
+                        destination = Manager.Mark(mark.GetOffset(), (Data.FlagType)mark.GetValue(), mark.GetCount());
                         break;
                     case 1:
-                        SelectOffset(Manager.MarkDataBank(mark.GetOffset(), (int)mark.GetValue(), mark.GetCount()));
+                        destination = Manager.MarkDataBank(mark.GetOffset(), (int)mark.GetValue(), mark.GetCount());
                         break;
                     case 2:
-                        SelectOffset(Manager.MarkDirectPage(mark.GetOffset(), (int)mark.GetValue(), mark.GetCount()));
+                        destination = Manager.MarkDirectPage(mark.GetOffset(), (int)mark.GetValue(), mark.GetCount());
                         break;
                     case 3:
-                        SelectOffset(Manager.MarkMFlag(mark.GetOffset(), (bool)mark.GetValue(), mark.GetCount()));
+                        destination = Manager.MarkMFlag(mark.GetOffset(), (bool)mark.GetValue(), mark.GetCount());
                         break;
                     case 4:
-                        SelectOffset(Manager.MarkXFlag(mark.GetOffset(), (bool)mark.GetValue(), mark.GetCount()));
+                        destination = Manager.MarkXFlag(mark.GetOffset(), (bool)mark.GetValue(), mark.GetCount());
                         break;
                     case 5:
-                        SelectOffset(Manager.MarkArchitechture(mark.GetOffset(), (Data.Architechture)mark.GetValue(), mark.GetCount()));
+                        destination = Manager.MarkArchitechture(mark.GetOffset(), (Data.Architechture)mark.GetValue(), mark.GetCount());
                         break;
                 }
+                if (MoveWithStep) SelectOffset(destination);
                 UpdatePercent();
                 UpdateWindowTitle();
                 table.Invalidate();
@@ -542,7 +547,7 @@ namespace DiztinGUIsh
             int size = Data.GetROMSize();
             int unreached = end ? (direction ? 0 : size - 1) : offset;
 
-            while (unreached >= 0 && unreached < size && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached += direction ? 1 : -1;
+            while (unreached > 0 && unreached < size - 1 && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached += direction ? 1 : -1;
             while (unreached > 0 && Data.GetFlag(unreached - 1) == Data.FlagType.Unreached) unreached--;
 
             if (Data.GetFlag(unreached) == Data.FlagType.Unreached) SelectOffset(unreached, 1);
@@ -774,6 +779,12 @@ namespace DiztinGUIsh
         {
             markFlag = Data.FlagType.Text;
             UpdateMarkerLabel();
+        }
+
+        private void moveWithStepToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MoveWithStep = !MoveWithStep;
+            moveWithStepToolStripMenuItem.Checked = MoveWithStep;
         }
 
         public OpenFileDialog GetRomOpenFileDialog()

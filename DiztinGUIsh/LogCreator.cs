@@ -130,9 +130,11 @@ namespace DiztinGUIsh
             while (pointer < Data.GetROMSize())
             {
                 int length = GetLineByteLength(pointer);
+                Data.FlagType flag = Data.GetFlag(pointer);
 
                 if (unlabeled == FormatUnlabeled.ShowAll) addMe.Add(pointer);
-                else if (unlabeled != FormatUnlabeled.ShowNone)
+                else if (unlabeled != FormatUnlabeled.ShowNone &&
+                    (flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit || flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit))
                 {
                     int ia = Util.GetIntermediateAddressOrPointer(pointer);
                     int pc = Util.ConvertSNEStoPC(ia);

@@ -130,6 +130,8 @@
             this.ColumnM = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnX = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnComment = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.moveWithStepToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -629,10 +631,11 @@
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.visualMapToolStripMenuItem,
             this.graphicsWindowToolStripMenuItem,
-            this.constantsToolStripMenuItem});
+            this.constantsToolStripMenuItem,
+            this.optionsToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.viewToolStripMenuItem.Text = "&View";
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
+            this.viewToolStripMenuItem.Text = "&Tools";
             // 
             // visualMapToolStripMenuItem
             // 
@@ -921,6 +924,23 @@
             this.ColumnComment.Name = "ColumnComment";
             this.ColumnComment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.moveWithStepToolStripMenuItem});
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.optionsToolStripMenuItem.Text = "Options";
+            // 
+            // moveWithStepToolStripMenuItem
+            // 
+            this.moveWithStepToolStripMenuItem.Checked = true;
+            this.moveWithStepToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.moveWithStepToolStripMenuItem.Name = "moveWithStepToolStripMenuItem";
+            this.moveWithStepToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.moveWithStepToolStripMenuItem.Text = "Move With Step";
+            this.moveWithStepToolStripMenuItem.Click += new System.EventHandler(this.moveWithStepToolStripMenuItem_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1038,6 +1058,8 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnM;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnX;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnComment;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem moveWithStepToolStripMenuItem;
     }
 }
 
