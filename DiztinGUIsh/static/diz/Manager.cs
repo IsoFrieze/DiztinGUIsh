@@ -292,5 +292,12 @@ namespace DiztinGUIsh
             Project.unsavedChanges |= unsaved;
             return modified;
         }
+
+        public static int ImportTraceLog(string[] lines)
+        {
+            // Must follow this format.
+            // 028cde rep #$30               A:0004 X:0000 Y:0004 S:1fdd D:0000 DB:02 nvmxdiZC V:133 H: 654 F:36
+            return 0;
+        }
     }
 }

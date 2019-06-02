@@ -277,6 +277,8 @@ namespace DiztinGUIsh
                 vScrollBar1.Maximum = Data.GetROMSize() - rowsToShow;
                 vScrollBar1.Value = viewOffset;
                 table.RowCount = rowsToShow;
+
+                importTraceLogToolStripMenuItem.Enabled = true;
                 importUsageMapToolStripMenuItem.Enabled = true;
             }
         }
