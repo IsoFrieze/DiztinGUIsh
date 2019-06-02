@@ -27,6 +27,11 @@ namespace DiztinGUIsh
 
         private void MainWindow_SizeChanged(object sender, EventArgs e)
         {
+            UpdatePanels();
+        }
+
+        private void UpdatePanels()
+        {
             table.Height = this.Height - 85;
             table.Width = this.Width - 33;
             vScrollBar1.Height = this.Height - 85;
@@ -54,6 +59,8 @@ namespace DiztinGUIsh
                 null,
                 table,
                 new object[] { true });
+
+            UpdatePanels();
         }
 
         public void UpdateWindowTitle()
