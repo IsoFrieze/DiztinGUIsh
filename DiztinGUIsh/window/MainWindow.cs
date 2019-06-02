@@ -791,5 +791,16 @@ namespace DiztinGUIsh
         {
             return openROMFile;
         }
+
+        private void ImportUsageMapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (openUsageMapFile.ShowDialog() == DialogResult.OK)
+            {
+                int total = Manager.ImportUsageMap(File.ReadAllBytes(openUsageMapFile.FileName));
+
+                MessageBox.Show($"Modified total {total} flags!", "Done",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
     }
 }

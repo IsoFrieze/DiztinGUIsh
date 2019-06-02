@@ -43,6 +43,17 @@ namespace DiztinGUIsh
             ReadPoint = 0x08
         }
 
+        [Flags]
+        public enum BsnesPlusUsage : byte
+        {
+            UsageRead = 0x80,
+            UsageWrite = 0x40,
+            UsageExec = 0x20,
+            UsageOpcode = 0x10,
+            UsageFlagM = 0x02,
+            UsageFlagX = 0x01,
+        };
+
         public enum ROMMapMode : byte
         {
             LoROM, HiROM, ExHiROM, SA1ROM, ExSA1ROM

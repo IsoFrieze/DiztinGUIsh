@@ -239,5 +239,56 @@ namespace DiztinGUIsh
 
             Project.unsavedChanges = true;
         }
+        
+        public static int ImportUsageMap(byte[] usageMap)
+        {
+            int size = Data.GetROMSize();
+            bool unsaved = false;
+            int modified = 0;
+
+            for (int i = 0; i < size; i++)
+            {
+                // TODO: get every single possible SNES address for mapping.
+                var map = Util.ConvertPCtoSNES(i);
+
+                var flags = (Data.BsnesPlusUsage)usageMap[map];
+
+                if (flags == 0)
+                {
+                    // no information available
+                    continue;
+                }
+
+                if (Data.GetFlag(i) != Data.FlagType.Unreached)
+                {
+                    // skip if there is something already set..
+                    continue;
+                }
+
+                // opcode: 0x30, operand: 0x20
+                if (flags.HasFlag(Data.BsnesPlusUsage.UsageExec))
+                {
+                    Data.SetFlag(i, Data.FlagType.Operand);
+
+                    if (flags.HasFlag(Data.BsnesPlusUsage.UsageOpcode))
+                    {
+                        Data.SetFlag(i, Data.FlagType.Opcode);
+                    }
+
+                    Data.SetMXFlags(i, ((int)flags & 3) << 4);
+                    unsaved = true;
+                    modified++;
+                }
+                else if (flags.HasFlag(Data.BsnesPlusUsage.UsageRead))
+                {
+                    Data.SetFlag(i, Data.FlagType.Data8Bit);
+                    unsaved = true;
+                    modified++;
+                }
+            }
+
+            Project.unsavedChanges |= unsaved;
+            return modified;
+        }
     }
 }
