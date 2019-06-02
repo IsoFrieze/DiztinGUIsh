@@ -245,6 +245,7 @@ namespace DiztinGUIsh
             int size = Data.GetROMSize();
             bool unsaved = false;
             int modified = 0;
+            int prevFlags = 0;
 
             for (int i = 0; i < size; i++)
             {
@@ -272,10 +273,11 @@ namespace DiztinGUIsh
 
                     if (flags.HasFlag(Data.BsnesPlusUsage.UsageOpcode))
                     {
+                        prevFlags = ((int)flags & 3) << 4;
                         Data.SetFlag(i, Data.FlagType.Opcode);
                     }
 
-                    Data.SetMXFlags(i, ((int)flags & 3) << 4);
+                    Data.SetMXFlags(i, prevFlags);
                     unsaved = true;
                     modified++;
                 }
