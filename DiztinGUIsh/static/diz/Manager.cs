@@ -297,7 +297,41 @@ namespace DiztinGUIsh
         {
             // Must follow this format.
             // 028cde rep #$30               A:0004 X:0000 Y:0004 S:1fdd D:0000 DB:02 nvmxdiZC V:133 H: 654 F:36
-            return 0;
+            bool unsaved = false;
+            int modified = 0;
+            int size = Data.GetROMSize();
+
+            foreach (var line in lines)
+            {
+                if (line.Length < 80)
+                {
+                    continue;
+                }
+
+                // TODO: error treatment
+                // TODO: parse MX flags
+                int directPageIndex = line.IndexOf("D:") + 2;
+                int dataBankIndex = line.IndexOf("DB:") + 3;
+
+                int snesAddress = Convert.ToInt32(line.Substring(0, 6), 16);
+                int directPage = Convert.ToInt32(line.Substring(directPageIndex, 4), 16);
+                int dataBank = Convert.ToInt32(line.Substring(dataBankIndex, 2), 16);
+
+                int pc = Util.ConvertSNEStoPC(snesAddress);
+                Data.SetFlag(pc, Data.FlagType.Opcode);
+                
+                do
+                {
+                    Data.SetDataBank(pc, dataBank);
+                    Data.SetDirectPage(pc, directPage);
+                    pc++;
+                    unsaved = true;
+                    modified++;
+                } while (pc < size && Data.GetFlag(pc) == Data.FlagType.Operand);
+            }
+
+            Project.unsavedChanges |= unsaved;
+            return modified;
         }
     }
 }

@@ -134,6 +134,7 @@
             this.ColumnM = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnX = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnComment = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -284,6 +285,7 @@
             this.importTraceLogToolStripMenuItem.Name = "importTraceLogToolStripMenuItem";
             this.importTraceLogToolStripMenuItem.Size = new System.Drawing.Size(292, 26);
             this.importTraceLogToolStripMenuItem.Text = "Import Trace Log...";
+            this.importTraceLogToolStripMenuItem.Click += new System.EventHandler(this.ImportTraceLogToolStripMenuItem_Click);
             // 
             // importUsageMapToolStripMenuItem
             // 
@@ -975,6 +977,10 @@
             this.ColumnComment.Name = "ColumnComment";
             this.ColumnComment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
+            // openTraceLogDialog
+            // 
+            this.openTraceLogDialog.Filter = "bsnes-plus trace log|*.log";
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
@@ -1097,6 +1103,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnM;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnX;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnComment;
+        private System.Windows.Forms.OpenFileDialog openTraceLogDialog;
     }
 }
 

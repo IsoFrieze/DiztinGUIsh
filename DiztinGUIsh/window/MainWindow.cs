@@ -812,5 +812,16 @@ namespace DiztinGUIsh
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
+
+        private void ImportTraceLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (openTraceLogDialog.ShowDialog() == DialogResult.OK)
+            {
+                int total = Manager.ImportTraceLog(File.ReadAllLines(openTraceLogDialog.FileName));
+
+                MessageBox.Show($"Modified total {total} flags!", "Done",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
     }
 }
