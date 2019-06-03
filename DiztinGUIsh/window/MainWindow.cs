@@ -198,7 +198,7 @@ namespace DiztinGUIsh
             try
             {
                 System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "/help.html");
-            } catch (Exception ex)
+            } catch (Exception)
             {
                 MessageBox.Show("Can't find the help file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
