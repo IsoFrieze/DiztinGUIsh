@@ -318,6 +318,12 @@ namespace DiztinGUIsh
                 int dataBank = Convert.ToInt32(line.Substring(dataBankIndex, 2), 16);
 
                 int pc = Util.ConvertSNEStoPC(snesAddress);
+
+                if (pc == -1)
+                {
+                    continue;
+                }
+
                 Data.SetFlag(pc, Data.FlagType.Opcode);
                 
                 do
