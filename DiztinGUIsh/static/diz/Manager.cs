@@ -247,10 +247,15 @@ namespace DiztinGUIsh
             int modified = 0;
             int prevFlags = 0;
 
-            for (int i = 0; i < size; i++)
+            for (int map = 0; map <= 0xFFFFFF; map++)
             {
-                // TODO: get every single possible SNES address for mapping.
-                var map = Util.ConvertPCtoSNES(i);
+                var i = Util.ConvertSNEStoPC(map);
+
+                if (i == -1 || i >= size)
+                {
+                    // branch predictor may optimize this
+                    continue;
+                }
 
                 var flags = (Data.BsnesPlusUsage)usageMap[map];
 
