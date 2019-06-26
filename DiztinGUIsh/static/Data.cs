@@ -239,8 +239,14 @@ namespace DiztinGUIsh
 
         public static void AddComment(int i, string v, bool overwrite)
         {
-            if (comment.ContainsKey(i) && overwrite) comment.Remove(i);
-            if (!comment.ContainsKey(i)) comment.Add(i, v);
+            if (v == null)
+            {
+                if (comment.ContainsKey(i)) comment.Remove(i);
+            } else
+            {
+                if (comment.ContainsKey(i) && overwrite) comment.Remove(i);
+                if (!comment.ContainsKey(i)) comment.Add(i, v);
+            }
         }
 
         public static Dictionary<int, string> GetAllComments()
