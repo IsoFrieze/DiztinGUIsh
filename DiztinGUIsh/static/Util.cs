@@ -434,7 +434,7 @@ namespace DiztinGUIsh
                             ) style.BackColor = Color.Yellow;
                             break;
                         case 8: // Data Bank
-                            if (opcode == 0xAB) // PLB
+                            if (opcode == 0xAB || opcode == 0x44 || opcode == 0x54) // PLB MVP MVN
                                 style.BackColor = Color.OrangeRed;
                             else if (opcode == 0x8B) // PHB
                                 style.BackColor = Color.Yellow;
