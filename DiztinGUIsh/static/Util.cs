@@ -42,7 +42,7 @@ namespace DiztinGUIsh
             {
                 case Data.FlagType.Unreached:
                 case Data.FlagType.Opcode:
-                    return GetIntermediateAddress(offset);
+                    return GetIntermediateAddress(offset, true);
                 case Data.FlagType.Pointer16Bit:
                     int bank = Data.GetDataBank(offset);
                     return (bank << 16) | GetROMWord(offset);
@@ -53,11 +53,12 @@ namespace DiztinGUIsh
             return -1;
         }
 
-        public static int GetIntermediateAddress(int offset)
+        public static int GetIntermediateAddress(int offset, bool resolve = false)
         {
+            // FIX ME: log and generation of dp opcodes. search references
             switch (Data.GetArchitechture(offset))
             {
-                case Data.Architechture.CPU65C816: return CPU65C816.GetIntermediateAddress(offset);
+                case Data.Architechture.CPU65C816: return CPU65C816.GetIntermediateAddress(offset, resolve);
                 case Data.Architechture.APUSPC700: return -1;
                 case Data.Architechture.GPUSuperFX: return -1;
             }

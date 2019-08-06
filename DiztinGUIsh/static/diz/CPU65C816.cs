@@ -57,14 +57,14 @@ namespace DiztinGUIsh
                 || opcode == 0x70 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 // BVS BCC BCS BNE
                 || opcode == 0xF0 || opcode == 0x20 || opcode == 0x22)))) // BEQ JSR JSL
             {
-                int iaNextOffsetPC = Util.ConvertSNEStoPC(Util.GetIntermediateAddress(offset));
+                int iaNextOffsetPC = Util.ConvertSNEStoPC(Util.GetIntermediateAddress(offset, true));
                 if (iaNextOffsetPC >= 0) nextOffset = iaNextOffsetPC;
             }
 
             return nextOffset;
         }
 
-        public static int GetIntermediateAddress(int offset)
+        public static int GetIntermediateAddress(int offset, bool resolve)
         {
             int bank, directPage, operand, programCounter;
             int opcode = Data.GetROMByte(offset);
@@ -80,9 +80,16 @@ namespace DiztinGUIsh
                 case AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX:
                 case AddressMode.DIRECT_PAGE_LONG_INDIRECT:
                 case AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX:
-                    directPage = Data.GetDirectPage(offset);
-                    operand = Data.GetROMByte(offset + 1);
-                    return (directPage + operand) & 0xFFFF;
+                    if (resolve)
+                    {
+                        directPage = Data.GetDirectPage(offset);
+                        operand = Data.GetROMByte(offset + 1);
+                        return (directPage + operand) & 0xFFFF;
+                    }
+                    else
+                    {
+                        goto case AddressMode.DIRECT_PAGE_S_INDEX;
+                    }
                 case AddressMode.DIRECT_PAGE_S_INDEX:
                 case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
                     return Data.GetROMByte(offset + 1);
@@ -185,7 +192,7 @@ namespace DiztinGUIsh
         public static void MarkInOutPoints(int offset)
         {
             int opcode = Data.GetROMByte(offset);
-            int iaOffsetPC = Util.ConvertSNEStoPC(Util.GetIntermediateAddress(offset));
+            int iaOffsetPC = Util.ConvertSNEStoPC(Util.GetIntermediateAddress(offset, true));
 
             // set read point on EA
             if (iaOffsetPC >= 0 && ( // these are all read/write/math instructions

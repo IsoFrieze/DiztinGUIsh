@@ -190,7 +190,7 @@ namespace DiztinGUIsh
                         }
                     }
                 }
-                int ia = Util.GetIntermediateAddress(offset);
+                int ia = Util.GetIntermediateAddress(offset, true);
                 if (ia >= 0 && flag == Data.FlagType.Opcode && Data.GetInOutPoint(offset) == Data.InOutPoint.OutPoint && Data.GetFlag(Util.ConvertSNEStoPC(ia)) != Data.FlagType.Opcode)
                 {
                     err.WriteLine("({0}) Offset 0x{1:X}: Branch or jump instruction to a non-instruction.", ++errorCount, offset);
