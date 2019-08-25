@@ -10,7 +10,49 @@ namespace DiztinGUIsh
     {
         public static int Step(int offset, bool branch, bool force, int prevOffset)
         {
-        
+            int opcode = Data.GetROMByte(offset);
+            int prevDirectPage = Data.GetDirectPage(offset);
+            int prevDataBank = Data.GetDataBank(offset);
+            bool prevX = Data.GetXFlag(offset), prevM = Data.GetMFlag(offset);
+            
+            while (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
+            if (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Opcode)
+            {
+                prevDirectPage = Data.GetDirectPage(prevOffset);
+                prevDataBank = Data.GetDataBank(prevOffset);
+                prevX = Data.GetXFlag(prevOffset);
+                prevM = Data.GetMFlag(prevOffset);
+            }
+            
+            Data.SetFlag(offset, Data.FlagType.Opcode);
+            Data.SetDataBank(offset, prevDataBank);
+            Data.SetDirectPage(offset, prevDirectPage);
+            Data.SetXFlag(offset, prevX);
+            Data.SetMFlag(offset, prevM);
+            
+            int length = GetInstructionLength(offset);
+            
+            for (int i = 1; i < length; i++)
+            {
+                Data.SetFlag(offset + i, Data.FlagType.Operand);
+                Data.SetDataBank(offset + i, prevDataBank);
+                Data.SetDirectPage(offset + i, prevDirectPage);
+                Data.SetXFlag(offset + i, prevX);
+                Data.SetMFlag(offset + i, prevM);
+            }
+            
+            MarkInOutPoints(offset);
+            
+            if (!force && (opcode == 0x4C || opcode == 0x80 // JMP BRA
+                || (branch && (opcode == 0x10 || opcode == 0x30 || opcode == 0x50 // BPL BMI BVC
+                || opcode == 0x70 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 // BVS BCC BCS BNE
+                || opcode == 0xF0 || opcode == 0x20)))) // BEQ JSR
+            {
+                int iaNextOffsetPC = Util.ConvertSNEStoPC(Util.GetIntermediateAddress(offset));
+                if (iaNextOffsetPC >= 0) nextOffset = iaNextOffsetPC;
+            }
+
+            return nextOffset;
         }
         
         public static int GetIntermediateAddress(int offset)
