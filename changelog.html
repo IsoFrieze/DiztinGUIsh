@@ -1,0 +1,65 @@
+<html>
+<head>
+<title>DiztinGUIsh Changelog</title>
+</head>
+<body>
+
+<h1>DiztinGUIsh Changelog</h1>
+
+<hr />
+
+<h2>Table of Contents</h2>
+<ul>
+    <li><a href="#v1010">v1.0</a></li>
+        <ul>
+            <li><a href="#v1010">v1.0.1.0</a></li>
+            <li><a href="#v1000">v1.0.0.0</a></li>
+        </ul>
+</ul>
+
+<hr />
+
+<h2 id="v1010">v1.0.1.0</h2>
+
+<p>Released September 12, 2019.</p>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+    <li>Fixed some errors with displaying the main table near the end of the ROM.</li>
+    <li>Fixed an error with opening ROMs of sizes of non-powers of 2.</li>
+    <li>Fixed the intermediate address not showing for unreached bytes.</li>
+    <li>Fixed an annoying error that would occur when saving a project where an alias or comment has been created then deleted.</li>
+    <li>Fixed an error when jumping to the previous unreached block when no block exists.</li>
+    <li>Fixed an error with the log generator that would create aliases on offsets that aren't instructions, pointers, or read points.</li>
+    <li>Fixed an error that occurs when auto generating aliases for two vectors with the same offset.</li>
+    <li>The data bank register column will now properly be highlighted in red when a MVP or MVN instruction is executed.</li>
+</ul>
+
+<h4>Changes</h4>
+
+<ul>
+    <li>Changed the "Effective Address" column and related things to "Intermediate Address," and fixed some instructions' calculations for the intermediate address. See the help file for more details.</li>
+    <li>Changed the hotkey of "Goto Effective Address" (F) to "Goto Intermediate Address" (T) to match the name change.</li>
+    <li>Renamed "View" to "Tools" and added an "Options" submenu.</li>
+</ul>
+
+<h4>New Features</h4>
+
+<ul>
+    <li>New mapping modes have been added. ExLoROM and SuperFX mapping modes are available and automatically detected. Two SA-1 mapping modes are also available thanks to Vitor Vilela. Mode 2, Super MMC (used with the S-DD1 and SPC7110 chips), is an option, but it is not supported yet.</li>
+    <li>Added "Move with Step" option that makes the selected row jump to the end of an Auto Step or Mark Many process.</li>
+    <li>Added support for opening and saving *.dizraw project files. These are just normal project files, but they are uncompressed.</li>
+</ul>
+
+<hr />
+
+<h2 id="v1000">v1.0.0.0</h2>
+
+<p>Released April 21, 2019.</p>
+<p>Initial Release.</p>
+
+<hr />
+
+</body>
+</html>
