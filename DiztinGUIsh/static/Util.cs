@@ -183,37 +183,80 @@ namespace DiztinGUIsh
             // WRAM mirror & PPU regs are N/A to PC addressing
             if (((address & 0x400000) == 0) && ((address & 0x8000) == 0)) return -1;
 
-            if (Data.GetROMMapMode() == Data.ROMMapMode.LoROM)
+            switch (Data.GetROMMapMode())
             {
-                // SRAM is N/A to PC addressing
-                if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) return -1;
+                case Data.ROMMapMode.LoROM:
+                    {
+                        // SRAM is N/A to PC addressing
+                        if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) return -1;
 
-                return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
-            } else if (Data.GetROMMapMode() == Data.ROMMapMode.HiROM)
-            {
-                return UnmirroredOffset(address & 0x3FFFFF);
-            } else if (Data.GetROMMapMode() == Data.ROMMapMode.ExHiROM)
-            {
-                return UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
-            } else
-            {
-                // BW-RAM is N/A to PC addressing
-                if (address >= 0x400000 && address <= 0x7FFFFF) return -1;
+                        return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                    }
+                case Data.ROMMapMode.HiROM:
+                    {
+                        return UnmirroredOffset(address & 0x3FFFFF);
+                    }
+                case Data.ROMMapMode.SuperMMC:
+                    {
+                        return UnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
+                    }
+                case Data.ROMMapMode.SA1ROM:
+                case Data.ROMMapMode.ExSA1ROM:
+                    {
+                        // BW-RAM is N/A to PC addressing
+                        if (address >= 0x400000 && address <= 0x7FFFFF) return -1;
 
-                if (address >= 0xC00000)
-                {
-                    if (Data.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM) return UnmirroredOffset(address & 0x7FFFFF);
-                    else return UnmirroredOffset(address & 0x3FFFFF);
-                }
-                else
-                {
-                    if (address >= 0x800000) address -= 0x400000;
+                        if (address >= 0xC00000)
+                        {
+                            if (Data.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM)
+                                return UnmirroredOffset(address & 0x7FFFFF);
+                            else
+                                return UnmirroredOffset(address & 0x3FFFFF);
+                        }
+                        else
+                        {
+                            if (address >= 0x800000) address -= 0x400000;
 
-                    // SRAM is N/A to PC addressing
-                    if (((address & 0x8000) == 0)) return -1;
+                            // SRAM is N/A to PC addressing
+                            if (((address & 0x8000) == 0)) return -1;
 
-                    return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
-                }
+                            return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        }
+                    }
+                case Data.ROMMapMode.SuperFX:
+                    {
+                        // BW-RAM is N/A to PC addressing
+                        if (address >= 0x600000 && address <= 0x7FFFFF) return -1;
+
+                        if (address < 0x400000)
+                        {
+                            return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        } else if (address < 0x600000)
+                        {
+                            return UnmirroredOffset(address & 0x3FFFFF);
+                        } else if (address < 0xC00000)
+                        {
+                            return 0x200000 + UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        } else
+                        {
+                            return 0x400000 + UnmirroredOffset(address & 0x3FFFFF);
+                        }
+                    }
+                case Data.ROMMapMode.ExHiROM:
+                    {
+                        return UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
+                    }
+                case Data.ROMMapMode.ExLoROM:
+                    {
+                        // SRAM is N/A to PC addressing
+                        if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) return -1;
+
+                        return UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
+                    }
+                default:
+                    {
+                        return -1;
+                    }
             }
         }
 
@@ -434,7 +477,7 @@ namespace DiztinGUIsh
                             ) style.BackColor = Color.Yellow;
                             break;
                         case 8: // Data Bank
-                            if (opcode == 0xAB) // PLB
+                            if (opcode == 0xAB || opcode == 0x44 || opcode == 0x54) // PLB MVP MVN
                                 style.BackColor = Color.OrangeRed;
                             else if (opcode == 0x8B) // PHB
                                 style.BackColor = Color.Yellow;

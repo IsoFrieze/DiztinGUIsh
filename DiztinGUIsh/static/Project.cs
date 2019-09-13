@@ -74,7 +74,9 @@ namespace DiztinGUIsh
                 Util.StringToByteArray(watermark).CopyTo(everything, 1);
                 data.CopyTo(everything, HEADER_SIZE);
 
-                File.WriteAllBytes(filename, TryZip(everything));
+                if (!IsUncompressedProject(filename)) everything = TryZip(everything);
+
+                File.WriteAllBytes(filename, everything);
                 unsavedChanges = false;
                 currentFile = filename;
             }
@@ -138,22 +140,23 @@ namespace DiztinGUIsh
         {
             try
             {
-                byte[] raw = File.ReadAllBytes(filename);
-                byte[] unzipped = TryUnzip(raw);
+                byte[] data = File.ReadAllBytes(filename);
+
+                if (!IsUncompressedProject(filename)) data = TryUnzip(data);
 
                 for (int i = 0; i < watermark.Length; i++)
                 {
-                    if (unzipped[i + 1] != (byte)watermark[i])
+                    if (data[i + 1] != (byte)watermark[i])
                     {
                         throw new Exception("This is not a valid DiztinGUIsh file!");
                     }
                 }
 
-                byte version = unzipped[0];
+                byte version = data[0];
 
                 switch (version)
                 {
-                    case 0: OpenVersion0(unzipped, open); break;
+                    case 0: OpenVersion0(data, open); break;
                     default: throw new Exception("This is not a valid DiztinGUIsh file!");
                 }
 
@@ -302,6 +305,11 @@ namespace DiztinGUIsh
                 unsavedChanges = true;
             }
             return true;
+        }
+
+        private static bool IsUncompressedProject(string filename)
+        {
+            return Path.GetExtension(filename).Equals(".dizraw", StringComparison.InvariantCultureIgnoreCase);
         }
 
         // https://stackoverflow.com/questions/33119119/unzip-byte-array-in-c-sharp

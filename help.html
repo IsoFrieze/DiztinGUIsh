@@ -4,7 +4,7 @@
 </head>
 <body>
 
-<h1>DiztinGUIsh Help - v1.0.0.0</h1>
+<h1>DiztinGUIsh Help - v1.0.1.0</h1>
 
 <hr />
 
@@ -88,8 +88,9 @@
 <p>All of the flags, labels, comments, and other data you make to help with disassembling will be put into a single <a href="#fileformat">Project File</a> (*.diz). This file contains a <em>link</em> to the ROM you are currently working on, but doesn't contain the ROM itself. This is for copyright reasons, and so you can easily share project files without worry of sharing ROM files as well. Because of this, if the ROM file you are working on is deleted or is relocated on your computer, DiztinGUIsh will ask to relocate the file. The ROM's internal name and checksum are stored to make sure you relink the same ROM you started with, but it is techincally possible to relink a different ROM. Not sure what would happen then, but it wouldn't be anything you'd want.</p>
 <p>When you start DiztinGUIsh, you can start a new project or open an existing one. Opening an existing project is simple, though you may have to relink your ROM if it moved, or if you recieved this project file from a friend. When you start a new project, DiztinGUIsh will first prompt you to select a ROM file you want to work on.</p>
 <h4>Starting a Project</h4>
-<p>DiztinGUIsh currently supports three types of <em>ROM Mapping Modes</em>: LoROM, HiROM, &amp; ExHiROM. The program will try its best to detect what mode the ROM you selected uses. There is a chance it won't be able to figure it out, or it will guess wrong. After you select a ROM file, DiztinGUIsh will show the ROM's internal name. If this doesn't look correct, try changing the ROM Map mode.</p>
+<p>DiztinGUIsh currently supports seven types of <em>ROM Mapping Modes</em>: LoROM, HiROM, two SA-1 modes, SuperFX, ExHiROM, &amp; ExLoROM. The program will try its best to detect what mode the ROM you selected uses. There is a chance it won't be able to figure it out, or it will guess wrong. After you select a ROM file, DiztinGUIsh will show the ROM's internal name. If this doesn't look correct, try changing the ROM Map mode.</p>
 <p><em>Note: Some Japanese titles will display as gibberish, so it is possible that the correct ROM Mapping Mode will result in a garbage looking title.</em></p>
+<p><em>Note: Although mapping mode 2, Super MMC, is an option, it currently functions identically to HiROM.</em></p>
 <p>DiztinGUIsh also provides a few extra jumpstart options on the New Project window. The table of numbers on the bottom half of the window show the ROM's <em>vectors</em>, which are special pointers that locate code that runs under special circumstances (interrupts, bootup, etc.). By default, DiztinGUIsh will check off the vectors it thinks are important. Checking off a vector will automatically generate a label at the location of the pointer (e.g. "Native_NMI").</p>
 <p>If the final checkbox is checked, DiztinGUIsh will automatically mark flags for the entire internal header. This includes the internal name, ROM meta info &amp; mapping settings, developer codes, &amp; the vectors.</p>
 
@@ -141,7 +142,7 @@
 </ul>
 <h4>B</h4>
 <p>The value of the <em>Data Bank register</em> during execution of this code. Some instructions derive their intermediate address using the value of the data bank register. The data bank register is also used as the bank byte of a 16-bit pointer.</p>
-<p>The value will be highlighted in yellow if the instruction at this location stores the data bank register (<tt>PHB</tt>). It will be highlighted in red if the instruction writes to the data bank register (<tt>PLB</tt>). This way you can be on a lookout for changes to this register.</p>
+<p>The value will be highlighted in yellow if the instruction at this location stores the data bank register (<tt>PHB</tt>). It will be highlighted in red if the instruction writes to the data bank register (<tt>PLB : MVP : MVN</tt>). This way you can be on a lookout for changes to this register.</p>
 <h4>D</h4>
 <p>The value of the <em>Direct Page register</em> during execution of this code. Some instructions derive their intermediate address using the value of the direct page register.</p>
 <p>The value will be highlighted in yellow if the instruction at this location stores the direct page register (<tt>PHD : TDC</tt>). It will be highlighted in red if the instruction writes to the direct page register (<tt>PLD : TCD</tt>). This way you can be on a lookout for changes to this register.</p>
@@ -413,8 +414,8 @@
 
 <h2 id="fileformat">Project File Format</h2>
 
-<p>This section is mainly for my benefit so I can make sure I deal with project files correctly, but you can use this to build/read from *.diz project files.</p>
-<p>All *.diz files are compressed and decompressed with the C# GZipStream. (This means you can rename a *.diz to a *.gz and extract the original file!)</p>
+<p>This section is mainly for my benefit so I can make sure I deal with project files correctly, but you can use this to build/read from *.diz and *.dizraw project files.</p>
+<p>All *.diz files are compressed and decompressed with the C# GZipStream. (This means you can rename a *.diz to a *.gz and extract the original file!) All *.dizraw files are uncompressed.</p>
 
 <hr />
 
@@ -424,7 +425,7 @@
     <li>1 byte: project file version (always 00)</li>
     <li>11 bytes: ASCII "DiztinGUIsh"</li>
     <li>244 bytes: reserved for project info</li>
-    <li>1 byte: ROM Map Mode (00 = LoROM, 01 = HiROM, 02 = ExHiROM)</li>
+    <li>1 byte: ROM Map Mode (00 = LoROM, 01 = HiROM, 02 = ExHiROM, 03 = SA-1, 04 = ExSA-1, 05 = SuperFX, 06 = Super MMC, 07 = ExLoROM)</li>
     <li>1 byte: ROM Speed (00 = SlowROM, 01 = FastROM)</li>
     <li>1 int: ROM Size in bytes; call this [size]</li>
     <li>21 bytes: ROM Internal Name ($00FFC0 - $00FFD4)</li>

@@ -45,7 +45,7 @@ namespace DiztinGUIsh
 
         public enum ROMMapMode : byte
         {
-            LoROM, HiROM, ExHiROM, SA1ROM, ExSA1ROM
+            LoROM, HiROM, ExHiROM, SA1ROM, ExSA1ROM, SuperFX, SuperMMC, ExLoROM
         }
 
         public enum ROMSpeed : byte
@@ -56,7 +56,8 @@ namespace DiztinGUIsh
         public const int
             LOROM_SETTING_OFFSET = 0x7FD5,
             HIROM_SETTING_OFFSET = 0xFFD5,
-            EXHIROM_SETTING_OFFSET = 0x40FFD5;
+            EXHIROM_SETTING_OFFSET = 0x40FFD5,
+            EXLOROM_SETTING_OFFSET = 0x407FD5;
 
         private static ROMMapMode rom_map_mode;
         private static ROMSpeed rom_speed;
@@ -239,8 +240,14 @@ namespace DiztinGUIsh
 
         public static void AddComment(int i, string v, bool overwrite)
         {
-            if (comment.ContainsKey(i) && overwrite) comment.Remove(i);
-            if (!comment.ContainsKey(i)) comment.Add(i, v);
+            if (v == null)
+            {
+                if (comment.ContainsKey(i)) comment.Remove(i);
+            } else
+            {
+                if (comment.ContainsKey(i) && overwrite) comment.Remove(i);
+                if (!comment.ContainsKey(i)) comment.Add(i, v);
+            }
         }
 
         public static Dictionary<int, string> GetAllComments()
@@ -255,6 +262,7 @@ namespace DiztinGUIsh
                 case ROMMapMode.LoROM: return LOROM_SETTING_OFFSET;
                 case ROMMapMode.HiROM: return HIROM_SETTING_OFFSET;
                 case ROMMapMode.ExHiROM: return EXHIROM_SETTING_OFFSET;
+                case ROMMapMode.ExLoROM: return EXLOROM_SETTING_OFFSET;
             }
             return LOROM_SETTING_OFFSET;
         }

@@ -104,11 +104,14 @@
             // 
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Items.AddRange(new object[] {
-            "LoROM",
-            "HiROM",
-            "ExHiROM",
-            "SA-1 ROM",
-            "SA-1 ROM (FuSoYa\'s 8MB mapper)"});
+            "(0) LoROM",
+            "(1) HiROM",
+            "(2) Super MMC",
+            "(3) SA-1 ROM",
+            "(3) SA-1 ROM (FuSoYa\'s 8MB mapper)",
+            "(4) SuperFX",
+            "(5) ExHiROM",
+            "(6) ExLoROM"});
             this.comboBox1.Location = new System.Drawing.Point(103, 18);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(121, 21);

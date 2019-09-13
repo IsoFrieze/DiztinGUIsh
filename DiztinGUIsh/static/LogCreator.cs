@@ -347,9 +347,11 @@ namespace DiztinGUIsh
             {
                 case Data.ROMMapMode.LoROM: s = "lorom"; break;
                 case Data.ROMMapMode.HiROM: s = "hirom"; break;
+                case Data.ROMMapMode.SA1ROM: s = "sa1rom"; break; // todo
+                case Data.ROMMapMode.ExSA1ROM: s = "exsa1rom"; break; // todo
+                case Data.ROMMapMode.SuperFX: s = "sfxrom"; break; // todo
                 case Data.ROMMapMode.ExHiROM: s = "exhirom"; break;
-                case Data.ROMMapMode.SA1ROM: s = "sa1rom"; break;
-                case Data.ROMMapMode.ExSA1ROM: s = "exsa1rom"; break;
+                case Data.ROMMapMode.ExLoROM: s = "exlorom"; break;
             }
             return string.Format("{0," + (length * -1) + "}", s);
         }

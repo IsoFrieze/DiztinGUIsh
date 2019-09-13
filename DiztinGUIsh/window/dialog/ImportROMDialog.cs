@@ -93,7 +93,7 @@ namespace DiztinGUIsh
 
         private Data.ROMMapMode DetectROMMapMode()
         {
-            if ((data[Data.LOROM_SETTING_OFFSET] == 0x23))
+            if ((data[Data.LOROM_SETTING_OFFSET] & 0xEF) == 0x23)
             {
                 if (data.Length > 0x400000)
                 {
@@ -110,27 +110,46 @@ namespace DiztinGUIsh
             }
             else if ((data[Data.LOROM_SETTING_OFFSET] & 0xEC) == 0x20)
             {
-                detectMessage.Text = "ROM Map Mode Detected: LoROM";
-                comboBox1.SelectedIndex = 0;
-                return Data.ROMMapMode.LoROM;
+                if ((data[Data.LOROM_SETTING_OFFSET + 1] & 0xF0) == 0x10) {
+                    detectMessage.Text = "ROM Map Mode Detected: SuperFX";
+                    comboBox1.SelectedIndex = 5;
+                    return Data.ROMMapMode.SuperFX;
+                } else {
+                    detectMessage.Text = "ROM Map Mode Detected: LoROM";
+                    comboBox1.SelectedIndex = 0;
+                    return Data.ROMMapMode.LoROM;
+                }
             }
-            else if (data.Length >= 0x10000 && (data[Data.HIROM_SETTING_OFFSET] & 0xE4) == 0x20)
+            else if (data.Length >= 0x10000 && (data[Data.HIROM_SETTING_OFFSET] & 0xEF) == 0x21)
             {
                 detectMessage.Text = "ROM Map Mode Detected: HiROM";
                 comboBox1.SelectedIndex = 1;
                 return Data.ROMMapMode.HiROM;
             }
+            else if (data.Length >= 0x10000 && (data[Data.HIROM_SETTING_OFFSET] & 0xE7) == 0x22)
+            {
+                detectMessage.Text = "ROM Map Mode Detected: Super MMC";
+                comboBox1.SelectedIndex = 2;
+                return Data.ROMMapMode.SuperMMC;
+            }
             else if (data.Length >= 0x410000 && (data[Data.EXHIROM_SETTING_OFFSET] & 0xEF) == 0x25)
             {
                 detectMessage.Text = "ROM Map Mode Detected: ExHiROM";
-                comboBox1.SelectedIndex = 2;
+                comboBox1.SelectedIndex = 6;
                 return Data.ROMMapMode.ExHiROM;
             }
             else
             {
                 detectMessage.Text = "Couldn't auto detect ROM Map Mode!";
-                comboBox1.SelectedIndex = 0;
-                return Data.ROMMapMode.LoROM;
+                if (data.Length > 0x40000)
+                {
+                    comboBox1.SelectedIndex = 7;
+                    return Data.ROMMapMode.ExLoROM;
+                } else
+                {
+                    comboBox1.SelectedIndex = 0;
+                    return Data.ROMMapMode.LoROM;
+                }
             }
         }
 
@@ -216,9 +235,12 @@ namespace DiztinGUIsh
             {
                 case 0: mode = Data.ROMMapMode.LoROM; break;
                 case 1: mode = Data.ROMMapMode.HiROM; break;
-                case 2: mode = Data.ROMMapMode.ExHiROM; break;
+                case 2: mode = Data.ROMMapMode.SuperMMC; break;
                 case 3: mode = Data.ROMMapMode.SA1ROM; break;
                 case 4: mode = Data.ROMMapMode.ExSA1ROM; break;
+                case 5: mode = Data.ROMMapMode.SuperFX; break;
+                case 6: mode = Data.ROMMapMode.ExHiROM; break;
+                case 7: mode = Data.ROMMapMode.ExLoROM; break;
             }
             UpdateOffsetAndSpeed();
             UpdateTextboxes();
