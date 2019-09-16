@@ -59,7 +59,7 @@
             this.rescan.Location = new System.Drawing.Point(174, 237);
             this.rescan.Name = "rescan";
             this.rescan.Size = new System.Drawing.Size(75, 23);
-            this.rescan.TabIndex = 3;
+            this.rescan.TabIndex = 2;
             this.rescan.Text = "Rescan";
             this.rescan.UseVisualStyleBackColor = true;
             this.rescan.Click += new System.EventHandler(this.rescan_Click);

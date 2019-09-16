@@ -182,6 +182,7 @@
             this.table.ShowRowErrors = false;
             this.table.Size = new System.Drawing.Size(700, 500);
             this.table.TabIndex = 0;
+            this.table.TabStop = false;
             this.table.VirtualMode = true;
             this.table.KeyDown += new System.Windows.Forms.KeyEventHandler(this.table_KeyDown);
             this.table.MouseDown += new System.Windows.Forms.MouseEventHandler(this.table_MouseDown);

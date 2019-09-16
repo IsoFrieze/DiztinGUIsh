@@ -62,7 +62,7 @@
             this.textROM.MaxLength = 6;
             this.textROM.Name = "textROM";
             this.textROM.Size = new System.Drawing.Size(46, 20);
-            this.textROM.TabIndex = 2;
+            this.textROM.TabIndex = 1;
             this.textROM.Text = "000000";
             this.textROM.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textROM.TextChanged += new System.EventHandler(this.textROM_TextChanged);
@@ -74,7 +74,7 @@
             this.textPC.MaxLength = 6;
             this.textPC.Name = "textPC";
             this.textPC.Size = new System.Drawing.Size(46, 20);
-            this.textPC.TabIndex = 3;
+            this.textPC.TabIndex = 2;
             this.textPC.Text = "00000";
             this.textPC.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.textPC.TextChanged += new System.EventHandler(this.textPC_TextChanged);
@@ -87,8 +87,7 @@
             this.radioHex.Location = new System.Drawing.Point(43, 70);
             this.radioHex.Name = "radioHex";
             this.radioHex.Size = new System.Drawing.Size(44, 17);
-            this.radioHex.TabIndex = 4;
-            this.radioHex.TabStop = true;
+            this.radioHex.TabIndex = 0;
             this.radioHex.Text = "Hex";
             this.radioHex.UseVisualStyleBackColor = true;
             this.radioHex.CheckedChanged += new System.EventHandler(this.radioHex_CheckedChanged);
@@ -99,7 +98,7 @@
             this.radioDec.Location = new System.Drawing.Point(93, 70);
             this.radioDec.Name = "radioDec";
             this.radioDec.Size = new System.Drawing.Size(45, 17);
-            this.radioDec.TabIndex = 5;
+            this.radioDec.TabIndex = 0;
             this.radioDec.Text = "Dec";
             this.radioDec.UseVisualStyleBackColor = true;
             // 
@@ -109,7 +108,8 @@
             this.cancel.Location = new System.Drawing.Point(12, 105);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
-            this.cancel.TabIndex = 6;
+            this.cancel.TabIndex = 0;
+            this.cancel.TabStop = false;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.cancel_Click);
@@ -119,7 +119,7 @@
             this.go.Location = new System.Drawing.Point(93, 105);
             this.go.Name = "go";
             this.go.Size = new System.Drawing.Size(75, 23);
-            this.go.TabIndex = 7;
+            this.go.TabIndex = 3;
             this.go.Text = "Go";
             this.go.UseVisualStyleBackColor = true;
             this.go.Click += new System.EventHandler(this.go_Click);

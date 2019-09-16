@@ -115,7 +115,7 @@
             this.comboBox1.Location = new System.Drawing.Point(103, 18);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(121, 21);
-            this.comboBox1.TabIndex = 2;
+            this.comboBox1.TabIndex = 1;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
             // mapmode
@@ -151,7 +151,8 @@
             this.cancel.Location = new System.Drawing.Point(12, 388);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
-            this.cancel.TabIndex = 6;
+            this.cancel.TabIndex = 0;
+            this.cancel.TabStop = false;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.cancel_Click);
@@ -161,7 +162,7 @@
             this.okay.Location = new System.Drawing.Point(172, 388);
             this.okay.Name = "okay";
             this.okay.Size = new System.Drawing.Size(75, 23);
-            this.okay.TabIndex = 7;
+            this.okay.TabIndex = 15;
             this.okay.Text = "OK";
             this.okay.UseVisualStyleBackColor = true;
             this.okay.Click += new System.EventHandler(this.okay_Click);
@@ -277,7 +278,7 @@
             this.checkboxEmuIRQ.Location = new System.Drawing.Point(197, 146);
             this.checkboxEmuIRQ.Name = "checkboxEmuIRQ";
             this.checkboxEmuIRQ.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuIRQ.TabIndex = 31;
+            this.checkboxEmuIRQ.TabIndex = 13;
             this.checkboxEmuIRQ.UseVisualStyleBackColor = true;
             // 
             // checkboxEmuRESET
@@ -288,7 +289,7 @@
             this.checkboxEmuRESET.Location = new System.Drawing.Point(197, 124);
             this.checkboxEmuRESET.Name = "checkboxEmuRESET";
             this.checkboxEmuRESET.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuRESET.TabIndex = 30;
+            this.checkboxEmuRESET.TabIndex = 12;
             this.checkboxEmuRESET.UseVisualStyleBackColor = true;
             // 
             // checkboxEmuNMI
@@ -297,7 +298,7 @@
             this.checkboxEmuNMI.Location = new System.Drawing.Point(197, 102);
             this.checkboxEmuNMI.Name = "checkboxEmuNMI";
             this.checkboxEmuNMI.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuNMI.TabIndex = 29;
+            this.checkboxEmuNMI.TabIndex = 11;
             this.checkboxEmuNMI.UseVisualStyleBackColor = true;
             // 
             // checkboxEmuABORT
@@ -306,7 +307,7 @@
             this.checkboxEmuABORT.Location = new System.Drawing.Point(197, 80);
             this.checkboxEmuABORT.Name = "checkboxEmuABORT";
             this.checkboxEmuABORT.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuABORT.TabIndex = 28;
+            this.checkboxEmuABORT.TabIndex = 10;
             this.checkboxEmuABORT.UseVisualStyleBackColor = true;
             // 
             // checkboxEmuBRK
@@ -315,7 +316,7 @@
             this.checkboxEmuBRK.Location = new System.Drawing.Point(197, 58);
             this.checkboxEmuBRK.Name = "checkboxEmuBRK";
             this.checkboxEmuBRK.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuBRK.TabIndex = 27;
+            this.checkboxEmuBRK.TabIndex = 9;
             this.checkboxEmuBRK.UseVisualStyleBackColor = true;
             // 
             // checkboxEmuCOP
@@ -324,7 +325,7 @@
             this.checkboxEmuCOP.Location = new System.Drawing.Point(197, 36);
             this.checkboxEmuCOP.Name = "checkboxEmuCOP";
             this.checkboxEmuCOP.Size = new System.Drawing.Size(15, 14);
-            this.checkboxEmuCOP.TabIndex = 26;
+            this.checkboxEmuCOP.TabIndex = 8;
             this.checkboxEmuCOP.UseVisualStyleBackColor = true;
             // 
             // checkboxNativeIRQ
@@ -335,7 +336,7 @@
             this.checkboxNativeIRQ.Location = new System.Drawing.Point(120, 146);
             this.checkboxNativeIRQ.Name = "checkboxNativeIRQ";
             this.checkboxNativeIRQ.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeIRQ.TabIndex = 25;
+            this.checkboxNativeIRQ.TabIndex = 7;
             this.checkboxNativeIRQ.UseVisualStyleBackColor = true;
             // 
             // checkboxNativeRESET
@@ -344,7 +345,7 @@
             this.checkboxNativeRESET.Location = new System.Drawing.Point(120, 124);
             this.checkboxNativeRESET.Name = "checkboxNativeRESET";
             this.checkboxNativeRESET.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeRESET.TabIndex = 24;
+            this.checkboxNativeRESET.TabIndex = 6;
             this.checkboxNativeRESET.UseVisualStyleBackColor = true;
             // 
             // checkboxNativeNMI
@@ -355,7 +356,7 @@
             this.checkboxNativeNMI.Location = new System.Drawing.Point(120, 102);
             this.checkboxNativeNMI.Name = "checkboxNativeNMI";
             this.checkboxNativeNMI.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeNMI.TabIndex = 23;
+            this.checkboxNativeNMI.TabIndex = 5;
             this.checkboxNativeNMI.UseVisualStyleBackColor = true;
             // 
             // checkboxNativeABORT
@@ -364,7 +365,7 @@
             this.checkboxNativeABORT.Location = new System.Drawing.Point(120, 80);
             this.checkboxNativeABORT.Name = "checkboxNativeABORT";
             this.checkboxNativeABORT.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeABORT.TabIndex = 22;
+            this.checkboxNativeABORT.TabIndex = 4;
             this.checkboxNativeABORT.UseVisualStyleBackColor = true;
             // 
             // checkboxNativeBRK
@@ -375,7 +376,7 @@
             this.checkboxNativeBRK.Location = new System.Drawing.Point(120, 58);
             this.checkboxNativeBRK.Name = "checkboxNativeBRK";
             this.checkboxNativeBRK.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeBRK.TabIndex = 21;
+            this.checkboxNativeBRK.TabIndex = 3;
             this.checkboxNativeBRK.UseVisualStyleBackColor = true;
             // 
             // checkboxNativeCOP
@@ -386,7 +387,7 @@
             this.checkboxNativeCOP.Location = new System.Drawing.Point(120, 36);
             this.checkboxNativeCOP.Name = "checkboxNativeCOP";
             this.checkboxNativeCOP.Size = new System.Drawing.Size(15, 14);
-            this.checkboxNativeCOP.TabIndex = 20;
+            this.checkboxNativeCOP.TabIndex = 2;
             this.checkboxNativeCOP.UseVisualStyleBackColor = true;
             // 
             // label12
@@ -414,7 +415,8 @@
             this.textEmuIRQ.Name = "textEmuIRQ";
             this.textEmuIRQ.ReadOnly = true;
             this.textEmuIRQ.Size = new System.Drawing.Size(34, 20);
-            this.textEmuIRQ.TabIndex = 17;
+            this.textEmuIRQ.TabIndex = 0;
+            this.textEmuIRQ.TabStop = false;
             this.textEmuIRQ.Text = "FFFF";
             // 
             // textEmuRESET
@@ -424,7 +426,8 @@
             this.textEmuRESET.Name = "textEmuRESET";
             this.textEmuRESET.ReadOnly = true;
             this.textEmuRESET.Size = new System.Drawing.Size(34, 20);
-            this.textEmuRESET.TabIndex = 16;
+            this.textEmuRESET.TabIndex = 0;
+            this.textEmuRESET.TabStop = false;
             this.textEmuRESET.Text = "FFFF";
             // 
             // textEmuNMI
@@ -434,7 +437,8 @@
             this.textEmuNMI.Name = "textEmuNMI";
             this.textEmuNMI.ReadOnly = true;
             this.textEmuNMI.Size = new System.Drawing.Size(34, 20);
-            this.textEmuNMI.TabIndex = 15;
+            this.textEmuNMI.TabIndex = 0;
+            this.textEmuNMI.TabStop = false;
             this.textEmuNMI.Text = "FFFF";
             // 
             // textEmuABORT
@@ -444,7 +448,8 @@
             this.textEmuABORT.Name = "textEmuABORT";
             this.textEmuABORT.ReadOnly = true;
             this.textEmuABORT.Size = new System.Drawing.Size(34, 20);
-            this.textEmuABORT.TabIndex = 14;
+            this.textEmuABORT.TabIndex = 0;
+            this.textEmuABORT.TabStop = false;
             this.textEmuABORT.Text = "FFFF";
             // 
             // textEmuBRK
@@ -454,7 +459,8 @@
             this.textEmuBRK.Name = "textEmuBRK";
             this.textEmuBRK.ReadOnly = true;
             this.textEmuBRK.Size = new System.Drawing.Size(34, 20);
-            this.textEmuBRK.TabIndex = 13;
+            this.textEmuBRK.TabIndex = 0;
+            this.textEmuBRK.TabStop = false;
             this.textEmuBRK.Text = "FFFF";
             // 
             // textEmuCOP
@@ -464,7 +470,8 @@
             this.textEmuCOP.Name = "textEmuCOP";
             this.textEmuCOP.ReadOnly = true;
             this.textEmuCOP.Size = new System.Drawing.Size(34, 20);
-            this.textEmuCOP.TabIndex = 12;
+            this.textEmuCOP.TabIndex = 0;
+            this.textEmuCOP.TabStop = false;
             this.textEmuCOP.Text = "FFFF";
             // 
             // textNativeIRQ
@@ -474,7 +481,8 @@
             this.textNativeIRQ.Name = "textNativeIRQ";
             this.textNativeIRQ.ReadOnly = true;
             this.textNativeIRQ.Size = new System.Drawing.Size(34, 20);
-            this.textNativeIRQ.TabIndex = 11;
+            this.textNativeIRQ.TabIndex = 0;
+            this.textNativeIRQ.TabStop = false;
             this.textNativeIRQ.Text = "FFFF";
             // 
             // textNativeRESET
@@ -484,7 +492,8 @@
             this.textNativeRESET.Name = "textNativeRESET";
             this.textNativeRESET.ReadOnly = true;
             this.textNativeRESET.Size = new System.Drawing.Size(34, 20);
-            this.textNativeRESET.TabIndex = 10;
+            this.textNativeRESET.TabIndex = 0;
+            this.textNativeRESET.TabStop = false;
             this.textNativeRESET.Text = "FFFF";
             // 
             // textNativeNMI
@@ -494,7 +503,8 @@
             this.textNativeNMI.Name = "textNativeNMI";
             this.textNativeNMI.ReadOnly = true;
             this.textNativeNMI.Size = new System.Drawing.Size(34, 20);
-            this.textNativeNMI.TabIndex = 9;
+            this.textNativeNMI.TabIndex = 0;
+            this.textNativeNMI.TabStop = false;
             this.textNativeNMI.Text = "FFFF";
             // 
             // textNativeABORT
@@ -504,7 +514,8 @@
             this.textNativeABORT.Name = "textNativeABORT";
             this.textNativeABORT.ReadOnly = true;
             this.textNativeABORT.Size = new System.Drawing.Size(34, 20);
-            this.textNativeABORT.TabIndex = 8;
+            this.textNativeABORT.TabIndex = 0;
+            this.textNativeABORT.TabStop = false;
             this.textNativeABORT.Text = "FFFF";
             // 
             // textNativeBRK
@@ -514,7 +525,8 @@
             this.textNativeBRK.Name = "textNativeBRK";
             this.textNativeBRK.ReadOnly = true;
             this.textNativeBRK.Size = new System.Drawing.Size(34, 20);
-            this.textNativeBRK.TabIndex = 7;
+            this.textNativeBRK.TabIndex = 0;
+            this.textNativeBRK.TabStop = false;
             this.textNativeBRK.Text = "FFFF";
             // 
             // textNativeCOP
@@ -524,7 +536,8 @@
             this.textNativeCOP.Name = "textNativeCOP";
             this.textNativeCOP.ReadOnly = true;
             this.textNativeCOP.Size = new System.Drawing.Size(34, 20);
-            this.textNativeCOP.TabIndex = 6;
+            this.textNativeCOP.TabIndex = 0;
+            this.textNativeCOP.TabStop = false;
             this.textNativeCOP.Text = "FFFF";
             // 
             // label10

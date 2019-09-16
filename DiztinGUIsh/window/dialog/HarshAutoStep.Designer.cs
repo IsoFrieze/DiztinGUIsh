@@ -62,8 +62,7 @@
             this.radioHex.Location = new System.Drawing.Point(104, 246);
             this.radioHex.Name = "radioHex";
             this.radioHex.Size = new System.Drawing.Size(44, 17);
-            this.radioHex.TabIndex = 4;
-            this.radioHex.TabStop = true;
+            this.radioHex.TabIndex = 0;
             this.radioHex.Text = "Hex";
             this.radioHex.UseVisualStyleBackColor = true;
             this.radioHex.CheckedChanged += new System.EventHandler(this.radioHex_CheckedChanged);
@@ -74,7 +73,8 @@
             this.cancel.Location = new System.Drawing.Point(12, 243);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
-            this.cancel.TabIndex = 5;
+            this.cancel.TabIndex = 0;
+            this.cancel.TabStop = false;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.cancel_Click);
@@ -84,7 +84,7 @@
             this.go.Location = new System.Drawing.Point(212, 243);
             this.go.Name = "go";
             this.go.Size = new System.Drawing.Size(75, 23);
-            this.go.TabIndex = 6;
+            this.go.TabIndex = 4;
             this.go.Text = "Go";
             this.go.UseVisualStyleBackColor = true;
             this.go.Click += new System.EventHandler(this.go_Click);
@@ -121,7 +121,7 @@
             this.textStart.MaxLength = 6;
             this.textStart.Name = "textStart";
             this.textStart.Size = new System.Drawing.Size(61, 20);
-            this.textStart.TabIndex = 15;
+            this.textStart.TabIndex = 0;
             this.textStart.TextChanged += new System.EventHandler(this.textStart_TextChanged);
             // 
             // radioPC
@@ -130,7 +130,7 @@
             this.radioPC.Location = new System.Drawing.Point(176, 48);
             this.radioPC.Name = "radioPC";
             this.radioPC.Size = new System.Drawing.Size(70, 17);
-            this.radioPC.TabIndex = 12;
+            this.radioPC.TabIndex = 0;
             this.radioPC.Text = "PC Offset";
             this.radioPC.UseVisualStyleBackColor = true;
             // 
@@ -141,8 +141,7 @@
             this.radioROM.Location = new System.Drawing.Point(176, 25);
             this.radioROM.Name = "radioROM";
             this.radioROM.Size = new System.Drawing.Size(91, 17);
-            this.radioROM.TabIndex = 11;
-            this.radioROM.TabStop = true;
+            this.radioROM.TabIndex = 0;
             this.radioROM.Text = "ROM Address";
             this.radioROM.UseVisualStyleBackColor = true;
             this.radioROM.CheckedChanged += new System.EventHandler(this.radioROM_CheckedChanged);
@@ -153,7 +152,7 @@
             this.textEnd.MaxLength = 6;
             this.textEnd.Name = "textEnd";
             this.textEnd.Size = new System.Drawing.Size(61, 20);
-            this.textEnd.TabIndex = 10;
+            this.textEnd.TabIndex = 1;
             this.textEnd.TextChanged += new System.EventHandler(this.textEnd_TextChanged);
             // 
             // label4
@@ -180,7 +179,7 @@
             this.textCount.MaxLength = 6;
             this.textCount.Name = "textCount";
             this.textCount.Size = new System.Drawing.Size(61, 20);
-            this.textCount.TabIndex = 7;
+            this.textCount.TabIndex = 2;
             this.textCount.TextChanged += new System.EventHandler(this.textCount_TextChanged);
             // 
             // radioDec
@@ -189,7 +188,7 @@
             this.radioDec.Location = new System.Drawing.Point(152, 246);
             this.radioDec.Name = "radioDec";
             this.radioDec.Size = new System.Drawing.Size(45, 17);
-            this.radioDec.TabIndex = 3;
+            this.radioDec.TabIndex = 0;
             this.radioDec.Text = "Dec";
             this.radioDec.UseVisualStyleBackColor = true;
             // 

@@ -52,6 +52,7 @@
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
             this.cancel.TabIndex = 0;
+            this.cancel.TabStop = false;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.cancel_Click);
@@ -61,7 +62,7 @@
             this.button2.Location = new System.Drawing.Point(487, 444);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(113, 23);
-            this.button2.TabIndex = 1;
+            this.button2.TabIndex = 5;
             this.button2.Text = "Disassemble";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
@@ -71,7 +72,7 @@
             this.textFormat.Location = new System.Drawing.Point(88, 92);
             this.textFormat.Name = "textFormat";
             this.textFormat.Size = new System.Drawing.Size(512, 20);
-            this.textFormat.TabIndex = 2;
+            this.textFormat.TabIndex = 4;
             this.textFormat.TextChanged += new System.EventHandler(this.textFormat_TextChanged);
             // 
             // textSample
@@ -83,7 +84,8 @@
             this.textSample.ReadOnly = true;
             this.textSample.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textSample.Size = new System.Drawing.Size(512, 319);
-            this.textSample.TabIndex = 3;
+            this.textSample.TabIndex = 0;
+            this.textSample.TabStop = false;
             this.textSample.WordWrap = false;
             // 
             // comboStructure
@@ -95,7 +97,7 @@
             this.comboStructure.Location = new System.Drawing.Point(479, 39);
             this.comboStructure.Name = "comboStructure";
             this.comboStructure.Size = new System.Drawing.Size(121, 21);
-            this.comboStructure.TabIndex = 5;
+            this.comboStructure.TabIndex = 2;
             this.comboStructure.SelectedIndexChanged += new System.EventHandler(this.comboStructure_SelectedIndexChanged);
             // 
             // comboUnlabeled
@@ -108,7 +110,7 @@
             this.comboUnlabeled.Location = new System.Drawing.Point(479, 12);
             this.comboUnlabeled.Name = "comboUnlabeled";
             this.comboUnlabeled.Size = new System.Drawing.Size(121, 21);
-            this.comboUnlabeled.TabIndex = 6;
+            this.comboUnlabeled.TabIndex = 1;
             this.comboUnlabeled.SelectedIndexChanged += new System.EventHandler(this.comboUnlabeled_SelectedIndexChanged);
             // 
             // label1
@@ -180,7 +182,7 @@
             0});
             this.numData.Name = "numData";
             this.numData.Size = new System.Drawing.Size(38, 20);
-            this.numData.TabIndex = 13;
+            this.numData.TabIndex = 3;
             this.numData.Value = new decimal(new int[] {
             8,
             0,

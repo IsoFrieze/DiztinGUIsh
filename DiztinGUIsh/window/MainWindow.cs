@@ -557,7 +557,16 @@ namespace DiztinGUIsh
             int size = Data.GetROMSize();
             int unreached = end ? (direction ? 0 : size - 1) : offset;
 
-            while (unreached > 0 && unreached < size - 1 && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached += direction ? 1 : -1;
+            if (direction)
+            {
+                if (!end) while (unreached < size - 1 && Data.GetFlag(unreached) == Data.FlagType.Unreached) unreached++;
+                while (unreached < size - 1 && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached++;
+            } else
+            {
+                if (unreached > 0) unreached--;
+                while (unreached > 0 && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached--;
+            }
+
             while (unreached > 0 && Data.GetFlag(unreached - 1) == Data.FlagType.Unreached) unreached--;
 
             if (Data.GetFlag(unreached) == Data.FlagType.Unreached) SelectOffset(unreached, 1);

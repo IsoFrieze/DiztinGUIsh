@@ -41,7 +41,7 @@
             this.buttonScan.Location = new System.Drawing.Point(93, 279);
             this.buttonScan.Name = "buttonScan";
             this.buttonScan.Size = new System.Drawing.Size(75, 23);
-            this.buttonScan.TabIndex = 0;
+            this.buttonScan.TabIndex = 2;
             this.buttonScan.Text = "Scan";
             this.buttonScan.UseVisualStyleBackColor = true;
             this.buttonScan.Click += new System.EventHandler(this.buttonScan_Click);
@@ -51,7 +51,7 @@
             this.buttonFix.Location = new System.Drawing.Point(174, 279);
             this.buttonFix.Name = "buttonFix";
             this.buttonFix.Size = new System.Drawing.Size(75, 23);
-            this.buttonFix.TabIndex = 1;
+            this.buttonFix.TabIndex = 3;
             this.buttonFix.Text = "Fix";
             this.buttonFix.UseVisualStyleBackColor = true;
             this.buttonFix.Click += new System.EventHandler(this.buttonFix_Click);
@@ -62,7 +62,7 @@
             this.label1.Location = new System.Drawing.Point(10, 11);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(244, 91);
-            this.label1.TabIndex = 2;
+            this.label1.TabIndex = 0;
             this.label1.Text = resources.GetString("label1.Text");
             // 
             // cancel
@@ -71,7 +71,7 @@
             this.cancel.Location = new System.Drawing.Point(12, 279);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
-            this.cancel.TabIndex = 3;
+            this.cancel.TabIndex = 1;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.cancel_Click);
@@ -84,7 +84,8 @@
             this.textLog.ReadOnly = true;
             this.textLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textLog.Size = new System.Drawing.Size(237, 157);
-            this.textLog.TabIndex = 4;
+            this.textLog.TabIndex = 0;
+            this.textLog.TabStop = false;
             // 
             // MisalignmentChecker
             // 
