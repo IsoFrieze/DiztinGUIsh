@@ -88,7 +88,7 @@
             this.labelProductName.MaximumSize = new System.Drawing.Size(0, 17);
             this.labelProductName.Name = "labelProductName";
             this.labelProductName.Size = new System.Drawing.Size(199, 17);
-            this.labelProductName.TabIndex = 19;
+            this.labelProductName.TabIndex = 0;
             this.labelProductName.Text = "Product Name";
             this.labelProductName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -100,7 +100,7 @@
             this.labelVersion.MaximumSize = new System.Drawing.Size(0, 17);
             this.labelVersion.Name = "labelVersion";
             this.labelVersion.Size = new System.Drawing.Size(199, 17);
-            this.labelVersion.TabIndex = 0;
+            this.labelVersion.TabIndex = 1;
             this.labelVersion.Text = "Version";
             this.labelVersion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -112,7 +112,7 @@
             this.labelCopyright.MaximumSize = new System.Drawing.Size(0, 17);
             this.labelCopyright.Name = "labelCopyright";
             this.labelCopyright.Size = new System.Drawing.Size(199, 17);
-            this.labelCopyright.TabIndex = 21;
+            this.labelCopyright.TabIndex = 2;
             this.labelCopyright.Text = "Copyright";
             this.labelCopyright.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -124,7 +124,7 @@
             this.labelCompanyName.MaximumSize = new System.Drawing.Size(0, 17);
             this.labelCompanyName.Name = "labelCompanyName";
             this.labelCompanyName.Size = new System.Drawing.Size(199, 17);
-            this.labelCompanyName.TabIndex = 22;
+            this.labelCompanyName.TabIndex = 3;
             this.labelCompanyName.Text = "Company Name";
             this.labelCompanyName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -136,8 +136,8 @@
             this.textBoxDescription.Name = "textBoxDescription";
             this.textBoxDescription.ReadOnly = true;
             this.textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxDescription.Size = new System.Drawing.Size(196, 92);
-            this.textBoxDescription.TabIndex = 23;
+            this.textBoxDescription.Size = new System.Drawing.Size(196, 93);
+            this.textBoxDescription.TabIndex = 4;
             this.textBoxDescription.TabStop = false;
             this.textBoxDescription.Text = "Description";
             // 
@@ -148,7 +148,7 @@
             this.okButton.Location = new System.Drawing.Point(255, 203);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(80, 23);
-            this.okButton.TabIndex = 24;
+            this.okButton.TabIndex = 5;
             this.okButton.Text = "&OK";
             // 
             // About

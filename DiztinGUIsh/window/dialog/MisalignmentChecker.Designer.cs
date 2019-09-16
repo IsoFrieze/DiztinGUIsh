@@ -71,7 +71,7 @@
             this.cancel.Location = new System.Drawing.Point(12, 279);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
-            this.cancel.TabIndex = 1;
+            this.cancel.TabIndex = 4;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.cancel_Click);
@@ -84,7 +84,7 @@
             this.textLog.ReadOnly = true;
             this.textLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textLog.Size = new System.Drawing.Size(237, 157);
-            this.textLog.TabIndex = 0;
+            this.textLog.TabIndex = 1;
             this.textLog.TabStop = false;
             // 
             // MisalignmentChecker
@@ -101,6 +101,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "MisalignmentChecker";
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Misaligned Flags";
             this.ResumeLayout(false);
             this.PerformLayout();

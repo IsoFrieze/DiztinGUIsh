@@ -181,7 +181,7 @@
             this.table.ShowEditingIcon = false;
             this.table.ShowRowErrors = false;
             this.table.Size = new System.Drawing.Size(700, 500);
-            this.table.TabIndex = 0;
+            this.table.TabIndex = 1;
             this.table.TabStop = false;
             this.table.VirtualMode = true;
             this.table.KeyDown += new System.Windows.Forms.KeyEventHandler(this.table_KeyDown);
@@ -341,7 +341,7 @@
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(717, 24);
-            this.menuStrip1.TabIndex = 1;
+            this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
@@ -895,7 +895,7 @@
             this.statusStrip1.Location = new System.Drawing.Point(0, 524);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(717, 22);
-            this.statusStrip1.TabIndex = 2;
+            this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
             // percentComplete
@@ -939,7 +939,7 @@
             this.vScrollBar1.Maximum = 32768;
             this.vScrollBar1.Name = "vScrollBar1";
             this.vScrollBar1.Size = new System.Drawing.Size(17, 500);
-            this.vScrollBar1.TabIndex = 3;
+            this.vScrollBar1.TabIndex = 2;
             this.vScrollBar1.ValueChanged += new System.EventHandler(this.vScrollBar1_ValueChanged);
             // 
             // saveLogSingleFile
@@ -967,6 +967,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.MinimumSize = new System.Drawing.Size(733, 200);
             this.Name = "MainWindow";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "DiztinGUIsh";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.Load += new System.EventHandler(this.MainWindow_Load);

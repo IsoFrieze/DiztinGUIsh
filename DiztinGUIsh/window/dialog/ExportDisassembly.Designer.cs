@@ -51,7 +51,7 @@
             this.cancel.Location = new System.Drawing.Point(9, 444);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
-            this.cancel.TabIndex = 0;
+            this.cancel.TabIndex = 12;
             this.cancel.TabStop = false;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
@@ -62,7 +62,7 @@
             this.button2.Location = new System.Drawing.Point(487, 444);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(113, 23);
-            this.button2.TabIndex = 5;
+            this.button2.TabIndex = 11;
             this.button2.Text = "Disassemble";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
@@ -72,7 +72,7 @@
             this.textFormat.Location = new System.Drawing.Point(88, 92);
             this.textFormat.Name = "textFormat";
             this.textFormat.Size = new System.Drawing.Size(512, 20);
-            this.textFormat.TabIndex = 4;
+            this.textFormat.TabIndex = 8;
             this.textFormat.TextChanged += new System.EventHandler(this.textFormat_TextChanged);
             // 
             // textSample
@@ -84,7 +84,7 @@
             this.textSample.ReadOnly = true;
             this.textSample.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textSample.Size = new System.Drawing.Size(512, 319);
-            this.textSample.TabIndex = 0;
+            this.textSample.TabIndex = 10;
             this.textSample.TabStop = false;
             this.textSample.WordWrap = false;
             // 
@@ -97,7 +97,7 @@
             this.comboStructure.Location = new System.Drawing.Point(479, 39);
             this.comboStructure.Name = "comboStructure";
             this.comboStructure.Size = new System.Drawing.Size(121, 21);
-            this.comboStructure.TabIndex = 2;
+            this.comboStructure.TabIndex = 4;
             this.comboStructure.SelectedIndexChanged += new System.EventHandler(this.comboStructure_SelectedIndexChanged);
             // 
             // comboUnlabeled
@@ -110,7 +110,7 @@
             this.comboUnlabeled.Location = new System.Drawing.Point(479, 12);
             this.comboUnlabeled.Name = "comboUnlabeled";
             this.comboUnlabeled.Size = new System.Drawing.Size(121, 21);
-            this.comboUnlabeled.TabIndex = 1;
+            this.comboUnlabeled.TabIndex = 2;
             this.comboUnlabeled.SelectedIndexChanged += new System.EventHandler(this.comboUnlabeled_SelectedIndexChanged);
             // 
             // label1
@@ -128,7 +128,7 @@
             this.label2.Location = new System.Drawing.Point(6, 122);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(80, 13);
-            this.label2.TabIndex = 8;
+            this.label2.TabIndex = 9;
             this.label2.Text = "Sample Output:";
             // 
             // label3
@@ -137,7 +137,7 @@
             this.label3.Location = new System.Drawing.Point(441, 68);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(119, 13);
-            this.label3.TabIndex = 9;
+            this.label3.TabIndex = 5;
             this.label3.Text = "Max data bytes per line:";
             // 
             // label4
@@ -146,7 +146,7 @@
             this.label4.Location = new System.Drawing.Point(398, 42);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(79, 13);
-            this.label4.TabIndex = 10;
+            this.label4.TabIndex = 3;
             this.label4.Text = "Bank structure:";
             // 
             // label5
@@ -155,7 +155,7 @@
             this.label5.Location = new System.Drawing.Point(363, 15);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(114, 13);
-            this.label5.TabIndex = 11;
+            this.label5.TabIndex = 1;
             this.label5.Text = "Unlabeled instructions:";
             // 
             // label6
@@ -164,7 +164,7 @@
             this.label6.Location = new System.Drawing.Point(12, 13);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(295, 65);
-            this.label6.TabIndex = 12;
+            this.label6.TabIndex = 0;
             this.label6.Text = resources.GetString("label6.Text");
             // 
             // numData
@@ -182,7 +182,7 @@
             0});
             this.numData.Name = "numData";
             this.numData.Size = new System.Drawing.Size(38, 20);
-            this.numData.TabIndex = 3;
+            this.numData.TabIndex = 6;
             this.numData.Value = new decimal(new int[] {
             8,
             0,
@@ -212,6 +212,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "ExportDisassembly";
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Export Disassembly";
             ((System.ComponentModel.ISupportInitialize)(this.numData)).EndInit();
             this.ResumeLayout(false);

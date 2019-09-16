@@ -75,7 +75,7 @@
             this.dataGridView1.ShowEditingIcon = false;
             this.dataGridView1.ShowRowErrors = false;
             this.dataGridView1.Size = new System.Drawing.Size(200, 310);
-            this.dataGridView1.TabIndex = 0;
+            this.dataGridView1.TabIndex = 3;
             this.dataGridView1.TabStop = false;
             this.dataGridView1.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.dataGridView1_CellBeginEdit);
             this.dataGridView1.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.dataGridView1_CellValidating);
@@ -106,7 +106,7 @@
             this.import.Location = new System.Drawing.Point(70, 3);
             this.import.Name = "import";
             this.import.Size = new System.Drawing.Size(62, 23);
-            this.import.TabIndex = 2;
+            this.import.TabIndex = 1;
             this.import.Text = "Import...";
             this.import.UseVisualStyleBackColor = true;
             // 
@@ -116,7 +116,7 @@
             this.export.Location = new System.Drawing.Point(136, 3);
             this.export.Name = "export";
             this.export.Size = new System.Drawing.Size(62, 23);
-            this.export.TabIndex = 3;
+            this.export.TabIndex = 2;
             this.export.Text = "Export...";
             this.export.UseVisualStyleBackColor = true;
             // 
@@ -140,7 +140,7 @@
             this.jump.Location = new System.Drawing.Point(3, 3);
             this.jump.Name = "jump";
             this.jump.Size = new System.Drawing.Size(63, 23);
-            this.jump.TabIndex = 1;
+            this.jump.TabIndex = 0;
             this.jump.Text = "Jump to";
             this.jump.UseVisualStyleBackColor = true;
             this.jump.Click += new System.EventHandler(this.jump_Click);
@@ -161,6 +161,7 @@
             this.MinimumSize = new System.Drawing.Size(217, 250);
             this.Name = "AliasList";
             this.ShowIcon = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Label List";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AliasList_FormClosing);
             this.Load += new System.EventHandler(this.AliasList_Load);

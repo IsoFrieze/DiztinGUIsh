@@ -49,7 +49,7 @@
             this.cancel.Location = new System.Drawing.Point(12, 237);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
-            this.cancel.TabIndex = 1;
+            this.cancel.TabIndex = 2;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.cancel_Click);
@@ -59,7 +59,7 @@
             this.rescan.Location = new System.Drawing.Point(174, 237);
             this.rescan.Name = "rescan";
             this.rescan.Size = new System.Drawing.Size(75, 23);
-            this.rescan.TabIndex = 2;
+            this.rescan.TabIndex = 1;
             this.rescan.Text = "Rescan";
             this.rescan.UseVisualStyleBackColor = true;
             this.rescan.Click += new System.EventHandler(this.rescan_Click);
@@ -76,6 +76,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "InOutPointChecker";
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Rescan for In/Out/End/Read Points";
             this.ResumeLayout(false);
             this.PerformLayout();

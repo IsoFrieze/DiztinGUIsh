@@ -81,7 +81,7 @@
             this.label2.Location = new System.Drawing.Point(64, 25);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(37, 13);
-            this.label2.TabIndex = 2;
+            this.label2.TabIndex = 0;
             this.label2.Text = "Value:";
             // 
             // flagCombo
@@ -105,7 +105,7 @@
             this.flagCombo.Location = new System.Drawing.Point(103, 22);
             this.flagCombo.Name = "flagCombo";
             this.flagCombo.Size = new System.Drawing.Size(121, 21);
-            this.flagCombo.TabIndex = 3;
+            this.flagCombo.TabIndex = 4;
             // 
             // regValue
             // 
@@ -113,7 +113,7 @@
             this.regValue.MaxLength = 5;
             this.regValue.Name = "regValue";
             this.regValue.Size = new System.Drawing.Size(61, 20);
-            this.regValue.TabIndex = 4;
+            this.regValue.TabIndex = 3;
             this.regValue.TextChanged += new System.EventHandler(this.regValue_TextChanged);
             // 
             // cancel
@@ -121,7 +121,7 @@
             this.cancel.Location = new System.Drawing.Point(11, 172);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
-            this.cancel.TabIndex = 0;
+            this.cancel.TabIndex = 6;
             this.cancel.TabStop = false;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
@@ -132,7 +132,7 @@
             this.okay.Location = new System.Drawing.Point(213, 172);
             this.okay.Name = "okay";
             this.okay.Size = new System.Drawing.Size(75, 23);
-            this.okay.TabIndex = 6;
+            this.okay.TabIndex = 3;
             this.okay.Text = "OK";
             this.okay.UseVisualStyleBackColor = true;
             this.okay.Click += new System.EventHandler(this.okay_Click);
@@ -143,7 +143,7 @@
             this.textCount.MaxLength = 6;
             this.textCount.Name = "textCount";
             this.textCount.Size = new System.Drawing.Size(61, 20);
-            this.textCount.TabIndex = 5;
+            this.textCount.TabIndex = 12;
             this.textCount.TextChanged += new System.EventHandler(this.textCount_TextChanged);
             // 
             // label3
@@ -152,7 +152,7 @@
             this.label3.Location = new System.Drawing.Point(24, 74);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(77, 13);
-            this.label3.TabIndex = 8;
+            this.label3.TabIndex = 9;
             this.label3.Text = "Up to Address:";
             // 
             // label4
@@ -161,7 +161,7 @@
             this.label4.Location = new System.Drawing.Point(13, 98);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(88, 13);
-            this.label4.TabIndex = 9;
+            this.label4.TabIndex = 11;
             this.label4.Text = "Number of Bytes:";
             // 
             // textEnd
@@ -170,7 +170,7 @@
             this.textEnd.MaxLength = 6;
             this.textEnd.Name = "textEnd";
             this.textEnd.Size = new System.Drawing.Size(61, 20);
-            this.textEnd.TabIndex = 4;
+            this.textEnd.TabIndex = 10;
             this.textEnd.TextChanged += new System.EventHandler(this.textEnd_TextChanged);
             // 
             // group
@@ -191,7 +191,7 @@
             this.group.Location = new System.Drawing.Point(12, 36);
             this.group.Name = "group";
             this.group.Size = new System.Drawing.Size(275, 128);
-            this.group.TabIndex = 11;
+            this.group.TabIndex = 2;
             this.group.TabStop = false;
             this.group.Text = "Mark Bytes";
             // 
@@ -201,7 +201,7 @@
             this.label5.Location = new System.Drawing.Point(16, 50);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(85, 13);
-            this.label5.TabIndex = 16;
+            this.label5.TabIndex = 7;
             this.label5.Text = "Start at Address:";
             // 
             // textStart
@@ -210,7 +210,7 @@
             this.textStart.MaxLength = 6;
             this.textStart.Name = "textStart";
             this.textStart.Size = new System.Drawing.Size(61, 20);
-            this.textStart.TabIndex = 3;
+            this.textStart.TabIndex = 8;
             this.textStart.TextChanged += new System.EventHandler(this.textStart_TextChanged);
             // 
             // mxCombo
@@ -222,7 +222,7 @@
             this.mxCombo.Location = new System.Drawing.Point(103, 22);
             this.mxCombo.Name = "mxCombo";
             this.mxCombo.Size = new System.Drawing.Size(121, 21);
-            this.mxCombo.TabIndex = 2;
+            this.mxCombo.TabIndex = 1;
             // 
             // archCombo
             // 
@@ -234,7 +234,7 @@
             this.archCombo.Location = new System.Drawing.Point(103, 22);
             this.archCombo.Name = "archCombo";
             this.archCombo.Size = new System.Drawing.Size(121, 21);
-            this.archCombo.TabIndex = 13;
+            this.archCombo.TabIndex = 2;
             // 
             // radioPC
             // 
@@ -242,7 +242,7 @@
             this.radioPC.Location = new System.Drawing.Point(176, 71);
             this.radioPC.Name = "radioPC";
             this.radioPC.Size = new System.Drawing.Size(70, 17);
-            this.radioPC.TabIndex = 0;
+            this.radioPC.TabIndex = 6;
             this.radioPC.Text = "PC Offset";
             this.radioPC.UseVisualStyleBackColor = true;
             // 
@@ -253,7 +253,8 @@
             this.radioROM.Location = new System.Drawing.Point(176, 48);
             this.radioROM.Name = "radioROM";
             this.radioROM.Size = new System.Drawing.Size(91, 17);
-            this.radioROM.TabIndex = 0;
+            this.radioROM.TabIndex = 5;
+            this.radioROM.TabStop = true;
             this.radioROM.Text = "ROM Address";
             this.radioROM.UseVisualStyleBackColor = true;
             this.radioROM.CheckedChanged += new System.EventHandler(this.radioROM_CheckedChanged);
@@ -265,7 +266,8 @@
             this.radioHex.Location = new System.Drawing.Point(104, 175);
             this.radioHex.Name = "radioHex";
             this.radioHex.Size = new System.Drawing.Size(44, 17);
-            this.radioHex.TabIndex = 0;
+            this.radioHex.TabIndex = 4;
+            this.radioHex.TabStop = true;
             this.radioHex.Text = "Hex";
             this.radioHex.UseVisualStyleBackColor = true;
             this.radioHex.CheckedChanged += new System.EventHandler(this.radioHex_CheckedChanged);
@@ -276,7 +278,7 @@
             this.radioDec.Location = new System.Drawing.Point(152, 175);
             this.radioDec.Name = "radioDec";
             this.radioDec.Size = new System.Drawing.Size(45, 17);
-            this.radioDec.TabIndex = 0;
+            this.radioDec.TabIndex = 5;
             this.radioDec.Text = "Dec";
             this.radioDec.UseVisualStyleBackColor = true;
             // 
@@ -295,6 +297,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "MarkManyDialog";
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Mark Many";
             this.group.ResumeLayout(false);
             this.group.PerformLayout();
