@@ -70,9 +70,9 @@ namespace DiztinGUIsh
         {
             try
             {
-                byte[] data = SaveVersion0();
+                byte[] data = SaveVersion1();
                 byte[] everything = new byte[HEADER_SIZE + data.Length];
-                everything[0] = 0; // version
+                everything[0] = 1; // version
                 Util.StringToByteArray(watermark).CopyTo(everything, 1);
                 data.CopyTo(everything, HEADER_SIZE);
 
@@ -88,7 +88,7 @@ namespace DiztinGUIsh
             }
         }
 
-        private static byte[] SaveVersion0()
+        private static byte[] SaveVersion1()
         {
             int size = Data.GetROMSize();
             byte[] romSettings = new byte[31];
@@ -132,8 +132,10 @@ namespace DiztinGUIsh
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 5 * size + i] = (byte)Data.GetFlag(i);
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 6 * size + i] = (byte)Data.GetArchitechture(i);
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 7 * size + i] = (byte)Data.GetInOutPoint(i);
+            // ???
             label.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size);
             comment.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size + label.Count);
+            // ???
 
             return data;
         }
@@ -159,7 +161,8 @@ namespace DiztinGUIsh
                 switch (version)
                 {
                     case 0: OpenVersion0(data, open); break;
-                    default: throw new Exception("This is not a valid DiztinGUIsh file!");
+                    case 1: OpenVersion1(data, open); break;
+                    default: throw new Exception("This DiztinGUIsh file uses a newer file format! You'll need to download the newest version of DiztinGUIsh to open it.");
                 }
 
                 unsavedChanges = false;
@@ -173,7 +176,85 @@ namespace DiztinGUIsh
             }
         }
 
+        // differences between version 0 and version 1:
+        // version 0: addresses for aliases and comments were stored in PC offset format.
+        //            tables: B, D lo, D hi, X, M, flag, arch, inoutpoint
+        //            lists: alias, comment
+        // version 1: addresses for aliases and comments are stored in SNES address format.
+        //            tables: B, D lo, D hi, X, M, flag, arch, inoutpoint, ???
+        //            lists: alias, comment, ???
         private static void OpenVersion0(byte[] unzipped, OpenFileDialog open)
+        {
+            MessageBox.Show(
+                "This project file is in an older format.\n" +
+                "You may want to back up your work or 'Save As' in case the conversion goes wrong.\n" +
+                "The project file will be untouched until it is saved again.",
+                "Project File Out of Date", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+            Data.ROMMapMode mode = (Data.ROMMapMode)unzipped[HEADER_SIZE];
+            Data.ROMSpeed speed = (Data.ROMSpeed)unzipped[HEADER_SIZE + 1];
+            int size = Util.ByteArrayToInteger(unzipped, HEADER_SIZE + 2);
+            string romName = "", romLocation = "";
+            byte[] rom;
+
+            int pointer = HEADER_SIZE + 6;
+            for (int i = 0; i < 0x15; i++) romName += (char)unzipped[pointer++];
+            int checksums = Util.ByteArrayToInteger(unzipped, pointer);
+            pointer += 4;
+            while (unzipped[pointer] != 0) romLocation += (char)unzipped[pointer++];
+            pointer++;
+
+            if (ValidateROM(romLocation, romName, checksums, mode, out rom, open))
+            {
+                Data.Initiate(rom, mode, speed);
+
+                for (int i = 0; i < size; i++) Data.SetDataBank(i, unzipped[pointer + i]);
+                for (int i = 0; i < size; i++) Data.SetDirectPage(i, unzipped[pointer + size + i] | (unzipped[pointer + 2 * size + i] << 8));
+                for (int i = 0; i < size; i++) Data.SetXFlag(i, unzipped[pointer + 3 * size + i] != 0);
+                for (int i = 0; i < size; i++) Data.SetMFlag(i, unzipped[pointer + 4 * size + i] != 0);
+                for (int i = 0; i < size; i++) Data.SetFlag(i, (Data.FlagType)unzipped[pointer + 5 * size + i]);
+                for (int i = 0; i < size; i++) Data.SetArchitechture(i, (Data.Architechture)unzipped[pointer + 6 * size + i]);
+                for (int i = 0; i < size; i++) Data.SetInOutPoint(i, (Data.InOutPoint)unzipped[pointer + 7 * size + i]);
+
+                pointer += 8 * size;
+                int label_count = Util.ByteArrayToInteger(unzipped, pointer);
+                pointer += 4;
+
+                AliasList.me.Reset();
+                for (int i = 0; i < label_count; i++)
+                {
+                    int offset = Util.ConvertPCtoSNES(Util.ByteArrayToInteger(unzipped, pointer)); // pc -> snes
+                    pointer += 4;
+
+                    string label = "";
+                    while (unzipped[pointer] != 0) label += (char)unzipped[pointer++];
+                    pointer++;
+
+                    Data.AddLabel(offset, label, true);
+                }
+
+                int comment_count = Util.ByteArrayToInteger(unzipped, pointer);
+                pointer += 4;
+
+                for (int i = 0; i < comment_count; i++)
+                {
+                    int offset = Util.ConvertPCtoSNES(Util.ByteArrayToInteger(unzipped, pointer)); // pc -> snes
+                    pointer += 4;
+
+                    string comment = "";
+                    while (unzipped[pointer] != 0) comment += (char)unzipped[pointer++];
+                    pointer++;
+
+                    Data.AddComment(offset, comment, true);
+                }
+            }
+            else
+            {
+                throw new Exception("Couldn't open the ROM file!");
+            }
+        }
+
+        private static void OpenVersion1(byte[] unzipped, OpenFileDialog open)
         {
             Data.ROMMapMode mode = (Data.ROMMapMode)unzipped[HEADER_SIZE];
             Data.ROMSpeed speed = (Data.ROMSpeed)unzipped[HEADER_SIZE + 1];
@@ -188,7 +269,7 @@ namespace DiztinGUIsh
             while (unzipped[pointer] != 0) romLocation += (char)unzipped[pointer++];
             pointer++;
 
-            if(ValidateROM(romLocation, romName, checksums, mode, out rom, open))
+            if (ValidateROM(romLocation, romName, checksums, mode, out rom, open))
             {
                 Data.Initiate(rom, mode, speed);
 
@@ -231,7 +312,8 @@ namespace DiztinGUIsh
 
                     Data.AddComment(offset, comment, true);
                 }
-            } else
+            }
+            else
             {
                 throw new Exception("Couldn't open the ROM file!");
             }
@@ -264,7 +346,7 @@ namespace DiztinGUIsh
 
                         if (error == null) validFile = true;
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         error = string.Format("The linked ROM file '{0}' couldn't be found.", filename);
                     }
@@ -328,7 +410,7 @@ namespace DiztinGUIsh
                     return res.ToArray();
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null;
             }
@@ -346,7 +428,7 @@ namespace DiztinGUIsh
                     return comp.ToArray();
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null;
             }

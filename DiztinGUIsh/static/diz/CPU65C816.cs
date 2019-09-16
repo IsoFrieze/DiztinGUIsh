@@ -218,8 +218,7 @@ namespace DiztinGUIsh
         {
             int address = Util.GetIntermediateAddress(offset);
             if (address < 0) return "";
-            int pc = Util.ConvertSNEStoPC(address);
-            if (pc >= 0 && Data.GetLabel(pc) != "") return Data.GetLabel(pc);
+            if (Data.GetLabel(address) != "") return Data.GetLabel(address);
 
             int count = BytesToShow(mode);
             if (mode == AddressMode.RELATIVE_8 || mode == AddressMode.RELATIVE_16) address = Util.GetROMWord(offset + 1);

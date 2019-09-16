@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DiztinGUIsh.window;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -57,7 +58,8 @@ namespace DiztinGUIsh
         {
             Dictionary<int, string> tempAlias = Data.GetAllLabels();
             Data.Restore(a: new Dictionary<int, string>(tempAlias));
-            bankSize = Data.GetROMMapMode() == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000;
+            AliasList.me.locked = true;
+            bankSize = Data.GetROMMapMode() == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000; // todo
 
             AddTemporaryLabels();
 
@@ -119,6 +121,7 @@ namespace DiztinGUIsh
 
             if (structure == FormatStructure.OneBankPerFile) sw.Close();
             Data.Restore(a: tempAlias);
+            AliasList.me.locked = false;
             return errorCount;
         }
 
@@ -132,13 +135,12 @@ namespace DiztinGUIsh
                 int length = GetLineByteLength(pointer);
                 Data.FlagType flag = Data.GetFlag(pointer);
 
-                if (unlabeled == FormatUnlabeled.ShowAll) addMe.Add(pointer);
+                if (unlabeled == FormatUnlabeled.ShowAll) addMe.Add(Util.ConvertPCtoSNES(pointer));
                 else if (unlabeled != FormatUnlabeled.ShowNone &&
                     (flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit || flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit))
                 {
                     int ia = Util.GetIntermediateAddressOrPointer(pointer);
-                    int pc = Util.ConvertSNEStoPC(ia);
-                    if (pc >= 0) addMe.Add(pc);
+                    if (Util.ConvertSNEStoPC(ia) >= 0) addMe.Add(ia);
                 }
 
                 pointer += length;
@@ -256,7 +258,7 @@ namespace DiztinGUIsh
                 min < max &&
                 offset + min < size &&
                 Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
-                Data.GetLabel(offset + min) == "" &&
+                Data.GetLabel(Util.ConvertPCtoSNES(offset + min)) == "" &&
                 (offset + min) / bankSize == myBank
             ) min += step;
             return min;
@@ -284,7 +286,7 @@ namespace DiztinGUIsh
         // negative length = right justified
         private static string GetLabel(int offset, int length)
         {
-            string label = Data.GetLabel(offset);
+            string label = Data.GetLabel(Util.ConvertPCtoSNES(offset));
             bool noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
             return string.Format("{0," + (length * -1) + "}", label + (noColon ? "" : ":"));
         }
@@ -405,7 +407,7 @@ namespace DiztinGUIsh
         // trim to length
         private static string GetComment(int offset, int length)
         {
-            return string.Format("{0," + (length * -1) + "}", Data.GetComment(offset));
+            return string.Format("{0," + (length * -1) + "}", Data.GetComment(Util.ConvertPCtoSNES(offset)));
         }
 
         // length forced to 2

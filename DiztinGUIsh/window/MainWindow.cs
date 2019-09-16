@@ -196,7 +196,7 @@ namespace DiztinGUIsh
             try
             {
                 System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "/help.html");
-            } catch (Exception ex)
+            } catch (Exception)
             {
                 MessageBox.Show("Can't find the help file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -392,7 +392,7 @@ namespace DiztinGUIsh
             if (row >= Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
-                case 0: e.Value = Data.GetLabel(row); break;
+                case 0: e.Value = Data.GetLabel(Util.ConvertPCtoSNES(row)); break;
                 case 1: e.Value = Util.NumberToBaseString(Util.ConvertPCtoSNES(row), Util.NumberBase.Hexadecimal, 6); break;
                 case 2: e.Value = (char)Data.GetROMByte(row); break;
                 case 3: e.Value = Util.NumberToBaseString(Data.GetROMByte(row), DisplayBase); break;
@@ -412,7 +412,7 @@ namespace DiztinGUIsh
                 case 9: e.Value = Util.NumberToBaseString(Data.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4); break;
                 case 10: e.Value = Util.BoolToSize(Data.GetMFlag(row)); break;
                 case 11: e.Value = Util.BoolToSize(Data.GetXFlag(row)); break;
-                case 12: e.Value = Data.GetComment(row); break;
+                case 12: e.Value = Data.GetComment(Util.ConvertPCtoSNES(row)); break;
             }
         }
 
@@ -424,12 +424,12 @@ namespace DiztinGUIsh
             if (row >= Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
-                case 0: Data.AddLabel(row, value, true); break;
+                case 0: Data.AddLabel(Util.ConvertPCtoSNES(row), value, true); break;
                 case 8: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDataBank(row, result); break;
                 case 9: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDirectPage(row, result); break;
                 case 10: Data.SetMFlag(row, (value == "8" || value == "M")); break;
                 case 11: Data.SetXFlag(row, (value == "8" || value == "X")); break;
-                case 12: Data.AddComment(row, value, true); break;
+                case 12: Data.AddComment(Util.ConvertPCtoSNES(row), value, true); break;
             }
             table.InvalidateRow(e.RowIndex);
         }

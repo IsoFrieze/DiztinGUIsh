@@ -16,8 +16,8 @@ namespace DiztinGUIsh.window
         // single instance
         public static AliasList me;
 
+        public bool locked = false;
         private MainWindow mw;
-        private bool locked = false;
         private int currentlyEditing = -1;
 
         public AliasList(MainWindow main)
@@ -66,14 +66,10 @@ namespace DiztinGUIsh.window
         {
             if (int.TryParse((string)dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null, out int val))
             {
-                int offset = Util.ConvertSNEStoPC(val);
-                if (offset >= 0)
-                {
-                    locked = true;
-                    Data.AddLabel(offset, null, true);
-                    locked = false;
-                    mw.InvalidateTable();
-                }
+                locked = true;
+                Data.AddLabel(val, null, true);
+                locked = false;
+                mw.InvalidateTable();
             }
         }
 
@@ -91,9 +87,8 @@ namespace DiztinGUIsh.window
         private void dataGridView1_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
         {
             if (dataGridView1.Rows[e.RowIndex].IsNewRow) return;
-            int val = -1;
-            string rowOldAddress = (string)dataGridView1.Rows[e.RowIndex].Cells[0].Value;
-            int oldOffset = rowOldAddress == null ? -1 : Util.ConvertSNEStoPC(int.Parse(rowOldAddress, NumberStyles.HexNumber, null));
+            int val = -1, oldAddress = -1;
+            int.TryParse((string)dataGridView1.Rows[e.RowIndex].Cells[0].Value, NumberStyles.HexNumber, null, out oldAddress);
             string label = (string)dataGridView1.Rows[e.RowIndex].Cells[1].Value;
 
             toolStripStatusLabel1.Text = "";
@@ -102,14 +97,16 @@ namespace DiztinGUIsh.window
             {
                 case 0:
                     {
-                        if (!int.TryParse(e.FormattedValue.ToString(), NumberStyles.HexNumber, null, out val) || Util.ConvertSNEStoPC(val) == -1)
+                        if (!int.TryParse(e.FormattedValue.ToString(), NumberStyles.HexNumber, null, out val))
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "Must enter a valid hex address.";
-                        } else if (oldOffset == -1 && Data.GetAllLabels().ContainsKey(Util.ConvertSNEStoPC(val)))
+                        } else if (oldAddress == -1 && Data.GetAllLabels().ContainsKey(val))
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "This address already has a label.";
+                            var x = Data.GetAllLabels();
+                            Console.WriteLine(Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal));
                         } else if (dataGridView1.EditingControl != null)
                         {
                             dataGridView1.EditingControl.Text = Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal, 6);
@@ -118,19 +115,18 @@ namespace DiztinGUIsh.window
                     }
                 case 1:
                     {
-                        val = int.Parse(rowOldAddress, NumberStyles.HexNumber, null);
+                        val = oldAddress;
                         label = e.FormattedValue.ToString();
                         // todo (validate for valid label characters)
                         break;
                     }
             }
-            int offset = Util.ConvertSNEStoPC(val);
 
             locked = true;
             if (currentlyEditing >= 0)
             {
-                if (oldOffset >= 0) Data.AddLabel(oldOffset, null, true);
-                Data.AddLabel(offset, label, true);
+                if (val >= 0) Data.AddLabel(oldAddress, null, true);
+                Data.AddLabel(val, label, true);
             }
             locked = false;
 
@@ -138,22 +134,22 @@ namespace DiztinGUIsh.window
             mw.InvalidateTable();
         }
 
-        public void AddRow(int offset, string alias)
+        public void AddRow(int address, string alias)
         {
             if (!locked)
             {
-                dataGridView1.Rows.Add(Util.NumberToBaseString(Util.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6), alias);
+                dataGridView1.Rows.Add(Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6), alias);
                 dataGridView1.Invalidate();
             }
         }
 
-        public void RemoveRow(int offset)
+        public void RemoveRow(int address)
         {
             if (!locked)
             {
                 for (int index = 0; index < dataGridView1.Rows.Count; index++)
                 {
-                    if ((string)dataGridView1.Rows[index].Cells[0].Value == Util.NumberToBaseString(Util.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6))
+                    if ((string)dataGridView1.Rows[index].Cells[0].Value == Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6))
                     {
                         dataGridView1.Rows.RemoveAt(index);
                         dataGridView1.Invalidate();

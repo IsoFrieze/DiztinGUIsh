@@ -126,7 +126,7 @@ namespace DiztinGUIsh
             }
 
             int pc = ConvertSNEStoPC(ia);
-            if (pc >= 0 && Data.GetLabel(pc) != "") param = Data.GetLabel(pc);
+            if (pc >= 0 && Data.GetLabel(ia) != "") param = Data.GetLabel(ia);
             return string.Format(format, param);
         }
 
@@ -137,10 +137,10 @@ namespace DiztinGUIsh
             return text + "\"";
         }
 
-        public static string GetDefaultLabel(int offset)
+        public static string GetDefaultLabel(int address)
         {
-            int snes = ConvertPCtoSNES(offset);
-            return string.Format("{0}_{1}", TypeToLabel(Data.GetFlag(offset)), NumberToBaseString(snes, NumberBase.Hexadecimal, 6));
+            int pc = ConvertSNEStoPC(address);
+            return string.Format("{0}_{1}", TypeToLabel(Data.GetFlag(pc)), NumberToBaseString(address, NumberBase.Hexadecimal, 6));
         }
 
         public static int ConvertPCtoSNES(int offset)
