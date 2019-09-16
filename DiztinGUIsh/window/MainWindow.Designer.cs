@@ -132,6 +132,7 @@
             this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
             this.saveLogSingleFile = new System.Windows.Forms.SaveFileDialog();
             this.chooseLogFolder = new System.Windows.Forms.FolderBrowserDialog();
+            this.labelListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -775,7 +776,8 @@
             this.visualMapToolStripMenuItem,
             this.graphicsWindowToolStripMenuItem,
             this.constantsToolStripMenuItem,
-            this.optionsToolStripMenuItem});
+            this.optionsToolStripMenuItem,
+            this.labelListToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
             this.viewToolStripMenuItem.Text = "&Tools";
@@ -943,6 +945,14 @@
             // 
             this.saveLogSingleFile.Filter = "Assembly Files|*.asm|All Files|*.*";
             // 
+            // labelListToolStripMenuItem
+            // 
+            this.labelListToolStripMenuItem.Enabled = false;
+            this.labelListToolStripMenuItem.Name = "labelListToolStripMenuItem";
+            this.labelListToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.labelListToolStripMenuItem.Text = "Label List";
+            this.labelListToolStripMenuItem.Click += new System.EventHandler(this.labelListToolStripMenuItem_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1062,6 +1072,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnComment;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moveWithStepToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem labelListToolStripMenuItem;
     }
 }
 

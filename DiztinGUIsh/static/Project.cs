@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DiztinGUIsh.window;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -40,6 +41,7 @@ namespace DiztinGUIsh
                     unsavedChanges = false;
                     currentFile = null;
 
+                    AliasList.me.Reset();
                     Dictionary<int, string> generatedLabels = import.GetGeneratedLabels();
                     if (generatedLabels.Count > 0)
                     {
@@ -202,6 +204,7 @@ namespace DiztinGUIsh
                 int label_count = Util.ByteArrayToInteger(unzipped, pointer);
                 pointer += 4;
 
+                AliasList.me.Reset();
                 for (int i = 0; i < label_count; i++)
                 {
                     int offset = Util.ByteArrayToInteger(unzipped, pointer);

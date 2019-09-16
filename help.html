@@ -4,14 +4,15 @@
 </head>
 <body>
 
-<h1>DiztinGUIsh Help - v1.0.1.0</h1>
+<h1>DiztinGUIsh Help - v1.0.1.1</h1>
 
 <hr />
 
 <h2>Table of Contents</h2>
 <ul>
     <li><a href="#intro">Introduction</a></li>
-    <li><a href="#mainwindow">DiztinGUIsh Main Window</a></li>
+    <li>
+        <a href="#mainwindow">DiztinGUIsh Main Window</a>
         <ul>
             <li><a href="#projectfiles">Project Files</a></li>
             <li><a href="#tablegrid">Table Grid View</a></li>
@@ -24,19 +25,26 @@
             <li><a href="#inoutpoints">In/Out/End/Read Points</a></li>
             <li><a href="#hotkeys">Keyboard Hotkeys</a></li>
         </ul>
-    <li><a href="#gotowindow">Goto Window</a></li>
+    </li>
+    <li>
+        <a href="#gotowindow">Goto Window</a>
         <ul>
             <li><a href="#romvspc">ROM Address vs PC Offset</a></li>
             <li><a href="#hexvsdec">Hexadecimal vs Decimal</a></li>
         </ul>
-    <li><a href="#markmany">Mark Many Window</a></li>
+    </li>
+    <li>
+        <a href="#markmany">Mark Many Window</a>
         <ul>
             <li><a href="#propertyvalue">Property &amp; Value</a></li>
             <li><a href="#addressrange">Address Range</a></li>
         </ul>
+    </li>
     <li><a href="#misalignedflags">Fix Misaligned Flags Window</a></li>
     <li><a href="#rescanpoints">Rescan for In/Out Points Window</a></li>
-    <li><a href="#disassembly">Export Disassembly Window</a></li>
+    <li><a href="#labellist">Label List Window</a></li>
+    <li>
+        <a href="#disassembly">Export Disassembly Window</a>
         <ul>
             <li><a href="#outputformat">Output Format</a></li>
             <li><a href="#unlabeled">Unlabeled Instructions</a></li>
@@ -44,10 +52,13 @@
             <li><a href="#maxdatabytes">Max Data Bytes Per Line</a></li>
             <li><a href="#asarassembly">Reassembly with Asar</a></li>
         </ul>
-    <li><a href="#fileformat">Project File Format</a></li>
+    </li>
+    <li>
+        <a href="#fileformat">Project File Format</a>
         <ul>
             <li><a href="#version00">Version 00</a></li>
         </ul>
+    </li>
 </ul>
 
 <hr />
@@ -73,10 +84,12 @@
     <li><strong>Visual Map</strong>: This window lets you see a visual map of the entire ROM, including what each byte is flagged as. <em>Not supported yet.</em></li>
     <li><strong>Graphics Window</strong>: This window lets you interpret the ROM data as various SNES graphics formats. <em>Not supported yet.</em></li>
     <li><strong>Constants</strong>: This changes what base the "raw byte" column is shown in. You can pick from decimal, hexadecimal, and binary.</li>
-    <li><strong>Options</strong></li>
-    <ul>
-        <li><strong>Move With Step</strong>: When enabled, the currently selected cell in the table will jump to the byte after the last modified byte after a auto step or mark many operation.</li>
-    </ul>
+    <li>
+        <strong>Options</strong>
+        <ul>
+            <li><strong>Move With Step</strong>: When enabled, the currently selected cell in the table will jump to the byte after the last modified byte after a auto step or mark many operation.</li>
+        </ul>
+    </li>
 </ul>
 <h4>Help</h4>
 <p>This menu has a link to this file, a link to the <a href="https://github.com/Dotsarecool/DiztinGUIsh">Github repository</a>, and the about window where you can see what version of DiztinGUIsh you have.</p>
@@ -213,6 +226,12 @@
 
 <p><strong>Hotkey: L, C</strong></p>
 <p>Pressing L will jump the selected cell to the label cell automatically so you can add a label to this byte. Pressing C will do the same for the comment column.</p>
+<h4>Valid Labels</h4>
+<p>Asar has a limitation on what characters can make up a label, and DiztinGUIsh follows the same format. Currently, labels must only contain the following characters:</p>
+<p><tt>a-z A-Z 0-9 _</tt></p>
+<p>Characters within a label that don't fit this description will be converted to <tt>_</tt>s.</p>
+<p>DiztinGUIsh currently does not support sublabels (starting with a <tt>.</tt>), or +/- labels (made of <tt>+ -</tt> characters).</p>
+<p>DiztinGUIsh also currently does not check for duplicate labels; that is, two more more addresses with the same label. For now, please use the <a href="#labellist">Label List</a> to check for any duplicate labels.</p>
 
 <hr />
 
@@ -348,6 +367,24 @@
 
 <hr />
 
+<h2 id="labellist">Label List Window</h2>
+
+<p>This window shows every single label that has been created, and the address it is associated with. Labels in this list will automatically be updated, added, or removed when they are modified via the Main Window. You can also add, remove, or edit them from this window. The labels can be sorted by address or name by clicking on the table header.</p>
+<h4>Jump to</h4>
+<p>Clicking on this button will jump to the location of this label in the Main Window.</p>
+<h4>Import...</h4>
+<p>Use this to import a *.csv file with a list of labels in the format described below. This is useful if you have an external program that generates labels for you. <em>Not supported yet.</em></p>
+<h4>Export...</h4>
+<p>This will export a *.csv file with all of the current labels. <em>Not supported yet.</em> The format is quite simple; each label is one line in the CSV file, formatted as such:</p>
+<p><tt>snes_address,label_name</tt></p>
+<p>Note: Since neither the address nor the label should contain spaces or quotation marks, DiztinGUIsh will expect no quotation marks surrounding either field.</p>
+<h4>Label Table</h4>
+<p>Pretty self-explanitory--the first column is the SNES address that the label name in the second column corresponds to.</p>
+<p>You can modify labels by double-clicking on them. Hitting the <tt>del</tt> key will delete a label. You can even select more than one at once to delete. To add a label, just add the address and label name to the empty row at the end of the table. Make sure the address is a valid 24-bit address in hexadecimal, that the address you enter isn't already in the list, and that the label name contains only valid characters. See <a href="labelcomment">here</a> for what makes a valid label name.</p>
+<p>Since DiztinGUIsh currently does not prevent you from reusing a label name more than once, it will warn you of duplicates by highlighting the rows that contain duplicate label names in yellow.</p>
+
+<hr />
+
 <h2 id="disassembly">Export Disassembly Window</h2>
 
 <p>This window lets you set the options for outputting a disassembly that can reassembled by Asar.</p>
@@ -437,7 +474,8 @@
     <li>[size] bytes: Direct Page register (high byte) for each byte in ROM</li>
     <li>[size] bytes: X Flag for each byte in ROM (0 for clear, 1 for set)</li>
     <li>[size] bytes: M Flag for each byte in ROM (0 for clear, 1 for set)</li>
-    <li>[size] bytes: Flag for each byte in ROM</li>
+    <li>
+        [size] bytes: Flag for each byte in ROM
         <ul>
             <li>Unreached = 0x00</li>
             <li>Opcode = 0x10</li>
@@ -454,26 +492,33 @@
             <li>Pointer32Bit = 0x51</li>
             <li>Text = 0x60</li>
         </ul>
+    </li>
     <li>[size] bytes: Archetecture for each byte in ROM <em>(currently always 00, or things will break)</em></li>
-    <li>[size] bytes: In/Out/End/Read Point for each byte in ROM (bitwise - can be combined)</li>
+    <li>
+        [size] bytes: In/Out/End/Read Point for each byte in ROM (bitwise - can be combined)
         <ul>
             <li>InPoint = 0x01</li>
             <li>OutPoint = 0x02</li>
             <li>EndPoint = 0x04</li>
             <li>ReadPoint = 0x08</li>
         </ul>
+    </li>
     <li>1 int: number of labels; call this [labelcount]</li>
-    <li>[labelcount] of struct:</li>
+    <li>
+        [labelcount] of struct:
         <ul>
             <li>1 int: PC offset of this label</li>
             <li>null-terminated string: the label</li>
         </ul>
+    </li>
     <li>1 int: number of comments; call this [commentcount]</li>
-    <li>[commentcount] of struct:</li>
+    <li>
+        [commentcount] of struct:
         <ul>
             <li>1 int: PC offset of this comment</li>
             <li>null-terminated string: the comment</li>
         </ul>
+    </li>
 </ul>
 
 <hr />

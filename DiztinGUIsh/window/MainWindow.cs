@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DiztinGUIsh.window;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -54,6 +55,8 @@ namespace DiztinGUIsh
                 null,
                 table,
                 new object[] { true });
+
+            aliasList = new AliasList(this);
         }
 
         public void UpdateWindowTitle()
@@ -96,6 +99,7 @@ namespace DiztinGUIsh
                         UpdateDataGridView();
                         UpdatePercent();
                         table.Invalidate();
+                        EnableSubWindows();
                     }
                 }
             }
@@ -123,6 +127,7 @@ namespace DiztinGUIsh
                 UpdateDataGridView();
                 UpdatePercent();
                 table.Invalidate();
+                EnableSubWindows();
             }
         }
 
@@ -238,7 +243,7 @@ namespace DiztinGUIsh
             decimalToolStripMenuItem.Checked = noBase == Util.NumberBase.Decimal;
             hexadecimalToolStripMenuItem.Checked = noBase == Util.NumberBase.Hexadecimal;
             binaryToolStripMenuItem.Checked = noBase == Util.NumberBase.Binary;
-            table.Invalidate();
+            InvalidateTable();
         }
 
         public void UpdatePercent()
@@ -252,6 +257,11 @@ namespace DiztinGUIsh
         public void UpdateMarkerLabel()
         {
             currentMarker.Text = string.Format("Marker: {0}", markFlag.ToString());
+        }
+
+        public void InvalidateTable()
+        {
+            table.Invalidate();
         }
 
         // DataGridView
@@ -283,7 +293,7 @@ namespace DiztinGUIsh
             if (selRow < viewOffset) selRow = viewOffset;
             else if (selRow >= viewOffset + rowsToShow) selRow = viewOffset + rowsToShow - 1;
             table.CurrentCell = table.Rows[selRow - viewOffset].Cells[selCol];
-            table.Invalidate();
+            InvalidateTable();
         }
 
         private void vScrollBar1_ValueChanged(object sender, EventArgs e)
@@ -296,12 +306,12 @@ namespace DiztinGUIsh
             else if (selOffset >= viewOffset + rowsToShow) table.CurrentCell = table.Rows[rowsToShow - 1].Cells[table.CurrentCell.ColumnIndex];
             else table.CurrentCell = table.Rows[selOffset - viewOffset].Cells[table.CurrentCell.ColumnIndex];
 
-            table.Invalidate();
+            InvalidateTable();
         }
 
         private void table_MouseDown(object sender, MouseEventArgs e)
         {
-            table.Invalidate();
+            InvalidateTable();
         }
 
         private void table_KeyDown(object sender, KeyEventArgs e)
@@ -373,7 +383,7 @@ namespace DiztinGUIsh
                     break;
             }
             e.Handled = true;
-            table.Invalidate();
+            InvalidateTable();
         }
 
         private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
@@ -431,7 +441,7 @@ namespace DiztinGUIsh
             Util.PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + viewOffset);
         }
 
-        private void SelectOffset(int offset, int column = -1)
+        public void SelectOffset(int offset, int column = -1)
         {
             int col = column == -1 ? table.CurrentCell.ColumnIndex : column;
             if (offset < viewOffset)
@@ -524,7 +534,7 @@ namespace DiztinGUIsh
                 if (MoveWithStep) SelectOffset(destination);
                 UpdatePercent();
                 UpdateWindowTitle();
-                table.Invalidate();
+                InvalidateTable();
             }
         }
 
@@ -679,7 +689,7 @@ namespace DiztinGUIsh
             if (result == DialogResult.OK)
             {
                 int count = Manager.FixMisalignedFlags();
-                table.Invalidate();
+                InvalidateTable();
                 MessageBox.Show(string.Format("Modified {0} flags!", count), "Done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
@@ -692,7 +702,7 @@ namespace DiztinGUIsh
             if (result == DialogResult.OK)
             {
                 Manager.RescanInOutPoints();
-                table.Invalidate();
+                InvalidateTable();
                 MessageBox.Show("Scan complete!", "Done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
@@ -790,6 +800,19 @@ namespace DiztinGUIsh
         public OpenFileDialog GetRomOpenFileDialog()
         {
             return openROMFile;
+        }
+
+        // sub windows
+        AliasList aliasList;
+
+        private void EnableSubWindows()
+        {
+            labelListToolStripMenuItem.Enabled = true;
+        }
+
+        private void labelListToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            aliasList.Show();
         }
     }
 }

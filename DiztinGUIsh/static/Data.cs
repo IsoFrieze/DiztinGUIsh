@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DiztinGUIsh.window;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -219,11 +220,23 @@ namespace DiztinGUIsh
         {
             if (v == null)
             {
-                if (alias.ContainsKey(i)) alias.Remove(i);
+                if (alias.ContainsKey(i))
+                {
+                    alias.Remove(i);
+                    AliasList.me.RemoveRow(i);
+                }
             } else
             {
-                if (alias.ContainsKey(i) && overwrite) alias.Remove(i);
-                if (!alias.ContainsKey(i)) alias.Add(i, v);
+                if (alias.ContainsKey(i) && overwrite)
+                {
+                    alias.Remove(i);
+                    AliasList.me.RemoveRow(i);
+                }
+                if (!alias.ContainsKey(i))
+                {
+                    alias.Add(i, v);
+                    AliasList.me.AddRow(i, v);
+                }
             }
         }
 

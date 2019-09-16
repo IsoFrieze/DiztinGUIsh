@@ -105,6 +105,12 @@
       <DependentUpon>InOutPointChecker.cs</DependentUpon>
     </Compile>
     <Compile Include="static\LogCreator.cs" />
+    <Compile Include="window\AliasList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="window\AliasList.Designer.cs">
+      <DependentUpon>AliasList.cs</DependentUpon>
+    </Compile>
     <Compile Include="window\MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -130,6 +136,9 @@
     <Compile Include="ROMByte.cs" />
     <Compile Include="static\diz\CPU65C816.cs" />
     <Compile Include="static\Util.cs" />
+    <EmbeddedResource Include="window\AliasList.resx">
+      <DependentUpon>AliasList.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="window\dialog\About.resx">
       <DependentUpon>About.cs</DependentUpon>
     </EmbeddedResource>
