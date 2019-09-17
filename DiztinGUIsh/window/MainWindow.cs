@@ -424,7 +424,7 @@ namespace DiztinGUIsh
             if (row >= Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
-                case 0: Data.AddLabel(Util.ConvertPCtoSNES(row), value, true); break;
+                case 0: Data.AddLabel(Util.ConvertPCtoSNES(row), value, true); break; // todo (validate for valid label characters)
                 case 8: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDataBank(row, result); break;
                 case 9: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDirectPage(row, result); break;
                 case 10: Data.SetMFlag(row, (value == "8" || value == "M")); break;

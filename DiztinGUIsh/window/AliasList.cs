@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -58,6 +59,57 @@ namespace DiztinGUIsh.window
                 if (offset >= 0)
                 {
                     mw.SelectOffset(offset);
+                }
+            }
+        }
+
+        private void import_Click(object sender, EventArgs e)
+        {
+            DialogResult result = openFileDialog1.ShowDialog();
+            if (result == DialogResult.OK && openFileDialog1.FileName != "")
+            {
+                int errLine = 0;
+                try
+                {
+                    Dictionary<int, string> newValues = new Dictionary<int, string>();
+                    string[] lines = File.ReadAllLines(openFileDialog1.FileName);
+
+                    for (int i = 0; i < lines.Length; i++) {
+                        errLine = i + 1;
+                        string addr = lines[i].Substring(0, lines[i].IndexOf(','));
+                        string label = lines[i].Substring(lines[i].IndexOf(',') + 1);
+                        newValues.Add(int.Parse(addr, NumberStyles.HexNumber, null), label); // todo (validate for valid label characters)
+                    }
+
+                    foreach (KeyValuePair<int,string> pair in newValues) Data.AddLabel(pair.Key, pair.Value, true);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show(
+                        "An error occurred while parsing the file." +
+                        (errLine > 0 ? string.Format(" (Check line {0}.)", errLine) : ""),
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void export_Click(object sender, EventArgs e)
+        {
+            DialogResult result = saveFileDialog1.ShowDialog();
+            if (result == DialogResult.OK && saveFileDialog1.FileName != "")
+            {
+                try
+                {
+                    using (StreamWriter sw = new StreamWriter(saveFileDialog1.FileName))
+                    {
+                        foreach (KeyValuePair<int, string> pair in Data.GetAllLabels())
+                        {
+                            sw.WriteLine(string.Format("{0},{1}", Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6), pair.Value));
+                        }
+                    }
+                } catch (Exception)
+                {
+                    MessageBox.Show("An error occurred while saving the file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
