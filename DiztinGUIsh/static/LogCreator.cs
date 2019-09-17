@@ -42,6 +42,7 @@ namespace DiztinGUIsh
             { "%empty", Tuple.Create<Func<int, int, string>, int>(GetEmpty, 1) },
             { "%incsrc", Tuple.Create<Func<int, int, string>, int>(GetIncSrc, 1) },
             { "%bankcross", Tuple.Create<Func<int, int, string>, int>(GetBankCross, 1) },
+            { "%labelassign", Tuple.Create<Func<int, int, string>, int>(GetLabelAssign, 1) },
         };
 
         public static string format = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
@@ -50,6 +51,7 @@ namespace DiztinGUIsh
         public static FormatStructure structure = FormatStructure.OneBankPerFile;
 
         private static List<Tuple<string, int>> list;
+        private static List<int> usedLabels;
         private static StreamWriter err;
         private static int errorCount, bankSize;
         private static string folder;
@@ -66,6 +68,7 @@ namespace DiztinGUIsh
             string[] split = format.Split('%');
             err = er;
             errorCount = 0;
+            usedLabels = new List<int>();
 
             list = new List<Tuple<string, int>>();
             for (int i = 0; i < split.Length; i++)
@@ -85,13 +88,12 @@ namespace DiztinGUIsh
             {
                 folder = Path.GetDirectoryName(((FileStream)sw.BaseStream).Name);
                 sw.WriteLine(GetLine(pointer, "map"));
-                sw.WriteLine(GetLine(pointer, "bankcross"));
                 sw.WriteLine(GetLine(pointer, "empty"));
                 for (int i = 0; i < size; i += bankSize) sw.WriteLine(GetLine(i, "incsrc"));
+                sw.WriteLine(GetLine(-1, "incsrc"));
             } else
             {
                 sw.WriteLine(GetLine(pointer, "map"));
-                sw.WriteLine(GetLine(pointer, "bankcross"));
                 sw.WriteLine(GetLine(pointer, "empty"));
             }
 
@@ -119,6 +121,23 @@ namespace DiztinGUIsh
                 pointer += GetLineByteLength(pointer);
             }
 
+            if (structure == FormatStructure.OneBankPerFile)
+            {
+                sw.Close();
+                sw = new StreamWriter(string.Format("{0}/labels.asm", folder));
+            } else
+            {
+                sw.WriteLine(GetLine(pointer, "empty"));
+            }
+
+            foreach (KeyValuePair<int, string> pair in Data.GetAllLabels())
+            {
+                if (!usedLabels.Contains(pair.Key))
+                {
+                    sw.WriteLine(GetLine(pair.Key, "labelassign"));
+                }
+            }
+
             if (structure == FormatStructure.OneBankPerFile) sw.Close();
             Data.Restore(a: tempAlias);
             AliasList.me.locked = false;
@@ -140,7 +159,7 @@ namespace DiztinGUIsh
                     (flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit || flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit))
                 {
                     int ia = Util.GetIntermediateAddressOrPointer(pointer);
-                    if (Util.ConvertSNEStoPC(ia) >= 0) addMe.Add(ia);
+                    if (ia >= 0 && Util.ConvertSNEStoPC(ia) >= 0) addMe.Add(ia);
                 }
 
                 pointer += length;
@@ -286,7 +305,9 @@ namespace DiztinGUIsh
         // negative length = right justified
         private static string GetLabel(int offset, int length)
         {
-            string label = Data.GetLabel(Util.ConvertPCtoSNES(offset));
+            int snes = Util.ConvertPCtoSNES(offset);
+            string label = Data.GetLabel(snes);
+            usedLabels.Add(snes);
             bool noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
             return string.Format("{0," + (length * -1) + "}", label + (noColon ? "" : ":"));
         }
@@ -358,10 +379,15 @@ namespace DiztinGUIsh
             return string.Format("{0," + (length * -1) + "}", s);
         }
 
+        // 0+ = bank_xx.asm, -1 = labels.asm
         private static string GetIncSrc(int offset, int length)
         {
-            int bank = Util.ConvertPCtoSNES(offset) >> 16;
-            string s = string.Format("incsrc \"bank_{0}.asm\"", Util.NumberToBaseString(bank, Util.NumberBase.Hexadecimal, 2));
+            string s = "incsrc \"labels.asm\"";
+            if (offset >= 0)
+            {
+                int bank = Util.ConvertPCtoSNES(offset) >> 16;
+                s = string.Format("incsrc \"bank_{0}.asm\"", Util.NumberToBaseString(bank, Util.NumberBase.Hexadecimal, 2));
+            }
             return string.Format("{0," + (length * -1) + "}", s);
         }
 
@@ -436,6 +462,13 @@ namespace DiztinGUIsh
             bool x = Data.GetXFlag(offset);
             if (length == 1) return x ? "X" : "x";
             else return x ? "08" : "16";
+        }
+
+        // output label at snes offset, and its value
+        private static string GetLabelAssign(int offset, int length)
+        {
+            string s = string.Format("{0} = {1}", Data.GetLabel(offset), Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true));
+            return string.Format("{0," + (length * -1) + "}", s);
         }
     }
 }
