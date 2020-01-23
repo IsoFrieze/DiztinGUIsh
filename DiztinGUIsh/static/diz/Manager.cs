@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -238,6 +239,41 @@ namespace DiztinGUIsh
             }
 
             Project.unsavedChanges = true;
+        }
+
+        public static void ImportBizHawkCDL(BizHawkCdl cdl)
+        {
+            if (!cdl.TryGetValue("CARTROM", out var cdlRomFlags))
+            {
+                throw new InvalidDataException("The CDL file does not contain CARTROM block.");
+            }
+
+            var size = Math.Min(cdlRomFlags.Count, Data.GetROMSize());
+            for (var offset = 0; offset < size; offset++)
+            {
+                var cdlFlag = cdlRomFlags[offset];
+                if (cdlFlag == BizHawkCdl.Flag.None)
+                    continue;
+
+                var type = Data.FlagType.Unreached;
+                if ((cdlFlag & BizHawkCdl.Flag.ExecFirst) != 0)
+                    type = Data.FlagType.Opcode;
+                else if ((cdlFlag & BizHawkCdl.Flag.ExecOperand) != 0)
+                    type = Data.FlagType.Operand;
+                else if ((cdlFlag & BizHawkCdl.Flag.CPUData) != 0)
+                    type = Data.FlagType.Data8Bit;
+                else if ((cdlFlag & BizHawkCdl.Flag.DMAData) != 0)
+                    type = Data.FlagType.Data8Bit;
+                Mark(offset, type, 1);
+
+                if (type == Data.FlagType.Opcode || type == Data.FlagType.Operand)
+                {
+                    var m = (cdlFlag & BizHawkCdl.Flag.CPUMFlag) != 0;
+                    var x = (cdlFlag & BizHawkCdl.Flag.CPUXFlag) != 0;
+                    MarkMFlag(offset, m, 1);
+                    MarkXFlag(offset, x, 1);
+                }
+            }
         }
     }
 }

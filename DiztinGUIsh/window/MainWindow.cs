@@ -94,6 +94,7 @@ namespace DiztinGUIsh
                 {
                     if (Project.NewProject(openROMFile.FileName))
                     {
+                        importCDLToolStripMenuItem.Enabled = true;
                         TriggerSaveOptions(false, true);
                         UpdateWindowTitle();
                         UpdateDataGridView();
@@ -122,6 +123,7 @@ namespace DiztinGUIsh
         {
             if (Project.TryOpenProject(filename, openROMFile))
             {
+                importCDLToolStripMenuItem.Enabled = true;
                 TriggerSaveOptions(true, true);
                 UpdateWindowTitle();
                 UpdateDataGridView();
@@ -146,6 +148,35 @@ namespace DiztinGUIsh
                 Project.SaveProject(saveProjectFile.FileName);
                 TriggerSaveOptions(true, true);
                 UpdateWindowTitle();
+            }
+        }
+
+        private void importCDLToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openCDLDialog.InitialDirectory = Project.currentFile;
+            DialogResult result = openCDLDialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                if (ContinueUnsavedChanges())
+                {
+                    try
+                    {
+                        var cdl = BizHawkCdl.LoadFromFile(openCDLDialog.FileName);
+                        Manager.ImportBizHawkCDL(cdl);
+                    }
+                    catch (InvalidDataException ex)
+                    {
+                        MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch (EndOfStreamException ex)
+                    {
+                        MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+
+                    UpdatePercent();
+                    UpdateWindowTitle();
+                    InvalidateTable();
+                }
             }
         }
 
