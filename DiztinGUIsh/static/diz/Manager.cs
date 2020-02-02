@@ -249,6 +249,8 @@ namespace DiztinGUIsh
             }
 
             var size = Math.Min(cdlRomFlags.Count, Data.GetROMSize());
+            bool m = false;
+            bool x = false;
             for (var offset = 0; offset < size; offset++)
             {
                 var cdlFlag = cdlRomFlags[offset];
@@ -257,7 +259,11 @@ namespace DiztinGUIsh
 
                 var type = Data.FlagType.Unreached;
                 if ((cdlFlag & BizHawkCdl.Flag.ExecFirst) != 0)
+                {
                     type = Data.FlagType.Opcode;
+                    m = (cdlFlag & BizHawkCdl.Flag.CPUMFlag) != 0;
+                    x = (cdlFlag & BizHawkCdl.Flag.CPUXFlag) != 0;
+                }
                 else if ((cdlFlag & BizHawkCdl.Flag.ExecOperand) != 0)
                     type = Data.FlagType.Operand;
                 else if ((cdlFlag & BizHawkCdl.Flag.CPUData) != 0)
@@ -268,8 +274,8 @@ namespace DiztinGUIsh
 
                 if (type == Data.FlagType.Opcode || type == Data.FlagType.Operand)
                 {
-                    var m = (cdlFlag & BizHawkCdl.Flag.CPUMFlag) != 0;
-                    var x = (cdlFlag & BizHawkCdl.Flag.CPUXFlag) != 0;
+                    // Operand reuses the last M and X flag values used in Opcode,
+                    // since BizHawk CDL records M and X flags only in Opcode.
                     MarkMFlag(offset, m, 1);
                     MarkXFlag(offset, x, 1);
                 }
