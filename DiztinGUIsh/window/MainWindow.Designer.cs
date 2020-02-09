@@ -136,6 +136,7 @@
             this.ColumnX = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnComment = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
+            this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -280,6 +281,7 @@
             this.importCDLToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
             this.importCDLToolStripMenuItem.Size = new System.Drawing.Size(292, 26);
             this.importCDLToolStripMenuItem.Text = "Import CDL...";
+            this.importCDLToolStripMenuItem.Click += new System.EventHandler(this.importCDLToolStripMenuItem_Click);
             // 
             // importTraceLogToolStripMenuItem
             // 
@@ -992,6 +994,10 @@
             this.labelListToolStripMenuItem.Text = "Label List";
             this.labelListToolStripMenuItem.Click += new System.EventHandler(this.labelListToolStripMenuItem_Click);
             // 
+            // openCDLDialog
+            // 
+            this.openCDLDialog.Filter = "BizHawk Code Data Logger Files|*.cdl|All Files|*.*";
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
@@ -1117,6 +1123,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnComment;
         private System.Windows.Forms.OpenFileDialog openTraceLogDialog;
         private System.Windows.Forms.ToolStripMenuItem labelListToolStripMenuItem;
+        private System.Windows.Forms.OpenFileDialog openCDLDialog;
     }
 }
 

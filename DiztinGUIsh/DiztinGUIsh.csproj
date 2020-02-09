@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BizHawkCdl.cs" />
     <Compile Include="window\dialog\About.cs">
       <SubType>Form</SubType>
     </Compile>
