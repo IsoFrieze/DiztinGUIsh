@@ -284,8 +284,10 @@
             // 
             // MarkManyDialog
             // 
+            this.AcceptButton = this.okay;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.cancel;
             this.ClientSize = new System.Drawing.Size(299, 206);
             this.Controls.Add(this.radioDec);
             this.Controls.Add(this.radioHex);
