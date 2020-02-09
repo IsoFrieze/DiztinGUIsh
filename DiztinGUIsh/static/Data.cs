@@ -44,6 +44,17 @@ namespace DiztinGUIsh
             ReadPoint = 0x08
         }
 
+        [Flags]
+        public enum BsnesPlusUsage : byte
+        {
+            UsageRead = 0x80,
+            UsageWrite = 0x40,
+            UsageExec = 0x20,
+            UsageOpcode = 0x10,
+            UsageFlagM = 0x02,
+            UsageFlagX = 0x01,
+        };
+
         public enum ROMMapMode : byte
         {
             LoROM, HiROM, ExHiROM, SA1ROM, ExSA1ROM, SuperFX, SuperMMC, ExLoROM
@@ -212,7 +223,8 @@ namespace DiztinGUIsh
 
         public static string GetLabel(int i)
         {
-            if (alias.TryGetValue(i, out string val)) return val;
+            string val;
+            if (alias.TryGetValue(i, out val)) return val;
             return "";
         }
 
@@ -247,7 +259,8 @@ namespace DiztinGUIsh
 
         public static string GetComment(int i)
         {
-            if (comment.TryGetValue(i, out string val)) return val;
+            string val;
+            if (comment.TryGetValue(i, out val)) return val;
             return "";
         }
 

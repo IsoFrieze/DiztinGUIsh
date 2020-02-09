@@ -28,6 +28,11 @@ namespace DiztinGUIsh
 
         private void MainWindow_SizeChanged(object sender, EventArgs e)
         {
+            UpdatePanels();
+        }
+
+        private void UpdatePanels()
+        {
             table.Height = this.Height - 85;
             table.Width = this.Width - 33;
             vScrollBar1.Height = this.Height - 85;
@@ -57,6 +62,8 @@ namespace DiztinGUIsh
                 new object[] { true });
 
             aliasList = new AliasList(this);
+
+            UpdatePanels();
         }
 
         public void UpdateWindowTitle()
@@ -280,6 +287,9 @@ namespace DiztinGUIsh
                 vScrollBar1.Maximum = Data.GetROMSize() - rowsToShow;
                 vScrollBar1.Value = viewOffset;
                 table.RowCount = rowsToShow;
+
+                importTraceLogToolStripMenuItem.Enabled = true;
+                importUsageMapToolStripMenuItem.Enabled = true;
             }
         }
 
@@ -822,6 +832,28 @@ namespace DiztinGUIsh
         private void labelListToolStripMenuItem_Click(object sender, EventArgs e)
         {
             aliasList.Show();
+        }
+
+        private void ImportUsageMapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (openUsageMapFile.ShowDialog() == DialogResult.OK)
+            {
+                int total = Manager.ImportUsageMap(File.ReadAllBytes(openUsageMapFile.FileName));
+
+                MessageBox.Show($"Modified total {total} flags!", "Done",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void ImportTraceLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (openTraceLogDialog.ShowDialog() == DialogResult.OK)
+            {
+                int total = Manager.ImportTraceLog(File.ReadAllLines(openTraceLogDialog.FileName));
+
+                MessageBox.Show($"Modified total {total} flags!", "Done",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
     }
 }
