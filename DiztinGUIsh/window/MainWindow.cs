@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -49,6 +50,7 @@ namespace DiztinGUIsh
             rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
 
             // https://stackoverflow.com/a/1506066
+
             typeof(DataGridView).InvokeMember(
                 "DoubleBuffered",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
@@ -195,8 +197,10 @@ namespace DiztinGUIsh
         {
             try
             {
-                System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "/help.html");
-            } catch (Exception)
+                var info = new ProcessStartInfo("help.html") { UseShellExecute = true };
+                Process.Start(info);
+            }
+            catch (Exception)
             {
                 MessageBox.Show("Can't find the help file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -204,7 +208,8 @@ namespace DiztinGUIsh
 
         private void githubToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/Dotsarecool/DiztinGUIsh");
+            var info = new ProcessStartInfo("https://github.com/Dotsarecool/DiztinGUIsh") { UseShellExecute = true };
+            Process.Start(info);
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)

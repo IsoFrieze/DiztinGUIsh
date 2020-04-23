@@ -10,11 +10,15 @@
   <PropertyGroup>
     <AssemblyTitle>DiztinGUIsh</AssemblyTitle>
     <Description>A Super NES ROM disassembler.</Description>
-    <Company>Written by Alex \"Dotsarecool\" Losego</Company>
+    <Company>Written by Alex "Dotsarecool" Losego</Company>
     <Product>DiztinGUIsh</Product>
     <Version>1.0.1.6</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="*.html" CopyToOutputDirectory="Always" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
