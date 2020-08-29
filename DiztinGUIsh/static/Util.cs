@@ -126,7 +126,7 @@ namespace DiztinGUIsh
             }
 
             int pc = ConvertSNEStoPC(ia);
-            if (pc >= 0 && Data.GetLabel(ia) != "") param = Data.GetLabel(ia);
+            if (pc >= 0 && Data.GetLabelName(ia) != "") param = Data.GetLabelName(ia);
             return string.Format(format, param);
         }
 
@@ -258,6 +258,15 @@ namespace DiztinGUIsh
                         return -1;
                     }
             }
+        }
+
+        public static string ReadZipString(byte[] unzipped, ref int pointer)
+        {
+            var label = "";
+            while (unzipped[pointer] != 0)
+                label += (char)unzipped[pointer++];
+            pointer++;
+            return label;
         }
 
         private static int UnmirroredOffset(int offset)

@@ -392,7 +392,7 @@ namespace DiztinGUIsh
             if (row >= Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
-                case 0: e.Value = Data.GetLabel(Util.ConvertPCtoSNES(row)); break;
+                case 0: e.Value = Data.GetLabelName(Util.ConvertPCtoSNES(row)); break;
                 case 1: e.Value = Util.NumberToBaseString(Util.ConvertPCtoSNES(row), Util.NumberBase.Hexadecimal, 6); break;
                 case 2: e.Value = (char)Data.GetROMByte(row); break;
                 case 3: e.Value = Util.NumberToBaseString(Data.GetROMByte(row), DisplayBase); break;
@@ -424,7 +424,7 @@ namespace DiztinGUIsh
             if (row >= Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
-                case 0: Data.AddLabel(Util.ConvertPCtoSNES(row), value, true); break; // todo (validate for valid label characters)
+                case 0: Data.AddLabel(Util.ConvertPCtoSNES(row), new Data.AliasInfo() {name=value}, true); break; // todo (validate for valid label characters)
                 case 8: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDataBank(row, result); break;
                 case 9: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDirectPage(row, result); break;
                 case 10: Data.SetMFlag(row, (value == "8" || value == "M")); break;

@@ -42,10 +42,10 @@ namespace DiztinGUIsh
                     currentFile = null;
 
                     AliasList.me.Reset();
-                    Dictionary<int, string> generatedLabels = import.GetGeneratedLabels();
+                    Dictionary<int, Data.AliasInfo> generatedLabels = import.GetGeneratedLabels();
                     if (generatedLabels.Count > 0)
                     {
-                        foreach (KeyValuePair<int, string> pair in generatedLabels) Data.AddLabel(pair.Key, pair.Value, true);
+                        foreach (KeyValuePair<int, Data.AliasInfo> pair in generatedLabels) Data.AddLabel(pair.Key, pair.Value, true);
                         unsavedChanges = true;
                     }
 
@@ -66,13 +66,17 @@ namespace DiztinGUIsh
             return false;
         }
 
+        private const int LATEST_FILE_FORMAT_VERSION = 2;
+
         public static void SaveProject(string filename)
         {
             try
             {
-                byte[] data = SaveVersion1();
+                const int versionToSave = LATEST_FILE_FORMAT_VERSION;
+
+                byte[] data = SaveVersion(versionToSave);
                 byte[] everything = new byte[HEADER_SIZE + data.Length];
-                everything[0] = 1; // version
+                everything[0] = versionToSave;
                 Util.StringToByteArray(watermark).CopyTo(everything, 1);
                 data.CopyTo(everything, HEADER_SIZE);
 
@@ -88,8 +92,26 @@ namespace DiztinGUIsh
             }
         }
 
-        private static byte[] SaveVersion1()
+        private static byte[] SaveVersion(int version)
         {
+            void SaveStringToBytes(string str, List<byte> bytes)
+            {
+                // TODO: combine with Util.StringToByteArray() probably.
+                if (str != null)
+                {
+                    foreach (var c in str)
+                    {
+                        bytes.Add((byte)c);
+                    }
+                }
+                bytes.Add(0);
+            }
+
+            if (version < 1 || version > LATEST_FILE_FORMAT_VERSION)
+            {
+                throw new ArgumentException($"Saving: Invalid save version requested for saving: {version}.");
+            }
+
             int size = Data.GetROMSize();
             byte[] romSettings = new byte[31];
             romSettings[0] = (byte)Data.GetROMMapMode();
@@ -101,22 +123,26 @@ namespace DiztinGUIsh
             // TODO put selected offset in save file
 
             List<byte> label = new List<byte>(), comment = new List<byte>();
-            Dictionary<int, string> all_labels = Data.GetAllLabels(), all_comments = Data.GetAllComments();
+            var all_labels = Data.GetAllLabels();
+            var all_comments = Data.GetAllComments();
 
             Util.IntegerIntoByteList(all_labels.Count, label);
-            foreach (KeyValuePair<int, string> pair in all_labels)
+            foreach (var pair in all_labels)
             {
                 Util.IntegerIntoByteList(pair.Key, label);
-                for (int i = 0; i < pair.Value.Length; i++) label.Add((byte)pair.Value[i]);
-                label.Add(0);
+
+                SaveStringToBytes(pair.Value.name, label);
+                if (version >= 2)
+                {
+                    SaveStringToBytes(pair.Value.comment, label);
+                }
             }
 
             Util.IntegerIntoByteList(all_comments.Count, comment);
             foreach (KeyValuePair<int, string> pair in all_comments)
             {
                 Util.IntegerIntoByteList(pair.Key, comment);
-                for (int i = 0; i < pair.Value.Length; i++) comment.Add((byte)pair.Value[i]);
-                comment.Add(0);
+                SaveStringToBytes(pair.Value, comment);
             }
 
             byte[] romLocation = Util.StringToByteArray(currentROMFile);
@@ -157,13 +183,7 @@ namespace DiztinGUIsh
                 }
 
                 byte version = data[0];
-
-                switch (version)
-                {
-                    case 0: OpenVersion0(data, open); break;
-                    case 1: OpenVersion1(data, open); break;
-                    default: throw new Exception("This DiztinGUIsh file uses a newer file format! You'll need to download the newest version of DiztinGUIsh to open it.");
-                }
+                OpenProject(version, data, open);
 
                 unsavedChanges = false;
                 currentFile = filename;
@@ -176,20 +196,32 @@ namespace DiztinGUIsh
             }
         }
 
-        // differences between version 0 and version 1:
-        // version 0: addresses for aliases and comments were stored in PC offset format.
-        //            tables: B, D lo, D hi, X, M, flag, arch, inoutpoint
-        //            lists: alias, comment
-        // version 1: addresses for aliases and comments are stored in SNES address format.
-        //            tables: B, D lo, D hi, X, M, flag, arch, inoutpoint, ???
-        //            lists: alias, comment, ???
-        private static void OpenVersion0(byte[] unzipped, OpenFileDialog open)
+        private delegate int AddressConverter(int address);
+
+        private static void OpenProject(int version, byte[] unzipped, OpenFileDialog open)
         {
-            MessageBox.Show(
-                "This project file is in an older format.\n" +
-                "You may want to back up your work or 'Save As' in case the conversion goes wrong.\n" +
-                "The project file will be untouched until it is saved again.",
-                "Project File Out of Date", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            if (version > LATEST_FILE_FORMAT_VERSION)
+            {
+                throw new ArgumentException("This DiztinGUIsh file uses a newer file format! You'll need to download the newest version of DiztinGUIsh to open it.");
+            }
+            else if (version != LATEST_FILE_FORMAT_VERSION)
+            {
+                MessageBox.Show(
+                    "This project file is in an older format.\n" +
+                    "You may want to back up your work or 'Save As' in case the conversion goes wrong.\n" +
+                    "The project file will be untouched until it is saved again.",
+                    "Project File Out of Date", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+            
+            if (version < 0)
+            {
+                throw new ArgumentException($"Invalid project file version detected: {version}.");
+            }
+
+            // version 0 needs to convert PC to SNES for some addresses
+            AddressConverter converter = address => address;
+            if (version == 0)
+                converter = Util.ConvertPCtoSNES;
 
             Data.ROMMapMode mode = (Data.ROMMapMode)unzipped[HEADER_SIZE];
             Data.ROMSpeed speed = (Data.ROMSpeed)unzipped[HEADER_SIZE + 1];
@@ -198,10 +230,10 @@ namespace DiztinGUIsh
             byte[] rom;
 
             int pointer = HEADER_SIZE + 6;
-            for (int i = 0; i < 0x15; i++) romName += (char)unzipped[pointer++];
+            for (int i = 0; i < 0x15; i++) romName += (char) unzipped[pointer++];
             int checksums = Util.ByteArrayToInteger(unzipped, pointer);
             pointer += 4;
-            while (unzipped[pointer] != 0) romLocation += (char)unzipped[pointer++];
+            while (unzipped[pointer] != 0) romLocation += (char) unzipped[pointer++];
             pointer++;
 
             if (ValidateROM(romLocation, romName, checksums, mode, out rom, open))
@@ -215,38 +247,12 @@ namespace DiztinGUIsh
                 for (int i = 0; i < size; i++) Data.SetFlag(i, (Data.FlagType)unzipped[pointer + 5 * size + i]);
                 for (int i = 0; i < size; i++) Data.SetArchitechture(i, (Data.Architechture)unzipped[pointer + 6 * size + i]);
                 for (int i = 0; i < size; i++) Data.SetInOutPoint(i, (Data.InOutPoint)unzipped[pointer + 7 * size + i]);
-
                 pointer += 8 * size;
-                int label_count = Util.ByteArrayToInteger(unzipped, pointer);
-                pointer += 4;
 
                 AliasList.me.Reset();
-                for (int i = 0; i < label_count; i++)
-                {
-                    int offset = Util.ConvertPCtoSNES(Util.ByteArrayToInteger(unzipped, pointer)); // pc -> snes
-                    pointer += 4;
+                ReadAliases(unzipped, ref pointer, converter, version >= 2);
 
-                    string label = "";
-                    while (unzipped[pointer] != 0) label += (char)unzipped[pointer++];
-                    pointer++;
-
-                    Data.AddLabel(offset, label, true);
-                }
-
-                int comment_count = Util.ByteArrayToInteger(unzipped, pointer);
-                pointer += 4;
-
-                for (int i = 0; i < comment_count; i++)
-                {
-                    int offset = Util.ConvertPCtoSNES(Util.ByteArrayToInteger(unzipped, pointer)); // pc -> snes
-                    pointer += 4;
-
-                    string comment = "";
-                    while (unzipped[pointer] != 0) comment += (char)unzipped[pointer++];
-                    pointer++;
-
-                    Data.AddComment(offset, comment, true);
-                }
+                ReadComments(unzipped, ref pointer, converter);
             }
             else
             {
@@ -254,68 +260,41 @@ namespace DiztinGUIsh
             }
         }
 
-        private static void OpenVersion1(byte[] unzipped, OpenFileDialog open)
+        // TODO: refactor ReadComments and ReadAliases into one generic list-reading function
+
+        private static void ReadComments(byte[] unzipped, ref int pointer, AddressConverter converter)
         {
-            Data.ROMMapMode mode = (Data.ROMMapMode)unzipped[HEADER_SIZE];
-            Data.ROMSpeed speed = (Data.ROMSpeed)unzipped[HEADER_SIZE + 1];
-            int size = Util.ByteArrayToInteger(unzipped, HEADER_SIZE + 2);
-            string romName = "", romLocation = "";
-            byte[] rom;
-
-            int pointer = HEADER_SIZE + 6;
-            for (int i = 0; i < 0x15; i++) romName += (char)unzipped[pointer++];
-            int checksums = Util.ByteArrayToInteger(unzipped, pointer);
+            var count = Util.ByteArrayToInteger(unzipped, pointer);
             pointer += 4;
-            while (unzipped[pointer] != 0) romLocation += (char)unzipped[pointer++];
-            pointer++;
 
-            if (ValidateROM(romLocation, romName, checksums, mode, out rom, open))
+            for (var i = 0; i < count; i++)
             {
-                Data.Initiate(rom, mode, speed);
-
-                for (int i = 0; i < size; i++) Data.SetDataBank(i, unzipped[pointer + i]);
-                for (int i = 0; i < size; i++) Data.SetDirectPage(i, unzipped[pointer + size + i] | (unzipped[pointer + 2 * size + i] << 8));
-                for (int i = 0; i < size; i++) Data.SetXFlag(i, unzipped[pointer + 3 * size + i] != 0);
-                for (int i = 0; i < size; i++) Data.SetMFlag(i, unzipped[pointer + 4 * size + i] != 0);
-                for (int i = 0; i < size; i++) Data.SetFlag(i, (Data.FlagType)unzipped[pointer + 5 * size + i]);
-                for (int i = 0; i < size; i++) Data.SetArchitechture(i, (Data.Architechture)unzipped[pointer + 6 * size + i]);
-                for (int i = 0; i < size; i++) Data.SetInOutPoint(i, (Data.InOutPoint)unzipped[pointer + 7 * size + i]);
-
-                pointer += 8 * size;
-                int label_count = Util.ByteArrayToInteger(unzipped, pointer);
+                int offset = converter(Util.ByteArrayToInteger(unzipped, pointer));
                 pointer += 4;
 
-                AliasList.me.Reset();
-                for (int i = 0; i < label_count; i++)
-                {
-                    int offset = Util.ByteArrayToInteger(unzipped, pointer);
-                    pointer += 4;
+                var comment = Util.ReadZipString(unzipped, ref pointer);
 
-                    string label = "";
-                    while (unzipped[pointer] != 0) label += (char)unzipped[pointer++];
-                    pointer++;
-
-                    Data.AddLabel(offset, label, true);
-                }
-
-                int comment_count = Util.ByteArrayToInteger(unzipped, pointer);
-                pointer += 4;
-
-                for (int i = 0; i < comment_count; i++)
-                {
-                    int offset = Util.ByteArrayToInteger(unzipped, pointer);
-                    pointer += 4;
-
-                    string comment = "";
-                    while (unzipped[pointer] != 0) comment += (char)unzipped[pointer++];
-                    pointer++;
-
-                    Data.AddComment(offset, comment, true);
-                }
+                Data.AddComment(offset, comment, true);
             }
-            else
+        }
+
+        private static void ReadAliases(byte[] unzipped, ref int pointer, AddressConverter converter, bool readAliasComments)
+        {
+            int count = Util.ByteArrayToInteger(unzipped, pointer);
+            pointer += 4;
+
+            for (int i = 0; i < count; i++)
             {
-                throw new Exception("Couldn't open the ROM file!");
+                int offset = converter(Util.ByteArrayToInteger(unzipped, pointer));
+                pointer += 4;
+
+                var aliasInfo = new Data.AliasInfo {
+                    name = Util.ReadZipString(unzipped, ref pointer), 
+                    comment = readAliasComments ? Util.ReadZipString(unzipped, ref pointer) : "",
+                };
+                aliasInfo.CleanUp();
+
+                Data.AddLabel(offset, aliasInfo, true);
             }
         }
 

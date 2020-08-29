@@ -20,6 +20,8 @@ namespace DiztinGUIsh
             textFormat.Text = LogCreator.format;
             comboUnlabeled.SelectedIndex = (int)LogCreator.unlabeled;
             comboStructure.SelectedIndex = (int)LogCreator.structure;
+            chkIncludeUnusedLabels.Checked = LogCreator.includeUnusedLabels;
+            chkPrintLabelSpecificComments.Checked = LogCreator.printLabelSpecificComments;
             UpdateSample();
         }
 
@@ -98,7 +100,8 @@ namespace DiztinGUIsh
                 List<ROMByte> tempTable = Data.GetTable();
                 Data.ROMMapMode tempMode = Data.GetROMMapMode();
                 Data.ROMSpeed tempSpeed = Data.GetROMSpeed();
-                Dictionary<int, string> tempAlias = Data.GetAllLabels(), tempComment = Data.GetAllComments();
+                var tempAlias = Data.GetAllLabels(); 
+                var tempComment = Data.GetAllComments();
                 LogCreator.FormatStructure tempStructure = LogCreator.structure;
                 Data.Restore(sampleTable, Data.ROMMapMode.LoROM, Data.ROMSpeed.FastROM, sampleAlias, sampleComment);
                 LogCreator.structure = LogCreator.FormatStructure.SingleFile;
@@ -244,14 +247,14 @@ namespace DiztinGUIsh
             new ROMByte {Rom = 0x6D, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
         };
 
-        public static Dictionary<int, string> sampleAlias = new Dictionary<int, string>
+        public static Dictionary<int, Data.AliasInfo> sampleAlias = new Dictionary<int, Data.AliasInfo>
         {
-            { 0x00, "Emulation_RESET" },
-            { 0x0A, "FastRESET" },
-            { 0x32, "Test_Indices" },
-            { 0x3A, "Pointer_Table" },
-            { 0x44, "First_Routine" },
-            { 0x5B, "Test_Data" }
+            { 0x00, new Data.AliasInfo() {name="Emulation_RESET", comment="Sample emulation reset location"} },
+            { 0x0A, new Data.AliasInfo() {name="FastRESET", comment="Sample label" } },
+            { 0x32, new Data.AliasInfo() {name="Test_Indices"} },
+            { 0x3A, new Data.AliasInfo() {name="Pointer_Table"} },
+            { 0x44, new Data.AliasInfo() {name="First_Routine"} },
+            { 0x5B, new Data.AliasInfo() {name="Test_Data", comment="Pretty cool huh?" } }
         };
 
         public static Dictionary<int, string> sampleComment = new Dictionary<int, string>
@@ -261,5 +264,15 @@ namespace DiztinGUIsh
             { 0x21, "clear APU regs" },
             { 0x44, "this routine copies Test_Data to $7E0100" }
         };
+
+        private void chkPrintLabelSpecificComments_CheckedChanged(object sender, EventArgs e)
+        {
+            LogCreator.printLabelSpecificComments = chkPrintLabelSpecificComments.Checked;
+        }
+
+        private void chkIncludeUnusedLabels_CheckedChanged(object sender, EventArgs e)
+        {
+            LogCreator.includeUnusedLabels = chkIncludeUnusedLabels.Checked;
+        }
     }
 }
