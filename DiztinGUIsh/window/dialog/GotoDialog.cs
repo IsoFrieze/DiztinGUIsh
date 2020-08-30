@@ -23,6 +23,7 @@ namespace DiztinGUIsh
         private void GotoDialog_Load(object sender, EventArgs e)
         {
             textROM.SelectAll();
+            UpdateUI();
         }
 
         public int GetOffset()
@@ -39,38 +40,77 @@ namespace DiztinGUIsh
 
         private bool updatingText = false;
 
-        private void textROM_TextChanged(object sender, EventArgs e)
+        private bool UpdateTextChanged(string txtChanged, Action<string, int, Util.NumberBase> onSuccess)
         {
+            bool result = false;
             if (!updatingText)
             {
                 updatingText = true;
 
                 NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
                 Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-                if (int.TryParse(textROM.Text, style, null, out int address))
+
+                if (Util.StripFormattedAddress(ref txtChanged, style, out var address))
                 {
-                    int pc = Util.ConvertSNEStoPC(address);
-                    if (pc >= 0 && pc < Data.GetROMSize()) textPC.Text = Util.NumberToBaseString(pc, noBase, 0);
+                    onSuccess(txtChanged, address, noBase);
+                    result = true;
                 }
                 updatingText = false;
             }
+
+            return result;
+        }
+
+        // For both textbox TextChanged events:
+        // precondition: unvalidated input in textbox
+        // postcondtion: valid text is in both textboxes, or, button is greyed out and error message displayed.
+
+        private void UpdateUI()
+        {
+            var validOffset = IsValidOffset();
+
+            if (validOffset)
+            {
+                go.Enabled = true;
+                lblError.Text = "";
+            }
+            else
+            {
+                go.Enabled = false;
+                lblError.Text = "Invalid Offset";
+            }
+        }
+
+        private bool IsValidOffset()
+        {
+            const int highest_offset_allowed = 0xFFFFFF; // TODO: not sure this is correct, probably lower. what's highest address for SNES?
+
+            var offset = GetOffset();
+            return offset >= 0 && offset <= highest_offset_allowed;
+        }
+
+        private void textROM_TextChanged(object sender, EventArgs e)
+        {
+            UpdateTextChanged(textROM.Text, (finaltext, address, noBase) =>
+            {
+                int pc = Util.ConvertSNEStoPC(address);
+                if (pc >= 0 && pc < Data.GetROMSize()) textPC.Text = Util.NumberToBaseString(pc, noBase, 0);
+                textROM.Text = finaltext;
+            });
+
+            UpdateUI();
         }
 
         private void textPC_TextChanged(object sender, EventArgs e)
         {
-            if (!updatingText)
+            UpdateTextChanged(textPC.Text, (finaltext, offset, noBase) =>
             {
-                updatingText = true;
+                int addr = Util.ConvertPCtoSNES(offset);
+                if (addr >= 0) textROM.Text = Util.NumberToBaseString(addr, noBase, 6);
+                textPC.Text = finaltext;
+            });
 
-                NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-                Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-                if (int.TryParse(textPC.Text, style, null, out int offset))
-                {
-                    int addr = Util.ConvertPCtoSNES(offset);
-                    if (addr >= 0) textROM.Text = Util.NumberToBaseString(addr, noBase, 6);
-                }
-                updatingText = false;
-            }
+            UpdateUI();
         }
 
         private void go_Click(object sender, EventArgs e)
