@@ -194,7 +194,7 @@
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ColumnAlias.DefaultCellStyle = dataGridViewCellStyle1;
             this.ColumnAlias.HeaderText = "Label";
-            this.ColumnAlias.MaxInputLength = 20;
+            this.ColumnAlias.MaxInputLength = 60;
             this.ColumnAlias.Name = "ColumnAlias";
             this.ColumnAlias.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 

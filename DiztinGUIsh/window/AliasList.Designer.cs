@@ -76,7 +76,7 @@
             this.dataGridView1.ShowCellToolTips = false;
             this.dataGridView1.ShowEditingIcon = false;
             this.dataGridView1.ShowRowErrors = false;
-            this.dataGridView1.Size = new System.Drawing.Size(200, 310);
+            this.dataGridView1.Size = new System.Drawing.Size(400, 310);
             this.dataGridView1.TabIndex = 3;
             this.dataGridView1.TabStop = false;
             this.dataGridView1.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.dataGridView1_CellBeginEdit);
@@ -97,7 +97,7 @@
             dataGridViewCellStyle17.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Alias.DefaultCellStyle = dataGridViewCellStyle17;
             this.Alias.HeaderText = "Label";
-            this.Alias.MaxInputLength = 20;
+            this.Alias.MaxInputLength = 60;
             this.Alias.Name = "Alias";
             this.Alias.Width = 138;
             // 
@@ -126,9 +126,9 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 339);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 342);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(201, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(402, 22);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
             // 
