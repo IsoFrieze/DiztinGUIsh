@@ -26,11 +26,16 @@ namespace DiztinGUIsh
             UpdateUI();
         }
 
-        public int GetOffset()
+        private int ParseOffset(string text)
         {
             NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-            if (int.TryParse(textPC.Text, style, null, out int offset)) return offset;
+            if (int.TryParse(text, style, null, out int offset)) return offset;
             return -1;
+        }
+
+        public int GetPcOffset()
+        {
+            return ParseOffset(textPC.Text);
         }
 
         private void Go()
@@ -50,7 +55,7 @@ namespace DiztinGUIsh
                 NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
                 Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
 
-                if (Util.StripFormattedAddress(ref txtChanged, style, out var address))
+                if (Util.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
                 {
                     onSuccess(txtChanged, address, noBase);
                     result = true;
@@ -67,35 +72,52 @@ namespace DiztinGUIsh
 
         private void UpdateUI()
         {
-            var validOffset = IsValidOffset();
+            bool valid = true;
+            lblError.Text = "";
 
-            if (validOffset)
+            if (!IsPCOffsetValid())
             {
-                go.Enabled = true;
-                lblError.Text = "";
+                lblError.Text = "Invalid PC Offset";
+                valid = false;
             }
-            else
+
+            if (!IsRomAddressValid())
             {
-                go.Enabled = false;
-                lblError.Text = "Invalid Offset";
+                lblError.Text = "Invalid ROM Address";
+                valid = false;
             }
+
+            go.Enabled = valid;
         }
 
-        private bool IsValidOffset()
+        private bool IsValidPCAddress(int pc)
         {
-            const int highest_offset_allowed = 0xFFFFFF; // TODO: not sure this is correct, probably lower. what's highest address for SNES?
+            return pc >= 0 && pc < Data.GetROMSize();
+        }
 
-            var offset = GetOffset();
-            return offset >= 0 && offset <= highest_offset_allowed;
+        private bool IsPCOffsetValid()
+        {
+            var offset = GetPcOffset();
+            return IsValidPCAddress(offset);
+        }
+
+        private bool IsRomAddressValid()
+        {
+            var address = ParseOffset(textROM.Text);
+            if (address < 0)
+                return false;
+            
+            return IsValidPCAddress(Util.ConvertSNEStoPC(address));
         }
 
         private void textROM_TextChanged(object sender, EventArgs e)
         {
-            UpdateTextChanged(textROM.Text, (finaltext, address, noBase) =>
+            UpdateTextChanged(textROM.Text,(finaltext, address, noBase) =>
             {
                 int pc = Util.ConvertSNEStoPC(address);
-                if (pc >= 0 && pc < Data.GetROMSize()) textPC.Text = Util.NumberToBaseString(pc, noBase, 0);
+                
                 textROM.Text = finaltext;
+                textPC.Text = Util.NumberToBaseString(pc, noBase, 0);
             });
 
             UpdateUI();
@@ -106,8 +128,9 @@ namespace DiztinGUIsh
             UpdateTextChanged(textPC.Text, (finaltext, offset, noBase) =>
             {
                 int addr = Util.ConvertPCtoSNES(offset);
-                if (addr >= 0) textROM.Text = Util.NumberToBaseString(addr, noBase, 6);
+
                 textPC.Text = finaltext;
+                textROM.Text = Util.NumberToBaseString(addr, noBase, 6);
             });
 
             UpdateUI();
