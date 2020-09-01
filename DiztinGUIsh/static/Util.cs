@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -322,6 +323,32 @@ namespace DiztinGUIsh
                 (data[offset + 1] << 8) |
                 (data[offset + 2] << 16) |
                 (data[offset + 3] << 24);
+        }
+
+        // deal with addresses that look like this,
+        // might be pasted from other editors
+        // C0FFFF
+        // $C0FFFF
+        // C7/AAAA
+        // $C6/BBBB
+        public static bool StripFormattedAddress(ref string addressTxt, NumberStyles style, out int address)
+        {
+            address = -1;
+
+            if (string.IsNullOrEmpty(addressTxt))
+                return false;
+
+            var inputText = new string(Array.FindAll<char>(addressTxt.ToCharArray(), (c => 
+                (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
+            )));
+
+            if (int.TryParse(inputText, style, null, out address))
+            {
+                addressTxt = inputText;
+                return true;
+            }
+
+            return false;
         }
 
         public static string TypeToString(Data.FlagType flag)

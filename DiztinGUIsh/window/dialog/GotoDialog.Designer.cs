@@ -36,6 +36,7 @@
             this.radioDec = new System.Windows.Forms.RadioButton();
             this.cancel = new System.Windows.Forms.Button();
             this.go = new System.Windows.Forms.Button();
+            this.lblError = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -59,7 +60,7 @@
             // textROM
             // 
             this.textROM.Location = new System.Drawing.Point(103, 12);
-            this.textROM.MaxLength = 6;
+            this.textROM.MaxLength = 8;
             this.textROM.Name = "textROM";
             this.textROM.Size = new System.Drawing.Size(46, 20);
             this.textROM.TabIndex = 1;
@@ -71,7 +72,7 @@
             // textPC
             // 
             this.textPC.Location = new System.Drawing.Point(103, 38);
-            this.textPC.MaxLength = 6;
+            this.textPC.MaxLength = 8;
             this.textPC.Name = "textPC";
             this.textPC.Size = new System.Drawing.Size(46, 20);
             this.textPC.TabIndex = 3;
@@ -106,7 +107,7 @@
             // cancel
             // 
             this.cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancel.Location = new System.Drawing.Point(12, 105);
+            this.cancel.Location = new System.Drawing.Point(12, 121);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(75, 23);
             this.cancel.TabIndex = 7;
@@ -117,7 +118,7 @@
             // 
             // go
             // 
-            this.go.Location = new System.Drawing.Point(93, 105);
+            this.go.Location = new System.Drawing.Point(93, 121);
             this.go.Name = "go";
             this.go.Size = new System.Drawing.Size(75, 23);
             this.go.TabIndex = 6;
@@ -125,12 +126,23 @@
             this.go.UseVisualStyleBackColor = true;
             this.go.Click += new System.EventHandler(this.go_Click);
             // 
+            // lblError
+            // 
+            this.lblError.AutoSize = true;
+            this.lblError.ForeColor = System.Drawing.Color.Red;
+            this.lblError.Location = new System.Drawing.Point(12, 102);
+            this.lblError.Name = "lblError";
+            this.lblError.Size = new System.Drawing.Size(39, 13);
+            this.lblError.TabIndex = 8;
+            this.lblError.Text = "lblError";
+            // 
             // GotoDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
-            this.ClientSize = new System.Drawing.Size(180, 140);
+            this.ClientSize = new System.Drawing.Size(180, 153);
+            this.Controls.Add(this.lblError);
             this.Controls.Add(this.go);
             this.Controls.Add(this.cancel);
             this.Controls.Add(this.radioDec);
@@ -161,5 +173,6 @@
         private System.Windows.Forms.RadioButton radioDec;
         private System.Windows.Forms.Button cancel;
         private System.Windows.Forms.Button go;
+        private System.Windows.Forms.Label lblError;
     }
 }

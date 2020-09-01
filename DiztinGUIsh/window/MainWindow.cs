@@ -615,7 +615,7 @@ namespace DiztinGUIsh
             DialogResult result = go.ShowDialog();
             if (result == DialogResult.OK)
             {
-                int offset = go.GetOffset();
+                int offset = go.GetPcOffset();
                 if (offset >= 0 && offset < Data.GetROMSize()) SelectOffset(offset); 
                 else MessageBox.Show("That offset is out of range.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
