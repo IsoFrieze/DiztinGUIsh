@@ -14,6 +14,11 @@ namespace DiztinGUIsh
         [STAThread]
         static void Main(string[] args)
         {
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                SetProcessDPIAware();
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             MainWindow window = new MainWindow();
@@ -22,5 +27,8 @@ namespace DiztinGUIsh
 
             Application.Run(window);
         }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
     }
 }

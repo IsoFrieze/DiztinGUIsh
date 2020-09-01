@@ -160,13 +160,15 @@ namespace DiztinGUIsh
         {
             if (radioHex.Checked)
             {
-                if (int.TryParse(textPC.Text, out int result))
+                int result;
+                if (int.TryParse(textPC.Text, out result))
                 {
                     textPC.Text = Util.NumberToBaseString(result, Util.NumberBase.Hexadecimal, 0);
                 }
             } else
             {
-                if (int.TryParse(textPC.Text, NumberStyles.HexNumber, null, out int result))
+                int result;
+                if (int.TryParse(textPC.Text, NumberStyles.HexNumber, null, out result))
                 {
                     textPC.Text = result.ToString();
                 }

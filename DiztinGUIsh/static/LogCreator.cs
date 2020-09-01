@@ -117,7 +117,7 @@ namespace DiztinGUIsh
                     if ((snes % bankSize) != 0) err.WriteLine("({0}) Offset 0x{1:X}: An instruction crossed a bank boundary.", ++errorCount, pointer);
                     bank = snes >> 16;
                 }
-
+                
                 var c1 = (Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0;
                 var c2 = (tempAlias.TryGetValue(pointer, out var aliasInfo) && aliasInfo.name.Length > 0);
                 if (c1 || c2) 
@@ -259,7 +259,7 @@ namespace DiztinGUIsh
                         }
                     }
                 }
-                int ia = Util.GetIntermediateAddress(offset);
+                int ia = Util.GetIntermediateAddress(offset, true);
                 if (ia >= 0 && flag == Data.FlagType.Opcode && Data.GetInOutPoint(offset) == Data.InOutPoint.OutPoint && Data.GetFlag(Util.ConvertSNEStoPC(ia)) != Data.FlagType.Opcode)
                 {
                     err.WriteLine("({0}) Offset 0x{1:X}: Branch or jump instruction to a non-instruction.", ++errorCount, offset);
@@ -334,7 +334,8 @@ namespace DiztinGUIsh
 
         public static string GetParameter(int offset, string parameter, int length)
         {
-            if (parameters.TryGetValue(parameter, out Tuple<Func<int, int, string>, int> tup)) return tup.Item1.Invoke(offset, length);
+            Tuple<Func<int, int, string>, int> tup;
+            if (parameters.TryGetValue(parameter, out tup)) return tup.Item1.Invoke(offset, length);
             return "";
         }
 

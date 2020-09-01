@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -238,6 +239,152 @@ namespace DiztinGUIsh
             }
 
             Project.unsavedChanges = true;
+        }
+
+        public static int ImportUsageMap(byte[] usageMap)
+        {
+            int size = Data.GetROMSize();
+            bool unsaved = false;
+            int modified = 0;
+            int prevFlags = 0;
+
+            for (int map = 0; map <= 0xFFFFFF; map++)
+            {
+                var i = Util.ConvertSNEStoPC(map);
+
+                if (i == -1 || i >= size)
+                {
+                    // branch predictor may optimize this
+                    continue;
+                }
+
+                var flags = (Data.BsnesPlusUsage)usageMap[map];
+
+                if (flags == 0)
+                {
+                    // no information available
+                    continue;
+                }
+
+                if (Data.GetFlag(i) != Data.FlagType.Unreached)
+                {
+                    // skip if there is something already set..
+                    continue;
+                }
+
+                // opcode: 0x30, operand: 0x20
+                if (flags.HasFlag(Data.BsnesPlusUsage.UsageExec))
+                {
+                    Data.SetFlag(i, Data.FlagType.Operand);
+
+                    if (flags.HasFlag(Data.BsnesPlusUsage.UsageOpcode))
+                    {
+                        prevFlags = ((int)flags & 3) << 4;
+                        Data.SetFlag(i, Data.FlagType.Opcode);
+                    }
+
+                    Data.SetMXFlags(i, prevFlags);
+                    unsaved = true;
+                    modified++;
+                }
+                else if (flags.HasFlag(Data.BsnesPlusUsage.UsageRead))
+                {
+                    Data.SetFlag(i, Data.FlagType.Data8Bit);
+                    unsaved = true;
+                    modified++;
+                }
+            }
+
+            Project.unsavedChanges |= unsaved;
+            return modified;
+        }
+
+        public static int ImportTraceLog(string[] lines)
+        {
+            // Must follow this format.
+            // 028cde rep #$30               A:0004 X:0000 Y:0004 S:1fdd D:0000 DB:02 nvmxdiZC V:133 H: 654 F:36
+            bool unsaved = false;
+            int modified = 0;
+            int size = Data.GetROMSize();
+
+            foreach (var line in lines)
+            {
+                if (line.Length < 80)
+                {
+                    continue;
+                }
+
+                // TODO: error treatment
+                // TODO: parse MX flags
+                int directPageIndex = line.IndexOf("D:") + 2;
+                int dataBankIndex = line.IndexOf("DB:") + 3;
+
+                int snesAddress = Convert.ToInt32(line.Substring(0, 6), 16);
+                int directPage = Convert.ToInt32(line.Substring(directPageIndex, 4), 16);
+                int dataBank = Convert.ToInt32(line.Substring(dataBankIndex, 2), 16);
+
+                int pc = Util.ConvertSNEStoPC(snesAddress);
+
+                if (pc == -1)
+                {
+                    continue;
+                }
+
+                Data.SetFlag(pc, Data.FlagType.Opcode);
+                
+                do
+                {
+                    Data.SetDataBank(pc, dataBank);
+                    Data.SetDirectPage(pc, directPage);
+                    pc++;
+                    unsaved = true;
+                    modified++;
+                } while (pc < size && Data.GetFlag(pc) == Data.FlagType.Operand);
+            }
+
+            Project.unsavedChanges |= unsaved;
+            return modified;
+        }
+
+        public static void ImportBizHawkCDL(BizHawkCdl cdl)
+        {
+            if (!cdl.TryGetValue("CARTROM", out var cdlRomFlags))
+            {
+                throw new InvalidDataException("The CDL file does not contain CARTROM block.");
+            }
+
+            var size = Math.Min(cdlRomFlags.Count, Data.GetROMSize());
+            bool m = false;
+            bool x = false;
+            for (var offset = 0; offset < size; offset++)
+            {
+                var cdlFlag = cdlRomFlags[offset];
+                if (cdlFlag == BizHawkCdl.Flag.None)
+                    continue;
+
+                var type = Data.FlagType.Unreached;
+                if ((cdlFlag & BizHawkCdl.Flag.ExecFirst) != 0)
+                {
+                    type = Data.FlagType.Opcode;
+                    m = (cdlFlag & BizHawkCdl.Flag.CPUMFlag) != 0;
+                    x = (cdlFlag & BizHawkCdl.Flag.CPUXFlag) != 0;
+                }
+                else if ((cdlFlag & BizHawkCdl.Flag.ExecOperand) != 0)
+                    type = Data.FlagType.Operand;
+                else if ((cdlFlag & BizHawkCdl.Flag.CPUData) != 0)
+                    type = Data.FlagType.Data8Bit;
+                else if ((cdlFlag & BizHawkCdl.Flag.DMAData) != 0)
+                    type = Data.FlagType.Data8Bit;
+                Mark(offset, type, 1);
+
+                if (type == Data.FlagType.Opcode || type == Data.FlagType.Operand)
+                {
+                    // Operand reuses the last M and X flag values used in Opcode,
+                    // since BizHawk CDL records M and X flags only in Opcode.
+                    MarkMFlag(offset, m, 1);
+                    MarkXFlag(offset, x, 1);
+                }
+            }
         }
     }
 }
