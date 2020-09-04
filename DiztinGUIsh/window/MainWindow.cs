@@ -878,13 +878,20 @@ namespace DiztinGUIsh
 
         private void ImportTraceLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (openTraceLogDialog.ShowDialog() == DialogResult.OK)
-            {
-                int total = Manager.ImportTraceLog(File.ReadAllLines(openTraceLogDialog.FileName));
+            openTraceLogDialog.Multiselect = true;
+            if (openTraceLogDialog.ShowDialog() != DialogResult.OK)
+                return;
 
-                MessageBox.Show($"Modified total {total} flags!", "Done",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            int total = 0;
+            foreach (var filename in openTraceLogDialog.FileNames)
+            {
+                total += Manager.ImportTraceLog(File.ReadAllLines(filename));
             }
+
+            MessageBox.Show(
+                $"Modified total {total} flags from {openTraceLogDialog.FileNames.Length} files!",
+                "Done",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }
