@@ -69,7 +69,7 @@ namespace DiztinGUIsh
         public void UpdateWindowTitle()
         {
             this.Text =
-                (Project.unsavedChanges ? "*" : "") + 
+                (Project.unsavedChanges ? "*" : "") +
                 (Project.currentFile == null ? "New Project" : Project.currentFile) +
                 " - DiztinGUIsh";
         }
@@ -78,9 +78,11 @@ namespace DiztinGUIsh
         {
             if (Project.unsavedChanges)
             {
-                DialogResult confirm = MessageBox.Show("You have unsaved changes. They will be lost if you continue.", "Unsaved Changes", MessageBoxButtons.OKCancel);
+                DialogResult confirm = MessageBox.Show("You have unsaved changes. They will be lost if you continue.",
+                    "Unsaved Changes", MessageBoxButtons.OKCancel);
                 return confirm == DialogResult.OK;
             }
+
             return true;
         }
 
@@ -203,7 +205,8 @@ namespace DiztinGUIsh
                         file = saveLogSingleFile.FileName;
                         error = Path.GetDirectoryName(file) + "/error.txt";
                     }
-                } else
+                }
+                else
                 {
                     chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.currentFile);
                     result = chooseLogFolder.ShowDialog();
@@ -221,9 +224,14 @@ namespace DiztinGUIsh
                     using (StreamWriter er = new StreamWriter(error))
                     {
                         errors = LogCreator.CreateLog(sw, er);
-                        if (errors > 0) MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        else MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                        if (errors > 0)
+                            MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        else
+                            MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK,
+                                MessageBoxIcon.Asterisk);
                     }
+
                     if (errors == 0) File.Delete(error);
                 }
             }
@@ -234,7 +242,8 @@ namespace DiztinGUIsh
             try
             {
                 System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "/help.html");
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 MessageBox.Show("Can't find the help file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -287,7 +296,9 @@ namespace DiztinGUIsh
         public void UpdatePercent()
         {
             int totalUnreached = 0, size = Data.GetROMSize();
-            for (int i = 0; i < size; i++) if (Data.GetFlag(i) == Data.FlagType.Unreached) totalUnreached++;
+            for (int i = 0; i < size; i++)
+                if (Data.GetFlag(i) == Data.FlagType.Unreached)
+                    totalUnreached++;
             int reached = size - totalUnreached;
             percentComplete.Text = string.Format("{0:N3}% ({1:D}/{2:D})", reached * 100.0 / size, reached, size);
         }
@@ -344,7 +355,8 @@ namespace DiztinGUIsh
             UpdateDataGridView();
 
             if (selOffset < viewOffset) table.CurrentCell = table.Rows[0].Cells[table.CurrentCell.ColumnIndex];
-            else if (selOffset >= viewOffset + rowsToShow) table.CurrentCell = table.Rows[rowsToShow - 1].Cells[table.CurrentCell.ColumnIndex];
+            else if (selOffset >= viewOffset + rowsToShow)
+                table.CurrentCell = table.Rows[rowsToShow - 1].Cells[table.CurrentCell.ColumnIndex];
             else table.CurrentCell = table.Rows[selOffset - viewOffset].Cells[table.CurrentCell.ColumnIndex];
 
             InvalidateTable();
@@ -392,14 +404,30 @@ namespace DiztinGUIsh
                     amount = amount + 1 >= table.ColumnCount ? table.ColumnCount - 1 : amount + 1;
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[amount];
                     break;
-                case Keys.S: Step(offset); break;
-                case Keys.I: StepIn(offset); break;
-                case Keys.A: AutoStepSafe(offset); break;
-                case Keys.T: GoToIntermediateAddress(offset); break;
-                case Keys.U: GoToUnreached(true, true); break;
-                case Keys.H: GoToUnreached(false, false); break;
-                case Keys.N: GoToUnreached(false, true); break;
-                case Keys.K: Mark(offset); break;
+                case Keys.S:
+                    Step(offset);
+                    break;
+                case Keys.I:
+                    StepIn(offset);
+                    break;
+                case Keys.A:
+                    AutoStepSafe(offset);
+                    break;
+                case Keys.T:
+                    GoToIntermediateAddress(offset);
+                    break;
+                case Keys.U:
+                    GoToUnreached(true, true);
+                    break;
+                case Keys.H:
+                    GoToUnreached(false, false);
+                    break;
+                case Keys.N:
+                    GoToUnreached(false, true);
+                    break;
+                case Keys.K:
+                    Mark(offset);
+                    break;
                 case Keys.L:
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[0];
                     table.BeginEdit(true);
@@ -423,6 +451,7 @@ namespace DiztinGUIsh
                     table.BeginEdit(true);
                     break;
             }
+
             e.Handled = true;
             InvalidateTable();
         }
@@ -433,11 +462,21 @@ namespace DiztinGUIsh
             if (row >= Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
-                case 0: e.Value = Data.GetLabelName(Util.ConvertPCtoSNES(row)); break;
-                case 1: e.Value = Util.NumberToBaseString(Util.ConvertPCtoSNES(row), Util.NumberBase.Hexadecimal, 6); break;
-                case 2: e.Value = (char)Data.GetROMByte(row); break;
-                case 3: e.Value = Util.NumberToBaseString(Data.GetROMByte(row), DisplayBase); break;
-                case 4: e.Value = Util.PointToString(Data.GetInOutPoint(row)); break;
+                case 0:
+                    e.Value = Data.GetLabelName(Util.ConvertPCtoSNES(row));
+                    break;
+                case 1:
+                    e.Value = Util.NumberToBaseString(Util.ConvertPCtoSNES(row), Util.NumberBase.Hexadecimal, 6);
+                    break;
+                case 2:
+                    e.Value = (char) Data.GetROMByte(row);
+                    break;
+                case 3:
+                    e.Value = Util.NumberToBaseString(Data.GetROMByte(row), DisplayBase);
+                    break;
+                case 4:
+                    e.Value = Util.PointToString(Data.GetInOutPoint(row));
+                    break;
                 case 5:
                     int len = Manager.GetInstructionLength(row);
                     if (row + len <= Data.GetROMSize()) e.Value = Util.GetInstruction(row);
@@ -448,12 +487,24 @@ namespace DiztinGUIsh
                     if (ia >= 0) e.Value = Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6);
                     else e.Value = "";
                     break;
-                case 7: e.Value = Util.TypeToString(Data.GetFlag(row)); break;
-                case 8: e.Value = Util.NumberToBaseString(Data.GetDataBank(row), Util.NumberBase.Hexadecimal, 2); break;
-                case 9: e.Value = Util.NumberToBaseString(Data.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4); break;
-                case 10: e.Value = Util.BoolToSize(Data.GetMFlag(row)); break;
-                case 11: e.Value = Util.BoolToSize(Data.GetXFlag(row)); break;
-                case 12: e.Value = Data.GetComment(Util.ConvertPCtoSNES(row)); break;
+                case 7:
+                    e.Value = Util.TypeToString(Data.GetFlag(row));
+                    break;
+                case 8:
+                    e.Value = Util.NumberToBaseString(Data.GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
+                    break;
+                case 9:
+                    e.Value = Util.NumberToBaseString(Data.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
+                    break;
+                case 10:
+                    e.Value = Util.BoolToSize(Data.GetMFlag(row));
+                    break;
+                case 11:
+                    e.Value = Util.BoolToSize(Data.GetXFlag(row));
+                    break;
+                case 12:
+                    e.Value = Data.GetComment(Util.ConvertPCtoSNES(row));
+                    break;
             }
         }
 
@@ -465,13 +516,26 @@ namespace DiztinGUIsh
             if (row >= Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
-                case 0: Data.AddLabel(Util.ConvertPCtoSNES(row), new Data.AliasInfo() {name=value}, true); break; // todo (validate for valid label characters)
-                case 8: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDataBank(row, result); break;
-                case 9: if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDirectPage(row, result); break;
-                case 10: Data.SetMFlag(row, (value == "8" || value == "M")); break;
-                case 11: Data.SetXFlag(row, (value == "8" || value == "X")); break;
-                case 12: Data.AddComment(Util.ConvertPCtoSNES(row), value, true); break;
+                case 0:
+                    Data.AddLabel(Util.ConvertPCtoSNES(row), new Data.AliasInfo() {name = value}, true);
+                    break; // todo (validate for valid label characters)
+                case 8:
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDataBank(row, result);
+                    break;
+                case 9:
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDirectPage(row, result);
+                    break;
+                case 10:
+                    Data.SetMFlag(row, (value == "8" || value == "M"));
+                    break;
+                case 11:
+                    Data.SetXFlag(row, (value == "8" || value == "X"));
+                    break;
+                case 12:
+                    Data.AddComment(Util.ConvertPCtoSNES(row), value, true);
+                    break;
             }
+
             table.InvalidateRow(e.RowIndex);
         }
 
@@ -490,12 +554,14 @@ namespace DiztinGUIsh
                 viewOffset = offset;
                 UpdateDataGridView();
                 table.CurrentCell = table.Rows[0].Cells[col];
-            } else if (offset >= viewOffset + rowsToShow)
+            }
+            else if (offset >= viewOffset + rowsToShow)
             {
                 viewOffset = offset - rowsToShow + 1;
                 UpdateDataGridView();
                 table.CurrentCell = table.Rows[rowsToShow - 1].Cells[col];
-            } else
+            }
+            else
             {
                 table.CurrentCell = table.Rows[offset - viewOffset].Cells[col];
             }
@@ -554,24 +620,26 @@ namespace DiztinGUIsh
                 switch (col)
                 {
                     case 0:
-                        destination = Manager.Mark(mark.GetOffset(), (Data.FlagType)mark.GetValue(), mark.GetCount());
+                        destination = Manager.Mark(mark.GetOffset(), (Data.FlagType) mark.GetValue(), mark.GetCount());
                         break;
                     case 1:
-                        destination = Manager.MarkDataBank(mark.GetOffset(), (int)mark.GetValue(), mark.GetCount());
+                        destination = Manager.MarkDataBank(mark.GetOffset(), (int) mark.GetValue(), mark.GetCount());
                         break;
                     case 2:
-                        destination = Manager.MarkDirectPage(mark.GetOffset(), (int)mark.GetValue(), mark.GetCount());
+                        destination = Manager.MarkDirectPage(mark.GetOffset(), (int) mark.GetValue(), mark.GetCount());
                         break;
                     case 3:
-                        destination = Manager.MarkMFlag(mark.GetOffset(), (bool)mark.GetValue(), mark.GetCount());
+                        destination = Manager.MarkMFlag(mark.GetOffset(), (bool) mark.GetValue(), mark.GetCount());
                         break;
                     case 4:
-                        destination = Manager.MarkXFlag(mark.GetOffset(), (bool)mark.GetValue(), mark.GetCount());
+                        destination = Manager.MarkXFlag(mark.GetOffset(), (bool) mark.GetValue(), mark.GetCount());
                         break;
                     case 5:
-                        destination = Manager.MarkArchitechture(mark.GetOffset(), (Data.Architechture)mark.GetValue(), mark.GetCount());
+                        destination = Manager.MarkArchitechture(mark.GetOffset(), (Data.Architechture) mark.GetValue(),
+                            mark.GetCount());
                         break;
                 }
+
                 if (MoveWithStep) SelectOffset(destination);
                 UpdatePercent();
                 UpdateWindowTitle();
@@ -600,9 +668,12 @@ namespace DiztinGUIsh
 
             if (direction)
             {
-                if (!end) while (unreached < size - 1 && Data.GetFlag(unreached) == Data.FlagType.Unreached) unreached++;
+                if (!end)
+                    while (unreached < size - 1 && Data.GetFlag(unreached) == Data.FlagType.Unreached)
+                        unreached++;
                 while (unreached < size - 1 && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached++;
-            } else
+            }
+            else
             {
                 if (unreached > 0) unreached--;
                 while (unreached > 0 && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached--;
@@ -657,8 +728,10 @@ namespace DiztinGUIsh
             if (result == DialogResult.OK)
             {
                 int offset = go.GetPcOffset();
-                if (offset >= 0 && offset < Data.GetROMSize()) SelectOffset(offset); 
-                else MessageBox.Show("That offset is out of range.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (offset >= 0 && offset < Data.GetROMSize()) SelectOffset(offset);
+                else
+                    MessageBox.Show("That offset is out of range.", "Error", MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
             }
         }
 
@@ -740,7 +813,8 @@ namespace DiztinGUIsh
             {
                 int count = Manager.FixMisalignedFlags();
                 InvalidateTable();
-                MessageBox.Show(string.Format("Modified {0} flags!", count), "Done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(string.Format("Modified {0} flags!", count), "Done!", MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
         }
 
@@ -885,7 +959,7 @@ namespace DiztinGUIsh
             int total = 0;
             foreach (var filename in openTraceLogDialog.FileNames)
             {
-                total += Manager.ImportTraceLog(File.ReadAllLines(filename));
+                total += Manager.ImportTraceLog(filename);
             }
 
             MessageBox.Show(

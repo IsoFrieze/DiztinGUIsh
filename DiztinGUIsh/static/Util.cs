@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -576,6 +578,27 @@ namespace DiztinGUIsh
                     //&& (Data.GetFlag(offset) == Data.FlagType.Opcode || Data.GetFlag(offset) == Data.FlagType.Unreached)
                     && ConvertSNEStoPC(GetIntermediateAddressOrPointer(offset)) == selOffset
                 ) style.BackColor = Color.DeepPink;
+            }
+        }
+
+        public static long GetFileSizeInBytes(string filename)
+        {
+            FileInfo fi = new FileInfo(filename);
+            if (!fi.Exists)
+                return -1;
+
+            return fi.Length;
+        }
+        public static void InvokeIfRequired(this ISynchronizeInvoke obj, MethodInvoker action)
+        {
+            if (obj.InvokeRequired)
+            {
+                var args = new object[0];
+                obj.Invoke(action, args);
+            }
+            else
+            {
+                action();
             }
         }
     }

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DiztinGUIsh
 {
@@ -299,50 +296,101 @@ namespace DiztinGUIsh
             return modified;
         }
 
-        public static int ImportTraceLog(string[] lines)
+        public static int ImportTraceLog(string filename)
         {
-            // Must follow this format.
-            // 028cde rep #$30               A:0004 X:0000 Y:0004 S:1fdd D:0000 DB:02 nvmxdiZC V:133 H: 654 F:36
-            bool unsaved = false;
-            int modified = 0;
-            int size = Data.GetROMSize();
+            var numberOfAddressesModified = 0;
 
-            foreach (var line in lines)
+            // caution: trace logs can be gigantic, even a few seconds can be > 1GB
+            LargeFileReader.ReadFileLines(filename, delegate (string line)
             {
-                if (line.Length < 80)
+                numberOfAddressesModified += ImportTraceLogLine(line);
+            });
+
+            return numberOfAddressesModified;
+        }
+
+        // this class exists for performance optimization ONLY.
+        // class representing offsets into a trace log
+        // we calculate it once from sample data and hang onto it
+        private class CachedTraceLineIndex
+        {
+            private string sample =
+                "028cde rep #$30               A:0004 X:0000 Y:0004 S:1fdd D:0000 DB:02 nvmxdiZC V:133 H: 654 F:36";
+
+            // index of the start of the info
+            public readonly int 
+                addr, 
+                D, DB, 
+                flags,
+                f_N, f_V, f_M, f_X, f_D, f_I, f_Z, f_C;
+
+            public CachedTraceLineIndex()
+            {
+                int SkipToken(string token)
                 {
-                    continue;
+                    return sample.IndexOf(token) + token.Length;
                 }
 
-                // TODO: error treatment
-                // TODO: parse MX flags
-                int directPageIndex = line.IndexOf("D:") + 2;
-                int dataBankIndex = line.IndexOf("DB:") + 3;
+                addr = 0;
+                D = SkipToken("D:");
+                DB = SkipToken("DB:");
+                flags = DB + 3;
 
-                int snesAddress = Convert.ToInt32(line.Substring(0, 6), 16);
-                int directPage = Convert.ToInt32(line.Substring(directPageIndex, 4), 16);
-                int dataBank = Convert.ToInt32(line.Substring(dataBankIndex, 2), 16);
+                // flags: nvmxdizc
+                f_N = flags + 0;
+                f_V = flags + 1;
+                f_M = flags + 2;
+                f_X = flags + 3;
+                f_D = flags + 4;
+                f_I = flags + 5;
+                f_Z = flags + 6;
+                f_C = flags + 7;
+            }
+        }
 
-                int pc = Util.ConvertSNEStoPC(snesAddress);
+        static CachedTraceLineIndex CachedIdx = new CachedTraceLineIndex();
 
-                if (pc == -1)
-                {
-                    continue;
-                }
+        private static int ImportTraceLogLine(string line)
+        {
+            // caution: very performance-sensitive function, please take care when making modifications
+            // string.IndexOf() is super-slow too.
+            // Input lines must follow this strict format and be this exact formatting and column indices.
+            // 028cde rep #$30               A:0004 X:0000 Y:0004 S:1fdd D:0000 DB:02 nvmxdiZC V:133 H: 654 F:36
 
-                Data.SetFlag(pc, Data.FlagType.Opcode);
-                
-                do
-                {
-                    Data.SetDataBank(pc, dataBank);
-                    Data.SetDirectPage(pc, directPage);
-                    pc++;
-                    unsaved = true;
-                    modified++;
-                } while (pc < size && Data.GetFlag(pc) == Data.FlagType.Operand);
+            int GetHexValueAt(int startIndex, int length) {
+                return Convert.ToInt32(line.Substring(startIndex, length), 16);
             }
 
-            Project.unsavedChanges |= unsaved;
+            if (line.Length < 80)
+                return 0;
+
+            int snesAddress = GetHexValueAt(0, 6);
+            int pc = Util.ConvertSNEStoPC(snesAddress);
+            if (pc == -1)
+                return 0;
+
+            // TODO: error treatment
+
+            int directPage = GetHexValueAt(CachedIdx.D, 4);
+            int dataBank = GetHexValueAt(CachedIdx.DB, 2);
+            bool xflag_set = line[CachedIdx.f_X] == 'x';
+            bool mflag_set = line[CachedIdx.f_M] == 'm';
+
+            Data.SetFlag(pc, Data.FlagType.Opcode);
+
+            int modified = 0;
+            int size = Data.GetROMSize();
+            do
+            {
+                Data.SetDataBank(pc, dataBank);
+                Data.SetDirectPage(pc, directPage);
+                Data.SetXFlag(pc, xflag_set);
+                Data.SetMFlag(pc, mflag_set);
+
+                pc++;
+                modified++;
+            } while (pc < size && Data.GetFlag(pc) == Data.FlagType.Operand);
+            Project.unsavedChanges = true;
             return modified;
         }
 

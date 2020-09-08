@@ -68,6 +68,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BizHawkCdl.cs" />
+    <Compile Include="LargeFileReader.cs" />
+    <Compile Include="ProgressBarWorker.cs" />
     <Compile Include="window\dialog\About.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -75,6 +77,12 @@
       <DependentUpon>About.cs</DependentUpon>
     </Compile>
     <Compile Include="static\Data.cs" />
+    <Compile Include="window\dialog\ProgressDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="window\dialog\ProgressDialog.Designer.cs">
+      <DependentUpon>ProgressDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="window\dialog\ExportDisassembly.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -142,6 +150,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="window\dialog\About.resx">
       <DependentUpon>About.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="window\dialog\ProgressDialog.resx">
+      <DependentUpon>ProgressDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="window\dialog\ExportDisassembly.resx">
       <DependentUpon>ExportDisassembly.cs</DependentUpon>
