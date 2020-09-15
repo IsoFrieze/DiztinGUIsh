@@ -24,9 +24,9 @@ namespace DiztinGUIsh.window.dialog
             this.InvokeIfRequired(() =>
             {
                 progressBar1.Value = i;
-                var percentDone = (int)((float)progressBar1.Value / (float)progressBar1.Maximum);
+                var percentDone = (int)(100*((float)progressBar1.Value / (float)progressBar1.Maximum));
 
-                label2.Text = $@"{percentDone}";
+                label2.Text = $@"{percentDone}%";
             });
         }
     }
