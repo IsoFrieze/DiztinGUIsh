@@ -68,7 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BizHawkCdl.cs" />
-    <Compile Include="LargeFileReader.cs" />
+    <Compile Include="LargeFilesReader.cs" />
     <Compile Include="ProgressBarWorker.cs" />
     <Compile Include="window\dialog\About.cs">
       <SubType>Form</SubType>

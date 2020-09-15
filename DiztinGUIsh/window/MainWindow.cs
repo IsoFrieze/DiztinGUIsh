@@ -956,16 +956,18 @@ namespace DiztinGUIsh
             if (openTraceLogDialog.ShowDialog() != DialogResult.OK)
                 return;
 
-            int total = 0;
-            foreach (var filename in openTraceLogDialog.FileNames)
+            var totalLinesSoFar = 0L;
+
+            // caution: trace logs can be gigantic, even a few seconds can be > 1GB
+            LargeFilesReader.ReadFilesLines(openTraceLogDialog.FileNames, delegate (string line)
             {
-                total += Manager.ImportTraceLog(filename);
-            }
+                totalLinesSoFar += Manager.ImportTraceLogLine(line);
+            });
 
             MessageBox.Show(
-                $"Modified total {total} flags from {openTraceLogDialog.FileNames.Length} files!",
-                "Done",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            $"Modified total {totalLinesSoFar} flags from {openTraceLogDialog.FileNames.Length} files!",
+            "Done",
+            MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

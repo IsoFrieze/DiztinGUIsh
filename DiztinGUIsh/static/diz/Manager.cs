@@ -296,19 +296,6 @@ namespace DiztinGUIsh
             return modified;
         }
 
-        public static int ImportTraceLog(string filename)
-        {
-            var numberOfAddressesModified = 0;
-
-            // caution: trace logs can be gigantic, even a few seconds can be > 1GB
-            LargeFileReader.ReadFileLines(filename, delegate (string line)
-            {
-                numberOfAddressesModified += ImportTraceLogLine(line);
-            });
-
-            return numberOfAddressesModified;
-        }
-
         // this class exists for performance optimization ONLY.
         // class representing offsets into a trace log
         // we calculate it once from sample data and hang onto it
@@ -350,7 +337,7 @@ namespace DiztinGUIsh
 
         static CachedTraceLineIndex CachedIdx = new CachedTraceLineIndex();
 
-        private static int ImportTraceLogLine(string line)
+        public static int ImportTraceLogLine(string line)
         {
             // caution: very performance-sensitive function, please take care when making modifications
             // string.IndexOf() is super-slow too.
@@ -373,8 +360,9 @@ namespace DiztinGUIsh
 
             int directPage = GetHexValueAt(CachedIdx.D, 4);
             int dataBank = GetHexValueAt(CachedIdx.DB, 2);
-            bool xflag_set = line[CachedIdx.f_X] == 'x';
-            bool mflag_set = line[CachedIdx.f_M] == 'm';
+
+            bool xflag_set = line[CachedIdx.f_X] != 'x';               // X = unchecked (8), x = checked (16)
+            bool mflag_set = line[CachedIdx.f_M] != 'm';               // M = unchecked (8), m = checked (16)
 
             Data.SetFlag(pc, Data.FlagType.Opcode);
 
