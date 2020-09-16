@@ -3,7 +3,8 @@ using System.Threading;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh
-{ public abstract class ProgressBarWorker
+{ 
+    public abstract class ProgressBarWorker
     {
         private ProgressDialog Dialog = null;
         private bool IsRunning = false;
@@ -75,5 +76,57 @@ namespace DiztinGUIsh
             // unblock the main thread from ShowDialog()
             Dialog?.BeginInvoke(new Action(() => Dialog.Close()));
         }
+    }
+}
+
+
+
+namespace DiztinGUIsh
+{
+    public class LongJob : ProgressBarWorker
+    {
+        public static void Loop(long maxProgress, NextAction callback)
+        {
+            var j = new LongJob()
+            {
+                MaxProgress = maxProgress,
+                Callback = callback,
+            };
+            j.Run();
+        }
+
+        public NextAction Callback { get; set; }
+        public long MaxProgress { get; set; }
+
+        protected override void Thread_DoWork()
+        {
+            var progress = -1L;
+            do {
+                progress = Callback();
+                UpdateProgress(progress);
+            } while (progress > 0);
+        }
+
+        private int previousProgress = 0;
+
+        protected void UpdateProgress(long currentProgress)
+        {
+            if (MaxProgress <= 0)
+                return;
+
+            float percent = (float)(currentProgress) / (float)MaxProgress;
+            int progressValue = (int)(percent * 100);
+
+            if (progressValue <= previousProgress)
+                return;
+
+            // don't do this too often, kinda slow due to thread synchronization.
+            base.UpdateProgress(progressValue);
+
+            previousProgress = progressValue;
+        }
+
+        // return > 0 to continue. return value will be used to indicate progress in range of [0 -> MaxProgress]
+        public delegate long NextAction();
     }
 }

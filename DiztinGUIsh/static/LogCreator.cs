@@ -100,33 +100,16 @@ namespace DiztinGUIsh
                 sw.WriteLine(GetLine(pointer, "empty"));
             }
 
-            while (pointer < size)
+            // show a progress bar while this happens
+            LongJob.Loop(size, () =>
             {
-                int snes = Util.ConvertPCtoSNES(pointer);
-                if ((snes >> 16) != bank)
-                {
-                    if (structure == FormatStructure.OneBankPerFile)
-                    {
-                        sw.Close();
-                        sw = new StreamWriter(string.Format("{0}/bank_{1}.asm", folder, Util.NumberToBaseString((snes >> 16), Util.NumberBase.Hexadecimal, 2)));
-                    }
+                if (pointer >= size)
+                    return -1; // stop looping
 
-                    sw.WriteLine(GetLine(pointer, "empty"));
-                    sw.WriteLine(GetLine(pointer, "org"));
-                    sw.WriteLine(GetLine(pointer, "empty"));
-                    if ((snes % bankSize) != 0) err.WriteLine("({0}) Offset 0x{1:X}: An instruction crossed a bank boundary.", ++errorCount, pointer);
-                    bank = snes >> 16;
-                }
-                
-                var c1 = (Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0;
-                var c2 = (tempAlias.TryGetValue(pointer, out var aliasInfo) && aliasInfo.name.Length > 0);
-                if (c1 || c2) 
-                    sw.WriteLine(GetLine(pointer, "empty"));
+                WriteAddress(ref sw, ref pointer, tempAlias, ref bank);
 
-                sw.WriteLine(GetLine(pointer, null));
-                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) sw.WriteLine(GetLine(pointer, "empty"));
-                pointer += GetLineByteLength(pointer);
-            }
+                return (long) pointer; // report current address as the progress
+            });
 
             WriteLabels(ref sw, pointer);
 
@@ -134,6 +117,36 @@ namespace DiztinGUIsh
             Data.Restore(a: tempAlias);
             AliasList.me.locked = false;
             return errorCount;
+        }
+
+        private static void WriteAddress(ref StreamWriter sw, ref int pointer, Dictionary<int, Data.AliasInfo> tempAlias, ref int bank)
+        {
+            int snes = Util.ConvertPCtoSNES(pointer);
+            if ((snes >> 16) != bank)
+            {
+                if (structure == FormatStructure.OneBankPerFile)
+                {
+                    sw.Close();
+                    sw = new StreamWriter(string.Format("{0}/bank_{1}.asm", folder,
+                        Util.NumberToBaseString((snes >> 16), Util.NumberBase.Hexadecimal, 2)));
+                }
+
+                sw.WriteLine(GetLine(pointer, "empty"));
+                sw.WriteLine(GetLine(pointer, "org"));
+                sw.WriteLine(GetLine(pointer, "empty"));
+                if ((snes % bankSize) != 0)
+                    err.WriteLine("({0}) Offset 0x{1:X}: An instruction crossed a bank boundary.", ++errorCount, pointer);
+                bank = snes >> 16;
+            }
+
+            var c1 = (Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0;
+            var c2 = (tempAlias.TryGetValue(pointer, out var aliasInfo) && aliasInfo.name.Length > 0);
+            if (c1 || c2)
+                sw.WriteLine(GetLine(pointer, "empty"));
+
+            sw.WriteLine(GetLine(pointer, null));
+            if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) sw.WriteLine(GetLine(pointer, "empty"));
+            pointer += GetLineByteLength(pointer);
         }
 
         private static void WriteLabels(ref StreamWriter sw, int pointer)
