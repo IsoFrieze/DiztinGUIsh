@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh
 {
@@ -64,6 +65,16 @@ namespace DiztinGUIsh
             aliasList = new AliasList(this);
 
             UpdatePanels();
+            UpdateUIFromSettings();
+
+            if (Settings.Default.OpenLastFileAutomatically)
+                openLastProject();
+        }
+
+        private void openLastProject()
+        {
+            if (Settings.Default.LastOpenedFile != "")
+                openProject(Settings.Default.LastOpenedFile);
         }
 
         public void UpdateWindowTitle()
@@ -128,9 +139,36 @@ namespace DiztinGUIsh
             }
         }
 
+        public string LastProjectFilename
+        {
+            get => Settings.Default.LastOpenedFile;
+            set
+            {
+                Settings.Default.LastOpenedFile = value;
+                Settings.Default.Save();
+
+                UpdateUIFromSettings();
+            }
+        }
+
+        private void UpdateUIFromSettings()
+        {
+            bool lastOpenedFilePresent = Settings.Default.LastOpenedFile != "";
+            toolStripOpenLast.Enabled = lastOpenedFilePresent;
+            toolStripOpenLast.Text = "Open Last File";
+            if (lastOpenedFilePresent)
+                toolStripOpenLast.Text += $" ({Path.GetFileNameWithoutExtension(Settings.Default.LastOpenedFile)})";
+
+            openLastProjectAutomaticallyToolStripMenuItem.Checked = Settings.Default.OpenLastFileAutomatically;
+        }
+
         public void openProject(string filename)
         {
-            if (Project.TryOpenProject(filename, openROMFile))
+            if (!Project.TryOpenProject(filename, openROMFile))
+            {
+                LastProjectFilename = "";
+            } 
+            else 
             {
                 importCDLToolStripMenuItem.Enabled = true;
                 TriggerSaveOptions(true, true);
@@ -139,6 +177,8 @@ namespace DiztinGUIsh
                 UpdatePercent();
                 table.Invalidate();
                 EnableSubWindows();
+
+                LastProjectFilename = filename;
             }
         }
 
@@ -968,6 +1008,18 @@ namespace DiztinGUIsh
             $"Modified total {totalLinesSoFar} flags from {openTraceLogDialog.FileNames.Length} files!",
             "Done",
             MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void openLastProjectAutomaticallyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.OpenLastFileAutomatically = openLastProjectAutomaticallyToolStripMenuItem.Checked;
+            Settings.Default.Save();
+            UpdateUIFromSettings();
+        }
+
+        private void toolStripOpenLast_Click(object sender, EventArgs e)
+        {
+            openLastProject();
         }
     }
 }
