@@ -101,7 +101,7 @@ namespace DiztinGUIsh
             }
 
             // show a progress bar while this happens
-            LongJob.Loop(size, () =>
+            ProgressBarJob.Loop(size, () =>
             {
                 if (pointer >= size)
                     return -1; // stop looping

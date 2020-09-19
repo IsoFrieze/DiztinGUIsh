@@ -83,11 +83,11 @@ namespace DiztinGUIsh
 
 namespace DiztinGUIsh
 {
-    public class LongJob : ProgressBarWorker
+    public class ProgressBarJob : ProgressBarWorker
     {
         public static void Loop(long maxProgress, NextAction callback)
         {
-            var j = new LongJob()
+            var j = new ProgressBarJob()
             {
                 MaxProgress = maxProgress,
                 Callback = callback,
