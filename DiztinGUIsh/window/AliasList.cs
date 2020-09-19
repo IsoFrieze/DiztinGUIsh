@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -76,21 +77,24 @@ namespace DiztinGUIsh.window
             remainder = instr.Substring(instr.IndexOf(',') + 1);
         }
 
-        private void import_Click(object sender, EventArgs e)
+        private void ImportLabelsFromCSV(bool replaceAll)
         {
             DialogResult result = openFileDialog1.ShowDialog();
-            if (result != DialogResult.OK || openFileDialog1.FileName == "") 
+            if (result != DialogResult.OK || openFileDialog1.FileName == "")
                 return;
-            
+
             int errLine = 0;
             try
             {
                 Dictionary<int, Data.AliasInfo> newValues = new Dictionary<int, Data.AliasInfo>();
-                string[] lines = File.ReadAllLines(openFileDialog1.FileName);
+                string[] lines = Util.ReadLines(openFileDialog1.FileName).ToArray();
+
+                Regex valid_label_chars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
 
                 // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
                 // section.
-                for (int i = 0; i < lines.Length; i++) {
+                for (int i = 0; i < lines.Length; i++)
+                {
                     var aliasInfo = new Data.AliasInfo();
 
                     errLine = i + 1;
@@ -98,20 +102,31 @@ namespace DiztinGUIsh.window
                     AliasList.SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
                     AliasList.SplitOnFirstComma(remainder, out aliasInfo.name, out aliasInfo.comment);
 
-                    // todo (validate for valid label characters)
+                    aliasInfo.CleanUp();
+
+                    aliasInfo.name = aliasInfo.name.Trim();
+                    if (!valid_label_chars.Match(aliasInfo.name).Success)
+                        throw new InvalidDataException("invalid label name: " + aliasInfo.name);
+
                     newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), aliasInfo);
                 }
 
+                // everything read OK, modify the existing list now. point of no return
+                if (replaceAll)
+                    Data.DeleteAllLabels();
+
+                ResetDataGrid();
+
+                // this will call AddRow() to add items back to the UI datagrid.
                 foreach (KeyValuePair<int, Data.AliasInfo> pair in newValues)
                 {
-                    pair.Value.CleanUp();
                     Data.AddLabel(pair.Key, pair.Value, true);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 MessageBox.Show(
-                    "An error occurred while parsing the file." +
+                    "An error occurred while parsing the file.\n" + ex.Message +
                     (errLine > 0 ? string.Format(" (Check line {0}.)", errLine) : ""),
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -248,10 +263,33 @@ namespace DiztinGUIsh.window
             }
         }
 
-        public void Reset()
+        public void ResetDataGrid()
         {
             dataGridView1.Rows.Clear();
             dataGridView1.Invalidate();
+        }
+
+        private void importAppend_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Info: Items in CSV will:\n" +
+                            "1) CSV items will be added if their address doesn't already exist in this list\n" +
+                            "2) CSV items will replace anything with the same address as items in the list\n" +
+                            "3) any unmatched addresses in the list will be left alone\n" +
+                            "\n" +
+                            "Continue?\n", "Warning", MessageBoxButtons.OKCancel) != DialogResult.OK)
+                return;
+
+            ImportLabelsFromCSV(false);
+        }
+
+        private void btnImportReplace_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Info: All list items will be deleted and replaced with the CSV file.\n" +
+                                "\n" +
+                                "Continue?\n", "Warning", MessageBoxButtons.OKCancel) != DialogResult.OK)
+                return;
+
+            ImportLabelsFromCSV(true);
         }
     }
 }

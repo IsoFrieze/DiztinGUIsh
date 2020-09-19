@@ -41,7 +41,7 @@ namespace DiztinGUIsh
                     unsavedChanges = false;
                     currentFile = null;
 
-                    AliasList.me.Reset();
+                    AliasList.me.ResetDataGrid();
                     Dictionary<int, Data.AliasInfo> generatedLabels = import.GetGeneratedLabels();
                     if (generatedLabels.Count > 0)
                     {
@@ -191,7 +191,7 @@ namespace DiztinGUIsh
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(e.Message, "Error opening project file", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
@@ -249,7 +249,7 @@ namespace DiztinGUIsh
                 for (int i = 0; i < size; i++) Data.SetInOutPoint(i, (Data.InOutPoint)unzipped[pointer + 7 * size + i]);
                 pointer += 8 * size;
 
-                AliasList.me.Reset();
+                AliasList.me.ResetDataGrid();
                 ReadAliases(unzipped, ref pointer, converter, version >= 2);
 
                 ReadComments(unzipped, ref pointer, converter);
