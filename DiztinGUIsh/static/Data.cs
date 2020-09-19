@@ -249,6 +249,11 @@ namespace DiztinGUIsh
             return "";
         }
 
+        public static void DeleteAllLabels()
+        {
+            alias.Clear();
+        }
+
         public static void AddLabel(int i, AliasInfo v, bool overwrite)
         {
             if (v == null)
