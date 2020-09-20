@@ -27,9 +27,9 @@ namespace DiztinGUIsh
             textLog.Text = "";
             int found = 0, offset = 0;
 
-            while (found < 500 && offset < Data.GetROMSize())
+            while (found < 500 && offset < Data.Inst.GetROMSize())
             {
-                Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
+                Data.FlagType flag = Data.Inst.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
                 int step = flag == Data.FlagType.Opcode ? Manager.GetInstructionLength(offset) : Util.TypeStepSize(flag);
 
                 if (flag == Data.FlagType.Operand)
@@ -42,13 +42,13 @@ namespace DiztinGUIsh
                 {
                     for (int i = 1; i < step; i++)
                     {
-                        if (Data.GetFlag(offset + i) != check)
+                        if (Data.Inst.GetFlag(offset + i) != check)
                         {
                             found++;
                             textLog.Text += string.Format("{0} (0x{1}): {2} is not {3}\r\n",
                                 Util.NumberToBaseString(Util.ConvertPCtoSNES(offset + i), Util.NumberBase.Hexadecimal, 6, true),
                                 Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0),
-                                Util.TypeToString(Data.GetFlag(offset + i)),
+                                Util.TypeToString(Data.Inst.GetFlag(offset + i)),
                                 Util.TypeToString(check));
                         }
                     }

@@ -92,7 +92,7 @@ namespace DiztinGUIsh
 
         private bool IsValidPCAddress(int pc)
         {
-            return pc >= 0 && pc < Data.GetROMSize();
+            return pc >= 0 && pc < Data.Inst.GetROMSize();
         }
 
         private bool IsPCOffsetValid()

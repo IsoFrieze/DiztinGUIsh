@@ -9,7 +9,7 @@ namespace DiztinGUIsh
         public static int Step(int offset, bool branch, bool force, int prevOffset)
         {
             Project.unsavedChanges = true;
-            switch (Data.GetArchitechture(offset))
+            switch (Data.Inst.GetArchitechture(offset))
             {
                 case Data.Architechture.CPU65C816: return CPU65C816.Step(offset, branch, force, prevOffset);
                 case Data.Architechture.APUSPC700: return offset;
@@ -38,7 +38,7 @@ namespace DiztinGUIsh
 
                 while (keepGoing)
                 {
-                    switch (Data.GetArchitechture(newOffset))
+                    switch (Data.Inst.GetArchitechture(newOffset))
                     {
                         case Data.Architechture.CPU65C816:
                             if (seenBranches.Contains(newOffset))
@@ -47,7 +47,7 @@ namespace DiztinGUIsh
                                 break;
                             }
 
-                            int opcode = Data.GetROMByte(newOffset);
+                            int opcode = Data.Inst.GetROMByte(newOffset);
 
                             nextOffset = Step(newOffset, false, false, prevOffset);
                             int jumpOffset = Step(newOffset, true, false, prevOffset);
@@ -64,7 +64,7 @@ namespace DiztinGUIsh
 
                             if (opcode == 0x08) // PHP
                             {
-                                stack.Push(Data.GetMXFlags(newOffset));
+                                stack.Push(Data.Inst.GetMXFlags(newOffset));
                             } else if (opcode == 0x28) // PLP
                             {
                                 if (stack.Count == 0)
@@ -72,7 +72,7 @@ namespace DiztinGUIsh
                                     keepGoing = false; break;
                                 } else
                                 {
-                                    Data.SetMXFlags(newOffset, stack.Pop());
+                                    Data.Inst.SetMXFlags(newOffset, stack.Pop());
                                 }
                             }
 
@@ -107,7 +107,7 @@ namespace DiztinGUIsh
                             break;
                     }
 
-                    Data.FlagType flag = Data.GetFlag(newOffset);
+                    Data.FlagType flag = Data.Inst.GetFlag(newOffset);
                     if (!(flag == Data.FlagType.Unreached || flag == Data.FlagType.Opcode || flag == Data.FlagType.Operand)) keepGoing = false;
                 }
             }
@@ -117,54 +117,54 @@ namespace DiztinGUIsh
         public static int Mark(int offset, Data.FlagType type, int count)
         {
             Project.unsavedChanges = true;
-            int i, size = Data.GetROMSize();
-            for (i = 0; i < count && offset + i < size; i++) Data.SetFlag(offset + i, type);
+            int i, size = Data.Inst.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetFlag(offset + i, type);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public static int MarkDataBank(int offset, int db, int count)
         {
             Project.unsavedChanges = true;
-            int i, size = Data.GetROMSize();
-            for (i = 0; i < count && offset + i < size; i++) Data.SetDataBank(offset + i, db);
+            int i, size = Data.Inst.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetDataBank(offset + i, db);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public static int MarkDirectPage(int offset, int dp, int count)
         {
             Project.unsavedChanges = true;
-            int i, size = Data.GetROMSize();
-            for (i = 0; i < count && offset + i < size; i++) Data.SetDirectPage(offset + i, dp);
+            int i, size = Data.Inst.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetDirectPage(offset + i, dp);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public static int MarkXFlag(int offset, bool x, int count)
         {
             Project.unsavedChanges = true;
-            int i, size = Data.GetROMSize();
-            for (i = 0; i < count && offset + i < size; i++) Data.SetXFlag(offset + i, x);
+            int i, size = Data.Inst.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetXFlag(offset + i, x);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public static int MarkMFlag(int offset, bool m, int count)
         {
             Project.unsavedChanges = true;
-            int i, size = Data.GetROMSize();
-            for (i = 0; i < count && offset + i < size; i++) Data.SetMFlag(offset + i, m);
+            int i, size = Data.Inst.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetMFlag(offset + i, m);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public static int MarkArchitechture(int offset, Data.Architechture arch, int count)
         {
             Project.unsavedChanges = true;
-            int i, size = Data.GetROMSize();
-            for (i = 0; i < count && offset + i < size; i++) Data.SetArchitechture(offset + i, arch);
+            int i, size = Data.Inst.GetROMSize();
+            for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetArchitechture(offset + i, arch);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public static int GetInstructionLength(int offset)
         {
-            switch (Data.GetArchitechture(offset))
+            switch (Data.Inst.GetArchitechture(offset))
             {
                 case Data.Architechture.CPU65C816: return CPU65C816.GetInstructionLength(offset);
                 case Data.Architechture.APUSPC700: return 1;
@@ -175,27 +175,27 @@ namespace DiztinGUIsh
 
         public static int FixMisalignedFlags()
         {
-            int count = 0, size = Data.GetROMSize();
+            int count = 0, size = Data.Inst.GetROMSize();
 
             for (int i = 0; i < size; i++)
             {
-                Data.FlagType flag = Data.GetFlag(i);
+                Data.FlagType flag = Data.Inst.GetFlag(i);
 
                 if (flag == Data.FlagType.Opcode)
                 {
                     int len = GetInstructionLength(i);
                     for (int j = 1; j < len && i + j < size; j++)
                     {
-                        if (Data.GetFlag(i + j) != Data.FlagType.Operand)
+                        if (Data.Inst.GetFlag(i + j) != Data.FlagType.Operand)
                         {
-                            Data.SetFlag(i + j, Data.FlagType.Operand);
+                            Data.Inst.SetFlag(i + j, Data.FlagType.Operand);
                             count++;
                         }
                     }
                     i += len - 1;
                 } else if (flag == Data.FlagType.Operand)
                 {
-                    Data.SetFlag(i, Data.FlagType.Opcode);
+                    Data.Inst.SetFlag(i, Data.FlagType.Opcode);
                     count++;
                     i--;
                 } else if (Util.TypeStepSize(flag) > 1)
@@ -203,9 +203,9 @@ namespace DiztinGUIsh
                     int step = Util.TypeStepSize(flag);
                     for (int j = 1; j < step; j++)
                     {
-                        if (Data.GetFlag(i + j) != flag)
+                        if (Data.Inst.GetFlag(i + j) != flag)
                         {
-                            Data.SetFlag(i + j, flag);
+                            Data.Inst.SetFlag(i + j, flag);
                             count++;
                         }
                     }
@@ -220,13 +220,13 @@ namespace DiztinGUIsh
 
         public static void RescanInOutPoints()
         {
-            for (int i = 0; i < Data.GetROMSize(); i++) Data.ClearInOutPoint(i);
+            for (int i = 0; i < Data.Inst.GetROMSize(); i++) Data.Inst.ClearInOutPoint(i);
 
-            for (int i = 0; i < Data.GetROMSize(); i++)
+            for (int i = 0; i < Data.Inst.GetROMSize(); i++)
             {
-                if (Data.GetFlag(i) == Data.FlagType.Opcode)
+                if (Data.Inst.GetFlag(i) == Data.FlagType.Opcode)
                 {
-                    switch (Data.GetArchitechture(i))
+                    switch (Data.Inst.GetArchitechture(i))
                     {
                         case Data.Architechture.CPU65C816: CPU65C816.MarkInOutPoints(i); break;
                         case Data.Architechture.APUSPC700: break;
@@ -240,7 +240,7 @@ namespace DiztinGUIsh
 
         public static int ImportUsageMap(byte[] usageMap)
         {
-            int size = Data.GetROMSize();
+            int size = Data.Inst.GetROMSize();
             bool unsaved = false;
             int modified = 0;
             int prevFlags = 0;
@@ -263,7 +263,7 @@ namespace DiztinGUIsh
                     continue;
                 }
 
-                if (Data.GetFlag(i) != Data.FlagType.Unreached)
+                if (Data.Inst.GetFlag(i) != Data.FlagType.Unreached)
                 {
                     // skip if there is something already set..
                     continue;
@@ -272,21 +272,21 @@ namespace DiztinGUIsh
                 // opcode: 0x30, operand: 0x20
                 if (flags.HasFlag(Data.BsnesPlusUsage.UsageExec))
                 {
-                    Data.SetFlag(i, Data.FlagType.Operand);
+                    Data.Inst.SetFlag(i, Data.FlagType.Operand);
 
                     if (flags.HasFlag(Data.BsnesPlusUsage.UsageOpcode))
                     {
                         prevFlags = ((int)flags & 3) << 4;
-                        Data.SetFlag(i, Data.FlagType.Opcode);
+                        Data.Inst.SetFlag(i, Data.FlagType.Opcode);
                     }
 
-                    Data.SetMXFlags(i, prevFlags);
+                    Data.Inst.SetMXFlags(i, prevFlags);
                     unsaved = true;
                     modified++;
                 }
                 else if (flags.HasFlag(Data.BsnesPlusUsage.UsageRead))
                 {
-                    Data.SetFlag(i, Data.FlagType.Data8Bit);
+                    Data.Inst.SetFlag(i, Data.FlagType.Data8Bit);
                     unsaved = true;
                     modified++;
                 }
@@ -367,20 +367,20 @@ namespace DiztinGUIsh
             // 'M' = unchecked in bsnesplus debugger UI = (8bit), 'm' or '.' = checked (16bit)
             bool mflag_set = line[CachedIdx.f_M] == 'M';
 
-            Data.SetFlag(pc, Data.FlagType.Opcode);
+            Data.Inst.SetFlag(pc, Data.FlagType.Opcode);
 
             int modified = 0;
-            int size = Data.GetROMSize();
+            int size = Data.Inst.GetROMSize();
             do
             {
-                Data.SetDataBank(pc, dataBank);
-                Data.SetDirectPage(pc, directPage);
-                Data.SetXFlag(pc, xflag_set);
-                Data.SetMFlag(pc, mflag_set);
+                Data.Inst.SetDataBank(pc, dataBank);
+                Data.Inst.SetDirectPage(pc, directPage);
+                Data.Inst.SetXFlag(pc, xflag_set);
+                Data.Inst.SetMFlag(pc, mflag_set);
 
                 pc++;
                 modified++;
-            } while (pc < size && Data.GetFlag(pc) == Data.FlagType.Operand);
+            } while (pc < size && Data.Inst.GetFlag(pc) == Data.FlagType.Operand);
             Project.unsavedChanges = true;
             return modified;
         }
@@ -392,7 +392,7 @@ namespace DiztinGUIsh
                 throw new InvalidDataException("The CDL file does not contain CARTROM block.");
             }
 
-            var size = Math.Min(cdlRomFlags.Count, Data.GetROMSize());
+            var size = Math.Min(cdlRomFlags.Count, Data.Inst.GetROMSize());
             bool m = false;
             bool x = false;
             for (var offset = 0; offset < size; offset++)

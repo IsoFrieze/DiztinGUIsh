@@ -166,7 +166,7 @@ namespace DiztinGUIsh
 
         private void UpdateOffsetAndSpeed()
         {
-            offset = Data.GetRomSettingOffset(mode);
+            offset = Data.Inst.GetRomSettingOffset(mode);
             if (offset >= data.Length)
             {
                 speed = Data.ROMSpeed.Unknown;

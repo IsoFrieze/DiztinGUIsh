@@ -37,7 +37,7 @@ namespace DiztinGUIsh
                 DialogResult result = import.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    Data.Initiate(rom, import.GetROMMapMode(), import.GetROMSpeed());
+                    Data.Inst.Initiate(rom, import.GetROMMapMode(), import.GetROMSpeed());
                     unsavedChanges = false;
                     currentFile = null;
 
@@ -45,14 +45,14 @@ namespace DiztinGUIsh
                     Dictionary<int, Data.AliasInfo> generatedLabels = import.GetGeneratedLabels();
                     if (generatedLabels.Count > 0)
                     {
-                        foreach (KeyValuePair<int, Data.AliasInfo> pair in generatedLabels) Data.AddLabel(pair.Key, pair.Value, true);
+                        foreach (KeyValuePair<int, Data.AliasInfo> pair in generatedLabels) Data.Inst.AddLabel(pair.Key, pair.Value, true);
                         unsavedChanges = true;
                     }
 
                     Dictionary<int, Data.FlagType> generatedFlags = import.GetHeaderFlags();
                     if (generatedFlags.Count > 0)
                     {
-                        foreach (KeyValuePair<int, Data.FlagType> pair in generatedFlags) Data.SetFlag(pair.Key, pair.Value);
+                        foreach (KeyValuePair<int, Data.FlagType> pair in generatedFlags) Data.Inst.SetFlag(pair.Key, pair.Value);
                         unsavedChanges = true;
                     }
 
@@ -112,19 +112,19 @@ namespace DiztinGUIsh
                 throw new ArgumentException($"Saving: Invalid save version requested for saving: {version}.");
             }
 
-            int size = Data.GetROMSize();
+            int size = Data.Inst.GetROMSize();
             byte[] romSettings = new byte[31];
-            romSettings[0] = (byte)Data.GetROMMapMode();
-            romSettings[1] = (byte)Data.GetROMSpeed();
+            romSettings[0] = (byte)Data.Inst.GetROMMapMode();
+            romSettings[1] = (byte)Data.Inst.GetROMSpeed();
             Util.IntegerIntoByteArray(size, romSettings, 2);
-            for (int i = 0; i < 0x15; i++) romSettings[6 + i] = (byte)Data.GetROMByte(Util.ConvertSNEStoPC(0xFFC0 + i));
-            for (int i = 0; i < 4; i++) romSettings[27 + i] = (byte)Data.GetROMByte(Util.ConvertSNEStoPC(0xFFDC + i));
+            for (int i = 0; i < 0x15; i++) romSettings[6 + i] = (byte)Data.Inst.GetROMByte(Util.ConvertSNEStoPC(0xFFC0 + i));
+            for (int i = 0; i < 4; i++) romSettings[27 + i] = (byte)Data.Inst.GetROMByte(Util.ConvertSNEStoPC(0xFFDC + i));
 
             // TODO put selected offset in save file
 
             List<byte> label = new List<byte>(), comment = new List<byte>();
-            var all_labels = Data.GetAllLabels();
-            var all_comments = Data.GetAllComments();
+            var all_labels = Data.Inst.GetAllLabels();
+            var all_comments = Data.Inst.GetAllComments();
 
             Util.IntegerIntoByteList(all_labels.Count, label);
             foreach (var pair in all_labels)
@@ -150,14 +150,14 @@ namespace DiztinGUIsh
             byte[] data = new byte[romSettings.Length + romLocation.Length + 8 * size + label.Count + comment.Count];
             romSettings.CopyTo(data, 0);
             for (int i = 0; i < romLocation.Length; i++) data[romSettings.Length + i] = romLocation[i];
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + i] = (byte)Data.GetDataBank(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + size + i] = (byte)Data.GetDirectPage(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 2 * size + i] = (byte)(Data.GetDirectPage(i) >> 8);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 3 * size + i] = (byte)(Data.GetXFlag(i) ? 1 : 0);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 4 * size + i] = (byte)(Data.GetMFlag(i) ? 1 : 0);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 5 * size + i] = (byte)Data.GetFlag(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 6 * size + i] = (byte)Data.GetArchitechture(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 7 * size + i] = (byte)Data.GetInOutPoint(i);
+            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + i] = (byte)Data.Inst.GetDataBank(i);
+            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + size + i] = (byte)Data.Inst.GetDirectPage(i);
+            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 2 * size + i] = (byte)(Data.Inst.GetDirectPage(i) >> 8);
+            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 3 * size + i] = (byte)(Data.Inst.GetXFlag(i) ? 1 : 0);
+            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 4 * size + i] = (byte)(Data.Inst.GetMFlag(i) ? 1 : 0);
+            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 5 * size + i] = (byte)Data.Inst.GetFlag(i);
+            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 6 * size + i] = (byte)Data.Inst.GetArchitechture(i);
+            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 7 * size + i] = (byte)Data.Inst.GetInOutPoint(i);
             // ???
             label.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size);
             comment.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size + label.Count);
@@ -238,15 +238,15 @@ namespace DiztinGUIsh
 
             if (ValidateROM(romLocation, romName, checksums, mode, out rom, open))
             {
-                Data.Initiate(rom, mode, speed);
+                Data.Inst.Initiate(rom, mode, speed);
 
-                for (int i = 0; i < size; i++) Data.SetDataBank(i, unzipped[pointer + i]);
-                for (int i = 0; i < size; i++) Data.SetDirectPage(i, unzipped[pointer + size + i] | (unzipped[pointer + 2 * size + i] << 8));
-                for (int i = 0; i < size; i++) Data.SetXFlag(i, unzipped[pointer + 3 * size + i] != 0);
-                for (int i = 0; i < size; i++) Data.SetMFlag(i, unzipped[pointer + 4 * size + i] != 0);
-                for (int i = 0; i < size; i++) Data.SetFlag(i, (Data.FlagType)unzipped[pointer + 5 * size + i]);
-                for (int i = 0; i < size; i++) Data.SetArchitechture(i, (Data.Architechture)unzipped[pointer + 6 * size + i]);
-                for (int i = 0; i < size; i++) Data.SetInOutPoint(i, (Data.InOutPoint)unzipped[pointer + 7 * size + i]);
+                for (int i = 0; i < size; i++) Data.Inst.SetDataBank(i, unzipped[pointer + i]);
+                for (int i = 0; i < size; i++) Data.Inst.SetDirectPage(i, unzipped[pointer + size + i] | (unzipped[pointer + 2 * size + i] << 8));
+                for (int i = 0; i < size; i++) Data.Inst.SetXFlag(i, unzipped[pointer + 3 * size + i] != 0);
+                for (int i = 0; i < size; i++) Data.Inst.SetMFlag(i, unzipped[pointer + 4 * size + i] != 0);
+                for (int i = 0; i < size; i++) Data.Inst.SetFlag(i, (Data.FlagType)unzipped[pointer + 5 * size + i]);
+                for (int i = 0; i < size; i++) Data.Inst.SetArchitechture(i, (Data.Architechture)unzipped[pointer + 6 * size + i]);
+                for (int i = 0; i < size; i++) Data.Inst.SetInOutPoint(i, (Data.InOutPoint)unzipped[pointer + 7 * size + i]);
                 pointer += 8 * size;
 
                 AliasList.me.ResetDataGrid();
@@ -274,7 +274,7 @@ namespace DiztinGUIsh
 
                 var comment = Util.ReadZipString(unzipped, ref pointer);
 
-                Data.AddComment(offset, comment, true);
+                Data.Inst.AddComment(offset, comment, true);
             }
         }
 
@@ -294,7 +294,7 @@ namespace DiztinGUIsh
                 };
                 aliasInfo.CleanUp();
 
-                Data.AddLabel(offset, aliasInfo, true);
+                Data.Inst.AddLabel(offset, aliasInfo, true);
             }
         }
 
@@ -341,7 +341,7 @@ namespace DiztinGUIsh
                 }
 
                 validFile = false;
-                int offset = Data.GetRomSettingOffset(mode);
+                int offset = Data.Inst.GetRomSettingOffset(mode);
                 if (rom.Length <= offset + 10) error = "The linked ROM is too small. It can't be opened.";
 
                 string myName = "";

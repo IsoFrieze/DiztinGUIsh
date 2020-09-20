@@ -8,8 +8,14 @@ using System.Threading.Tasks;
 
 namespace DiztinGUIsh
 {
-    public static class Data
+    public class Data
     {
+        // singleton
+        private static readonly Lazy<Data> instance = new Lazy<Data>(() => new Data());
+        public static Data Inst => instance.Value;
+
+        private Data() {}
+
         public enum FlagType : byte
         {
             Unreached = 0x00,
@@ -71,10 +77,10 @@ namespace DiztinGUIsh
             EXHIROM_SETTING_OFFSET = 0x40FFD5,
             EXLOROM_SETTING_OFFSET = 0x407FD5;
 
-        private static ROMMapMode rom_map_mode;
-        private static ROMSpeed rom_speed;
-        private static List<ROMByte> table;
-        private static Dictionary<int, string> comment;
+        private ROMMapMode rom_map_mode;
+        private ROMSpeed rom_speed;
+        private List<ROMByte> table;
+        private Dictionary<int, string> comment;
 
         public class AliasInfo
         {
@@ -87,9 +93,9 @@ namespace DiztinGUIsh
                 if (name == null) name = "";
             }
         }
-        private static Dictionary<int, AliasInfo> alias;
+        private Dictionary<int, AliasInfo> alias;
 
-        public static void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
+        public void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
         {
             rom_map_mode = mode;
             rom_speed = speed;
@@ -114,7 +120,7 @@ namespace DiztinGUIsh
             }
         }
 
-        public static void Restore(List<ROMByte> l = null, ROMMapMode m = ROMMapMode.LoROM, ROMSpeed s = ROMSpeed.Unknown, Dictionary<int, AliasInfo> a = null, Dictionary<int, string> c = null)
+        public void Restore(List<ROMByte> l = null, ROMMapMode m = ROMMapMode.LoROM, ROMSpeed s = ROMSpeed.Unknown, Dictionary<int, AliasInfo> a = null, Dictionary<int, string> c = null)
         {
             table = l ?? table;
             rom_map_mode = s == ROMSpeed.Unknown ? rom_map_mode : m;
@@ -123,125 +129,125 @@ namespace DiztinGUIsh
             comment = c ?? comment;
         }
 
-        public static ROMMapMode GetROMMapMode()
+        public ROMMapMode GetROMMapMode()
         {
             return rom_map_mode;
         }
 
-        public static ROMSpeed GetROMSpeed()
+        public ROMSpeed GetROMSpeed()
         {
             return rom_speed;
         }
 
-        public static List<ROMByte> GetTable()
+        public List<ROMByte> GetTable()
         {
             return table;
         }
 
-        public static int GetROMByte(int i)
+        public int GetROMByte(int i)
         {
             return table[i].Rom;
         }
 
-        public static int GetROMSize()
+        public int GetROMSize()
         {
             return table == null ? 0 : table.Count;
         }
 
-        public static FlagType GetFlag(int i)
+        public FlagType GetFlag(int i)
         {
             return table[i].TypeFlag;
         }
 
-        public static void SetFlag(int i, FlagType flag)
+        public void SetFlag(int i, FlagType flag)
         {
             table[i].TypeFlag = flag;
         }
 
-        public static Architechture GetArchitechture(int i)
+        public Architechture GetArchitechture(int i)
         {
             return table[i].Arch;
         }
 
-        public static void SetArchitechture(int i, Architechture arch)
+        public void SetArchitechture(int i, Architechture arch)
         {
             table[i].Arch = arch;
         }
 
-        public static InOutPoint GetInOutPoint(int i)
+        public InOutPoint GetInOutPoint(int i)
         {
             return table[i].Point;
         }
 
-        public static void SetInOutPoint(int i, InOutPoint point)
+        public void SetInOutPoint(int i, InOutPoint point)
         {
             table[i].Point |= point;
         }
 
-        public static void ClearInOutPoint(int i)
+        public void ClearInOutPoint(int i)
         {
             table[i].Point = 0;
         }
 
-        public static int GetDataBank(int i)
+        public int GetDataBank(int i)
         {
             return table[i].DataBank;
         }
 
-        public static void SetDataBank(int i, int dbank)
+        public void SetDataBank(int i, int dbank)
         {
             table[i].DataBank = (byte)dbank;
         }
 
-        public static int GetDirectPage(int i)
+        public int GetDirectPage(int i)
         {
             return table[i].DirectPage;
         }
 
-        public static void SetDirectPage(int i, int dpage)
+        public void SetDirectPage(int i, int dpage)
         {
             table[i].DirectPage = 0xFFFF & dpage;
         }
 
-        public static bool GetXFlag(int i)
+        public bool GetXFlag(int i)
         {
             return table[i].XFlag;
         }
 
-        public static void SetXFlag(int i, bool x)
+        public void SetXFlag(int i, bool x)
         {
             table[i].XFlag = x;
         }
 
-        public static bool GetMFlag(int i)
+        public bool GetMFlag(int i)
         {
             return table[i].MFlag;
         }
 
-        public static void SetMFlag(int i, bool m)
+        public void SetMFlag(int i, bool m)
         {
             table[i].MFlag = m;
         }
 
-        public static int GetMXFlags(int i)
+        public int GetMXFlags(int i)
         {
             return (table[i].MFlag ? 0x20 : 0) | (table[i].XFlag ? 0x10 : 0);
         }
 
-        public static void SetMXFlags(int i, int mx)
+        public void SetMXFlags(int i, int mx)
         {
             table[i].MFlag = ((mx & 0x20) != 0);
             table[i].XFlag = ((mx & 0x10) != 0);
         }
 
-        public static string GetLabelName(int i)
+        public string GetLabelName(int i)
         {
             if (alias.TryGetValue(i, out AliasInfo val)) 
                 return val?.name ?? "";
 
             return "";
         }
-        public static string GetLabelComment(int i)
+        public string GetLabelComment(int i)
         {
             if (alias.TryGetValue(i, out AliasInfo val)) 
                 return val?.comment ?? "";
@@ -249,12 +255,12 @@ namespace DiztinGUIsh
             return "";
         }
 
-        public static void DeleteAllLabels()
+        public void DeleteAllLabels()
         {
             alias.Clear();
         }
 
-        public static void AddLabel(int i, AliasInfo v, bool overwrite)
+        public void AddLabel(int i, AliasInfo v, bool overwrite)
         {
             if (v == null)
             {
@@ -279,19 +285,19 @@ namespace DiztinGUIsh
             }
         }
 
-        public static Dictionary<int, AliasInfo> GetAllLabels()
+        public Dictionary<int, AliasInfo> GetAllLabels()
         {
             return alias;
         }
 
-        public static string GetComment(int i)
+        public string GetComment(int i)
         {
             string val;
             if (comment.TryGetValue(i, out val)) return val;
             return "";
         }
 
-        public static void AddComment(int i, string v, bool overwrite)
+        public void AddComment(int i, string v, bool overwrite)
         {
             if (v == null)
             {
@@ -303,12 +309,12 @@ namespace DiztinGUIsh
             }
         }
 
-        public static Dictionary<int, string> GetAllComments()
+        public Dictionary<int, string> GetAllComments()
         {
             return comment;
         }
 
-        public static int GetRomSettingOffset(ROMMapMode mode)
+        public int GetRomSettingOffset(ROMMapMode mode)
         {
             switch (mode)
             {

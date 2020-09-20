@@ -61,10 +61,10 @@ namespace DiztinGUIsh
 
         public static int CreateLog(StreamWriter sw, StreamWriter er)
         {
-            var tempAlias = Data.GetAllLabels();
-            Data.Restore(a: new Dictionary<int, Data.AliasInfo>(tempAlias));
+            var tempAlias = Data.Inst.GetAllLabels();
+            Data.Inst.Restore(a: new Dictionary<int, Data.AliasInfo>(tempAlias));
             AliasList.me.locked = true;
-            bankSize = Data.GetROMMapMode() == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000; // todo
+            bankSize = Data.Inst.GetROMMapMode() == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000; // todo
 
             AddTemporaryLabels();
 
@@ -85,7 +85,7 @@ namespace DiztinGUIsh
                 }
             }
 
-            int pointer = 0, size = (Data.GetTable() == ExportDisassembly.sampleTable) ? 0x7B : Data.GetROMSize(), bank = -1;
+            int pointer = 0, size = (Data.Inst.GetTable() == ExportDisassembly.sampleTable) ? 0x7B : Data.Inst.GetROMSize(), bank = -1;
 
             if (structure == FormatStructure.OneBankPerFile)
             {
@@ -114,7 +114,7 @@ namespace DiztinGUIsh
             WriteLabels(ref sw, pointer);
 
             if (structure == FormatStructure.OneBankPerFile) sw.Close();
-            Data.Restore(a: tempAlias);
+            Data.Inst.Restore(a: tempAlias);
             AliasList.me.locked = false;
             return errorCount;
         }
@@ -139,13 +139,13 @@ namespace DiztinGUIsh
                 bank = snes >> 16;
             }
 
-            var c1 = (Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0;
+            var c1 = (Data.Inst.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0;
             var c2 = (tempAlias.TryGetValue(pointer, out var aliasInfo) && aliasInfo.name.Length > 0);
             if (c1 || c2)
                 sw.WriteLine(GetLine(pointer, "empty"));
 
             sw.WriteLine(GetLine(pointer, null));
-            if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) sw.WriteLine(GetLine(pointer, "empty"));
+            if ((Data.Inst.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) sw.WriteLine(GetLine(pointer, "empty"));
             pointer += GetLineByteLength(pointer);
         }
 
@@ -156,7 +156,7 @@ namespace DiztinGUIsh
             Dictionary<int, Data.AliasInfo> listToPrint = new Dictionary<int, Data.AliasInfo>();
 
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
-            foreach (var pair in Data.GetAllLabels())
+            foreach (var pair in Data.Inst.GetAllLabels())
             {
                 if (usedLabels.Contains(pair.Key)) 
                     continue;
@@ -176,7 +176,7 @@ namespace DiztinGUIsh
             if (includeUnusedLabels)
             {
                 SwitchOutputFile(ref sw, pointer, $"{folder}/all-labels.txt");
-                foreach (var pair in Data.GetAllLabels())
+                foreach (var pair in Data.Inst.GetAllLabels())
                 {
                     // not the best place to add formatting, TODO: cleanup
                     var category = listToPrint.ContainsKey(pair.Key) ? "INLINE" : "EXTRA ";
@@ -203,10 +203,10 @@ namespace DiztinGUIsh
             List<int> addMe = new List<int>();
             int pointer = 0;
 
-            while (pointer < Data.GetROMSize())
+            while (pointer < Data.Inst.GetROMSize())
             {
                 int length = GetLineByteLength(pointer);
-                Data.FlagType flag = Data.GetFlag(pointer);
+                Data.FlagType flag = Data.Inst.GetFlag(pointer);
 
                 if (unlabeled == FormatUnlabeled.ShowAll) addMe.Add(Util.ConvertPCtoSNES(pointer));
                 else if (unlabeled != FormatUnlabeled.ShowNone &&
@@ -222,7 +222,7 @@ namespace DiztinGUIsh
             // TODO +/- labels
             for (int i = 0; i < addMe.Count; i++)
             {
-                Data.AddLabel(addMe[i], 
+                Data.Inst.AddLabel(addMe[i], 
                     new Data.AliasInfo()
                     {
                         name = Util.GetDefaultLabel(addMe[i])
@@ -253,9 +253,9 @@ namespace DiztinGUIsh
             if (special == null)
             {
                 // throw out some errors if stuff looks fishy
-                Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
-                int step = flag == Data.FlagType.Opcode ? GetLineByteLength(offset) : Util.TypeStepSize(flag), size = Data.GetROMSize();
-                if (flag == Data.FlagType.Operand) err.WriteLine("({0}) Offset 0x{1:X}: Bytes marked as operands formatted as data.", ++errorCount, offset);
+                Data.FlagType flag = Data.Inst.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
+                int step = flag == Data.FlagType.Opcode ? GetLineByteLength(offset) : Util.TypeStepSize(flag), size = Data.Inst.GetROMSize();
+                if (flag == Data.FlagType.Operand) err.WriteLine("({0}) Offset 0x{1:X}: Bytes marked as operands formatted as Data.Inst.", ++errorCount, offset);
                 else if (step > 1)
                 {
                     for (int i = 1; i < step; i++)
@@ -265,15 +265,15 @@ namespace DiztinGUIsh
                             err.WriteLine("({0}) Offset 0x{1:X}: {2} extends past the end of the ROM.", ++errorCount, offset, Util.TypeToString(check));
                             break;
                         }
-                        else if (Data.GetFlag(offset + i) != check)
+                        else if (Data.Inst.GetFlag(offset + i) != check)
                         {
-                            err.WriteLine("({0}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, Util.TypeToString(check), Util.TypeToString(Data.GetFlag(offset + i)));
+                            err.WriteLine("({0}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, Util.TypeToString(check), Util.TypeToString(Data.Inst.GetFlag(offset + i)));
                             break;
                         }
                     }
                 }
                 int ia = Util.GetIntermediateAddress(offset, true);
-                if (ia >= 0 && flag == Data.FlagType.Opcode && Data.GetInOutPoint(offset) == Data.InOutPoint.OutPoint && Data.GetFlag(Util.ConvertSNEStoPC(ia)) != Data.FlagType.Opcode)
+                if (ia >= 0 && flag == Data.FlagType.Opcode && Data.Inst.GetInOutPoint(offset) == Data.InOutPoint.OutPoint && Data.Inst.GetFlag(Util.ConvertSNEStoPC(ia)) != Data.FlagType.Opcode)
                 {
                     err.WriteLine("({0}) Offset 0x{1:X}: Branch or jump instruction to a non-instruction.", ++errorCount, offset);
                 }
@@ -285,12 +285,12 @@ namespace DiztinGUIsh
         private static int GetLineByteLength(int offset)
         {
             int max = 1, step = 1;
-            int size = Data.GetROMSize();
+            int size = Data.Inst.GetROMSize();
 
-            switch (Data.GetFlag(offset))
+            switch (Data.Inst.GetFlag(offset))
             {
                 case Data.FlagType.Opcode:
-                    switch (Data.GetArchitechture(offset))
+                    switch (Data.Inst.GetArchitechture(offset))
                     {
                         case Data.Architechture.CPU65C816: return CPU65C816.GetInstructionLength(offset);
                         case Data.Architechture.APUSPC700: return 1;
@@ -338,8 +338,8 @@ namespace DiztinGUIsh
             while (
                 min < max &&
                 offset + min < size &&
-                Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
-                Data.GetLabelName(Util.ConvertPCtoSNES(offset + min)) == "" &&
+                Data.Inst.GetFlag(offset + min) == Data.Inst.GetFlag(offset) &&
+                Data.Inst.GetLabelName(Util.ConvertPCtoSNES(offset + min)) == "" &&
                 (offset + min) / bankSize == myBank
             ) min += step;
             return min;
@@ -369,7 +369,7 @@ namespace DiztinGUIsh
         private static string GetLabel(int offset, int length)
         {
             int snes = Util.ConvertPCtoSNES(offset);
-            string label = Data.GetLabelName(snes);
+            string label = Data.Inst.GetLabelName(snes);
             if (label == null)
                 return "";
             
@@ -384,7 +384,7 @@ namespace DiztinGUIsh
             int bytes = GetLineByteLength(offset);
             string code = "";
 
-            switch (Data.GetFlag(offset))
+            switch (Data.Inst.GetFlag(offset))
             {
                 case Data.FlagType.Opcode:
                     code = Util.GetInstruction(offset);
@@ -432,7 +432,7 @@ namespace DiztinGUIsh
         private static string GetMap(int offset, int length)
         {
             string s = "";
-            switch (Data.GetROMMapMode())
+            switch (Data.Inst.GetROMMapMode())
             {
                 case Data.ROMMapMode.LoROM: s = "lorom"; break;
                 case Data.ROMMapMode.HiROM: s = "hirom"; break;
@@ -486,11 +486,11 @@ namespace DiztinGUIsh
         private static string GetRawBytes(int offset, int length)
         {
             string bytes = "";
-            if (Data.GetFlag(offset) == Data.FlagType.Opcode)
+            if (Data.Inst.GetFlag(offset) == Data.FlagType.Opcode)
             {
                 for (int i = 0; i < Manager.GetInstructionLength(offset); i++)
                 {
-                    bytes += Util.NumberToBaseString(Data.GetROMByte(offset + i), Util.NumberBase.Hexadecimal);
+                    bytes += Util.NumberToBaseString(Data.Inst.GetROMByte(offset + i), Util.NumberBase.Hexadecimal);
                 }
             }
             return string.Format("{0,-8}", bytes);
@@ -499,25 +499,25 @@ namespace DiztinGUIsh
         // trim to length
         private static string GetComment(int offset, int length)
         {
-            return string.Format("{0," + (length * -1) + "}", Data.GetComment(Util.ConvertPCtoSNES(offset)));
+            return string.Format("{0," + (length * -1) + "}", Data.Inst.GetComment(Util.ConvertPCtoSNES(offset)));
         }
 
         // length forced to 2
         private static string GetDataBank(int offset, int length)
         {
-            return Util.NumberToBaseString(Data.GetDataBank(offset), Util.NumberBase.Hexadecimal, 2);
+            return Util.NumberToBaseString(Data.Inst.GetDataBank(offset), Util.NumberBase.Hexadecimal, 2);
         }
 
         // length forced to 4
         private static string GetDirectPage(int offset, int length)
         {
-            return Util.NumberToBaseString(Data.GetDirectPage(offset), Util.NumberBase.Hexadecimal, 4);
+            return Util.NumberToBaseString(Data.Inst.GetDirectPage(offset), Util.NumberBase.Hexadecimal, 4);
         }
 
         // if length == 1, M/m, else 08/16
         private static string GetMFlag(int offset, int length)
         {
-            bool m = Data.GetMFlag(offset);
+            bool m = Data.Inst.GetMFlag(offset);
             if (length == 1) return m ? "M" : "m";
             else return m ? "08" : "16";
         }
@@ -525,7 +525,7 @@ namespace DiztinGUIsh
         // if length == 1, X/x, else 08/16
         private static string GetXFlag(int offset, int length)
         {
-            bool x = Data.GetXFlag(offset);
+            bool x = Data.Inst.GetXFlag(offset);
             if (length == 1) return x ? "X" : "x";
             else return x ? "08" : "16";
         }
@@ -533,9 +533,9 @@ namespace DiztinGUIsh
         // output label at snes offset, and its value
         private static string GetLabelAssign(int offset, int length)
         {
-            var labelName = Data.GetLabelName(offset);
+            var labelName = Data.Inst.GetLabelName(offset);
             var offsetStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true);
-            var labelComment = Data.GetLabelComment(offset);
+            var labelComment = Data.Inst.GetLabelComment(offset);
 
             if (string.IsNullOrEmpty(labelName))
                 return "";

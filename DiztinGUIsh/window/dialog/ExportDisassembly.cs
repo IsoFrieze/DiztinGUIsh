@@ -98,18 +98,18 @@ namespace DiztinGUIsh
             using (MemoryStream mem = new MemoryStream())
             using (StreamWriter sw = new StreamWriter(mem))
             {
-                List<ROMByte> tempTable = Data.GetTable();
-                Data.ROMMapMode tempMode = Data.GetROMMapMode();
-                Data.ROMSpeed tempSpeed = Data.GetROMSpeed();
-                var tempAlias = Data.GetAllLabels(); 
-                var tempComment = Data.GetAllComments();
+                List<ROMByte> tempTable = Data.Inst.GetTable();
+                Data.ROMMapMode tempMode = Data.Inst.GetROMMapMode();
+                Data.ROMSpeed tempSpeed = Data.Inst.GetROMSpeed();
+                var tempAlias = Data.Inst.GetAllLabels(); 
+                var tempComment = Data.Inst.GetAllComments();
                 LogCreator.FormatStructure tempStructure = LogCreator.structure;
-                Data.Restore(sampleTable, Data.ROMMapMode.LoROM, Data.ROMSpeed.FastROM, sampleAlias, sampleComment);
+                Data.Inst.Restore(sampleTable, Data.ROMMapMode.LoROM, Data.ROMSpeed.FastROM, sampleAlias, sampleComment);
                 LogCreator.structure = LogCreator.FormatStructure.SingleFile;
 
                 LogCreator.CreateLog(sw, StreamWriter.Null);
 
-                Data.Restore(tempTable, tempMode, tempSpeed, tempAlias, tempComment);
+                Data.Inst.Restore(tempTable, tempMode, tempSpeed, tempAlias, tempComment);
                 LogCreator.structure = tempStructure;
 
                 sw.Flush();

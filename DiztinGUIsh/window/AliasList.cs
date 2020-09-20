@@ -113,14 +113,14 @@ namespace DiztinGUIsh.window
 
                 // everything read OK, modify the existing list now. point of no return
                 if (replaceAll)
-                    Data.DeleteAllLabels();
+                    Data.Inst.DeleteAllLabels();
 
                 ResetDataGrid();
 
                 // this will call AddRow() to add items back to the UI datagrid.
                 foreach (KeyValuePair<int, Data.AliasInfo> pair in newValues)
                 {
-                    Data.AddLabel(pair.Key, pair.Value, true);
+                    Data.Inst.AddLabel(pair.Key, pair.Value, true);
                 }
             }
             catch (Exception ex)
@@ -141,7 +141,7 @@ namespace DiztinGUIsh.window
                 {
                     using (StreamWriter sw = new StreamWriter(saveFileDialog1.FileName))
                     {
-                        foreach (var pair in Data.GetAllLabels())
+                        foreach (var pair in Data.Inst.GetAllLabels())
                         {
                             sw.WriteLine(
                                 $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.name},{pair.Value.comment}");
@@ -159,7 +159,7 @@ namespace DiztinGUIsh.window
             if (int.TryParse((string)dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null, out int val))
             {
                 locked = true;
-                Data.AddLabel(val, null, true);
+                Data.Inst.AddLabel(val, null, true);
                 locked = false;
                 mw.InvalidateTable();
             }
@@ -198,11 +198,11 @@ namespace DiztinGUIsh.window
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "Must enter a valid hex address.";
-                        } else if (oldAddress == -1 && Data.GetAllLabels().ContainsKey(val))
+                        } else if (oldAddress == -1 && Data.Inst.GetAllLabels().ContainsKey(val))
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "This address already has a label.";
-                            var x = Data.GetAllLabels();
+                            var x = Data.Inst.GetAllLabels();
                             Console.WriteLine(Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal));
                         } else if (dataGridView1.EditingControl != null)
                         {
@@ -229,8 +229,8 @@ namespace DiztinGUIsh.window
             locked = true;
             if (currentlyEditing >= 0)
             {
-                if (val >= 0) Data.AddLabel(oldAddress, null, true);
-                Data.AddLabel(val, labelAliasInfo, true);
+                if (val >= 0) Data.Inst.AddLabel(oldAddress, null, true);
+                Data.Inst.AddLabel(val, labelAliasInfo, true);
             }
             locked = false;
 

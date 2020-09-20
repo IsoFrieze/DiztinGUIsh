@@ -335,9 +335,9 @@ namespace DiztinGUIsh
 
         public void UpdatePercent()
         {
-            int totalUnreached = 0, size = Data.GetROMSize();
+            int totalUnreached = 0, size = Data.Inst.GetROMSize();
             for (int i = 0; i < size; i++)
-                if (Data.GetFlag(i) == Data.FlagType.Unreached)
+                if (Data.Inst.GetFlag(i) == Data.FlagType.Unreached)
                     totalUnreached++;
             int reached = size - totalUnreached;
             percentComplete.Text = string.Format("{0:N3}% ({1:D}/{2:D})", reached * 100.0 / size, reached, size);
@@ -360,13 +360,13 @@ namespace DiztinGUIsh
 
         private void UpdateDataGridView()
         {
-            if (Data.GetROMSize() > 0)
+            if (Data.Inst.GetROMSize() > 0)
             {
                 rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
-                if (viewOffset + rowsToShow > Data.GetROMSize()) viewOffset = Data.GetROMSize() - rowsToShow;
+                if (viewOffset + rowsToShow > Data.Inst.GetROMSize()) viewOffset = Data.Inst.GetROMSize() - rowsToShow;
                 if (viewOffset < 0) viewOffset = 0;
                 vScrollBar1.Enabled = true;
-                vScrollBar1.Maximum = Data.GetROMSize() - rowsToShow;
+                vScrollBar1.Maximum = Data.Inst.GetROMSize() - rowsToShow;
                 vScrollBar1.Value = viewOffset;
                 table.RowCount = rowsToShow;
 
@@ -377,7 +377,7 @@ namespace DiztinGUIsh
 
         private void table_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             int selRow = table.CurrentCell.RowIndex + viewOffset, selCol = table.CurrentCell.ColumnIndex;
             int amount = e.Delta / 0x18;
             viewOffset -= amount;
@@ -409,7 +409,7 @@ namespace DiztinGUIsh
 
         private void table_KeyDown(object sender, KeyEventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
 
             int offset = table.CurrentCell.RowIndex + viewOffset;
             int newOffset = offset;
@@ -431,7 +431,7 @@ namespace DiztinGUIsh
                 case Keys.Down:
                     amount = e.KeyCode == Keys.Down ? 0x01 : e.KeyCode == Keys.PageDown ? 0x10 : 0x100;
                     newOffset = offset + amount;
-                    if (newOffset >= Data.GetROMSize()) newOffset = Data.GetROMSize() - 1;
+                    if (newOffset >= Data.Inst.GetROMSize()) newOffset = Data.Inst.GetROMSize() - 1;
                     SelectOffset(newOffset);
                     break;
                 case Keys.Left:
@@ -481,10 +481,10 @@ namespace DiztinGUIsh
                     table.BeginEdit(true);
                     break;
                 case Keys.M:
-                    Data.SetMFlag(offset, !Data.GetMFlag(offset));
+                    Data.Inst.SetMFlag(offset, !Data.Inst.GetMFlag(offset));
                     break;
                 case Keys.X:
-                    Data.SetXFlag(offset, !Data.GetXFlag(offset));
+                    Data.Inst.SetXFlag(offset, !Data.Inst.GetXFlag(offset));
                     break;
                 case Keys.C:
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
@@ -499,27 +499,27 @@ namespace DiztinGUIsh
         private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
             int row = e.RowIndex + viewOffset;
-            if (row >= Data.GetROMSize()) return;
+            if (row >= Data.Inst.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
                 case 0:
-                    e.Value = Data.GetLabelName(Util.ConvertPCtoSNES(row));
+                    e.Value = Data.Inst.GetLabelName(Util.ConvertPCtoSNES(row));
                     break;
                 case 1:
                     e.Value = Util.NumberToBaseString(Util.ConvertPCtoSNES(row), Util.NumberBase.Hexadecimal, 6);
                     break;
                 case 2:
-                    e.Value = (char) Data.GetROMByte(row);
+                    e.Value = (char) Data.Inst.GetROMByte(row);
                     break;
                 case 3:
-                    e.Value = Util.NumberToBaseString(Data.GetROMByte(row), DisplayBase);
+                    e.Value = Util.NumberToBaseString(Data.Inst.GetROMByte(row), DisplayBase);
                     break;
                 case 4:
-                    e.Value = Util.PointToString(Data.GetInOutPoint(row));
+                    e.Value = Util.PointToString(Data.Inst.GetInOutPoint(row));
                     break;
                 case 5:
                     int len = Manager.GetInstructionLength(row);
-                    if (row + len <= Data.GetROMSize()) e.Value = Util.GetInstruction(row);
+                    if (row + len <= Data.Inst.GetROMSize()) e.Value = Util.GetInstruction(row);
                     else e.Value = "";
                     break;
                 case 6:
@@ -528,22 +528,22 @@ namespace DiztinGUIsh
                     else e.Value = "";
                     break;
                 case 7:
-                    e.Value = Util.TypeToString(Data.GetFlag(row));
+                    e.Value = Util.TypeToString(Data.Inst.GetFlag(row));
                     break;
                 case 8:
-                    e.Value = Util.NumberToBaseString(Data.GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
+                    e.Value = Util.NumberToBaseString(Data.Inst.GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
                     break;
                 case 9:
-                    e.Value = Util.NumberToBaseString(Data.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
+                    e.Value = Util.NumberToBaseString(Data.Inst.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
                     break;
                 case 10:
-                    e.Value = Util.BoolToSize(Data.GetMFlag(row));
+                    e.Value = Util.BoolToSize(Data.Inst.GetMFlag(row));
                     break;
                 case 11:
-                    e.Value = Util.BoolToSize(Data.GetXFlag(row));
+                    e.Value = Util.BoolToSize(Data.Inst.GetXFlag(row));
                     break;
                 case 12:
-                    e.Value = Data.GetComment(Util.ConvertPCtoSNES(row));
+                    e.Value = Data.Inst.GetComment(Util.ConvertPCtoSNES(row));
                     break;
             }
         }
@@ -553,26 +553,26 @@ namespace DiztinGUIsh
             string value = e.Value as string;
             int result;
             int row = e.RowIndex + viewOffset;
-            if (row >= Data.GetROMSize()) return;
+            if (row >= Data.Inst.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
                 case 0:
-                    Data.AddLabel(Util.ConvertPCtoSNES(row), new Data.AliasInfo() {name = value}, true);
+                    Data.Inst.AddLabel(Util.ConvertPCtoSNES(row), new Data.AliasInfo() {name = value}, true);
                     break; // todo (validate for valid label characters)
                 case 8:
-                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDataBank(row, result);
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.Inst.SetDataBank(row, result);
                     break;
                 case 9:
-                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.SetDirectPage(row, result);
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.Inst.SetDirectPage(row, result);
                     break;
                 case 10:
-                    Data.SetMFlag(row, (value == "8" || value == "M"));
+                    Data.Inst.SetMFlag(row, (value == "8" || value == "M"));
                     break;
                 case 11:
-                    Data.SetXFlag(row, (value == "8" || value == "X"));
+                    Data.Inst.SetXFlag(row, (value == "8" || value == "X"));
                     break;
                 case 12:
-                    Data.AddComment(Util.ConvertPCtoSNES(row), value, true);
+                    Data.Inst.AddComment(Util.ConvertPCtoSNES(row), value, true);
                     break;
             }
 
@@ -582,7 +582,7 @@ namespace DiztinGUIsh
         private void table_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             int row = e.RowIndex + viewOffset;
-            if (row < 0 || row >= Data.GetROMSize()) return;
+            if (row < 0 || row >= Data.Inst.GetROMSize()) return;
             Util.PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + viewOffset);
         }
 
@@ -703,25 +703,25 @@ namespace DiztinGUIsh
         private void GoToUnreached(bool end, bool direction)
         {
             int offset = table.CurrentCell.RowIndex + viewOffset;
-            int size = Data.GetROMSize();
+            int size = Data.Inst.GetROMSize();
             int unreached = end ? (direction ? 0 : size - 1) : offset;
 
             if (direction)
             {
                 if (!end)
-                    while (unreached < size - 1 && Data.GetFlag(unreached) == Data.FlagType.Unreached)
+                    while (unreached < size - 1 && Data.Inst.GetFlag(unreached) == Data.FlagType.Unreached)
                         unreached++;
-                while (unreached < size - 1 && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached++;
+                while (unreached < size - 1 && Data.Inst.GetFlag(unreached) != Data.FlagType.Unreached) unreached++;
             }
             else
             {
                 if (unreached > 0) unreached--;
-                while (unreached > 0 && Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached--;
+                while (unreached > 0 && Data.Inst.GetFlag(unreached) != Data.FlagType.Unreached) unreached--;
             }
 
-            while (unreached > 0 && Data.GetFlag(unreached - 1) == Data.FlagType.Unreached) unreached--;
+            while (unreached > 0 && Data.Inst.GetFlag(unreached - 1) == Data.FlagType.Unreached) unreached--;
 
-            if (Data.GetFlag(unreached) == Data.FlagType.Unreached) SelectOffset(unreached, 1);
+            if (Data.Inst.GetFlag(unreached) == Data.FlagType.Unreached) SelectOffset(unreached, 1);
         }
 
         private void visualMapToolStripMenuItem_Click(object sender, EventArgs e)
@@ -738,37 +738,37 @@ namespace DiztinGUIsh
 
         private void stepOverToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             Step(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void stepInToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             StepIn(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void autoStepSafeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             AutoStepSafe(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void autoStepHarshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             AutoStepHarsh(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void gotoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             GotoDialog go = new GotoDialog(viewOffset + table.CurrentCell.RowIndex);
             DialogResult result = go.ShowDialog();
             if (result == DialogResult.OK)
             {
                 int offset = go.GetPcOffset();
-                if (offset >= 0 && offset < Data.GetROMSize()) SelectOffset(offset);
+                if (offset >= 0 && offset < Data.Inst.GetROMSize()) SelectOffset(offset);
                 else
                     MessageBox.Show("That offset is out of range.", "Error", MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
@@ -777,7 +777,7 @@ namespace DiztinGUIsh
 
         private void gotoIntermediateAddressToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             GoToIntermediateAddress(table.CurrentCell.RowIndex + viewOffset);
         }
 
@@ -798,13 +798,13 @@ namespace DiztinGUIsh
 
         private void markOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             Mark(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void markManyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 7);
         }
 
@@ -816,25 +816,25 @@ namespace DiztinGUIsh
 
         private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 8);
         }
 
         private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 9);
         }
 
         private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 10);
         }
 
         private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 11);
         }
 
@@ -846,7 +846,7 @@ namespace DiztinGUIsh
 
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             MisalignmentChecker mis = new MisalignmentChecker();
             DialogResult result = mis.ShowDialog();
             if (result == DialogResult.OK)
@@ -860,7 +860,7 @@ namespace DiztinGUIsh
 
         private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.GetROMSize() <= 0) return;
+            if (Data.Inst.GetROMSize() <= 0) return;
             InOutPointChecker point = new InOutPointChecker();
             DialogResult result = point.ShowDialog();
             if (result == DialogResult.OK)

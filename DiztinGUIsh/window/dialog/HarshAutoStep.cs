@@ -20,7 +20,7 @@ namespace DiztinGUIsh
             InitializeComponent();
 
             start = offset;
-            int rest = Data.GetROMSize() - start;
+            int rest = Data.Inst.GetROMSize() - start;
             count = rest < 0x100 ? rest : 0x100;
             end = start + count;
 
@@ -43,7 +43,7 @@ namespace DiztinGUIsh
         {
             Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
             int digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
-            int size = Data.GetROMSize();
+            int size = Data.Inst.GetROMSize();
 
             if (start < 0) start = 0;
             if (end >= size) end = size - 1;

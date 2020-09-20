@@ -20,34 +20,34 @@ namespace DiztinGUIsh
 
         public static int GetROMWord(int offset)
         {
-            if (offset + 1 < Data.GetROMSize())
-                return Data.GetROMByte(offset) + (Data.GetROMByte(offset + 1) << 8);
+            if (offset + 1 < Data.Inst.GetROMSize())
+                return Data.Inst.GetROMByte(offset) + (Data.Inst.GetROMByte(offset + 1) << 8);
             return -1;
         }
 
         public static int GetROMLong(int offset)
         {
-            if (offset + 2 < Data.GetROMSize())
-                return Data.GetROMByte(offset) + (Data.GetROMByte(offset + 1) << 8) + (Data.GetROMByte(offset + 2) << 16);
+            if (offset + 2 < Data.Inst.GetROMSize())
+                return Data.Inst.GetROMByte(offset) + (Data.Inst.GetROMByte(offset + 1) << 8) + (Data.Inst.GetROMByte(offset + 2) << 16);
             return -1;
         }
 
         public static int GetROMDoubleWord(int offset)
         {
-            if (offset + 3 < Data.GetROMSize())
-                return Data.GetROMByte(offset) + (Data.GetROMByte(offset + 1) << 8) + (Data.GetROMByte(offset + 2) << 16) + (Data.GetROMByte(offset + 3) << 24);
+            if (offset + 3 < Data.Inst.GetROMSize())
+                return Data.Inst.GetROMByte(offset) + (Data.Inst.GetROMByte(offset + 1) << 8) + (Data.Inst.GetROMByte(offset + 2) << 16) + (Data.Inst.GetROMByte(offset + 3) << 24);
             return -1;
         }
 
         public static int GetIntermediateAddressOrPointer(int offset)
         {
-            switch (Data.GetFlag(offset))
+            switch (Data.Inst.GetFlag(offset))
             {
                 case Data.FlagType.Unreached:
                 case Data.FlagType.Opcode:
                     return GetIntermediateAddress(offset, true);
                 case Data.FlagType.Pointer16Bit:
-                    int bank = Data.GetDataBank(offset);
+                    int bank = Data.Inst.GetDataBank(offset);
                     return (bank << 16) | GetROMWord(offset);
                 case Data.FlagType.Pointer24Bit:
                 case Data.FlagType.Pointer32Bit:
@@ -59,7 +59,7 @@ namespace DiztinGUIsh
         public static int GetIntermediateAddress(int offset, bool resolve = false)
         {
             // FIX ME: log and generation of dp opcodes. search references
-            switch (Data.GetArchitechture(offset))
+            switch (Data.Inst.GetArchitechture(offset))
             {
                 case Data.Architechture.CPU65C816: return CPU65C816.GetIntermediateAddress(offset, resolve);
                 case Data.Architechture.APUSPC700: return -1;
@@ -70,7 +70,7 @@ namespace DiztinGUIsh
 
         public static string GetInstruction(int offset)
         {
-            switch (Data.GetArchitechture(offset))
+            switch (Data.Inst.GetArchitechture(offset))
             {
                 case Data.Architechture.CPU65C816: return CPU65C816.GetInstruction(offset);
                 case Data.Architechture.APUSPC700: return "";
@@ -96,7 +96,7 @@ namespace DiztinGUIsh
 
                 switch (step)
                 {
-                    case 1: res += NumberToBaseString(Data.GetROMByte(offset + i), NumberBase.Hexadecimal, 2, true); break;
+                    case 1: res += NumberToBaseString(Data.Inst.GetROMByte(offset + i), NumberBase.Hexadecimal, 2, true); break;
                     case 2: res += NumberToBaseString(GetROMWord(offset + i), NumberBase.Hexadecimal, 4, true); break;
                     case 3: res += NumberToBaseString(GetROMLong(offset + i), NumberBase.Hexadecimal, 6, true); break;
                     case 4: res += NumberToBaseString(GetROMDoubleWord(offset + i), NumberBase.Hexadecimal, 8, true); break;
@@ -113,7 +113,7 @@ namespace DiztinGUIsh
             switch (bytes)
             {
                 case 2:
-                    ia = (Data.GetDataBank(offset) << 16) | GetROMWord(offset);
+                    ia = (Data.Inst.GetDataBank(offset) << 16) | GetROMWord(offset);
                     format = "dw {0}";
                     param = NumberToBaseString(GetROMWord(offset), NumberBase.Hexadecimal, 4, true);
                     break;
@@ -124,49 +124,49 @@ namespace DiztinGUIsh
                     break;
                 case 4:
                     ia = GetROMLong(offset);
-                    format = "dl {0}" + string.Format(" : db {0}", NumberToBaseString(Data.GetROMByte(offset + 3), NumberBase.Hexadecimal, 2, true));
+                    format = "dl {0}" + string.Format(" : db {0}", NumberToBaseString(Data.Inst.GetROMByte(offset + 3), NumberBase.Hexadecimal, 2, true));
                     param = NumberToBaseString(GetROMLong(offset), NumberBase.Hexadecimal, 6, true);
                     break;
             }
 
             int pc = ConvertSNEStoPC(ia);
-            if (pc >= 0 && Data.GetLabelName(ia) != "") param = Data.GetLabelName(ia);
+            if (pc >= 0 && Data.Inst.GetLabelName(ia) != "") param = Data.Inst.GetLabelName(ia);
             return string.Format(format, param);
         }
 
         public static string GetFormattedText(int offset, int bytes)
         {
             string text = "db \"";
-            for (int i = 0; i < bytes; i++) text += (char)Data.GetROMByte(offset + i);
+            for (int i = 0; i < bytes; i++) text += (char)Data.Inst.GetROMByte(offset + i);
             return text + "\"";
         }
 
         public static string GetDefaultLabel(int address)
         {
             int pc = ConvertSNEStoPC(address);
-            return string.Format("{0}_{1}", TypeToLabel(Data.GetFlag(pc)), NumberToBaseString(address, NumberBase.Hexadecimal, 6));
+            return string.Format("{0}_{1}", TypeToLabel(Data.Inst.GetFlag(pc)), NumberToBaseString(address, NumberBase.Hexadecimal, 6));
         }
 
         public static int ConvertPCtoSNES(int offset)
         {
-            if (Data.GetROMMapMode() == Data.ROMMapMode.LoROM)
+            if (Data.Inst.GetROMMapMode() == Data.ROMMapMode.LoROM)
             {
                 offset = ((offset & 0x3F8000) << 1) | 0x8000 | (offset & 0x7FFF);
-                if (Data.GetROMSpeed() == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
+                if (Data.Inst.GetROMSpeed() == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
             }
-            else if (Data.GetROMMapMode() == Data.ROMMapMode.HiROM)
+            else if (Data.Inst.GetROMMapMode() == Data.ROMMapMode.HiROM)
             {
                 offset |= 0x400000;
-                if (Data.GetROMSpeed() == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
+                if (Data.Inst.GetROMSpeed() == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
             }
-            else if (Data.GetROMMapMode() == Data.ROMMapMode.ExHiROM)
+            else if (Data.Inst.GetROMMapMode() == Data.ROMMapMode.ExHiROM)
             {
                 if (offset < 0x40000) offset |= 0xC00000;
                 else if (offset >= 0x7E0000) offset &= 0x3FFFFF;
             }
             else
             {
-                if (offset >= 0x400000 && Data.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM)
+                if (offset >= 0x400000 && Data.Inst.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM)
                 {
                     offset += 0x800000;
                 }
@@ -187,7 +187,7 @@ namespace DiztinGUIsh
             // WRAM mirror & PPU regs are N/A to PC addressing
             if (((address & 0x400000) == 0) && ((address & 0x8000) == 0)) return -1;
 
-            switch (Data.GetROMMapMode())
+            switch (Data.Inst.GetROMMapMode())
             {
                 case Data.ROMMapMode.LoROM:
                     {
@@ -212,7 +212,7 @@ namespace DiztinGUIsh
 
                         if (address >= 0xC00000)
                         {
-                            if (Data.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM)
+                            if (Data.Inst.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM)
                                 return UnmirroredOffset(address & 0x7FFFFF);
                             else
                                 return UnmirroredOffset(address & 0x3FFFFF);
@@ -275,7 +275,7 @@ namespace DiztinGUIsh
 
         private static int UnmirroredOffset(int offset)
         {
-            int size = Data.GetROMSize();
+            int size = Data.Inst.GetROMSize();
 
             // most of the time this is true; for efficiency
             if (offset < size) return offset;
@@ -505,18 +505,18 @@ namespace DiztinGUIsh
             // editable cells show up green
             if (column == 0 || column == 8 || column == 9 || column == 12) style.SelectionBackColor = Color.Chartreuse;
 
-            switch (Data.GetFlag(offset))
+            switch (Data.Inst.GetFlag(offset))
             {
                 case Data.FlagType.Unreached:
                     style.BackColor = Color.LightGray;
                     style.ForeColor = Color.DarkSlateGray;
                     break;
                 case Data.FlagType.Opcode:
-                    int opcode = Data.GetROMByte(offset);
+                    int opcode = Data.Inst.GetROMByte(offset);
                     switch (column)
                     {
                         case 4: // <*>
-                            Data.InOutPoint point = Data.GetInOutPoint(offset);
+                            Data.InOutPoint point = Data.Inst.GetInOutPoint(offset);
                             int r = 255, g = 255, b = 255;
                             if ((point & (Data.InOutPoint.EndPoint | Data.InOutPoint.OutPoint)) != 0) g -= 50;
                             if ((point & (Data.InOutPoint.InPoint)) != 0) r -= 50;
@@ -544,7 +544,7 @@ namespace DiztinGUIsh
                         case 11: // X Flag
                             int mask = column == 10 ? 0x20 : 0x10;
                             if (opcode == 0x28 || ((opcode == 0xC2 || opcode == 0xE2) // PLP SEP REP
-                                && (Data.GetROMByte(offset + 1) & mask) != 0)) // relevant bit set
+                                && (Data.Inst.GetROMByte(offset + 1) & mask) != 0)) // relevant bit set
                                 style.BackColor = Color.OrangeRed;
                             if (opcode == 0x08) // PHP
                                 style.BackColor = Color.Yellow;
@@ -580,15 +580,15 @@ namespace DiztinGUIsh
                     break;
             }
 
-            if (selOffset >= 0 && selOffset < Data.GetROMSize())
+            if (selOffset >= 0 && selOffset < Data.Inst.GetROMSize())
             {
                 if (column == 1
-                    //&& (Data.GetFlag(selOffset) == Data.FlagType.Opcode || Data.GetFlag(selOffset) == Data.FlagType.Unreached)
+                    //&& (Data.Inst.GetFlag(selOffset) == Data.FlagType.Opcode || Data.Inst.GetFlag(selOffset) == Data.FlagType.Unreached)
                     && ConvertSNEStoPC(GetIntermediateAddressOrPointer(selOffset)) == offset
                 ) style.BackColor = Color.DeepPink;
 
                 if (column == 6
-                    //&& (Data.GetFlag(offset) == Data.FlagType.Opcode || Data.GetFlag(offset) == Data.FlagType.Unreached)
+                    //&& (Data.Inst.GetFlag(offset) == Data.FlagType.Opcode || Data.Inst.GetFlag(offset) == Data.FlagType.Unreached)
                     && ConvertSNEStoPC(GetIntermediateAddressOrPointer(offset)) == selOffset
                 ) style.BackColor = Color.DeepPink;
             }

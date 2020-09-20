@@ -27,7 +27,7 @@ namespace DiztinGUIsh
                 default: property.SelectedIndex = 0; break;
             }
             start = offset;
-            int rest = Data.GetROMSize() - start;
+            int rest = Data.Inst.GetROMSize() - start;
             count = rest < 0x10 ? rest : 0x10;
             end = start + count;
 
@@ -102,7 +102,7 @@ namespace DiztinGUIsh
             mxCombo.Visible = (property.SelectedIndex == 3 || property.SelectedIndex == 4);
             archCombo.Visible = (property.SelectedIndex == 5);
             regValue.MaxLength = (property.SelectedIndex == 1 ? 3 : 5);
-            value = property.SelectedIndex == 1 ? Data.GetDataBank(start) : Data.GetDirectPage(start);
+            value = property.SelectedIndex == 1 ? Data.Inst.GetDataBank(start) : Data.Inst.GetDirectPage(start);
         }
 
         private bool updatingText = false;
@@ -111,7 +111,7 @@ namespace DiztinGUIsh
         {
             Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
             int digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
-            int size = Data.GetROMSize();
+            int size = Data.Inst.GetROMSize();
             int maxValue = property.SelectedIndex == 1 ? 0x100 : 0x10000;
 
             if (start < 0) start = 0;
