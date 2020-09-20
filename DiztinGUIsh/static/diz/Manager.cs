@@ -361,8 +361,11 @@ namespace DiztinGUIsh
             int directPage = GetHexValueAt(CachedIdx.D, 4);
             int dataBank = GetHexValueAt(CachedIdx.DB, 2);
 
-            bool xflag_set = line[CachedIdx.f_X] != 'x';               // X = unchecked (8), x = checked (16)
-            bool mflag_set = line[CachedIdx.f_M] != 'm';               // M = unchecked (8), m = checked (16)
+            // 'X' = unchecked in bsnesplus debugger UI = (8bit), 'x' or '.' = checked (16bit)
+            bool xflag_set = line[CachedIdx.f_X] == 'X';
+
+            // 'M' = unchecked in bsnesplus debugger UI = (8bit), 'm' or '.' = checked (16bit)
+            bool mflag_set = line[CachedIdx.f_M] == 'M';
 
             Data.SetFlag(pc, Data.FlagType.Opcode);
 
