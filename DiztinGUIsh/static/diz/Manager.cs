@@ -8,7 +8,7 @@ namespace DiztinGUIsh
     {
         public static int Step(int offset, bool branch, bool force, int prevOffset)
         {
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
             switch (Data.Inst.GetArchitechture(offset))
             {
                 case Data.Architechture.CPU65C816: return CPU65C816.Step(offset, branch, force, prevOffset);
@@ -20,7 +20,7 @@ namespace DiztinGUIsh
 
         public static int AutoStep(int offset, bool harsh, int amount)
         {
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
             int newOffset = offset, prevOffset = offset - 1, nextOffset = offset;
             if (harsh)
             {
@@ -116,7 +116,7 @@ namespace DiztinGUIsh
 
         public static int Mark(int offset, Data.FlagType type, int count)
         {
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
             int i, size = Data.Inst.GetROMSize();
             for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetFlag(offset + i, type);
             return offset + i < size ? offset + i : size - 1;
@@ -124,7 +124,7 @@ namespace DiztinGUIsh
 
         public static int MarkDataBank(int offset, int db, int count)
         {
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
             int i, size = Data.Inst.GetROMSize();
             for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetDataBank(offset + i, db);
             return offset + i < size ? offset + i : size - 1;
@@ -132,7 +132,7 @@ namespace DiztinGUIsh
 
         public static int MarkDirectPage(int offset, int dp, int count)
         {
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
             int i, size = Data.Inst.GetROMSize();
             for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetDirectPage(offset + i, dp);
             return offset + i < size ? offset + i : size - 1;
@@ -140,7 +140,7 @@ namespace DiztinGUIsh
 
         public static int MarkXFlag(int offset, bool x, int count)
         {
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
             int i, size = Data.Inst.GetROMSize();
             for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetXFlag(offset + i, x);
             return offset + i < size ? offset + i : size - 1;
@@ -148,7 +148,7 @@ namespace DiztinGUIsh
 
         public static int MarkMFlag(int offset, bool m, int count)
         {
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
             int i, size = Data.Inst.GetROMSize();
             for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetMFlag(offset + i, m);
             return offset + i < size ? offset + i : size - 1;
@@ -156,7 +156,7 @@ namespace DiztinGUIsh
 
         public static int MarkArchitechture(int offset, Data.Architechture arch, int count)
         {
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
             int i, size = Data.Inst.GetROMSize();
             for (i = 0; i < count && offset + i < size; i++) Data.Inst.SetArchitechture(offset + i, arch);
             return offset + i < size ? offset + i : size - 1;
@@ -213,7 +213,7 @@ namespace DiztinGUIsh
                 }
             }
 
-            if (count > 0) Project.unsavedChanges = true;
+            if (count > 0) Project.Inst.unsavedChanges = true;
 
             return count;
         }
@@ -235,7 +235,7 @@ namespace DiztinGUIsh
                 }
             }
 
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
         }
 
         public static int ImportUsageMap(byte[] usageMap)
@@ -292,7 +292,7 @@ namespace DiztinGUIsh
                 }
             }
 
-            Project.unsavedChanges |= unsaved;
+            Project.Inst.unsavedChanges |= unsaved;
             return modified;
         }
 
@@ -381,7 +381,7 @@ namespace DiztinGUIsh
                 pc++;
                 modified++;
             } while (pc < size && Data.Inst.GetFlag(pc) == Data.FlagType.Operand);
-            Project.unsavedChanges = true;
+            Project.Inst.unsavedChanges = true;
             return modified;
         }
 

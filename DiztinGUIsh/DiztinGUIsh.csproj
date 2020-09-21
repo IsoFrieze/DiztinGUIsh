@@ -108,7 +108,7 @@
     <Compile Include="BizHawkCdl.cs" />
     <Compile Include="LargeFilesReader.cs" />
     <Compile Include="ProgressBarWorker.cs" />
-    <Compile Include="static\Class1.cs" />
+    <Compile Include="static\DataSerializer.cs" />
     <Compile Include="window\dialog\About.cs">
       <SubType>Form</SubType>
     </Compile>

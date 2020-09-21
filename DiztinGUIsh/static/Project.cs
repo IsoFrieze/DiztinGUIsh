@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,15 +21,23 @@ using ExtendedXmlSerializer.ContentModel.Format;
 
 namespace DiztinGUIsh
 {
-    public static class Project
+    public class Project
     {
         public const int HEADER_SIZE = 0x100;
 
-        public static string currentFile = null, currentROMFile = null;
-        public static bool unsavedChanges = false;
-        public static string watermark = "DiztinGUIsh";
+        public string currentProjectFile = null, currentROMFile = null;
+        public bool unsavedChanges = false;
+        public const string watermark = "DiztinGUIsh";
 
-        public static bool NewProject(string filename)
+        // these must always match the same bytes in the ROM
+        public string InternalRomTitleName { get; set; } = "";
+        public int InternalCheckSum { get; set; } = -1;
+        public int InternalRomSize { get; set; } = -1;
+
+        // needs to come last for serialization
+        public Data Data = new Data();
+
+        public bool NewProject(string filename)
         {
             try
             {
@@ -49,7 +58,7 @@ namespace DiztinGUIsh
                 {
                     Data.Inst.Initiate(rom, import.GetROMMapMode(), import.GetROMSpeed());
                     unsavedChanges = false;
-                    currentFile = null;
+                    currentProjectFile = null;
 
                     AliasList.me.ResetDataGrid();
                     Dictionary<int, Data.AliasInfo> generatedLabels = import.GetGeneratedLabels();
@@ -66,6 +75,10 @@ namespace DiztinGUIsh
                         unsavedChanges = true;
                     }
 
+                    InternalCheckSum = GetRomCheckSumsFromRomBytes();
+                    InternalRomTitleName = GetRomNameFromRomBytes();
+                    InternalRomSize = Data.Inst.GetROMSize();
+
                     return true;
                 }
             }
@@ -78,262 +91,64 @@ namespace DiztinGUIsh
 
         private const int LATEST_FILE_FORMAT_VERSION = 2;
 
-        /*sealed class RomByteSerializer : ISerializer<ROMByte>
+        public IExtendedXmlSerializer GetSerializer()
         {
-            public static RomByteSerializer Default { get; } = new RomByteSerializer();
-
-            RomByteSerializer() { }
-
-            public ROMByte Get(IFormatReader parameter)
-            {
-                //var parts = parameter.Content().Split('|');
-                //var result = new ROMByte(parts[0], int.Parse(parts[1]));
-                //return result;
-                throw new NotImplementedException();
-            }
-
-            public void Write(IFormatWriter writer, ROMByte instance)
-            {
-                // use a custom formatter here to save space. there are a LOT of ROMBytes.
-                // despite that we're still going for:
-                // 1) text only for slightly human readability
-                // 2) mergability in git/etc
-                //
-                // some of this can be unpacked further to increase readibility without
-                // hurting the filesize too much. figure out what's useful.
-
-                string flagTxt;
-                switch (instance.TypeFlag)
-                {
-                    case Data.FlagType.Unreached: flagTxt = "?"; break;
-                    case Data.FlagType.Opcode: flagTxt = "="; break;
-                    case Data.FlagType.Operand: flagTxt = "-"; break;
-                    case Data.FlagType.Graphics: flagTxt = "G"; break;
-                    case Data.FlagType.Music: flagTxt = "M"; break;
-                    case Data.FlagType.Empty: flagTxt = "E"; break;
-                    case Data.FlagType.Text: flagTxt = "T"; break;
-
-                    case Data.FlagType.Data8Bit: flagTxt = "1"; break;
-                    case Data.FlagType.Data16Bit: flagTxt = "2"; break;
-                    case Data.FlagType.Data24Bit: flagTxt = "3"; break;
-                    case Data.FlagType.Data32Bit: flagTxt = "4"; break;
-
-                    case Data.FlagType.Pointer16Bit: flagTxt = "p"; break;
-                    case Data.FlagType.Pointer24Bit: flagTxt = "P"; break;
-                    case Data.FlagType.Pointer32Bit: flagTxt = "X"; break;
-
-                    default: throw new InvalidDataException("Unknown FlagType");
-                }
-
-                // max 8 bits
-                byte otherFlags = (byte) (
-                    (instance.XFlag ? 0 : 1) << 0 |   // 1 bit
-                    (instance.MFlag ? 0 : 1) << 1 |   // 1 bit
-                    (byte)instance.Point     << 2 |   // 4 bits
-                    (byte)instance.Arch      << 6     // 2 bits
-                );
-
-                string data = 
-                    flagTxt +
-                    instance.DataBank.ToString("X2") +
-                    instance.DirectPage.ToString("X4") +
-                    otherFlags.ToString("X2");
-
-                Debug.Assert(data.Length == 9);
-                writer.Content(data);
-            }
-        }*/
-
-        sealed class TableDataSerializer : ISerializer<TableData>
-        {
-            public static TableDataSerializer Default { get; } = new TableDataSerializer();
-
-            TableDataSerializer() { }
-
-            public TableData Get(IFormatReader parameter)
-            {
-                /*var parts = parameter.Content().Split('|');
-                var result = new ROMByte(parts[0], int.Parse(parts[1]));
-                return result;*/
-                throw new NotImplementedException();
-            }
-
-            public void Write(IFormatWriter writer, TableData instance)
-            {
-                const bool compress_groupblock = true;
-
-                var lines = new List<string>();
-                foreach (var rb in instance.RomBytes)
-                {
-                    lines.Add(EncodeByte(rb));
-                }
-
-                var options = new List<string>();
-
-                if (compress_groupblock)
-                {
-                    options.Add("compress_groupblocks");
-                    ApplyCompression_GroupsBlocks(ref lines);
-                }
-
-                writer.Content($"\n{string.Join(",", options)}\n");
-
-                foreach (var line in lines)
-                {
-                    writer.Content(line + "\n");
-                }
-            }
-
-            public static void ApplyCompression_GroupsBlocks(ref List<string> lines)
-            {
-                if (lines.Count < 8)
-                    return; // forget it, too small to care.
-
-                var output = new List<string>();
-
-                var lastline = lines[0];
-                var consecutive = 1;
-
-                // adjustable, just pick something > 8 or it's not worth the optimization.
-                // we want to catch large consecutive blocks of data.
-                const int min_number_repeats_before_we_bother = 8;
-
-                for (var i = 0; i < lines.Count; ++i) {
-                    var line = lines[i];
-
-                    bool different = line != lastline;
-                    if (!different)
-                        consecutive++;
-
-                    if (!different && i != lines.Count)
-                        continue;
-
-                    if (consecutive >= min_number_repeats_before_we_bother) {
-                        // replace multiple repeated lines with one new statement
-                        output.Add($"r {consecutive.ToString()} {lastline}");
-                    } else {
-                        // output 1 or more copies of the last line
-                        // this is also how we print single lines too
-                        output.AddRange(Enumerable.Repeat(lastline, consecutive).ToList());
-                    }
-
-                    lastline = line;
-                    consecutive = 1;
-                }
-
-                lines = output;
-            }
-
-            public string EncodeByte(ROMByte instance)
-            {
-                // use a custom formatter here to save space. there are a LOT of ROMBytes.
-                // despite that we're still going for:
-                // 1) text only for slightly human readability
-                // 2) mergability in git/etc
-                //
-                // some of this can be unpacked further to increase readability without
-                // hurting the filesize too much. figure out what's useful.
-                //
-                // sorry, I know the encoding looks insane and weird and specific.  this reduced my
-                // save file size from 42MB to less than 13MB
-
-                // NOTE: must be uppercase letter or "=" or "-"
-                // if you add things here, make sure you understand the compression settings above.
-                string flagTxt;
-                switch (instance.TypeFlag)
-                {
-                    case Data.FlagType.Unreached: flagTxt = "U"; break;
-
-                    case Data.FlagType.Opcode: flagTxt = "-"; break;
-                    case Data.FlagType.Operand: flagTxt = "="; break;
-
-                    case Data.FlagType.Graphics: flagTxt = "G"; break;
-                    case Data.FlagType.Music: flagTxt = "M"; break;
-                    case Data.FlagType.Empty: flagTxt = "E"; break;
-                    case Data.FlagType.Text: flagTxt = "T"; break;
-
-                    case Data.FlagType.Data8Bit: flagTxt = "A"; break;
-                    case Data.FlagType.Data16Bit: flagTxt = "B"; break;
-                    case Data.FlagType.Data24Bit: flagTxt = "C"; break;
-                    case Data.FlagType.Data32Bit: flagTxt = "D"; break;
-
-                    case Data.FlagType.Pointer16Bit: flagTxt = "E"; break;
-                    case Data.FlagType.Pointer24Bit: flagTxt = "F"; break;
-                    case Data.FlagType.Pointer32Bit: flagTxt = "G"; break;
-
-                    default: throw new InvalidDataException("Unknown FlagType");
-                }
-
-                // max 6 bits if we want to fit in 1 base64 ASCII digit
-                byte otherFlags1 = (byte) (
-                    (instance.XFlag ? 1 : 0) << 0 | // 1 bit
-                    (instance.MFlag ? 1 : 0) << 1 | // 1 bit
-                    (byte)instance.Point     << 2   // 4 bits
-                );
-                // reminder: when decoding, have to cut off all but the first 6 bits
-                var o1_str = System.Convert.ToBase64String(new byte[] { otherFlags1 });
-                Debug.Assert(o1_str.Length == 4);
-                o1_str = o1_str.Remove(1);
-                
-                if (!instance.XFlag && !instance.MFlag && instance.Point == 0)
-                    Debug.Assert(o1_str == "A"); // sanity
-
-                // dumbest thing in the entire world.
-                // the more zeroes we output, the more compressed we get.
-                // let's swap "A" (index 0) for "0" (index 52).
-                // if you got here after being really fucking confused about why
-                // your Base64 encoding algo wasn't working, then I owe you a beer. super-sorry.
-                // you are now allowed to flip your desk over. say it with me
-                // "Damnit Dom!!! Y U DO THIS"
-                if (o1_str == "A") 
-                    o1_str = "0";       // get me that sweet, sweet zero
-                else if (o1_str == "0") 
-                    o1_str = "A";
-
-                // this is basically going to be "0" almost 100% of the time.
-                // we'll put it on the end of the string so it's most likely not output
-                byte otherFlags2 = (byte)(
-                    (byte)instance.Arch << 0 // 2 bits
-                );
-                var o2_str = otherFlags2.ToString("X1"); Debug.Assert(o2_str.Length == 1);
-
-                // ordering: put DB and D on the end, they're likely to be zero and compressible
-                string data =
-                    flagTxt + // 1
-                    o1_str +  // 1
-                    instance.DataBank.ToString("X2") +  // 2
-                    instance.DirectPage.ToString("X4") + // 4
-                    o2_str; // 1
-
-                Debug.Assert(data.Length == 9);
-
-                // light compression: chop off any trailing zeroes.
-                // this alone saves a giant amount of space.
-                data = data.TrimEnd(new Char[] {'0'});
-
-                // future compression but dilutes readability:
-                // if type is opcode or operand, combine 
-
-                return data;
-            }
-        }
-
-        public static void SaveProject(string filename)
-        {
-            var serializer = new ConfigurationContainer()
+            return new ConfigurationContainer()
                 .Type<TableData>().Register().Serializer().Using(TableDataSerializer.Default)
-                .UseOptimizedNamespaces()   //If you want to have all namespaces in root element
+                .UseOptimizedNamespaces()
+                .UseAutoFormatting()
+                .EnableImplicitTyping(typeof(Data))
+                .EnableImplicitTyping(typeof(Data.AliasInfo))
                 .Create();
-
-            var xml = serializer.Serialize(
-                new XmlWriterSettings {
-                    Indent = true
-                }, Data.Inst);
-
-            File.WriteAllText(filename + ".xml", xml);
         }
 
-        public static void SaveProjectORIG(string filename)
+        public void SaveProject(string filename)
+        {
+            // TODO: figure out how to not save Project.unsavedChanges property in XML
+
+            var file = filename + ".xml";
+            {
+                var xml = GetSerializer().Serialize(
+                    new XmlWriterSettings
+                    {
+                        Indent = true
+                    }, Project.Inst);
+
+                File.WriteAllText(file, xml);
+            }
+
+            var dataRead = OpenProjectXml(file);
+            bool equal = dataRead.Equals(Project.Inst);
+
+            for (int i = 0; i < dataRead.Data.table.RomBytes.Count; ++i)
+            {
+                if (!dataRead.Data.table[i].Equals(Project.Inst.Data.table[i]))
+                {
+                    int y = 3;
+                }
+            }
+
+            int x = 3;
+        }
+
+        public Project OpenProjectXml(string filename)
+        {
+            var loadingProject = GetSerializer().Deserialize<Project>(File.ReadAllText(filename));
+
+            byte[] rom;
+
+            // tmp
+            OpenFileDialog open = new OpenFileDialog();
+
+            if (ValidateROM(this.currentROMFile, InternalRomTitleName, InternalCheckSum, Project.Inst.Data.RomMapMode, out rom, open))
+            {
+                loadingProject.Data.CopyRomDataIn(rom);
+            }
+
+            return loadingProject;
+        }
+
+        public void SaveProjectORIG(string filename)
         {
             try
             {
@@ -349,7 +164,7 @@ namespace DiztinGUIsh
 
                 File.WriteAllBytes(filename, everything);
                 unsavedChanges = false;
-                currentFile = filename;
+                currentProjectFile = filename;
             }
             catch (Exception e)
             {
@@ -357,7 +172,7 @@ namespace DiztinGUIsh
             }
         }
 
-        private static byte[] SaveVersion(int version)
+        private byte[] SaveVersion(int version)
         {
             void SaveStringToBytes(string str, List<byte> bytes)
             {
@@ -379,14 +194,23 @@ namespace DiztinGUIsh
 
             int size = Data.Inst.GetROMSize();
             byte[] romSettings = new byte[31];
+
+            // save these two
             romSettings[0] = (byte)Data.Inst.GetROMMapMode();
             romSettings[1] = (byte)Data.Inst.GetROMSpeed();
+
+            // save the size, 4 bytes
             Util.IntegerIntoByteArray(size, romSettings, 2);
-            for (int i = 0; i < 0x15; i++) romSettings[6 + i] = (byte)Data.Inst.GetROMByte(Util.ConvertSNEStoPC(0xFFC0 + i));
-            for (int i = 0; i < 4; i++) romSettings[27 + i] = (byte)Data.Inst.GetROMByte(Util.ConvertSNEStoPC(0xFFDC + i));
+
+            var romName = GetRomNameFromRomBytes();
+            romName.ToCharArray().CopyTo(romSettings, 6);
+
+            var romChecksum = GetRomCheckSumsFromRomBytes();
+            BitConverter.GetBytes(romChecksum).CopyTo(romSettings, 27);
 
             // TODO put selected offset in save file
 
+            // save all labels ad comments
             List<byte> label = new List<byte>(), comment = new List<byte>();
             var all_labels = Data.Inst.GetAllLabels();
             var all_comments = Data.Inst.GetAllComments();
@@ -410,6 +234,7 @@ namespace DiztinGUIsh
                 SaveStringToBytes(pair.Value, comment);
             }
 
+            // save current Rom full path - "D:\projects\cthack\rom\ct-orig.smc"
             byte[] romLocation = Util.StringToByteArray(currentROMFile);
 
             byte[] data = new byte[romSettings.Length + romLocation.Length + 8 * size + label.Count + comment.Count];
@@ -432,7 +257,26 @@ namespace DiztinGUIsh
             return data;
         }
 
-        public static bool TryOpenProject(string filename, OpenFileDialog open)
+        private static byte[] GetRomBytes(int pcOffset, int count)
+        {
+            byte[] output = new byte[count];
+            for (int i = 0; i < output.Length; i++)
+                output[i] = (byte)Data.Inst.GetROMByte(Util.ConvertSNEStoPC(pcOffset + i));
+
+            return output;
+        }
+
+        private static string GetRomNameFromRomBytes()
+        {
+            return System.Text.Encoding.UTF8.GetString(GetRomBytes(0xFFC0, 21));
+        }
+
+        private static int GetRomCheckSumsFromRomBytes()
+        {
+            return Util.ByteArrayToInteger(GetRomBytes(0xFFDC, 4));
+        }
+
+        public bool TryOpenProject(string filename, OpenFileDialog open)
         {
             try
             {
@@ -452,7 +296,7 @@ namespace DiztinGUIsh
                 OpenProject(version, data, open);
 
                 unsavedChanges = false;
-                currentFile = filename;
+                currentProjectFile = filename;
                 return true;
             }
             catch (Exception e)
@@ -464,7 +308,7 @@ namespace DiztinGUIsh
 
         private delegate int AddressConverter(int address);
 
-        private static void OpenProject(int version, byte[] unzipped, OpenFileDialog open)
+        private void OpenProject(int version, byte[] unzipped, OpenFileDialog open)
         {
             if (version > LATEST_FILE_FORMAT_VERSION)
             {
@@ -489,20 +333,28 @@ namespace DiztinGUIsh
             if (version == 0)
                 converter = Util.ConvertPCtoSNES;
 
+            // read mode, speed, size
             Data.ROMMapMode mode = (Data.ROMMapMode)unzipped[HEADER_SIZE];
             Data.ROMSpeed speed = (Data.ROMSpeed)unzipped[HEADER_SIZE + 1];
             int size = Util.ByteArrayToInteger(unzipped, HEADER_SIZE + 2);
-            string romName = "", romLocation = "";
-            byte[] rom;
 
+            // read internal title
+            string romInternalTitle = "";
             int pointer = HEADER_SIZE + 6;
-            for (int i = 0; i < 0x15; i++) romName += (char) unzipped[pointer++];
+            for (int i = 0; i < 0x15; i++) romInternalTitle += (char) unzipped[pointer++];
+
+            // read checksums
             int checksums = Util.ByteArrayToInteger(unzipped, pointer);
             pointer += 4;
-            while (unzipped[pointer] != 0) romLocation += (char) unzipped[pointer++];
+
+            // read full filepath to the ROM .sfc file
+            string romFullFilepath = "";
+            while (unzipped[pointer] != 0) romFullFilepath += (char) unzipped[pointer++];
             pointer++;
 
-            if (ValidateROM(romLocation, romName, checksums, mode, out rom, open))
+            byte[] rom;
+
+            if (ValidateROM(romFullFilepath, romInternalTitle, checksums, mode, out rom, open))
             {
                 Data.Inst.Initiate(rom, mode, speed);
 
@@ -517,8 +369,12 @@ namespace DiztinGUIsh
 
                 AliasList.me.ResetDataGrid();
                 ReadAliases(unzipped, ref pointer, converter, version >= 2);
-
                 ReadComments(unzipped, ref pointer, converter);
+
+                // redundant but, needed for forwards-compatibility
+                InternalCheckSum = GetRomCheckSumsFromRomBytes();
+                InternalRomTitleName = GetRomNameFromRomBytes();
+                InternalRomSize = Data.Inst.GetROMSize();
             }
             else
             {
@@ -528,7 +384,7 @@ namespace DiztinGUIsh
 
         // TODO: refactor ReadComments and ReadAliases into one generic list-reading function
 
-        private static void ReadComments(byte[] unzipped, ref int pointer, AddressConverter converter)
+        private void ReadComments(byte[] unzipped, ref int pointer, AddressConverter converter)
         {
             var count = Util.ByteArrayToInteger(unzipped, pointer);
             pointer += 4;
@@ -544,7 +400,7 @@ namespace DiztinGUIsh
             }
         }
 
-        private static void ReadAliases(byte[] unzipped, ref int pointer, AddressConverter converter, bool readAliasComments)
+        private void ReadAliases(byte[] unzipped, ref int pointer, AddressConverter converter, bool readAliasComments)
         {
             int count = Util.ByteArrayToInteger(unzipped, pointer);
             pointer += 4;
@@ -564,11 +420,11 @@ namespace DiztinGUIsh
             }
         }
 
-        private static bool ValidateROM(string filename, string romName, int checksums, Data.ROMMapMode mode, out byte[] rom, OpenFileDialog open)
+        private bool ValidateROM(string filename, string romName, int checksums, Data.ROMMapMode mode, out byte[] rom, OpenFileDialog open)
         {
             bool validFile = false, matchingROM = false;
             rom = null;
-            open.InitialDirectory = currentFile;
+            open.InitialDirectory = currentProjectFile;
 
             while (!matchingROM)
             {
@@ -637,13 +493,13 @@ namespace DiztinGUIsh
             return true;
         }
 
-        private static bool IsUncompressedProject(string filename)
+        private bool IsUncompressedProject(string filename)
         {
             return Path.GetExtension(filename).Equals(".dizraw", StringComparison.InvariantCultureIgnoreCase);
         }
 
         // https://stackoverflow.com/questions/33119119/unzip-byte-array-in-c-sharp
-        private static byte[] TryUnzip(byte[] data)
+        private byte[] TryUnzip(byte[] data)
         {
             try
             {
@@ -661,7 +517,7 @@ namespace DiztinGUIsh
             }
         }
 
-        private static byte[] TryZip(byte[] data)
+        private byte[] TryZip(byte[] data)
         {
             try
             {
@@ -678,5 +534,36 @@ namespace DiztinGUIsh
                 return null;
             }
         }
+
+        protected bool Equals(Project other)
+        {
+            return currentProjectFile == other.currentProjectFile && currentROMFile == other.currentROMFile && Equals(Data, other.Data) && InternalRomTitleName == other.InternalRomTitleName && InternalCheckSum == other.InternalCheckSum && InternalRomSize == other.InternalRomSize;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Project) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (currentProjectFile != null ? currentProjectFile.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (currentROMFile != null ? currentROMFile.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (InternalRomTitleName != null ? InternalRomTitleName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ InternalCheckSum;
+                hashCode = (hashCode * 397) ^ InternalRomSize;
+                return hashCode;
+            }
+        }
+
+        // singleton
+        private static readonly Lazy<Project> instance = new Lazy<Project>(() => new Project());
+        public static Project Inst => instance.Value;
     }
 }

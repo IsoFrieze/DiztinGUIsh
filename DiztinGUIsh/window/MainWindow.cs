@@ -80,14 +80,14 @@ namespace DiztinGUIsh
         public void UpdateWindowTitle()
         {
             this.Text =
-                (Project.unsavedChanges ? "*" : "") +
-                (Project.currentFile == null ? "New Project" : Project.currentFile) +
+                (Project.Inst.unsavedChanges ? "*" : "") +
+                (Project.Inst.currentProjectFile == null ? "New Project" : Project.Inst.currentProjectFile) +
                 " - DiztinGUIsh";
         }
 
         private bool ContinueUnsavedChanges()
         {
-            if (Project.unsavedChanges)
+            if (Project.Inst.unsavedChanges)
             {
                 DialogResult confirm = MessageBox.Show("You have unsaved changes. They will be lost if you continue.",
                     "Unsaved Changes", MessageBoxButtons.OKCancel);
@@ -108,11 +108,11 @@ namespace DiztinGUIsh
         {
             if (ContinueUnsavedChanges())
             {
-                openROMFile.InitialDirectory = Project.currentFile;
+                openROMFile.InitialDirectory = Project.Inst.currentProjectFile;
                 DialogResult result = openROMFile.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    if (Project.NewProject(openROMFile.FileName))
+                    if (Project.Inst.NewProject(openROMFile.FileName))
                     {
                         importCDLToolStripMenuItem.Enabled = true;
                         TriggerSaveOptions(false, true);
@@ -130,7 +130,7 @@ namespace DiztinGUIsh
         {
             if (ContinueUnsavedChanges())
             {
-                openProjectFile.InitialDirectory = Project.currentFile;
+                openProjectFile.InitialDirectory = Project.Inst.currentProjectFile;
                 DialogResult result = openProjectFile.ShowDialog();
                 if (result == DialogResult.OK)
                 {
@@ -164,7 +164,7 @@ namespace DiztinGUIsh
 
         public void openProject(string filename)
         {
-            if (!Project.TryOpenProject(filename, openROMFile))
+            if (!Project.Inst.TryOpenProject(filename, openROMFile))
             {
                 LastProjectFilename = "";
             } 
@@ -184,17 +184,17 @@ namespace DiztinGUIsh
 
         private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Project.SaveProject(Project.currentFile);
+            Project.Inst.SaveProject(Project.Inst.currentProjectFile);
             UpdateWindowTitle();
         }
 
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            saveProjectFile.InitialDirectory = Project.currentROMFile;
+            saveProjectFile.InitialDirectory = Project.Inst.currentROMFile;
             DialogResult result = saveProjectFile.ShowDialog();
             if (result == DialogResult.OK && saveProjectFile.FileName != "")
             {
-                Project.SaveProject(saveProjectFile.FileName);
+                Project.Inst.SaveProject(saveProjectFile.FileName);
                 TriggerSaveOptions(true, true);
                 UpdateWindowTitle();
             }
@@ -202,7 +202,7 @@ namespace DiztinGUIsh
 
         private void importCDLToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openCDLDialog.InitialDirectory = Project.currentFile;
+            openCDLDialog.InitialDirectory = Project.Inst.currentProjectFile;
             DialogResult result = openCDLDialog.ShowDialog();
             if (result == DialogResult.OK)
             {
@@ -238,7 +238,7 @@ namespace DiztinGUIsh
                 string file = null, error = null;
                 if (LogCreator.structure == LogCreator.FormatStructure.SingleFile)
                 {
-                    saveLogSingleFile.InitialDirectory = Project.currentFile;
+                    saveLogSingleFile.InitialDirectory = Project.Inst.currentProjectFile;
                     result = saveLogSingleFile.ShowDialog();
                     if (result == DialogResult.OK && saveLogSingleFile.FileName != "")
                     {
@@ -248,7 +248,7 @@ namespace DiztinGUIsh
                 }
                 else
                 {
-                    chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.currentFile);
+                    chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.Inst.currentProjectFile);
                     result = chooseLogFolder.ShowDialog();
                     if (result == DialogResult.OK && chooseLogFolder.SelectedPath != "")
                     {

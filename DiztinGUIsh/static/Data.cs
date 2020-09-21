@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,24 @@ namespace DiztinGUIsh
 {
     public class TableData
     {
+        protected bool Equals(TableData other)
+        {
+            return Equals(RomBytes, other.RomBytes);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((TableData) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (RomBytes != null ? RomBytes.GetHashCode() : 0);
+        }
+
         public List<ROMByte> RomBytes { get; } = new List<ROMByte>();
         public ROMByte this[int i] {
             get => RomBytes[i];
@@ -19,11 +38,42 @@ namespace DiztinGUIsh
 
     public class Data
     {
-        // singleton
-        private static readonly Lazy<Data> instance = new Lazy<Data>(() => new Data());
-        public static Data Inst => instance.Value;
+        protected bool Equals(Data other)
+        {
+            return alias.Equals(other.alias) && RomMapMode == other.RomMapMode && rom_speed == other.rom_speed && comment.Equals(other.comment) && table.Equals(other.table);
+        }
 
-        public Data() {} // should be non-public but whatev
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Data) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = alias.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int) RomMapMode;
+                hashCode = (hashCode * 397) ^ (int) rom_speed;
+                hashCode = (hashCode * 397) ^ comment.GetHashCode();
+                hashCode = (hashCode * 397) ^ table.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        // singleton
+        // private static readonly Lazy<Data> instance = new Lazy<Data>(() => new Data());
+        // public static Data Inst => instance.Value;
+
+        // backwards compatibility only. from here on out, everything should reference Project.Inst.Data
+        public static Data Inst => Project.Inst.Data;
+
+
+        // public Data() {} // should be non-public for singleton but whatev for now.
+        // we shouldn't use singleton anyway, we should just pass around Data.
 
         public enum FlagType : byte
         {
@@ -86,13 +136,36 @@ namespace DiztinGUIsh
             EXHIROM_SETTING_OFFSET = 0x40FFD5,
             EXLOROM_SETTING_OFFSET = 0x407FD5;
 
+        // Note: order of these properties matters for the load/save process. Keep 'table' LAST
         public ROMMapMode RomMapMode { get; set; }
         public ROMSpeed rom_speed { get; set; }
-        public TableData table { get; set; }
         public Dictionary<int, string> comment { get; set; }
+        public TableData table { get; set; }
+
 
         public class AliasInfo
         {
+            protected bool Equals(AliasInfo other)
+            {
+                return name == other.name && comment == other.comment;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((AliasInfo) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((name != null ? name.GetHashCode() : 0) * 397) ^ (comment != null ? comment.GetHashCode() : 0);
+                }
+            }
+
             public string name = "";        // name of the label
             public string comment = "";     // user-generated text, comment only
 
@@ -126,6 +199,16 @@ namespace DiztinGUIsh
                     Point = 0
                 };
                 table.RomBytes.Add(r);
+            }
+        }
+
+        public void CopyRomDataIn(byte[] data)
+        {
+            int size = data.Length;
+            Debug.Assert(table.RomBytes.Count == size);
+            for (int i = 0; i < size; i++)
+            {
+                table[i].Rom = data[i];
             }
         }
 
