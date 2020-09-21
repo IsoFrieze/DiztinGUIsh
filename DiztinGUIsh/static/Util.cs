@@ -149,24 +149,24 @@ namespace DiztinGUIsh
 
         public static int ConvertPCtoSNES(int offset)
         {
-            if (Data.Inst.GetROMMapMode() == Data.ROMMapMode.LoROM)
+            if (Data.Inst.RomMapMode == Data.ROMMapMode.LoROM)
             {
                 offset = ((offset & 0x3F8000) << 1) | 0x8000 | (offset & 0x7FFF);
                 if (Data.Inst.GetROMSpeed() == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
             }
-            else if (Data.Inst.GetROMMapMode() == Data.ROMMapMode.HiROM)
+            else if (Data.Inst.RomMapMode == Data.ROMMapMode.HiROM)
             {
                 offset |= 0x400000;
                 if (Data.Inst.GetROMSpeed() == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
             }
-            else if (Data.Inst.GetROMMapMode() == Data.ROMMapMode.ExHiROM)
+            else if (Data.Inst.RomMapMode == Data.ROMMapMode.ExHiROM)
             {
                 if (offset < 0x40000) offset |= 0xC00000;
                 else if (offset >= 0x7E0000) offset &= 0x3FFFFF;
             }
             else
             {
-                if (offset >= 0x400000 && Data.Inst.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM)
+                if (offset >= 0x400000 && Data.Inst.RomMapMode == Data.ROMMapMode.ExSA1ROM)
                 {
                     offset += 0x800000;
                 }
@@ -187,7 +187,7 @@ namespace DiztinGUIsh
             // WRAM mirror & PPU regs are N/A to PC addressing
             if (((address & 0x400000) == 0) && ((address & 0x8000) == 0)) return -1;
 
-            switch (Data.Inst.GetROMMapMode())
+            switch (Data.Inst.RomMapMode)
             {
                 case Data.ROMMapMode.LoROM:
                     {
@@ -212,7 +212,7 @@ namespace DiztinGUIsh
 
                         if (address >= 0xC00000)
                         {
-                            if (Data.Inst.GetROMMapMode() == Data.ROMMapMode.ExSA1ROM)
+                            if (Data.Inst.RomMapMode == Data.ROMMapMode.ExSA1ROM)
                                 return UnmirroredOffset(address & 0x7FFFFF);
                             else
                                 return UnmirroredOffset(address & 0x3FFFFF);

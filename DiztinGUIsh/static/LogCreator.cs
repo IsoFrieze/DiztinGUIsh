@@ -64,7 +64,7 @@ namespace DiztinGUIsh
             var tempAlias = Data.Inst.GetAllLabels();
             Data.Inst.Restore(a: new Dictionary<int, Data.AliasInfo>(tempAlias));
             AliasList.me.locked = true;
-            bankSize = Data.Inst.GetROMMapMode() == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000; // todo
+            bankSize = Data.Inst.RomMapMode == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000; // todo
 
             AddTemporaryLabels();
 
@@ -432,7 +432,7 @@ namespace DiztinGUIsh
         private static string GetMap(int offset, int length)
         {
             string s = "";
-            switch (Data.Inst.GetROMMapMode())
+            switch (Data.Inst.RomMapMode)
             {
                 case Data.ROMMapMode.LoROM: s = "lorom"; break;
                 case Data.ROMMapMode.HiROM: s = "hirom"; break;

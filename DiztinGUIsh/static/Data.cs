@@ -8,13 +8,22 @@ using System.Threading.Tasks;
 
 namespace DiztinGUIsh
 {
+    public class TableData
+    {
+        public List<ROMByte> RomBytes { get; } = new List<ROMByte>();
+        public ROMByte this[int i] {
+            get => RomBytes[i];
+            set => RomBytes[i] = value;
+        }
+    }
+
     public class Data
     {
         // singleton
         private static readonly Lazy<Data> instance = new Lazy<Data>(() => new Data());
         public static Data Inst => instance.Value;
 
-        private Data() {}
+        public Data() {} // should be non-public but whatev
 
         public enum FlagType : byte
         {
@@ -77,10 +86,10 @@ namespace DiztinGUIsh
             EXHIROM_SETTING_OFFSET = 0x40FFD5,
             EXLOROM_SETTING_OFFSET = 0x407FD5;
 
-        private ROMMapMode rom_map_mode;
-        private ROMSpeed rom_speed;
-        private List<ROMByte> table;
-        private Dictionary<int, string> comment;
+        public ROMMapMode RomMapMode { get; set; }
+        public ROMSpeed rom_speed { get; set; }
+        public TableData table { get; set; }
+        public Dictionary<int, string> comment { get; set; }
 
         public class AliasInfo
         {
@@ -93,16 +102,16 @@ namespace DiztinGUIsh
                 if (name == null) name = "";
             }
         }
-        private Dictionary<int, AliasInfo> alias;
+        public Dictionary<int, AliasInfo> alias;
 
         public void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
         {
-            rom_map_mode = mode;
+            RomMapMode = mode;
             rom_speed = speed;
             int size = data.Length;
             alias = new Dictionary<int, AliasInfo>();
             comment = new Dictionary<int, string>();
-            table = new List<ROMByte>();
+            table = new TableData();
             for (int i = 0; i < size; i++)
             {
                 ROMByte r = new ROMByte
@@ -116,14 +125,14 @@ namespace DiztinGUIsh
                     Arch = Architechture.CPU65C816,
                     Point = 0
                 };
-                table.Add(r);
+                table.RomBytes.Add(r);
             }
         }
 
-        public void Restore(List<ROMByte> l = null, ROMMapMode m = ROMMapMode.LoROM, ROMSpeed s = ROMSpeed.Unknown, Dictionary<int, AliasInfo> a = null, Dictionary<int, string> c = null)
+        public void Restore(TableData l = null, ROMMapMode m = ROMMapMode.LoROM, ROMSpeed s = ROMSpeed.Unknown, Dictionary<int, AliasInfo> a = null, Dictionary<int, string> c = null)
         {
             table = l ?? table;
-            rom_map_mode = s == ROMSpeed.Unknown ? rom_map_mode : m;
+            RomMapMode = s == ROMSpeed.Unknown ? RomMapMode : m;
             rom_speed = s == ROMSpeed.Unknown ? rom_speed : s;
             alias = a ?? alias;
             comment = c ?? comment;
@@ -131,7 +140,7 @@ namespace DiztinGUIsh
 
         public ROMMapMode GetROMMapMode()
         {
-            return rom_map_mode;
+            return RomMapMode;
         }
 
         public ROMSpeed GetROMSpeed()
@@ -139,7 +148,7 @@ namespace DiztinGUIsh
             return rom_speed;
         }
 
-        public List<ROMByte> GetTable()
+        public TableData GetTable()
         {
             return table;
         }
@@ -151,7 +160,7 @@ namespace DiztinGUIsh
 
         public int GetROMSize()
         {
-            return table == null ? 0 : table.Count;
+            return table == null ? 0 : table.RomBytes.Count;
         }
 
         public FlagType GetFlag(int i)

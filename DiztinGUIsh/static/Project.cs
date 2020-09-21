@@ -1,12 +1,22 @@
 ﻿using DiztinGUIsh.window;
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Serialization;
+using ExtendedXmlSerializer;
+using ExtendedXmlSerializer.Configuration;
+using ExtendedXmlSerializer.ContentModel;
+using ExtendedXmlSerializer.ContentModel.Format;
 
 namespace DiztinGUIsh
 {
@@ -68,7 +78,262 @@ namespace DiztinGUIsh
 
         private const int LATEST_FILE_FORMAT_VERSION = 2;
 
+        /*sealed class RomByteSerializer : ISerializer<ROMByte>
+        {
+            public static RomByteSerializer Default { get; } = new RomByteSerializer();
+
+            RomByteSerializer() { }
+
+            public ROMByte Get(IFormatReader parameter)
+            {
+                //var parts = parameter.Content().Split('|');
+                //var result = new ROMByte(parts[0], int.Parse(parts[1]));
+                //return result;
+                throw new NotImplementedException();
+            }
+
+            public void Write(IFormatWriter writer, ROMByte instance)
+            {
+                // use a custom formatter here to save space. there are a LOT of ROMBytes.
+                // despite that we're still going for:
+                // 1) text only for slightly human readability
+                // 2) mergability in git/etc
+                //
+                // some of this can be unpacked further to increase readibility without
+                // hurting the filesize too much. figure out what's useful.
+
+                string flagTxt;
+                switch (instance.TypeFlag)
+                {
+                    case Data.FlagType.Unreached: flagTxt = "?"; break;
+                    case Data.FlagType.Opcode: flagTxt = "="; break;
+                    case Data.FlagType.Operand: flagTxt = "-"; break;
+                    case Data.FlagType.Graphics: flagTxt = "G"; break;
+                    case Data.FlagType.Music: flagTxt = "M"; break;
+                    case Data.FlagType.Empty: flagTxt = "E"; break;
+                    case Data.FlagType.Text: flagTxt = "T"; break;
+
+                    case Data.FlagType.Data8Bit: flagTxt = "1"; break;
+                    case Data.FlagType.Data16Bit: flagTxt = "2"; break;
+                    case Data.FlagType.Data24Bit: flagTxt = "3"; break;
+                    case Data.FlagType.Data32Bit: flagTxt = "4"; break;
+
+                    case Data.FlagType.Pointer16Bit: flagTxt = "p"; break;
+                    case Data.FlagType.Pointer24Bit: flagTxt = "P"; break;
+                    case Data.FlagType.Pointer32Bit: flagTxt = "X"; break;
+
+                    default: throw new InvalidDataException("Unknown FlagType");
+                }
+
+                // max 8 bits
+                byte otherFlags = (byte) (
+                    (instance.XFlag ? 0 : 1) << 0 |   // 1 bit
+                    (instance.MFlag ? 0 : 1) << 1 |   // 1 bit
+                    (byte)instance.Point     << 2 |   // 4 bits
+                    (byte)instance.Arch      << 6     // 2 bits
+                );
+
+                string data = 
+                    flagTxt +
+                    instance.DataBank.ToString("X2") +
+                    instance.DirectPage.ToString("X4") +
+                    otherFlags.ToString("X2");
+
+                Debug.Assert(data.Length == 9);
+                writer.Content(data);
+            }
+        }*/
+
+        sealed class TableDataSerializer : ISerializer<TableData>
+        {
+            public static TableDataSerializer Default { get; } = new TableDataSerializer();
+
+            TableDataSerializer() { }
+
+            public TableData Get(IFormatReader parameter)
+            {
+                /*var parts = parameter.Content().Split('|');
+                var result = new ROMByte(parts[0], int.Parse(parts[1]));
+                return result;*/
+                throw new NotImplementedException();
+            }
+
+            public void Write(IFormatWriter writer, TableData instance)
+            {
+                const bool compress_groupblock = true;
+
+                var lines = new List<string>();
+                foreach (var rb in instance.RomBytes)
+                {
+                    lines.Add(EncodeByte(rb));
+                }
+
+                var options = new List<string>();
+
+                if (compress_groupblock)
+                {
+                    options.Add("compress_groupblocks");
+                    ApplyCompression_GroupsBlocks(ref lines);
+                }
+
+                writer.Content($"\n{string.Join(",", options)}\n");
+
+                foreach (var line in lines)
+                {
+                    writer.Content(line + "\n");
+                }
+            }
+
+            public static void ApplyCompression_GroupsBlocks(ref List<string> lines)
+            {
+                if (lines.Count < 8)
+                    return; // forget it, too small to care.
+
+                var output = new List<string>();
+
+                var lastline = lines[0];
+                var consecutive = 1;
+
+                // adjustable, just pick something > 8 or it's not worth the optimization.
+                // we want to catch large consecutive blocks of data.
+                const int min_number_repeats_before_we_bother = 8;
+
+                for (var i = 0; i < lines.Count; ++i) {
+                    var line = lines[i];
+
+                    bool different = line != lastline;
+                    if (!different)
+                        consecutive++;
+
+                    if (!different && i != lines.Count)
+                        continue;
+
+                    if (consecutive >= min_number_repeats_before_we_bother) {
+                        // replace multiple repeated lines with one new statement
+                        output.Add($"r {consecutive.ToString()} {lastline}");
+                    } else {
+                        // output 1 or more copies of the last line
+                        // this is also how we print single lines too
+                        output.AddRange(Enumerable.Repeat(lastline, consecutive).ToList());
+                    }
+
+                    lastline = line;
+                    consecutive = 1;
+                }
+
+                lines = output;
+            }
+
+            public string EncodeByte(ROMByte instance)
+            {
+                // use a custom formatter here to save space. there are a LOT of ROMBytes.
+                // despite that we're still going for:
+                // 1) text only for slightly human readability
+                // 2) mergability in git/etc
+                //
+                // some of this can be unpacked further to increase readability without
+                // hurting the filesize too much. figure out what's useful.
+                //
+                // sorry, I know the encoding looks insane and weird and specific.  this reduced my
+                // save file size from 42MB to less than 13MB
+
+                // NOTE: must be uppercase letter or "=" or "-"
+                // if you add things here, make sure you understand the compression settings above.
+                string flagTxt;
+                switch (instance.TypeFlag)
+                {
+                    case Data.FlagType.Unreached: flagTxt = "U"; break;
+
+                    case Data.FlagType.Opcode: flagTxt = "-"; break;
+                    case Data.FlagType.Operand: flagTxt = "="; break;
+
+                    case Data.FlagType.Graphics: flagTxt = "G"; break;
+                    case Data.FlagType.Music: flagTxt = "M"; break;
+                    case Data.FlagType.Empty: flagTxt = "E"; break;
+                    case Data.FlagType.Text: flagTxt = "T"; break;
+
+                    case Data.FlagType.Data8Bit: flagTxt = "A"; break;
+                    case Data.FlagType.Data16Bit: flagTxt = "B"; break;
+                    case Data.FlagType.Data24Bit: flagTxt = "C"; break;
+                    case Data.FlagType.Data32Bit: flagTxt = "D"; break;
+
+                    case Data.FlagType.Pointer16Bit: flagTxt = "E"; break;
+                    case Data.FlagType.Pointer24Bit: flagTxt = "F"; break;
+                    case Data.FlagType.Pointer32Bit: flagTxt = "G"; break;
+
+                    default: throw new InvalidDataException("Unknown FlagType");
+                }
+
+                // max 6 bits if we want to fit in 1 base64 ASCII digit
+                byte otherFlags1 = (byte) (
+                    (instance.XFlag ? 1 : 0) << 0 | // 1 bit
+                    (instance.MFlag ? 1 : 0) << 1 | // 1 bit
+                    (byte)instance.Point     << 2   // 4 bits
+                );
+                // reminder: when decoding, have to cut off all but the first 6 bits
+                var o1_str = System.Convert.ToBase64String(new byte[] { otherFlags1 });
+                Debug.Assert(o1_str.Length == 4);
+                o1_str = o1_str.Remove(1);
+                
+                if (!instance.XFlag && !instance.MFlag && instance.Point == 0)
+                    Debug.Assert(o1_str == "A"); // sanity
+
+                // dumbest thing in the entire world.
+                // the more zeroes we output, the more compressed we get.
+                // let's swap "A" (index 0) for "0" (index 52).
+                // if you got here after being really fucking confused about why
+                // your Base64 encoding algo wasn't working, then I owe you a beer. super-sorry.
+                // you are now allowed to flip your desk over. say it with me
+                // "Damnit Dom!!! Y U DO THIS"
+                if (o1_str == "A") 
+                    o1_str = "0";       // get me that sweet, sweet zero
+                else if (o1_str == "0") 
+                    o1_str = "A";
+
+                // this is basically going to be "0" almost 100% of the time.
+                // we'll put it on the end of the string so it's most likely not output
+                byte otherFlags2 = (byte)(
+                    (byte)instance.Arch << 0 // 2 bits
+                );
+                var o2_str = otherFlags2.ToString("X1"); Debug.Assert(o2_str.Length == 1);
+
+                // ordering: put DB and D on the end, they're likely to be zero and compressible
+                string data =
+                    flagTxt + // 1
+                    o1_str +  // 1
+                    instance.DataBank.ToString("X2") +  // 2
+                    instance.DirectPage.ToString("X4") + // 4
+                    o2_str; // 1
+
+                Debug.Assert(data.Length == 9);
+
+                // light compression: chop off any trailing zeroes.
+                // this alone saves a giant amount of space.
+                data = data.TrimEnd(new Char[] {'0'});
+
+                // future compression but dilutes readability:
+                // if type is opcode or operand, combine 
+
+                return data;
+            }
+        }
+
         public static void SaveProject(string filename)
+        {
+            var serializer = new ConfigurationContainer()
+                .Type<TableData>().Register().Serializer().Using(TableDataSerializer.Default)
+                .UseOptimizedNamespaces()   //If you want to have all namespaces in root element
+                .Create();
+
+            var xml = serializer.Serialize(
+                new XmlWriterSettings {
+                    Indent = true
+                }, Data.Inst);
+
+            File.WriteAllText(filename + ".xml", xml);
+        }
+
+        public static void SaveProjectORIG(string filename)
         {
             try
             {
@@ -150,6 +415,7 @@ namespace DiztinGUIsh
             byte[] data = new byte[romSettings.Length + romLocation.Length + 8 * size + label.Count + comment.Count];
             romSettings.CopyTo(data, 0);
             for (int i = 0; i < romLocation.Length; i++) data[romSettings.Length + i] = romLocation[i];
+
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + i] = (byte)Data.Inst.GetDataBank(i);
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + size + i] = (byte)Data.Inst.GetDirectPage(i);
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 2 * size + i] = (byte)(Data.Inst.GetDirectPage(i) >> 8);

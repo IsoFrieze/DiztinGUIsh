@@ -1,23 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using DiztinGUIsh;
 
 
 class TextLoader
 {
-    void Save()
+    void Save(string filename)
     {
-        int size = Data.Inst.GetROMSize();
+        XmlSerializer serializer = new XmlSerializer(typeof(Data));
+        TextWriter writer = new StreamWriter(filename);
+
+        serializer.Serialize(writer, Data.Inst);
+        writer.Close();
+
+        // int size = Data.Inst.GetROMSize();
 
         // byte[] romSettings = new byte[31];
         //romSettings[0] = (byte)Data.Inst.GetROMMapMode();
         //romSettings[1] = (byte)Data.Inst.GetROMSpeed();
 
 
-        
+
         /*(Util.IntegerIntoByteArray(size, romSettings, 2);
         for (int i = 0; i < 0x15; i++) romSettings[6 + i] = (byte)Data.Inst.GetROMByte(Util.ConvertSNEStoPC(0xFFC0 + i));
         for (int i = 0; i < 4; i++) romSettings[27 + i] = (byte)Data.Inst.GetROMByte(Util.ConvertSNEStoPC(0xFFDC + i));

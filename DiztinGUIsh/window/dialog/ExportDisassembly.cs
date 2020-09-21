@@ -93,13 +93,13 @@ namespace DiztinGUIsh
         private void UpdateSample()
         {
             // cheeky way of using the same methods for disassembling a different set of data :^)
-            while (sampleTable.Count < 0x8000) sampleTable.Add(new ROMByte());
+            while (sampleTable.RomBytes.Count < 0x8000) sampleTable.RomBytes.Add(new ROMByte());
 
             using (MemoryStream mem = new MemoryStream())
             using (StreamWriter sw = new StreamWriter(mem))
             {
-                List<ROMByte> tempTable = Data.Inst.GetTable();
-                Data.ROMMapMode tempMode = Data.Inst.GetROMMapMode();
+                var tempTable = Data.Inst.GetTable();
+                Data.ROMMapMode tempMode = Data.Inst.RomMapMode;
                 Data.ROMSpeed tempSpeed = Data.Inst.GetROMSpeed();
                 var tempAlias = Data.Inst.GetAllLabels(); 
                 var tempComment = Data.Inst.GetAllComments();
@@ -121,8 +121,8 @@ namespace DiztinGUIsh
 
         // random sample code I made up; hopefully it shows a little bit of
         // everything so you can see how the settings will effect the output
-        public static List<ROMByte> sampleTable = new List<ROMByte>
-        {
+        public static TableData sampleTable = new TableData
+        { RomBytes = {
             new ROMByte {Rom = 0x78, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.InPoint},
             new ROMByte {Rom = 0xA9, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true},
             new ROMByte {Rom = 0x01, TypeFlag = Data.FlagType.Operand},
@@ -246,7 +246,7 @@ namespace DiztinGUIsh
             new ROMByte {Rom = 0x83, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x34, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x6D, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-        };
+        }};
 
         public static Dictionary<int, Data.AliasInfo> sampleAlias = new Dictionary<int, Data.AliasInfo>
         {
