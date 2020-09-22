@@ -100,7 +100,7 @@
             dataGridViewCellStyle17.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Alias.DefaultCellStyle = dataGridViewCellStyle17;
             this.Alias.HeaderText = "Label";
-            this.Alias.MaxInputLength = 20;
+            this.Alias.MaxInputLength = 60;
             this.Alias.Name = "Alias";
             this.Alias.Width = 138;
             // 
