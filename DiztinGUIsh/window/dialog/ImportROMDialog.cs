@@ -43,9 +43,9 @@ namespace DiztinGUIsh
             UpdateOffsetAndSpeed();
         }
 
-        public Dictionary<int, string> GetGeneratedLabels()
+        public Dictionary<int, Data.AliasInfo> GetGeneratedLabels()
         {
-            Dictionary<int, string> labels = new Dictionary<int, string>();
+            var labels = new Dictionary<int, Data.AliasInfo>();
             
             for (int i = 0; i < checkboxes.GetLength(0); i++)
             {
@@ -56,7 +56,8 @@ namespace DiztinGUIsh
                         int index = offset + 15 + 0x10 * i + 2 * j;
                         int val = data[index] + (data[index + 1] << 8);
                         int pc = Util.ConvertSNEStoPC(val);
-                        if (pc >= 0 && pc < data.Length && !labels.ContainsKey(val)) labels.Add(val, vectorNames[i, j]);
+                        if (pc >= 0 && pc < data.Length && !labels.ContainsKey(val)) 
+                            labels.Add(val, new Data.AliasInfo() {name = vectorNames[i, j]}); 
                     }
                 }
             }

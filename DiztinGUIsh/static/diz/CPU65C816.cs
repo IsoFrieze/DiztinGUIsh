@@ -218,7 +218,7 @@ namespace DiztinGUIsh
         {
             int address = Util.GetIntermediateAddress(offset);
             if (address < 0) return "";
-            if (Data.GetLabel(address) != "") return Data.GetLabel(address);
+            if (Data.GetLabelName(address) != "") return Data.GetLabelName(address);
 
             int count = BytesToShow(mode);
             if (mode == AddressMode.RELATIVE_8 || mode == AddressMode.RELATIVE_16) address = Util.GetROMWord(offset + 1);

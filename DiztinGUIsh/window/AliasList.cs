@@ -63,33 +63,57 @@ namespace DiztinGUIsh.window
             }
         }
 
+        private static void SplitOnFirstComma(string instr, out string first_part, out string remainder)
+        {
+            if (!instr.Contains(","))
+            {
+                first_part = instr;
+                remainder = "";
+                return;
+            }
+
+            first_part = instr.Substring(0, instr.IndexOf(','));
+            remainder = instr.Substring(instr.IndexOf(',') + 1);
+        }
+
         private void import_Click(object sender, EventArgs e)
         {
             DialogResult result = openFileDialog1.ShowDialog();
-            if (result == DialogResult.OK && openFileDialog1.FileName != "")
+            if (result != DialogResult.OK || openFileDialog1.FileName == "") 
+                return;
+            
+            int errLine = 0;
+            try
             {
-                int errLine = 0;
-                try
-                {
-                    Dictionary<int, string> newValues = new Dictionary<int, string>();
-                    string[] lines = File.ReadAllLines(openFileDialog1.FileName);
+                Dictionary<int, Data.AliasInfo> newValues = new Dictionary<int, Data.AliasInfo>();
+                string[] lines = File.ReadAllLines(openFileDialog1.FileName);
 
-                    for (int i = 0; i < lines.Length; i++) {
-                        errLine = i + 1;
-                        string addr = lines[i].Substring(0, lines[i].IndexOf(','));
-                        string label = lines[i].Substring(lines[i].IndexOf(',') + 1);
-                        newValues.Add(int.Parse(addr, NumberStyles.HexNumber, null), label); // todo (validate for valid label characters)
-                    }
+                // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
+                // section.
+                for (int i = 0; i < lines.Length; i++) {
+                    var aliasInfo = new Data.AliasInfo();
 
-                    foreach (KeyValuePair<int,string> pair in newValues) Data.AddLabel(pair.Key, pair.Value, true);
+                    errLine = i + 1;
+
+                    AliasList.SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
+                    AliasList.SplitOnFirstComma(remainder, out aliasInfo.name, out aliasInfo.comment);
+
+                    // todo (validate for valid label characters)
+                    newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), aliasInfo);
                 }
-                catch (Exception)
+
+                foreach (KeyValuePair<int, Data.AliasInfo> pair in newValues)
                 {
-                    MessageBox.Show(
-                        "An error occurred while parsing the file." +
-                        (errLine > 0 ? string.Format(" (Check line {0}.)", errLine) : ""),
-                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    pair.Value.CleanUp();
+                    Data.AddLabel(pair.Key, pair.Value, true);
                 }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show(
+                    "An error occurred while parsing the file." +
+                    (errLine > 0 ? string.Format(" (Check line {0}.)", errLine) : ""),
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -102,9 +126,10 @@ namespace DiztinGUIsh.window
                 {
                     using (StreamWriter sw = new StreamWriter(saveFileDialog1.FileName))
                     {
-                        foreach (KeyValuePair<int, string> pair in Data.GetAllLabels())
+                        foreach (var pair in Data.GetAllLabels())
                         {
-                            sw.WriteLine(string.Format("{0},{1}", Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6), pair.Value));
+                            sw.WriteLine(
+                                $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.name},{pair.Value.comment}");
                         }
                     }
                 } catch (Exception)
@@ -141,7 +166,12 @@ namespace DiztinGUIsh.window
             if (dataGridView1.Rows[e.RowIndex].IsNewRow) return;
             int val = -1, oldAddress = -1;
             int.TryParse((string)dataGridView1.Rows[e.RowIndex].Cells[0].Value, NumberStyles.HexNumber, null, out oldAddress);
-            string label = (string)dataGridView1.Rows[e.RowIndex].Cells[1].Value;
+
+            var labelAliasInfo = new Data.AliasInfo
+            {
+                name = (string) dataGridView1.Rows[e.RowIndex].Cells[1].Value,
+                comment = (string)dataGridView1.Rows[e.RowIndex].Cells[2].Value,
+            };
 
             toolStripStatusLabel1.Text = "";
 
@@ -168,8 +198,15 @@ namespace DiztinGUIsh.window
                 case 1:
                     {
                         val = oldAddress;
-                        label = e.FormattedValue.ToString();
+                        labelAliasInfo.name = e.FormattedValue.ToString();
                         // todo (validate for valid label characters)
+                        break;
+                    }
+                case 2:
+                    {
+                        val = oldAddress;
+                        labelAliasInfo.comment = e.FormattedValue.ToString();
+                        // todo (validate for valid comment characters, if any)
                         break;
                     }
             }
@@ -178,7 +215,7 @@ namespace DiztinGUIsh.window
             if (currentlyEditing >= 0)
             {
                 if (val >= 0) Data.AddLabel(oldAddress, null, true);
-                Data.AddLabel(val, label, true);
+                Data.AddLabel(val, labelAliasInfo, true);
             }
             locked = false;
 
@@ -186,11 +223,11 @@ namespace DiztinGUIsh.window
             mw.InvalidateTable();
         }
 
-        public void AddRow(int address, string alias)
+        public void AddRow(int address, Data.AliasInfo alias)
         {
             if (!locked)
             {
-                dataGridView1.Rows.Add(Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6), alias);
+                dataGridView1.Rows.Add(Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6), alias.name, alias.comment);
                 dataGridView1.Invalidate();
             }
         }

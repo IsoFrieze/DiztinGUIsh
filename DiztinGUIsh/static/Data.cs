@@ -63,14 +63,27 @@ namespace DiztinGUIsh
         private static ROMMapMode rom_map_mode;
         private static ROMSpeed rom_speed;
         private static List<ROMByte> table;
-        private static Dictionary<int, string> alias, comment;
+        private static Dictionary<int, string> comment;
+
+        public class AliasInfo
+        {
+            public string name = "";        // name of the label
+            public string comment = "";     // user-generated text, comment only
+
+            public void CleanUp()
+            {
+                if (comment == null) comment = "";
+                if (name == null) name = "";
+            }
+        }
+        private static Dictionary<int, AliasInfo> alias;
 
         public static void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
         {
             rom_map_mode = mode;
             rom_speed = speed;
             int size = data.Length;
-            alias = new Dictionary<int, string>();
+            alias = new Dictionary<int, AliasInfo>();
             comment = new Dictionary<int, string>();
             table = new List<ROMByte>();
             for (int i = 0; i < size; i++)
@@ -90,7 +103,7 @@ namespace DiztinGUIsh
             }
         }
 
-        public static void Restore(List<ROMByte> l = null, ROMMapMode m = ROMMapMode.LoROM, ROMSpeed s = ROMSpeed.Unknown, Dictionary<int, string> a = null, Dictionary<int, string> c = null)
+        public static void Restore(List<ROMByte> l = null, ROMMapMode m = ROMMapMode.LoROM, ROMSpeed s = ROMSpeed.Unknown, Dictionary<int, AliasInfo> a = null, Dictionary<int, string> c = null)
         {
             table = l ?? table;
             rom_map_mode = s == ROMSpeed.Unknown ? rom_map_mode : m;
@@ -210,13 +223,22 @@ namespace DiztinGUIsh
             table[i].XFlag = ((mx & 0x10) != 0);
         }
 
-        public static string GetLabel(int i)
+        public static string GetLabelName(int i)
         {
-            if (alias.TryGetValue(i, out string val)) return val;
+            if (alias.TryGetValue(i, out AliasInfo val)) 
+                return val?.name ?? "";
+
+            return "";
+        }
+        public static string GetLabelComment(int i)
+        {
+            if (alias.TryGetValue(i, out AliasInfo val)) 
+                return val?.comment ?? "";
+
             return "";
         }
 
-        public static void AddLabel(int i, string v, bool overwrite)
+        public static void AddLabel(int i, AliasInfo v, bool overwrite)
         {
             if (v == null)
             {
@@ -225,8 +247,7 @@ namespace DiztinGUIsh
                     alias.Remove(i);
                     AliasList.me.RemoveRow(i);
                 }
-            } else
-            {
+            } else {
                 if (alias.ContainsKey(i) && overwrite)
                 {
                     alias.Remove(i);
@@ -234,13 +255,15 @@ namespace DiztinGUIsh
                 }
                 if (!alias.ContainsKey(i))
                 {
+                    v.CleanUp();
+
                     alias.Add(i, v);
                     AliasList.me.AddRow(i, v);
                 }
             }
         }
 
-        public static Dictionary<int, string> GetAllLabels()
+        public static Dictionary<int, AliasInfo> GetAllLabels()
         {
             return alias;
         }

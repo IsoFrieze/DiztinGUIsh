@@ -1,6 +1,7 @@
 ﻿using DiztinGUIsh.window;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -49,6 +50,8 @@ namespace DiztinGUIsh
         public static int dataPerLine = 8;
         public static FormatUnlabeled unlabeled = FormatUnlabeled.ShowInPoints;
         public static FormatStructure structure = FormatStructure.OneBankPerFile;
+        public static bool includeUnusedLabels;
+        public static bool printLabelSpecificComments;
 
         private static List<Tuple<string, int>> list;
         private static List<int> usedLabels;
@@ -58,8 +61,8 @@ namespace DiztinGUIsh
 
         public static int CreateLog(StreamWriter sw, StreamWriter er)
         {
-            Dictionary<int, string> tempAlias = Data.GetAllLabels();
-            Data.Restore(a: new Dictionary<int, string>(tempAlias));
+            var tempAlias = Data.GetAllLabels();
+            Data.Restore(a: new Dictionary<int, Data.AliasInfo>(tempAlias));
             AliasList.me.locked = true;
             bankSize = Data.GetROMMapMode() == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000; // todo
 
@@ -115,33 +118,71 @@ namespace DiztinGUIsh
                     bank = snes >> 16;
                 }
 
-                if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0 || (tempAlias.TryGetValue(pointer, out string label) && label.Length > 0)) sw.WriteLine(GetLine(pointer, "empty"));
+                var c1 = (Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0;
+                var c2 = (tempAlias.TryGetValue(pointer, out var aliasInfo) && aliasInfo.name.Length > 0);
+                if (c1 || c2) 
+                    sw.WriteLine(GetLine(pointer, "empty"));
+
                 sw.WriteLine(GetLine(pointer, null));
                 if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) sw.WriteLine(GetLine(pointer, "empty"));
                 pointer += GetLineByteLength(pointer);
             }
 
-            if (structure == FormatStructure.OneBankPerFile)
-            {
-                sw.Close();
-                sw = new StreamWriter(string.Format("{0}/labels.asm", folder));
-            } else
-            {
-                sw.WriteLine(GetLine(pointer, "empty"));
-            }
-
-            foreach (KeyValuePair<int, string> pair in Data.GetAllLabels())
-            {
-                if (!usedLabels.Contains(pair.Key))
-                {
-                    sw.WriteLine(GetLine(pair.Key, "labelassign"));
-                }
-            }
+            WriteLabels(ref sw, pointer);
 
             if (structure == FormatStructure.OneBankPerFile) sw.Close();
             Data.Restore(a: tempAlias);
             AliasList.me.locked = false;
             return errorCount;
+        }
+
+        private static void WriteLabels(ref StreamWriter sw, int pointer)
+        {
+            SwitchOutputFile(ref sw, pointer, $"{folder}/labels.asm");
+
+            Dictionary<int, Data.AliasInfo> listToPrint = new Dictionary<int, Data.AliasInfo>();
+
+            // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
+            foreach (var pair in Data.GetAllLabels())
+            {
+                if (usedLabels.Contains(pair.Key)) 
+                    continue;
+
+                // this label was not defined elsewhere in our disassembly, so we need to include it in labels.asm
+                listToPrint.Add(pair.Key, pair.Value);
+            }
+
+            foreach (var pair in listToPrint)
+            {
+                sw.WriteLine(GetLine(pair.Key, "labelassign"));
+            }
+
+            // part 2: optional: if requested, print all labels regardless of use.
+            // Useful for debugging, documentation, or reverse engineering workflow.
+            // this file shouldn't need to be included in the build, it's just reference documentation
+            if (includeUnusedLabels)
+            {
+                SwitchOutputFile(ref sw, pointer, $"{folder}/all-labels.txt");
+                foreach (var pair in Data.GetAllLabels())
+                {
+                    // not the best place to add formatting, TODO: cleanup
+                    var category = listToPrint.ContainsKey(pair.Key) ? "INLINE" : "EXTRA ";
+                    sw.WriteLine($";!^!-{category}-! " + GetLine(pair.Key, "labelassign"));
+                }
+            }
+        }
+
+        private static void SwitchOutputFile(ref StreamWriter sw, int pointer, string path)
+        {
+            if (structure == FormatStructure.OneBankPerFile)
+            {
+                sw.Close();
+                sw = new StreamWriter(path);
+            }
+            else
+            {
+                sw.WriteLine(GetLine(pointer, "empty"));
+            }
         }
 
         private static void AddTemporaryLabels()
@@ -166,7 +207,15 @@ namespace DiztinGUIsh
             }
 
             // TODO +/- labels
-            for (int i = 0; i < addMe.Count; i++) Data.AddLabel(addMe[i], Util.GetDefaultLabel(addMe[i]), false);
+            for (int i = 0; i < addMe.Count; i++)
+            {
+                Data.AddLabel(addMe[i], 
+                    new Data.AliasInfo()
+                    {
+                        name = Util.GetDefaultLabel(addMe[i])
+                    }, 
+                    false);
+            }
         }
 
         private static string GetLine(int offset, string special)
@@ -277,7 +326,7 @@ namespace DiztinGUIsh
                 min < max &&
                 offset + min < size &&
                 Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
-                Data.GetLabel(Util.ConvertPCtoSNES(offset + min)) == "" &&
+                Data.GetLabelName(Util.ConvertPCtoSNES(offset + min)) == "" &&
                 (offset + min) / bankSize == myBank
             ) min += step;
             return min;
@@ -306,7 +355,10 @@ namespace DiztinGUIsh
         private static string GetLabel(int offset, int length)
         {
             int snes = Util.ConvertPCtoSNES(offset);
-            string label = Data.GetLabel(snes);
+            string label = Data.GetLabelName(snes);
+            if (label == null)
+                return "";
+            
             usedLabels.Add(snes);
             bool noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
             return string.Format("{0," + (length * -1) + "}", label + (noColon ? "" : ":"));
@@ -467,7 +519,23 @@ namespace DiztinGUIsh
         // output label at snes offset, and its value
         private static string GetLabelAssign(int offset, int length)
         {
-            string s = string.Format("{0} = {1}", Data.GetLabel(offset), Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true));
+            var labelName = Data.GetLabelName(offset);
+            var offsetStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true);
+            var labelComment = Data.GetLabelComment(offset);
+
+            if (string.IsNullOrEmpty(labelName))
+                return "";
+
+            if (labelComment == null)
+                labelComment = "";
+
+            var finalCommentText = "";
+
+            // TODO: sorry, probably not the best way to stuff this in here, consider putting it in the %comment% section in the future. -Dom
+            if (printLabelSpecificComments && labelComment != "")
+                finalCommentText = $"; !^ {labelComment} ^!";
+
+            string s = $"{labelName} = {offsetStr}{finalCommentText}";
             return string.Format("{0," + (length * -1) + "}", s);
         }
     }
