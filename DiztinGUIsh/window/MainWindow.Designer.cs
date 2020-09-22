@@ -132,6 +132,7 @@
             this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
             this.saveLogSingleFile = new System.Windows.Forms.SaveFileDialog();
             this.chooseLogFolder = new System.Windows.Forms.FolderBrowserDialog();
+            this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
             this.labelListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
@@ -417,6 +418,7 @@
             this.importCDLToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
             this.importCDLToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.importCDLToolStripMenuItem.Text = "Import CDL...";
+            this.importCDLToolStripMenuItem.Click += new System.EventHandler(this.importCDLToolStripMenuItem_Click);
             // 
             // importTraceLogToolStripMenuItem
             // 
@@ -954,6 +956,10 @@
             this.labelListToolStripMenuItem.Text = "Label List";
             this.labelListToolStripMenuItem.Click += new System.EventHandler(this.labelListToolStripMenuItem_Click);
             // 
+            // openCDLDialog
+            // 
+            this.openCDLDialog.Filter = "BizHawk Code Data Logger Files|*.cdl|All Files|*.*";
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1075,6 +1081,7 @@
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moveWithStepToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem labelListToolStripMenuItem;
+        private System.Windows.Forms.OpenFileDialog openCDLDialog;
     }
 }
 
