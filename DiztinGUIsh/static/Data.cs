@@ -13,7 +13,7 @@ namespace DiztinGUIsh
     {
         protected bool Equals(TableData other)
         {
-            return Equals(RomBytes, other.RomBytes);
+            return RomBytes.SequenceEqual(other.RomBytes);
         }
 
         public override bool Equals(object obj)
@@ -40,7 +40,7 @@ namespace DiztinGUIsh
     {
         protected bool Equals(Data other)
         {
-            return alias.Equals(other.alias) && RomMapMode == other.RomMapMode && rom_speed == other.rom_speed && comment.Equals(other.comment) && table.Equals(other.table);
+            return alias.SequenceEqual(other.alias) && RomMapMode == other.RomMapMode && rom_speed == other.rom_speed && comment.SequenceEqual(other.comment) && table.Equals(other.table);
         }
 
         public override bool Equals(object obj)

@@ -1,23 +1,13 @@
 ﻿using DiztinGUIsh.window;
 using System;
-using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
-using System.Xml.Serialization;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
-using ExtendedXmlSerializer.ContentModel;
-using ExtendedXmlSerializer.ContentModel.Format;
 
 namespace DiztinGUIsh
 {
@@ -107,28 +97,26 @@ namespace DiztinGUIsh
             // TODO: figure out how to not save Project.unsavedChanges property in XML
 
             var file = filename + ".xml";
+            var xml = GetSerializer().Serialize(new XmlWriterSettings { Indent = true }, Project.Inst);
+            File.WriteAllText(file, xml);
+
+            var project = OpenProjectXml(file);
+            DebugVerifyProjectEquality(Project.Inst, project);
+        }
+
+        private void DebugVerifyProjectEquality(Project project1, Project project2, bool deepcut=true)
+        {
+            if (deepcut)
             {
-                var xml = GetSerializer().Serialize(
-                    new XmlWriterSettings
-                    {
-                        Indent = true
-                    }, Project.Inst);
-
-                File.WriteAllText(file, xml);
-            }
-
-            var dataRead = OpenProjectXml(file);
-            bool equal = dataRead.Equals(Project.Inst);
-
-            for (int i = 0; i < dataRead.Data.table.RomBytes.Count; ++i)
-            {
-                if (!dataRead.Data.table[i].Equals(Project.Inst.Data.table[i]))
+                for (int i = 0; i < project1.Data.table.RomBytes.Count; ++i)
                 {
-                    int y = 3;
+                    Debug.Assert(project1.Data.table[i].Equals(project2.Data.table[i]));
                 }
-            }
 
-            int x = 3;
+                Debug.Assert(project1.Data.table.Equals(project2.Data.table));
+                Debug.Assert(project1.Data.Equals(project2.Data));
+            }
+            Debug.Assert(project1.Equals(Project.Inst));
         }
 
         public Project OpenProjectXml(string filename)

@@ -20,10 +20,9 @@ using DiztinGUIsh;
 // but, for projects with multiple collaborators using diztinGUIsh, mergability in text/git/editors/etc
 // is a must.  We aim for a tradeoff between decent compression and some small semblance of human readability.
 //
-// It's not.. super-pretty but it gets the job done.
+// It's not.. super-pretty code, but it compresses well.
 sealed class TableDataSerializer : ISerializer<TableData>
 {
-
     public static TableDataSerializer Default { get; } = new TableDataSerializer();
 
     TableDataSerializer() { }
@@ -43,7 +42,7 @@ sealed class TableDataSerializer : ISerializer<TableData>
 
         // always apply options in same order here and in saving function
         if (options.Exists(s => s == "compress_table_1"))
-            UndoCompression_Table1(ref lines);
+            DecodeCompression_Table1(ref lines);
 
         if (options.Exists(s => s == "compress_groupblocks"))
             UndoCompression_GroupsBlocks(ref lines);
@@ -73,7 +72,12 @@ sealed class TableDataSerializer : ISerializer<TableData>
         var lines = new List<string>();
         foreach (var rb in instance.RomBytes)
         {
-            lines.Add(EncodeByte(rb));
+            var encoded = EncodeByte(rb);
+            lines.Add(encoded);
+
+            // debug check, optional:
+            var decoded = DecodeRomByte(encoded);
+            Debug.Assert(decoded.EqualsButNoRomByte(rb));
         }
 
         if (compress_groupblock)
@@ -85,7 +89,7 @@ sealed class TableDataSerializer : ISerializer<TableData>
         if (compress_using_table_1)
         {
             options.Add("compress_table_1");
-            ApplyCompression_Table1(ref lines);
+            EncodeCompression_Table1(ref lines);
         }
 
         writer.Content($"\n{string.Join(",", options)}\n");
@@ -101,22 +105,23 @@ sealed class TableDataSerializer : ISerializer<TableData>
         public string Pattern;
         public string c;
     }
-
     private static List<CompressionEntry> table1 = new List<CompressionEntry>
-            {
-                new CompressionEntry() {Pattern = "0001E", c="ZQ"},
-                new CompressionEntry() {Pattern = "B0001", c="Zq"},
-                new CompressionEntry() {Pattern = "C0001", c="ZX"},
-                new CompressionEntry() {Pattern = "B7E", c="Zx"},
-                new CompressionEntry() {Pattern = "07F01", c="ZY"},
-                new CompressionEntry() {Pattern = "0001D", c="Zy"},
-                new CompressionEntry() {Pattern = "C7E", c="ZZ"},
-                new CompressionEntry() {Pattern = "07E", c="Zz"},
-                new CompressionEntry() {Pattern = "00001", c="ZS"},
-                new CompressionEntry() {Pattern = "0001", c="Zs"},
-            };
+    {
+        new CompressionEntry() {Pattern = "0001E", c="ZQ"},
+        new CompressionEntry() {Pattern = "B0001", c="Zq"},
+        new CompressionEntry() {Pattern = "C0001", c="ZX"},
+        new CompressionEntry() {Pattern = "B7E", c="Zx"},
+        new CompressionEntry() {Pattern = "07F01", c="ZY"},
+        new CompressionEntry() {Pattern = "0001D", c="Zy"},
+        new CompressionEntry() {Pattern = "C7E", c="ZZ"},
+        new CompressionEntry() {Pattern = "07E", c="Zz"},
+        new CompressionEntry() {Pattern = "00001", c="ZS"},
+        new CompressionEntry() {Pattern = "0001", c="Zs"},
+    };
 
-    private void UndoCompression_Table1(ref List<string> lines)
+
+
+    private void DecodeCompression_Table1(ref List<string> lines)
     {
         for (int i = 0; i < lines.Count; ++i)
         {
@@ -127,7 +132,7 @@ sealed class TableDataSerializer : ISerializer<TableData>
         }
     }
 
-    private void ApplyCompression_Table1(ref List<string> lines)
+    private void EncodeCompression_Table1(ref List<string> lines)
     {
         // kind of a manually made / crappy huffman table encoding type thing.
         // this is no great work of genius, more just some cheap hacks to reduce filesize
@@ -278,13 +283,8 @@ sealed class TableDataSerializer : ISerializer<TableData>
 
         newByte.Arch = (Data.Architechture)((o2_str >> 0) & 0x3);
 
-        // un-screw-up the base64 dumb thing we do on the encode
-        if (o1_str == "A") o1_str = "0"; else if (o1_str == "0") o1_str = "A";
-
-        var superHackyBase64 = o1_str + "A=="; // we dont care about > 6 bits.
-        var originalBytes = Convert.FromBase64CharArray(superHackyBase64.ToCharArray(), 0, superHackyBase64.Length);
-        Debug.Assert(originalBytes.Length == 1);
-        byte otherFlags1 = originalBytes[0];
+        var otherFlags1 = DecodeHackyBase64(o1_str);
+        Debug.Assert(EncodeHackyBase64(otherFlags1) == o1_str);
 
         newByte.XFlag = ((otherFlags1 >> 2) & 0x1) != 0;
         newByte.MFlag = ((otherFlags1 >> 3) & 0x1) != 0;
@@ -305,6 +305,7 @@ sealed class TableDataSerializer : ISerializer<TableData>
 
         return newByte;
     }
+
 
     private string EncodeByte(ROMByte instance)
     {
@@ -342,25 +343,11 @@ sealed class TableDataSerializer : ISerializer<TableData>
             // LEAVE OFF THE LAST 2 BITS. it'll mess with the base64 below
         );
         // reminder: when decoding, have to cut off all but the first 6 bits
-        var o1_str = System.Convert.ToBase64String(new byte[] { otherFlags1 });
-        Debug.Assert(o1_str.Length == 4);
-        Debug.Assert(o1_str.Substring(1) == "A==");
-        o1_str = o1_str.Remove(1);
+        var o1_str = EncodeHackyBase64(otherFlags1);
+        Debug.Assert(DecodeHackyBase64(o1_str) == otherFlags1);
 
         if (!instance.XFlag && !instance.MFlag && instance.Point == 0)
-            Debug.Assert(o1_str == "A"); // sanity
-
-        // dumbest thing in the entire world.
-        // the more zeroes we output, the more compressed we get.
-        // let's swap "A" (index 0) for "0" (index 52).
-        // if you got here after being really fucking confused about why
-        // your Base64 encoding algo wasn't working, then I owe you a beer. super-sorry.
-        // you are now allowed to flip your desk over. say it with me
-        // "Damnit Dom!!! Y U DO THIS"
-        if (o1_str == "A")
-            o1_str = "0";       // get me that sweet, sweet zero
-        else if (o1_str == "0")
-            o1_str = "A";
+            Debug.Assert(o1_str == "0"); // sanity
 
         // this is basically going to be "0" almost 100% of the time.
         // we'll put it on the end of the string so it's most likely not output
@@ -389,5 +376,39 @@ sealed class TableDataSerializer : ISerializer<TableData>
         // instead of "=---", we swap with "+" or something. small optimization.
 
         return data;
+    }
+
+    private static void Swap0forA(ref string input)
+    {
+        // dumbest thing in the entire world.
+        // the more zeroes we output, the more compressed we get.
+        // let's swap "A" (index 0) for "0" (index 52).
+        // if you got here after being really fucking confused about why
+        // your Base64 encoding algo wasn't working, then I owe you a beer. super-sorry.
+        // you are now allowed to flip your desk over. say it with me
+        // "Damnit Dom!!! Y U DO THIS"
+        if (input == "A") 
+            input = "0";
+        else if (input == "0") 
+            input = "A";
+    }
+
+    private static byte DecodeHackyBase64(string input)
+    {
+        Swap0forA(ref input);
+        var superHackyBase64 = input + "A=="; // we dont care about > 6 bits, so we can fake this.
+        var result = Convert.FromBase64CharArray(superHackyBase64.ToCharArray(), 0, superHackyBase64.Length);
+        Debug.Assert(result.Length == 1);
+        return result[0];
+    }
+
+    private static string EncodeHackyBase64(byte input)
+    {
+        var output = System.Convert.ToBase64String(new byte[] {input});
+        Debug.Assert(output.Length == 4);
+        Debug.Assert(output.Substring(1) == "A==");
+        output = output.Remove(1);
+        Swap0forA(ref output);
+        return output;
     }
 }

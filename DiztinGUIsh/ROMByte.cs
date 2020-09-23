@@ -10,7 +10,12 @@ namespace DiztinGUIsh
     {
         protected bool Equals(ROMByte other)
         {
-            return Rom == other.Rom && DataBank == other.DataBank && DirectPage == other.DirectPage && XFlag == other.XFlag && MFlag == other.MFlag && TypeFlag == other.TypeFlag && Arch == other.Arch && Point == other.Point;
+            return Rom == other.Rom && EqualsButNoRomByte(other);
+        }
+
+        public bool EqualsButNoRomByte(ROMByte other)
+        {
+            return DataBank == other.DataBank && DirectPage == other.DirectPage && XFlag == other.XFlag && MFlag == other.MFlag && TypeFlag == other.TypeFlag && Arch == other.Arch && Point == other.Point;
         }
 
         public override bool Equals(object obj)
