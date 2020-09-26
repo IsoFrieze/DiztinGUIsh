@@ -12,10 +12,10 @@ namespace DiztinGUIsh
 {
     public partial class ImportROMDialog : Form
     {
-        private Data.ROMMapMode mode;
-        private Data.ROMSpeed speed;
+        private Project.ImportRomSettings importSettings;
+        private bool couldnt_detect_rom_type;
+
         private string title;
-        private byte[] data;
         private int offset;
         private string[,] vectorNames = new string[2, 6]
         {
@@ -25,7 +25,28 @@ namespace DiztinGUIsh
         private TextBox[,] vectors;
         private CheckBox[,] checkboxes;
 
-        public ImportROMDialog(byte [] rom)
+        public Project.ImportRomSettings PromptForImportSettings(string filename)
+        {
+            importSettings = new Project.ImportRomSettings
+            {
+                rom_filename = filename,
+                rom_bytes = Util.ReadAllRomBytesFromFile(filename),
+                ROMMapMode = Util.DetectROMMapMode(importSettings.rom_bytes, out couldnt_detect_rom_type)
+            };
+
+            UpdateUIFromRomMapDetection();
+            UpdateOffsetAndSpeed();
+
+            if (ShowDialog() != DialogResult.OK)
+                importSettings = null;
+
+            importSettings.InitialLabels = GetGeneratedLabels();
+            importSettings.InitialHeaderFlags = GetHeaderFlags();
+
+            return importSettings;
+        }
+
+        public ImportROMDialog()
         {
             InitializeComponent();
             vectors = new TextBox[2, 6]
@@ -38,36 +59,33 @@ namespace DiztinGUIsh
                 { checkboxNativeCOP, checkboxNativeBRK, checkboxNativeABORT, checkboxNativeNMI, checkboxNativeRESET, checkboxNativeIRQ },
                 { checkboxEmuCOP, checkboxEmuBRK, checkboxEmuABORT, checkboxEmuNMI, checkboxEmuRESET, checkboxEmuIRQ },
             };
-            data = rom;
-            mode = DetectROMMapMode();
-            UpdateOffsetAndSpeed();
         }
 
-        public Dictionary<int, Data.AliasInfo> GetGeneratedLabels()
+        private Dictionary<int, Label> GetGeneratedLabels()
         {
-            var labels = new Dictionary<int, Data.AliasInfo>();
+            var labels = new Dictionary<int, Label>();
             
             for (int i = 0; i < checkboxes.GetLength(0); i++)
             {
                 for (int j = 0; j < checkboxes.GetLength(1); j++)
                 {
-                    if (checkboxes[i, j].Checked)
-                    {
-                        int index = offset + 15 + 0x10 * i + 2 * j;
-                        int val = data[index] + (data[index + 1] << 8);
-                        int pc = Util.ConvertSNEStoPC(val);
-                        if (pc >= 0 && pc < data.Length && !labels.ContainsKey(val)) 
-                            labels.Add(val, new Data.AliasInfo() {name = vectorNames[i, j]}); 
-                    }
+                    if (!checkboxes[i, j].Checked) 
+                        continue;
+
+                    int index = offset + 15 + 0x10 * i + 2 * j;
+                    int val = importSettings.rom_bytes[index] + (importSettings.rom_bytes[index + 1] << 8);
+                    int pc = Util.ConvertSNESToPC(val, importSettings.ROMMapMode, importSettings.rom_bytes.Length);
+                    if (pc >= 0 && pc < importSettings.rom_bytes.Length && !labels.ContainsKey(val)) 
+                        labels.Add(val, new Label() {name = vectorNames[i, j]});
                 }
             }
 
             return labels;
         }
 
-        public Dictionary<int, Data.FlagType> GetHeaderFlags()
+        private Dictionary<int, Data.FlagType> GetHeaderFlags()
         {
-            Dictionary<int, Data.FlagType> flags = new Dictionary<int, Data.FlagType>();
+            var flags = new Dictionary<int, Data.FlagType>();
 
             if (checkHeader.Checked)
             {
@@ -76,13 +94,13 @@ namespace DiztinGUIsh
                 for (int i = 0; i < 4; i++) flags.Add(offset + 7 + i, Data.FlagType.Data16Bit);
                 for (int i = 0; i < 0x20; i++) flags.Add(offset + 11 + i, Data.FlagType.Pointer16Bit);
 
-                if (data[offset - 1] == 0)
+                if (importSettings.rom_bytes[offset - 1] == 0)
                 {
                     flags.Remove(offset - 1);
                     flags.Add(offset - 1, Data.FlagType.Data8Bit);
                     for (int i = 0; i < 0x10; i++) flags.Add(offset - 0x25 + i, Data.FlagType.Data8Bit);
                 }
-                else if (data[offset + 5] == 0x33)
+                else if (importSettings.rom_bytes[offset + 5] == 0x33)
                 {
                     for (int i = 0; i < 6; i++) flags.Add(offset - 0x25 + i, Data.FlagType.Text);
                     for (int i = 0; i < 10; i++) flags.Add(offset - 0x1F + i, Data.FlagType.Data8Bit);
@@ -92,106 +110,74 @@ namespace DiztinGUIsh
             return flags;
         }
 
-        private Data.ROMMapMode DetectROMMapMode()
+        private void UpdateUIFromRomMapDetection()
         {
-            if ((data[Data.LOROM_SETTING_OFFSET] & 0xEF) == 0x23)
-            {
-                if (data.Length > 0x400000)
-                {
-                    detectMessage.Text = "ROM Map Mode Detected: SA-1 ROM (FuSoYa's 8MB mapper)";
-                    comboBox1.SelectedIndex = 4;
-                    return Data.ROMMapMode.ExSA1ROM;
-                }
-                else
-                {
-                    detectMessage.Text = "ROM Map Mode Detected: SA-1 ROM";
-                    comboBox1.SelectedIndex = 3;
-                    return Data.ROMMapMode.SA1ROM;
-                }
-            }
-            else if ((data[Data.LOROM_SETTING_OFFSET] & 0xEC) == 0x20)
-            {
-                if ((data[Data.LOROM_SETTING_OFFSET + 1] & 0xF0) == 0x10) {
-                    detectMessage.Text = "ROM Map Mode Detected: SuperFX";
-                    comboBox1.SelectedIndex = 5;
-                    return Data.ROMMapMode.SuperFX;
-                } else {
-                    detectMessage.Text = "ROM Map Mode Detected: LoROM";
-                    comboBox1.SelectedIndex = 0;
-                    return Data.ROMMapMode.LoROM;
-                }
-            }
-            else if (data.Length >= 0x10000 && (data[Data.HIROM_SETTING_OFFSET] & 0xEF) == 0x21)
-            {
-                detectMessage.Text = "ROM Map Mode Detected: HiROM";
-                comboBox1.SelectedIndex = 1;
-                return Data.ROMMapMode.HiROM;
-            }
-            else if (data.Length >= 0x10000 && (data[Data.HIROM_SETTING_OFFSET] & 0xE7) == 0x22)
-            {
-                detectMessage.Text = "ROM Map Mode Detected: Super MMC";
-                comboBox1.SelectedIndex = 2;
-                return Data.ROMMapMode.SuperMMC;
-            }
-            else if (data.Length >= 0x410000 && (data[Data.EXHIROM_SETTING_OFFSET] & 0xEF) == 0x25)
-            {
-                detectMessage.Text = "ROM Map Mode Detected: ExHiROM";
-                comboBox1.SelectedIndex = 6;
-                return Data.ROMMapMode.ExHiROM;
-            }
-            else
-            {
+            if (couldnt_detect_rom_type)
                 detectMessage.Text = "Couldn't auto detect ROM Map Mode!";
-                if (data.Length > 0x40000)
-                {
-                    comboBox1.SelectedIndex = 7;
-                    return Data.ROMMapMode.ExLoROM;
-                } else
-                {
+            else
+                detectMessage.Text = "ROM Map Mode Detected: " + Util.GetRomMapModeName(importSettings.ROMMapMode);
+
+            // TODO: there's definitely a better way. probably have the control read from a data table,
+            // then have it update itself based on the value of importSettings.ROMMapMode.
+            switch (importSettings.ROMMapMode)
+            {
+                case Data.ROMMapMode.LoROM:
                     comboBox1.SelectedIndex = 0;
-                    return Data.ROMMapMode.LoROM;
-                }
+                    break;
+                case Data.ROMMapMode.HiROM:
+                    comboBox1.SelectedIndex = 1;
+                    break;
+                case Data.ROMMapMode.ExHiROM:
+                    comboBox1.SelectedIndex = 6;
+                    break;
+                case Data.ROMMapMode.SA1ROM:
+                    comboBox1.SelectedIndex = 3;
+                    break;
+                case Data.ROMMapMode.ExSA1ROM:
+                    comboBox1.SelectedIndex = 4;
+                    break;
+                case Data.ROMMapMode.SuperFX:
+                    comboBox1.SelectedIndex = 5;
+                    break;
+                case Data.ROMMapMode.SuperMMC:
+                    comboBox1.SelectedIndex = 2;
+                    break;
+                case Data.ROMMapMode.ExLoROM:
+                    comboBox1.SelectedIndex = 7;
+                    break;
+                default:
+                    break;
             }
-        }
-
-        public Data.ROMMapMode GetROMMapMode()
-        {
-            return mode;
-        }
-
-        public Data.ROMSpeed GetROMSpeed()
-        {
-            return speed;
         }
 
         private void UpdateOffsetAndSpeed()
         {
-            offset = Data.Inst.GetRomSettingOffset(mode);
-            if (offset >= data.Length)
+            offset = Data.GetRomSettingOffset(importSettings.ROMMapMode);
+            if (offset >= importSettings.rom_bytes.Length)
             {
-                speed = Data.ROMSpeed.Unknown;
+                importSettings.ROMSpeed = Data.ROMSpeed.Unknown;
                 okay.Enabled = false;
             } else
             {
                 okay.Enabled = true;
-                speed = (data[offset] & 0x10) != 0 ? Data.ROMSpeed.FastROM : Data.ROMSpeed.SlowROM;
+                importSettings.ROMSpeed = (importSettings.rom_bytes[offset] & 0x10) != 0 ? Data.ROMSpeed.FastROM : Data.ROMSpeed.SlowROM;
             }
         }
 
         private void UpdateTextboxes()
         {
-            if (speed == Data.ROMSpeed.Unknown)
+            if (importSettings.ROMSpeed == Data.ROMSpeed.Unknown)
             {
                 romspeed.Text = "????";
                 romtitle.Text = "?????????????????????";
                 for (int i = 0; i < vectors.GetLength(0); i++) for (int j = 0; j < vectors.GetLength(1); j++) vectors[i, j].Text = "????";
             } else
             {
-                if (speed == Data.ROMSpeed.SlowROM) romspeed.Text = "SlowROM";
+                if (importSettings.ROMSpeed == Data.ROMSpeed.SlowROM) romspeed.Text = "SlowROM";
                 else romspeed.Text = "FastROM";
 
                 title = "";
-                for (int i = 0; i < 0x15; i++) title += (char)data[offset - 0x15 + i];
+                for (int i = 0; i < 0x15; i++) title += (char)importSettings.rom_bytes[offset - 0x15 + i];
                 romtitle.Text = title;
 
                 for (int i = 0; i < vectors.GetLength(0); i++)
@@ -199,7 +185,7 @@ namespace DiztinGUIsh
                     for (int j = 0; j < vectors.GetLength(1); j++)
                     {
                         int index = offset + 15 + 0x10 * i + 2 * j;
-                        int val = data[index] + (data[index + 1] << 8);
+                        int val = importSettings.rom_bytes[index] + (importSettings.rom_bytes[index + 1] << 8);
                         vectors[i, j].Text = Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal, 4);
 
                         if (val < 0x8000)
@@ -232,16 +218,17 @@ namespace DiztinGUIsh
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // TODO: there's definitely a better way, we'll get to it :)
             switch (comboBox1.SelectedIndex)
             {
-                case 0: mode = Data.ROMMapMode.LoROM; break;
-                case 1: mode = Data.ROMMapMode.HiROM; break;
-                case 2: mode = Data.ROMMapMode.SuperMMC; break;
-                case 3: mode = Data.ROMMapMode.SA1ROM; break;
-                case 4: mode = Data.ROMMapMode.ExSA1ROM; break;
-                case 5: mode = Data.ROMMapMode.SuperFX; break;
-                case 6: mode = Data.ROMMapMode.ExHiROM; break;
-                case 7: mode = Data.ROMMapMode.ExLoROM; break;
+                case 0: importSettings.ROMMapMode = Data.ROMMapMode.LoROM; break;
+                case 1: importSettings.ROMMapMode = Data.ROMMapMode.HiROM; break;
+                case 2: importSettings.ROMMapMode = Data.ROMMapMode.SuperMMC; break;
+                case 3: importSettings.ROMMapMode = Data.ROMMapMode.SA1ROM; break;
+                case 4: importSettings.ROMMapMode = Data.ROMMapMode.ExSA1ROM; break;
+                case 5: importSettings.ROMMapMode = Data.ROMMapMode.SuperFX; break;
+                case 6: importSettings.ROMMapMode = Data.ROMMapMode.ExHiROM; break;
+                case 7: importSettings.ROMMapMode = Data.ROMMapMode.ExLoROM; break;
             }
             UpdateOffsetAndSpeed();
             UpdateTextboxes();

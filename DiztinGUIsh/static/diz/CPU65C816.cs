@@ -6,46 +6,51 @@ using System.Threading.Tasks;
 
 namespace DiztinGUIsh
 {
-    public static class CPU65C816
+    public class CPU65C816
     {
-        public static int Step(int offset, bool branch, bool force, int prevOffset)
+        private readonly Data Data;
+        public CPU65C816(Data data)
         {
-            int opcode = Data.Inst.GetROMByte(offset);
-            int prevDirectPage = Data.Inst.GetDirectPage(offset);
-            int prevDataBank = Data.Inst.GetDataBank(offset);
-            bool prevX = Data.Inst.GetXFlag(offset), prevM = Data.Inst.GetMFlag(offset);
+            Data = data;
+        }
+        public int Step(int offset, bool branch, bool force, int prevOffset)
+        {
+            int opcode = Data.GetROMByte(offset);
+            int prevDirectPage = Data.GetDirectPage(offset);
+            int prevDataBank = Data.GetDataBank(offset);
+            bool prevX = Data.GetXFlag(offset), prevM = Data.GetMFlag(offset);
 
-            while (prevOffset >= 0 && Data.Inst.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
-            if (prevOffset >= 0 && Data.Inst.GetFlag(prevOffset) == Data.FlagType.Opcode)
+            while (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
+            if (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Opcode)
             {
-                prevDirectPage = Data.Inst.GetDirectPage(prevOffset);
-                prevDataBank = Data.Inst.GetDataBank(prevOffset);
-                prevX = Data.Inst.GetXFlag(prevOffset);
-                prevM = Data.Inst.GetMFlag(prevOffset);
+                prevDirectPage = Data.GetDirectPage(prevOffset);
+                prevDataBank = Data.GetDataBank(prevOffset);
+                prevX = Data.GetXFlag(prevOffset);
+                prevM = Data.GetMFlag(prevOffset);
             }
 
             if (opcode == 0xC2 || opcode == 0xE2) // REP SEP
             {
-                prevX = (Data.Inst.GetROMByte(offset + 1) & 0x10) != 0 ? opcode == 0xE2 : prevX;
-                prevM = (Data.Inst.GetROMByte(offset + 1) & 0x20) != 0 ? opcode == 0xE2 : prevM;
+                prevX = (Data.GetROMByte(offset + 1) & 0x10) != 0 ? opcode == 0xE2 : prevX;
+                prevM = (Data.GetROMByte(offset + 1) & 0x20) != 0 ? opcode == 0xE2 : prevM;
             }
 
             // set first byte first, so the instruction length is correct
-            Data.Inst.SetFlag(offset, Data.FlagType.Opcode);
-            Data.Inst.SetDataBank(offset, prevDataBank);
-            Data.Inst.SetDirectPage(offset, prevDirectPage);
-            Data.Inst.SetXFlag(offset, prevX);
-            Data.Inst.SetMFlag(offset, prevM);
+            Data.SetFlag(offset, Data.FlagType.Opcode);
+            Data.SetDataBank(offset, prevDataBank);
+            Data.SetDirectPage(offset, prevDirectPage);
+            Data.SetXFlag(offset, prevX);
+            Data.SetMFlag(offset, prevM);
 
             int length = GetInstructionLength(offset);
 
             for (int i = 1; i < length; i++)
             {
-                Data.Inst.SetFlag(offset + i, Data.FlagType.Operand);
-                Data.Inst.SetDataBank(offset + i, prevDataBank);
-                Data.Inst.SetDirectPage(offset + i, prevDirectPage);
-                Data.Inst.SetXFlag(offset + i, prevX);
-                Data.Inst.SetMFlag(offset + i, prevM);
+                Data.SetFlag(offset + i, Data.FlagType.Operand);
+                Data.SetDataBank(offset + i, prevDataBank);
+                Data.SetDirectPage(offset + i, prevDirectPage);
+                Data.SetXFlag(offset + i, prevX);
+                Data.SetMFlag(offset + i, prevM);
             }
 
             MarkInOutPoints(offset);
@@ -57,19 +62,20 @@ namespace DiztinGUIsh
                 || opcode == 0x70 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 // BVS BCC BCS BNE
                 || opcode == 0xF0 || opcode == 0x20 || opcode == 0x22)))) // BEQ JSR JSL
             {
-                int iaNextOffsetPC = Util.ConvertSNEStoPC(Util.GetIntermediateAddress(offset, true));
-                if (iaNextOffsetPC >= 0) nextOffset = iaNextOffsetPC;
+                int iaNextOffsetPC = Data.ConvertSNEStoPC(GetIntermediateAddress(offset, true));
+                if (iaNextOffsetPC >= 0) 
+                    nextOffset = iaNextOffsetPC;
             }
 
             return nextOffset;
         }
 
-        public static int GetIntermediateAddress(int offset, bool resolve)
+        public int GetIntermediateAddress(int offset, bool resolve)
         {
             int bank, directPage, operand, programCounter;
-            int opcode = Data.Inst.GetROMByte(offset);
+            int opcode = Data.GetROMByte(offset);
 
-            AddressMode mode = GetAddressMode(offset);
+            var mode = GetAddressMode(offset);
             switch (mode)
             {
                 case AddressMode.DIRECT_PAGE:
@@ -82,8 +88,8 @@ namespace DiztinGUIsh
                 case AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX:
                     if (resolve)
                     {
-                        directPage = Data.Inst.GetDirectPage(offset);
-                        operand = Data.Inst.GetROMByte(offset + 1);
+                        directPage = Data.GetDirectPage(offset);
+                        operand = Data.GetROMByte(offset + 1);
                         return (directPage + operand) & 0xFFFF;
                     }
                     else
@@ -92,39 +98,39 @@ namespace DiztinGUIsh
                     }
                 case AddressMode.DIRECT_PAGE_S_INDEX:
                 case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
-                    return Data.Inst.GetROMByte(offset + 1);
+                    return Data.GetROMByte(offset + 1);
                 case AddressMode.ADDRESS:
                 case AddressMode.ADDRESS_X_INDEX:
                 case AddressMode.ADDRESS_Y_INDEX:
                 case AddressMode.ADDRESS_X_INDEX_INDIRECT:
                     bank = (opcode == 0x20 || opcode == 0x4C || opcode == 0x7C || opcode == 0xFC) ?
-                        Util.ConvertPCtoSNES(offset) >> 16 :
-                        Data.Inst.GetDataBank(offset);
-                    operand = Util.GetROMWord(offset + 1);
+                        Data.ConvertPCtoSNES(offset) >> 16 :
+                        Data.GetDataBank(offset);
+                    operand = Data.GetROMWord(offset + 1); 
                     return (bank << 16) | operand;
                 case AddressMode.ADDRESS_INDIRECT:
                 case AddressMode.ADDRESS_LONG_INDIRECT:
-                    operand = Util.GetROMWord(offset + 1);
+                    operand = Data.GetROMWord(offset + 1);
                     return operand;
                 case AddressMode.LONG:
                 case AddressMode.LONG_X_INDEX:
-                    operand = Util.GetROMLong(offset + 1);
+                    operand = Data.GetROMLong(offset + 1);
                     return operand;
                 case AddressMode.RELATIVE_8:
-                    programCounter = Util.ConvertPCtoSNES(offset + 2);
+                    programCounter = Data.ConvertPCtoSNES(offset + 2);
                     bank = programCounter >> 16;
-                    offset = (sbyte)Data.Inst.GetROMByte(offset + 1);
+                    offset = (sbyte)Data.GetROMByte(offset + 1);
                     return (bank << 16) | ((programCounter + offset) & 0xFFFF);
                 case AddressMode.RELATIVE_16:
-                    programCounter = Util.ConvertPCtoSNES(offset + 3);
+                    programCounter = Data.ConvertPCtoSNES(offset + 3);
                     bank = programCounter >> 16;
-                    offset = (short)Util.GetROMWord(offset + 1);
+                    offset = (short)Data.GetROMWord(offset + 1);
                     return (bank << 16) | ((programCounter + offset) & 0xFFFF);
             }
             return -1;
         }
 
-        public static string GetInstruction(int offset)
+        public string GetInstruction(int offset)
         {
             AddressMode mode = GetAddressMode(offset);
             string format = GetInstructionFormatString(offset);
@@ -132,16 +138,16 @@ namespace DiztinGUIsh
             string op1 = "", op2 = "";
             if (mode == AddressMode.BLOCK_MOVE)
             {
-                op1 = Util.NumberToBaseString(Data.Inst.GetROMByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
-                op2 = Util.NumberToBaseString(Data.Inst.GetROMByte(offset + 2), Util.NumberBase.Hexadecimal, 2, true);
+                op1 = Util.NumberToBaseString(Data.GetROMByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
+                op2 = Util.NumberToBaseString(Data.GetROMByte(offset + 2), Util.NumberBase.Hexadecimal, 2, true);
             }
             else if (mode == AddressMode.CONSTANT_8 || mode == AddressMode.IMMEDIATE_8)
             {
-                op1 = Util.NumberToBaseString(Data.Inst.GetROMByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
+                op1 = Util.NumberToBaseString(Data.GetROMByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
             }
             else if (mode == AddressMode.IMMEDIATE_16)
             {
-                op1 = Util.NumberToBaseString(Util.GetROMWord(offset + 1), Util.NumberBase.Hexadecimal, 4, true);
+                op1 = Util.NumberToBaseString(Data.GetROMWord(offset + 1), Util.NumberBase.Hexadecimal, 4, true);
             }
             else
             {
@@ -153,7 +159,7 @@ namespace DiztinGUIsh
             return string.Format(format, mnemonic, op1, op2);
         }
 
-        public static int GetInstructionLength(int offset)
+        public int GetInstructionLength(int offset)
         {
             AddressMode mode = GetAddressMode(offset);
             switch (mode)
@@ -192,10 +198,10 @@ namespace DiztinGUIsh
             return 1;
         }
 
-        public static void MarkInOutPoints(int offset)
+        public void MarkInOutPoints(int offset)
         {
-            int opcode = Data.Inst.GetROMByte(offset);
-            int iaOffsetPC = Util.ConvertSNEStoPC(Util.GetIntermediateAddress(offset, true));
+            int opcode = Data.GetROMByte(offset);
+            int iaOffsetPC = Data.ConvertSNEStoPC(Data.GetIntermediateAddress(offset, true));
 
             // set read point on EA
             if (iaOffsetPC >= 0 && ( // these are all read/write/math instructions
@@ -203,13 +209,13 @@ namespace DiztinGUIsh
                 ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
                 (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
                 (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
-            ) Data.Inst.SetInOutPoint(iaOffsetPC, Data.InOutPoint.ReadPoint);
+            ) Data.SetInOutPoint(iaOffsetPC, Data.InOutPoint.ReadPoint);
 
             // set end point on offset
             if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
                 || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
                 || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC // BRL STP JML
-            ) Data.Inst.SetInOutPoint(offset, Data.InOutPoint.EndPoint);
+            ) Data.SetInOutPoint(offset, Data.InOutPoint.EndPoint);
 
             // set out point on offset
             // set in point on EA
@@ -219,26 +225,26 @@ namespace DiztinGUIsh
                 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0  // BCC BCS BNE BEQ
                 || opcode == 0x20 || opcode == 0x22)) // JSR JSL
             {
-                Data.Inst.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
-                Data.Inst.SetInOutPoint(iaOffsetPC, Data.InOutPoint.InPoint);
+                Data.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
+                Data.SetInOutPoint(iaOffsetPC, Data.InOutPoint.InPoint);
             }
         }
 
-        private static string FormatOperandAddress(int offset, AddressMode mode)
+        private string FormatOperandAddress(int offset, AddressMode mode)
         {
-            int address = Util.GetIntermediateAddress(offset);
+            int address = Data.GetIntermediateAddress(offset);
             if (address < 0) return "";
-            if (Data.Inst.GetLabelName(address) != "") return Data.Inst.GetLabelName(address);
+            if (Data.GetLabelName(address) != "") return Data.GetLabelName(address);
 
             int count = BytesToShow(mode);
-            if (mode == AddressMode.RELATIVE_8 || mode == AddressMode.RELATIVE_16) address = Util.GetROMWord(offset + 1);
+            if (mode == AddressMode.RELATIVE_8 || mode == AddressMode.RELATIVE_16) address = Data.GetROMWord(offset + 1);
             address &= ~(-1 << (8 * count));
             return Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 2 * count, true);
         }
 
-        private static string GetMnemonic(int offset, bool showHint = true)
+        private string GetMnemonic(int offset, bool showHint = true)
         {
-            string mn = mnemonics[Data.Inst.GetROMByte(offset)];
+            string mn = mnemonics[Data.GetROMByte(offset)];
             if (showHint)
             {
                 AddressMode mode = GetAddressMode(offset);
@@ -256,7 +262,7 @@ namespace DiztinGUIsh
             return mn;
         }
 
-        private static int BytesToShow(AddressMode mode)
+        private int BytesToShow(AddressMode mode)
         {
             switch (mode)
             {
@@ -293,7 +299,7 @@ namespace DiztinGUIsh
         // {0} = mnemonic
         // {1} = intermediate address / label OR operand 1 for block move
         // {2} = operand 2 for block move
-        private static string GetInstructionFormatString(int offset)
+        private string GetInstructionFormatString(int offset)
         {
             AddressMode mode = GetAddressMode(offset);
             switch (mode)
@@ -342,11 +348,11 @@ namespace DiztinGUIsh
             return "";
         }
 
-        private static AddressMode GetAddressMode(int offset)
+        private AddressMode GetAddressMode(int offset)
         {
-            AddressMode mode = addressingModes[Data.Inst.GetROMByte(offset)];
-            if (mode == AddressMode.IMMEDIATE_M_FLAG_DEPENDENT) return Data.Inst.GetMFlag(offset) ? AddressMode.IMMEDIATE_8 : AddressMode.IMMEDIATE_16;
-            else if (mode == AddressMode.IMMEDIATE_X_FLAG_DEPENDENT) return Data.Inst.GetXFlag(offset) ? AddressMode.IMMEDIATE_8 : AddressMode.IMMEDIATE_16;
+            AddressMode mode = addressingModes[Data.GetROMByte(offset)];
+            if (mode == AddressMode.IMMEDIATE_M_FLAG_DEPENDENT) return Data.GetMFlag(offset) ? AddressMode.IMMEDIATE_8 : AddressMode.IMMEDIATE_16;
+            else if (mode == AddressMode.IMMEDIATE_X_FLAG_DEPENDENT) return Data.GetXFlag(offset) ? AddressMode.IMMEDIATE_8 : AddressMode.IMMEDIATE_16;
             return mode;
         }
 

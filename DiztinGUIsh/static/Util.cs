@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Linq;
+using System.IO.Compression;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DiztinGUIsh
@@ -18,191 +16,35 @@ namespace DiztinGUIsh
             Decimal = 3, Hexadecimal = 2, Binary = 8
         }
 
-        public static int GetROMWord(int offset)
+        public static int ConvertSNESToPC(int address, Data.ROMMapMode mode, int size)
         {
-            if (offset + 1 < Data.Inst.GetROMSize())
-                return Data.Inst.GetROMByte(offset) + (Data.Inst.GetROMByte(offset + 1) << 8);
-            return -1;
-        }
-
-        public static int GetROMLong(int offset)
-        {
-            if (offset + 2 < Data.Inst.GetROMSize())
-                return Data.Inst.GetROMByte(offset) + (Data.Inst.GetROMByte(offset + 1) << 8) + (Data.Inst.GetROMByte(offset + 2) << 16);
-            return -1;
-        }
-
-        public static int GetROMDoubleWord(int offset)
-        {
-            if (offset + 3 < Data.Inst.GetROMSize())
-                return Data.Inst.GetROMByte(offset) + (Data.Inst.GetROMByte(offset + 1) << 8) + (Data.Inst.GetROMByte(offset + 2) << 16) + (Data.Inst.GetROMByte(offset + 3) << 24);
-            return -1;
-        }
-
-        public static int GetIntermediateAddressOrPointer(int offset)
-        {
-            switch (Data.Inst.GetFlag(offset))
+            int _UnmirroredOffset(int offset)
             {
-                case Data.FlagType.Unreached:
-                case Data.FlagType.Opcode:
-                    return GetIntermediateAddress(offset, true);
-                case Data.FlagType.Pointer16Bit:
-                    int bank = Data.Inst.GetDataBank(offset);
-                    return (bank << 16) | GetROMWord(offset);
-                case Data.FlagType.Pointer24Bit:
-                case Data.FlagType.Pointer32Bit:
-                    return GetROMLong(offset);
-            }
-            return -1;
-        }
-
-        public static int GetIntermediateAddress(int offset, bool resolve = false)
-        {
-            // FIX ME: log and generation of dp opcodes. search references
-            switch (Data.Inst.GetArchitechture(offset))
-            {
-                case Data.Architechture.CPU65C816: return CPU65C816.GetIntermediateAddress(offset, resolve);
-                case Data.Architechture.APUSPC700: return -1;
-                case Data.Architechture.GPUSuperFX: return -1;
-            }
-            return -1;
-        }
-
-        public static string GetInstruction(int offset)
-        {
-            switch (Data.Inst.GetArchitechture(offset))
-            {
-                case Data.Architechture.CPU65C816: return CPU65C816.GetInstruction(offset);
-                case Data.Architechture.APUSPC700: return "";
-                case Data.Architechture.GPUSuperFX: return "";
-            }
-            return "";
-        }
-
-        public static string GetFormattedBytes(int offset, int step, int bytes)
-        {
-            string res = "";
-            switch (step)
-            {
-                case 1: res = "db "; break;
-                case 2: res = "dw "; break;
-                case 3: res = "dl "; break;
-                case 4: res = "dd "; break;
+                return Util.UnmirroredOffset(offset, size);
             }
 
-            for (int i = 0; i < bytes; i += step)
-            {
-                if (i > 0) res += ",";
-
-                switch (step)
-                {
-                    case 1: res += NumberToBaseString(Data.Inst.GetROMByte(offset + i), NumberBase.Hexadecimal, 2, true); break;
-                    case 2: res += NumberToBaseString(GetROMWord(offset + i), NumberBase.Hexadecimal, 4, true); break;
-                    case 3: res += NumberToBaseString(GetROMLong(offset + i), NumberBase.Hexadecimal, 6, true); break;
-                    case 4: res += NumberToBaseString(GetROMDoubleWord(offset + i), NumberBase.Hexadecimal, 8, true); break;
-                }
-            }
-
-            return res;
-        }
-
-        public static string GetPointer(int offset, int bytes)
-        {
-            int ia = -1;
-            string format = "", param = "";
-            switch (bytes)
-            {
-                case 2:
-                    ia = (Data.Inst.GetDataBank(offset) << 16) | GetROMWord(offset);
-                    format = "dw {0}";
-                    param = NumberToBaseString(GetROMWord(offset), NumberBase.Hexadecimal, 4, true);
-                    break;
-                case 3:
-                    ia = GetROMLong(offset);
-                    format = "dl {0}";
-                    param = NumberToBaseString(GetROMLong(offset), NumberBase.Hexadecimal, 6, true);
-                    break;
-                case 4:
-                    ia = GetROMLong(offset);
-                    format = "dl {0}" + string.Format(" : db {0}", NumberToBaseString(Data.Inst.GetROMByte(offset + 3), NumberBase.Hexadecimal, 2, true));
-                    param = NumberToBaseString(GetROMLong(offset), NumberBase.Hexadecimal, 6, true);
-                    break;
-            }
-
-            int pc = ConvertSNEStoPC(ia);
-            if (pc >= 0 && Data.Inst.GetLabelName(ia) != "") param = Data.Inst.GetLabelName(ia);
-            return string.Format(format, param);
-        }
-
-        public static string GetFormattedText(int offset, int bytes)
-        {
-            string text = "db \"";
-            for (int i = 0; i < bytes; i++) text += (char)Data.Inst.GetROMByte(offset + i);
-            return text + "\"";
-        }
-
-        public static string GetDefaultLabel(int address)
-        {
-            int pc = ConvertSNEStoPC(address);
-            return string.Format("{0}_{1}", TypeToLabel(Data.Inst.GetFlag(pc)), NumberToBaseString(address, NumberBase.Hexadecimal, 6));
-        }
-
-        public static int ConvertPCtoSNES(int offset)
-        {
-            if (Data.Inst.RomMapMode == Data.ROMMapMode.LoROM)
-            {
-                offset = ((offset & 0x3F8000) << 1) | 0x8000 | (offset & 0x7FFF);
-                if (Data.Inst.GetROMSpeed() == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
-            }
-            else if (Data.Inst.RomMapMode == Data.ROMMapMode.HiROM)
-            {
-                offset |= 0x400000;
-                if (Data.Inst.GetROMSpeed() == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
-            }
-            else if (Data.Inst.RomMapMode == Data.ROMMapMode.ExHiROM)
-            {
-                if (offset < 0x40000) offset |= 0xC00000;
-                else if (offset >= 0x7E0000) offset &= 0x3FFFFF;
-            }
-            else
-            {
-                if (offset >= 0x400000 && Data.Inst.RomMapMode == Data.ROMMapMode.ExSA1ROM)
-                {
-                    offset += 0x800000;
-                }
-                else
-                {
-                    offset = ((offset & 0x3F8000) << 1) | 0x8000 | (offset & 0x7FFF);
-                    if (offset >= 0x400000) offset += 0x400000;
-                }
-            }
-            return offset;
-        }
-
-        public static int ConvertSNEStoPC(int address)
-        {
             // WRAM is N/A to PC addressing
             if ((address & 0xFE0000) == 0x7E0000) return -1;
 
             // WRAM mirror & PPU regs are N/A to PC addressing
             if (((address & 0x400000) == 0) && ((address & 0x8000) == 0)) return -1;
 
-            switch (Data.Inst.RomMapMode)
+            switch (mode)
             {
                 case Data.ROMMapMode.LoROM:
                     {
                         // SRAM is N/A to PC addressing
                         if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) return -1;
 
-                        return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        return _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                     }
                 case Data.ROMMapMode.HiROM:
                     {
-                        return UnmirroredOffset(address & 0x3FFFFF);
+                        return _UnmirroredOffset(address & 0x3FFFFF);
                     }
                 case Data.ROMMapMode.SuperMMC:
                     {
-                        return UnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
+                        return _UnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
                     }
                 case Data.ROMMapMode.SA1ROM:
                 case Data.ROMMapMode.ExSA1ROM:
@@ -212,10 +54,10 @@ namespace DiztinGUIsh
 
                         if (address >= 0xC00000)
                         {
-                            if (Data.Inst.RomMapMode == Data.ROMMapMode.ExSA1ROM)
-                                return UnmirroredOffset(address & 0x7FFFFF);
+                            if (mode == Data.ROMMapMode.ExSA1ROM)
+                                return _UnmirroredOffset(address & 0x7FFFFF);
                             else
-                                return UnmirroredOffset(address & 0x3FFFFF);
+                                return _UnmirroredOffset(address & 0x3FFFFF);
                         }
                         else
                         {
@@ -224,7 +66,7 @@ namespace DiztinGUIsh
                             // SRAM is N/A to PC addressing
                             if (((address & 0x8000) == 0)) return -1;
 
-                            return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                            return _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                         }
                     }
                 case Data.ROMMapMode.SuperFX:
@@ -234,28 +76,31 @@ namespace DiztinGUIsh
 
                         if (address < 0x400000)
                         {
-                            return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
-                        } else if (address < 0x600000)
+                            return _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        }
+                        else if (address < 0x600000)
                         {
-                            return UnmirroredOffset(address & 0x3FFFFF);
-                        } else if (address < 0xC00000)
+                            return _UnmirroredOffset(address & 0x3FFFFF);
+                        }
+                        else if (address < 0xC00000)
                         {
-                            return 0x200000 + UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
-                        } else
+                            return 0x200000 + _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        }
+                        else
                         {
-                            return 0x400000 + UnmirroredOffset(address & 0x3FFFFF);
+                            return 0x400000 + _UnmirroredOffset(address & 0x3FFFFF);
                         }
                     }
                 case Data.ROMMapMode.ExHiROM:
                     {
-                        return UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
+                        return _UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
                     }
                 case Data.ROMMapMode.ExLoROM:
                     {
                         // SRAM is N/A to PC addressing
                         if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) return -1;
 
-                        return UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
+                        return _UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
                     }
                 default:
                     {
@@ -264,36 +109,70 @@ namespace DiztinGUIsh
             }
         }
 
-        public static string ReadZipString(byte[] unzipped, ref int pointer)
+        public static int ConvertPCtoSNES(int offset, Data.ROMMapMode romMapMode, Data.ROMSpeed romSpeed)
         {
-            var label = "";
-            while (unzipped[pointer] != 0)
-                label += (char)unzipped[pointer++];
-            pointer++;
-            return label;
+            switch (romMapMode)
+            {
+                case Data.ROMMapMode.LoROM:
+                    offset = ((offset & 0x3F8000) << 1) | 0x8000 | (offset & 0x7FFF);
+                    if (romSpeed == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
+                    return offset;
+                case Data.ROMMapMode.HiROM:
+                    offset |= 0x400000;
+                    if (romSpeed == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
+                    return offset;
+                case Data.ROMMapMode.ExHiROM when offset < 0x40000:
+                    offset |= 0xC00000;
+                    return offset;
+                case Data.ROMMapMode.ExHiROM:
+                    if (offset >= 0x7E0000) offset &= 0x3FFFFF;
+                    return offset;
+                case Data.ROMMapMode.ExSA1ROM when offset >= 0x400000:
+                    offset += 0x800000;
+                    return offset;
+            }
+
+            offset = ((offset & 0x3F8000) << 1) | 0x8000 | (offset & 0x7FFF);
+            if (offset >= 0x400000) offset += 0x400000;
+
+            return offset;
         }
 
-        private static int UnmirroredOffset(int offset)
+        public delegate int AddressConverter(int address);
+
+        public static int ReadStringsTable(byte[] bytes, int starting_index, int stringsPerEntry, AddressConverter converter, Action<int, string[]> processTableEntry)
         {
-            int size = Data.Inst.GetROMSize();
+            var strings = new List<string>();
 
-            // most of the time this is true; for efficiency
-            if (offset < size) return offset;
+            var pos = starting_index;
+            var num_table_entries = Util.ByteArrayToInteger(bytes, pos);
+            pos += 4;
 
-            int repeatSize = 0x8000;
-            while (repeatSize < size) repeatSize <<= 1;
+            for (var entry = 0; entry < num_table_entries; ++entry)
+            {
+                var offset = converter(Util.ByteArrayToInteger(bytes, pos));
+                pos += 4;
 
-            int repeatedOffset = offset % repeatSize;
+                strings.Clear();
+                for (var j = 0; j < stringsPerEntry; ++j)
+                {
+                    pos += Util.ReadNullTerminatedString(bytes, pos, out var str);
+                    strings.Add(str);
+                }
+                processTableEntry(offset, strings.ToArray());
+            }
 
-            // this will then be true for ROM sizes of powers of 2
-            if (repeatedOffset < size) return repeatedOffset;
+            return pos - starting_index;
+        }
 
-            // for ROM sizes not powers of 2, it's kinda ugly
-            int sizeOfSmallerSection = 0x8000;
-            while (size % (sizeOfSmallerSection << 1) == 0) sizeOfSmallerSection <<= 1;
-
-            while (repeatedOffset >= size) repeatedOffset -= sizeOfSmallerSection;
-            return repeatedOffset;
+        public static int ReadNullTerminatedString(byte[] bytes, int starting_offset, out string str)
+        {
+            str = "";
+            var pos = starting_offset;
+            while (bytes[pos] != 0)
+                str += (char)bytes[pos++];
+            pos++;
+            return pos - starting_offset;
         }
 
         public static byte[] IntegerToByteArray(int a)
@@ -376,6 +255,60 @@ namespace DiztinGUIsh
             return "";
         }
 
+        public static int UnmirroredOffset(int offset, int size)
+        {
+            // most of the time this is true; for efficiency
+            if (offset < size) return offset;
+
+            int repeatSize = 0x8000;
+            while (repeatSize < size) repeatSize <<= 1;
+
+            int repeatedOffset = offset % repeatSize;
+
+            // this will then be true for ROM sizes of powers of 2
+            if (repeatedOffset < size) return repeatedOffset;
+
+            // for ROM sizes not powers of 2, it's kinda ugly
+            int sizeOfSmallerSection = 0x8000;
+            while (size % (sizeOfSmallerSection << 1) == 0) sizeOfSmallerSection <<= 1;
+
+            while (repeatedOffset >= size) repeatedOffset -= sizeOfSmallerSection;
+            return repeatedOffset;
+        }
+
+        public static string GetRomMapModeName(Data.ROMMapMode mode)
+        {
+            switch (mode)
+            {
+                case Data.ROMMapMode.ExSA1ROM:
+                    return "SA-1 ROM (FuSoYa's 8MB mapper)";
+
+                case Data.ROMMapMode.SA1ROM:
+                    return "SA-1 ROM";
+
+                case Data.ROMMapMode.SuperFX:
+                    return "SuperFX";
+
+                case Data.ROMMapMode.LoROM:
+                    return "LoROM";
+
+                case Data.ROMMapMode.HiROM:
+                    return "HiROM";
+
+                case Data.ROMMapMode.SuperMMC:
+                    return "Super MMC";
+
+                case Data.ROMMapMode.ExHiROM:
+                    return "ExHiROM";
+
+                case Data.ROMMapMode.ExLoROM:
+                    return "ExLoROM";
+
+                default:
+                    return "Unknown mapping";
+            }
+        }
+
         public static string TypeToLabel(Data.FlagType flag)
         {
             switch (flag)
@@ -422,6 +355,38 @@ namespace DiztinGUIsh
                     return 4;
             }
             return 0;
+        }
+
+        public static Data.ROMMapMode DetectROMMapMode(IReadOnlyList<byte> rom_bytes, out bool couldnt_detect)
+        {
+            couldnt_detect = false;
+
+            if ((rom_bytes[Data.LOROM_SETTING_OFFSET] & 0xEF) == 0x23)
+            {
+                return rom_bytes.Count > 0x400000 ? Data.ROMMapMode.ExSA1ROM : Data.ROMMapMode.SA1ROM;
+            }
+            else if ((rom_bytes[Data.LOROM_SETTING_OFFSET] & 0xEC) == 0x20)
+            {
+                return (rom_bytes[Data.LOROM_SETTING_OFFSET + 1] & 0xF0) == 0x10 ? Data.ROMMapMode.SuperFX : Data.ROMMapMode.LoROM;
+            }
+            else if (rom_bytes.Count >= 0x10000 && (rom_bytes[Data.HIROM_SETTING_OFFSET] & 0xEF) == 0x21)
+            {
+                return Data.ROMMapMode.HiROM;
+            }
+            else if (rom_bytes.Count >= 0x10000 && (rom_bytes[Data.HIROM_SETTING_OFFSET] & 0xE7) == 0x22)
+            {
+                return Data.ROMMapMode.SuperMMC;
+            }
+            else if (rom_bytes.Count >= 0x410000 && (rom_bytes[Data.EXHIROM_SETTING_OFFSET] & 0xEF) == 0x25)
+            {
+                return Data.ROMMapMode.ExHiROM;
+            }
+            else
+            {
+                // detection failed. take our best guess.....
+                couldnt_detect = true;
+                return rom_bytes.Count > 0x40000 ? Data.ROMMapMode.ExLoROM : Data.ROMMapMode.LoROM;
+            }
         }
 
         public static IEnumerable<string> ReadLines(string path)
@@ -500,98 +465,13 @@ namespace DiztinGUIsh
             return array;
         }
 
-        public static void PaintCell(int offset, DataGridViewCellStyle style, int column, int selOffset)
+        // read a fixed length string from an array of bytes. does not check for null termination
+        public static string ReadStringFromByteArray(byte[] bytes, int count, int offset)
         {
-            // editable cells show up green
-            if (column == 0 || column == 8 || column == 9 || column == 12) style.SelectionBackColor = Color.Chartreuse;
-
-            switch (Data.Inst.GetFlag(offset))
-            {
-                case Data.FlagType.Unreached:
-                    style.BackColor = Color.LightGray;
-                    style.ForeColor = Color.DarkSlateGray;
-                    break;
-                case Data.FlagType.Opcode:
-                    int opcode = Data.Inst.GetROMByte(offset);
-                    switch (column)
-                    {
-                        case 4: // <*>
-                            Data.InOutPoint point = Data.Inst.GetInOutPoint(offset);
-                            int r = 255, g = 255, b = 255;
-                            if ((point & (Data.InOutPoint.EndPoint | Data.InOutPoint.OutPoint)) != 0) g -= 50;
-                            if ((point & (Data.InOutPoint.InPoint)) != 0) r -= 50;
-                            if ((point & (Data.InOutPoint.ReadPoint)) != 0) b -= 50;
-                            style.BackColor = Color.FromArgb(r, g, b);
-                            break;
-                        case 5: // Instruction
-                            if (opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 // RTI WAI STP SED
-                                || opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42 // XCE BRK COP WDM
-                            ) style.BackColor = Color.Yellow;
-                            break;
-                        case 8: // Data Bank
-                            if (opcode == 0xAB || opcode == 0x44 || opcode == 0x54) // PLB MVP MVN
-                                style.BackColor = Color.OrangeRed;
-                            else if (opcode == 0x8B) // PHB
-                                style.BackColor = Color.Yellow;
-                            break;
-                        case 9: // Direct Page
-                            if (opcode == 0x2B || opcode == 0x5B) // PLD TCD
-                                style.BackColor = Color.OrangeRed;
-                            if (opcode == 0x0B || opcode == 0x7B) // PHD TDC
-                                style.BackColor = Color.Yellow;
-                            break;
-                        case 10: // M Flag
-                        case 11: // X Flag
-                            int mask = column == 10 ? 0x20 : 0x10;
-                            if (opcode == 0x28 || ((opcode == 0xC2 || opcode == 0xE2) // PLP SEP REP
-                                && (Data.Inst.GetROMByte(offset + 1) & mask) != 0)) // relevant bit set
-                                style.BackColor = Color.OrangeRed;
-                            if (opcode == 0x08) // PHP
-                                style.BackColor = Color.Yellow;
-                            break;
-                    }
-                    break;
-                case Data.FlagType.Operand:
-                    style.ForeColor = Color.LightGray;
-                    break;
-                case Data.FlagType.Graphics:
-                    style.BackColor = Color.LightPink;
-                    break;
-                case Data.FlagType.Music:
-                    style.BackColor = Color.PowderBlue;
-                    break;
-                case Data.FlagType.Data8Bit:
-                case Data.FlagType.Data16Bit:
-                case Data.FlagType.Data24Bit:
-                case Data.FlagType.Data32Bit:
-                    style.BackColor = Color.NavajoWhite;
-                    break;
-                case Data.FlagType.Pointer16Bit:
-                case Data.FlagType.Pointer24Bit:
-                case Data.FlagType.Pointer32Bit:
-                    style.BackColor = Color.Orchid;
-                    break;
-                case Data.FlagType.Text:
-                    style.BackColor = Color.Aquamarine;
-                    break;
-                case Data.FlagType.Empty:
-                    style.BackColor = Color.DarkSlateGray;
-                    style.ForeColor = Color.LightGray;
-                    break;
-            }
-
-            if (selOffset >= 0 && selOffset < Data.Inst.GetROMSize())
-            {
-                if (column == 1
-                    //&& (Data.Inst.GetFlag(selOffset) == Data.FlagType.Opcode || Data.Inst.GetFlag(selOffset) == Data.FlagType.Unreached)
-                    && ConvertSNEStoPC(GetIntermediateAddressOrPointer(selOffset)) == offset
-                ) style.BackColor = Color.DeepPink;
-
-                if (column == 6
-                    //&& (Data.Inst.GetFlag(offset) == Data.FlagType.Opcode || Data.Inst.GetFlag(offset) == Data.FlagType.Unreached)
-                    && ConvertSNEStoPC(GetIntermediateAddressOrPointer(offset)) == selOffset
-                ) style.BackColor = Color.DeepPink;
-            }
+            var myName = "";
+            for (var i = 0; i < count; i++)
+                myName += (char)bytes[offset - count + i];
+            return myName;
         }
 
         public static long GetFileSizeInBytes(string filename)
@@ -613,6 +493,67 @@ namespace DiztinGUIsh
             {
                 action();
             }
+        }
+
+
+        // https://stackoverflow.com/questions/33119119/unzip-byte-array-in-c-sharp
+        public static byte[] TryUnzip(byte[] data)
+        {
+            try
+            {
+                using (MemoryStream comp = new MemoryStream(data))
+                using (GZipStream gzip = new GZipStream(comp, CompressionMode.Decompress))
+                using (MemoryStream res = new MemoryStream())
+                {
+                    gzip.CopyTo(res);
+                    return res.ToArray();
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+        public static byte[] TryZip(byte[] data)
+        {
+            try
+            {
+                using (MemoryStream comp = new MemoryStream())
+                using (GZipStream gzip = new GZipStream(comp, CompressionMode.Compress))
+                {
+                    gzip.Write(data, 0, data.Length);
+                    gzip.Close();
+                    return comp.ToArray();
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static byte[] ReadAllRomBytesFromFile(string filename)
+        {
+            var smc = File.ReadAllBytes(filename);
+            var rom = new byte[smc.Length & 0x7FFFFC00];
+
+            if ((smc.Length & 0x3FF) == 0x200)
+                for (int i = 0; i < rom.Length; i++)
+                    rom[i] = smc[i + 0x200];
+            else if ((smc.Length & 0x3FF) != 0)
+                throw new InvalidDataException("This ROM has an unusual size. It can't be opened.");
+            else
+                rom = smc;
+
+            if (rom.Length < 0x8000)
+                throw new InvalidDataException("This ROM is too small. It can't be opened.");
+
+            return rom;
+        }
+        public static string PromptToSelectFile(string initialDirectory = null)
+        {
+            var open = new OpenFileDialog { InitialDirectory = initialDirectory };
+            return open.ShowDialog() == DialogResult.OK ? open.FileName : null;
         }
     }
 }

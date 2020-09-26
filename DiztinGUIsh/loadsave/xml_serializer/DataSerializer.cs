@@ -21,18 +21,22 @@ using DiztinGUIsh;
 // is a must.  We aim for a tradeoff between decent compression and some small semblance of human readability.
 //
 // It's not.. super-pretty code, but it compresses well.
-sealed class TableDataSerializer : ISerializer<TableData>
+sealed class RomBytesSerializer : ISerializer<RomBytes>
 {
-    public static TableDataSerializer Default { get; } = new TableDataSerializer();
+    // let the outer XML class do the heavy lifting on versioning.
+    // but, let's add one here just because this specific class is complex.
+    private const int CURRENT_DATA_FORMAT_VERSION = 200;
 
-    TableDataSerializer() { }
+    public static RomBytesSerializer Default { get; } = new RomBytesSerializer();
+
+    RomBytesSerializer() { }
 
     public bool compress_groupblock = true;
     public bool compress_using_table_1 = true;
 
-    public TableData Get(IFormatReader parameter)
+    public RomBytes Get(IFormatReader parameter)
     {
-        var tableDataOut = new TableData();
+        var romBytesOut = new RomBytes();
 
         var lines = parameter.Content().Split(new char[] { '\n' }, 3).ToList();
         var options = lines[1].Split(new char[] { ',' }).ToList();
@@ -40,19 +44,21 @@ sealed class TableDataSerializer : ISerializer<TableData>
         if (lines[lines.Count - 1] == "")
             lines.RemoveAt(lines.Count - 1);
 
+        CheckForCompatibleVersion(options);
+
         // always apply options in same order here and in saving function
         if (options.Exists(s => s == "compress_table_1"))
             DecodeCompression_Table1(ref lines);
 
         if (options.Exists(s => s == "compress_groupblocks"))
-            UndoCompression_GroupsBlocks(ref lines);
+            DecodeCompression_GroupsBlocks(ref lines);
 
         int lineNum = 0;
         try
         {
             foreach (var line in lines)
             {
-                tableDataOut.RomBytes.Add(DecodeRomByte(line));
+                romBytesOut.Add(DecodeRomByte(line));
                 lineNum++;
             }
         }
@@ -62,15 +68,51 @@ sealed class TableDataSerializer : ISerializer<TableData>
             throw;
         }
 
-        return tableDataOut;
+        return romBytesOut;
     }
 
-    public void Write(IFormatWriter writer, TableData instance)
+    private static void CheckForCompatibleVersion(IEnumerable<string> options)
     {
-        var options = new List<string>();
+        try
+        {
+            var versionOption = options.SingleOrDefault(s => s.Contains("version:"));
+
+            if (versionOption == null)
+            {
+                throw new InvalidDataException(
+                    $"Exactly 1 'version' tag must be in options, unable to continue");
+            }
+
+            var split = versionOption.Split(':');
+            Debug.Assert(split.Length == 2);
+            if (!int.TryParse(split[1], out var version_num))
+                throw new InvalidDataException(
+                    $"Couldn't parse version # from version tag");
+
+            if (version_num > CURRENT_DATA_FORMAT_VERSION)
+                throw new InvalidDataException(
+                    $"Newer file format detected: {version_num}. This version of distinguish only supports data table formats up to {CURRENT_DATA_FORMAT_VERSION}.");
+
+            // In the future, we can add migrations here for older version. For now, just reject it.
+            if (version_num < CURRENT_DATA_FORMAT_VERSION)
+                throw new InvalidDataException(
+                    $"Newer file format detected: {version_num}. This version of distinguish only supports data table formats up to {CURRENT_DATA_FORMAT_VERSION}.");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidDataException($"Data table loader: Version error: {ex.Message}");
+        }
+    }
+
+    public void Write(IFormatWriter writer, RomBytes instance)
+    {
+        var options = new List<string>
+        {
+            $"version:{CURRENT_DATA_FORMAT_VERSION}",
+        };
 
         var lines = new List<string>();
-        foreach (var rb in instance.RomBytes)
+        foreach (var rb in instance)
         {
             var encoded = EncodeByte(rb);
             lines.Add(encoded);
@@ -119,8 +161,6 @@ sealed class TableDataSerializer : ISerializer<TableData>
         new CompressionEntry() {Pattern = "0001", c="Zs"},
     };
 
-
-
     private void DecodeCompression_Table1(ref List<string> lines)
     {
         for (int i = 0; i < lines.Count; ++i)
@@ -149,7 +189,7 @@ sealed class TableDataSerializer : ISerializer<TableData>
         }
     }
 
-    private void UndoCompression_GroupsBlocks(ref List<string> lines)
+    private void DecodeCompression_GroupsBlocks(ref List<string> lines)
     {
         var output = new List<string>();
 

@@ -128,7 +128,7 @@
             this.percentComplete = new System.Windows.Forms.ToolStripStatusLabel();
             this.seperator1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.currentMarker = new System.Windows.Forms.ToolStripStatusLabel();
-            this.openROMFile = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.openProjectFile = new System.Windows.Forms.OpenFileDialog();
             this.saveProjectFile = new System.Windows.Forms.SaveFileDialog();
             this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
@@ -964,7 +964,7 @@
             // 
             // openROMFile
             // 
-            this.openROMFile.Filter = "SNES ROM Images|*.smc;*.sfc|All files|*.*";
+            this.openFileDialog.Filter = "SNES ROM Images|*.smc;*.sfc|All files|*.*";
             // 
             // openProjectFile
             // 
@@ -1106,7 +1106,7 @@
         private System.Windows.Forms.ToolStripMenuItem viewHelpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripStatusLabel percentComplete;
-        private System.Windows.Forms.OpenFileDialog openROMFile;
+        private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.OpenFileDialog openProjectFile;
         private System.Windows.Forms.SaveFileDialog saveProjectFile;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;

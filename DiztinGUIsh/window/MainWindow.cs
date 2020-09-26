@@ -1,22 +1,18 @@
 ﻿using DiztinGUIsh.window;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using DiztinGUIsh.loadsave;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh
 {
     public partial class MainWindow : Form
     {
+        public Project Project { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -80,21 +76,20 @@ namespace DiztinGUIsh
         public void UpdateWindowTitle()
         {
             this.Text =
-                (Project.Inst.unsavedChanges ? "*" : "") +
-                (Project.Inst.currentProjectFile == null ? "New Project" : Project.Inst.currentProjectFile) +
+                (Project.UnsavedChanges ? "*" : "") +
+                (Project.ProjectFileName == null ? "New Project" : Project.ProjectFileName) +
                 " - DiztinGUIsh";
         }
 
         private bool ContinueUnsavedChanges()
         {
-            if (Project.Inst.unsavedChanges)
-            {
-                DialogResult confirm = MessageBox.Show("You have unsaved changes. They will be lost if you continue.",
-                    "Unsaved Changes", MessageBoxButtons.OKCancel);
-                return confirm == DialogResult.OK;
-            }
+            if (Project == null || !Project.UnsavedChanges)
+                return true;
 
-            return true;
+            return DialogResult.OK == MessageBox.Show(
+                "You have unsaved changes. They will be lost if you continue.",
+                "Unsaved Changes", MessageBoxButtons.OKCancel);
+
         }
 
         public void TriggerSaveOptions(bool save, bool saveas)
@@ -106,37 +101,66 @@ namespace DiztinGUIsh
 
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (ContinueUnsavedChanges())
+            if (!ContinueUnsavedChanges()) 
+                return;
+
+            var romFilename = PromptForOpenFilename();
+            if (string.IsNullOrEmpty(romFilename))
+                return;
+
+            if (!TryImportProject(openFileDialog.FileName))
+                return;
+
+            OnImportedProjectSuccess();
+        }
+
+        private string PromptForOpenFilename()
+        {
+            // TODO: combine with another function in Project that looks like this
+            openFileDialog.InitialDirectory = Project.ProjectFileName;
+            return openFileDialog.ShowDialog() != DialogResult.OK ? openFileDialog.FileName : null;
+        }
+
+        private void OnImportedProjectSuccess()
+        {
+            importCDLToolStripMenuItem.Enabled = true;
+            TriggerSaveOptions(false, true);
+            UpdateWindowTitle();
+            UpdateDataGridView();
+            UpdatePercent();
+            table.Invalidate();
+            EnableSubWindows();
+        }
+
+        private bool TryImportProject(string romFileToOpen)
+        {
+            try
             {
-                openROMFile.InitialDirectory = Project.Inst.currentProjectFile;
-                DialogResult result = openROMFile.ShowDialog();
-                if (result == DialogResult.OK)
-                {
-                    if (Project.Inst.NewProject(openROMFile.FileName))
-                    {
-                        importCDLToolStripMenuItem.Enabled = true;
-                        TriggerSaveOptions(false, true);
-                        UpdateWindowTitle();
-                        UpdateDataGridView();
-                        UpdatePercent();
-                        table.Invalidate();
-                        EnableSubWindows();
-                    }
-                }
+                var importSettings = new ImportROMDialog().PromptForImportSettings(romFileToOpen);
+                if (importSettings == null)
+                    return false;
+
+                Project.ImportRomAndCreateNewProject(importSettings);
+                return true;
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return false;
         }
 
         private void openProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (ContinueUnsavedChanges())
-            {
-                openProjectFile.InitialDirectory = Project.Inst.currentProjectFile;
-                DialogResult result = openProjectFile.ShowDialog();
-                if (result == DialogResult.OK)
-                {
-                    openProject(openProjectFile.FileName);
-                }
-            }
+            if (!ContinueUnsavedChanges()) 
+                return;
+
+            openProjectFile.InitialDirectory = Project?.ProjectFileName;
+            if (openProjectFile.ShowDialog() != DialogResult.OK) 
+                return;
+
+            openProject(openProjectFile.FileName);
         }
 
         public string LastProjectFilename
@@ -164,37 +188,38 @@ namespace DiztinGUIsh
 
         public void openProject(string filename)
         {
-            if (!Project.Inst.TryOpenProject(filename, openROMFile))
+            var project = ProjectFileManager.Open(filename);
+            if (project == null)
             {
                 LastProjectFilename = "";
-            } 
-            else 
-            {
-                importCDLToolStripMenuItem.Enabled = true;
-                TriggerSaveOptions(true, true);
-                UpdateWindowTitle();
-                UpdateDataGridView();
-                UpdatePercent();
-                table.Invalidate();
-                EnableSubWindows();
-
-                LastProjectFilename = filename;
+                return;
             }
+
+            Project = project;
+            
+            importCDLToolStripMenuItem.Enabled = true;
+            TriggerSaveOptions(true, true);
+            UpdateWindowTitle();
+            UpdateDataGridView();
+            UpdatePercent();
+            table.Invalidate();
+            EnableSubWindows();
+            LastProjectFilename = filename;
         }
 
         private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Project.Inst.SaveProject(Project.Inst.currentProjectFile);
+            ProjectFileManager.Save(Project, Project.ProjectFileName);
             UpdateWindowTitle();
         }
 
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            saveProjectFile.InitialDirectory = Project.Inst.currentROMFile;
+            saveProjectFile.InitialDirectory = Project.AttachedRomFilename;
             DialogResult result = saveProjectFile.ShowDialog();
             if (result == DialogResult.OK && saveProjectFile.FileName != "")
             {
-                Project.Inst.SaveProject(saveProjectFile.FileName);
+                ProjectFileManager.Save(Project, saveProjectFile.FileName);
                 TriggerSaveOptions(true, true);
                 UpdateWindowTitle();
             }
@@ -202,7 +227,7 @@ namespace DiztinGUIsh
 
         private void importCDLToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openCDLDialog.InitialDirectory = Project.Inst.currentProjectFile;
+            openCDLDialog.InitialDirectory = Project.ProjectFileName;
             DialogResult result = openCDLDialog.ShowDialog();
             if (result == DialogResult.OK)
             {
@@ -211,7 +236,7 @@ namespace DiztinGUIsh
                     try
                     {
                         var cdl = BizHawkCdl.LoadFromFile(openCDLDialog.FileName);
-                        Manager.ImportBizHawkCDL(cdl);
+                        Project.Data.ImportBizHawkCDL(cdl);
                     }
                     catch (InvalidDataException ex)
                     {
@@ -231,50 +256,52 @@ namespace DiztinGUIsh
 
         private void exportLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ExportDisassembly export = new ExportDisassembly();
-            DialogResult result = export.ShowDialog();
-            if (result == DialogResult.OK)
+            var lc = new LogCreator(Project);
+
+            var export = new ExportDisassembly(lc);
+            if (export.ShowDialog() != DialogResult.OK) 
+                return;
+
+            string file = null, error = null;
+
+            // TODO: save this as a setting in the project file
+            if (lc.structure == LogCreator.FormatStructure.SingleFile)
             {
-                string file = null, error = null;
-                if (LogCreator.structure == LogCreator.FormatStructure.SingleFile)
+                saveLogSingleFile.InitialDirectory = Project.ProjectFileName;
+                if (saveLogSingleFile.ShowDialog() == DialogResult.OK && saveLogSingleFile.FileName != "")
                 {
-                    saveLogSingleFile.InitialDirectory = Project.Inst.currentProjectFile;
-                    result = saveLogSingleFile.ShowDialog();
-                    if (result == DialogResult.OK && saveLogSingleFile.FileName != "")
-                    {
-                        file = saveLogSingleFile.FileName;
-                        error = Path.GetDirectoryName(file) + "/error.txt";
-                    }
-                }
-                else
-                {
-                    chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.Inst.currentProjectFile);
-                    result = chooseLogFolder.ShowDialog();
-                    if (result == DialogResult.OK && chooseLogFolder.SelectedPath != "")
-                    {
-                        file = chooseLogFolder.SelectedPath + "/main.asm";
-                        error = Path.GetDirectoryName(file) + "/error.txt";
-                    }
-                }
-
-                if (file != null)
-                {
-                    int errors = 0;
-                    using (StreamWriter sw = new StreamWriter(file))
-                    using (StreamWriter er = new StreamWriter(error))
-                    {
-                        errors = LogCreator.CreateLog(sw, er);
-                        if (errors > 0)
-                            MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",
-                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        else
-                            MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK,
-                                MessageBoxIcon.Asterisk);
-                    }
-
-                    if (errors == 0) File.Delete(error);
+                    file = saveLogSingleFile.FileName;
+                    error = Path.GetDirectoryName(file) + "/error.txt";
                 }
             }
+            else
+            {
+                chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.ProjectFileName);
+                if (chooseLogFolder.ShowDialog() == DialogResult.OK && chooseLogFolder.SelectedPath != "")
+                {
+                    file = chooseLogFolder.SelectedPath + "/main.asm";
+                    error = Path.GetDirectoryName(file) + "/error.txt";
+                }
+            }
+
+            if (file == null) 
+                return;
+
+            int errors = 0;
+            using (StreamWriter sw = new StreamWriter(file))
+            using (StreamWriter er = new StreamWriter(error))
+            {
+                errors = lc.CreateLog(sw, er);
+                if (errors > 0)
+                    MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                else
+                    MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK,
+                        MessageBoxIcon.Asterisk);
+            }
+
+            if (errors == 0) 
+                File.Delete(error);
         }
 
         private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e)
@@ -296,7 +323,7 @@ namespace DiztinGUIsh
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            About about = new About();
+            var about = new About();
             about.ShowDialog();
         }
 
@@ -335,9 +362,9 @@ namespace DiztinGUIsh
 
         public void UpdatePercent()
         {
-            int totalUnreached = 0, size = Data.Inst.GetROMSize();
+            int totalUnreached = 0, size = Project.Data.GetROMSize();
             for (int i = 0; i < size; i++)
-                if (Data.Inst.GetFlag(i) == Data.FlagType.Unreached)
+                if (Project.Data.GetFlag(i) == Data.FlagType.Unreached)
                     totalUnreached++;
             int reached = size - totalUnreached;
             percentComplete.Text = string.Format("{0:N3}% ({1:D}/{2:D})", reached * 100.0 / size, reached, size);
@@ -360,13 +387,13 @@ namespace DiztinGUIsh
 
         private void UpdateDataGridView()
         {
-            if (Data.Inst.GetROMSize() > 0)
+            if (Project.Data.GetROMSize() > 0)
             {
                 rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
-                if (viewOffset + rowsToShow > Data.Inst.GetROMSize()) viewOffset = Data.Inst.GetROMSize() - rowsToShow;
+                if (viewOffset + rowsToShow > Project.Data.GetROMSize()) viewOffset = Project.Data.GetROMSize() - rowsToShow;
                 if (viewOffset < 0) viewOffset = 0;
                 vScrollBar1.Enabled = true;
-                vScrollBar1.Maximum = Data.Inst.GetROMSize() - rowsToShow;
+                vScrollBar1.Maximum = Project.Data.GetROMSize() - rowsToShow;
                 vScrollBar1.Value = viewOffset;
                 table.RowCount = rowsToShow;
 
@@ -377,7 +404,7 @@ namespace DiztinGUIsh
 
         private void table_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             int selRow = table.CurrentCell.RowIndex + viewOffset, selCol = table.CurrentCell.ColumnIndex;
             int amount = e.Delta / 0x18;
             viewOffset -= amount;
@@ -409,7 +436,7 @@ namespace DiztinGUIsh
 
         private void table_KeyDown(object sender, KeyEventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
 
             int offset = table.CurrentCell.RowIndex + viewOffset;
             int newOffset = offset;
@@ -431,7 +458,7 @@ namespace DiztinGUIsh
                 case Keys.Down:
                     amount = e.KeyCode == Keys.Down ? 0x01 : e.KeyCode == Keys.PageDown ? 0x10 : 0x100;
                     newOffset = offset + amount;
-                    if (newOffset >= Data.Inst.GetROMSize()) newOffset = Data.Inst.GetROMSize() - 1;
+                    if (newOffset >= Project.Data.GetROMSize()) newOffset = Project.Data.GetROMSize() - 1;
                     SelectOffset(newOffset);
                     break;
                 case Keys.Left:
@@ -481,10 +508,10 @@ namespace DiztinGUIsh
                     table.BeginEdit(true);
                     break;
                 case Keys.M:
-                    Data.Inst.SetMFlag(offset, !Data.Inst.GetMFlag(offset));
+                    Project.Data.SetMFlag(offset, !Project.Data.GetMFlag(offset));
                     break;
                 case Keys.X:
-                    Data.Inst.SetXFlag(offset, !Data.Inst.GetXFlag(offset));
+                    Project.Data.SetXFlag(offset, !Project.Data.GetXFlag(offset));
                     break;
                 case Keys.C:
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
@@ -499,51 +526,51 @@ namespace DiztinGUIsh
         private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
             int row = e.RowIndex + viewOffset;
-            if (row >= Data.Inst.GetROMSize()) return;
+            if (row >= Project.Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
                 case 0:
-                    e.Value = Data.Inst.GetLabelName(Util.ConvertPCtoSNES(row));
+                    e.Value = Project.Data.GetLabelName(Project.Data.ConvertPCtoSNES(row));
                     break;
                 case 1:
-                    e.Value = Util.NumberToBaseString(Util.ConvertPCtoSNES(row), Util.NumberBase.Hexadecimal, 6);
+                    e.Value = Util.NumberToBaseString(Project.Data.ConvertPCtoSNES(row), Util.NumberBase.Hexadecimal, 6);
                     break;
                 case 2:
-                    e.Value = (char) Data.Inst.GetROMByte(row);
+                    e.Value = (char) Project.Data.GetROMByte(row);
                     break;
                 case 3:
-                    e.Value = Util.NumberToBaseString(Data.Inst.GetROMByte(row), DisplayBase);
+                    e.Value = Util.NumberToBaseString(Project.Data.GetROMByte(row), DisplayBase);
                     break;
                 case 4:
-                    e.Value = Util.PointToString(Data.Inst.GetInOutPoint(row));
+                    e.Value = Util.PointToString(Project.Data.GetInOutPoint(row));
                     break;
                 case 5:
-                    int len = Manager.GetInstructionLength(row);
-                    if (row + len <= Data.Inst.GetROMSize()) e.Value = Util.GetInstruction(row);
+                    int len = Project.Data.GetInstructionLength(row);
+                    if (row + len <= Project.Data.GetROMSize()) e.Value = Project.Data.GetInstruction(row);
                     else e.Value = "";
                     break;
                 case 6:
-                    int ia = Util.GetIntermediateAddressOrPointer(row);
+                    int ia = Project.Data.GetIntermediateAddressOrPointer(row);
                     if (ia >= 0) e.Value = Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6);
                     else e.Value = "";
                     break;
                 case 7:
-                    e.Value = Util.TypeToString(Data.Inst.GetFlag(row));
+                    e.Value = Util.TypeToString(Project.Data.GetFlag(row));
                     break;
                 case 8:
-                    e.Value = Util.NumberToBaseString(Data.Inst.GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
+                    e.Value = Util.NumberToBaseString(Project.Data.GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
                     break;
                 case 9:
-                    e.Value = Util.NumberToBaseString(Data.Inst.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
+                    e.Value = Util.NumberToBaseString(Project.Data.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
                     break;
                 case 10:
-                    e.Value = Util.BoolToSize(Data.Inst.GetMFlag(row));
+                    e.Value = Util.BoolToSize(Project.Data.GetMFlag(row));
                     break;
                 case 11:
-                    e.Value = Util.BoolToSize(Data.Inst.GetXFlag(row));
+                    e.Value = Util.BoolToSize(Project.Data.GetXFlag(row));
                     break;
                 case 12:
-                    e.Value = Data.Inst.GetComment(Util.ConvertPCtoSNES(row));
+                    e.Value = Project.Data.GetComment(Project.Data.ConvertPCtoSNES(row));
                     break;
             }
         }
@@ -553,42 +580,136 @@ namespace DiztinGUIsh
             string value = e.Value as string;
             int result;
             int row = e.RowIndex + viewOffset;
-            if (row >= Data.Inst.GetROMSize()) return;
+            if (row >= Project.Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
                 case 0:
-                    Data.Inst.AddLabel(Util.ConvertPCtoSNES(row), new Data.AliasInfo() {name = value}, true);
+                    Project.Data.AddLabel(Project.Data.ConvertPCtoSNES(row), new Label() {name = value}, true);
                     break; // todo (validate for valid label characters)
                 case 8:
-                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.Inst.SetDataBank(row, result);
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.SetDataBank(row, result);
                     break;
                 case 9:
-                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Data.Inst.SetDirectPage(row, result);
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.SetDirectPage(row, result);
                     break;
                 case 10:
-                    Data.Inst.SetMFlag(row, (value == "8" || value == "M"));
+                    Project.Data.SetMFlag(row, (value == "8" || value == "M"));
                     break;
                 case 11:
-                    Data.Inst.SetXFlag(row, (value == "8" || value == "X"));
+                    Project.Data.SetXFlag(row, (value == "8" || value == "X"));
                     break;
                 case 12:
-                    Data.Inst.AddComment(Util.ConvertPCtoSNES(row), value, true);
+                    Project.Data.AddComment(Project.Data.ConvertPCtoSNES(row), value, true);
                     break;
             }
 
             table.InvalidateRow(e.RowIndex);
         }
 
+        public void PaintCell(int offset, DataGridViewCellStyle style, int column, int selOffset)
+        {
+            // editable cells show up green
+            if (column == 0 || column == 8 || column == 9 || column == 12) style.SelectionBackColor = Color.Chartreuse;
+
+            switch (Project.Data.GetFlag(offset))
+            {
+                case Data.FlagType.Unreached:
+                    style.BackColor = Color.LightGray;
+                    style.ForeColor = Color.DarkSlateGray;
+                    break;
+                case Data.FlagType.Opcode:
+                    int opcode = Project.Data.GetROMByte(offset);
+                    switch (column)
+                    {
+                        case 4: // <*>
+                            Data.InOutPoint point = Project.Data.GetInOutPoint(offset);
+                            int r = 255, g = 255, b = 255;
+                            if ((point & (Data.InOutPoint.EndPoint | Data.InOutPoint.OutPoint)) != 0) g -= 50;
+                            if ((point & (Data.InOutPoint.InPoint)) != 0) r -= 50;
+                            if ((point & (Data.InOutPoint.ReadPoint)) != 0) b -= 50;
+                            style.BackColor = Color.FromArgb(r, g, b);
+                            break;
+                        case 5: // Instruction
+                            if (opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 // RTI WAI STP SED
+                                || opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42 // XCE BRK COP WDM
+                            ) style.BackColor = Color.Yellow;
+                            break;
+                        case 8: // Data Bank
+                            if (opcode == 0xAB || opcode == 0x44 || opcode == 0x54) // PLB MVP MVN
+                                style.BackColor = Color.OrangeRed;
+                            else if (opcode == 0x8B) // PHB
+                                style.BackColor = Color.Yellow;
+                            break;
+                        case 9: // Direct Page
+                            if (opcode == 0x2B || opcode == 0x5B) // PLD TCD
+                                style.BackColor = Color.OrangeRed;
+                            if (opcode == 0x0B || opcode == 0x7B) // PHD TDC
+                                style.BackColor = Color.Yellow;
+                            break;
+                        case 10: // M Flag
+                        case 11: // X Flag
+                            int mask = column == 10 ? 0x20 : 0x10;
+                            if (opcode == 0x28 || ((opcode == 0xC2 || opcode == 0xE2) // PLP SEP REP
+                                && (Project.Data.GetROMByte(offset + 1) & mask) != 0)) // relevant bit set
+                                style.BackColor = Color.OrangeRed;
+                            if (opcode == 0x08) // PHP
+                                style.BackColor = Color.Yellow;
+                            break;
+                    }
+                    break;
+                case Data.FlagType.Operand:
+                    style.ForeColor = Color.LightGray;
+                    break;
+                case Data.FlagType.Graphics:
+                    style.BackColor = Color.LightPink;
+                    break;
+                case Data.FlagType.Music:
+                    style.BackColor = Color.PowderBlue;
+                    break;
+                case Data.FlagType.Data8Bit:
+                case Data.FlagType.Data16Bit:
+                case Data.FlagType.Data24Bit:
+                case Data.FlagType.Data32Bit:
+                    style.BackColor = Color.NavajoWhite;
+                    break;
+                case Data.FlagType.Pointer16Bit:
+                case Data.FlagType.Pointer24Bit:
+                case Data.FlagType.Pointer32Bit:
+                    style.BackColor = Color.Orchid;
+                    break;
+                case Data.FlagType.Text:
+                    style.BackColor = Color.Aquamarine;
+                    break;
+                case Data.FlagType.Empty:
+                    style.BackColor = Color.DarkSlateGray;
+                    style.ForeColor = Color.LightGray;
+                    break;
+            }
+
+            if (selOffset >= 0 && selOffset < Project.Data.GetROMSize())
+            {
+                if (column == 1
+                    //&& (Project.Data.GetFlag(selOffset) == Data.FlagType.Opcode || Project.Data.GetFlag(selOffset) == Data.FlagType.Unreached)
+                    && Project.Data.ConvertSNEStoPC(Project.Data.GetIntermediateAddressOrPointer(selOffset)) == offset
+                ) style.BackColor = Color.DeepPink;
+
+                if (column == 6
+                    //&& (Project.Data.GetFlag(offset) == Data.FlagType.Opcode || Project.Data.GetFlag(offset) == Data.FlagType.Unreached)
+                    && Project.Data.ConvertSNEStoPC(Project.Data.GetIntermediateAddressOrPointer(offset)) == selOffset
+                ) style.BackColor = Color.DeepPink;
+            }
+        }
+
         private void table_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             int row = e.RowIndex + viewOffset;
-            if (row < 0 || row >= Data.Inst.GetROMSize()) return;
-            Util.PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + viewOffset);
+            if (row < 0 || row >= Project.Data.GetROMSize()) return;
+            PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + viewOffset);
         }
 
         public void SelectOffset(int offset, int column = -1)
         {
-            int col = column == -1 ? table.CurrentCell.ColumnIndex : column;
+            var col = column == -1 ? table.CurrentCell.ColumnIndex : column;
             if (offset < viewOffset)
             {
                 viewOffset = offset;
@@ -609,33 +730,38 @@ namespace DiztinGUIsh
 
         private void Step(int offset)
         {
-            SelectOffset(Manager.Step(offset, false, false, offset - 1));
+            Project.UnsavedChanges = true;
+            SelectOffset(Project.Data.Step(offset, false, false, offset - 1));
             UpdatePercent();
             UpdateWindowTitle();
         }
 
         private void StepIn(int offset)
         {
-            SelectOffset(Manager.Step(offset, true, false, offset - 1));
+            Project.UnsavedChanges = true;
+            SelectOffset(Project.Data.Step(offset, true, false, offset - 1));
             UpdatePercent();
             UpdateWindowTitle();
         }
 
         private void AutoStepSafe(int offset)
         {
-            int destination = Manager.AutoStep(offset, false, 0);
-            if (MoveWithStep) SelectOffset(destination);
+            Project.UnsavedChanges = true;
+            var destination = Project.Data.AutoStep(offset, false, 0);
+            if (MoveWithStep) 
+                SelectOffset(destination);
             UpdatePercent();
             UpdateWindowTitle();
         }
 
         private void AutoStepHarsh(int offset)
         {
-            HarshAutoStep harsh = new HarshAutoStep(offset);
+            HarshAutoStep harsh = new HarshAutoStep(offset, Project.Data);
             DialogResult result = harsh.ShowDialog();
             if (result == DialogResult.OK)
             {
-                int destination = Manager.AutoStep(harsh.GetOffset(), true, harsh.GetCount());
+                Project.UnsavedChanges = true;
+                int destination = Project.Data.AutoStep(harsh.GetOffset(), true, harsh.GetCount());
                 if (MoveWithStep) SelectOffset(destination);
                 UpdatePercent();
                 UpdateWindowTitle();
@@ -644,84 +770,89 @@ namespace DiztinGUIsh
 
         private void Mark(int offset)
         {
-            SelectOffset(Manager.Mark(offset, markFlag, Util.TypeStepSize(markFlag)));
+            Project.UnsavedChanges = true;
+            SelectOffset(Project.Data.Mark(offset, markFlag, Util.TypeStepSize(markFlag)));
             UpdatePercent();
             UpdateWindowTitle();
         }
 
         private void MarkMany(int offset, int column)
         {
-            MarkManyDialog mark = new MarkManyDialog(offset, column);
-            DialogResult result = mark.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                int destination = 0;
-                int col = mark.GetProperty();
-                switch (col)
-                {
-                    case 0:
-                        destination = Manager.Mark(mark.GetOffset(), (Data.FlagType) mark.GetValue(), mark.GetCount());
-                        break;
-                    case 1:
-                        destination = Manager.MarkDataBank(mark.GetOffset(), (int) mark.GetValue(), mark.GetCount());
-                        break;
-                    case 2:
-                        destination = Manager.MarkDirectPage(mark.GetOffset(), (int) mark.GetValue(), mark.GetCount());
-                        break;
-                    case 3:
-                        destination = Manager.MarkMFlag(mark.GetOffset(), (bool) mark.GetValue(), mark.GetCount());
-                        break;
-                    case 4:
-                        destination = Manager.MarkXFlag(mark.GetOffset(), (bool) mark.GetValue(), mark.GetCount());
-                        break;
-                    case 5:
-                        destination = Manager.MarkArchitechture(mark.GetOffset(), (Data.Architechture) mark.GetValue(),
-                            mark.GetCount());
-                        break;
-                }
+            var mark = new MarkManyDialog(offset, column, Project.Data);
+            var result = mark.ShowDialog();
+            if (result != DialogResult.OK) 
+                return;
 
-                if (MoveWithStep) SelectOffset(destination);
-                UpdatePercent();
-                UpdateWindowTitle();
-                InvalidateTable();
+            Project.UnsavedChanges = true;
+
+            var destination = 0;
+            var col = mark.GetProperty();
+            switch (col)
+            {
+                case 0:
+                    destination = Project.Data.Mark(mark.GetOffset(), (Data.FlagType) mark.GetValue(), mark.GetCount());
+                    break;
+                case 1:
+                    destination = Project.Data.MarkDataBank(mark.GetOffset(), (int) mark.GetValue(), mark.GetCount());
+                    break;
+                case 2:
+                    destination = Project.Data.MarkDirectPage(mark.GetOffset(), (int) mark.GetValue(), mark.GetCount());
+                    break;
+                case 3:
+                    destination = Project.Data.MarkMFlag(mark.GetOffset(), (bool) mark.GetValue(), mark.GetCount());
+                    break;
+                case 4:
+                    destination = Project.Data.MarkXFlag(mark.GetOffset(), (bool) mark.GetValue(), mark.GetCount());
+                    break;
+                case 5:
+                    destination = Project.Data.MarkArchitechture(mark.GetOffset(), (Data.Architechture) mark.GetValue(),
+                        mark.GetCount());
+                    break;
             }
+
+            if (MoveWithStep) 
+                SelectOffset(destination);
+
+            UpdatePercent();
+            UpdateWindowTitle();
+            InvalidateTable();
         }
 
         private void GoToIntermediateAddress(int offset)
         {
-            int ia = Util.GetIntermediateAddressOrPointer(offset);
-            if (ia >= 0)
-            {
-                int pc = Util.ConvertSNEStoPC(ia);
-                if (pc >= 0)
-                {
-                    SelectOffset(pc, 1);
-                }
-            }
+            var ia = Project.Data.GetIntermediateAddressOrPointer(offset);
+            if (ia < 0) 
+                return;
+
+            var pc = Project.Data.ConvertSNEStoPC(ia);
+            if (pc < 0) 
+                return;
+
+            SelectOffset(pc, 1);
         }
 
         private void GoToUnreached(bool end, bool direction)
         {
             int offset = table.CurrentCell.RowIndex + viewOffset;
-            int size = Data.Inst.GetROMSize();
+            int size = Project.Data.GetROMSize();
             int unreached = end ? (direction ? 0 : size - 1) : offset;
 
             if (direction)
             {
                 if (!end)
-                    while (unreached < size - 1 && Data.Inst.GetFlag(unreached) == Data.FlagType.Unreached)
+                    while (unreached < size - 1 && Project.Data.GetFlag(unreached) == Data.FlagType.Unreached)
                         unreached++;
-                while (unreached < size - 1 && Data.Inst.GetFlag(unreached) != Data.FlagType.Unreached) unreached++;
+                while (unreached < size - 1 && Project.Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached++;
             }
             else
             {
                 if (unreached > 0) unreached--;
-                while (unreached > 0 && Data.Inst.GetFlag(unreached) != Data.FlagType.Unreached) unreached--;
+                while (unreached > 0 && Project.Data.GetFlag(unreached) != Data.FlagType.Unreached) unreached--;
             }
 
-            while (unreached > 0 && Data.Inst.GetFlag(unreached - 1) == Data.FlagType.Unreached) unreached--;
+            while (unreached > 0 && Project.Data.GetFlag(unreached - 1) == Data.FlagType.Unreached) unreached--;
 
-            if (Data.Inst.GetFlag(unreached) == Data.FlagType.Unreached) SelectOffset(unreached, 1);
+            if (Project.Data.GetFlag(unreached) == Data.FlagType.Unreached) SelectOffset(unreached, 1);
         }
 
         private void visualMapToolStripMenuItem_Click(object sender, EventArgs e)
@@ -738,46 +869,49 @@ namespace DiztinGUIsh
 
         private void stepOverToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             Step(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void stepInToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             StepIn(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void autoStepSafeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             AutoStepSafe(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void autoStepHarshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             AutoStepHarsh(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void gotoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
-            GotoDialog go = new GotoDialog(viewOffset + table.CurrentCell.RowIndex);
-            DialogResult result = go.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                int offset = go.GetPcOffset();
-                if (offset >= 0 && offset < Data.Inst.GetROMSize()) SelectOffset(offset);
-                else
-                    MessageBox.Show("That offset is out of range.", "Error", MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-            }
+            if (Project.Data.GetROMSize() <= 0) 
+                return;
+
+            var go = new GotoDialog(viewOffset + table.CurrentCell.RowIndex, Project.Data);
+            var result = go.ShowDialog();
+            if (result != DialogResult.OK) 
+                return;
+
+            int offset = go.GetPcOffset();
+            if (offset >= 0 && offset < Project.Data.GetROMSize()) 
+                SelectOffset(offset);
+            else
+                MessageBox.Show("That offset is out of range.", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
         }
 
         private void gotoIntermediateAddressToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             GoToIntermediateAddress(table.CurrentCell.RowIndex + viewOffset);
         }
 
@@ -798,13 +932,13 @@ namespace DiztinGUIsh
 
         private void markOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             Mark(table.CurrentCell.RowIndex + viewOffset);
         }
 
         private void markManyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 7);
         }
 
@@ -816,25 +950,25 @@ namespace DiztinGUIsh
 
         private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 8);
         }
 
         private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 9);
         }
 
         private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 10);
         }
 
         private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) return;
             MarkMany(table.CurrentCell.RowIndex + viewOffset, 11);
         }
 
@@ -846,29 +980,38 @@ namespace DiztinGUIsh
 
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
-            MisalignmentChecker mis = new MisalignmentChecker();
-            DialogResult result = mis.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                int count = Manager.FixMisalignedFlags();
-                InvalidateTable();
-                MessageBox.Show(string.Format("Modified {0} flags!", count), "Done!", MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-            }
+            if (Project.Data.GetROMSize() <= 0) 
+                return;
+
+            var mis = new MisalignmentChecker(Project.Data);
+            var result = mis.ShowDialog();
+
+            if (result != DialogResult.OK) 
+                return;
+            
+            int count = Project.Data.FixMisalignedFlags();
+
+            if (count > 0)
+                Project.UnsavedChanges = true;
+
+            InvalidateTable();
+            MessageBox.Show($"Modified {count} flags!", "Done!", 
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Data.Inst.GetROMSize() <= 0) return;
-            InOutPointChecker point = new InOutPointChecker();
-            DialogResult result = point.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                Manager.RescanInOutPoints();
-                InvalidateTable();
-                MessageBox.Show("Scan complete!", "Done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            if (Project.Data.GetROMSize() <= 0) 
+                return;
+
+            var point = new InOutPointChecker();
+            if (point.ShowDialog() != DialogResult.OK) 
+                return;
+
+            Project.Data.RescanInOutPoints();
+            Project.UnsavedChanges = true;
+            InvalidateTable();
+            MessageBox.Show("Scan complete!", "Done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void unreachedToolStripMenuItem_Click(object sender, EventArgs e)
@@ -963,7 +1106,7 @@ namespace DiztinGUIsh
 
         public OpenFileDialog GetRomOpenFileDialog()
         {
-            return openROMFile;
+            return openFileDialog;
         }
 
         // sub windows
@@ -981,13 +1124,16 @@ namespace DiztinGUIsh
 
         private void ImportUsageMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (openUsageMapFile.ShowDialog() == DialogResult.OK)
-            {
-                int total = Manager.ImportUsageMap(File.ReadAllBytes(openUsageMapFile.FileName));
+            if (openUsageMapFile.ShowDialog() != DialogResult.OK) 
+                return;
 
-                MessageBox.Show($"Modified total {total} flags!", "Done",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            var num_modified_flags = Project.Data.ImportUsageMap(File.ReadAllBytes(openUsageMapFile.FileName));
+
+            if (num_modified_flags > 0)
+                Project.UnsavedChanges = true;
+
+            MessageBox.Show($"Modified total {num_modified_flags} flags!", "Done",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void ImportTraceLogToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1001,8 +1147,11 @@ namespace DiztinGUIsh
             // caution: trace logs can be gigantic, even a few seconds can be > 1GB
             LargeFilesReader.ReadFilesLines(openTraceLogDialog.FileNames, delegate (string line)
             {
-                totalLinesSoFar += Manager.ImportTraceLogLine(line);
+                totalLinesSoFar += Project.Data.ImportTraceLogLine(line);
             });
+
+            if (totalLinesSoFar > 0)
+                Project.UnsavedChanges = true;
 
             MessageBox.Show(
             $"Modified total {totalLinesSoFar} flags from {openTraceLogDialog.FileNames.Length} files!",

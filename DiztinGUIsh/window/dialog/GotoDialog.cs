@@ -13,10 +13,12 @@ namespace DiztinGUIsh
 {
     public partial class GotoDialog : Form
     {
-        public GotoDialog(int offset)
+        public Data Data { get; set; }
+        public GotoDialog(int offset, Data data)
         {
             InitializeComponent();
-            textROM.Text = Util.NumberToBaseString(Util.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6);
+            Data = data;
+            textROM.Text = Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6);
             textPC.Text = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0);
         }
 
@@ -92,7 +94,7 @@ namespace DiztinGUIsh
 
         private bool IsValidPCAddress(int pc)
         {
-            return pc >= 0 && pc < Data.Inst.GetROMSize();
+            return pc >= 0 && pc < Data.GetROMSize();
         }
 
         private bool IsPCOffsetValid()
@@ -107,14 +109,14 @@ namespace DiztinGUIsh
             if (address < 0)
                 return false;
             
-            return IsValidPCAddress(Util.ConvertSNEStoPC(address));
+            return IsValidPCAddress(Data.ConvertSNEStoPC(address));
         }
 
         private void textROM_TextChanged(object sender, EventArgs e)
         {
             UpdateTextChanged(textROM.Text,(finaltext, address, noBase) =>
             {
-                int pc = Util.ConvertSNEStoPC(address);
+                int pc = Data.ConvertSNEStoPC(address);
                 
                 textROM.Text = finaltext;
                 textPC.Text = Util.NumberToBaseString(pc, noBase, 0);
@@ -127,7 +129,7 @@ namespace DiztinGUIsh
         {
             UpdateTextChanged(textPC.Text, (finaltext, offset, noBase) =>
             {
-                int addr = Util.ConvertPCtoSNES(offset);
+                int addr = Data.ConvertPCtoSNES(offset);
 
                 textPC.Text = finaltext;
                 textROM.Text = Util.NumberToBaseString(addr, noBase, 6);

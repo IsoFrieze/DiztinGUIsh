@@ -107,8 +107,14 @@
   <ItemGroup>
     <Compile Include="BizHawkCdl.cs" />
     <Compile Include="LargeFilesReader.cs" />
+    <Compile Include="loadsave\binary_serializer_old\BinarySerializer.cs" />
+    <Compile Include="loadsave\ProjectSerializer.cs" />
+    <Compile Include="loadsave\ProjectFileManager.cs" />
+    <Compile Include="loadsave\xml_serializer\ProjectXMLSerializer.cs" />
     <Compile Include="ProgressBarWorker.cs" />
-    <Compile Include="static\DataSerializer.cs" />
+    <Compile Include="loadsave\xml_serializer\DataSerializer.cs" />
+    <Compile Include="static\Label.cs" />
+    <Compile Include="static\RomBytes.cs" />
     <Compile Include="window\dialog\About.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -210,6 +216,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="window\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="window\dialog\MarkManyDialog.resx">
       <DependentUpon>MarkManyDialog.cs</DependentUpon>
@@ -256,5 +263,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

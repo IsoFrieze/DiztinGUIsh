@@ -12,8 +12,10 @@ namespace DiztinGUIsh
 {
     public partial class MisalignmentChecker : Form
     {
-        public MisalignmentChecker()
+        private Data Data { get; set; }
+        public MisalignmentChecker(Data data)
         {
+            Data = data;
             InitializeComponent();
         }
 
@@ -27,28 +29,28 @@ namespace DiztinGUIsh
             textLog.Text = "";
             int found = 0, offset = 0;
 
-            while (found < 500 && offset < Data.Inst.GetROMSize())
+            while (found < 500 && offset < Data.GetROMSize())
             {
-                Data.FlagType flag = Data.Inst.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
-                int step = flag == Data.FlagType.Opcode ? Manager.GetInstructionLength(offset) : Util.TypeStepSize(flag);
+                Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
+                int step = flag == Data.FlagType.Opcode ? Data.GetInstructionLength(offset) : Util.TypeStepSize(flag);
 
                 if (flag == Data.FlagType.Operand)
                 {
                     found++;
                     textLog.Text += string.Format("{0} (0x{1}): Operand without Opcode\r\n",
-                        Util.NumberToBaseString(Util.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6, true),
+                        Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6, true),
                         Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0));
                 } else if (step > 1)
                 {
                     for (int i = 1; i < step; i++)
                     {
-                        if (Data.Inst.GetFlag(offset + i) != check)
+                        if (Data.GetFlag(offset + i) != check)
                         {
                             found++;
                             textLog.Text += string.Format("{0} (0x{1}): {2} is not {3}\r\n",
-                                Util.NumberToBaseString(Util.ConvertPCtoSNES(offset + i), Util.NumberBase.Hexadecimal, 6, true),
+                                Util.NumberToBaseString(Data.ConvertPCtoSNES(offset + i), Util.NumberBase.Hexadecimal, 6, true),
                                 Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0),
-                                Util.TypeToString(Data.Inst.GetFlag(offset + i)),
+                                Util.TypeToString(Data.GetFlag(offset + i)),
                                 Util.TypeToString(check));
                         }
                     }

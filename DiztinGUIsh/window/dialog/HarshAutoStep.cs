@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -15,12 +16,17 @@ namespace DiztinGUIsh
     {
         private int start, end, count;
 
-        public HarshAutoStep(int offset)
+        private readonly Data Data;
+
+        public HarshAutoStep(int offset, Data data)
         {
+            Debug.Assert(Data!=null);
+            Data = data;
+
             InitializeComponent();
 
             start = offset;
-            int rest = Data.Inst.GetROMSize() - start;
+            var rest = data.GetROMSize() - start;
             count = rest < 0x100 ? rest : 0x100;
             end = start + count;
 
@@ -43,16 +49,15 @@ namespace DiztinGUIsh
         {
             Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
             int digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
-            int size = Data.Inst.GetROMSize();
 
             if (start < 0) start = 0;
-            if (end >= size) end = size - 1;
+            if (end >= Data.GetROMSize()) end = Data.GetROMSize() - 1;
             count = end - start;
             if (count < 0) count = 0;
 
             updatingText = true;
-            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioROM.Checked ? Util.ConvertPCtoSNES(start) : start, noBase, digits);
-            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? Util.ConvertPCtoSNES(end) : end, noBase, digits);
+            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioROM.Checked ? Data.ConvertPCtoSNES(start) : start, noBase, digits);
+            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? Data.ConvertPCtoSNES(end) : end, noBase, digits);
             if (selected != textCount) textCount.Text = Util.NumberToBaseString(count, noBase, 0);
             updatingText = false;
         }
@@ -72,10 +77,9 @@ namespace DiztinGUIsh
             if (!updatingText)
             {
                 updatingText = true;
-                NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+                var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
-                int result = 0;
-                if (int.TryParse(textCount.Text, style, null, out result))
+                if (int.TryParse(textCount.Text, style, null, out var result))
                 {
                     count = result;
                     end = start + count;
@@ -87,40 +91,41 @@ namespace DiztinGUIsh
 
         private void textEnd_TextChanged(object sender, EventArgs e)
         {
-            if (!updatingText)
+            if (updatingText) 
+                return;
+
+            updatingText = true;
+            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+
+            if (int.TryParse(textEnd.Text, style, null, out var result))
             {
-                updatingText = true;
-                NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+                if (radioROM.Checked) 
+                    result = Data.ConvertSNEStoPC(result);
 
-                int result = 0;
-                if (int.TryParse(textEnd.Text, style, null, out result))
-                {
-                    if (radioROM.Checked) result = Util.ConvertSNEStoPC(result);
-                    end = result;
-                    count = end - start;
-                }
-
-                UpdateText(textEnd);
+                end = result;
+                count = end - start;
             }
+
+            UpdateText(textEnd);
         }
 
         private void textStart_TextChanged(object sender, EventArgs e)
         {
-            if (!updatingText)
+            if (updatingText) 
+                return;
+
+            updatingText = true;
+            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+
+            if (int.TryParse(textStart.Text, style, null, out var result))
             {
-                updatingText = true;
-                NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-
-                int result = 0;
-                if (int.TryParse(textStart.Text, style, null, out result))
-                {
-                    if (radioROM.Checked) result = Util.ConvertSNEStoPC(result);
-                    start = result;
-                    count = end - start;
-                }
-
-                UpdateText(textStart);
+                if (radioROM.Checked) 
+                    result = Data.ConvertSNEStoPC(result);
+                start = result;
+                count = end - start;
             }
+
+            UpdateText(textStart);
         }
 
         private void go_Click(object sender, EventArgs e)

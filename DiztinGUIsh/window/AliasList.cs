@@ -16,10 +16,10 @@ namespace DiztinGUIsh.window
     public partial class AliasList : Form
     {
         // single instance
-        public static AliasList me;
+        public static AliasList me; // TODO: get rid of static field and access via MainWindow
+        private MainWindow mw;
 
         public bool locked = false;
-        private MainWindow mw;
         private int currentlyEditing = -1;
 
         public AliasList(MainWindow main)
@@ -54,13 +54,13 @@ namespace DiztinGUIsh.window
 
         private void jump_Click(object sender, EventArgs e)
         {
-            if (int.TryParse((string)dataGridView1.SelectedRows[0].Cells[0].Value, NumberStyles.HexNumber, null, out int val))
+            if (!int.TryParse((string) dataGridView1.SelectedRows[0].Cells[0].Value, NumberStyles.HexNumber, null,
+                out int val)) return;
+
+            int offset = mw.Project.Data.ConvertSNEStoPC(val);
+            if (offset >= 0)
             {
-                int offset = Util.ConvertSNEStoPC(val);
-                if (offset >= 0)
-                {
-                    mw.SelectOffset(offset);
-                }
+                mw.SelectOffset(offset);
             }
         }
 
@@ -79,14 +79,14 @@ namespace DiztinGUIsh.window
 
         private void ImportLabelsFromCSV(bool replaceAll)
         {
-            DialogResult result = openFileDialog1.ShowDialog();
+            var result = openFileDialog1.ShowDialog();
             if (result != DialogResult.OK || openFileDialog1.FileName == "")
                 return;
 
             int errLine = 0;
             try
             {
-                Dictionary<int, Data.AliasInfo> newValues = new Dictionary<int, Data.AliasInfo>();
+                Dictionary<int, Label> newValues = new Dictionary<int, Label>();
                 string[] lines = Util.ReadLines(openFileDialog1.FileName).ToArray();
 
                 Regex valid_label_chars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
@@ -95,32 +95,32 @@ namespace DiztinGUIsh.window
                 // section.
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    var aliasInfo = new Data.AliasInfo();
+                    var Label = new Label();
 
                     errLine = i + 1;
 
-                    AliasList.SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
-                    AliasList.SplitOnFirstComma(remainder, out aliasInfo.name, out aliasInfo.comment);
+                    SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
+                    SplitOnFirstComma(remainder, out Label.name, out Label.comment);
 
-                    aliasInfo.CleanUp();
+                    Label.CleanUp();
 
-                    aliasInfo.name = aliasInfo.name.Trim();
-                    if (!valid_label_chars.Match(aliasInfo.name).Success)
-                        throw new InvalidDataException("invalid label name: " + aliasInfo.name);
+                    Label.name = Label.name.Trim();
+                    if (!valid_label_chars.Match(Label.name).Success)
+                        throw new InvalidDataException("invalid label name: " + Label.name);
 
-                    newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), aliasInfo);
+                    newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), Label);
                 }
 
                 // everything read OK, modify the existing list now. point of no return
                 if (replaceAll)
-                    Data.Inst.DeleteAllLabels();
+                    mw.Project.Data.DeleteAllLabels();
 
                 ResetDataGrid();
 
                 // this will call AddRow() to add items back to the UI datagrid.
-                foreach (KeyValuePair<int, Data.AliasInfo> pair in newValues)
+                foreach (KeyValuePair<int, Label> pair in newValues)
                 {
-                    Data.Inst.AddLabel(pair.Key, pair.Value, true);
+                    mw.Project.Data.AddLabel(pair.Key, pair.Value, true);
                 }
             }
             catch (Exception ex)
@@ -141,7 +141,7 @@ namespace DiztinGUIsh.window
                 {
                     using (StreamWriter sw = new StreamWriter(saveFileDialog1.FileName))
                     {
-                        foreach (var pair in Data.Inst.GetAllLabels())
+                        foreach (var pair in mw.Project.Data.GetAllLabels())
                         {
                             sw.WriteLine(
                                 $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.name},{pair.Value.comment}");
@@ -159,7 +159,7 @@ namespace DiztinGUIsh.window
             if (int.TryParse((string)dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null, out int val))
             {
                 locked = true;
-                Data.Inst.AddLabel(val, null, true);
+                mw.Project.Data.AddLabel(val, null, true);
                 locked = false;
                 mw.InvalidateTable();
             }
@@ -179,10 +179,10 @@ namespace DiztinGUIsh.window
         private void dataGridView1_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
         {
             if (dataGridView1.Rows[e.RowIndex].IsNewRow) return;
-            int val = -1, oldAddress = -1;
-            int.TryParse((string)dataGridView1.Rows[e.RowIndex].Cells[0].Value, NumberStyles.HexNumber, null, out oldAddress);
+            int val = -1;
+            int.TryParse((string)dataGridView1.Rows[e.RowIndex].Cells[0].Value, NumberStyles.HexNumber, null, out var oldAddress);
 
-            var labelAliasInfo = new Data.AliasInfo
+            var labelLabel = new Label
             {
                 name = (string) dataGridView1.Rows[e.RowIndex].Cells[1].Value,
                 comment = (string)dataGridView1.Rows[e.RowIndex].Cells[2].Value,
@@ -198,11 +198,11 @@ namespace DiztinGUIsh.window
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "Must enter a valid hex address.";
-                        } else if (oldAddress == -1 && Data.Inst.GetAllLabels().ContainsKey(val))
+                        } else if (oldAddress == -1 && mw.Project.Data.GetAllLabels().ContainsKey(val))
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "This address already has a label.";
-                            var x = Data.Inst.GetAllLabels();
+                            var x = mw.Project.Data.GetAllLabels();
                             Console.WriteLine(Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal));
                         } else if (dataGridView1.EditingControl != null)
                         {
@@ -213,14 +213,14 @@ namespace DiztinGUIsh.window
                 case 1:
                     {
                         val = oldAddress;
-                        labelAliasInfo.name = e.FormattedValue.ToString();
+                        labelLabel.name = e.FormattedValue.ToString();
                         // todo (validate for valid label characters)
                         break;
                     }
                 case 2:
                     {
                         val = oldAddress;
-                        labelAliasInfo.comment = e.FormattedValue.ToString();
+                        labelLabel.comment = e.FormattedValue.ToString();
                         // todo (validate for valid comment characters, if any)
                         break;
                     }
@@ -229,8 +229,8 @@ namespace DiztinGUIsh.window
             locked = true;
             if (currentlyEditing >= 0)
             {
-                if (val >= 0) Data.Inst.AddLabel(oldAddress, null, true);
-                Data.Inst.AddLabel(val, labelAliasInfo, true);
+                if (val >= 0) mw.Project.Data.AddLabel(oldAddress, null, true);
+                mw.Project.Data.AddLabel(val, labelLabel, true);
             }
             locked = false;
 
@@ -238,7 +238,7 @@ namespace DiztinGUIsh.window
             mw.InvalidateTable();
         }
 
-        public void AddRow(int address, Data.AliasInfo alias)
+        public void AddRow(int address, Label alias)
         {
             if (!locked)
             {

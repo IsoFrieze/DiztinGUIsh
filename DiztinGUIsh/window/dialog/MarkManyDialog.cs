@@ -15,9 +15,13 @@ namespace DiztinGUIsh
     {
         private int start, end, count, value;
 
-        public MarkManyDialog(int offset, int column)
+        private Data Data;
+
+        public MarkManyDialog(int offset, int column, Data data)
         {
             InitializeComponent();
+            Data = data;
+
             switch (column)
             {
                 case 8: property.SelectedIndex = 1; break;
@@ -27,7 +31,7 @@ namespace DiztinGUIsh
                 default: property.SelectedIndex = 0; break;
             }
             start = offset;
-            int rest = Data.Inst.GetROMSize() - start;
+            int rest = Data.GetROMSize() - start;
             count = rest < 0x10 ? rest : 0x10;
             end = start + count;
 
@@ -102,7 +106,7 @@ namespace DiztinGUIsh
             mxCombo.Visible = (property.SelectedIndex == 3 || property.SelectedIndex == 4);
             archCombo.Visible = (property.SelectedIndex == 5);
             regValue.MaxLength = (property.SelectedIndex == 1 ? 3 : 5);
-            value = property.SelectedIndex == 1 ? Data.Inst.GetDataBank(start) : Data.Inst.GetDirectPage(start);
+            value = property.SelectedIndex == 1 ? Data.GetDataBank(start) : Data.GetDirectPage(start);
         }
 
         private bool updatingText = false;
@@ -111,7 +115,7 @@ namespace DiztinGUIsh
         {
             Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
             int digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
-            int size = Data.Inst.GetROMSize();
+            int size = Data.GetROMSize();
             int maxValue = property.SelectedIndex == 1 ? 0x100 : 0x10000;
 
             if (start < 0) start = 0;
@@ -122,8 +126,8 @@ namespace DiztinGUIsh
             if (value >= maxValue) value = maxValue - 1;
 
             updatingText = true;
-            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioROM.Checked ? Util.ConvertPCtoSNES(start) : start, noBase, digits);
-            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? Util.ConvertPCtoSNES(end) : end, noBase, digits);
+            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioROM.Checked ? Data.ConvertPCtoSNES(start) : start, noBase, digits);
+            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? Data.ConvertPCtoSNES(end) : end, noBase, digits);
             if (selected != textCount) textCount.Text = Util.NumberToBaseString(count, noBase, 0);
             if (selected != regValue) regValue.Text = Util.NumberToBaseString(value, noBase, 0);
             updatingText = false;
@@ -157,7 +161,7 @@ namespace DiztinGUIsh
                 int result = 0;
                 if (int.TryParse(textEnd.Text, style, null, out result))
                 {
-                    if (radioROM.Checked) result = Util.ConvertSNEStoPC(result);
+                    if (radioROM.Checked) result = Data.ConvertSNEStoPC(result);
                     end = result;
                     count = end - start;
                 }
@@ -202,7 +206,7 @@ namespace DiztinGUIsh
                 int result = 0;
                 if (int.TryParse(textStart.Text, style, null, out result))
                 {
-                    if (radioROM.Checked) result = Util.ConvertSNEStoPC(result);
+                    if (radioROM.Checked) result = Data.ConvertSNEStoPC(result);
                     start = result;
                     count = end - start;
                 }

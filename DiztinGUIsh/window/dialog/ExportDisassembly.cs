@@ -13,8 +13,12 @@ namespace DiztinGUIsh
 {
     public partial class ExportDisassembly : Form
     {
-        public ExportDisassembly()
+        private readonly LogCreator LogCreator;
+        private Data Data => LogCreator.Data;
+        public ExportDisassembly(LogCreator lc)
         {
+            LogCreator = lc;
+
             InitializeComponent();
             numData.Value = LogCreator.dataPerLine;
             textFormat.Text = LogCreator.format;
@@ -92,24 +96,28 @@ namespace DiztinGUIsh
         // https://stackoverflow.com/a/29679597
         private void UpdateSample()
         {
+            // TODO: since we don't have to do this as a singleton now, we can
+            // replace all this save/restore stuff and just create a new Project() or Data() and populate it
+
             // cheeky way of using the same methods for disassembling a different set of data :^)
-            while (sampleTable.RomBytes.Count < 0x8000) sampleTable.RomBytes.Add(new ROMByte());
+            while (sampleTable.Count < 0x8000) 
+                sampleTable.Add(new ROMByte());
 
             using (MemoryStream mem = new MemoryStream())
             using (StreamWriter sw = new StreamWriter(mem))
             {
-                var tempTable = Data.Inst.GetTable();
-                Data.ROMMapMode tempMode = Data.Inst.RomMapMode;
-                Data.ROMSpeed tempSpeed = Data.Inst.GetROMSpeed();
-                var tempAlias = Data.Inst.GetAllLabels(); 
-                var tempComment = Data.Inst.GetAllComments();
+                var tempTable = Data.GetTable();
+                Data.ROMMapMode tempMode = Data.RomMapMode;
+                Data.ROMSpeed tempSpeed = Data.GetROMSpeed();
+                var tempAlias = Data.GetAllLabels(); 
+                var tempComment = Data.GetAllComments();
                 LogCreator.FormatStructure tempStructure = LogCreator.structure;
-                Data.Inst.Restore(sampleTable, Data.ROMMapMode.LoROM, Data.ROMSpeed.FastROM, sampleAlias, sampleComment);
+                Data.Restore(sampleTable, Data.ROMMapMode.LoROM, Data.ROMSpeed.FastROM, sampleAlias, sampleComment);
                 LogCreator.structure = LogCreator.FormatStructure.SingleFile;
 
                 LogCreator.CreateLog(sw, StreamWriter.Null);
 
-                Data.Inst.Restore(tempTable, tempMode, tempSpeed, tempAlias, tempComment);
+                Data.Restore(tempTable, tempMode, tempSpeed, tempAlias, tempComment);
                 LogCreator.structure = tempStructure;
 
                 sw.Flush();
@@ -121,8 +129,8 @@ namespace DiztinGUIsh
 
         // random sample code I made up; hopefully it shows a little bit of
         // everything so you can see how the settings will effect the output
-        public static TableData sampleTable = new TableData
-        { RomBytes = {
+        public static RomBytes sampleTable = new RomBytes
+        { 
             new ROMByte {Rom = 0x78, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.InPoint},
             new ROMByte {Rom = 0xA9, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true},
             new ROMByte {Rom = 0x01, TypeFlag = Data.FlagType.Operand},
@@ -246,16 +254,16 @@ namespace DiztinGUIsh
             new ROMByte {Rom = 0x83, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x34, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             new ROMByte {Rom = 0x6D, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-        }};
+        };
 
-        public static Dictionary<int, Data.AliasInfo> sampleAlias = new Dictionary<int, Data.AliasInfo>
+        public static Dictionary<int, Label> sampleAlias = new Dictionary<int, Label>
         {
-            { 0x00, new Data.AliasInfo() {name="Emulation_RESET", comment="Sample emulation reset location"} },
-            { 0x0A, new Data.AliasInfo() {name="FastRESET", comment="Sample label" } },
-            { 0x32, new Data.AliasInfo() {name="Test_Indices"} },
-            { 0x3A, new Data.AliasInfo() {name="Pointer_Table"} },
-            { 0x44, new Data.AliasInfo() {name="First_Routine"} },
-            { 0x5B, new Data.AliasInfo() {name="Test_Data", comment="Pretty cool huh?" } }
+            { 0x00, new Label() {name="Emulation_RESET", comment="Sample emulation reset location"} },
+            { 0x0A, new Label() {name="FastRESET", comment="Sample label" } },
+            { 0x32, new Label() {name="Test_Indices"} },
+            { 0x3A, new Label() {name="Pointer_Table"} },
+            { 0x44, new Label() {name="First_Routine"} },
+            { 0x5B, new Label() {name="Test_Data", comment="Pretty cool huh?" } }
         };
 
         public static Dictionary<int, string> sampleComment = new Dictionary<int, string>
