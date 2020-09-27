@@ -161,7 +161,12 @@ namespace DiztinGUIsh
 
         public int GetInstructionLength(int offset)
         {
-            AddressMode mode = GetAddressMode(offset);
+            var mode = GetAddressMode(offset);
+            return InstructionLength(mode);
+        }
+
+        public static int InstructionLength(AddressMode mode)
+        {
             switch (mode)
             {
                 case AddressMode.IMPLIED:
@@ -195,6 +200,7 @@ namespace DiztinGUIsh
                 case AddressMode.LONG_X_INDEX:
                     return 4;
             }
+
             return 1;
         }
 
@@ -356,7 +362,7 @@ namespace DiztinGUIsh
             return mode;
         }
 
-        private enum AddressMode : byte
+        public enum AddressMode : byte
         {
             IMPLIED, ACCUMULATOR, CONSTANT_8, IMMEDIATE_8, IMMEDIATE_16,
             IMMEDIATE_X_FLAG_DEPENDENT, IMMEDIATE_M_FLAG_DEPENDENT,

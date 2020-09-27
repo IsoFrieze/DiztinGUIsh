@@ -61,6 +61,7 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripOpenLast = new System.Windows.Forms.ToolStripMenuItem();
             this.saveProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveProjectAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -119,6 +120,7 @@
             this.binaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.moveWithStepToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openLastProjectAutomaticallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.labelListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewHelpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -132,13 +134,9 @@
             this.openProjectFile = new System.Windows.Forms.OpenFileDialog();
             this.saveProjectFile = new System.Windows.Forms.SaveFileDialog();
             this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
-            this.saveLogSingleFile = new System.Windows.Forms.SaveFileDialog();
-            this.chooseLogFolder = new System.Windows.Forms.FolderBrowserDialog();
             this.openUsageMapFile = new System.Windows.Forms.OpenFileDialog();
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
-            this.toolStripOpenLast = new System.Windows.Forms.ToolStripMenuItem();
-            this.openLastProjectAutomaticallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -400,6 +398,13 @@
             this.openProjectToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.openProjectToolStripMenuItem.Text = "Open Project...";
             this.openProjectToolStripMenuItem.Click += new System.EventHandler(this.openProjectToolStripMenuItem_Click);
+            // 
+            // toolStripOpenLast
+            // 
+            this.toolStripOpenLast.Name = "toolStripOpenLast";
+            this.toolStripOpenLast.Size = new System.Drawing.Size(235, 22);
+            this.toolStripOpenLast.Text = "Open Last Project";
+            this.toolStripOpenLast.Click += new System.EventHandler(this.toolStripOpenLast_Click);
             // 
             // saveProjectToolStripMenuItem
             // 
@@ -889,6 +894,13 @@
             this.moveWithStepToolStripMenuItem.Text = "Move With Step";
             this.moveWithStepToolStripMenuItem.Click += new System.EventHandler(this.moveWithStepToolStripMenuItem_Click);
             // 
+            // openLastProjectAutomaticallyToolStripMenuItem
+            // 
+            this.openLastProjectAutomaticallyToolStripMenuItem.Name = "openLastProjectAutomaticallyToolStripMenuItem";
+            this.openLastProjectAutomaticallyToolStripMenuItem.Size = new System.Drawing.Size(244, 22);
+            this.openLastProjectAutomaticallyToolStripMenuItem.Text = "Open Last Project Automatically";
+            this.openLastProjectAutomaticallyToolStripMenuItem.Click += new System.EventHandler(this.openLastProjectAutomaticallyToolStripMenuItem_Click);
+            // 
             // labelListToolStripMenuItem
             // 
             this.labelListToolStripMenuItem.Enabled = false;
@@ -962,7 +974,7 @@
             this.currentMarker.Size = new System.Drawing.Size(110, 17);
             this.currentMarker.Text = "Marker: Data (8-bit)";
             // 
-            // openROMFile
+            // openFileDialog
             // 
             this.openFileDialog.Filter = "SNES ROM Images|*.smc;*.sfc|All files|*.*";
             // 
@@ -985,10 +997,6 @@
             this.vScrollBar1.TabIndex = 2;
             this.vScrollBar1.ValueChanged += new System.EventHandler(this.vScrollBar1_ValueChanged);
             // 
-            // saveLogSingleFile
-            // 
-            this.saveLogSingleFile.Filter = "Assembly Files|*.asm|All Files|*.*";
-            // 
             // openUsageMapFile
             // 
             this.openUsageMapFile.Filter = "bsnes-plus usage map files|*.bin";
@@ -1000,20 +1008,6 @@
             // openCDLDialog
             // 
             this.openCDLDialog.Filter = "BizHawk Code Data Logger Files|*.cdl|All Files|*.*";
-            // 
-            // toolStripOpenLast
-            // 
-            this.toolStripOpenLast.Name = "toolStripOpenLast";
-            this.toolStripOpenLast.Size = new System.Drawing.Size(235, 22);
-            this.toolStripOpenLast.Text = "Open Last Project";
-            this.toolStripOpenLast.Click += new System.EventHandler(this.toolStripOpenLast_Click);
-            // 
-            // openLastProjectAutomaticallyToolStripMenuItem
-            // 
-            this.openLastProjectAutomaticallyToolStripMenuItem.Name = "openLastProjectAutomaticallyToolStripMenuItem";
-            this.openLastProjectAutomaticallyToolStripMenuItem.Size = new System.Drawing.Size(244, 22);
-            this.openLastProjectAutomaticallyToolStripMenuItem.Text = "Open Last Project Automatically";
-            this.openLastProjectAutomaticallyToolStripMenuItem.Click += new System.EventHandler(this.openLastProjectAutomaticallyToolStripMenuItem_Click);
             // 
             // MainWindow
             // 
@@ -1118,8 +1112,6 @@
         private System.Windows.Forms.ToolStripMenuItem githubToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importTraceLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gotoNextUnreachedToolStripMenuItem;
-        private System.Windows.Forms.SaveFileDialog saveLogSingleFile;
-        private System.Windows.Forms.FolderBrowserDialog chooseLogFolder;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moveWithStepToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importUsageMapToolStripMenuItem;

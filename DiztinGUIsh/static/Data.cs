@@ -284,13 +284,13 @@ namespace DiztinGUIsh
                 if (alias.ContainsKey(i))
                 {
                     alias.Remove(i);
-                    AliasList.me.RemoveRow(i);
+                    // TODO: notify observers     AliasList.me.RemoveRow(i);
                 }
             } else {
                 if (alias.ContainsKey(i) && overwrite)
                 {
                     alias.Remove(i);
-                    AliasList.me.RemoveRow(i);
+                    // // TODO: notify observers     AliasList.me.RemoveRow(i);
                 }
 
                 if (alias.ContainsKey(i)) 
@@ -299,7 +299,7 @@ namespace DiztinGUIsh
                 v.CleanUp();
 
                 alias.Add(i, v);
-                AliasList.me.AddRow(i, v);
+                // // TODO: notify observers     AliasList.me.AddRow(i, v);
             }
         }
 
@@ -310,8 +310,7 @@ namespace DiztinGUIsh
 
         public string GetComment(int i)
         {
-            if (Comments.TryGetValue(i, out var val)) return val;
-            return "";
+            return Comments.TryGetValue(i, out var val) ? val : "";
         }
 
         public void AddComment(int i, string v, bool overwrite)

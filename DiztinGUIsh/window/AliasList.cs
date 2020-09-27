@@ -16,7 +16,6 @@ namespace DiztinGUIsh.window
     public partial class AliasList : Form
     {
         // single instance
-        public static AliasList me; // TODO: get rid of static field and access via MainWindow
         private MainWindow mw;
 
         public bool locked = false;
@@ -24,12 +23,8 @@ namespace DiztinGUIsh.window
 
         public AliasList(MainWindow main)
         {
-            if (me == null)
-            {
-                me = this;
-                mw = main;
-                InitializeComponent();
-            }
+            mw = main;
+            InitializeComponent();
         }
 
         private void AliasList_Load(object sender, EventArgs e)

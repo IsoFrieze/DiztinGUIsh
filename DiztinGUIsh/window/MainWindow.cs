@@ -6,10 +6,11 @@ using System.IO;
 using System.Windows.Forms;
 using DiztinGUIsh.loadsave;
 using DiztinGUIsh.Properties;
+using ExtendedXmlSerializer.ExtensionModel.Types.Sources;
 
 namespace DiztinGUIsh
 {
-    public partial class MainWindow : Form
+    public partial class MainWindow : Form, IProjectView
     {
         public Project Project { get; set; }
 
@@ -70,7 +71,7 @@ namespace DiztinGUIsh
         private void openLastProject()
         {
             if (Settings.Default.LastOpenedFile != "")
-                openProject(Settings.Default.LastOpenedFile);
+                OpenProject(Settings.Default.LastOpenedFile);
         }
 
         public void UpdateWindowTitle()
@@ -92,7 +93,7 @@ namespace DiztinGUIsh
 
         }
 
-        public void TriggerSaveOptions(bool save, bool saveas)
+        public void UpdateSaveOptionStates(bool save, bool saveas)
         {
             saveProjectToolStripMenuItem.Enabled = save;
             saveProjectAsToolStripMenuItem.Enabled = saveas;
@@ -124,7 +125,7 @@ namespace DiztinGUIsh
         private void OnImportedProjectSuccess()
         {
             importCDLToolStripMenuItem.Enabled = true;
-            TriggerSaveOptions(false, true);
+            UpdateSaveOptionStates(false, true);
             UpdateWindowTitle();
             UpdateDataGridView();
             UpdatePercent();
@@ -140,7 +141,7 @@ namespace DiztinGUIsh
                 if (importSettings == null)
                     return false;
 
-                Project.ImportRomAndCreateNewProject(importSettings);
+                ProjectController.ImportRomAndCreateNewProject(importSettings);
                 return true;
             }
             catch (Exception ex)
@@ -160,7 +161,7 @@ namespace DiztinGUIsh
             if (openProjectFile.ShowDialog() != DialogResult.OK) 
                 return;
 
-            openProject(openProjectFile.FileName);
+            OpenProject(openProjectFile.FileName);
         }
 
         public string LastProjectFilename
@@ -186,42 +187,62 @@ namespace DiztinGUIsh
             openLastProjectAutomaticallyToolStripMenuItem.Checked = Settings.Default.OpenLastFileAutomatically;
         }
 
-        public void openProject(string filename)
+        public void OnProjectOpened(string filename)
         {
-            var project = ProjectFileManager.Open(filename);
-            if (project == null)
-            {
-                LastProjectFilename = "";
-                return;
-            }
+            LastProjectFilename = filename;
 
-            Project = project;
-            
             importCDLToolStripMenuItem.Enabled = true;
-            TriggerSaveOptions(true, true);
+            UpdateSaveOptionStates(true, true);
             UpdateWindowTitle();
             UpdateDataGridView();
             UpdatePercent();
             table.Invalidate();
             EnableSubWindows();
-            LastProjectFilename = filename;
+        }
+
+        public void OnProjectOpenFail()
+        {
+            LastProjectFilename = "";
+        }
+
+
+        public void OpenProject(string filename)
+        {
+            ProjectController.OpenProject(filename);
         }
 
         private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ProjectFileManager.Save(Project, Project.ProjectFileName);
+            SaveProject(Project.ProjectFileName);
+        }
+
+        public void SaveProject(string filename)
+        {
+            ProjectController.SaveProject(filename);
+        }
+
+        public void OnProjectSaved()
+        {
+            UpdateSaveOptionStates(true, true);
             UpdateWindowTitle();
+        }
+
+        public void OnExportFinished(LogCreator.OutputResult result)
+        {
+            if (result.error_count > 0)
+                MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else
+                MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK,
+                    MessageBoxIcon.Asterisk);
         }
 
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             saveProjectFile.InitialDirectory = Project.AttachedRomFilename;
-            DialogResult result = saveProjectFile.ShowDialog();
-            if (result == DialogResult.OK && saveProjectFile.FileName != "")
+            if (saveProjectFile.ShowDialog() == DialogResult.OK && saveProjectFile.FileName != "")
             {
-                ProjectFileManager.Save(Project, saveProjectFile.FileName);
-                TriggerSaveOptions(true, true);
-                UpdateWindowTitle();
+                SaveProject(saveProjectFile.FileName);
             }
         }
 
@@ -254,54 +275,33 @@ namespace DiztinGUIsh
             }
         }
 
+        private readonly ProjectController ProjectController = new ProjectController();
+
         private void exportLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var lc = new LogCreator(Project);
-
-            var export = new ExportDisassembly(lc);
-            if (export.ShowDialog() != DialogResult.OK) 
+            var adjustedSettings = PromptForExportSettingsAndConfirmation();
+            if (!adjustedSettings.HasValue)
                 return;
 
-            string file = null, error = null;
+            ProjectController.UpdateExportSettings(adjustedSettings.Value);
+            ProjectController.WriteAssemblyOutput();
+        }
 
-            // TODO: save this as a setting in the project file
-            if (lc.structure == LogCreator.FormatStructure.SingleFile)
-            {
-                saveLogSingleFile.InitialDirectory = Project.ProjectFileName;
-                if (saveLogSingleFile.ShowDialog() == DialogResult.OK && saveLogSingleFile.FileName != "")
-                {
-                    file = saveLogSingleFile.FileName;
-                    error = Path.GetDirectoryName(file) + "/error.txt";
-                }
-            }
-            else
-            {
-                chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.ProjectFileName);
-                if (chooseLogFolder.ShowDialog() == DialogResult.OK && chooseLogFolder.SelectedPath != "")
-                {
-                    file = chooseLogFolder.SelectedPath + "/main.asm";
-                    error = Path.GetDirectoryName(file) + "/error.txt";
-                }
-            }
+        private LogWriterSettings? PromptForExportSettingsAndConfirmation()
+        {
+            // TODO: use the controller to update the project settings from a new one we build
+            // don't update directly.
+            // probably make our Project property be fully readonly/const/whatever [ReadOnly] attribute
 
-            if (file == null) 
-                return;
+            var selectedSettings = ExportDisassembly.ConfirmSettingsAndAskToStart(Project);
+            if (!selectedSettings.HasValue)
+                return null;
 
-            int errors = 0;
-            using (StreamWriter sw = new StreamWriter(file))
-            using (StreamWriter er = new StreamWriter(error))
-            {
-                errors = lc.CreateLog(sw, er);
-                if (errors > 0)
-                    MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                else
-                    MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK,
-                        MessageBoxIcon.Asterisk);
-            }
+            var settings = selectedSettings.Value;
 
-            if (errors == 0) 
-                File.Delete(error);
+            ProjectController.UpdateExportSettings(selectedSettings.Value);
+
+            return settings;
         }
 
         private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e)
@@ -387,24 +387,30 @@ namespace DiztinGUIsh
 
         private void UpdateDataGridView()
         {
-            if (Project.Data.GetROMSize() > 0)
-            {
-                rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
-                if (viewOffset + rowsToShow > Project.Data.GetROMSize()) viewOffset = Project.Data.GetROMSize() - rowsToShow;
-                if (viewOffset < 0) viewOffset = 0;
-                vScrollBar1.Enabled = true;
-                vScrollBar1.Maximum = Project.Data.GetROMSize() - rowsToShow;
-                vScrollBar1.Value = viewOffset;
-                table.RowCount = rowsToShow;
+            if (Project.Data.GetROMSize() <= 0) 
+                return;
 
-                importTraceLogToolStripMenuItem.Enabled = true;
-                importUsageMapToolStripMenuItem.Enabled = true;
-            }
+            rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
+            
+            if (viewOffset + rowsToShow > Project.Data.GetROMSize()) 
+                viewOffset = Project.Data.GetROMSize() - rowsToShow;
+            
+            if (viewOffset < 0)
+                viewOffset = 0;
+            
+            vScrollBar1.Enabled = true;
+            vScrollBar1.Maximum = Project.Data.GetROMSize() - rowsToShow;
+            vScrollBar1.Value = viewOffset;
+            table.RowCount = rowsToShow;
+
+            importTraceLogToolStripMenuItem.Enabled = true;
+            importUsageMapToolStripMenuItem.Enabled = true;
         }
 
         private void table_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
+            if (Project.Data.GetROMSize() <= 0) 
+                return;
             int selRow = table.CurrentCell.RowIndex + viewOffset, selCol = table.CurrentCell.ColumnIndex;
             int amount = e.Delta / 0x18;
             viewOffset -= amount;
@@ -1110,7 +1116,7 @@ namespace DiztinGUIsh
         }
 
         // sub windows
-        AliasList aliasList;
+        public AliasList aliasList;
 
         private void EnableSubWindows()
         {

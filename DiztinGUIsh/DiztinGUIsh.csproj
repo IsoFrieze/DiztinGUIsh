@@ -8,10 +8,12 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>DiztinGUIsh</RootNamespace>
     <AssemblyName>DiztinGUIsh</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -24,7 +26,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -37,6 +38,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -46,6 +48,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>resource\diz.ico</ApplicationIcon>
@@ -113,8 +116,11 @@
     <Compile Include="loadsave\xml_serializer\ProjectXMLSerializer.cs" />
     <Compile Include="ProgressBarWorker.cs" />
     <Compile Include="loadsave\xml_serializer\DataSerializer.cs" />
+    <Compile Include="static\IProjectView.cs" />
     <Compile Include="static\Label.cs" />
+    <Compile Include="static\ProjectController.cs" />
     <Compile Include="static\RomBytes.cs" />
+    <Compile Include="static\SampleRomData.cs" />
     <Compile Include="window\dialog\About.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -232,6 +238,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\DataSources\ROMByte.datasource" />

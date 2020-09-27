@@ -1,32 +1,51 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DiztinGUIsh
 {
+    // consider renaming? this class is mostly about editing settings, with a 'save' button at the
+    // end.
     public partial class ExportDisassembly : Form
     {
-        private readonly LogCreator LogCreator;
-        private Data Data => LogCreator.Data;
-        public ExportDisassembly(LogCreator lc)
+        //private readonly LogCreator LogCreator;
+        private Data Data => Project.Data;
+        private readonly Project Project;
+
+        // Our copy. At the end, if everything is correct, we'll return this.
+        private LogWriterSettings settings;
+
+        // shows the UI and returns non-null settings if everything went OK in the
+        // setup process.
+        public static LogWriterSettings? ConfirmSettingsAndAskToStart(Project project)
         {
-            LogCreator = lc;
+            var export = new ExportDisassembly(project);
+            if (export.ShowDialog() != DialogResult.OK)
+                return null;
+
+            return export.settings;
+        }
+
+        public ExportDisassembly(Project project)
+        {
+            Project = project;
+            settings = project.LogWriterSettings; // copy
 
             InitializeComponent();
-            numData.Value = LogCreator.dataPerLine;
-            textFormat.Text = LogCreator.format;
-            comboUnlabeled.SelectedIndex = (int)LogCreator.unlabeled;
-            comboStructure.SelectedIndex = (int)LogCreator.structure;
-            chkIncludeUnusedLabels.Checked = LogCreator.includeUnusedLabels;
-            chkPrintLabelSpecificComments.Checked = LogCreator.printLabelSpecificComments;
-            UpdateSample();
+            UpdateUiFromProjectSettings();
+            RegenerateSampleOutput();
+        }
+
+        public void UpdateUiFromProjectSettings()
+        {
+            // TODO: in the future, replace this with databinding so we don't have to do it manually
+            numData.Value = settings.dataPerLine;
+            textFormat.Text = settings.format;
+            comboUnlabeled.SelectedIndex = (int)settings.unlabeled;
+            comboStructure.SelectedIndex = (int)settings.structure;
+            chkIncludeUnusedLabels.Checked = settings.includeUnusedLabels;
+            chkPrintLabelSpecificComments.Checked = settings.printLabelSpecificComments;
         }
 
         private void cancel_Click(object sender, EventArgs e)
@@ -36,18 +55,58 @@ namespace DiztinGUIsh
 
         private void button2_Click(object sender, EventArgs e)
         {
+            if (!PromptForPath())
+                return;
+
             this.DialogResult = DialogResult.OK;
+        }
+
+        // Prompt user for either a filename to save, or a folder location
+        private string PromptForLogPathFromFileOrFolderDialog(bool askForFile)
+        {
+            if (askForFile)
+            {
+                saveLogSingleFile.InitialDirectory = Project.ProjectFileName;
+                if (saveLogSingleFile.ShowDialog() == DialogResult.OK && saveLogSingleFile.FileName != "")
+                    return saveLogSingleFile.FileName;
+            }
+            else
+            {
+                chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.ProjectFileName);
+                if (chooseLogFolder.ShowDialog() == DialogResult.OK && chooseLogFolder.SelectedPath != "")
+                    return saveLogSingleFile.FileName;
+            }
+
+            return null;
+        }
+
+        private bool PromptForPath()
+        {
+            var singleFile = settings.structure == LogCreator.FormatStructure.SingleFile;
+            var path = PromptForLogPathFromFileOrFolderDialog(singleFile);
+
+            if (string.IsNullOrEmpty(path))
+                return false;
+
+            // kinda weird. we should probably just pass
+            // the containing folder name and let LogCreator handle these details
+            if (!singleFile)
+                path += "/main.asm";
+
+            settings.file = path;
+            settings.error = Path.GetDirectoryName(path) + "/error.txt";
+
+            return true;
         }
 
         private void textFormat_TextChanged(object sender, EventArgs e)
         {
             if (ValidateFormat())
             {
-                LogCreator.format = textFormat.Text.ToLower();
-                UpdateSample();
+                settings.format = textFormat.Text.ToLower();
+                RegenerateSampleOutput();
                 button2.Enabled = true;
-            } else
-            {
+            } else {
                 textSample.Text = "Invalid format!";
                 button2.Enabled = false;
             }
@@ -55,233 +114,62 @@ namespace DiztinGUIsh
 
         private void numData_ValueChanged(object sender, EventArgs e)
         {
-            LogCreator.dataPerLine = (int)numData.Value;
-            UpdateSample();
+            settings.dataPerLine = (int)numData.Value;
+            RegenerateSampleOutput();
         }
 
         private void comboUnlabeled_SelectedIndexChanged(object sender, EventArgs e)
         {
-            LogCreator.unlabeled = (LogCreator.FormatUnlabeled)comboUnlabeled.SelectedIndex;
-            UpdateSample();
+            settings.unlabeled = (LogCreator.FormatUnlabeled)comboUnlabeled.SelectedIndex;
+            RegenerateSampleOutput();
         }
 
         private void comboStructure_SelectedIndexChanged(object sender, EventArgs e)
         {
-            LogCreator.structure = (LogCreator.FormatStructure)comboStructure.SelectedIndex;
+            settings.structure = (LogCreator.FormatStructure)comboStructure.SelectedIndex;
         }
 
         private bool ValidateFormat()
         {
-            string[] tokens = textFormat.Text.ToLower().Split('%');
-
-            // not valid if format has an odd amount of %s
-            if (tokens.Length % 2 == 0) return false;
-
-            for (int i = 1; i < tokens.Length; i += 2)
-            {
-                int indexOfColon = tokens[i].IndexOf(':');
-                string kind = indexOfColon >= 0 ? tokens[i].Substring(0, indexOfColon) : tokens[i];
-
-                // not valid if base token isn't one we know of
-                if (!LogCreator.parameters.ContainsKey(kind)) return false;
-
-                // not valid if parameter isn't an integer
-                int oof;
-                if (indexOfColon >= 0 && !int.TryParse(tokens[i].Substring(indexOfColon + 1), out oof)) return false;
-            }
-
-            return true;
+            return LogCreator.ValidateFormat(textFormat.Text);
         }
 
-        // https://stackoverflow.com/a/29679597
-        private void UpdateSample()
+        private void RegenerateSampleOutput()
         {
-            // TODO: since we don't have to do this as a singleton now, we can
-            // replace all this save/restore stuff and just create a new Project() or Data() and populate it
-
-            // cheeky way of using the same methods for disassembling a different set of data :^)
-            while (sampleTable.Count < 0x8000) 
-                sampleTable.Add(new ROMByte());
-
-            using (MemoryStream mem = new MemoryStream())
-            using (StreamWriter sw = new StreamWriter(mem))
-            {
-                var tempTable = Data.GetTable();
-                Data.ROMMapMode tempMode = Data.RomMapMode;
-                Data.ROMSpeed tempSpeed = Data.GetROMSpeed();
-                var tempAlias = Data.GetAllLabels(); 
-                var tempComment = Data.GetAllComments();
-                LogCreator.FormatStructure tempStructure = LogCreator.structure;
-                Data.Restore(sampleTable, Data.ROMMapMode.LoROM, Data.ROMSpeed.FastROM, sampleAlias, sampleComment);
-                LogCreator.structure = LogCreator.FormatStructure.SingleFile;
-
-                LogCreator.CreateLog(sw, StreamWriter.Null);
-
-                Data.Restore(tempTable, tempMode, tempSpeed, tempAlias, tempComment);
-                LogCreator.structure = tempStructure;
-
-                sw.Flush();
-                mem.Seek(0, SeekOrigin.Begin);
-
-                textSample.Text = Encoding.UTF8.GetString(mem.ToArray(), 0, (int)mem.Length);
-            }
+            textSample.Text = CreateSampleOutput();
         }
-
-        // random sample code I made up; hopefully it shows a little bit of
-        // everything so you can see how the settings will effect the output
-        public static RomBytes sampleTable = new RomBytes
-        { 
-            new ROMByte {Rom = 0x78, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.InPoint},
-            new ROMByte {Rom = 0xA9, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true},
-            new ROMByte {Rom = 0x01, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0x8D, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true},
-            new ROMByte {Rom = 0x0D, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0x42, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0x5C, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.EndPoint},
-            new ROMByte {Rom = 0x0A, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0xC2, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.InPoint},
-            new ROMByte {Rom = 0x30, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0xA9, TypeFlag = Data.FlagType.Opcode},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0x21, TypeFlag = Data.FlagType.Operand},
-            new ROMByte {Rom = 0x5B, TypeFlag = Data.FlagType.Opcode},
-            new ROMByte {Rom = 0x4B, TypeFlag = Data.FlagType.Opcode, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xAB, TypeFlag = Data.FlagType.Opcode, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xA2, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x07, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xBF, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.InPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x32, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x9F, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x7E, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xCA, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xCA, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x10, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.OutPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xF4, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x64, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x40, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x64, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x41, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x64, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x42, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x64, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x43, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xAE, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.InPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xFC, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.OutPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x3A, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x4C, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.EndPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xC0, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, Point = Data.InOutPoint.ReadPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x08, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x10, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x20, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x44, TypeFlag = Data.FlagType.Pointer16Bit, Point = Data.InOutPoint.ReadPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x7B, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x44, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x81, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xC4, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x81, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x0A, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x82, TypeFlag = Data.FlagType.Pointer16Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x08, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.InPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x8B, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x4B, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xAB, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xE2, TypeFlag = Data.FlagType.Opcode, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x20, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xC2, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x10, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xA2, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x1F, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xBD, TypeFlag = Data.FlagType.Opcode, MFlag = true, Point = Data.InOutPoint.InPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x5B, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x9D, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x01, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xCA, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x10, TypeFlag = Data.FlagType.Opcode, MFlag = true, Point = Data.InOutPoint.OutPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xF7, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xAB, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x28, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x60, TypeFlag = Data.FlagType.Opcode, Point = Data.InOutPoint.EndPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x45, TypeFlag = Data.FlagType.Data8Bit, Point = Data.InOutPoint.ReadPoint, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x8D, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x69, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x83, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xB2, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x99, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x23, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x01, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xA3, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xF8, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x52, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x08, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xBB, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x29, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x5C, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x32, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xE7, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x88, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x3C, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x30, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x18, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x9A, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xB0, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x34, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x8C, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xDD, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x05, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0xB7, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x83, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x34, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-            new ROMByte {Rom = 0x6D, TypeFlag = Data.FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-        };
-
-        public static Dictionary<int, Label> sampleAlias = new Dictionary<int, Label>
-        {
-            { 0x00, new Label() {name="Emulation_RESET", comment="Sample emulation reset location"} },
-            { 0x0A, new Label() {name="FastRESET", comment="Sample label" } },
-            { 0x32, new Label() {name="Test_Indices"} },
-            { 0x3A, new Label() {name="Pointer_Table"} },
-            { 0x44, new Label() {name="First_Routine"} },
-            { 0x5B, new Label() {name="Test_Data", comment="Pretty cool huh?" } }
-        };
-
-        public static Dictionary<int, string> sampleComment = new Dictionary<int, string>
-        {
-            { 0x03, "this sets FastROM" },
-            { 0x0F, "direct page = $2100" },
-            { 0x21, "clear APU regs" },
-            { 0x44, "this routine copies Test_Data to $7E0100" }
-        };
 
         private void chkPrintLabelSpecificComments_CheckedChanged(object sender, EventArgs e)
         {
-            LogCreator.printLabelSpecificComments = chkPrintLabelSpecificComments.Checked;
+            settings.printLabelSpecificComments = chkPrintLabelSpecificComments.Checked;
         }
 
         private void chkIncludeUnusedLabels_CheckedChanged(object sender, EventArgs e)
         {
-            LogCreator.includeUnusedLabels = chkIncludeUnusedLabels.Checked;
+            settings.includeUnusedLabels = chkIncludeUnusedLabels.Checked;
+        }
+        private string CreateSampleOutput()
+        {
+            using var mem = new MemoryStream();
+            using var sw = new StreamWriter(mem);
+
+            // make a copy, but override the FormatStructure so it's all in one file
+            var sampleSettings = settings;
+            sampleSettings.structure = LogCreator.FormatStructure.SingleFile;
+
+            var lc = new LogCreator()
+            {
+                Settings = sampleSettings,
+                Data = SampleRomData.SampleData,
+                StreamOutput = sw,
+                StreamError = StreamWriter.Null,
+            };
+
+            lc.CreateLog();
+
+            sw.Flush();
+            mem.Seek(0, SeekOrigin.Begin);
+            return Encoding.UTF8.GetString(mem.ToArray(), 0, (int)mem.Length);
         }
     }
 }

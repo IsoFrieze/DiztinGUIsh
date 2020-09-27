@@ -23,7 +23,7 @@ namespace DiztinGUIsh
             Application.SetCompatibleTextRenderingDefault(false);
             MainWindow window = new MainWindow();
 
-            if (args.Length > 0) window.openProject(args[0]);
+            if (args.Length > 0) window.OpenProject(args[0]);
 
             Application.Run(window);
         }

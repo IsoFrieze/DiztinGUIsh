@@ -124,4 +124,10 @@ the instruction misalignment checker and the in/out point
 scanner before exporting.
 See the help document for more details.</value>
   </data>
+  <metadata name="saveLogSingleFile.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>41, 29</value>
+  </metadata>
+  <metadata name="chooseLogFolder.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>201, 26</value>
+  </metadata>
 </root>

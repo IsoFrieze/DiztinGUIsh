@@ -44,6 +44,8 @@
             this.numData = new System.Windows.Forms.NumericUpDown();
             this.chkPrintLabelSpecificComments = new System.Windows.Forms.CheckBox();
             this.chkIncludeUnusedLabels = new System.Windows.Forms.CheckBox();
+            this.saveLogSingleFile = new System.Windows.Forms.SaveFileDialog();
+            this.chooseLogFolder = new System.Windows.Forms.FolderBrowserDialog();
             ((System.ComponentModel.ISupportInitialize)(this.numData)).BeginInit();
             this.SuspendLayout();
             // 
@@ -216,6 +218,10 @@
             this.chkIncludeUnusedLabels.UseVisualStyleBackColor = true;
             this.chkIncludeUnusedLabels.CheckedChanged += new System.EventHandler(this.chkIncludeUnusedLabels_CheckedChanged);
             // 
+            // saveLogSingleFile
+            // 
+            this.saveLogSingleFile.Filter = "Assembly Files|*.asm|All Files|*.*";
+            // 
             // ExportDisassembly
             // 
             this.AcceptButton = this.button2;
@@ -266,5 +272,7 @@
         private System.Windows.Forms.NumericUpDown numData;
         private System.Windows.Forms.CheckBox chkPrintLabelSpecificComments;
         private System.Windows.Forms.CheckBox chkIncludeUnusedLabels;
+        private System.Windows.Forms.SaveFileDialog saveLogSingleFile;
+        private System.Windows.Forms.FolderBrowserDialog chooseLogFolder;
     }
 }

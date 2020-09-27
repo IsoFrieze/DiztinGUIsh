@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using ExtendedXmlSerializer;
 
 namespace DiztinGUIsh
 {
+    // MODEL
     public class Project
     {
         // Any public properties will be automatically serialized to XML.
@@ -23,6 +25,13 @@ namespace DiztinGUIsh
         // needs to come last for serialization
         public Data Data { get; set; }
 
+        public LogWriterSettings LogWriterSettings;
+
+        public Project()
+        {
+            LogWriterSettings.SetDefaults();
+        }
+
         public class ImportRomSettings
         {
             public Data.ROMMapMode ROMMapMode;
@@ -35,13 +44,7 @@ namespace DiztinGUIsh
             public string rom_filename;
         }
 
-        public Project ImportRomAndCreateNewProject(ImportRomSettings importSettings)
-        {
-            var project = new Project();
-            project.DoImportRomAndCreateNewProject(importSettings);
-            return project;
-        }
-        private void DoImportRomAndCreateNewProject(ImportRomSettings importSettings)
+        public void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
         {
             AttachedRomFilename = importSettings.rom_filename;
             UnsavedChanges = false;
@@ -51,7 +54,7 @@ namespace DiztinGUIsh
             Data.Initiate(importSettings.rom_bytes, importSettings.ROMMapMode, importSettings.ROMSpeed);
 
             // TODO: get this UI out of here. probably just use databinding instead
-            AliasList.me.ResetDataGrid();
+            // AliasList.me.ResetDataGrid();
 
             if (importSettings.InitialLabels.Count > 0)
             {

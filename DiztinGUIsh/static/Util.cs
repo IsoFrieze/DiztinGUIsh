@@ -15,6 +15,11 @@ namespace DiztinGUIsh
         {
             Decimal = 3, Hexadecimal = 2, Binary = 8
         }
+        public static int GetBankSize(Data.ROMMapMode mode)
+        {
+            // todo
+            return mode == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000;
+        }
 
         public static int ConvertSNESToPC(int address, Data.ROMMapMode mode, int size)
         {

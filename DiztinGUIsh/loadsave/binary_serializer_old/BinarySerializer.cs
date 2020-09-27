@@ -87,12 +87,11 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (Data.InOutPoint)data[pointer + 7 * size + i]);
             pointer += 8 * size;
 
-            AliasList.me.ResetDataGrid();
+            // AliasList.me.ResetDataGrid(); // need this outta here.
+
             ReadLabels(project, data, ref pointer, converter, version >= 2);
             ReadComments(project, data, ref pointer, converter);
 
-            // redundant but, needed for forwards-compatibility
-            // project.InternalRomSize = project.Data.GetROMSize();
             project.UnsavedChanges = false;
 
             return project;
