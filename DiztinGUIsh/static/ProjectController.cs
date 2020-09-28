@@ -35,7 +35,7 @@ namespace DiztinGUIsh
 
         public void SaveProject(string projectProjectFileName)
         {
-            ProjectFileManager.Save(Project, Project.ProjectFileName);
+            ProjectFileManager.Save(Project, projectProjectFileName);
             ProjectView.OnProjectSaved();
         }
 
