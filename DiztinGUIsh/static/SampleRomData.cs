@@ -18,7 +18,7 @@ namespace DiztinGUIsh
         {
             // random sample code I made up; hopefully it shows a little bit of
             // everything so you can see how the settings will effect the output
-            RomBytes = {
+            RomBytes = new RomBytes {
                 new ROMByte {Rom = 0x78, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, Point = Data.InOutPoint.InPoint},
                 new ROMByte {Rom = 0xA9, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true},
                 new ROMByte {Rom = 0x01, TypeFlag = Data.FlagType.Operand},
@@ -150,7 +150,7 @@ namespace DiztinGUIsh
                 {0x21, "clear APU regs"},
                 {0x44, "this routine copies Test_Data to $7E0100"}
             },
-            alias = new Dictionary<int, Label>
+            Labels = new Dictionary<int, Label>
             {
                 {0x00, new Label() {name = "Emulation_RESET", comment = "Sample emulation reset location"}},
                 {0x0A, new Label() {name = "FastRESET", comment = "Sample label"}},

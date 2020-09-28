@@ -13,6 +13,20 @@ namespace DiztinGUIsh
 {
     public class Data
     {
+        // Note: order of these properties matters for the load/save process. Keep 'RomBytes' LAST
+        public ROMMapMode RomMapMode { get; set; }
+        public ROMSpeed RomSpeed { get; set; }
+        public Dictionary<int, string> Comments { get; set; }
+        public Dictionary<int, Label> Labels { get; set; }
+        public RomBytes RomBytes { get; set; }
+
+        private CPU65C816 CPU65C816 { get; set; }
+
+        public Data()
+        {
+            CPU65C816 = new CPU65C816(this);
+        }
+
         public enum FlagType : byte
         {
             Unreached = 0x00,
@@ -75,20 +89,13 @@ namespace DiztinGUIsh
             EXHIROM_SETTING_OFFSET = 0x40FFD5,
             EXLOROM_SETTING_OFFSET = 0x407FD5;
 
-        // Note: order of these properties matters for the load/save process. Keep 'RomBytes' LAST
-        public ROMMapMode RomMapMode { get; set; }
-        public ROMSpeed RomSpeed { get; set; }
-        public Dictionary<int, string> Comments { get; set; }
-        public RomBytes RomBytes { get; set; }
-
-        public Dictionary<int, Label> alias;
 
         public void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
         {
             RomMapMode = mode;
             RomSpeed = speed;
             int size = data.Length;
-            alias = new Dictionary<int, Label>();
+            Labels = new Dictionary<int, Label>();
             Comments = new Dictionary<int, string>();
             RomBytes = new RomBytes();
             for (int i = 0; i < size; i++)
@@ -135,15 +142,6 @@ namespace DiztinGUIsh
             {
                 RomBytes[i].Rom = data[i];
             }
-        }
-
-        public void Restore(RomBytes l = null, ROMMapMode m = ROMMapMode.LoROM, ROMSpeed s = ROMSpeed.Unknown, Dictionary<int, Label> a = null, Dictionary<int, string> c = null)
-        {
-            RomBytes = l ?? RomBytes;
-            RomMapMode = s == ROMSpeed.Unknown ? RomMapMode : m;
-            RomSpeed = s == ROMSpeed.Unknown ? RomSpeed : s;
-            alias = a ?? alias;
-            Comments = c ?? Comments;
         }
 
         public ROMMapMode GetROMMapMode()
@@ -259,14 +257,14 @@ namespace DiztinGUIsh
 
         public string GetLabelName(int i)
         {
-            if (alias.TryGetValue(i, out var val)) 
+            if (Labels.TryGetValue(i, out var val)) 
                 return val?.name ?? "";
 
             return "";
         }
         public string GetLabelComment(int i)
         {
-            if (alias.TryGetValue(i, out var val)) 
+            if (Labels.TryGetValue(i, out var val)) 
                 return val?.comment ?? "";
 
             return "";
@@ -274,38 +272,38 @@ namespace DiztinGUIsh
 
         public void DeleteAllLabels()
         {
-            alias.Clear();
+            Labels.Clear();
         }
 
         public void AddLabel(int i, Label v, bool overwrite)
         {
             if (v == null)
             {
-                if (alias.ContainsKey(i))
+                if (Labels.ContainsKey(i))
                 {
-                    alias.Remove(i);
+                    Labels.Remove(i);
                     // TODO: notify observers     AliasList.me.RemoveRow(i);
                 }
             } else {
-                if (alias.ContainsKey(i) && overwrite)
+                if (Labels.ContainsKey(i) && overwrite)
                 {
-                    alias.Remove(i);
+                    Labels.Remove(i);
                     // // TODO: notify observers     AliasList.me.RemoveRow(i);
                 }
 
-                if (alias.ContainsKey(i)) 
+                if (Labels.ContainsKey(i)) 
                     return;
 
                 v.CleanUp();
 
-                alias.Add(i, v);
+                Labels.Add(i, v);
                 // // TODO: notify observers     AliasList.me.AddRow(i, v);
             }
         }
 
         public Dictionary<int, Label> GetAllLabels()
         {
-            return alias;
+            return Labels;
         }
 
         public string GetComment(int i)
@@ -453,7 +451,8 @@ namespace DiztinGUIsh
                     break;
                 case 4:
                     ia = GetROMLong(offset);
-                    format = "dl {0}" + string.Format(" : db {0}", Util.NumberToBaseString(GetROMByte(offset + 3), Util.NumberBase.Hexadecimal, 2, true));
+                    format = "dl {0}" +
+                             $" : db {Util.NumberToBaseString(GetROMByte(offset + 3), Util.NumberBase.Hexadecimal, 2, true)}";
                     param = Util.NumberToBaseString(GetROMLong(offset), Util.NumberBase.Hexadecimal, 6, true);
                     break;
             }
@@ -475,18 +474,6 @@ namespace DiztinGUIsh
             var pc = ConvertSNEStoPC(address);
             return
                 $"{Util.TypeToLabel(GetFlag(pc))}_{Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6)}";
-        }
-
-
-        //private Project Project { get; set; }
-
-        //private Data Data => Project.Data;
-        private CPU65C816 CPU65C816 { get; set; }
-
-        public Data()
-        {
-            // Project = project;
-            CPU65C816 = new CPU65C816(this);
         }
 
         public int Step(int offset, bool branch, bool force, int prevOffset)
@@ -799,6 +786,7 @@ namespace DiztinGUIsh
         // we calculate it once from sample data and hang onto it
         private class CachedTraceLineIndex
         {
+            // NOTE: newer versions of BSNES use different text for flags. check for completeness.
             private string sample =
                 "028cde rep #$30               A:0004 X:0000 Y:0004 S:1fdd D:0000 DB:02 nvmxdiZC V:133 H: 654 F:36";
 
@@ -925,10 +913,9 @@ namespace DiztinGUIsh
             }
         }
         #region Equality
-
         protected bool Equals(Data other)
         {
-            return alias.SequenceEqual(other.alias) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
+            return Labels.SequenceEqual(other.Labels) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
         }
 
         public override bool Equals(object obj)
@@ -943,7 +930,7 @@ namespace DiztinGUIsh
         {
             unchecked
             {
-                var hashCode = alias.GetHashCode();
+                var hashCode = Labels.GetHashCode();
                 hashCode = (hashCode * 397) ^ (int)RomMapMode;
                 hashCode = (hashCode * 397) ^ (int)RomSpeed;
                 hashCode = (hashCode * 397) ^ Comments.GetHashCode();

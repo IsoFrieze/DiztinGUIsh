@@ -83,6 +83,7 @@ namespace DiztinGUIsh
             }
         }
 
+        private Dictionary<int, Label> ExtraLabels { get; set; } = new Dictionary<int, Label>();
         private List<Tuple<string, int>> parseList;
         private List<int> usedLabels;
         private int errorCount, bankSize;
@@ -140,14 +141,12 @@ namespace DiztinGUIsh
 
         public OutputResult CreateLog()
         {
-            // var aliases = Data.GetAllLabels(); // junk
-            // Data.Restore(a: new Dictionary<int, Label>(aliases)); // junk
-            // AliasList.me.locked = true; // notify observers. do this outside this class.
-
             bankSize = Util.GetBankSize(Data.RomMapMode);
             errorCount = 0;
 
-            GenerateGenericLabels();
+            AddLabelSource(Data.Labels);
+            AddLabelSource(ExtraLabels);
+            GenerateAdditionalExtraLabels();
 
             usedLabels = new List<int>();
 
@@ -162,7 +161,7 @@ namespace DiztinGUIsh
             ProgressBarJob.Loop(size, () =>
             {
                 if (pointer >= size)
-                    return -1; // stop looping
+                    return -1; // means "stop looping"
 
                 WriteAddress(ref pointer, ref bank);
 
@@ -174,7 +173,6 @@ namespace DiztinGUIsh
             if (Settings.structure == FormatStructure.OneBankPerFile)
                 StreamOutput.Close();
 
-            // // TODO: notify observers     AliasList.me.locked = false;
             return new OutputResult()
             {
                 error_count = errorCount,
@@ -204,67 +202,97 @@ namespace DiztinGUIsh
             return pointer;
         }
 
-        // TODO: These are labels like "CODE_856469" and "DATA_763525".
-        // ISSUE: the original code just modified Data, but, we can't do that anymore.
-        // Either we need to copy all of it, or, we need another list of labels and use that.
-        private void GenerateGenericLabels()
+        private List<Dictionary<int, Label>> LabelSources { get; set; } = new List<Dictionary<int, Label>>();
+
+        public void AddLabelSource(Dictionary<int, Label> labelSource)
         {
-            var addressList = new List<int>();
-            var pointer = 0;
+            LabelSources.Add(labelSource);
+        }
 
-            while (pointer < Data.GetROMSize())
+        public string GetLabelName(int i)
+        {
+            foreach (var labelDict in LabelSources)
             {
-                var addr = GetLabelTargetAddress(pointer, out var length);
-                pointer += length;
-
-                if (addr != -1)
-                    addressList.Add(addr);
+                if (labelDict.TryGetValue(i, out var val))
+                    return val?.name ?? "";
             }
 
-            // TODO: +/- labels
-            foreach (var t in addressList)
+            return "";
+        }
+        public string GetLabelComment(int i)
+        {
+            foreach (var labelDict in LabelSources)
             {
-                var label = new Label()
-                {
-                    name = Data.GetDefaultLabel(t)
-                };
+                if (labelDict.TryGetValue(i, out var val))
+                    return val?.comment ?? "";
+            }
 
-                throw new NotImplementedException("see note above, not implemented yet.");
-                // if we were just going to add them we could do this:
-                // Data.AddLabel(t, label, false);
+            return "";
+        }
+
+        // NOTE: we should refactor this and the stuff in Data to make a new class called
+        // LabelCollection or similar.
+        public void AddExtraLabel(int i, Label v)
+        {
+            Debug.Assert(v != null);
+            if (ExtraLabels.ContainsKey(i))
+                return;
+
+            v.CleanUp();
+
+            ExtraLabels.Add(i, v);
+        }
+
+
+        // Generate labels like "CODE_856469" and "DATA_763525"
+        // These will be combined with the original labels to produce our final assembly
+        // These labels exist only for the duration of this export, and then are discarded.
+        //
+        // TODO: generate some nice looking "+"/"-" labels here.
+        private void GenerateAdditionalExtraLabels()
+        {
+            for (var pointer = 0; pointer < Data.GetROMSize();)
+            {
+                var offset = GetAddressOfAnyUsefulLabelsAt(pointer, out var length);
+                pointer += length;
+
+                if (offset == -1)
+                    continue;
+
+                AddExtraLabel(offset, new Label() {
+                    name = Data.GetDefaultLabel(offset)
+                });
             }
         }
 
-        private int GetLabelTargetAddress(int pointer, out int length)
+        private int GetAddressOfAnyUsefulLabelsAt(int pointer, out int length)
         {
             length = GetLineByteLength(pointer);
+            switch (Settings.unlabeled)
+            {
+                case FormatUnlabeled.ShowNone:
+                    return -1;
+                case FormatUnlabeled.ShowAll:
+                    return Data.ConvertPCtoSNES(pointer);
+            }
 
             var flag = Data.GetFlag(pointer);
+            var usefulToCreateLabelFrom = 
+                flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit ||
+                flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit;
 
-            bool c1 = Settings.unlabeled == LogCreator.FormatUnlabeled.ShowAll;
-            bool c2 = Settings.unlabeled != LogCreator.FormatUnlabeled.ShowNone &&
-                      (flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit ||
-                       flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit);
+            if (!usefulToCreateLabelFrom) 
+                return -1;
 
-            if (c1)
-            {
-                return Data.ConvertPCtoSNES(pointer);
-            }
-            else if (c2)
-            {
-                var ia = Data.GetIntermediateAddressOrPointer(pointer);
-
-                if (ia >= 0 && Data.ConvertSNEStoPC(ia) >= 0)
-                    return ia;
-            }
+            var ia = Data.GetIntermediateAddressOrPointer(pointer);
+            if (ia >= 0 && Data.ConvertSNEStoPC(ia) >= 0)
+                return ia;
 
             return -1;
         }
 
         private void SetupParseList()
         {
-            // TODO: this is probably not correct now, check
-
             string[] split = Settings.format.Split('%');
             parseList = new List<Tuple<string, int>>();
             for (int i = 0; i < split.Length; i++)
@@ -418,12 +446,11 @@ namespace DiztinGUIsh
         {
             int max = 1, step = 1;
             var size = Data.GetROMSize();
-            var data = Data;
 
-            switch (data.GetFlag(offset))
+            switch (Data.GetFlag(offset))
             {
                 case Data.FlagType.Opcode:
-                    return data.OpcodeByteLength(offset);
+                    return Data.OpcodeByteLength(offset);
                 case Data.FlagType.Unreached:
                 case Data.FlagType.Operand:
                 case Data.FlagType.Data8Bit:
@@ -465,8 +492,8 @@ namespace DiztinGUIsh
             while (
                 min < max &&
                 offset + min < size &&
-                data.GetFlag(offset + min) == data.GetFlag(offset) &&
-                data.GetLabelName(data.ConvertPCtoSNES(offset + min)) == "" &&
+                Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
+                GetLabelName(Data.ConvertPCtoSNES(offset + min)) == "" &&
                 (offset + min) / bankSize == myBank
             ) min += step;
             return min;
@@ -517,7 +544,7 @@ namespace DiztinGUIsh
         private string GetLabel(int offset, int length)
         {
             var snes = Data.ConvertPCtoSNES(offset);
-            var label = Data.GetLabelName(snes);
+            var label = GetLabelName(snes);
             if (label == null)
                 return "";
             
@@ -696,9 +723,9 @@ namespace DiztinGUIsh
         [AssemblerHandler(token = "%labelassign", weight = 1)]
         private string GetLabelAssign(int offset, int length)
         {
-            var labelName = Data.GetLabelName(offset);
+            var labelName = GetLabelName(offset);
             var offsetStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true);
-            var labelComment = Data.GetLabelComment(offset);
+            var labelComment = GetLabelComment(offset);
 
             if (string.IsNullOrEmpty(labelName))
                 return "";

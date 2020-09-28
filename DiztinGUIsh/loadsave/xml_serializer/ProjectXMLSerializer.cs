@@ -72,7 +72,7 @@ namespace DiztinGUIsh.loadsave.xml_serializer
             var final_bytes = Encoding.UTF8.GetBytes(xml_str);
 
             // if you want some sanity checking, run this to verify everything saved correctly
-            // DebugVerifyProjectEquality(OpenProjectXml(file), project); 
+            DebugVerifyProjectEquality(project, Load(final_bytes));
 
             return final_bytes;
         }

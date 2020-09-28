@@ -25,7 +25,7 @@ namespace DiztinGUIsh.loadsave
             return Load(File.ReadAllBytes(filename));
         }
 
-        private void DebugVerifyProjectEquality(Project project1, Project project2, bool deepcut = true)
+        protected static void DebugVerifyProjectEquality(Project project1, Project project2, bool deepcut = true)
         {
             if (deepcut)
             {

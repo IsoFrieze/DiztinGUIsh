@@ -16,6 +16,10 @@ namespace DiztinGUIsh
 
         public MainWindow()
         {
+            ProjectController = new ProjectController
+            {
+                ProjectView = this
+            };
             InitializeComponent();
         }
 
@@ -275,7 +279,7 @@ namespace DiztinGUIsh
             }
         }
 
-        private readonly ProjectController ProjectController = new ProjectController();
+        private readonly ProjectController ProjectController;
 
         private void exportLogToolStripMenuItem_Click(object sender, EventArgs e)
         {

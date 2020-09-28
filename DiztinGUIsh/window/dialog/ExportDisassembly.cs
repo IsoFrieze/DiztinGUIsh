@@ -157,6 +157,8 @@ namespace DiztinGUIsh
             var sampleSettings = settings;
             sampleSettings.structure = LogCreator.FormatStructure.SingleFile;
 
+            Data sampleData = SampleRomData.SampleData;
+
             var lc = new LogCreator()
             {
                 Settings = sampleSettings,

@@ -1,6 +1,7 @@
 ﻿using DiztinGUIsh.window;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using ExtendedXmlSerializer;
@@ -166,6 +167,8 @@ namespace DiztinGUIsh
             //
             // So now, with all our metadata loaded successfully, we now open the .smc file on disk
             // and marry the original rom's bytes with all of our metadata loaded from the project file.
+
+            Debug.Assert(Data.RomBytes != null && Data.Labels != null && Data.Comments != null);
 
             var rom = ReadFromOriginalRom();
             if (rom == null)
