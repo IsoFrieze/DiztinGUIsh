@@ -14,9 +14,28 @@ namespace DiztinGUIsh
         public IProjectView ProjectView { get; set; }
         public Project Project { get; private set; }
 
+        // there's probably better ways to handle this.
+        // probably replace with a UI like "start task" and "stop task"
+        // so we can flip up a progress bar and remove it.
+        public void DoLongRunningTask(Action task, string description = null)
+        {
+            if (ProjectView.TaskHandler != null)
+            {
+                ProjectView.TaskHandler(task, description);
+            }
+            else
+            {
+                task();
+            }
+        }
+
         public bool OpenProject(string filename)
         {
-            var project = ProjectFileManager.Open(filename);
+            Project project = null;
+            DoLongRunningTask(delegate {
+                project = ProjectFileManager.Open(filename);
+            }, $"Opening {Path.GetFileName(filename)}...");
+
             if (project == null)
             {
                 ProjectView.OnProjectOpenFail();
@@ -33,9 +52,12 @@ namespace DiztinGUIsh
             ProjectView.OnProjectOpened(filename);
         }
 
-        public void SaveProject(string projectProjectFileName)
+        public void SaveProject(string filename)
         {
-            ProjectFileManager.Save(Project, projectProjectFileName);
+            DoLongRunningTask(delegate
+            {
+                ProjectFileManager.Save(Project, filename);
+            }, $"Saving {Path.GetFileName(filename)}...");
             ProjectView.OnProjectSaved();
         }
 
@@ -58,8 +80,6 @@ namespace DiztinGUIsh
 
         private void WriteAssemblyOutput(ref LogWriterSettings settings)
         {
-            int errors = 0;
-
             // kinda hate that we're passing in these...
             using var sw = new StreamWriter(settings.file);
             using var er = new StreamWriter(settings.error);

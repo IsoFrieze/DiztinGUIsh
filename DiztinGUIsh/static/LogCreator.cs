@@ -97,7 +97,7 @@ namespace DiztinGUIsh
             parameters = new Dictionary<string, Tuple<MethodInfo, int>>();
 
             var methodsWithAttributes = typeof(LogCreator)
-                .GetMethods()
+                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(
                     x => x.GetCustomAttributes(typeof(AssemblerHandler), false).FirstOrDefault() != null
                 );
@@ -121,6 +121,8 @@ namespace DiztinGUIsh
 
                 parameters.Add(token, (new Tuple<MethodInfo, int>(method, weight)));
             }
+
+            Debug.Assert(parameters.Count != 0);
         }
 
         public string GetParameter(int offset, string parameter, int length)
@@ -146,7 +148,8 @@ namespace DiztinGUIsh
 
             AddLabelSource(Data.Labels);
             AddLabelSource(ExtraLabels);
-            GenerateAdditionalExtraLabels();
+            AddTemporaryLabels();
+            // GenerateAdditionalExtraLabels();
 
             usedLabels = new List<int>();
 
@@ -249,7 +252,7 @@ namespace DiztinGUIsh
         // These labels exist only for the duration of this export, and then are discarded.
         //
         // TODO: generate some nice looking "+"/"-" labels here.
-        private void GenerateAdditionalExtraLabels()
+        /*private void GenerateAdditionalExtraLabels()
         {
             for (var pointer = 0; pointer < Data.GetROMSize();)
             {
@@ -289,6 +292,45 @@ namespace DiztinGUIsh
                 return ia;
 
             return -1;
+        }*/
+
+        private void AddTemporaryLabels()
+        {
+            List<int> addMe = new List<int>();
+            int pointer = 0;
+
+            while (pointer < Data.GetROMSize())
+            {
+                int length = GetLineByteLength(pointer);
+                Data.FlagType flag = Data.GetFlag(pointer);
+
+                var flagsOK = (flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit ||
+                               flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit);
+
+                if (Settings.unlabeled == FormatUnlabeled.ShowAll)
+                    addMe.Add(pointer);
+                else if (Settings.unlabeled != FormatUnlabeled.ShowNone && flagsOK)
+                {
+                    int ia = Data.GetIntermediateAddressOrPointer(pointer);
+                    int pc = Data.ConvertSNEStoPC(ia);
+                    if (pc >= 0) addMe.Add(pc);
+                }
+
+                pointer += length;
+            }
+
+            // TODO +/- labels
+            for (int i = 0; i < addMe.Count; i++)
+            {
+                var offset = addMe[i];
+                var p1 = offset;
+                var p2 = Data.GetDefaultLabel(offset);
+                // Data.AddLabel(p1, p2, false);
+                AddExtraLabel(p1, new Label()
+                {
+                    name = p2
+                });
+            }
         }
 
         private void SetupParseList()
@@ -301,9 +343,28 @@ namespace DiztinGUIsh
                 else
                 {
                     var colon = split[i].IndexOf(':');
-                    parseList.Add(colon < 0
-                        ? Tuple.Create(split[i], Parameters[split[i]].Item2)
-                        : Tuple.Create(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1))));
+
+                    Tuple<string, int> tuple;
+
+                    if (colon < 0)
+                    {
+                        /*
+                        if (colon < 0) 
+                           list.Add(Tuple.Create(split[i], parameters[split[i]].Item2));
+                        else 
+                           list.Add(Tuple.Create(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1))));
+                        */
+
+                        var s1 = split[i];
+                        var s2 = Parameters[s1].Item2;
+                        tuple = Tuple.Create(s1, s2);
+                    }
+                    else
+                    {
+                        tuple = Tuple.Create(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1)));
+                    }
+
+                    parseList.Add(tuple);
                 }
             }
         }
@@ -526,14 +587,14 @@ namespace DiztinGUIsh
 
         // just a %
         [AssemblerHandler(token = "", weight = 1)]
-        private static string GetPercent(int offset, int length)
+        private string GetPercent(int offset, int length)
         {
             return "%";
         }
 
         // all spaces
         [AssemblerHandler(token = "%empty", weight = 1)]
-        private static string GetEmpty(int offset, int length)
+        private string GetEmpty(int offset, int length)
         {
             return string.Format("{0," + length + "}", "");
         }

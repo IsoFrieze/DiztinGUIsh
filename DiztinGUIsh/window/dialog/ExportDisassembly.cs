@@ -9,7 +9,6 @@ namespace DiztinGUIsh
     // end.
     public partial class ExportDisassembly : Form
     {
-        //private readonly LogCreator LogCreator;
         private Data Data => Project.Data;
         private readonly Project Project;
 

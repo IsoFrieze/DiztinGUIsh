@@ -1,0 +1,2566 @@
+Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe -v:diag .\DiztinGUIsh.sln
+Building the projects in this solution one at a time. To enable parallel build, please add the "-m" switch.
+Build started 9/28/2020 4:45:56 PM.
+Environment at start of build:
+ALLUSERSPROFILE = C:\ProgramData
+APPDATA = C:\Users\Dominic Cerquetti\AppData\Roaming
+CommonProgramFiles = C:\Program Files (x86)\Common Files
+CommonProgramFiles(x86) = C:\Program Files (x86)\Common Files
+CommonProgramW6432 = C:\Program Files\Common Files
+COMPUTERNAME = LAPTOP-DOM-CERQ
+ComSpec = C:\Windows\system32\cmd.exe
+DriverData = C:\Windows\System32\Drivers\DriverData
+FPS_BROWSER_APP_PROFILE_STRING = Internet Explorer
+FPS_BROWSER_USER_PROFILE_STRING = Default
+HOMEDRIVE = C:
+HOMEPATH = \Users\Dominic Cerquetti
+LOCALAPPDATA = C:\Users\Dominic Cerquetti\AppData\Local
+LOGONSERVER = \\LAPTOP-DOM-CERQ
+MSBuildLoadMicrosoftTargetsReadOnly = true
+NDI_RUNTIME_DIR_V2 = C:\Program Files\NewTek\NDI 4 Runtime\v4
+NDI_RUNTIME_DIR_V3 = C:\Program Files\NewTek\NDI 4 Runtime\v4
+NDI_RUNTIME_DIR_V4 = C:\Program Files\NewTek\NDI 4 Runtime\v4
+NUMBER_OF_PROCESSORS = 8
+OneDrive = C:\Users\Dominic Cerquetti\OneDrive - AA Recycle II LLC
+OneDriveCommercial = C:\Users\Dominic Cerquetti\OneDrive - AA Recycle II LLC
+OS = Windows_NT
+Path = D:\installs\msys64\mingw64\bin;D:\installs\msys64\usr\bin\;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\Perforce\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\PuTTY\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\Program Files\dotnet\;C:\Users\Dominic Cerquetti\AppData\Local\Microsoft\WindowsApps;C:\Users\Dominic Cerquetti\.dotnet\tools;C:\Users\Dominic Cerquetti\.platformio\penv\Scripts\;C:\Users\Dominic Cerquetti\AppData\Local\Programs\Python\Python38-32\python.exe;C:\Users\Dominic Cerquetti\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files (x86)\Nmap;C:\Users\Dominic Cerquetti\AppData\Roaming\npm;C:\Users\Dominic Cerquetti\.dotnet\tools;D:\installs\msys64\mingw64\bin;
+PATHEXT = .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+PROCESSOR_ARCHITECTURE = x86
+PROCESSOR_ARCHITEW6432 = AMD64
+PROCESSOR_IDENTIFIER = Intel64 Family 6 Model 158 Stepping 9, GenuineIntel
+PROCESSOR_LEVEL = 6
+PROCESSOR_REVISION = 9e09
+ProgramData = C:\ProgramData
+ProgramFiles = C:\Program Files (x86)
+ProgramFiles(x86) = C:\Program Files (x86)
+ProgramW6432 = C:\Program Files
+PROMPT = $P$G
+PSModulePath = C:\Program Files (x86)\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules;C:\Program Files (x86)\AutoIt3\AutoItX
+PUBLIC = C:\Users\Public
+SESSIONNAME = Console
+SystemDrive = C:
+SystemRoot = C:\Windows
+TEMP = C:\Users\DOMINI~1\AppData\Local\Temp
+TMP = C:\Users\DOMINI~1\AppData\Local\Temp
+USERDOMAIN = LAPTOP-DOM-CERQ
+USERDOMAIN_ROAMINGPROFILE = LAPTOP-DOM-CERQ
+USERNAME = Dominic Cerquetti
+USERPROFILE = C:\Users\Dominic Cerquetti
+VBOX_MSI_INSTALL_PATH = C:\Program Files\Oracle\VirtualBox\
+windir = C:\Windows
+WWISEROOT = C:\Program Files (x86)\Audiokinetic\Wwise 2019.2.4.7329
+WWISESDK = C:\Program Files (x86)\Audiokinetic\Wwise 2019.2.4.7329\SDK
+
+Process = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe"
+MSBuild executable path = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe"
+Command line arguments = ""C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe"  -v:diag "
+Current directory = "d:\projects\cthack\src\diztinguish"
+MSBuild version = "16.7.0+b89cb5fde"
+Project "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln" on node 1 (default targets).
+Initial Properties:
+_DirectorySolutionPropsBasePath = 
+_DirectorySolutionPropsFile = Directory.Solution.props
+_DirectorySolutionTargetsBasePath = 
+_DirectorySolutionTargetsFile = Directory.Solution.targets
+_GenerateRestoreGraphProjectEntryInputProperties = 
+      ExcludeRestorePackageImports=true;
+      _RestoreSolutionFileUsed=true;
+      SolutionDir=d:\projects\cthack\src\diztinguish\;
+      SolutionName=DiztinGUIsh;
+      SolutionFileName=DiztinGUIsh.sln;
+      SolutionPath=d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln;
+      SolutionExt=.sln;
+    
+_RestoreSolutionFileUsed = true
+ALLUSERSPROFILE = C:\ProgramData
+AndroidTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\MDD\Android\V150\
+APPDATA = C:\Users\Dominic Cerquetti\AppData\Roaming
+AspNetConfiguration = Debug
+CommonProgramFiles = C:\Program Files (x86)\Common Files
+CommonProgramW6432 = C:\Program Files\Common Files
+COMPUTERNAME = LAPTOP-DOM-CERQ
+ComSpec = C:\Windows\system32\cmd.exe
+Configuration = Debug
+CurrentSolutionConfigurationContents = <SolutionConfiguration>
+  <ProjectConfiguration Project="{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}" AbsolutePath="d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" BuildProjectInSolution="True">Debug|AnyCPU</ProjectConfiguration>
+</SolutionConfiguration>
+DriverData = C:\Windows\System32\Drivers\DriverData
+FPS_BROWSER_APP_PROFILE_STRING = Internet Explorer
+FPS_BROWSER_USER_PROFILE_STRING = Default
+FrameworkSDKRoot = C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\
+HideWarningsAndErrors = false
+HOMEDRIVE = C:
+HOMEPATH = \Users\Dominic Cerquetti
+iOSTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\MDD\iOS\V150\
+IsRestoreTargetsFileLoaded = true
+LOCALAPPDATA = C:\Users\Dominic Cerquetti\AppData\Local
+LOGONSERVER = \\LAPTOP-DOM-CERQ
+MSBuildAllProjects = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\SolutionFile\ImportAfter\Microsoft.NuGet.Solution.ImportAfter.targets;;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets
+MSBuildAssemblyVersion = 16.0
+MSBuildBinPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
+MSBuildExtensionsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+MSBuildExtensionsPath32 = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+MSBuildExtensionsPath64 = C:\Program Files\MSBuild
+MSBuildFrameworkToolsPath = C:\Windows\Microsoft.NET\Framework\v4.0.30319\
+MSBuildFrameworkToolsPath32 = C:\Windows\Microsoft.NET\Framework\v4.0.30319\
+MSBuildFrameworkToolsPath64 = C:\Windows\Microsoft.NET\Framework64\v4.0.30319\
+MSBuildFrameworkToolsRoot = C:\Windows\Microsoft.NET\Framework\
+MSBuildLoadMicrosoftTargetsReadOnly = true
+MSBuildNodeCount = 1
+MSBuildProgramFiles32 = C:\Program Files (x86)
+MSBuildProjectDefaultTargets = Build
+MSBuildProjectDirectory = d:\projects\cthack\src\diztinguish
+MSBuildProjectDirectoryNoRoot = projects\cthack\src\diztinguish
+MSBuildProjectExtension = .metaproj
+MSBuildProjectFile = DiztinGUIsh.sln.metaproj
+MSBuildProjectFullPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln.metaproj
+MSBuildProjectName = DiztinGUIsh.sln
+MSBuildRuntimeType = Full
+MSBuildRuntimeVersion = 4.0.30319
+MSBuildSDKsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Sdks
+MSBuildStartupDirectory = d:\projects\cthack\src\diztinguish
+MSBuildToolsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
+MSBuildToolsPath32 = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
+MSBuildToolsPath64 = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64
+MSBuildToolsRoot = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+MSBuildToolsVersion = Current
+MSBuildUserExtensionsPath = C:\Users\Dominic Cerquetti\AppData\Local\Microsoft\MSBuild
+MSBuildVersion = 16.7.0
+NDI_RUNTIME_DIR_V2 = C:\Program Files\NewTek\NDI 4 Runtime\v4
+NDI_RUNTIME_DIR_V3 = C:\Program Files\NewTek\NDI 4 Runtime\v4
+NDI_RUNTIME_DIR_V4 = C:\Program Files\NewTek\NDI 4 Runtime\v4
+NuGetInteractive = 
+NuGetRestoreTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets
+NUMBER_OF_PROCESSORS = 8
+OneDrive = C:\Users\Dominic Cerquetti\OneDrive - AA Recycle II LLC
+OneDriveCommercial = C:\Users\Dominic Cerquetti\OneDrive - AA Recycle II LLC
+OS = Windows_NT
+PackageDownloadSupported = true
+Path = D:\installs\msys64\mingw64\bin;D:\installs\msys64\usr\bin\;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\Perforce\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\PuTTY\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\Program Files\dotnet\;C:\Users\Dominic Cerquetti\AppData\Local\Microsoft\WindowsApps;C:\Users\Dominic Cerquetti\.dotnet\tools;C:\Users\Dominic Cerquetti\.platformio\penv\Scripts\;C:\Users\Dominic Cerquetti\AppData\Local\Programs\Python\Python38-32\python.exe;C:\Users\Dominic Cerquetti\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files (x86)\Nmap;C:\Users\Dominic Cerquetti\AppData\Roaming\npm;C:\Users\Dominic Cerquetti\.dotnet\tools;D:\installs\msys64\mingw64\bin;
+PATHEXT = .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+Platform = Any CPU
+PROCESSOR_ARCHITECTURE = x86
+PROCESSOR_ARCHITEW6432 = AMD64
+PROCESSOR_IDENTIFIER = Intel64 Family 6 Model 158 Stepping 9, GenuineIntel
+PROCESSOR_LEVEL = 6
+PROCESSOR_REVISION = 9e09
+ProgramData = C:\ProgramData
+ProgramFiles = C:\Program Files (x86)
+ProgramW6432 = C:\Program Files
+PROMPT = $P$G
+PSModulePath = C:\Program Files (x86)\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules;C:\Program Files (x86)\AutoIt3\AutoItX
+PUBLIC = C:\Users\Public
+RestoreBuildInParallel = true
+RestoreContinueOnError = WarnAndContinue
+RestoreRecursive = true
+RestoreTaskAssemblyFile = NuGet.Build.Tasks.dll
+RestoreUseSkipNonexistentTargets = true
+RoslynTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Roslyn
+SDK35ToolsPath = C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\
+SDK40ToolsPath = C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\
+SESSIONNAME = Console
+SolutionDir = d:\projects\cthack\src\diztinguish\
+SolutionExt = .sln
+SolutionFileName = DiztinGUIsh.sln
+SolutionName = DiztinGUIsh
+SolutionPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln
+SystemDrive = C:
+SystemRoot = C:\Windows
+TargetFrameworkVersion = v4.0
+TEMP = C:\Users\DOMINI~1\AppData\Local\Temp
+TMP = C:\Users\DOMINI~1\AppData\Local\Temp
+USERDOMAIN = LAPTOP-DOM-CERQ
+USERDOMAIN_ROAMINGPROFILE = LAPTOP-DOM-CERQ
+USERNAME = Dominic Cerquetti
+USERPROFILE = C:\Users\Dominic Cerquetti
+ValidateRuntimeIdentifierCompatibility = false
+VBOX_MSI_INSTALL_PATH = C:\Program Files\Oracle\VirtualBox\
+VCTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\
+VCTargetsPath10 = C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\
+VCTargetsPath11 = C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\
+VCTargetsPath12 = C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\
+VCTargetsPath14 = C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\
+VisualStudioVersion = 16.0
+VsInstallRoot = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community
+windir = C:\Windows
+WindowsSDK80Path = 
+WWISEROOT = C:\Program Files (x86)\Audiokinetic\Wwise 2019.2.4.7329
+WWISESDK = C:\Program Files (x86)\Audiokinetic\Wwise 2019.2.4.7329\SDK
+
+Initial Items:
+ProjectReference
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj
+        ToolsVersion = 
+        SkipNonexistentProjects = False
+        AdditionalProperties = Configuration=Debug; Platform=AnyCPU
+        Configuration = Debug
+        Platform = AnyCPU
+SolutionConfiguration
+    Debug|Any CPU
+        Configuration = Debug
+        Platform = Any CPU
+        Content = <SolutionConfiguration>
+  <ProjectConfiguration Project="{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}" AbsolutePath="d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" BuildProjectInSolution="True">Debug|AnyCPU</ProjectConfiguration>
+</SolutionConfiguration>
+    Release|Any CPU
+        Configuration = Release
+        Platform = Any CPU
+        Content = <SolutionConfiguration>
+  <ProjectConfiguration Project="{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}" AbsolutePath="d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" BuildProjectInSolution="True">Release|AnyCPU</ProjectConfiguration>
+</SolutionConfiguration>
+
+Building with tools version "Current".
+Target "ValidateSolutionConfiguration: (TargetId:2)" in file "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln.metaproj" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln" (entry point):
+Task "Error" skipped, due to false condition; (('$(CurrentSolutionConfigurationContents)' == '') and ('$(SkipInvalidConfigurations)' != 'true')) was evaluated as (('<SolutionConfiguration>
+  <ProjectConfiguration Project="{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}" AbsolutePath="d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" BuildProjectInSolution="True">Debug|AnyCPU</ProjectConfiguration>
+</SolutionConfiguration>' == '') and ('' != 'true')).
+Task "Warning" skipped, due to false condition; (('$(CurrentSolutionConfigurationContents)' == '') and ('$(SkipInvalidConfigurations)' == 'true')) was evaluated as (('<SolutionConfiguration>
+  <ProjectConfiguration Project="{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}" AbsolutePath="d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" BuildProjectInSolution="True">Debug|AnyCPU</ProjectConfiguration>
+</SolutionConfiguration>' == '') and ('' == 'true')).
+Using "Message" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "Message" (TaskId:2)
+  Task Parameter:Text=Building solution configuration "Debug|Any CPU". (TaskId:2)
+  Building solution configuration "Debug|Any CPU". (TaskId:2)
+Done executing task "Message". (TaskId:2)
+Done building target "ValidateSolutionConfiguration" in project "DiztinGUIsh.sln".: (TargetId:2)
+Target "ValidateToolsVersions: (TargetId:3)" in file "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln.metaproj" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln" (entry point):
+Task "Error" skipped, due to false condition; ('$(MSBuildToolsVersion)' == '2.0' and ('$(ProjectToolsVersion)' != '2.0' and '$(ProjectToolsVersion)' != '')) was evaluated as ('Current' == '2.0' and ('' != '2.0' and '' != '')).
+Done building target "ValidateToolsVersions" in project "DiztinGUIsh.sln".: (TargetId:3)
+Target "ValidateProjects: (TargetId:4)" in file "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln.metaproj" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln" (entry point):
+Done building target "ValidateProjects" in project "DiztinGUIsh.sln".: (TargetId:4)
+Target "Build: (TargetId:5)" in file "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln.metaproj" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln" (entry point):
+Using "MSBuild" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "MSBuild" (TaskId:3)
+  Task Parameter:
+      Projects=
+          d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj
+                  AdditionalProperties=Configuration=Debug; Platform=AnyCPU
+                  Configuration=Debug
+                  Platform=AnyCPU
+                  SkipNonexistentProjects=False
+                  ToolsVersion= (TaskId:3)
+  Task Parameter:BuildInParallel=True (TaskId:3)
+  Task Parameter:
+      Properties=
+          BuildingSolutionFile=true
+          CurrentSolutionConfigurationContents=<SolutionConfiguration>
+    <ProjectConfiguration Project="{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}" AbsolutePath="d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" BuildProjectInSolution="True">Debug|AnyCPU</ProjectConfiguration>
+  </SolutionConfiguration>
+          SolutionDir=d:\projects\cthack\src\diztinguish\
+          SolutionExt=.sln
+          SolutionFileName=DiztinGUIsh.sln
+          SolutionName=DiztinGUIsh
+          SolutionPath=d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln (TaskId:3)
+  Task Parameter:SkipNonexistentProjects=False (TaskId:3)
+  Global Properties: (TaskId:3)
+    BuildingSolutionFile=true (TaskId:3)
+    CurrentSolutionConfigurationContents=<SolutionConfiguration>
+    <ProjectConfiguration Project="{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}" AbsolutePath="d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" BuildProjectInSolution="True">Debug|AnyCPU</ProjectConfiguration>
+  </SolutionConfiguration> (TaskId:3)
+    SolutionDir=d:\projects\cthack\src\diztinguish\ (TaskId:3)
+    SolutionExt=.sln (TaskId:3)
+    SolutionFileName=DiztinGUIsh.sln (TaskId:3)
+    SolutionName=DiztinGUIsh (TaskId:3)
+    SolutionPath=d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln (TaskId:3)
+  Additional Properties for project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj": (TaskId:3)
+    Configuration=Debug (TaskId:3)
+    Platform=AnyCPU (TaskId:3)
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Trying to import C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\$(MSBuildToolsVersion)\Microsoft.Common.props using extensions path C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+Property reassignment: $(MSBuildProjectExtensionsPath)="d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\" (previous value: "obj\") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Microsoft.Common.props (56,5)
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Trying to import C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\$(MSBuildToolsVersion)\Imports\Microsoft.Common.props\ImportBefore\* using extensions path C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+The "Configuration" property is a global property, and cannot be modified.
+The "Platform" property is a global property, and cannot be modified.
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+The "Configuration" property is a global property, and cannot be modified.
+The "Platform" property is a global property, and cannot be modified.
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Property reassignment: $(DefineCommonItemSchemas)="false" (previous value: "true") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets (12,5)
+Property reassignment: $(DefineCommonCapabilities)="false" (previous value: "true") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets (13,5)
+Property reassignment: $(DefineCommonReferenceSchemas)="false" (previous value: "true") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets (14,5)
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+The "Configuration" property is a global property, and cannot be modified.
+The "Platform" property is a global property, and cannot be modified.
+Property reassignment: $(_DebugSymbolsProduced)="true" (previous value: "false") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (149,5)
+Property reassignment: $(_DocumentationFileProduced)="false" (previous value: "true") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (158,5)
+The "SolutionName" property is a global property, and cannot be modified.
+The "SolutionFileName" property is a global property, and cannot be modified.
+The "SolutionPath" property is a global property, and cannot be modified.
+The "SolutionDir" property is a global property, and cannot be modified.
+The "SolutionExt" property is a global property, and cannot be modified.
+Property reassignment: $(_DeploymentUrl)="publish\" (previous value: "") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (432,5)
+Property reassignment: $(_DeploymentUrl)="publish\DiztinGUIsh.application" (previous value: "publish\") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (434,5)
+Property reassignment: $(_DeploymentUrl)="" (previous value: "publish\DiztinGUIsh.application") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (441,5)
+Property reassignment: $(ProcessorArchitecture)="msil" (previous value: "AnyCPU") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (473,5)
+Property reassignment: $(DelaySign)="" (previous value: "false") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (527,5)
+Property reassignment: $(_SGenGenerateSerializationAssembliesConfig)="Auto" (previous value: "") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (3491,5)
+Property reassignment: $(_SGenGenerateSerializationAssembliesConfig)="Off" (previous value: "Auto") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (3492,5)
+Property reassignment: $(PrepareForRunDependsOn)="
+      CopyFilesToOutputDirectory
+    ;RunCodeAnalysis" (previous value: "
+      CopyFilesToOutputDirectory
+    ") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\v16.0\CodeAnalysis\Microsoft.CodeAnalysis.targets (199,9)
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Property reassignment: $(ResolveReferencesDependsOn)="
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    " (previous value: "
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets (75,5)
+Property reassignment: $(PrepareResourceNamesDependsOn)="
+                    AssignWinFXEmbeddedResource;
+                    
+      AssignTargetPaths;
+      SplitResourcesByCulture;
+      CreateManifestResourceNames;
+      CreateCustomManifestResourceNames
+    
+      " (previous value: "
+      AssignTargetPaths;
+      SplitResourcesByCulture;
+      CreateManifestResourceNames;
+      CreateCustomManifestResourceNames
+    ") at C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (97,7)
+Property reassignment: $(PrepareResourcesDependsOn)="
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+      " (previous value: "
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    ") at C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (108,7)
+Property reassignment: $(CompileDependsOn)="
+        
+      ResolveReferences;
+      ResolveKeySource;
+      SetWin32ManifestProperties;
+      FindReferenceAssembliesForReferences;
+      _GenerateCompileInputs;
+      BeforeCompile;
+      _TimeStampBeforeCompile;
+      _GenerateCompileDependencyCache;
+      CoreCompile;
+      _TimeStampAfterCompile;
+      AfterCompile;
+    ;
+        _AfterCompileWinFXInternal
+    " (previous value: "
+      ResolveReferences;
+      ResolveKeySource;
+      SetWin32ManifestProperties;
+      FindReferenceAssembliesForReferences;
+      _GenerateCompileInputs;
+      BeforeCompile;
+      _TimeStampBeforeCompile;
+      _GenerateCompileDependencyCache;
+      CoreCompile;
+      _TimeStampAfterCompile;
+      AfterCompile;
+    ") at C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (184,5)
+Property reassignment: $(PublishBuildDependsOn)="
+            BuildOnlySettings;
+            PrepareForBuild;
+            ResolveReferences;
+            PrepareResources;
+            ResolveKeySource;
+            PrepareResourcesForSatelliteAssemblies;
+            GenerateSerializationAssemblies;
+            CreateSatelliteAssemblies;
+        " (previous value: "
+      BuildOnlySettings;
+      PrepareForBuild;
+      ResolveReferences;
+      PrepareResources;
+      ResolveKeySource;
+      GenerateSerializationAssemblies;
+      CreateSatelliteAssemblies;
+    ") at C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (813,9)
+Property reassignment: $(BuildDependsOn)="
+      EntityDeploy;
+      
+      BeforeBuild;
+      CoreBuild;
+      AfterBuild
+    
+    " (previous value: "
+      BeforeBuild;
+      CoreBuild;
+      AfterBuild
+    ") at C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.Data.Entity.targets (35,5)
+Property reassignment: $(CleanDependsOn)="
+      
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      CleanReferencedProjects;
+      CleanPublishFolder;
+      AfterClean
+    ;
+      EntityClean;
+    " (previous value: "
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      CleanReferencedProjects;
+      CleanPublishFolder;
+      AfterClean
+    ") at C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.Data.Entity.targets (42,5)
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Property reassignment: $(PrepareResourcesDependsOn)="
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    " (previous value: "
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+      ") at C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.Xaml.targets (35,5)
+Property reassignment: $(PrepareResourcesDependsOn)="
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    " (previous value: "
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    ") at C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.WorkflowBuildExtensions.targets (16,5)
+Property reassignment: $(ResolveReferencesDependsOn)="
+      
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    ;
+      ResolveTestReferences
+    " (previous value: "
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    ") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\v16.0\TeamTest\Microsoft.TeamTest.targets (4,5)
+Property reassignment: $(MSBuildAllProjects)=";C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Xaml.targets;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets" (previous value: ";C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Xaml.targets") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets (45,5)
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Trying to import C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\$(MSBuildToolsVersion)\Microsoft.Common.targets\ImportAfter\* using extensions path C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Trying to import C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Sdks\Microsoft.Docker.Sdk\build\Microsoft.Docker.targets using extensions path C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+Property reassignment: $(MSBuildAllProjects)=";C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Xaml.targets;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\NuGet\16.0\Microsoft.NuGet.targets" (previous value: ";C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Xaml.targets;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\NuGet\16.0\Microsoft.NuGet.targets (67,5)
+Property reassignment: $(ResolveAssemblyReferencesDependsOn)="
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      GetFrameworkPaths;
+      GetReferenceAssemblyPaths;
+      PrepareForBuild;
+      ResolveSDKReferences;
+      ExpandSDKReferences;
+    ;ResolveNuGetPackageAssets" (previous value: "
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      GetFrameworkPaths;
+      GetReferenceAssemblyPaths;
+      PrepareForBuild;
+      ResolveSDKReferences;
+      ExpandSDKReferences;
+    ") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\NuGet\16.0\Microsoft.NuGet.targets (173,5)
+Property reassignment: $(PrepareResourcesDependsOn)="ResolveNuGetPackageAssets;
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    " (previous value: "
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    ") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\NuGet\16.0\Microsoft.NuGet.targets (174,5)
+Property reassignment: $(_HandlePackageFileConflictsAfter)="ResolveNuGetPackageAssets;ResolveNuGetPackageAssetsNonAOT" (previous value: "ResolveNuGetPackageAssets") at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\NuGet\16.0\Microsoft.NuGet.targets (255,5)
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Search paths being used for $(MSBuildExtensionsPath) are C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+Property reassignment: $(CoreCompileDependsOn)="
+			GitInfo;
+			GitVersion;
+			GitThisAssembly;
+			GitInfoReport;
+			;_ComputeNonExistentFileProperty;ResolveCodeAnalysisRuleSet
+		" (previous value: ";_ComputeNonExistentFileProperty;ResolveCodeAnalysisRuleSet") at d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets (125,3)
+Overriding target "ResolveFrameworkReferences" in project "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets" with target "ResolveFrameworkReferences" from project "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets".
+Overriding target "GetFrameworkPaths" in project "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets" with target "GetFrameworkPaths" from project "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets".
+Overriding target "SatelliteDllsProjectOutputGroup" in project "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets" with target "SatelliteDllsProjectOutputGroup" from project "C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets".
+Overriding target "GenerateCompiledExpressionsTempFile" in project "C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.WorkflowBuildExtensions.targets" with target "GenerateCompiledExpressionsTempFile" from project "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.WorkflowBuildExtensions.targets".
+Overriding target "CollectPackageReferences" in project "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets" with target "CollectPackageReferences" from project "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets".
+The target "ClCompile" listed in an AfterTargets attribute at "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\v16.0\CodeAnalysis\Microsoft.CodeAnalysis.targets (478,11)" does not exist in the project, and will be ignored.
+Project "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln" (1) is building "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (2) on node 1 (default targets).
+Initial Properties:
+_AfterCompileWinFXInternalDependsOn = 
+        PrepareResourcesForSatelliteAssemblies;
+        MergeLocalizationDirectives;
+        AfterCompileWinFX
+    
+_CommitDateFormat = %%cI
+_CompileTargetNameForLocalType = _CompileTemporaryAssembly
+_DebugSymbolsProduced = true
+_DeploymentApplicationManifestIdentity = DiztinGUIsh.exe
+_DeploymentBuiltUpdateInterval = 0
+_DeploymentBuiltUpdateIntervalUnits = Days
+_DeploymentDeployManifestIdentity = DiztinGUIsh.application
+_DeploymentFileMappingExtension = .deploy
+_DeploymentPublishableProjectDefault = true
+_DeploymentTargetApplicationManifestFileName = DiztinGUIsh.exe.manifest
+_DeploymentUrl = 
+_DirectoryBuildPropsBasePath = 
+_DirectoryBuildPropsFile = Directory.Build.props
+_DirectoryBuildTargetsBasePath = 
+_DirectoryBuildTargetsFile = Directory.Build.targets
+_DirectoryPackagesPropsBasePath = 
+_DirectoryPackagesPropsFile = Directory.Packages.props
+_DocumentationFileProduced = false
+_GenerateBindingRedirectsIntermediateAppConfig = obj\Debug\DiztinGUIsh.exe.config
+_GenerateRestoreGraphProjectEntryInputProperties = ExcludeRestorePackageImports=true
+_GetChildProjectCopyToOutputDirectoryItems = true
+_GitInfoFile = obj\Debug\GitInfo.cache
+_HandlePackageFileConflictsAfter = ResolveNuGetPackageAssets;ResolveNuGetPackageAssetsNonAOT
+_HandlePackageFileConflictsBefore = ResolveAssemblyReferences
+_InitialBaseIntermediateOutputPath = obj\
+_InitialMSBuildProjectExtensionsPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\
+_LongShaFormat = %%H
+_MaxSupportedLangVersion = 7.3
+_NuGetRuntimeIdentifierWithoutAot = win
+_OriginalConfiguration = Debug
+_OriginalPlatform = AnyCPU
+_ProjectDefaultTargets = Build
+_RecursiveTargetForContentCopying = GetCopyToOutputDirectoryItems
+_RequireMCPass2ForMainAssembly = false
+_RequireMCPass2ForSatelliteAssemblyOnly = false
+_ResolveReferenceDependencies = false
+_ResourceNameInMainAssembly = DiztinGUIsh.g.resources
+_SGenDllCreated = false
+_SGenDllName = DiztinGUIsh.XmlSerializers.dll
+_SGenGenerateSerializationAssembliesConfig = Off
+_ShortShaFormat = %%h
+_TargetFrameworkVersionWithoutV = 4.8
+_TargetsThatPrepareProjectReferences = _SplitProjectReferencesByFileExistence
+AddAdditionalExplicitAssemblyReferences = true
+AddAppConfigToBuildOutputs = true
+AddItemTemplatesGuid = {FAE04EC0-301F-11d3-BF4B-00C04F79EFBC}
+AdditionalExplicitAssemblyReferences = System.Core;
+AllowedReferenceAssemblyFileExtensions = 
+      .winmd;
+      .dll;
+      .exe
+    
+AllowedReferenceRelatedFileExtensions = 
+      .pdb;
+      .xml;
+      .pri;
+      .dll.config;
+      .exe.config
+    
+ALLUSERSPROFILE = C:\ProgramData
+AlwaysCompileMarkupFilesInSeparateDomain = true
+AlwaysUseNumericalSuffixInItemNames = true
+AndroidTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\MDD\Android\V150\
+APPDATA = C:\Users\Dominic Cerquetti\AppData\Roaming
+AppDesignerFolder = Properties
+AppDesignerFolderContentsVisibleOnlyInShowAllFiles = false
+ApplicationIcon = diz-4.ico
+ApplicationRevision = 0
+ApplicationVersion = 1.0.0.*
+AssemblyFoldersConfigFile = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\AssemblyFolders.config
+AssemblyFoldersConfigFileSearchPath = {AssemblyFoldersFromConfig:C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.8};
+AssemblyFoldersSuffix = AssemblyFoldersEx
+AssemblyName = DiztinGUIsh
+AssemblySearchPaths = 
+      {CandidateAssemblyFiles};
+      ;
+      {HintPathFromItem};
+      {TargetFrameworkDirectory};
+      {AssemblyFoldersFromConfig:C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.8};
+      {Registry:Software\Microsoft\.NETFramework,v4.8,AssemblyFoldersEx};
+      {AssemblyFolders};
+      {GAC};
+      {RawFileName};
+      bin\Debug\
+    
+AssignTargetPathsDependsOn = 
+AutoGenerateBindingRedirects = true
+AutoUnifyAssemblyReferences = true
+AvailablePlatforms = Any CPU,x86,x64
+BaseIntermediateOutputPath = obj\
+BaseNuGetRuntimeIdentifier = win
+BootstrapperEnabled = true
+BootstrapperUrlHistory = 
+BuildCompileAction = Build
+BuildDependsOn = 
+      EntityDeploy;
+      
+      BeforeBuild;
+      CoreBuild;
+      AfterBuild
+    
+    
+BuildGenerateSourcesAction = Build
+BuildingProject = false
+BuildingSolutionFile = true
+BuildInParallel = true
+BuildLinkAction = Build
+BuildProjectReferences = true
+BuildSystem = MSBuild
+BuildTaskAssembly = PresentationBuildTasks, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+BuiltProjectOutputGroupDependenciesDependsOn = 
+      ;
+      
+      ;
+      BuildOnlySettings;
+      PrepareForBuild;
+      AssignTargetPaths;
+      ResolveReferences
+    
+    
+BuiltProjectOutputGroupDependsOn = PrepareForBuild
+CleanDependsOn = 
+      
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      CleanReferencedProjects;
+      CleanPublishFolder;
+      AfterClean
+    ;
+      EntityClean;
+    
+CleanFile = DiztinGUIsh.csproj.FileListAbsolute.txt
+CmdUIContextGuid = {FAE04EC1-301F-11d3-BF4B-00C04F79EFBC}
+CodeAnalysisApplyLogFileXsl = false
+CodeAnalysisFailOnMissingRules = false
+CodeAnalysisForceOutput = true
+CodeAnalysisGenerateSuccessFile = true
+CodeAnalysisIgnoreGeneratedCode = true
+CodeAnalysisIgnoreInvalidTargets = true
+CodeAnalysisIgnoreMissingIndirectReferences = false
+CodeAnalysisInputAssembly = bin\Debug\DiztinGUIsh.exe
+CodeAnalysisLogFile = bin\Debug\DiztinGUIsh.exe.CodeAnalysisLog.xml
+CodeAnalysisModuleSuppressionsFile = GlobalSuppressions.cs
+CodeAnalysisOutputToConsole = false
+CodeAnalysisOverrideRuleVisibilities = false
+CodeAnalysisPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Team Tools\Static Analysis Tools\FxCop\
+CodeAnalysisQuiet = false
+CodeAnalysisRuleDirectories = ;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Team Tools\Static Analysis Tools\FxCop\\Rules
+CodeAnalysisRuleSet = MinimumRecommendedRules.ruleset
+CodeAnalysisRuleSetDirectories = ;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Team Tools\Static Analysis Tools\\Rule Sets
+CodeAnalysisSaveMessagesToReport = Active
+CodeAnalysisSearchGlobalAssemblyCache = true
+CodeAnalysisStaticAnalysisDirectory = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Team Tools\Static Analysis Tools\
+CodeAnalysisSucceededFile = bin\Debug\DiztinGUIsh.exe.lastcodeanalysissucceeded
+CodeAnalysisSummary = false
+CodeAnalysisTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\v16.0\CodeAnalysis\Microsoft.CodeAnalysis.targets
+CodeAnalysisTimeout = 120
+CodeAnalysisTreatWarningsAsErrors = false
+CodeAnalysisUpdateProject = false
+CodeAnalysisUseTypeNameInSuppression = true
+CodeAnalysisVerbose = false
+CommonOutputGroupsDependsOn = 
+      ;
+      BuildOnlySettings;
+      PrepareForBuild;
+      AssignTargetPaths;
+      ResolveReferences
+    
+CommonProgramFiles = C:\Program Files (x86)\Common Files
+CommonProgramW6432 = C:\Program Files\Common Files
+CommonTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets
+CommonXamlResourcesDirectory = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\\
+CompileDependsOn = 
+        
+      ResolveReferences;
+      ResolveKeySource;
+      SetWin32ManifestProperties;
+      FindReferenceAssembliesForReferences;
+      _GenerateCompileInputs;
+      BeforeCompile;
+      _TimeStampBeforeCompile;
+      _GenerateCompileDependencyCache;
+      CoreCompile;
+      _TimeStampAfterCompile;
+      AfterCompile;
+    ;
+        _AfterCompileWinFXInternal
+    
+CompileLicxFilesDependsOn = 
+CompileTargetNameForTemporaryAssembly = CompileTemporaryAssembly
+ComputeIntermediateSatelliteAssembliesDependsOn = 
+      CreateManifestResourceNames
+    
+COMPUTERNAME = LAPTOP-DOM-CERQ
+ComReferenceExecuteAsTool = false
+ComReferenceNoClassMembers = false
+ComSpec = C:\Windows\system32\cmd.exe
+Configuration = Debug
+ConfigurationName = Debug
+ConsiderPlatformAsProcessorArchitecture = true
+ContentFilesProjectOutputGroupDependsOn = PrepareForBuild;AssignTargetPaths
+ContinueOnError = false
+CopyNuGetImplementations = true
+CoreBuildDependsOn = 
+      BuildOnlySettings;
+      PrepareForBuild;
+      PreBuildEvent;
+      ResolveReferences;
+      PrepareResources;
+      ResolveKeySource;
+      Compile;
+      ExportWindowsMDFile;
+      UnmanagedUnregistration;
+      GenerateSerializationAssemblies;
+      CreateSatelliteAssemblies;
+      GenerateManifests;
+      GetTargetPath;
+      PrepareForRun;
+      UnmanagedRegistration;
+      IncrementalClean;
+      PostBuildEvent
+    
+CoreCleanDependsOn = 
+CoreCompileDependsOn = 
+			GitInfo;
+			GitVersion;
+			GitThisAssembly;
+			GitInfoReport;
+			;_ComputeNonExistentFileProperty;ResolveCodeAnalysisRuleSet
+		
+CoreResGenDependsOn = FindReferenceAssembliesForReferences
+CreateCustomManifestResourceNamesDependsOn = 
+CreateHardLinksForCopyAdditionalFilesIfPossible = false
+CreateManifestResourceNamesDependsOn = 
+CreateSatelliteAssembliesDependsOn = 
+      _GenerateSatelliteAssemblyInputs;
+      ComputeIntermediateSatelliteAssemblies;
+      GenerateSatelliteAssemblies
+    
+CreateSymbolicLinksForCopyAdditionalFilesIfPossible = false
+CSharpCoreTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Roslyn\Microsoft.CSharp.Core.targets
+CSharpDesignTimeTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.CSharp.DesignTime.targets
+CSharpTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.CSharp.CurrentVersion.targets
+CurrentSolutionConfigurationContents = <SolutionConfiguration>
+  <ProjectConfiguration Project="{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}" AbsolutePath="d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" BuildProjectInSolution="True">Debug|AnyCPU</ProjectConfiguration>
+</SolutionConfiguration>
+CustomAfterMicrosoftCommonProps = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\vCurrent\Custom.After.Microsoft.Common.props
+CustomAfterMicrosoftCommonTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\vCurrent\Custom.After.Microsoft.Common.targets
+CustomAfterMicrosoftCSharpTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\vCurrent\Custom.After.Microsoft.CSharp.targets
+CustomBeforeMicrosoftCommonProps = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\vCurrent\Custom.Before.Microsoft.Common.props
+CustomBeforeMicrosoftCommonTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\vCurrent\Custom.Before.Microsoft.Common.targets
+CustomBeforeMicrosoftCSharpTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\vCurrent\Custom.Before.Microsoft.CSharp.targets
+DebuggerFlavor = ProjectDebugger
+DebugSymbols = true
+DebugSymbolsProjectOutputGroupDependenciesDependsOn = 
+      ;
+      
+      ;
+      BuildOnlySettings;
+      PrepareForBuild;
+      AssignTargetPaths;
+      ResolveReferences
+    
+    
+DebugSymbolsProjectOutputGroupDependsOn = 
+DebugType = full
+DefaultLanguageSourceExtension = .cs
+DefaultProjectTypeGuid = {FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}
+DeferredValidationErrorsFileName = obj\Debug\\AC2C1ABA-CCF6-44D4-8127-588FD4D0A860-DeferredValidationErrors.xml
+DefineCommonCapabilities = false
+DefineCommonItemSchemas = false
+DefineCommonManagedCapabilities = true
+DefineCommonManagedItemSchemas = true
+DefineCommonManagedReferenceSchemas = true
+DefineCommonReferenceSchemas = false
+DefineConstants = DEBUG;TRACE
+DefineCSharpItemSchemas = false
+DelaySign = 
+DeploymentType = Installed
+DesignerFunctionVisibility = Private
+DesignerHiddenCodeGeneration = Declarations
+DesignerRuntimeImplementationProjectOutputGroupDependsOn = 
+      ;
+      
+      ;
+      BuildOnlySettings;
+      PrepareForBuild;
+      AssignTargetPaths;
+      ResolveReferences
+    
+    
+DesignerVariableNaming = Camel
+DesignTimeIntermediateOutputPath = obj\Debug\InProcessTempFiles\
+DesignTimeResolveAssemblyReferencesDependsOn = 
+      GetFrameworkPaths;
+      GetReferenceAssemblyPaths;
+      ResolveReferences
+    
+Deterministic = true
+DevEnvDir = *Undefined*
+DisableLogTaskParameter_ConvertToAbsolutePath_Path = true
+DisableLogTaskParameter_FindUnderPath_OutOfPath = true
+DisableLogTaskParameter_RemoveDuplicates_Inputs = true
+DisableLogTaskParameterItemMetadata_ConvertToAbsolutePath_AbsolutePaths = true
+DisableLogTaskParameterItemMetadata_Copy_CopiedFiles = true
+DisableLogTaskParameterItemMetadata_Copy_DestinationFiles = true
+DisableLogTaskParameterItemMetadata_Copy_SourceFiles = true
+DisableLogTaskParameterItemMetadata_FindUnderPath_Files = true
+DisableLogTaskParameterItemMetadata_FindUnderPath_InPath = true
+DisableLogTaskParameterItemMetadata_GenerateResource_FilesWritten = true
+DisableLogTaskParameterItemMetadata_Hash_ItemsToHash = true
+DisableLogTaskParameterItemMetadata_RemoveDuplicates_Filtered = true
+DisableLogTaskParameterItemMetadata_WriteLinesToFile_Lines = true
+DockerBuildTasksAssembly = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Sdks\Microsoft.Docker.Sdk\build\..\tools\Microsoft.Docker.BuildTasks.dll
+DockerIntermediateOutputPath = obj\Docker
+DockerPublishDirectory = obj\Docker\publish
+DocumentationProjectOutputGroupDependenciesDependsOn = 
+      ;
+      
+      ;
+      BuildOnlySettings;
+      PrepareForBuild;
+      AssignTargetPaths;
+      ResolveReferences
+    
+    
+DocumentationProjectOutputGroupDependsOn = 
+DriverData = C:\Windows\System32\Drivers\DriverData
+EmbeddedWin32Manifest = 
+EntityDeployDependsOn = 
+EntityDeployIntermediateResourcePath = obj\Debug\edmxResourcesToEmbed\
+ErrorReport = prompt
+ErrorReportUrlHistory = 
+ExpandSDKAllowedReferenceExtensions = 
+      .winmd;
+      .dll
+    
+ExpandSDKReferencesDependsOn = 
+      ResolveSDKReferences
+    
+FallbackCulture = en-US
+FileAlignment = 512
+FindInvalidProjectReferencesDependsOn = 
+      GetReferenceTargetPlatformMonikers
+    
+FPS_BROWSER_APP_PROFILE_STRING = Internet Explorer
+FPS_BROWSER_USER_PROFILE_STRING = Default
+Framework20Dir = @(_TargetFramework20DirectoryItem)
+Framework30Dir = @(_TargetFramework30DirectoryItem)
+Framework35Dir = @(_TargetFramework35DirectoryItem)
+Framework40Dir = @(_TargetFramework40DirectoryItem)
+FrameworkDir = @(_TargetFramework40DirectoryItem)
+FrameworkPathOverride = C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8
+FrameworkRegistryBase = Software\Microsoft\.NETFramework
+FrameworkSDKDir = @(_TargetFrameworkSDKDirectoryItem)
+FrameworkSDKRoot = C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\
+FullReferenceAssemblyNames = Full
+GenerateBindingRedirectsOutputType = true
+GenerateClickOnceManifests = 
+GenerateCompiledExpressionsTempFilePathForEditing = obj\Debug\\TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
+GenerateCompiledExpressionsTempFilePathForTypeInfer = obj\Debug\\TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+GenerateCompiledExpressionsTempFilePathForValidation = obj\Debug\\TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs
+GeneratedFileExtension = .g.cs
+GeneratedMSBuildEditorConfigFile = DiztinGUIsh.GeneratedMSBuildEditorConfig.editorconfig
+GenerateManifestsDependsOn = 
+      SetWin32ManifestProperties;
+      GenerateApplicationManifest;
+      GenerateDeploymentManifest
+    
+GenerateMSBuildEditorConfigFile = true
+GenerateTargetFrameworkAttribute = true
+GeneratorsTypeGuid = {FAE04EC1-301F-11d3-BF4B-00C04F79EFBC}
+GetCopyToOutputDirectoryItemsDependsOn = 
+      AssignTargetPaths;
+      _SplitProjectReferencesByFileExistence;
+      _GetProjectReferenceTargetFrameworkProperties;
+      _PopulateCommonStateForGetCopyToOutputDirectoryItems
+    
+GetFrameworkPathsDependsOn = 
+GetReferenceAssemblyPathsDependsOn = 
+        ;
+        GetWinFXPath
+    
+GetTargetPathDependsOn = 
+GetTargetPathWithTargetPlatformMonikerDependsOn = 
+GitBaseVersionRegex = v?(?<MAJOR>\d+)\.(?<MINOR>\d+)(?:\-(?<LABEL>[\dA-Za-z\-\.]+))?$|^v?(?<MAJOR>\d+)\.(?<MINOR>\d+)\.(?<PATCH>\d+)(?:\-(?<LABEL>[\dA-Za-z\-\.]+))?$|^(?<LABEL>[\dA-Za-z\-\.]+)\-v?(?<MAJOR>\d+)\.(?<MINOR>\d+)\.(?<PATCH>\d+)$
+GitCommits = 0
+GitCommitsIgnoreMerges = false
+GitDefaultBranch = master
+GitDefaultCommit = 0000000
+GitDefaultVersion = 0.0.0
+GitInfoBaseDir = d:\projects\cthack\src\diztinguish\DiztinGUIsh
+GitInfoDependsOn = 
+			SetGitExe;
+			_EnsureGit;
+			_GitRoot;
+			_GitInputs;
+			_GitClearCache;
+			_GitReadCache;
+			_GitRepositoryUrl;
+			_GitBranch;
+			_GitCommit;
+			_GitCommitDate;
+			_GitPopulateInfo;
+		
+GitInfoImported = true
+GitInfoReportImportance = low
+GitInfoThisAssemblyFile = obj\Debug\ThisAssembly.GitInfo.g.cs
+GitMinVersion = 2.5.0
+GitNameRevOptions = --refs=refs/heads/*
+GitRemote = origin
+GitSkipCache = false
+GitTagRegex = *
+GitThisAssembly = true
+GitThisAssemblyDependsOn = 
+			GitInfo;
+			GitVersion;
+			_GitInputs;
+			_GitGenerateThisAssembly
+		
+GitThisAssemblyMetadata = false
+GitThisAssemblyMetadataDefine = NOMETADATA
+GitVersionDependsOn = 
+			GitInfo;
+			_GitBaseVersionBranch;
+			_GitBaseVersionTagExists;
+			_GitBaseVersionTag;
+			_GitBaseVersionFile;
+			_GitBaseVersionFallback;
+			_GitValidateBaseVersion;
+			_GitPopulateVersionInfo;
+			_GitWriteCache
+		
+GitVersionFile = GitInfo.txt
+HideWarningsAndErrors = false
+HighEntropyVA = true
+HOMEDRIVE = C:
+HOMEPATH = \Users\Dominic Cerquetti
+HostInBrowser = false
+ImplicitlyExpandDesignTimeFacades = true
+ImplicitlyExpandDesignTimeFacadesDependsOn = 
+      ;
+      GetReferenceAssemblyPaths
+    
+ImplicitlyExpandNETStandardFacades = true
+ImportByWildcardAfterMicrosoftCommonProps = true
+ImportByWildcardAfterMicrosoftCommonTargets = true
+ImportByWildcardAfterMicrosoftCSharpTargets = true
+ImportByWildcardAfterMicrosoftNetFrameworkProps = true
+ImportByWildcardAfterMicrosoftNetFrameworkTargets = true
+ImportByWildcardBeforeMicrosoftCommonProps = true
+ImportByWildcardBeforeMicrosoftCommonTargets = true
+ImportByWildcardBeforeMicrosoftCSharpTargets = true
+ImportByWildcardBeforeMicrosoftNetFrameworkProps = true
+ImportByWildcardBeforeMicrosoftNetFrameworkTargets = true
+ImportDirectoryBuildProps = true
+ImportDirectoryBuildTargets = true
+ImportDirectoryPackagesProps = true
+ImportProjectExtensionProps = true
+ImportProjectExtensionTargets = true
+ImportUserLocationsByWildcardAfterMicrosoftCommonProps = true
+ImportUserLocationsByWildcardAfterMicrosoftCommonTargets = true
+ImportUserLocationsByWildcardAfterMicrosoftCSharpTargets = true
+ImportUserLocationsByWildcardAfterMicrosoftNetFrameworkProps = true
+ImportUserLocationsByWildcardAfterMicrosoftNetFrameworkTargets = true
+ImportUserLocationsByWildcardBeforeMicrosoftCommonProps = true
+ImportUserLocationsByWildcardBeforeMicrosoftCommonTargets = true
+ImportUserLocationsByWildcardBeforeMicrosoftCSharpTargets = true
+ImportUserLocationsByWildcardBeforeMicrosoftNetFrameworkProps = true
+ImportUserLocationsByWildcardBeforeMicrosoftNetFrameworkTargets = true
+ImportXamlTargets = true
+IncludeFrameworkReferencesFromNuGet = true
+InnerBuildProperty = TargetFramework
+InnerBuildPropertyValues = TargetFrameworks
+Install = true
+InstallFrom = Disk
+InstallUrlHistory = 
+IntermediateOutputPath = obj\Debug\
+iOSTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\MDD\iOS\V150\
+IsApplication = true
+IsCSharpOrVbProject = true
+IsLegacyCodeAnalysis = true
+IsRestoreTargetsFileLoaded = true
+IsWebBootstrapper = false
+Language = C#
+LanguageServiceId = {694DD9B6-B865-4C5B-AD85-86356E9C88DC}
+LanguageServiceName = C#
+LangVersion = 8.0
+LoadTimeSensitiveProperties = 
+      ;
+    
+LoadTimeSensitiveTargets = 
+      ;
+      XamlMarkupCompilePass1;
+    
+LOCALAPPDATA = C:\Users\Dominic Cerquetti\AppData\Local
+LocalizationDirectivesToLocFile = None
+LOGONSERVER = \\LAPTOP-DOM-CERQ
+ManagedXamlNeutralResourcesDirectory = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\
+ManagedXamlResourcesDirectory = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\
+MapFileExtensions = true
+MarkupCompilePass2ForMainAssemblyDependsOn = 
+                     GenerateTemporaryTargetAssembly;
+                     MarkupCompilePass2;
+                     AfterMarkupCompilePass2;
+                     CleanupTemporaryTargetAssembly
+       
+MaxTargetPath = 100
+MicrosoftCommonPropsHasBeenImported = true
+MicrosoftNETBuildExtensionsTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\Microsoft.NET.Build.Extensions\Microsoft.NET.Build.Extensions.targets
+MicrosoftNETBuildExtensionsTasksAssembly = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\Microsoft.NET.Build.Extensions\\tools\net472\Microsoft.NET.Build.Extensions.Tasks.dll
+MsAppxPackageTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\v16.0\AppxPackage\Microsoft.AppXPackage.Targets
+MSBuildAllProjects = d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj;;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Xaml.targets;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\NuGet\16.0\Microsoft.NuGet.targets
+MSBuildAssemblyVersion = 16.0
+MSBuildBinPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
+MSBuildExtensionsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+MSBuildExtensionsPath32 = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+MSBuildExtensionsPath64 = C:\Program Files\MSBuild
+MSBuildFrameworkToolsPath = C:\Windows\Microsoft.NET\Framework\v4.0.30319\
+MSBuildFrameworkToolsPath32 = C:\Windows\Microsoft.NET\Framework\v4.0.30319\
+MSBuildFrameworkToolsPath64 = C:\Windows\Microsoft.NET\Framework64\v4.0.30319\
+MSBuildFrameworkToolsRoot = C:\Windows\Microsoft.NET\Framework\
+MSBuildLoadMicrosoftTargetsReadOnly = true
+MSBuildNodeCount = 1
+MSBuildProgramFiles32 = C:\Program Files (x86)
+MSBuildProjectDefaultTargets = Build
+MSBuildProjectDirectory = d:\projects\cthack\src\diztinguish\DiztinGUIsh
+MSBuildProjectDirectoryNoRoot = projects\cthack\src\diztinguish\DiztinGUIsh
+MSBuildProjectExtension = .csproj
+MSBuildProjectExtensionsPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\
+MSBuildProjectFile = DiztinGUIsh.csproj
+MSBuildProjectFullPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj
+MSBuildProjectName = DiztinGUIsh
+MSBuildRuntimeType = Full
+MSBuildRuntimeVersion = 4.0.30319
+MSBuildSDKsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Sdks
+MSBuildStartupDirectory = d:\projects\cthack\src\diztinguish
+MSBuildToolsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
+MSBuildToolsPath32 = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
+MSBuildToolsPath64 = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64
+MSBuildToolsRoot = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild
+MSBuildToolsVersion = Current
+MSBuildUserExtensionsPath = C:\Users\Dominic Cerquetti\AppData\Local\Microsoft\MSBuild
+MSBuildUseVisualStudioDirectoryLayout = True
+MSBuildVersion = 16.7.0
+MsTestToolsTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\v16.0\TeamTest\Microsoft.TeamTest.targets
+NDI_RUNTIME_DIR_V2 = C:\Program Files\NewTek\NDI 4 Runtime\v4
+NDI_RUNTIME_DIR_V3 = C:\Program Files\NewTek\NDI 4 Runtime\v4
+NDI_RUNTIME_DIR_V4 = C:\Program Files\NewTek\NDI 4 Runtime\v4
+NetFrameworkPropsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.props
+NetFrameworkTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets
+NoCompilerStandardLib = true
+NuGetInteractive = 
+NuGetPackageImportStamp = 
+NuGetProps = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\NuGet\16.0\Microsoft.NuGet.props
+NuGetPropsFile = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.props
+NuGetRestoreTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets
+NuGetRuntimeIdentifier = win
+NuGetTargetFrameworkMonikerToInject = .NETCore,Version=v5.0
+NuGetTargetMoniker = .NETFramework,Version=v4.8
+NuGetTargetMonikerToInject = .NETCore,Version=v5.0
+NuGetTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\NuGet\16.0\Microsoft.NuGet.targets
+NUMBER_OF_PROCESSORS = 8
+OneDrive = C:\Users\Dominic Cerquetti\OneDrive - AA Recycle II LLC
+OneDriveCommercial = C:\Users\Dominic Cerquetti\OneDrive - AA Recycle II LLC
+Optimize = false
+OS = Windows_NT
+OSVersion = 5.1.2600.0
+OutDir = bin\Debug\
+OutputPath = bin\Debug\
+OutputType = WinExe
+OverwriteReadOnlyFiles = false
+PackageAction = Pack
+PackageDownloadSupported = true
+Path = D:\installs\msys64\mingw64\bin;D:\installs\msys64\usr\bin\;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\Perforce\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\PuTTY\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\Program Files\dotnet\;C:\Users\Dominic Cerquetti\AppData\Local\Microsoft\WindowsApps;C:\Users\Dominic Cerquetti\.dotnet\tools;C:\Users\Dominic Cerquetti\.platformio\penv\Scripts\;C:\Users\Dominic Cerquetti\AppData\Local\Programs\Python\Python38-32\python.exe;C:\Users\Dominic Cerquetti\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files (x86)\Nmap;C:\Users\Dominic Cerquetti\AppData\Roaming\npm;C:\Users\Dominic Cerquetti\.dotnet\tools;D:\installs\msys64\mingw64\bin;
+PATHEXT = .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+Platform = AnyCPU
+PlatformName = AnyCPU
+PlatformTarget = AnyCPU
+PlatformTargetAsMSBuildArchitecture = CurrentArchitecture
+PlatformTargetAsMSBuildArchitectureExplicitlySet = false
+PostBuildEventDependsOn = 
+PreBuildEventDependsOn = 
+Prefer32Bit = true
+PrepareForBuildDependsOn = ;GetFrameworkPaths;GetReferenceAssemblyPaths;AssignLinkMetadata
+PrepareForRunDependsOn = 
+      CopyFilesToOutputDirectory
+    ;RunCodeAnalysis
+PrepareProjectReferencesDependsOn = 
+      AssignProjectConfiguration;
+      _SplitProjectReferencesByFileExistence;
+      _GetProjectReferenceTargetFrameworkProperties
+    
+PrepareResourceNamesDependsOn = 
+                    AssignWinFXEmbeddedResource;
+                    
+      AssignTargetPaths;
+      SplitResourcesByCulture;
+      CreateManifestResourceNames;
+      CreateCustomManifestResourceNames
+    
+      
+PrepareResourcesDependsOn = ResolveNuGetPackageAssets;
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    
+PROCESSOR_ARCHITECTURE = x86
+PROCESSOR_ARCHITEW6432 = AMD64
+PROCESSOR_IDENTIFIER = Intel64 Family 6 Model 158 Stepping 9, GenuineIntel
+PROCESSOR_LEVEL = 6
+PROCESSOR_REVISION = 9e09
+ProcessorArchitecture = msil
+ProduceReferenceAssembly = false
+ProgramData = C:\ProgramData
+ProgramFiles = C:\Program Files (x86)
+ProgramW6432 = C:\Program Files
+ProjectDesignTimeAssemblyResolutionSearchPaths = 
+      {CandidateAssemblyFiles};
+      ;
+      {HintPathFromItem};
+      {TargetFrameworkDirectory};
+      {Registry:Software\Microsoft\.NETFramework,v4.8,AssemblyFoldersEx};
+      {RawFileName};
+      d:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\
+    
+ProjectDir = d:\projects\cthack\src\diztinguish\DiztinGUIsh\
+ProjectExt = .csproj
+ProjectFileName = DiztinGUIsh.csproj
+ProjectFlavor = Client
+ProjectGuid = {2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}
+ProjectLockFile = d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\project.assets.json
+ProjectName = DiztinGUIsh
+ProjectPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj
+PROMPT = $P$G
+PSModulePath = C:\Program Files (x86)\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules;C:\Program Files (x86)\AutoIt3\AutoItX
+PUBLIC = C:\Users\Public
+PublishableProject = true
+PublishBuildDependsOn = 
+            BuildOnlySettings;
+            PrepareForBuild;
+            ResolveReferences;
+            PrepareResources;
+            ResolveKeySource;
+            PrepareResourcesForSatelliteAssemblies;
+            GenerateSerializationAssemblies;
+            CreateSatelliteAssemblies;
+        
+PublishDependsOn = 
+      SetGenerateManifests;
+      Build;
+      PublishOnly
+    
+PublishDir = bin\Debug\app.publish\
+PublishOnlyDependsOn = 
+      SetGenerateManifests;
+      PublishBuild;
+      BeforePublish;
+      GenerateManifests;
+      CopyFilesToOutputDirectory;
+      _CopyFilesToPublishFolder;
+      _DeploymentGenerateBootstrapper;
+      ResolveKeySource;
+      _DeploymentSignClickOnceDeployment;
+      AfterPublish
+    
+PublishUrl = publish\
+PublishUrlHistory = publish\
+RebuildDependsOn = 
+      BeforeRebuild;
+      Clean;
+      Build;
+      AfterRebuild;
+    
+ReferenceCopyLocalPathsOutputGroupDependsOn = 
+      ;
+      
+      ;
+      BuildOnlySettings;
+      PrepareForBuild;
+      AssignTargetPaths;
+      ResolveReferences
+    
+    
+ReportingServicesTargets = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\v16.0\ReportingServices\Microsoft.ReportingServices.targets
+ResGenDependsOn = ResolveAssemblyReferences;SplitResourcesByCulture;BeforeResGen;CoreResGen;AfterResGen
+ResGenExecuteAsTool = false
+ResolveAssemblyConflicts = true
+ResolveAssemblyReferencesDependsOn = 
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      GetFrameworkPaths;
+      GetReferenceAssemblyPaths;
+      PrepareForBuild;
+      ResolveSDKReferences;
+      ExpandSDKReferences;
+    ;ResolveNuGetPackageAssets
+ResolveNuGetPackageAssetsDependsOn = ResolveProjectReferences
+ResolveNuGetPackages = true
+ResolveReferencesDependsOn = 
+      
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    ;
+      ResolveTestReferences
+    
+ResolveSDKReferencesDependsOn = 
+      GetInstalledSDKLocations
+    
+RestoreBuildInParallel = true
+RestoreContinueOnError = WarnAndContinue
+RestoreRecursive = true
+RestoreTaskAssemblyFile = NuGet.Build.Tasks.dll
+RestoreUseSkipNonexistentTargets = true
+RootNamespace = DiztinGUIsh
+RoslynTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Roslyn
+RunAfterInstall = true
+RunAnalyzersDuringBuild = true
+RunAnalyzersDuringLiveAnalysis = true
+RunCodeAnalysisDependsOn = ;Compile
+RunCodeAnalysisInputs = bin\Debug\DiztinGUIsh.exe
+RunCppAnalysis = false
+RunDependsOn = 
+RunMsvcAnalysis = false
+RuntimeIdentifiers = win;win-x86;win-x64
+SatelliteDllsProjectOutputGroupDependenciesDependsOn = 
+      ;
+      
+      ;
+      BuildOnlySettings;
+      PrepareForBuild;
+      AssignTargetPaths;
+      ResolveReferences
+    
+    
+SatelliteDllsProjectOutputGroupDependsOn = PrepareForBuild;PrepareResourceNames
+SDK35ToolsPath = C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\
+SDK40ToolsPath = C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\
+SDKRedistOutputGroupDependsOn = ResolveSDKReferences;ExpandSDKReferences
+SDKReferenceDirectoryRoot = C:\Users\Dominic Cerquetti\AppData\Local\Microsoft SDKs;C:\Program Files (x86)\Microsoft SDKs
+SDKReferenceRegistryRoot = Software\Microsoft\Microsoft SDKs
+SESSIONNAME = Console
+SGenFilesOutputGroupDependenciesDependsOn = 
+      ;
+      
+      ;
+      BuildOnlySettings;
+      PrepareForBuild;
+      AssignTargetPaths;
+      ResolveReferences
+    
+    
+SGenFilesOutputGroupDependsOn = 
+SGenShouldGenerateSerializer = true
+SGenUseKeep = false
+SGenUseProxyTypes = true
+ShouldMarkCertainSDKReferencesAsRuntimeOnly = true
+SkipCopyUnchangedFiles = true
+SkipReadGitCache = false
+SkipWriteGitCache = false
+SolutionDir = d:\projects\cthack\src\diztinguish\
+SolutionExt = .sln
+SolutionFileName = DiztinGUIsh.sln
+SolutionName = DiztinGUIsh
+SolutionPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln
+SourceControlInformationFeatureSupported = true
+SourceFilesProjectOutputGroupDependsOn = PrepareForBuild;AssignTargetPaths
+SourceRootMappedPathsFeatureSupported = true
+StartupObject = DiztinGUIsh.Program
+SubsystemVersion = 6.00
+SupportedOutputTypes = Exe;WinExe;Library
+SupportUrlHistory = 
+SuppressLegacyCodeAnalysisDeprecatedWarning = false
+SuppressOutOfDateMessageOnBuild = true
+SystemDrive = C:
+SystemRoot = C:\Windows
+TargetCulture = *
+TargetDeployManifestFileName = DiztinGUIsh.application
+TargetDir = d:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\
+TargetedFrameworkDir = @(_TargetedFrameworkDirectoryItem)
+TargetedRuntimeVersion = v4.0.30319
+TargetedSDKArchitecture = msil
+TargetedSDKConfiguration = Debug
+TargetExt = .exe
+TargetFileName = DiztinGUIsh.exe
+TargetFrameworkAsMSBuildRuntime = CurrentRuntime
+TargetFrameworkIdentifier = .NETFramework
+TargetFrameworkMoniker = .NETFramework,Version=v4.8
+TargetFrameworkMonikerAssemblyAttributesPath = obj\Debug\.NETFramework,Version=v4.8.AssemblyAttributes.cs
+TargetFrameworkProfile = 
+TargetFrameworkSDKToolsDirectory = C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\
+TargetFrameworkVersion = v4.8
+TargetName = DiztinGUIsh
+TargetPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+TargetPlatformDisplayName = Windows 7.0
+TargetPlatformIdentifier = Windows
+TargetPlatformMoniker = Windows,Version=7.0
+TargetPlatformRegistryBase = Software\Microsoft\Microsoft SDKs\Windows
+TargetPlatformSdkPath = 
+TargetPlatformVersion = 7.0
+TargetRuntime = Managed
+TaskKeyToken = 31bf3856ad364e35
+TaskVersion = 4.0.0.0
+TEMP = C:\Users\DOMINI~1\AppData\Local\Temp
+TemplateLanguage = CSharp
+TMP = C:\Users\DOMINI~1\AppData\Local\Temp
+UnmanagedRegistrationDependsOn = 
+UnmanagedUnregistrationDependsOn = 
+UpdateEnabled = false
+UpdateInterval = 7
+UpdateIntervalUnits = Days
+UpdateMode = Foreground
+UpdatePeriodically = false
+UpdateRequired = false
+UpdateUrlHistory = 
+UpgradeSubsetToProfile = true
+UseApplicationTrust = false
+UseCommonOutputDirectory = false
+UseHostCompilerIfAvailable = true
+USERDOMAIN = LAPTOP-DOM-CERQ
+USERDOMAIN_ROAMINGPROFILE = LAPTOP-DOM-CERQ
+USERNAME = Dominic Cerquetti
+USERPROFILE = C:\Users\Dominic Cerquetti
+UseSourcePath = true
+Utf8Output = true
+ValidateRuntimeIdentifierCompatibility = false
+VBOX_MSI_INSTALL_PATH = C:\Program Files\Oracle\VirtualBox\
+VCTargetsPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\
+VCTargetsPath10 = C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\
+VCTargetsPath11 = C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\
+VCTargetsPath12 = C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\
+VCTargetsPath14 = C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\
+VerifyUploadedFiles = false
+Version = 1.0.0.0
+VisualStudioVersion = 16.0
+VsInstallRoot = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community
+WarningLevel = 4
+WebReference_EnableLegacyEventingModel = false
+WebReference_EnableProperties = true
+WebReference_EnableSQLTypes = true
+windir = C:\Windows
+WindowsSDK80Path = 
+WMSJSProject = WJProject
+WMSJSProjectDirectory = JavaScript
+WorkflowBuildExtensionAssemblyName = Microsoft.Activities.Build, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+WorkflowBuildExtensionKeyToken = 31bf3856ad364e35
+WorkflowBuildExtensionVersion = 4.0.0.0
+WWISEROOT = C:\Program Files (x86)\Audiokinetic\Wwise 2019.2.4.7329
+WWISESDK = C:\Program Files (x86)\Audiokinetic\Wwise 2019.2.4.7329\SDK
+XamlBuildTaskAssemblyName = XamlBuildTask, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+XamlBuildTaskLocation = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64
+XamlBuildTaskPath = C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64
+XamlDebuggingInformation = true
+XamlGenCodeFileNames = DiztinGUIsh.csproj.XamlGeneratedCodeFileListAbsolute.txt
+XamlGenMarkupFileNames = DiztinGUIsh.csproj.XamlGeneratedXamlFileListAbsolute.txt
+XamlPass2FlagFile = DiztinGUIsh.csproj.XamlPass2Flag.txt
+XamlRequiresCompilationPass2 = false
+XamlTemporaryAssemblyName = DiztinGUIsh
+YieldDuringToolExecution = true
+
+Initial Items:
+_AllDirectoriesAbove
+    d:\
+    d:\projects
+    d:\projects\cthack
+    d:\projects\cthack\src
+    d:\projects\cthack\src\diztinguish
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\loadsave
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\loadsave\binary_serializer_old
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\loadsave\xml_serializer
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\Properties
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\static
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\static\diz
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\window
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\window\dialog
+_ApplicationManifestFinal
+    bin\Debug\DiztinGUIsh.exe.manifest
+        TargetPath = DiztinGUIsh.exe.manifest
+_DebugSymbolsIntermediatePath
+    obj\Debug\DiztinGUIsh.pdb
+_DebugSymbolsOutputPath
+    bin\Debug\DiztinGUIsh.pdb
+_DeploymentManifestEntryPoint
+    obj\Debug\DiztinGUIsh.exe
+        TargetPath = DiztinGUIsh.exe
+_DeploymentManifestIconFile
+    diz-4.ico
+        TargetPath = diz-4.ico
+_ExplicitReference
+    C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\mscorlib.dll
+_OutputPathItem
+    bin\Debug\
+_ResolveComReferenceCache
+    obj\Debug\DiztinGUIsh.csproj.ResolveComReference.cache
+_UnmanagedRegistrationCache
+    obj\DiztinGUIsh.csproj.UnmanagedRegistration.cache
+AdditionalDesignTimeBuildInput
+    d:\.editorconfig
+        ContentSensitive = false
+    d:\projects\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\loadsave\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\loadsave\binary_serializer_old\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\loadsave\xml_serializer\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\Properties\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\static\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\static\diz\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\window\.editorconfig
+        ContentSensitive = false
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\window\dialog\.editorconfig
+        ContentSensitive = false
+AppConfigFileDestination
+    bin\Debug\DiztinGUIsh.exe.config
+ApplicationManifest
+    obj\Debug\DiztinGUIsh.exe.manifest
+        TargetPath = DiztinGUIsh.exe.manifest
+AvailableItemName
+    AdditionalFiles
+    CodeAnalysisDictionary
+    EntityDeploy
+BootstrapperPackage
+    .NETFramework,Version=v4.6.1
+        Visible = False
+        ProductName = Microsoft .NET Framework 4.6.1 (x86 and x64)
+        Install = true
+    Microsoft.Net.Framework.3.5.SP1
+        Visible = False
+        ProductName = .NET Framework 3.5 SP1
+        Install = false
+BuiltProjectOutputGroupKeyOutput
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+        IsKeyOutput = true
+        FinalOutputPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+        TargetPath = DiztinGUIsh.exe
+Clean
+    obj\Debug\\TempCA\DiztinGUIsh.exe
+    obj\Debug\\TempCA\DiztinGUIsh.pdb
+Compile
+    BizHawkCdl.cs
+    LargeFilesReader.cs
+    loadsave\binary_serializer_old\BinarySerializer.cs
+    loadsave\ProjectFileManager.cs
+    loadsave\ProjectSerializer.cs
+    loadsave\xml_serializer\DataSerializer.cs
+    loadsave\xml_serializer\ProjectXMLSerializer.cs
+    Program.cs
+    ProgressBarWorker.cs
+    Properties\AssemblyInfo.cs
+    Properties\Resources.Designer.cs
+        AutoGen = True
+        DependentUpon = Resources.resx
+        DesignTime = True
+    Properties\Settings.Designer.cs
+        AutoGen = True
+        DependentUpon = Settings.settings
+        DesignTimeSharedInput = True
+    ROMByte.cs
+    static\Data.cs
+    static\diz\CPU65C816.cs
+    static\diz\Manager.cs
+    static\IProjectView.cs
+    static\Label.cs
+    static\LogCreator.cs
+    static\Project.cs
+    static\ProjectController.cs
+    static\RomBytes.cs
+    static\SampleRomData.cs
+    static\Util.cs
+    window\AliasList.cs
+        SubType = Form
+    window\AliasList.Designer.cs
+        DependentUpon = AliasList.cs
+    window\dialog\About.cs
+        SubType = Form
+    window\dialog\About.Designer.cs
+        DependentUpon = About.cs
+    window\dialog\ExportDisassembly.cs
+        SubType = Form
+    window\dialog\ExportDisassembly.Designer.cs
+        DependentUpon = ExportDisassembly.cs
+    window\dialog\GotoDialog.cs
+        SubType = Form
+    window\dialog\GotoDialog.Designer.cs
+        DependentUpon = GotoDialog.cs
+    window\dialog\HarshAutoStep.cs
+        SubType = Form
+    window\dialog\HarshAutoStep.Designer.cs
+        DependentUpon = HarshAutoStep.cs
+    window\dialog\ImportROMDialog.cs
+        SubType = Form
+    window\dialog\ImportROMDialog.Designer.cs
+        DependentUpon = ImportROMDialog.cs
+    window\dialog\InOutPointChecker.cs
+        SubType = Form
+    window\dialog\InOutPointChecker.Designer.cs
+        DependentUpon = InOutPointChecker.cs
+    window\dialog\MarkManyDialog.cs
+        SubType = Form
+    window\dialog\MarkManyDialog.Designer.cs
+        DependentUpon = MarkManyDialog.cs
+    window\dialog\MisalignmentChecker.cs
+        SubType = Form
+    window\dialog\MisalignmentChecker.Designer.cs
+        DependentUpon = MisalignmentChecker.cs
+    window\dialog\ProgressDialog.cs
+        SubType = Form
+    window\dialog\ProgressDialog.Designer.cs
+        DependentUpon = ProgressDialog.cs
+    window\MainWindow.cs
+        SubType = Form
+    window\MainWindow.Designer.cs
+        DependentUpon = MainWindow.cs
+Content
+    diz-4.ico
+    resource\diz.ico
+CopyUpToDateMarker
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CopyComplete
+DebugSymbolsProjectOutputGroupOutput
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+        FinalOutputPath = d:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.pdb
+        TargetPath = DiztinGUIsh.pdb
+DeployManifest
+    obj\Debug\DiztinGUIsh.application
+        TargetPath = DiztinGUIsh.application
+EmbeddedResource
+    Properties\Resources.resx
+        Generator = ResXFileCodeGenerator
+        LastGenOutput = Resources.Designer.cs
+        SubType = Designer
+    window\AliasList.resx
+        DependentUpon = AliasList.cs
+    window\dialog\About.resx
+        DependentUpon = About.cs
+    window\dialog\ExportDisassembly.resx
+        DependentUpon = ExportDisassembly.cs
+    window\dialog\GotoDialog.resx
+        DependentUpon = GotoDialog.cs
+    window\dialog\HarshAutoStep.resx
+        DependentUpon = HarshAutoStep.cs
+    window\dialog\ImportROMDialog.resx
+        DependentUpon = ImportROMDialog.cs
+    window\dialog\InOutPointChecker.resx
+        DependentUpon = InOutPointChecker.cs
+    window\dialog\MarkManyDialog.resx
+        DependentUpon = MarkManyDialog.cs
+    window\dialog\MisalignmentChecker.resx
+        DependentUpon = MisalignmentChecker.cs
+    window\dialog\ProgressDialog.resx
+        DependentUpon = ProgressDialog.cs
+    window\MainWindow.resx
+        DependentUpon = MainWindow.cs
+        SubType = Designer
+IntermediateAssembly
+    obj\Debug\DiztinGUIsh.exe
+None
+    App.config
+    packages.config
+    Properties\DataSources\ROMByte.datasource
+    Properties\Settings.settings
+        Generator = SettingsSingleFileGenerator
+        LastGenOutput = Settings.Designer.cs
+    Resources\diz-4.ico
+    Resources\diz-4.png
+NuGetPreprocessorValue
+    assemblyname
+        Value = DiztinGUIsh
+    filename
+        Value = DiztinGUIsh.csproj
+    fullpath
+        Value = d:\projects\cthack\src\diztinguish\DiztinGUIsh
+    outputfilename
+        Value = DiztinGUIsh.exe
+    rootnamespace
+        Value = DiztinGUIsh
+PackageConflictOverrides
+    NETStandard.Library
+        OverriddenPackages = 
+        Microsoft.Win32.Primitives|4.3.0;
+        System.AppContext|4.3.0;
+        System.Collections|4.3.0;
+        System.Collections.Concurrent|4.3.0;
+        System.Collections.Immutable|1.4.0;
+        System.Collections.NonGeneric|4.3.0;
+        System.Collections.Specialized|4.3.0;
+        System.ComponentModel|4.3.0;
+        System.ComponentModel.EventBasedAsync|4.3.0;
+        System.ComponentModel.Primitives|4.3.0;
+        System.ComponentModel.TypeConverter|4.3.0;
+        System.Console|4.3.0;
+        System.Data.Common|4.3.0;
+        System.Diagnostics.Contracts|4.3.0;
+        System.Diagnostics.Debug|4.3.0;
+        System.Diagnostics.FileVersionInfo|4.3.0;
+        System.Diagnostics.Process|4.3.0;
+        System.Diagnostics.StackTrace|4.3.0;
+        System.Diagnostics.TextWriterTraceListener|4.3.0;
+        System.Diagnostics.Tools|4.3.0;
+        System.Diagnostics.TraceSource|4.3.0;
+        System.Diagnostics.Tracing|4.3.0;
+        System.Dynamic.Runtime|4.3.0;
+        System.Globalization|4.3.0;
+        System.Globalization.Calendars|4.3.0;
+        System.Globalization.Extensions|4.3.0;
+        System.IO|4.3.0;
+        System.IO.Compression|4.3.0;
+        System.IO.Compression.ZipFile|4.3.0;
+        System.IO.FileSystem|4.3.0;
+        System.IO.FileSystem.DriveInfo|4.3.0;
+        System.IO.FileSystem.Primitives|4.3.0;
+        System.IO.FileSystem.Watcher|4.3.0;
+        System.IO.IsolatedStorage|4.3.0;
+        System.IO.MemoryMappedFiles|4.3.0;
+        System.IO.Pipes|4.3.0;
+        System.IO.UnmanagedMemoryStream|4.3.0;
+        System.Linq|4.3.0;
+        System.Linq.Expressions|4.3.0;
+        System.Linq.Queryable|4.3.0;
+        System.Net.Http|4.3.0;
+        System.Net.NameResolution|4.3.0;
+        System.Net.Primitives|4.3.0;
+        System.Net.Requests|4.3.0;
+        System.Net.Security|4.3.0;
+        System.Net.Sockets|4.3.0;
+        System.Net.WebHeaderCollection|4.3.0;
+        System.ObjectModel|4.3.0;
+        System.Private.DataContractSerialization|4.3.0;
+        System.Reflection|4.3.0;
+        System.Reflection.Emit|4.3.0;
+        System.Reflection.Emit.ILGeneration|4.3.0;
+        System.Reflection.Emit.Lightweight|4.3.0;
+        System.Reflection.Extensions|4.3.0;
+        System.Reflection.Primitives|4.3.0;
+        System.Reflection.TypeExtensions|4.3.0;
+        System.Resources.ResourceManager|4.3.0;
+        System.Runtime|4.3.0;
+        System.Runtime.Extensions|4.3.0;
+        System.Runtime.Handles|4.3.0;
+        System.Runtime.InteropServices|4.3.0;
+        System.Runtime.InteropServices.RuntimeInformation|4.3.0;
+        System.Runtime.Loader|4.3.0;
+        System.Runtime.Numerics|4.3.0;
+        System.Runtime.Serialization.Formatters|4.3.0;
+        System.Runtime.Serialization.Json|4.3.0;
+        System.Runtime.Serialization.Primitives|4.3.0;
+        System.Security.AccessControl|4.4.0;
+        System.Security.Claims|4.3.0;
+        System.Security.Cryptography.Algorithms|4.3.0;
+        System.Security.Cryptography.Csp|4.3.0;
+        System.Security.Cryptography.Encoding|4.3.0;
+        System.Security.Cryptography.Primitives|4.3.0;
+        System.Security.Cryptography.X509Certificates|4.3.0;
+        System.Security.Cryptography.Xml|4.4.0;
+        System.Security.Principal|4.3.0;
+        System.Security.Principal.Windows|4.4.0;
+        System.Text.Encoding|4.3.0;
+        System.Text.Encoding.Extensions|4.3.0;
+        System.Text.RegularExpressions|4.3.0;
+        System.Threading|4.3.0;
+        System.Threading.Overlapped|4.3.0;
+        System.Threading.Tasks|4.3.0;
+        System.Threading.Tasks.Extensions|4.3.0;
+        System.Threading.Tasks.Parallel|4.3.0;
+        System.Threading.Thread|4.3.0;
+        System.Threading.ThreadPool|4.3.0;
+        System.Threading.Timer|4.3.0;
+        System.ValueTuple|4.3.0;
+        System.Xml.ReaderWriter|4.3.0;
+        System.Xml.XDocument|4.3.0;
+        System.Xml.XmlDocument|4.3.0;
+        System.Xml.XmlSerializer|4.3.0;
+        System.Xml.XPath|4.3.0;
+        System.Xml.XPath.XDocument|4.3.0;
+      
+PotentialEditorConfigFiles
+    d:\.editorconfig
+    d:\projects\.editorconfig
+    d:\projects\cthack\.editorconfig
+    d:\projects\cthack\src\.editorconfig
+    d:\projects\cthack\src\diztinguish\.editorconfig
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\.editorconfig
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\loadsave\.editorconfig
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\loadsave\binary_serializer_old\.editorconfig
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\loadsave\xml_serializer\.editorconfig
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\Properties\.editorconfig
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\static\.editorconfig
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\static\diz\.editorconfig
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\window\.editorconfig
+    d:\projects\cthack\src\diztinguish\DiztinGUIsh\window\dialog\.editorconfig
+ProjectCapability
+    .NET
+    AllTargetOutputGroups
+    AppSettings
+    AssemblyReferences
+    ClassDesigner
+    COMReferences
+    ConfigurableFileNesting
+    CSharp
+    DataSourceWindow
+    DeclaredSourceItems
+    DependenciesTree
+    DynamicDependentFile
+    FolderPublish
+    IntegratedConsoleDebugging
+    LaunchProfiles
+    Managed
+    NoGeneralDependentFileIcon
+    OutputGroups
+    PersistDesignTimeDataOutOfProject
+    ProjectImportsTree
+    ProjectReferences
+    Publish
+    RelativePathDerivedDefaultNamespace
+    SharedProjectReferences
+    SingleFileGenerators
+    SupportAvailableItemName
+    UseFileGlobs
+    UserSourceItems
+    VisualStudioWellKnownOutputGroups
+    WinRTReferences
+PropertyPageSchema
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\AnalyzerReference.xaml
+        Context = Project;ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\AppDesigner.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ApplicationPropertyPage.xaml
+        Context = Project
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\AssemblyReference.xaml
+        Context = Project;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\BuildPropertyPage.xaml
+        Context = Project
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\CollectedFrameworkReference.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\CollectedPackageDownload.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\CollectedPackageVersion.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Compile.BrowseObject.xaml
+        Context = BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Compile.xaml
+        Context = File
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\CompilerCommandLineArgs.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\COMReference.xaml
+        Context = Project;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ConfigurationGeneral.xaml
+        Context = Project;ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Content.BrowseObject.xaml
+        Context = BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Content.xaml
+        Context = File
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\CopyUpToDateMarker.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\CSharp.ProjectItemsSchema.xaml
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\DebuggerGeneral.xaml
+        Context = Project
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\DotNetCliToolReference.xaml
+        Context = ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\EditorConfigFiles.BrowseObject.xaml
+        Context = BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\EditorConfigFiles.xaml
+        Context = File
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\EmbeddedResource.BrowseObject.xaml
+        Context = BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\EmbeddedResource.xaml
+        Context = File
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ExecutableDebugPropertyPage.xaml
+        Context = Project
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Folder.xaml
+        Context = File;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\FrameworkReference.xaml
+        Context = Project;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\GeneralBrowseObject.xaml
+        Context = BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\GeneralConfiguredBrowseObject.xaml
+        Context = ConfiguredBrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\LanguageService.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\None.BrowseObject.xaml
+        Context = BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\None.xaml
+        Context = File
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\NuGetRestore.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\PackageReference.xaml
+        Context = ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ParentDebugPropertyPage.xaml
+        Context = Project
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\PotentialEditorConfigFiles.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ProjectDebugger.xaml
+        Context = Project
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ProjectDebugPropertyPage.xaml
+        Context = Project
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ProjectItemsSchema.xaml
+        Context = Project
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ProjectReference.xaml
+        Context = Project;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ResolvedAnalyzerReference.xaml
+        Context = ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ResolvedAssemblyReference.xaml
+        Context = ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ResolvedCompilationReference.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ResolvedCOMReference.xaml
+        Context = ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ResolvedFrameworkReference.xaml
+        Context = ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ResolvedPackageReference.xaml
+        Context = ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ResolvedProjectReference.xaml
+        Context = ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\ResolvedSdkReference.xaml
+        Context = ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\Resource.BrowseObject.xaml
+        Context = BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\SdkReference.xaml
+        Context = Project;ProjectSubscriptionService;BrowseObject
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\SourceControl.xaml
+        Context = Invisible
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\SpecialFolder.xaml
+        Context = File;ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\UpToDateCheckBuilt.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\UpToDateCheckInput.xaml
+        Context = ProjectSubscriptionService
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VisualStudio\Managed\UpToDateCheckOutput.xaml
+        Context = ProjectSubscriptionService
+Reference
+    ExtendedXmlSerializer, Version=3.3.0.0, Culture=neutral, processorArchitecture=MSIL
+        HintPath = ..\packages\ExtendedXmlSerializer.3.3.0\lib\net452\ExtendedXmlSerializer.dll
+    LightInject, Version=6.3.5.0, Culture=neutral, processorArchitecture=MSIL
+        HintPath = ..\packages\LightInject.6.3.5\lib\net46\LightInject.dll
+    Microsoft.CSharp
+    NReco.LambdaParser, Version=1.0.11.0, Culture=neutral, PublicKeyToken=50b5ad72a1d364c6, processorArchitecture=MSIL
+        HintPath = ..\packages\NReco.LambdaParser.1.0.12\lib\net45\NReco.LambdaParser.dll
+    Sprache, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL
+        HintPath = ..\packages\Sprache.2.3.1\lib\net45\Sprache.dll
+    System
+    System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL
+        HintPath = ..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll
+    System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL
+        HintPath = ..\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll
+    System.Core
+    System.Data
+    System.Data.DataSetExtensions
+    System.Deployment
+    System.Drawing
+    System.Interactive, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL
+        HintPath = ..\packages\System.Interactive.4.1.1\lib\net45\System.Interactive.dll
+    System.IO, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL
+    System.Linq.Expressions, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL
+    System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL
+        HintPath = ..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll
+    System.Net.Http
+    System.Numerics
+    System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL
+        HintPath = ..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll
+    System.Runtime, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL
+    System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL
+        HintPath = ..\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\net461\System.Runtime.CompilerServices.Unsafe.dll
+    System.Threading.Tasks, Version=4.0.11.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL
+    System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL
+        HintPath = ..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll
+    System.Windows.Forms
+    System.Xml
+    System.Xml.Linq
+XamlBuildTaskTypeGenerationExtensionName
+    Microsoft.Activities.Build.BeforeInitializeComponentExtension
+        AssemblyName = Microsoft.Activities.Build, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+        Visible = false
+    Microsoft.Activities.Build.Debugger.DebugBuildExtension
+        AssemblyName = Microsoft.Activities.Build, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+        Visible = false
+
+Building with tools version "Current".
+Project file contains ToolsVersion="15.0". This toolset may be unknown or missing, in which case you may be able to resolve this by installing the appropriate version of MSBuild, or the build may have been forced to a particular ToolsVersion for policy reasons. Treating the project as if it had ToolsVersion="Current". For more information, please see http://go.microsoft.com/fwlink/?LinkId=293424.
+Target "SetGitExe: (TargetId:6)" in file "d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (entry point):
+Using "Exec" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "Exec" (TaskId:4)
+  Task Parameter:Command=git --version (TaskId:4)
+  Task Parameter:EchoOff=True (TaskId:4)
+  Task Parameter:IgnoreExitCode=True (TaskId:4)
+  Task Parameter:StandardErrorImportance=low (TaskId:4)
+  Task Parameter:StandardOutputImportance=low (TaskId:4)
+  git version 2.27.0 (TaskId:4)
+  Output Property: MSBuildLastExitCode=0 (TaskId:4)
+Done executing task "Exec". (TaskId:4)
+Set Property: GitExe=git
+Task "Exec" skipped, due to false condition; ('$(GitExe)' == '') was evaluated as ('git' == '').
+Done building target "SetGitExe" in project "DiztinGUIsh.csproj".: (TargetId:6)
+Target "EntityDeploy" skipped, due to false condition; ('@(EntityDeploy)' != '') was evaluated as ('' != '').
+Target "EnableIntermediateOutputPathMismatchWarning" skipped, due to false condition; ('$(RestoreProjectStyle)' == 'PackageReference') was evaluated as ('' == 'PackageReference').
+Target "_CheckForInvalidConfigurationAndPlatform: (TargetId:7)" in file "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (target "EntityDeploy" depends on it):
+Set Property: _InvalidConfigurationMessageText=The OutputPath property is not set for project 'DiztinGUIsh.csproj'.  Please check to make sure that you have specified a valid combination of Configuration and Platform for this project.  Configuration='Debug'  Platform='AnyCPU'.
+Set Property: _InvalidConfigurationMessageText=The OutputPath property is not set for project 'DiztinGUIsh.csproj'.  Please check to make sure that you have specified a valid combination of Configuration and Platform for this project.  Configuration='Debug'  Platform='AnyCPU'.  You may be seeing this message because you are trying to build a project without a solution file, and have specified a non-default Configuration or Platform that doesn't exist for this project.
+Task "Error" skipped, due to false condition; ( '$(_InvalidConfigurationError)' == 'true' ) was evaluated as ( '' == 'true' ).
+Task "Warning" skipped, due to false condition; ( '$(_InvalidConfigurationWarning)' == 'true' ) was evaluated as ( '' == 'true' ).
+Using "Message" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "Message" (TaskId:5)
+  Task Parameter:Text=Configuration=Debug (TaskId:5)
+  Task Parameter:Importance=Low (TaskId:5)
+  Configuration=Debug (TaskId:5)
+Done executing task "Message". (TaskId:5)
+Task "Message" (TaskId:6)
+  Task Parameter:Text=Platform=AnyCPU (TaskId:6)
+  Task Parameter:Importance=Low (TaskId:6)
+  Platform=AnyCPU (TaskId:6)
+Done executing task "Message". (TaskId:6)
+Task "Error" skipped, due to false condition; ('$(OutDir)' != '' and !HasTrailingSlash('$(OutDir)')) was evaluated as ('bin\Debug\' != '' and !HasTrailingSlash('bin\Debug\')).
+Task "Error" skipped, due to false condition; ('$(BaseIntermediateOutputPath)' != '' and !HasTrailingSlash('$(BaseIntermediateOutputPath)')) was evaluated as ('obj\' != '' and !HasTrailingSlash('obj\')).
+Task "Error" skipped, due to false condition; ('$(IntermediateOutputPath)' != '' and !HasTrailingSlash('$(IntermediateOutputPath)')) was evaluated as ('obj\Debug\' != '' and !HasTrailingSlash('obj\Debug\')).
+Set Property: PlatformTargetAsMSBuildArchitecture=x86
+Task "Error" skipped, due to false condition; ( '$(_InitialMSBuildProjectExtensionsPath)' != '' And '$(MSBuildProjectExtensionsPath)' != '$(_InitialMSBuildProjectExtensionsPath)' ) was evaluated as ( 'd:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\' != '' And 'd:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\' != 'd:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\' ).
+Task "Warning" skipped, due to false condition; ( '$(EnableBaseIntermediateOutputPathMismatchWarning)' == 'true' And '$(_InitialBaseIntermediateOutputPath)' != '$(BaseIntermediateOutputPath)' And '$(BaseIntermediateOutputPath)' != '$(MSBuildProjectExtensionsPath)' ) was evaluated as ( '' == 'true' And 'obj\' != 'obj\' And 'obj\' != 'd:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\' ).
+Done building target "_CheckForInvalidConfigurationAndPlatform" in project "DiztinGUIsh.csproj".: (TargetId:7)
+Target "BeforeBuild: (TargetId:8)" in file "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (target "Build" depends on it):
+Done building target "BeforeBuild" in project "DiztinGUIsh.csproj".: (TargetId:8)
+Target "SetGitExe" skipped. Previously built successfully.
+Target "_EnsureGit: (TargetId:9)" in file "d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (target "GitInfo" depends on it):
+Task "Exec" (TaskId:7)
+  Task Parameter:Command=git --version (TaskId:7)
+  Task Parameter:EchoOff=True (TaskId:7)
+  Task Parameter:ConsoleToMSBuild=True (TaskId:7)
+  Task Parameter:StandardErrorImportance=high (TaskId:7)
+  Task Parameter:StandardOutputImportance=low (TaskId:7)
+  git version 2.27.0 (TaskId:7)
+  Output Property: _GitOutput=git version 2.27.0 (TaskId:7)
+  Output Property: MSBuildLastExitCode=0 (TaskId:7)
+Done executing task "Exec". (TaskId:7)
+Task "Error" skipped, due to false condition; ('$(MSBuildLastExitCode)' != '0') was evaluated as ('0' != '0').
+Set Property: _GitCurrentVersion=2.27.0
+Task "Error" skipped, due to false condition; ($([System.Version]::Parse('$(_GitCurrentVersion)').CompareTo($([System.Version]::Parse('$(GitMinVersion)')))) < 0) was evaluated as (1 < 0).
+Done building target "_EnsureGit" in project "DiztinGUIsh.csproj".: (TargetId:9)
+Target "_GitRoot: (TargetId:10)" in file "d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (target "GitInfo" depends on it):
+Task "Exec" (TaskId:8)
+  Task Parameter:Command=git rev-parse --show-toplevel (TaskId:8)
+  Task Parameter:EchoOff=True (TaskId:8)
+  Task Parameter:StandardErrorImportance=high (TaskId:8)
+  Task Parameter:StandardOutputImportance=low (TaskId:8)
+  Task Parameter:ConsoleToMSBuild=True (TaskId:8)
+  Task Parameter:WorkingDirectory=d:\projects\cthack\src\diztinguish\DiztinGUIsh (TaskId:8)
+  Task Parameter:StdOutEncoding=utf-8 (TaskId:8)
+  /d/projects/cthack/src/diztinguish (TaskId:8)
+  Output Property: _GitOutput=/d/projects/cthack/src/diztinguish (TaskId:8)
+  Output Property: MSBuildLastExitCode=0 (TaskId:8)
+Done executing task "Exec". (TaskId:8)
+Set Property: GitRoot=d:\d\projects\cthack\src\diztinguish\
+Task "Exec" skipped, due to false condition; ('$(MSBuildLastExitCode)' == '0' And '$(CygPathExe)' != '') was evaluated as ('0' == '0' And '' != '').
+Set Property: GitRoot=d:\d\projects\cthack\src\diztinguish\
+Set Property: GitDir=d:\d\projects\cthack\src\diztinguish\.git
+Set Property: _IsGitFile=False
+Task "Exec" skipped, due to false condition; ('$(_IsGitFile)' == 'true') was evaluated as ('False' == 'true').
+Set Property: _IsGitWorkTree=
+Task "Exec" skipped, due to false condition; ('$(_IsGitFile)' == 'true' and '$(_IsGitWorkTree)' == 'true') was evaluated as ('False' == 'true' and '' == 'true').
+Task "Exec" skipped, due to false condition; ('$(_IsGitFile)' == 'true' and '$(_IsGitWorkTree)' == 'true' And '$(MSBuildLastExitCode)' == '0' And '$(CygPathExe)' != '') was evaluated as ('False' == 'true' and '' == 'true' And '0' == '0' And '' != '').
+Task "Message" (TaskId:9)
+  Task Parameter:Text=Determined Git repository root as 'd:\d\projects\cthack\src\diztinguish\' (TaskId:9)
+  Task Parameter:Importance=low (TaskId:9)
+  Determined Git repository root as 'd:\d\projects\cthack\src\diztinguish\' (TaskId:9)
+Done executing task "Message". (TaskId:9)
+Task "Message" (TaskId:10)
+  Task Parameter:Text=Determined Git dir as 'd:\d\projects\cthack\src\diztinguish\.git' (TaskId:10)
+  Task Parameter:Importance=low (TaskId:10)
+  Determined Git dir as 'd:\d\projects\cthack\src\diztinguish\.git' (TaskId:10)
+Done executing task "Message". (TaskId:10)
+Task "Warning" skipped, due to false condition; ('$(GitRoot)' == '') was evaluated as ('d:\d\projects\cthack\src\diztinguish\' == '').
+Task "Exec" (TaskId:11)
+  Task Parameter:Command=git diff-index --quiet HEAD (TaskId:11)
+  Task Parameter:EchoOff=True (TaskId:11)
+  Task Parameter:StandardErrorImportance=low (TaskId:11)
+  Task Parameter:StandardOutputImportance=low (TaskId:11)
+  Task Parameter:WorkingDirectory=d:\d\projects\cthack\src\diztinguish\ (TaskId:11)
+  Task Parameter:IgnoreExitCode=True (TaskId:11)
+  Task Parameter:StdOutEncoding=utf-8 (TaskId:11)
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003: The specified task executable "cmd.exe" could not be run. System.IO.DirectoryNotFoundException: The working directory "d:\d\projects\cthack\src\diztinguish\" does not exist. [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Tasks.Exec.GetWorkingDirectory() [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.GetProcessStartInfo(String pathToTool, String commandLineCommands, String responseFileSwitch) [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Tasks.Exec.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+  Output Property: GitIsDirty=0 (TaskId:11)
+Done executing task "Exec" -- FAILED. (TaskId:11)
+Done building target "_GitRoot" in project "DiztinGUIsh.csproj" -- FAILED.: (TargetId:10)
+Target "_CheckForCompileOutputs: (TargetId:11)" in file "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (target "_CleanGetCurrentAndPriorFileWrites" depends on it):
+Added Item(s): FileWrites=obj\Debug\DiztinGUIsh.exe
+Set Property: _DocumentationFileProduced=false
+Added Item(s): FileWrites=obj\Debug\DiztinGUIsh.pdb
+Done building target "_CheckForCompileOutputs" in project "DiztinGUIsh.csproj".: (TargetId:11)
+Target "_SGenCheckForOutputs" skipped, due to false condition; ('$(_SGenGenerateSerializationAssembliesConfig)' == 'On' or ('@(WebReferenceUrl)'!='' and '$(_SGenGenerateSerializationAssembliesConfig)' == 'Auto')) was evaluated as ('Off' == 'On' or (''!='' and 'Off' == 'Auto')).
+Target "_CleanGetCurrentAndPriorFileWrites: (TargetId:12)" in file "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (target "_CleanRecordFileWrites" depends on it):
+Using "ReadLinesFromFile" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "ReadLinesFromFile" (TaskId:12)
+  Task Parameter:File=obj\Debug\DiztinGUIsh.csproj.FileListAbsolute.txt (TaskId:12)
+  Output Item(s): 
+      _CleanUnfilteredPriorFileWrites=
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe.config
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csprojAssemblyReference.cache
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.AliasList.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.About.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ExportDisassembly.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.GotoDialog.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.HarshAutoStep.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ImportROMDialog.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.InOutPointChecker.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MainWindow.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MarkManyDialog.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MisalignmentChecker.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.Properties.Resources.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.GenerateResource.cache
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CoreCompileInputs.cache
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.dialog.ProgressDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csprojAssemblyReference.cache
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.AliasList.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.About.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.dialog.ProgressDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ExportDisassembly.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.GotoDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.HarshAutoStep.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ImportROMDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.InOutPointChecker.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MainWindow.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MarkManyDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MisalignmentChecker.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.Properties.Resources.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.GenerateResource.cache
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CoreCompileInputs.cache
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe.config
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\NReco.LambdaParser.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\Sprache.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Buffers.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Collections.Immutable.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Interactive.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Memory.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Numerics.Vectors.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.ValueTuple.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\NReco.LambdaParser.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\Sprache.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Buffers.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Collections.Immutable.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Interactive.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Memory.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Numerics.Vectors.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.ValueTuple.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CopyComplete
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\GitInfo.cache (TaskId:12)
+Done executing task "ReadLinesFromFile". (TaskId:12)
+Using "ConvertToAbsolutePath" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "ConvertToAbsolutePath" (TaskId:13)
+Done executing task "ConvertToAbsolutePath". (TaskId:13)
+Added Item(s): 
+    _CleanPriorFileWrites=
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe.config
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.pdb
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csprojAssemblyReference.cache
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.AliasList.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.About.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ExportDisassembly.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.GotoDialog.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.HarshAutoStep.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ImportROMDialog.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.InOutPointChecker.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MainWindow.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MarkManyDialog.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MisalignmentChecker.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.Properties.Resources.resources
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.GenerateResource.cache
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CoreCompileInputs.cache
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+        D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.dialog.ProgressDialog.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csprojAssemblyReference.cache
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.AliasList.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.About.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.dialog.ProgressDialog.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ExportDisassembly.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.GotoDialog.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.HarshAutoStep.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ImportROMDialog.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.InOutPointChecker.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MainWindow.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MarkManyDialog.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MisalignmentChecker.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.Properties.Resources.resources
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.GenerateResource.cache
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CoreCompileInputs.cache
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe.config
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.pdb
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\NReco.LambdaParser.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\Sprache.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Buffers.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Collections.Immutable.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Interactive.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Memory.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Numerics.Vectors.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.ValueTuple.dll
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.pdb
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.pdb
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\NReco.LambdaParser.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\Sprache.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Buffers.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Collections.Immutable.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Interactive.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Memory.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Numerics.Vectors.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.ValueTuple.xml
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CopyComplete
+        D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\GitInfo.cache
+Using "FindUnderPath" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "FindUnderPath" (TaskId:14)
+  Task Parameter:Path=d:\projects\cthack\src\diztinguish\DiztinGUIsh (TaskId:14)
+  Task Parameter:UpdateToAbsolutePaths=True (TaskId:14)
+  Comparison path is "d:\projects\cthack\src\diztinguish\DiztinGUIsh". (TaskId:14)
+Done executing task "FindUnderPath". (TaskId:14)
+Task "FindUnderPath" (TaskId:15)
+  Task Parameter:Path=bin\Debug\ (TaskId:15)
+  Task Parameter:
+      Files=
+          obj\Debug\DiztinGUIsh.exe
+          obj\Debug\DiztinGUIsh.pdb (TaskId:15)
+  Task Parameter:UpdateToAbsolutePaths=True (TaskId:15)
+  Comparison path is "bin\Debug\". (TaskId:15)
+Done executing task "FindUnderPath". (TaskId:15)
+Task "FindUnderPath" (TaskId:16)
+  Task Parameter:Path=obj\Debug\ (TaskId:16)
+  Task Parameter:
+      Files=
+          obj\Debug\DiztinGUIsh.exe
+          obj\Debug\DiztinGUIsh.pdb (TaskId:16)
+  Task Parameter:UpdateToAbsolutePaths=True (TaskId:16)
+  Comparison path is "obj\Debug\". (TaskId:16)
+  Output Item(s): 
+      _CleanCurrentFileWritesInIntermediate=
+          d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+          d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb (TaskId:16)
+Done executing task "FindUnderPath". (TaskId:16)
+Added Item(s): 
+    _CleanCurrentFileWritesWithNoReferences=
+        d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+        d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+Using "RemoveDuplicates" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "RemoveDuplicates" (TaskId:17)
+  Output Item(s): 
+      _CleanCurrentFileWrites=
+          d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+          d:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb (TaskId:17)
+Done executing task "RemoveDuplicates". (TaskId:17)
+Done building target "_CleanGetCurrentAndPriorFileWrites" in project "DiztinGUIsh.csproj".: (TargetId:12)
+Target "_CleanRecordFileWrites: (TargetId:13)" in file "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets" from project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (target "CoreBuild" depends on it):
+Task "RemoveDuplicates" (TaskId:18)
+  Output Item(s): 
+      _CleanUniqueFileWrites=
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe.config
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csprojAssemblyReference.cache
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.AliasList.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.About.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ExportDisassembly.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.GotoDialog.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.HarshAutoStep.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ImportROMDialog.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.InOutPointChecker.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MainWindow.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MarkManyDialog.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MisalignmentChecker.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.Properties.Resources.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.GenerateResource.cache
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CoreCompileInputs.cache
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.dialog.ProgressDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csprojAssemblyReference.cache
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.AliasList.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.About.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.dialog.ProgressDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ExportDisassembly.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.GotoDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.HarshAutoStep.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ImportROMDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.InOutPointChecker.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MainWindow.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MarkManyDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MisalignmentChecker.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.Properties.Resources.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.GenerateResource.cache
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CoreCompileInputs.cache
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe.config
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\NReco.LambdaParser.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\Sprache.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Buffers.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Collections.Immutable.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Interactive.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Memory.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Numerics.Vectors.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.ValueTuple.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\NReco.LambdaParser.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\Sprache.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Buffers.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Collections.Immutable.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Interactive.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Memory.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Numerics.Vectors.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.ValueTuple.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CopyComplete
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\GitInfo.cache (TaskId:18)
+Done executing task "RemoveDuplicates". (TaskId:18)
+Using "MakeDir" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "MakeDir" (TaskId:19)
+  Task Parameter:Directories=obj\Debug\ (TaskId:19)
+Done executing task "MakeDir". (TaskId:19)
+Using "WriteLinesToFile" task from assembly "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "WriteLinesToFile" (TaskId:20)
+  Task Parameter:File=obj\Debug\DiztinGUIsh.csproj.FileListAbsolute.txt (TaskId:20)
+  Task Parameter:
+      Lines=
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe.config
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csprojAssemblyReference.cache
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.AliasList.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.About.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ExportDisassembly.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.GotoDialog.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.HarshAutoStep.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ImportROMDialog.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.InOutPointChecker.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MainWindow.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MarkManyDialog.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MisalignmentChecker.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.Properties.Resources.resources
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.GenerateResource.cache
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CoreCompileInputs.cache
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\Rom\external\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.dialog.ProgressDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csprojAssemblyReference.cache
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.AliasList.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.About.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.window.dialog.ProgressDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ExportDisassembly.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.GotoDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.HarshAutoStep.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.ImportROMDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.InOutPointChecker.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MainWindow.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MarkManyDialog.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.MisalignmentChecker.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.Properties.Resources.resources
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.GenerateResource.cache
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CoreCompileInputs.cache
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe.config
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.exe
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\DiztinGUIsh.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\NReco.LambdaParser.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\Sprache.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Buffers.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Collections.Immutable.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Interactive.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Memory.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Numerics.Vectors.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.ValueTuple.dll
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\ExtendedXmlSerializer.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.pdb
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\LightInject.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\NReco.LambdaParser.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\Sprache.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Buffers.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Collections.Immutable.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Interactive.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Memory.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Numerics.Vectors.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\bin\Debug\System.ValueTuple.xml
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\DiztinGUIsh.csproj.CopyComplete
+          D:\projects\cthack\src\diztinguish\DiztinGUIsh\obj\Debug\GitInfo.cache (TaskId:20)
+  Task Parameter:Overwrite=True (TaskId:20)
+Done executing task "WriteLinesToFile". (TaskId:20)
+Done building target "_CleanRecordFileWrites" in project "DiztinGUIsh.csproj".: (TargetId:13)
+Done Building Project "d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (default targets) -- FAILED.
+Done executing task "MSBuild" -- FAILED. (TaskId:3)
+Done building target "Build" in project "DiztinGUIsh.sln" -- FAILED.: (TargetId:5)
+Done Building Project "d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln" (default targets) -- FAILED.
+Deferred Messages
+
+Detailed Build Summary
+======================
+     (TaskId:0)
+  
+  ============================== Build Hierarchy (IDs represent configurations) =====================================================
+  Id                  : Exclusive Time   Total Time   Path (Targets)
+  ----------------------------------------------------------------------------------------------------------------------------------- (TaskId:0)
+  0                   : 0.093s           0.553s       d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln ()  (TaskId:0)
+  . 1                 : 0.460s           0.460s       d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj ()  (TaskId:0)
+  
+  ============================== Node Utilization (IDs represent configurations) ====================================================
+  Timestamp:            1        Duration   Cumulative
+  ----------------------------------------------------------------------------------------------------------------------------------- (TaskId:0)
+  637369227568779567:   0        0.086s     0.086s . (TaskId:0)
+  637369227569644411:   1        0.460s     0.546s ......... (TaskId:0)
+  637369227574240567:   0        0.007s     0.553s  (TaskId:0)
+  -----------------------------------------------------------------------------------------------------------------------------------
+  Utilization:          100.0    Average Utilization: 100.0 (TaskId:0)
+
+Project Evaluation Performance Summary:
+       93 ms  d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj   1 calls
+
+Project Performance Summary:
+      365 ms  d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj   1 calls
+      551 ms  d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln   1 calls
+
+Target Performance Summary:
+        0 ms  ValidateProjects                           1 calls
+        0 ms  BeforeBuild                                1 calls
+        1 ms  ValidateToolsVersions                      1 calls
+        2 ms  _CheckForCompileOutputs                    1 calls
+        5 ms  _CheckForInvalidConfigurationAndPlatform   1 calls
+        6 ms  _CleanRecordFileWrites                     1 calls
+       10 ms  _CleanGetCurrentAndPriorFileWrites         1 calls
+       17 ms  ValidateSolutionConfiguration              1 calls
+       72 ms  _EnsureGit                                 1 calls
+       79 ms  SetGitExe                                  1 calls
+      101 ms  _GitRoot                                   1 calls
+      508 ms  Build                                      1 calls
+
+Task Performance Summary:
+        0 ms  ConvertToAbsolutePath                      1 calls
+        2 ms  RemoveDuplicates                           2 calls
+        2 ms  WriteLinesToFile                           1 calls
+        2 ms  ReadLinesFromFile                          1 calls
+        2 ms  MakeDir                                    1 calls
+        3 ms  FindUnderPath                              3 calls
+        6 ms  Message                                    5 calls
+      241 ms  Exec                                       4 calls
+      506 ms  MSBuild                                    1 calls
+
+Build FAILED.
+
+"d:\projects\cthack\src\diztinguish\DiztinGUIsh.sln" (default target) (1) ->
+"d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj" (default target) (2) ->
+(_GitRoot target) -> 
+  d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003: The specified task executable "cmd.exe" could not be run. System.IO.DirectoryNotFoundException: The working directory "d:\d\projects\cthack\src\diztinguish\" does not exist. [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Tasks.Exec.GetWorkingDirectory() [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.GetProcessStartInfo(String pathToTool, String commandLineCommands, String responseFileSwitch) [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Tasks.Exec.ExecuteTool(String pathToTool, String responseFileCommands, String commandLineCommands) [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+d:\projects\cthack\src\diztinguish\packages\GitInfo.2.1.1\build\GitInfo.targets(315,3): error MSB6003:    at Microsoft.Build.Utilities.ToolTask.Execute() [d:\projects\cthack\src\diztinguish\DiztinGUIsh\DiztinGUIsh.csproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.70

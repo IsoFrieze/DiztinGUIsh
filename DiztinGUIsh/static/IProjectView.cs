@@ -13,5 +13,8 @@ namespace DiztinGUIsh
         void OnProjectOpenFail();
         void OnProjectSaved();
         void OnExportFinished(LogCreator.OutputResult result);
+
+        public delegate void LongRunningTaskHandler(Action task, string description = null);
+        LongRunningTaskHandler TaskHandler { get; }
     }
 }

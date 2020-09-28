@@ -9,6 +9,8 @@ namespace DiztinGUIsh
         private ProgressDialog Dialog = null;
         private bool IsRunning = false;
         private Thread backgroundThread = null;
+        public bool IsMarquee { get; set; } = false;
+        public string TextOverride { get; set; } = null;
 
         protected void UpdateProgress(int i)
         {
@@ -39,7 +41,7 @@ namespace DiztinGUIsh
 
             IsRunning = true;
 
-            Dialog = new ProgressDialog();
+            Dialog = new ProgressDialog(IsMarquee, TextOverride);
 
             // setup, but don't start, the new thread
             backgroundThread = new Thread(new ThreadStart(Thread_Main));
@@ -85,14 +87,27 @@ namespace DiztinGUIsh
 {
     public class ProgressBarJob : ProgressBarWorker
     {
-        public static void Loop(long maxProgress, NextAction callback)
+        // a version that keeps calling 'callback' until it returns -1
+        public static void Loop(long maxProgress, NextAction callback, string overrideTxt = null)
         {
             var j = new ProgressBarJob()
             {
                 MaxProgress = maxProgress,
                 Callback = callback,
+                IsMarquee = maxProgress == -1,
+                TextOverride = overrideTxt,
             };
             j.Run();
+        }
+
+        // a version that calls action once and exits
+        // shows a "marquee" i.e. spinner
+        public static void RunAndWaitForCompletion(Action action, string overrideTxt = null)
+        {
+            Loop(-1, () => {
+                action();
+                return -1;
+            }, overrideTxt);
         }
 
         public NextAction Callback { get; set; }
@@ -100,6 +115,7 @@ namespace DiztinGUIsh
 
         protected override void Thread_DoWork()
         {
+            UpdateProgress(0);
             var progress = -1L;
             do {
                 progress = Callback();

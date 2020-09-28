@@ -7,14 +7,26 @@ using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh
 {
-    class SampleRomData : Data
+    internal class SampleRomData : Data
     {
-        // TODO: this was originally how this thing was setup, we probably should inject this in somewhere.
-        // I don't remember how it interacts with our sample RomBytes data
-        //while (sampleTable.Count < 0x8000)
-        //    sampleTable.Add(new ROMByte());
+        public static SampleRomData SampleData
+        {
+            get
+            {
+                if (finalSampleData != null)
+                    return finalSampleData;
 
-        public static SampleRomData SampleData = new SampleRomData
+                while (baseSampleData.RomBytes.Count < 0x8000)
+                    baseSampleData.RomBytes.Add(new ROMByte());
+
+                finalSampleData = baseSampleData;
+                return baseSampleData;
+            }
+        }
+
+        private static SampleRomData finalSampleData = null;
+
+        private static readonly SampleRomData baseSampleData = new SampleRomData
         {
             // random sample code I made up; hopefully it shows a little bit of
             // everything so you can see how the settings will effect the output

@@ -241,6 +241,9 @@ namespace DiztinGUIsh
                     MessageBoxIcon.Asterisk);
         }
 
+        IProjectView.LongRunningTaskHandler IProjectView.TaskHandler => 
+            ProgressBarJob.RunAndWaitForCompletion;
+
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             saveProjectFile.InitialDirectory = Project.AttachedRomFilename;

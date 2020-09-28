@@ -469,11 +469,12 @@ namespace DiztinGUIsh
             return text + "\"";
         }
 
-        public string GetDefaultLabel(int address)
+        public string GetDefaultLabel(int offset)
         {
-            var pc = ConvertSNEStoPC(address);
-            return
-                $"{Util.TypeToLabel(GetFlag(pc))}_{Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6)}";
+            var snes = ConvertPCtoSNES(offset);
+            //return
+            //    $"{Util.TypeToLabel(GetFlag(pc))}_{Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6)}";
+            return string.Format("{0}_{1}", Util.TypeToLabel(GetFlag(offset)), Util.NumberToBaseString(snes, Util.NumberBase.Hexadecimal, 6));
         }
 
         public int Step(int offset, bool branch, bool force, int prevOffset)
