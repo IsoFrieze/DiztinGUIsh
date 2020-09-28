@@ -472,8 +472,6 @@ namespace DiztinGUIsh
         public string GetDefaultLabel(int offset)
         {
             var snes = ConvertPCtoSNES(offset);
-            //return
-            //    $"{Util.TypeToLabel(GetFlag(pc))}_{Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6)}";
             return string.Format("{0}_{1}", Util.TypeToLabel(GetFlag(offset)), Util.NumberToBaseString(snes, Util.NumberBase.Hexadecimal, 6));
         }
 
