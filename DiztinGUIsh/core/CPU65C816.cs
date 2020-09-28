@@ -153,7 +153,7 @@ namespace DiztinGUIsh
             {
                 // dom note: this is where we could inject expressions if needed. it gives stuff like "$F001".
                 // we could substitute our expression of "$#F000 + $#01" or "some_struct.member" like "player.hp"
-                // the expression must match the bytes in the file [unless we allow overriding]
+                // the expression must be verified to always match the bytes in the file [unless we allow overriding]
                 op1 = FormatOperandAddress(offset, mode);
             }
             return string.Format(format, mnemonic, op1, op2);

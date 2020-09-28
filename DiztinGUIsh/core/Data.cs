@@ -14,6 +14,8 @@ namespace DiztinGUIsh
     public class Data
     {
         // Note: order of these properties matters for the load/save process. Keep 'RomBytes' LAST
+        // TODO: should be a way in the XML serializer to control the order, remove this comment
+        // when we figure it out.
         public ROMMapMode RomMapMode { get; set; }
         public ROMSpeed RomSpeed { get; set; }
         public Dictionary<int, string> Comments { get; set; }
