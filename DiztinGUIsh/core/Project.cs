@@ -1,39 +1,87 @@
-﻿using DiztinGUIsh.window;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Windows.Forms;
-using ExtendedXmlSerializer;
 
 namespace DiztinGUIsh
 {
-    // MODEL
-    public class Project
+    public class Project : DizModel
     {
         // Any public properties will be automatically serialized to XML.
-        // They require a get AND set.
+        // They require a get AND set. Order is important.
+        public string ProjectFileName
+        {
+            get => projectFileName;
+            set => SetField(ref projectFileName, value);
+        }
 
-        public string ProjectFileName { get; set; }
-        public string AttachedRomFilename { get; set; }
-        public bool UnsavedChanges { get; set; }
+        public string AttachedRomFilename
+        {
+            get => attachedRomFilename;
+            set => SetField(ref attachedRomFilename, value);
+        }
 
-        // safety check: these are copies of data in the ROM, they must always match the ROM on project load
-        // or else we might be looking at the wrong file.
-        public string InternalRomGameName { get; set; }
-        public int InternalCheckSum { get; set; } = -1;
+        // would be cool to make this more automatic. probably hook into SetField()
+        // for a lot of it.
+        public bool UnsavedChanges
+        {
+            get => unsavedChanges;
+            set => SetField(ref unsavedChanges, value);
+        }
 
-        // needs to come last for serialization
-        public Data Data { get; set; }
+        // safety checks:
+        // The rom "Game name" and "Checksum" are copies of certain bytes from the ROM which
+        // get stored with the project file.  REMEMBER: We don't store the actual ROM bytes
+        // in the project file, so when we load a project, we must also open the same ROM and load its
+        // bytes in the project.
+        //
+        // Project = Metadata
+        // Rom = The real data
+        //
+        // If we load a ROM, and then its checksum and name don't match what we have stored,
+        // then we have an issue (i.e. not the same ROM, or it was modified, or missing, etc).
+        // The user must either provide the correct ROM, or abort loading the project.
+        public string InternalRomGameName
+        {
+            get => internalRomGameName;
+            set => SetField(ref internalRomGameName, value);
+        }
 
-        public LogWriterSettings LogWriterSettings;
+        public int InternalCheckSum
+        {
+            get => internalCheckSum;
+            set => SetField(ref internalCheckSum, value);
+        }
+
+        public LogWriterSettings LogWriterSettings
+        {
+            get => logWriterSettings;
+            set => SetField(ref logWriterSettings, value);
+        }
+
+        // purely visual. what offset is currently being looked at in the main grid.
+        // we store it here because we want to save it out with the project file
+        private int currentViewOffset;
+        public int CurrentViewOffset
+        {
+            get => currentViewOffset;
+            set => SetField(ref currentViewOffset, value);
+        }
+
+        // needs to come last for serialization. this is the heart of the app, the actual
+        // data from the ROM and metadata we add/create.
+        public Data Data
+        {
+            get => data;
+            set => SetField(ref data, value);
+        }
 
         public Project()
         {
             LogWriterSettings.SetDefaults();
         }
 
-        public class ImportRomSettings
+        public struct ImportRomSettings
         {
             public Data.ROMMapMode ROMMapMode;
             public Data.ROMSpeed ROMSpeed;
@@ -45,49 +93,26 @@ namespace DiztinGUIsh
             public string rom_filename;
         }
 
-        public void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
-        {
-            AttachedRomFilename = importSettings.rom_filename;
-            UnsavedChanges = false;
-            ProjectFileName = null;
-
-            Data = new Data();
-            Data.Initiate(importSettings.rom_bytes, importSettings.ROMMapMode, importSettings.ROMSpeed);
-
-            // TODO: get this UI out of here. probably just use databinding instead
-            // AliasList.me.ResetDataGrid();
-
-            if (importSettings.InitialLabels.Count > 0)
-            {
-                foreach (var pair in importSettings.InitialLabels)
-                    Data.AddLabel(pair.Key, pair.Value, true);
-                UnsavedChanges = true;
-            }
-
-            if (importSettings.InitialHeaderFlags.Count > 0)
-            {
-                foreach (var pair in importSettings.InitialHeaderFlags)
-                    Data.SetFlag(pair.Key, pair.Value);
-                UnsavedChanges = true;
-            }
-
-            // Save a copy of these identifying ROM bytes with the project file itself.
-            // When we reload, we will make sure the linked ROM still matches them.
-            InternalCheckSum = Data.GetRomCheckSumsFromRomBytes();
-            InternalRomGameName = Data.GetRomNameFromRomBytes();
-        }
+        private string projectFileName;
+        private string attachedRomFilename;
+        private bool unsavedChanges;
+        private string internalRomGameName;
+        private int internalCheckSum = -1;
+        private Data data;
+        private LogWriterSettings logWriterSettings;
 
         public byte[] ReadFromOriginalRom()
         {
             string firstRomFileWeTried;
             var nextFileToTry = firstRomFileWeTried = AttachedRomFilename;
-            byte[] rom = null;
+            byte[] rom;
 
             do {
-                var error = ReadROMIfMatchesProject(nextFileToTry, out rom);
+                var error = ReadRomIfMatchesProject(nextFileToTry, out rom);
                 if (error == null)
                     break;
 
+                // TODO: move to controller
                 nextFileToTry = PromptForNewRom($"{error} Link a new ROM now?");
                 if (nextFileToTry == null)
                     return null;
@@ -101,7 +126,7 @@ namespace DiztinGUIsh
             return rom;
         }
 
-        private string ReadROMIfMatchesProject(string filename, out byte[] rom_bytes)
+        private string ReadRomIfMatchesProject(string filename, out byte[] rom_bytes)
         {
             string error_msg = null;
 
@@ -121,41 +146,21 @@ namespace DiztinGUIsh
             return error_msg;
         }
 
-        // returns error message if it's not identical, or null if everything is OK.
-        private string IsThisRomIsIdenticalToUs(byte[] rom)
-        {
-            var offset = Data.GetRomSettingOffset(Data.RomMapMode);
-            if (rom.Length <= offset + 10)
-                return "The linked ROM is too small. It can't be opened.";
-
-            var romInternalGameName = Util.ReadStringFromByteArray(rom, 0x15, offset);
-
-            var myChecksums = Util.ByteArrayToInteger(rom, offset + 7);
-
-            if (romInternalGameName != InternalRomGameName)
-                return $"The linked ROM's internal name '{romInternalGameName}' doesn't " + 
-                       $"match the project's internal name of '{InternalRomGameName}'.";
-            
-            if (myChecksums != InternalCheckSum)
-                return $"The linked ROM's checksums '{myChecksums:X8}' " + 
-                       $"don't match the project's checksums of '{InternalCheckSum:X8}'.";
-
-            return null;
-        }
-
+        private string IsThisRomIsIdenticalToUs(byte[] romBytes) => 
+            Util.IsThisRomIsIdenticalToUs(romBytes, Data.RomMapMode, InternalRomGameName, InternalCheckSum);
         private string PromptForNewRom(string promptText)
         {
+            // TODO: put this in the view, hooked up through controller.
+
             var dialogResult = MessageBox.Show(promptText, "Error",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Error);
 
-            if (dialogResult == DialogResult.No)
-                return null;
-
-            return PromptToSelectFile();
+            return dialogResult == DialogResult.Yes ? PromptToSelectFile() : null;
         }
 
         private string PromptToSelectFile()
         {
+            // TODO: move to controller
             return Util.PromptToSelectFile(ProjectFileName);
         }
 

@@ -199,7 +199,6 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Label List";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AliasList_FormClosing);
-            this.Load += new System.EventHandler(this.AliasList_Load);
             this.Resize += new System.EventHandler(this.AliasList_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.statusStrip1.ResumeLayout(false);

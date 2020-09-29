@@ -113,12 +113,16 @@
   <ItemGroup>
     <Compile Include="core\import\BizHawkCdl.cs" />
     <Compile Include="core\util\LargeFilesReader.cs" />
+    <Compile Include="core\util\ObservableDictionary.cs" />
+    <Compile Include="core\util\RomUtil.cs" />
     <Compile Include="loadsave\binary_serializer_old\BinarySerializer.cs" />
     <Compile Include="loadsave\ProjectSerializer.cs" />
     <Compile Include="loadsave\ProjectFileManager.cs" />
     <Compile Include="loadsave\xml_serializer\ProjectXMLSerializer.cs" />
     <Compile Include="core\util\ProgressBarWorker.cs" />
     <Compile Include="loadsave\xml_serializer\RomBytesXMLSerializer.cs" />
+    <Compile Include="Model.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="window\IProjectView.cs" />
     <Compile Include="core\Label.cs" />
     <Compile Include="window\ProjectController.cs" />

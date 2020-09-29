@@ -1,26 +1,53 @@
 ﻿using DiztinGUIsh.window;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using DiztinGUIsh.loadsave;
 using DiztinGUIsh.Properties;
-using ExtendedXmlSerializer.ExtensionModel.Types.Sources;
 
 namespace DiztinGUIsh
 {
     public partial class MainWindow : Form, IProjectView
     {
+        // temp: readonly project data model. eventually, get this ONLY from the controller.
+        // right now, it returns Project2 which will go away
         public Project Project { get; set; }
 
         public MainWindow()
         {
-            ProjectController = new ProjectController
-            {
-                ProjectView = this
+            ProjectController = new ProjectController {
+                ProjectView = this,
             };
+            ProjectController.ProjectChanged += ProjectController_ProjectChanged;
+
             InitializeComponent();
+        }
+
+        private void ProjectController_ProjectChanged(object sender, ProjectController.ProjectChangedEventArgs e)
+        {
+            RebindProject();
+
+            switch (e.ChangeType)
+            {
+                case ProjectController.ProjectChangedEventArgs.ProjectChangedType.Saved:
+                    OnProjectSaved();
+                    break;
+                case ProjectController.ProjectChangedEventArgs.ProjectChangedType.Opened:
+                    OnProjectOpened(e.Filename);
+                    break;
+                case ProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported:
+                    OnImportedProjectSuccess();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void RebindProject()
+        {
+            aliasList.RebindProject();
         }
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
@@ -52,7 +79,7 @@ namespace DiztinGUIsh
             table.CellValueNeeded += new DataGridViewCellValueEventHandler(table_CellValueNeeded);
             table.CellValuePushed += new DataGridViewCellValueEventHandler(table_CellValuePushed);
             table.CellPainting += new DataGridViewCellPaintingEventHandler(table_CellPainting);
-            viewOffset = 0;
+
             rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
 
             // https://stackoverflow.com/a/1506066
@@ -82,7 +109,7 @@ namespace DiztinGUIsh
         {
             this.Text =
                 (Project.UnsavedChanges ? "*" : "") +
-                (Project.ProjectFileName == null ? "New Project" : Project.ProjectFileName) +
+                (Project.ProjectFileName ?? "New Project") +
                 " - DiztinGUIsh";
         }
 
@@ -126,17 +153,6 @@ namespace DiztinGUIsh
             return openFileDialog.ShowDialog() != DialogResult.OK ? openFileDialog.FileName : null;
         }
 
-        private void OnImportedProjectSuccess()
-        {
-            importCDLToolStripMenuItem.Enabled = true;
-            UpdateSaveOptionStates(false, true);
-            UpdateWindowTitle();
-            UpdateDataGridView();
-            UpdatePercent();
-            table.Invalidate();
-            EnableSubWindows();
-        }
-
         private bool TryImportProject(string romFileToOpen)
         {
             try
@@ -145,7 +161,7 @@ namespace DiztinGUIsh
                 if (importSettings == null)
                     return false;
 
-                ProjectController.ImportRomAndCreateNewProject(importSettings);
+                ProjectController.ImportRomAndCreateNewProject(importSettings.Value);
                 return true;
             }
             catch (Exception ex)
@@ -168,6 +184,7 @@ namespace DiztinGUIsh
             OpenProject(openProjectFile.FileName);
         }
 
+        // TODO: state change needs to go in controller
         public string LastProjectFilename
         {
             get => Settings.Default.LastOpenedFile;
@@ -194,9 +211,19 @@ namespace DiztinGUIsh
         public void OnProjectOpened(string filename)
         {
             LastProjectFilename = filename;
-
-            importCDLToolStripMenuItem.Enabled = true;
             UpdateSaveOptionStates(true, true);
+            RefreshUI();
+        }
+
+        private void OnImportedProjectSuccess()
+        {
+            UpdateSaveOptionStates(false, true);
+            RefreshUI();
+        }
+
+        private void RefreshUI()
+        {
+            importCDLToolStripMenuItem.Enabled = true;
             UpdateWindowTitle();
             UpdateDataGridView();
             UpdatePercent();
@@ -257,32 +284,30 @@ namespace DiztinGUIsh
         {
             openCDLDialog.InitialDirectory = Project.ProjectFileName;
             DialogResult result = openCDLDialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                if (ContinueUnsavedChanges())
-                {
-                    try
-                    {
-                        var cdl = BizHawkCdl.LoadFromFile(openCDLDialog.FileName);
-                        Project.Data.ImportBizHawkCDL(cdl);
-                    }
-                    catch (InvalidDataException ex)
-                    {
-                        MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    catch (EndOfStreamException ex)
-                    {
-                        MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+            if (result != DialogResult.OK) return;
+            if (!ContinueUnsavedChanges()) return;
 
-                    UpdatePercent();
-                    UpdateWindowTitle();
-                    InvalidateTable();
-                }
+            var filename = openCDLDialog.FileName;
+
+            try
+            {
+                ProjectController.ImportBizHawkCDL(filename);
             }
+            catch (InvalidDataException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (EndOfStreamException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            UpdatePercent();
+            UpdateWindowTitle();
+            InvalidateTable();
         }
 
-        private readonly ProjectController ProjectController;
+        public ProjectController ProjectController { get; protected set; }
 
         private void exportLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -369,6 +394,9 @@ namespace DiztinGUIsh
 
         public void UpdatePercent()
         {
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0)
+                return;
+
             int totalUnreached = 0, size = Project.Data.GetROMSize();
             for (int i = 0; i < size; i++)
                 if (Project.Data.GetFlag(i) == Data.FlagType.Unreached)
@@ -389,25 +417,30 @@ namespace DiztinGUIsh
 
         // DataGridView
 
-        private int viewOffset;
+        private int ViewOffset
+        {
+            get => Project.CurrentViewOffset;
+            set => Project.CurrentViewOffset = value;
+        }
+
         private int rowsToShow;
 
         private void UpdateDataGridView()
         {
-            if (Project.Data.GetROMSize() <= 0) 
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0)
                 return;
 
             rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
             
-            if (viewOffset + rowsToShow > Project.Data.GetROMSize()) 
-                viewOffset = Project.Data.GetROMSize() - rowsToShow;
+            if (ViewOffset + rowsToShow > Project.Data.GetROMSize()) 
+                ViewOffset = Project.Data.GetROMSize() - rowsToShow;
             
-            if (viewOffset < 0)
-                viewOffset = 0;
+            if (ViewOffset < 0)
+                ViewOffset = 0;
             
             vScrollBar1.Enabled = true;
             vScrollBar1.Maximum = Project.Data.GetROMSize() - rowsToShow;
-            vScrollBar1.Value = viewOffset;
+            vScrollBar1.Value = ViewOffset;
             table.RowCount = rowsToShow;
 
             importTraceLogToolStripMenuItem.Enabled = true;
@@ -416,28 +449,28 @@ namespace DiztinGUIsh
 
         private void table_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) 
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) 
                 return;
-            int selRow = table.CurrentCell.RowIndex + viewOffset, selCol = table.CurrentCell.ColumnIndex;
+            int selRow = table.CurrentCell.RowIndex + ViewOffset, selCol = table.CurrentCell.ColumnIndex;
             int amount = e.Delta / 0x18;
-            viewOffset -= amount;
+            ViewOffset -= amount;
             UpdateDataGridView();
-            if (selRow < viewOffset) selRow = viewOffset;
-            else if (selRow >= viewOffset + rowsToShow) selRow = viewOffset + rowsToShow - 1;
-            table.CurrentCell = table.Rows[selRow - viewOffset].Cells[selCol];
+            if (selRow < ViewOffset) selRow = ViewOffset;
+            else if (selRow >= ViewOffset + rowsToShow) selRow = ViewOffset + rowsToShow - 1;
+            table.CurrentCell = table.Rows[selRow - ViewOffset].Cells[selCol];
             InvalidateTable();
         }
 
         private void vScrollBar1_ValueChanged(object sender, EventArgs e)
         {
-            int selOffset = table.CurrentCell.RowIndex + viewOffset;
-            viewOffset = vScrollBar1.Value;
+            int selOffset = table.CurrentCell.RowIndex + ViewOffset;
+            ViewOffset = vScrollBar1.Value;
             UpdateDataGridView();
 
-            if (selOffset < viewOffset) table.CurrentCell = table.Rows[0].Cells[table.CurrentCell.ColumnIndex];
-            else if (selOffset >= viewOffset + rowsToShow)
+            if (selOffset < ViewOffset) table.CurrentCell = table.Rows[0].Cells[table.CurrentCell.ColumnIndex];
+            else if (selOffset >= ViewOffset + rowsToShow)
                 table.CurrentCell = table.Rows[rowsToShow - 1].Cells[table.CurrentCell.ColumnIndex];
-            else table.CurrentCell = table.Rows[selOffset - viewOffset].Cells[table.CurrentCell.ColumnIndex];
+            else table.CurrentCell = table.Rows[selOffset - ViewOffset].Cells[table.CurrentCell.ColumnIndex];
 
             InvalidateTable();
         }
@@ -449,9 +482,9 @@ namespace DiztinGUIsh
 
         private void table_KeyDown(object sender, KeyEventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
 
-            int offset = table.CurrentCell.RowIndex + viewOffset;
+            int offset = table.CurrentCell.RowIndex + ViewOffset;
             int newOffset = offset;
             int amount = 0x01;
 
@@ -538,7 +571,7 @@ namespace DiztinGUIsh
 
         private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
-            int row = e.RowIndex + viewOffset;
+            int row = e.RowIndex + ViewOffset;
             if (row >= Project.Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
@@ -592,7 +625,7 @@ namespace DiztinGUIsh
         {
             string value = e.Value as string;
             int result;
-            int row = e.RowIndex + viewOffset;
+            int row = e.RowIndex + ViewOffset;
             if (row >= Project.Data.GetROMSize()) return;
             switch (e.ColumnIndex)
             {
@@ -715,35 +748,35 @@ namespace DiztinGUIsh
 
         private void table_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            int row = e.RowIndex + viewOffset;
+            int row = e.RowIndex + ViewOffset;
             if (row < 0 || row >= Project.Data.GetROMSize()) return;
-            PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + viewOffset);
+            PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + ViewOffset);
         }
 
         public void SelectOffset(int offset, int column = -1)
         {
             var col = column == -1 ? table.CurrentCell.ColumnIndex : column;
-            if (offset < viewOffset)
+            if (offset < ViewOffset)
             {
-                viewOffset = offset;
+                ViewOffset = offset;
                 UpdateDataGridView();
                 table.CurrentCell = table.Rows[0].Cells[col];
             }
-            else if (offset >= viewOffset + rowsToShow)
+            else if (offset >= ViewOffset + rowsToShow)
             {
-                viewOffset = offset - rowsToShow + 1;
+                ViewOffset = offset - rowsToShow + 1;
                 UpdateDataGridView();
                 table.CurrentCell = table.Rows[rowsToShow - 1].Cells[col];
             }
             else
             {
-                table.CurrentCell = table.Rows[offset - viewOffset].Cells[col];
+                table.CurrentCell = table.Rows[offset - ViewOffset].Cells[col];
             }
         }
 
         private void Step(int offset)
         {
-            Project.UnsavedChanges = true;
+            ProjectController.MarkChanged();;
             SelectOffset(Project.Data.Step(offset, false, false, offset - 1));
             UpdatePercent();
             UpdateWindowTitle();
@@ -751,7 +784,7 @@ namespace DiztinGUIsh
 
         private void StepIn(int offset)
         {
-            Project.UnsavedChanges = true;
+            ProjectController.MarkChanged();
             SelectOffset(Project.Data.Step(offset, true, false, offset - 1));
             UpdatePercent();
             UpdateWindowTitle();
@@ -759,7 +792,7 @@ namespace DiztinGUIsh
 
         private void AutoStepSafe(int offset)
         {
-            Project.UnsavedChanges = true;
+            ProjectController.MarkChanged();
             var destination = Project.Data.AutoStep(offset, false, 0);
             if (MoveWithStep) 
                 SelectOffset(destination);
@@ -773,7 +806,7 @@ namespace DiztinGUIsh
             DialogResult result = harsh.ShowDialog();
             if (result == DialogResult.OK)
             {
-                Project.UnsavedChanges = true;
+                ProjectController.MarkChanged();
                 int destination = Project.Data.AutoStep(harsh.GetOffset(), true, harsh.GetCount());
                 if (MoveWithStep) SelectOffset(destination);
                 UpdatePercent();
@@ -783,7 +816,7 @@ namespace DiztinGUIsh
 
         private void Mark(int offset)
         {
-            Project.UnsavedChanges = true;
+            ProjectController.MarkChanged();
             SelectOffset(Project.Data.Mark(offset, markFlag, Util.TypeStepSize(markFlag)));
             UpdatePercent();
             UpdateWindowTitle();
@@ -796,7 +829,7 @@ namespace DiztinGUIsh
             if (result != DialogResult.OK) 
                 return;
 
-            Project.UnsavedChanges = true;
+            ProjectController.MarkChanged();
 
             var destination = 0;
             var col = mark.GetProperty();
@@ -818,7 +851,7 @@ namespace DiztinGUIsh
                     destination = Project.Data.MarkXFlag(mark.GetOffset(), (bool) mark.GetValue(), mark.GetCount());
                     break;
                 case 5:
-                    destination = Project.Data.MarkArchitechture(mark.GetOffset(), (Data.Architechture) mark.GetValue(),
+                    destination = Project.Data.MarkArchitechture(mark.GetOffset(), (Data.Architecture) mark.GetValue(),
                         mark.GetCount());
                     break;
             }
@@ -846,7 +879,7 @@ namespace DiztinGUIsh
 
         private void GoToUnreached(bool end, bool direction)
         {
-            int offset = table.CurrentCell.RowIndex + viewOffset;
+            int offset = table.CurrentCell.RowIndex + ViewOffset;
             int size = Project.Data.GetROMSize();
             int unreached = end ? (direction ? 0 : size - 1) : offset;
 
@@ -882,34 +915,34 @@ namespace DiztinGUIsh
 
         private void stepOverToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            Step(table.CurrentCell.RowIndex + viewOffset);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            Step(table.CurrentCell.RowIndex + ViewOffset);
         }
 
         private void stepInToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            StepIn(table.CurrentCell.RowIndex + viewOffset);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            StepIn(table.CurrentCell.RowIndex + ViewOffset);
         }
 
         private void autoStepSafeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            AutoStepSafe(table.CurrentCell.RowIndex + viewOffset);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            AutoStepSafe(table.CurrentCell.RowIndex + ViewOffset);
         }
 
         private void autoStepHarshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            AutoStepHarsh(table.CurrentCell.RowIndex + viewOffset);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            AutoStepHarsh(table.CurrentCell.RowIndex + ViewOffset);
         }
 
         private void gotoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) 
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) 
                 return;
 
-            var go = new GotoDialog(viewOffset + table.CurrentCell.RowIndex, Project.Data);
+            var go = new GotoDialog(ViewOffset + table.CurrentCell.RowIndex, Project.Data);
             var result = go.ShowDialog();
             if (result != DialogResult.OK) 
                 return;
@@ -924,8 +957,8 @@ namespace DiztinGUIsh
 
         private void gotoIntermediateAddressToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            GoToIntermediateAddress(table.CurrentCell.RowIndex + viewOffset);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            GoToIntermediateAddress(table.CurrentCell.RowIndex + ViewOffset);
         }
 
         private void gotoFirstUnreachedToolStripMenuItem_Click(object sender, EventArgs e)
@@ -945,14 +978,14 @@ namespace DiztinGUIsh
 
         private void markOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            Mark(table.CurrentCell.RowIndex + viewOffset);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            Mark(table.CurrentCell.RowIndex + ViewOffset);
         }
 
         private void markManyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            MarkMany(table.CurrentCell.RowIndex + viewOffset, 7);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + ViewOffset, 7);
         }
 
         private void addLabelToolStripMenuItem_Click(object sender, EventArgs e)
@@ -963,26 +996,26 @@ namespace DiztinGUIsh
 
         private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            MarkMany(table.CurrentCell.RowIndex + viewOffset, 8);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + ViewOffset, 8);
         }
 
         private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            MarkMany(table.CurrentCell.RowIndex + viewOffset, 9);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + ViewOffset, 9);
         }
 
         private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            MarkMany(table.CurrentCell.RowIndex + viewOffset, 10);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + ViewOffset, 10);
         }
 
         private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) return;
-            MarkMany(table.CurrentCell.RowIndex + viewOffset, 11);
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) return;
+            MarkMany(table.CurrentCell.RowIndex + ViewOffset, 11);
         }
 
         private void addCommentToolStripMenuItem_Click(object sender, EventArgs e)
@@ -993,7 +1026,7 @@ namespace DiztinGUIsh
 
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) 
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) 
                 return;
 
             var mis = new MisalignmentChecker(Project.Data);
@@ -1005,7 +1038,7 @@ namespace DiztinGUIsh
             int count = Project.Data.FixMisalignedFlags();
 
             if (count > 0)
-                Project.UnsavedChanges = true;
+                ProjectController.MarkChanged();
 
             InvalidateTable();
             MessageBox.Show($"Modified {count} flags!", "Done!", 
@@ -1014,7 +1047,7 @@ namespace DiztinGUIsh
 
         private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Project.Data.GetROMSize() <= 0) 
+            if (Project?.Data == null || Project.Data.GetROMSize() <= 0) 
                 return;
 
             var point = new InOutPointChecker();
@@ -1022,7 +1055,7 @@ namespace DiztinGUIsh
                 return;
 
             Project.Data.RescanInOutPoints();
-            Project.UnsavedChanges = true;
+            ProjectController.MarkChanged();
             InvalidateTable();
             MessageBox.Show("Scan complete!", "Done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -1143,7 +1176,7 @@ namespace DiztinGUIsh
             var num_modified_flags = Project.Data.ImportUsageMap(File.ReadAllBytes(openUsageMapFile.FileName));
 
             if (num_modified_flags > 0)
-                Project.UnsavedChanges = true;
+                ProjectController.MarkChanged();
 
             MessageBox.Show($"Modified total {num_modified_flags} flags!", "Done",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1164,7 +1197,7 @@ namespace DiztinGUIsh
             });
 
             if (totalLinesSoFar > 0)
-                Project.UnsavedChanges = true;
+                ProjectController.MarkChanged();
 
             MessageBox.Show(
             $"Modified total {totalLinesSoFar} flags from {openTraceLogDialog.FileNames.Length} files!",

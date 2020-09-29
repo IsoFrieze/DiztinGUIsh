@@ -21,12 +21,31 @@ namespace DiztinGUIsh
             return mode == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000;
         }
 
+        // verify the data in the provided ROM bytes matches the data we expect it to have.
+        // returns error message if it's not identical, or null if everything is OK.
+        public static string IsThisRomIsIdenticalToUs(byte[] rom, 
+            Data.ROMMapMode mode, string internalGameNameMustMatch, int romChecksums)
+        {
+            var offset = Util.GetRomSettingOffset(mode);
+            if (rom.Length <= offset + 10)
+                return "The linked ROM is too small. It can't be opened.";
+
+            var internalGameNameToVerify = Util.ReadStringFromByteArray(rom, 0x15, offset);
+            var checksumToVerify = Util.ByteArrayToInteger(rom, offset + 7);
+
+            if (internalGameNameToVerify != internalGameNameMustMatch)
+                return $"The linked ROM's internal name '{internalGameNameToVerify}' doesn't " +
+                       $"match the project's internal name of '{internalGameNameMustMatch}'.";
+
+            if (checksumToVerify != romChecksums)
+                return $"The linked ROM's checksums '{checksumToVerify:X8}' " +
+                       $"don't match the project's checksums of '{romChecksums:X8}'.";
+
+            return null;
+        }
         public static int ConvertSNESToPC(int address, Data.ROMMapMode mode, int size)
         {
-            int _UnmirroredOffset(int offset)
-            {
-                return Util.UnmirroredOffset(offset, size);
-            }
+            int UnmirroredOffset(int offset) => Util.UnmirroredOffset(offset, size);
 
             // WRAM is N/A to PC addressing
             if ((address & 0xFE0000) == 0x7E0000) return -1;
@@ -41,15 +60,15 @@ namespace DiztinGUIsh
                         // SRAM is N/A to PC addressing
                         if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) return -1;
 
-                        return _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                     }
                 case Data.ROMMapMode.HiROM:
                     {
-                        return _UnmirroredOffset(address & 0x3FFFFF);
+                        return UnmirroredOffset(address & 0x3FFFFF);
                     }
                 case Data.ROMMapMode.SuperMMC:
                     {
-                        return _UnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
+                        return UnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
                     }
                 case Data.ROMMapMode.SA1ROM:
                 case Data.ROMMapMode.ExSA1ROM:
@@ -60,9 +79,9 @@ namespace DiztinGUIsh
                         if (address >= 0xC00000)
                         {
                             if (mode == Data.ROMMapMode.ExSA1ROM)
-                                return _UnmirroredOffset(address & 0x7FFFFF);
+                                return UnmirroredOffset(address & 0x7FFFFF);
                             else
-                                return _UnmirroredOffset(address & 0x3FFFFF);
+                                return UnmirroredOffset(address & 0x3FFFFF);
                         }
                         else
                         {
@@ -71,7 +90,7 @@ namespace DiztinGUIsh
                             // SRAM is N/A to PC addressing
                             if (((address & 0x8000) == 0)) return -1;
 
-                            return _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                            return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                         }
                     }
                 case Data.ROMMapMode.SuperFX:
@@ -81,31 +100,31 @@ namespace DiztinGUIsh
 
                         if (address < 0x400000)
                         {
-                            return _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                            return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                         }
                         else if (address < 0x600000)
                         {
-                            return _UnmirroredOffset(address & 0x3FFFFF);
+                            return UnmirroredOffset(address & 0x3FFFFF);
                         }
                         else if (address < 0xC00000)
                         {
-                            return 0x200000 + _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                            return 0x200000 + UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                         }
                         else
                         {
-                            return 0x400000 + _UnmirroredOffset(address & 0x3FFFFF);
+                            return 0x400000 + UnmirroredOffset(address & 0x3FFFFF);
                         }
                     }
                 case Data.ROMMapMode.ExHiROM:
                     {
-                        return _UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
+                        return UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
                     }
                 case Data.ROMMapMode.ExLoROM:
                     {
                         // SRAM is N/A to PC addressing
                         if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) return -1;
 
-                        return _UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
+                        return UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
                     }
                 default:
                     {
@@ -407,13 +426,26 @@ namespace DiztinGUIsh
             }
         }
 
-        public static string ArchToString(Data.Architechture arch)
+        public static int GetRomSettingOffset(Data.ROMMapMode mode)
+        {
+            return mode switch
+            {
+                Data.ROMMapMode.LoROM => Data.LOROM_SETTING_OFFSET,
+                Data.ROMMapMode.HiROM => Data.HIROM_SETTING_OFFSET,
+                Data.ROMMapMode.ExHiROM => Data.EXHIROM_SETTING_OFFSET,
+                Data.ROMMapMode.ExLoROM => Data.EXLOROM_SETTING_OFFSET,
+                _ => Data.LOROM_SETTING_OFFSET
+            };
+        }
+
+
+        public static string ArchToString(Data.Architecture arch)
         {
             switch (arch)
             {
-                case Data.Architechture.CPU65C816: return "65C816";
-                case Data.Architechture.APUSPC700: return "SPC700";
-                case Data.Architechture.GPUSuperFX: return "SuperFX";
+                case Data.Architecture.CPU65C816: return "65C816";
+                case Data.Architecture.APUSPC700: return "SPC700";
+                case Data.Architecture.GPUSuperFX: return "SuperFX";
             }
             return "";
         }

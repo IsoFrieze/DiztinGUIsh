@@ -45,8 +45,10 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             byte version = data[0];
             ValidateProjectFileVersion(version);
 
-            var project = new Project();
-            project.Data = new Data();
+            var project = new Project
+            {
+                Data = new Data()
+            };
 
             // version 0 needs to convert PC to SNES for some addresses
             Util.AddressConverter converter = address => address;
@@ -83,11 +85,9 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             for (int i = 0; i < size; i++) project.Data.SetXFlag(i, data[pointer + 3 * size + i] != 0);
             for (int i = 0; i < size; i++) project.Data.SetMFlag(i, data[pointer + 4 * size + i] != 0);
             for (int i = 0; i < size; i++) project.Data.SetFlag(i, (Data.FlagType)data[pointer + 5 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetArchitechture(i, (Data.Architechture)data[pointer + 6 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetArchitechture(i, (Data.Architecture)data[pointer + 6 * size + i]);
             for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (Data.InOutPoint)data[pointer + 7 * size + i]);
             pointer += 8 * size;
-
-            // AliasList.me.ResetDataGrid(); // need this outta here.
 
             ReadLabels(project, data, ref pointer, converter, version >= 2);
             ReadComments(project, data, ref pointer, converter);
@@ -132,8 +132,8 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
 
             // save all labels ad comments
             List<byte> label = new List<byte>(), comment = new List<byte>();
-            var all_labels = project.Data.GetAllLabels();
-            var all_comments = project.Data.GetAllComments();
+            var all_labels = project.Data.Labels;
+            var all_comments = project.Data.Comments;
 
             Util.IntegerIntoByteList(all_labels.Count, label);
             foreach (var pair in all_labels)
@@ -167,7 +167,7 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 3 * size + i] = (byte)(project.Data.GetXFlag(i) ? 1 : 0);
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 4 * size + i] = (byte)(project.Data.GetMFlag(i) ? 1 : 0);
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 5 * size + i] = (byte)project.Data.GetFlag(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 6 * size + i] = (byte)project.Data.GetArchitechture(i);
+            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 6 * size + i] = (byte)project.Data.GetArchitecture(i);
             for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 7 * size + i] = (byte)project.Data.GetInOutPoint(i);
             // ???
             label.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size);

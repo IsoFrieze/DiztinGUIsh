@@ -1,163 +1,150 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DiztinGUIsh.window
 {
     public partial class AliasList : Form
     {
-        // single instance
-        private MainWindow mw;
+        private readonly MainWindow parentWindow;
+        private ProjectController ProjectController => parentWindow?.ProjectController;
+        private Data Data => ProjectController?.Project?.Data;
 
-        public bool locked = false;
+        public bool locked;
         private int currentlyEditing = -1;
-
+        
         public AliasList(MainWindow main)
         {
-            mw = main;
+            parentWindow = main;
             InitializeComponent();
-        }
-
-        private void AliasList_Load(object sender, EventArgs e)
-        {
-
         }
 
         private void AliasList_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (e.CloseReason == CloseReason.UserClosing)
-            {
-                e.Cancel = true;
-                this.Hide();
-            }
+            if (e.CloseReason != CloseReason.UserClosing) return;
+            e.Cancel = true;
+            this.Hide();
         }
 
         private void AliasList_Resize(object sender, EventArgs e)
         {
-            int h = Height - 68 - 22;
+            var h = Height - 68 - 22;
             dataGridView1.Height = h;
         }
 
         private void jump_Click(object sender, EventArgs e)
         {
             if (!int.TryParse((string) dataGridView1.SelectedRows[0].Cells[0].Value, NumberStyles.HexNumber, null,
-                out int val)) return;
+                out var val)) return;
 
-            int offset = mw.Project.Data.ConvertSNEStoPC(val);
+            var offset = Data.ConvertSNEStoPC(val);
             if (offset >= 0)
             {
-                mw.SelectOffset(offset);
+                ProjectController.SelectOffset(offset);
             }
         }
 
-        private static void SplitOnFirstComma(string instr, out string first_part, out string remainder)
+        private static void SplitOnFirstComma(string instr, out string firstPart, out string remainder)
         {
             if (!instr.Contains(","))
             {
-                first_part = instr;
+                firstPart = instr;
                 remainder = "";
                 return;
             }
 
-            first_part = instr.Substring(0, instr.IndexOf(','));
+            firstPart = instr.Substring(0, instr.IndexOf(','));
             remainder = instr.Substring(instr.IndexOf(',') + 1);
         }
 
-        private void ImportLabelsFromCSV(bool replaceAll)
+        private void ImportLabelsFromCsv(bool replaceAll)
         {
             var result = openFileDialog1.ShowDialog();
             if (result != DialogResult.OK || openFileDialog1.FileName == "")
                 return;
 
-            int errLine = 0;
+            var errLine = 0;
             try
             {
-                Dictionary<int, Label> newValues = new Dictionary<int, Label>();
-                string[] lines = Util.ReadLines(openFileDialog1.FileName).ToArray();
+                var newValues = new Dictionary<int, Label>();
+                var lines = Util.ReadLines(openFileDialog1.FileName).ToArray();
 
-                Regex valid_label_chars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
+                var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
 
                 // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
                 // section.
-                for (int i = 0; i < lines.Length; i++)
+                for (var i = 0; i < lines.Length; i++)
                 {
-                    var Label = new Label();
+                    var label = new Label();
 
                     errLine = i + 1;
 
                     SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
-                    SplitOnFirstComma(remainder, out Label.name, out Label.comment);
+                    SplitOnFirstComma(remainder, out label.name, out label.comment);
 
-                    Label.CleanUp();
+                    label.CleanUp();
 
-                    Label.name = Label.name.Trim();
-                    if (!valid_label_chars.Match(Label.name).Success)
-                        throw new InvalidDataException("invalid label name: " + Label.name);
+                    label.name = label.name.Trim();
+                    if (!validLabelChars.Match(label.name).Success)
+                        throw new InvalidDataException("invalid label name: " + label.name);
 
-                    newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), Label);
+                    newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), label);
                 }
 
                 // everything read OK, modify the existing list now. point of no return
                 if (replaceAll)
-                    mw.Project.Data.DeleteAllLabels();
+                    Data.DeleteAllLabels();
 
-                ResetDataGrid();
+                ClearAndInvalidateDataGrid();
 
                 // this will call AddRow() to add items back to the UI datagrid.
-                foreach (KeyValuePair<int, Label> pair in newValues)
+                foreach (var pair in newValues)
                 {
-                    mw.Project.Data.AddLabel(pair.Key, pair.Value, true);
+                    Data.AddLabel(pair.Key, pair.Value, true);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
                     "An error occurred while parsing the file.\n" + ex.Message +
-                    (errLine > 0 ? string.Format(" (Check line {0}.)", errLine) : ""),
+                    (errLine > 0 ? $" (Check line {errLine}.)" : ""),
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void export_Click(object sender, EventArgs e)
         {
-            DialogResult result = saveFileDialog1.ShowDialog();
-            if (result == DialogResult.OK && saveFileDialog1.FileName != "")
+            var result = saveFileDialog1.ShowDialog();
+            if (result != DialogResult.OK || saveFileDialog1.FileName == "") return;
+            
+            try
             {
-                try
+                using var sw = new StreamWriter(saveFileDialog1.FileName);
+                foreach (var pair in Data.Labels)
                 {
-                    using (StreamWriter sw = new StreamWriter(saveFileDialog1.FileName))
-                    {
-                        foreach (var pair in mw.Project.Data.GetAllLabels())
-                        {
-                            sw.WriteLine(
-                                $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.name},{pair.Value.comment}");
-                        }
-                    }
-                } catch (Exception)
-                {
-                    MessageBox.Show("An error occurred while saving the file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    sw.WriteLine(
+                        $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.name},{pair.Value.comment}");
                 }
+            } catch (Exception)
+            {
+                MessageBox.Show("An error occurred while saving the file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void dataGridView1_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {
-            if (int.TryParse((string)dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null, out int val))
-            {
-                locked = true;
-                mw.Project.Data.AddLabel(val, null, true);
-                locked = false;
-                mw.InvalidateTable();
-            }
+            if (!int.TryParse((string) dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null,
+                out var val)) return;
+            locked = true;
+            Data.AddLabel(val, null, true);
+            locked = false;
+            parentWindow.InvalidateTable(); // TODO: move to mainwindow, use notifychanged in mainwindow for this
         }
 
         private void dataGridView1_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
@@ -174,7 +161,7 @@ namespace DiztinGUIsh.window
         private void dataGridView1_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
         {
             if (dataGridView1.Rows[e.RowIndex].IsNewRow) return;
-            int val = -1;
+            var val = -1;
             int.TryParse((string)dataGridView1.Rows[e.RowIndex].Cells[0].Value, NumberStyles.HexNumber, null, out var oldAddress);
 
             var labelLabel = new Label
@@ -193,11 +180,11 @@ namespace DiztinGUIsh.window
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "Must enter a valid hex address.";
-                        } else if (oldAddress == -1 && mw.Project.Data.GetAllLabels().ContainsKey(val))
+                        } else if (oldAddress == -1 && Data.Labels.ContainsKey(val))
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "This address already has a label.";
-                            var x = mw.Project.Data.GetAllLabels();
+                            var x = Data.Labels;
                             Console.WriteLine(Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal));
                         } else if (dataGridView1.EditingControl != null)
                         {
@@ -224,41 +211,45 @@ namespace DiztinGUIsh.window
             locked = true;
             if (currentlyEditing >= 0)
             {
-                if (val >= 0) mw.Project.Data.AddLabel(oldAddress, null, true);
-                mw.Project.Data.AddLabel(val, labelLabel, true);
+                if (val >= 0) Data.AddLabel(oldAddress, null, true);
+                Data.AddLabel(val, labelLabel, true);
             }
             locked = false;
 
             currentlyEditing = -1;
-            mw.InvalidateTable();
+            parentWindow.InvalidateTable();  // TODO: move to mainwindow, use notifychanged in mainwindow for this
         }
 
         public void AddRow(int address, Label alias)
         {
-            if (!locked)
-            {
-                dataGridView1.Rows.Add(Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6), alias.name, alias.comment);
-                dataGridView1.Invalidate();
-            }
+            if (locked) 
+                return;
+            RawAdd(address, alias);
+            dataGridView1.Invalidate();
+        }
+
+        private void RawAdd(int address, Label alias)
+        {
+            dataGridView1.Rows.Add(Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6), alias.name, alias.comment);
         }
 
         public void RemoveRow(int address)
         {
-            if (!locked)
+            if (locked) 
+                return;
+
+            for (var index = 0; index < dataGridView1.Rows.Count; index++)
             {
-                for (int index = 0; index < dataGridView1.Rows.Count; index++)
-                {
-                    if ((string)dataGridView1.Rows[index].Cells[0].Value == Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6))
-                    {
-                        dataGridView1.Rows.RemoveAt(index);
-                        dataGridView1.Invalidate();
-                        break;
-                    }
-                }
+                if ((string) dataGridView1.Rows[index].Cells[0].Value !=
+                    Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6)) continue;
+
+                dataGridView1.Rows.RemoveAt(index);
+                dataGridView1.Invalidate();
+                break;
             }
         }
 
-        public void ResetDataGrid()
+        public void ClearAndInvalidateDataGrid()
         {
             dataGridView1.Rows.Clear();
             dataGridView1.Invalidate();
@@ -274,7 +265,7 @@ namespace DiztinGUIsh.window
                             "Continue?\n", "Warning", MessageBoxButtons.OKCancel) != DialogResult.OK)
                 return;
 
-            ImportLabelsFromCSV(false);
+            ImportLabelsFromCsv(false);
         }
 
         private void btnImportReplace_Click(object sender, EventArgs e)
@@ -284,7 +275,55 @@ namespace DiztinGUIsh.window
                                 "Continue?\n", "Warning", MessageBoxButtons.OKCancel) != DialogResult.OK)
                 return;
 
-            ImportLabelsFromCSV(true);
+            ImportLabelsFromCsv(true);
+        }
+
+        public void RebindProject()
+        {
+            RepopulateFromData();
+
+            // todo: eventually use databinding/datasource, probably.
+            Data.Labels.PropertyChanged += Labels_PropertyChanged;
+            Data.Labels.CollectionChanged += Labels_CollectionChanged;
+        }
+
+        private void RepopulateFromData()
+        {
+            ClearAndInvalidateDataGrid();
+
+            if (Data == null)
+                return;
+
+            // TODO: replace with winforms databinding eventually
+            foreach (var item in Data.Labels)
+            {
+                RawAdd(item.Key, item.Value);
+            }
+            dataGridView1.Invalidate();
+        }
+
+        private void Labels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (KeyValuePair<int, Label> item in e.NewItems)
+                {
+                    AddRow(item.Key, item.Value);
+                }
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (KeyValuePair<int, Label> item in e.OldItems)
+                {
+                    RemoveRow(item.Key);
+                }
+            }
+        }
+
+        private void Labels_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // if needed, catch any changes to label content here
         }
     }
 }

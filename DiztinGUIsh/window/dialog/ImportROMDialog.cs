@@ -25,7 +25,7 @@ namespace DiztinGUIsh
         private TextBox[,] vectors;
         private CheckBox[,] checkboxes;
 
-        public Project.ImportRomSettings PromptForImportSettings(string filename)
+        public Project.ImportRomSettings? PromptForImportSettings(string filename)
         {
             importSettings = new Project.ImportRomSettings
             {
@@ -38,7 +38,7 @@ namespace DiztinGUIsh
             UpdateOffsetAndSpeed();
 
             if (ShowDialog() != DialogResult.OK)
-                importSettings = null;
+                return null;
 
             importSettings.InitialLabels = GetGeneratedLabels();
             importSettings.InitialHeaderFlags = GetHeaderFlags();
@@ -152,7 +152,7 @@ namespace DiztinGUIsh
 
         private void UpdateOffsetAndSpeed()
         {
-            offset = Data.GetRomSettingOffset(importSettings.ROMMapMode);
+            offset = Util.GetRomSettingOffset(importSettings.ROMMapMode);
             if (offset >= importSettings.rom_bytes.Length)
             {
                 importSettings.ROMSpeed = Data.ROMSpeed.Unknown;

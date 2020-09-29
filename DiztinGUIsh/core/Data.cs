@@ -1,34 +1,15 @@
-﻿using DiztinGUIsh.window;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
+using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
 {
     public class Data
     {
-        // Note: order of these properties matters for the load/save process. Keep 'RomBytes' LAST
-        // TODO: should be a way in the XML serializer to control the order, remove this comment
-        // when we figure it out.
-        public ROMMapMode RomMapMode { get; set; }
-        public ROMSpeed RomSpeed { get; set; }
-        public Dictionary<int, string> Comments { get; set; }
-        public Dictionary<int, Label> Labels { get; set; }
-        public RomBytes RomBytes { get; set; }
-
-        private CPU65C816 CPU65C816 { get; set; }
-
-        public Data()
-        {
-            CPU65C816 = new CPU65C816(this);
-        }
-
         public enum FlagType : byte
         {
             Unreached = 0x00,
@@ -47,7 +28,7 @@ namespace DiztinGUIsh
             Text = 0x60
         }
 
-        public enum Architechture : byte
+        public enum Architecture : byte
         {
             CPU65C816 = 0x00,
             APUSPC700 = 0x01,
@@ -91,29 +72,45 @@ namespace DiztinGUIsh
             EXHIROM_SETTING_OFFSET = 0x40FFD5,
             EXLOROM_SETTING_OFFSET = 0x407FD5;
 
+        // Note: order of these properties matters for the load/save process. Keep 'RomBytes' LAST
+        // TODO: should be a way in the XML serializer to control the order, remove this comment
+        // when we figure it out.
+        public ROMMapMode RomMapMode { get; set; }
+        public ROMSpeed RomSpeed { get; set; }
+        public ObservableDictionary<int, string> Comments { get; set; } = new ObservableDictionary< int, string>();
+        public ObservableDictionary<int, Label> Labels { get; set; } = new ObservableDictionary< int, Label>();
+        public RomBytes RomBytes { get; set; } = new RomBytes();
 
-        public void Initiate(byte[] data, ROMMapMode mode, ROMSpeed speed)
+        private CPU65C816 CPU65C816 { get; set; }
+
+        public Data()
+        {
+            CPU65C816 = new CPU65C816(this);
+            romMemoryOp = new Func<int, int>[] {GetROMByte, GetROMWord, GetROMLong, GetROMDoubleWord};
+        }
+
+        public void Initiate(byte[] actualRomBytes, Data.ROMMapMode mode, Data.ROMSpeed speed)
         {
             RomMapMode = mode;
             RomSpeed = speed;
-            int size = data.Length;
-            Labels = new Dictionary<int, Label>();
-            Comments = new Dictionary<int, string>();
-            RomBytes = new RomBytes();
-            for (int i = 0; i < size; i++)
+            CreateRomBytesFromRom(actualRomBytes);
+        }
+
+        private void CreateRomBytesFromRom(IEnumerable<byte> actualRomBytes)
+        {
+            foreach (var fileByte in actualRomBytes)
             {
-                var r = new ROMByte
+                RomBytes.Add(new ROMByte
                 {
-                    Rom = data[i],
+                    Rom = fileByte,
                     DataBank = 0,
                     DirectPage = 0,
                     XFlag = false,
                     MFlag = false,
-                    TypeFlag = FlagType.Unreached,
-                    Arch = Architechture.CPU65C816,
+                    TypeFlag = Data.FlagType.Unreached,
+                    Arch = Data.Architecture.CPU65C816,
                     Point = 0
-                };
-                RomBytes.Add(r);
+                });
             }
         }
 
@@ -128,7 +125,7 @@ namespace DiztinGUIsh
 
         public string GetRomNameFromRomBytes()
         {
-            return System.Text.Encoding.UTF8.GetString(GetRomBytes(0xFFC0, 21));
+            return Encoding.UTF8.GetString(GetRomBytes(0xFFC0, 21));
         }
 
         public int GetRomCheckSumsFromRomBytes()
@@ -146,117 +143,33 @@ namespace DiztinGUIsh
             }
         }
 
-        public ROMMapMode GetROMMapMode()
-        {
-            return RomMapMode;
-        }
-
-        public ROMSpeed GetROMSpeed()
-        {
-            return RomSpeed;
-        }
-
-        public RomBytes GetTable()
-        {
-            return RomBytes;
-        }
-
-        public int GetROMByte(int i)
-        {
-            return RomBytes[i].Rom;
-        }
-
-        public int GetROMSize()
-        {
-            return RomBytes?.Count ?? 0;
-        }
-
-        public FlagType GetFlag(int i)
-        {
-            return RomBytes[i].TypeFlag;
-        }
-
-        public void SetFlag(int i, FlagType flag)
-        {
-            RomBytes[i].TypeFlag = flag;
-        }
-
-        public Architechture GetArchitechture(int i)
-        {
-            return RomBytes[i].Arch;
-        }
-
-        public void SetArchitechture(int i, Architechture arch)
-        {
-            RomBytes[i].Arch = arch;
-        }
-
-        public InOutPoint GetInOutPoint(int i)
-        {
-            return RomBytes[i].Point;
-        }
-
-        public void SetInOutPoint(int i, InOutPoint point)
-        {
-            RomBytes[i].Point |= point;
-        }
-
-        public void ClearInOutPoint(int i)
-        {
-            RomBytes[i].Point = 0;
-        }
-
-        public int GetDataBank(int i)
-        {
-            return RomBytes[i].DataBank;
-        }
-
-        public void SetDataBank(int i, int dbank)
-        {
-            RomBytes[i].DataBank = (byte)dbank;
-        }
-
-        public int GetDirectPage(int i)
-        {
-            return RomBytes[i].DirectPage;
-        }
-
-        public void SetDirectPage(int i, int dpage)
-        {
-            RomBytes[i].DirectPage = 0xFFFF & dpage;
-        }
-
-        public bool GetXFlag(int i)
-        {
-            return RomBytes[i].XFlag;
-        }
-
-        public void SetXFlag(int i, bool x)
-        {
-            RomBytes[i].XFlag = x;
-        }
-
-        public bool GetMFlag(int i)
-        {
-            return RomBytes[i].MFlag;
-        }
-
-        public void SetMFlag(int i, bool m)
-        {
-            RomBytes[i].MFlag = m;
-        }
-
+        public int GetROMSize() => RomBytes?.Count ?? 0;
+        public ROMMapMode GetROMMapMode() => RomMapMode;
+        public ROMSpeed GetROMSpeed() => RomSpeed;
+        public FlagType GetFlag(int i) => RomBytes[i].TypeFlag;
+        public void SetFlag(int i, FlagType flag) => RomBytes[i].TypeFlag = flag;
+        public Architecture GetArchitecture(int i) => RomBytes[i].Arch;
+        public void SetArchitechture(int i, Architecture arch) => RomBytes[i].Arch = arch;
+        public InOutPoint GetInOutPoint(int i) => RomBytes[i].Point;
+        public void SetInOutPoint(int i, InOutPoint point) => RomBytes[i].Point |= point;
+        public void ClearInOutPoint(int i) => RomBytes[i].Point = 0;
+        public int GetDataBank(int i) => RomBytes[i].DataBank;
+        public void SetDataBank(int i, int dbank) => RomBytes[i].DataBank = (byte)dbank;
+        public int GetDirectPage(int i) => RomBytes[i].DirectPage;
+        public void SetDirectPage(int i, int dpage) => RomBytes[i].DirectPage = 0xFFFF & dpage;
+        public bool GetXFlag(int i) => RomBytes[i].XFlag;
+        public void SetXFlag(int i, bool x) => RomBytes[i].XFlag = x;
+        public bool GetMFlag(int i) => RomBytes[i].MFlag;
+        public void SetMFlag(int i, bool m) => RomBytes[i].MFlag = m;
         public int GetMXFlags(int i)
         {
             return (RomBytes[i].MFlag ? 0x20 : 0) | (RomBytes[i].XFlag ? 0x10 : 0);
         }
-
         public void SetMXFlags(int i, int mx)
         {
             RomBytes[i].MFlag = ((mx & 0x20) != 0);
             RomBytes[i].XFlag = ((mx & 0x10) != 0);
         }
-
         public string GetLabelName(int i)
         {
             if (Labels.TryGetValue(i, out var val)) 
@@ -277,42 +190,31 @@ namespace DiztinGUIsh
             Labels.Clear();
         }
 
-        public void AddLabel(int i, Label v, bool overwrite)
+        public void AddLabel(int offset, Label label, bool overwrite)
         {
-            if (v == null)
+            // adding null label removes it
+            if (label == null)
             {
-                if (Labels.ContainsKey(i))
-                {
-                    Labels.Remove(i);
-                    // TODO: notify observers     AliasList.me.RemoveRow(i);
-                }
-            } else {
-                if (Labels.ContainsKey(i) && overwrite)
-                {
-                    Labels.Remove(i);
-                    // // TODO: notify observers     AliasList.me.RemoveRow(i);
-                }
+                if (Labels.ContainsKey(offset))
+                    Labels.Remove(offset);
 
-                if (Labels.ContainsKey(i)) 
-                    return;
+                return;
+            }
 
-                v.CleanUp();
+            if (overwrite)
+            {
+                if (Labels.ContainsKey(offset))
+                    Labels.Remove(offset);
+            }
 
-                Labels.Add(i, v);
-                // // TODO: notify observers     AliasList.me.AddRow(i, v);
+            if (!Labels.ContainsKey(offset))
+            {
+                label.CleanUp();
+                Labels.Add(offset, label);
             }
         }
 
-        public Dictionary<int, Label> GetAllLabels()
-        {
-            return Labels;
-        }
-
-        public string GetComment(int i)
-        {
-            return Comments.TryGetValue(i, out var val) ? val : "";
-        }
-
+        public string GetComment(int i) => Comments.TryGetValue(i, out var val) ? val : "";
         public void AddComment(int i, string v, bool overwrite)
         {
             if (v == null)
@@ -325,50 +227,29 @@ namespace DiztinGUIsh
             }
         }
 
-        public Dictionary<int, string> GetAllComments()
-        {
-            return Comments;
-        }
-
-        public static int GetRomSettingOffset(ROMMapMode mode)
-        {
-            switch (mode)
-            {
-                case ROMMapMode.LoROM: return LOROM_SETTING_OFFSET;
-                case ROMMapMode.HiROM: return HIROM_SETTING_OFFSET;
-                case ROMMapMode.ExHiROM: return EXHIROM_SETTING_OFFSET;
-                case ROMMapMode.ExLoROM: return EXLOROM_SETTING_OFFSET;
-            }
-            return LOROM_SETTING_OFFSET;
-        }
-
-
         public int ConvertPCtoSNES(int offset)
         {
             return Util.ConvertPCtoSNES(offset, RomMapMode, GetROMSpeed());
         }
-
+        public int GetROMByte(int i) => RomBytes[i].Rom;
         public int GetROMWord(int offset)
         {
             if (offset + 1 < GetROMSize())
                 return GetROMByte(offset) + (GetROMByte(offset + 1) << 8);
             return -1;
         }
-
         public int GetROMLong(int offset)
         {
             if (offset + 2 < GetROMSize())
                 return GetROMByte(offset) + (GetROMByte(offset + 1) << 8) + (GetROMByte(offset + 2) << 16);
             return -1;
         }
-
         public int GetROMDoubleWord(int offset)
         {
             if (offset + 3 < GetROMSize())
                 return GetROMByte(offset) + (GetROMByte(offset + 1) << 8) + (GetROMByte(offset + 2) << 16) + (GetROMByte(offset + 3) << 24);
             return -1;
         }
-
         public int GetIntermediateAddressOrPointer(int offset)
         {
             switch (GetFlag(offset))
@@ -388,14 +269,13 @@ namespace DiztinGUIsh
 
         public int OpcodeByteLength(int offset)
         {
-            switch (GetArchitechture(offset))
+            return GetArchitecture(offset) switch
             {
-                case Data.Architechture.CPU65C816: return CPU65C816.GetInstructionLength(offset);
-                case Data.Architechture.APUSPC700: return 1;
-                case Data.Architechture.GPUSuperFX: return 1;
-            }
-
-            return 1;
+                Data.Architecture.CPU65C816 => CPU65C816.GetInstructionLength(offset),
+                Data.Architecture.APUSPC700 => 1,
+                Data.Architecture.GPUSuperFX => 1,
+                _ => 1
+            };
         }
 
         private int UnmirroredOffset(int offset)
@@ -405,22 +285,22 @@ namespace DiztinGUIsh
 
         public string GetFormattedBytes(int offset, int step, int bytes)
         {
-            string res = "";
-            switch (step)
+            var res = step switch
             {
-                case 1: res = "db "; break;
-                case 2: res = "dw "; break;
-                case 3: res = "dl "; break;
-                case 4: res = "dd "; break;
-            }
+                1 => "db ",
+                2 => "dw ",
+                3 => "dl ",
+                4 => "dd ",
+                _ => ""
+            };
 
-            for (int i = 0; i < bytes; i += step)
+            for (var i = 0; i < bytes; i += step)
             {
                 if (i > 0) res += ",";
 
                 switch (step)
                 {
-                    case 1: res += Util.NumberToBaseString(GetROMByte(offset + i), Util.NumberBase.Hexadecimal, 2, true); break;
+                    case 1: res += NumberToBaseString(offset + i, step); break;
                     case 2: res += Util.NumberToBaseString(GetROMWord(offset + i), Util.NumberBase.Hexadecimal, 4, true); break;
                     case 3: res += Util.NumberToBaseString(GetROMLong(offset + i), Util.NumberBase.Hexadecimal, 6, true); break;
                     case 4: res += Util.NumberToBaseString(GetROMDoubleWord(offset + i), Util.NumberBase.Hexadecimal, 8, true); break;
@@ -428,6 +308,14 @@ namespace DiztinGUIsh
             }
 
             return res;
+        }
+
+        private readonly Func<int, int>[] romMemoryOp;
+
+        private string NumberToBaseString(int offset, int num_bytes)
+        {
+            return Util.NumberToBaseString(romMemoryOp[num_bytes](offset), 
+                Util.NumberBase.Hexadecimal, num_bytes*2, true);
         }
 
         public int ConvertSNEStoPC(int address)
@@ -474,18 +362,20 @@ namespace DiztinGUIsh
         public string GetDefaultLabel(int offset)
         {
             var snes = ConvertPCtoSNES(offset);
-            return string.Format("{0}_{1}", Util.TypeToLabel(GetFlag(offset)), Util.NumberToBaseString(snes, Util.NumberBase.Hexadecimal, 6));
+            var prefix = Util.TypeToLabel(GetFlag(offset));
+            var labelAddress = Util.NumberToBaseString(snes, Util.NumberBase.Hexadecimal, 6);
+            return $"{prefix}_{labelAddress}";
         }
 
         public int Step(int offset, bool branch, bool force, int prevOffset)
         {
-            switch (GetArchitechture(offset))
+            return GetArchitecture(offset) switch
             {
-                case Data.Architechture.CPU65C816: return CPU65C816.Step(offset, branch, force, prevOffset);
-                case Data.Architechture.APUSPC700: return offset;
-                case Data.Architechture.GPUSuperFX: return offset;
-            }
-            return offset;
+                Data.Architecture.CPU65C816 => CPU65C816.Step(offset, branch, force, prevOffset),
+                Data.Architecture.APUSPC700 => offset,
+                Data.Architecture.GPUSuperFX => offset,
+                _ => offset
+            };
         }
 
         public int AutoStep(int offset, bool harsh, int amount)
@@ -502,15 +392,15 @@ namespace DiztinGUIsh
             }
             else
             {
-                Stack<int> stack = new Stack<int>();
-                List<int> seenBranches = new List<int>();
-                bool keepGoing = true;
+                var stack = new Stack<int>();
+                var seenBranches = new List<int>();
+                var keepGoing = true;
 
                 while (keepGoing)
                 {
-                    switch (GetArchitechture(newOffset))
+                    switch (GetArchitecture(newOffset))
                     {
-                        case Data.Architechture.CPU65C816:
+                        case Data.Architecture.CPU65C816:
                             if (seenBranches.Contains(newOffset))
                             {
                                 keepGoing = false;
@@ -573,15 +463,15 @@ namespace DiztinGUIsh
                                 newOffset = nextOffset;
                             }
                             break;
-                        case Data.Architechture.APUSPC700:
-                        case Data.Architechture.GPUSuperFX:
+                        case Data.Architecture.APUSPC700:
+                        case Data.Architecture.GPUSuperFX:
                             nextOffset = Step(newOffset, false, true, prevOffset);
                             prevOffset = newOffset;
                             newOffset = nextOffset;
                             break;
                     }
 
-                    Data.FlagType flag = GetFlag(newOffset);
+                    var flag = GetFlag(newOffset);
                     if (!(flag == Data.FlagType.Unreached || flag == Data.FlagType.Opcode || flag == Data.FlagType.Operand)) keepGoing = false;
                 }
             }
@@ -623,7 +513,7 @@ namespace DiztinGUIsh
             return offset + i < size ? offset + i : size - 1;
         }
 
-        public int MarkArchitechture(int offset, Data.Architechture arch, int count)
+        public int MarkArchitechture(int offset, Data.Architecture arch, int count)
         {
             int i, size = GetROMSize();
             for (i = 0; i < count && offset + i < size; i++) SetArchitechture(offset + i, arch);
@@ -632,54 +522,61 @@ namespace DiztinGUIsh
 
         public int GetInstructionLength(int offset)
         {
-            switch (GetArchitechture(offset))
+            return GetArchitecture(offset) switch
             {
-                case Data.Architechture.CPU65C816: return CPU65C816.GetInstructionLength(offset);
-                case Data.Architechture.APUSPC700: return 1;
-                case Data.Architechture.GPUSuperFX: return 1;
-            }
-            return 1;
+                Data.Architecture.CPU65C816 => CPU65C816.GetInstructionLength(offset),
+                Data.Architecture.APUSPC700 => 1,
+                Data.Architecture.GPUSuperFX => 1,
+                _ => 1
+            };
         }
 
         public int FixMisalignedFlags()
         {
             int count = 0, size = GetROMSize();
 
-            for (int i = 0; i < size; i++)
+            for (var i = 0; i < size; i++)
             {
-                Data.FlagType flag = GetFlag(i);
+                var flag = GetFlag(i);
 
-                if (flag == Data.FlagType.Opcode)
+                switch (flag)
                 {
-                    int len = GetInstructionLength(i);
-                    for (int j = 1; j < len && i + j < size; j++)
+                    case FlagType.Opcode:
                     {
-                        if (GetFlag(i + j) != Data.FlagType.Operand)
+                        int len = GetInstructionLength(i);
+                        for (var j = 1; j < len && i + j < size; j++)
                         {
-                            SetFlag(i + j, Data.FlagType.Operand);
-                            count++;
+                            if (GetFlag(i + j) != Data.FlagType.Operand)
+                            {
+                                SetFlag(i + j, Data.FlagType.Operand);
+                                count++;
+                            }
                         }
+                        i += len - 1;
+                        break;
                     }
-                    i += len - 1;
-                }
-                else if (flag == Data.FlagType.Operand)
-                {
-                    SetFlag(i, Data.FlagType.Opcode);
-                    count++;
-                    i--;
-                }
-                else if (Util.TypeStepSize(flag) > 1)
-                {
-                    int step = Util.TypeStepSize(flag);
-                    for (int j = 1; j < step; j++)
+                    case Data.FlagType.Operand:
+                        SetFlag(i, Data.FlagType.Opcode);
+                        count++;
+                        i--;
+                        break;
+                    default:
                     {
-                        if (GetFlag(i + j) != flag)
+                        if (Util.TypeStepSize(flag) > 1)
                         {
-                            SetFlag(i + j, flag);
-                            count++;
+                            int step = Util.TypeStepSize(flag);
+                            for (int j = 1; j < step; j++)
+                            {
+                                if (GetFlag(i + j) == flag) 
+                                    continue;
+                                SetFlag(i + j, flag);
+                                count++;
+                            }
+                            i += step - 1;
                         }
+
+                        break;
                     }
-                    i += step - 1;
                 }
             }
 
@@ -694,16 +591,17 @@ namespace DiztinGUIsh
             {
                 if (GetFlag(i) == Data.FlagType.Opcode)
                 {
-                    switch (GetArchitechture(i))
+                    switch (GetArchitecture(i))
                     {
-                        case Data.Architechture.CPU65C816: CPU65C816.MarkInOutPoints(i); break;
-                        case Data.Architechture.APUSPC700: break;
-                        case Data.Architechture.GPUSuperFX: break;
+                        case Data.Architecture.CPU65C816: CPU65C816.MarkInOutPoints(i); break;
+                        case Data.Architecture.APUSPC700: break;
+                        case Data.Architecture.GPUSuperFX: break;
                     }
                 }
             }
         }
 
+        // move out of here to extension method or just external method
         public int ImportUsageMap(byte[] usageMap)
         {
             int size = GetROMSize();
@@ -762,24 +660,24 @@ namespace DiztinGUIsh
         public int GetIntermediateAddress(int offset, bool resolve = false)
         {
             // FIX ME: log and generation of dp opcodes. search references
-            switch (GetArchitechture(offset))
+            return GetArchitecture(offset) switch
             {
-                case Data.Architechture.CPU65C816: return CPU65C816.GetIntermediateAddress(offset, resolve);
-                case Data.Architechture.APUSPC700: return -1;
-                case Data.Architechture.GPUSuperFX: return -1;
-            }
-            return -1;
+                Data.Architecture.CPU65C816 => CPU65C816.GetIntermediateAddress(offset, resolve),
+                Data.Architecture.APUSPC700 => -1,
+                Data.Architecture.GPUSuperFX => -1,
+                _ => -1
+            };
         }
 
         public string GetInstruction(int offset)
         {
-            switch (GetArchitechture(offset))
+            return GetArchitecture(offset) switch
             {
-                case Data.Architechture.CPU65C816: return CPU65C816.GetInstruction(offset);
-                case Data.Architechture.APUSPC700: return "";
-                case Data.Architechture.GPUSuperFX: return "";
-            }
-            return "";
+                Data.Architecture.CPU65C816 => CPU65C816.GetInstruction(offset),
+                Data.Architecture.APUSPC700 => "",
+                Data.Architecture.GPUSuperFX => "",
+                _ => ""
+            };
         }
 
         // this class exists for performance optimization ONLY.
@@ -873,46 +771,6 @@ namespace DiztinGUIsh
             return modified;
         }
 
-        public void ImportBizHawkCDL(BizHawkCdl cdl)
-        {
-            if (!cdl.TryGetValue("CARTROM", out var cdlRomFlags))
-            {
-                throw new InvalidDataException("The CDL file does not contain CARTROM block.");
-            }
-
-            var size = Math.Min(cdlRomFlags.Count, GetROMSize());
-            bool m = false;
-            bool x = false;
-            for (var offset = 0; offset < size; offset++)
-            {
-                var cdlFlag = cdlRomFlags[offset];
-                if (cdlFlag == BizHawkCdl.Flag.None)
-                    continue;
-
-                var type = Data.FlagType.Unreached;
-                if ((cdlFlag & BizHawkCdl.Flag.ExecFirst) != 0)
-                {
-                    type = Data.FlagType.Opcode;
-                    m = (cdlFlag & BizHawkCdl.Flag.CPUMFlag) != 0;
-                    x = (cdlFlag & BizHawkCdl.Flag.CPUXFlag) != 0;
-                }
-                else if ((cdlFlag & BizHawkCdl.Flag.ExecOperand) != 0)
-                    type = Data.FlagType.Operand;
-                else if ((cdlFlag & BizHawkCdl.Flag.CPUData) != 0)
-                    type = Data.FlagType.Data8Bit;
-                else if ((cdlFlag & BizHawkCdl.Flag.DMAData) != 0)
-                    type = Data.FlagType.Data8Bit;
-                Mark(offset, type, 1);
-
-                if (type == Data.FlagType.Opcode || type == Data.FlagType.Operand)
-                {
-                    // Operand reuses the last M and X flag values used in Opcode,
-                    // since BizHawk CDL records M and X flags only in Opcode.
-                    MarkMFlag(offset, m, 1);
-                    MarkXFlag(offset, x, 1);
-                }
-            }
-        }
         #region Equality
         protected bool Equals(Data other)
         {

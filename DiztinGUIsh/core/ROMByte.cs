@@ -48,7 +48,7 @@ namespace DiztinGUIsh
         public bool XFlag { get; set; }
         public bool MFlag { get; set; }
         public Data.FlagType TypeFlag { get; set; }
-        public Data.Architechture Arch { get; set; }
+        public Data.Architecture Arch { get; set; }
         public Data.InOutPoint Point { get; set; }
     }
 }

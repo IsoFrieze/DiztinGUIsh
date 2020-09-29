@@ -324,7 +324,7 @@ namespace DiztinGUIsh.loadsave.xml_serializer
             newByte.DirectPage = int.Parse(line.Substring(4, 4), asHex);
             var o2_str = byte.Parse(line.Substring(8, 1), asHex);
 
-            newByte.Arch = (Data.Architechture)((o2_str >> 0) & 0x3);
+            newByte.Arch = (Data.Architecture)((o2_str >> 0) & 0x3);
 
             var otherFlags1 = DecodeHackyBase64(o1_str);
             Debug.Assert(EncodeHackyBase64(otherFlags1) == o1_str);

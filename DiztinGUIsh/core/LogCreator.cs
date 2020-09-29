@@ -61,7 +61,7 @@ namespace DiztinGUIsh
         private class AssemblerHandler : Attribute
         {
             public string token;
-            public int weight;
+            public int length;
         }
 
         public StreamWriter StreamOutput { get; set; }
@@ -106,7 +106,7 @@ namespace DiztinGUIsh
             {
                 var assemblerHandler = method.GetCustomAttribute<AssemblerHandler>();
                 var token = assemblerHandler.token;
-                var weight = assemblerHandler.weight;
+                var length = assemblerHandler.length;
 
                 // check your method signature if you hit this stuff.
                 Debug.Assert(method.GetParameters().Length == 2);
@@ -119,7 +119,7 @@ namespace DiztinGUIsh
 
                 Debug.Assert(method.ReturnType == typeof(string));
 
-                parameters.Add(token, (new Tuple<MethodInfo, int>(method, weight)));
+                parameters.Add(token, (new Tuple<MethodInfo, int>(method, length)));
             }
 
             Debug.Assert(parameters.Count != 0);
@@ -127,12 +127,12 @@ namespace DiztinGUIsh
 
         public string GetParameter(int offset, string parameter, int length)
         {
-            if (!Parameters.TryGetValue(parameter, out var methodAndWeight))
+            if (!Parameters.TryGetValue(parameter, out var methodAndLength))
             {
                 throw new InvalidDataException($"Unknown parameter: {parameter}");
             }
 
-            var methodInfo = methodAndWeight.Item1;
+            var methodInfo = methodAndLength.Item1;
             var callParams = new object[] { offset, length };
 
             var returnValue = methodInfo.Invoke(this, callParams);
@@ -146,10 +146,16 @@ namespace DiztinGUIsh
             bankSize = Util.GetBankSize(Data.RomMapMode);
             errorCount = 0;
 
+            // TODO: this label combination isn't working well. fix.
+            // could create a copy of the data in the controller before we get here and
+            // pass that in. unsubscribe all the notify events from it first.
+            // ehhhh... is that a little weird... maybe.
+            //
+            // maybe just clone the list and use the local list instead, remove subscribes from just that.
             AddLabelSource(Data.Labels);
             AddLabelSource(ExtraLabels);
+
             AddTemporaryLabels();
-            // GenerateAdditionalExtraLabels();
 
             usedLabels = new List<int>();
 
@@ -161,6 +167,8 @@ namespace DiztinGUIsh
             int bank = -1;
 
             // show a progress bar while this happens
+            // TODO: this is view stuff, keep it out of here.
+            // call controller with "LongRunningTask"
             ProgressBarJob.Loop(size, () =>
             {
                 if (pointer >= size)
@@ -205,9 +213,9 @@ namespace DiztinGUIsh
             return pointer;
         }
 
-        private List<Dictionary<int, Label>> LabelSources { get; set; } = new List<Dictionary<int, Label>>();
+        private List<IDictionary<int, Label>> LabelSources { get; set; } = new List<IDictionary<int, Label>>();
 
-        public void AddLabelSource(Dictionary<int, Label> labelSource)
+        public void AddLabelSource(IDictionary<int, Label> labelSource)
         {
             LabelSources.Add(labelSource);
         }
@@ -391,7 +399,7 @@ namespace DiztinGUIsh
             }
 
             var c1 = (Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0;
-            var c2 = (Data.GetAllLabels().TryGetValue(pointer, out var label) && label.name.Length > 0);
+            var c2 = (Data.Labels.TryGetValue(pointer, out var label) && label.name.Length > 0);
             if (c1 || c2)
                 StreamOutput.WriteLine(GetLine(pointer, "empty"));
 
@@ -407,7 +415,7 @@ namespace DiztinGUIsh
             var listToPrint = new Dictionary<int, Label>();
 
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
-            foreach (var pair in Data.GetAllLabels())
+            foreach (var pair in Data.Labels)
             {
                 if (usedLabels.Contains(pair.Key)) 
                     continue;
@@ -427,7 +435,7 @@ namespace DiztinGUIsh
             if (Settings.includeUnusedLabels)
             {
                 SwitchOutputFile(pointer, $"{folder}/all-labels.txt");
-                foreach (var pair in Data.GetAllLabels())
+                foreach (var pair in Data.Labels)
                 {
                     // not the best place to add formatting, TODO: cleanup
                     var category = listToPrint.ContainsKey(pair.Key) ? "INLINE" : "EXTRA ";
@@ -586,14 +594,14 @@ namespace DiztinGUIsh
         }
 
         // just a %
-        [AssemblerHandler(token = "", weight = 1)]
+        [AssemblerHandler(token = "", length = 1)]
         private string GetPercent(int offset, int length)
         {
             return "%";
         }
 
         // all spaces
-        [AssemblerHandler(token = "%empty", weight = 1)]
+        [AssemblerHandler(token = "%empty", length = 1)]
         private string GetEmpty(int offset, int length)
         {
             return string.Format("{0," + length + "}", "");
@@ -601,7 +609,7 @@ namespace DiztinGUIsh
 
         // trim to length
         // negative length = right justified
-        [AssemblerHandler(token = "label", weight = -22)]
+        [AssemblerHandler(token = "label", length = -22)]
         private string GetLabel(int offset, int length)
         {
             var snes = Data.ConvertPCtoSNES(offset);
@@ -615,7 +623,7 @@ namespace DiztinGUIsh
         }
 
         // trim to length
-        [AssemblerHandler(token = "code", weight = 37)]
+        [AssemblerHandler(token = "code", length = 37)]
         private string GetCode(int offset, int length)
         {
             var bytes = GetLineByteLength(offset);
@@ -660,14 +668,14 @@ namespace DiztinGUIsh
             return string.Format("{0," + (length * -1) + "}", code);
         }
 
-        [AssemblerHandler(token = "%org", weight = 37)]
+        [AssemblerHandler(token = "%org", length = 37)]
         private string GetORG(int offset, int length)
         {
             string org = "ORG " + Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6, true);
             return string.Format("{0," + (length * -1) + "}", org);
         }
 
-        [AssemblerHandler(token = "%map", weight = 37)]
+        [AssemblerHandler(token = "%map", length = 37)]
         private string GetMap(int offset, int length)
         {
             string s = "";
@@ -685,7 +693,7 @@ namespace DiztinGUIsh
         }
 
         // 0+ = bank_xx.asm, -1 = labels.asm
-        [AssemblerHandler(token = "%incsrc", weight = 1)]
+        [AssemblerHandler(token = "%incsrc", length = 1)]
         private string GetIncSrc(int offset, int length)
         {
             string s = "incsrc \"labels.asm\"";
@@ -697,7 +705,7 @@ namespace DiztinGUIsh
             return string.Format("{0," + (length * -1) + "}", s);
         }
 
-        [AssemblerHandler(token = "%bankcross", weight = 1)]
+        [AssemblerHandler(token = "%bankcross", length = 1)]
         private string GetBankCross(int offset, int length)
         {
             string s = "check bankcross off";
@@ -705,7 +713,7 @@ namespace DiztinGUIsh
         }
 
         // length forced to 6
-        [AssemblerHandler(token = "ia", weight = 6)]
+        [AssemblerHandler(token = "ia", length = 6)]
         private string GetIntermediateAddress(int offset, int length)
         {
             int ia = Data.GetIntermediateAddressOrPointer(offset);
@@ -713,21 +721,21 @@ namespace DiztinGUIsh
         }
 
         // length forced to 6
-        [AssemblerHandler(token = "pc", weight = 6)]
+        [AssemblerHandler(token = "pc", length = 6)]
         private string GetProgramCounter(int offset, int length)
         {
             return Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6);
         }
 
         // trim to length
-        [AssemblerHandler(token = "offset", weight = -6)]
+        [AssemblerHandler(token = "offset", length = -6)]
         private string GetOffset(int offset, int length)
         {
             return string.Format("{0," + (length * -1) + "}", Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0));
         }
 
         // length forced to 8
-        [AssemblerHandler(token = "bytes", weight = 8)]
+        [AssemblerHandler(token = "bytes", length = 8)]
         private string GetRawBytes(int offset, int length)
         {
             string bytes = "";
@@ -742,28 +750,28 @@ namespace DiztinGUIsh
         }
 
         // trim to length
-        [AssemblerHandler(token = "comment", weight = 1)]
+        [AssemblerHandler(token = "comment", length = 1)]
         private string GetComment(int offset, int length)
         {
             return string.Format("{0," + (length * -1) + "}", Data.GetComment(Data.ConvertPCtoSNES(offset)));
         }
 
         // length forced to 2
-        [AssemblerHandler(token = "b", weight = 2)]
+        [AssemblerHandler(token = "b", length = 2)]
         private string GetDataBank(int offset, int length)
         {
             return Util.NumberToBaseString(Data.GetDataBank(offset), Util.NumberBase.Hexadecimal, 2);
         }
 
         // length forced to 4
-        [AssemblerHandler(token = "d", weight = 4)]
+        [AssemblerHandler(token = "d", length = 4)]
         private string GetDirectPage(int offset, int length)
         {
             return Util.NumberToBaseString(Data.GetDirectPage(offset), Util.NumberBase.Hexadecimal, 4);
         }
 
         // if length == 1, M/m, else 08/16
-        [AssemblerHandler(token = "m", weight = 1)]
+        [AssemblerHandler(token = "m", length = 1)]
         private string GetMFlag(int offset, int length)
         {
             var m = Data.GetMFlag(offset);
@@ -772,7 +780,7 @@ namespace DiztinGUIsh
         }
 
         // if length == 1, X/x, else 08/16
-        [AssemblerHandler(token = "x", weight = 1)]
+        [AssemblerHandler(token = "x", length = 1)]
         private string GetXFlag(int offset, int length)
         {
             var x = Data.GetXFlag(offset);
@@ -781,7 +789,7 @@ namespace DiztinGUIsh
         }
 
         // output label at snes offset, and its value
-        [AssemblerHandler(token = "%labelassign", weight = 1)]
+        [AssemblerHandler(token = "%labelassign", length = 1)]
         private string GetLabelAssign(int offset, int length)
         {
             var labelName = GetLabelName(offset);

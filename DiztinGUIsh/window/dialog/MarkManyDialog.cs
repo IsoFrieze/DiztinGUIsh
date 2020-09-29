@@ -90,9 +90,9 @@ namespace DiztinGUIsh
                 case 5:
                     switch (archCombo.SelectedIndex)
                     {
-                        case 0: return Data.Architechture.CPU65C816;
-                        case 1: return Data.Architechture.APUSPC700;
-                        case 2: return Data.Architechture.GPUSuperFX;
+                        case 0: return Data.Architecture.CPU65C816;
+                        case 1: return Data.Architecture.APUSPC700;
+                        case 2: return Data.Architecture.GPUSuperFX;
                     }
                     break;
             }
