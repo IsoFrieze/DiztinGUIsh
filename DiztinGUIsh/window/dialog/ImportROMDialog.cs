@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Forms;
 using DiztinGUIsh.core.util;
 
@@ -9,6 +10,27 @@ namespace DiztinGUIsh.window.dialog
     {
         public Project.ImportRomSettings ImportSettings { get; protected set; }
         public bool romTypeNotDetectedCorrectly = true;
+
+        public class ImportRomViewModel
+        {
+            private readonly Project.ImportRomSettings settings;
+
+            public int SelectedRomMappingIndex
+            {
+                get => (int)settings.ROMMapMode;
+                set => settings.ROMMapMode = (Data.ROMMapMode)value;
+            }
+
+            public List<KeyValuePair<Data.ROMMapMode, string>> SelectedRomMappingList { get; }
+                = Util.GetEnumDescriptions<Data.ROMMapMode>();
+
+            public ImportRomViewModel(Project.ImportRomSettings settingsDataSource)
+            {
+                Debug.Assert(settingsDataSource != null);
+                settings = settingsDataSource;
+            }
+        }
+
 
         public string title;
         public int RomSettingsOffset;
@@ -67,7 +89,7 @@ namespace DiztinGUIsh.window.dialog
             cmbRomMapMode.DataBindings.Add(new Binding("SelectedIndex", ImportSettings, "ROMMapMode", false, DataSourceUpdateMode.OnPropertyChanged));
             */
 
-            importRomSettingsBindingSource.DataSource = ImportSettings;
+            // importRomSettingsBindingSource.DataSource = ImportSettings;
 
             // specific to this combo. datasource is a static list of enum values
             var dataSource = Util.GetEnumDescriptions<Data.ROMMapMode>();
@@ -76,7 +98,10 @@ namespace DiztinGUIsh.window.dialog
             cmbRomMapMode.DisplayMember = "Value";
 
             // bind comboboxes "SelectedIndex" property to store its value in settings.ROMMapMode
-            cmbRomMapMode.DataBindings.Add(new Binding("SelectedIndex", ImportSettings, "ROMMapMode", false, DataSourceUpdateMode.OnPropertyChanged));            
+            cmbRomMapMode.DataBindings.Add(new Binding(
+                "SelectedIndex", ImportViewModel,
+                "SelectedRomMappingIndex", false, 
+                DataSourceUpdateMode.OnPropertyChanged));
     
             /*
             var dataSource = Util.GetEnumDescriptions<Data.ROMMapMode>();
@@ -129,12 +154,12 @@ namespace DiztinGUIsh.window.dialog
             //Validate(true);
 
             // this seems to work the best to get the values flushed out in realtime
-            foreach (var i in sender.DataBindings)
+            /*foreach (var i in sender.DataBindings)
             {
                 var q = i as Binding;
                 // flushes the cached value back out to the real data structure
                 q.WriteValue();
-            }
+            }*/
         }
 
         private void importRomSettingsBindingSource_CurrentChanged(object sender, EventArgs e)
@@ -159,6 +184,8 @@ namespace DiztinGUIsh.window.dialog
             UpdateFromDatabinding(sender as IBindableComponent);
         }
 
+        ImportRomViewModel ImportViewModel;
+
         private void CreateRomImportSettingsFor(string filename)
         {
             var romBytes = RomUtil.ReadAllRomBytesFromFile(filename);
@@ -168,6 +195,8 @@ namespace DiztinGUIsh.window.dialog
                 RomBytes = romBytes,
                 ROMMapMode = RomUtil.DetectROMMapMode(romBytes, out romTypeNotDetectedCorrectly)
             };
+
+            ImportViewModel = new ImportRomViewModel(ImportSettings);
         }
 
         private Dictionary<int, Label> GetGeneratedLabels()

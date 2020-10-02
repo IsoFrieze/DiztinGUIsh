@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.detectMessage = new System.Windows.Forms.Label();
             this.checkData = new System.Windows.Forms.Label();
             this.cmbRomMapMode = new System.Windows.Forms.ComboBox();
@@ -77,10 +76,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.checkHeader = new System.Windows.Forms.CheckBox();
-            this.importRomSettingsBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.importRomSettingsBindingSource)).BeginInit();
             this.SuspendLayout();
             // 
             // detectMessage
@@ -105,9 +102,6 @@
             // 
             // cmbRomMapMode
             // 
-            this.cmbRomMapMode.DataBindings.Add(new System.Windows.Forms.Binding("SelectedItem", this.importRomSettingsBindingSource, "ROMMapMode", true));
-            this.cmbRomMapMode.DataBindings.Add(new System.Windows.Forms.Binding("Text", this.importRomSettingsBindingSource, "ROMMapMode", true));
-            this.cmbRomMapMode.DataSource = this.importRomSettingsBindingSource;
             this.cmbRomMapMode.FormattingEnabled = true;
             this.cmbRomMapMode.Location = new System.Drawing.Point(103, 18);
             this.cmbRomMapMode.Name = "cmbRomMapMode";
@@ -606,11 +600,6 @@
             this.checkHeader.Text = "Auto generate flags for Internal ROM Header";
             this.checkHeader.UseVisualStyleBackColor = true;
             // 
-            // importRomSettingsBindingSource
-            // 
-            this.importRomSettingsBindingSource.DataSource = typeof(DiztinGUIsh.Project.ImportRomSettings);
-            this.importRomSettingsBindingSource.CurrentChanged += new System.EventHandler(this.importRomSettingsBindingSource_CurrentChanged);
-            // 
             // ImportRomDialog
             // 
             this.AcceptButton = this.okay;
@@ -638,7 +627,6 @@
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.importRomSettingsBindingSource)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -694,6 +682,5 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox checkHeader;
-        private System.Windows.Forms.BindingSource importRomSettingsBindingSource;
     }
 }
