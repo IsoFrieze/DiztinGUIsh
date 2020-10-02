@@ -76,24 +76,14 @@ namespace DiztinGUIsh.window.dialog
 
         private void DataBind()
         {
-            // common for everything on the page
-            /*importRomSettingsBindingSource.DataSource = ImportSettings;
-
-            // specific to this combo. datasource is a static list of enum values
-            var dataSource = Util.GetEnumDescriptions<Data.ROMMapMode>();
-            cmbRomMapMode.DataSource = new BindingSource(dataSource, null);
-            cmbRomMapMode.ValueMember = "Key";         // names of properties of each item on datasource.
-            cmbRomMapMode.DisplayMember = "Value";
-
-            // bind comboboxes "SelectedIndex" property to store its value in settings.ROMMapMode
-            cmbRomMapMode.DataBindings.Add(new Binding("SelectedIndex", ImportSettings, "ROMMapMode", false, DataSourceUpdateMode.OnPropertyChanged));
-            */
-
             // importRomSettingsBindingSource.DataSource = ImportSettings;
 
             // specific to this combo. datasource is a static list of enum values
             var dataSource = Util.GetEnumDescriptions<Data.ROMMapMode>();
-            cmbRomMapMode.DataSource = new BindingSource(dataSource, null);
+            var bs = new BindingSource(dataSource, null);
+            bs.CurrentChanged += Bs_CurrentChanged;
+
+            cmbRomMapMode.DataSource = bs;
             cmbRomMapMode.ValueMember = "Key";         // names of properties of each item on datasource.
             cmbRomMapMode.DisplayMember = "Value";
 
@@ -102,44 +92,18 @@ namespace DiztinGUIsh.window.dialog
                 "SelectedIndex", ImportViewModel,
                 "SelectedRomMappingIndex", false, 
                 DataSourceUpdateMode.OnPropertyChanged));
-    
-            /*
-            var dataSource = Util.GetEnumDescriptions<Data.ROMMapMode>();
 
-            var bs = new BindingSource(dataSource, null);
-            comboBox1.DataSource = bs;
-            comboBox1.ValueMember = "Key";
-            comboBox1.DisplayMember = "Value";
-
-            comboBox1.DataBindings.Add(new Binding("SelectedIndex", ImportSettings, "ROMMapMode", false, DataSourceUpdateMode.OnPropertyChanged));
-
-            bs.CurrentChanged += Bs_CurrentChanged;
-            bs.CurrentItemChanged += Bs_CurrentItemChanged;*/
-
-            // Call ResetBindings after manual update to update the textboxes.
-            // bindingSource1.ResetBindings(false);
-
-
-            //LoadEnumToCombo(comboBox1);
-            // comboBox1.DataSource = Enum.GetValues(typeof(Data.ROMMapMode));
-            // comboBox1.DataBindings.Add(new Binding("SelectedValue", ImportSettings.ROMMapMode, "StoreObjectROMMapMode"));
-
-            //comboBox1.DataBindings.Add(
-            //    new Binding("SelectedIndex", ImportSettings, "ROMMapMode"));
-
-            //rOMMapModeBindingSource.DataSource = Enum.GetValues(typeof(Data.ROMMapMode));
-            //importRomSettingsBindingSource.DataSource = ImportSettings.ROMMapMode;
-
-            // rOMMapModeBindingSource.DataSource = comboBox1DataSource;
-            // importRomSettingsBindingSource
-            // importRomSettingsBindingSource = new BindingSource(ImportSettings.ROMMapMode);
+            
         }
 
+        private void Bs_CurrentChanged(object sender, EventArgs e)
+        {
+            UpdateUI();
+        }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // ImportSettings.ROMMapMode = SelectRomMapModeFromUi(comboBox1.SelectedIndex);
-            UpdateUI();
+            
         }
 
         private void UpdateUI()
@@ -165,7 +129,7 @@ namespace DiztinGUIsh.window.dialog
         private void importRomSettingsBindingSource_CurrentChanged(object sender, EventArgs e)
         {
             int x = 3;
-            UpdateUI();
+            // UpdateUI();
         }
 
         private void comboBox1_DropDownClosed(object sender, EventArgs e)
@@ -179,9 +143,9 @@ namespace DiztinGUIsh.window.dialog
         }
 
         private void comboBox1_TextChanged(object sender, EventArgs e)
-        { ;
+        { 
             //Validate(true);
-            UpdateFromDatabinding(sender as IBindableComponent);
+            // UpdateFromDatabinding(sender as IBindableComponent);
         }
 
         ImportRomViewModel ImportViewModel;
