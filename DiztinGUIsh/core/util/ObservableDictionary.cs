@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -7,7 +8,7 @@ using System.Diagnostics;
 namespace DiztinGUIsh.core.util
 {
 	// based on: kzu/ObservableDictionary.cs    https://gist.github.com/kzu/cfe3cb6e4fe3efea6d24
-	// note: does newer .NET have a native version of this? if so, replace.
+	// adds implementation of IDictionary, which we need.
 
 	/// <summary>
 	/// Provides a dictionary for use with data binding.
@@ -16,13 +17,14 @@ namespace DiztinGUIsh.core.util
 	/// <typeparam name="TValue">Specifies the type of the values in this collection.</typeparam>
 	[DebuggerDisplay("Count={" + nameof(Count) + "}")]
 	public class ObservableDictionary<TKey, TValue> :
-		/*ICollection<KeyValuePair<TKey, TValue>>,*/
+		// ICollection<KeyValuePair<TKey, TValue>>,
         IDictionary<TKey, TValue>,
+		IDictionary,
 		INotifyCollectionChanged, INotifyPropertyChanged
 	{
         private readonly IDictionary<TKey, TValue> dictionary;
 
-		/// <summary>Event raised when the collection changes.</summary>
+        /// <summary>Event raised when the collection changes.</summary>
 		public event NotifyCollectionChangedEventHandler CollectionChanged = (sender, args) => { };
 
 		/// <summary>Event raised when a property on the collection changes.</summary>
@@ -129,6 +131,8 @@ namespace DiztinGUIsh.core.util
 		/// <returns>An <see cref="T:System.Collections.Generic.ICollection`1" /> containing the keys of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2" />.</returns>
 		public ICollection<TKey> Keys => dictionary.Keys;
 
+        // ICollection IDictionary.Values => (ICollection) dictionary.Values;
+
         /// <summary>
 		/// Removes the element with the specified key from the <see cref="T:System.Collections.Generic.IDictionary`2" />.
 		/// </summary>
@@ -154,7 +158,7 @@ namespace DiztinGUIsh.core.util
 			return dictionary.TryGetValue(key, out value);
 		}
 
-		/// <summary>
+        /// <summary>
 		/// Gets an <see cref="T:System.Collections.Generic.ICollection`1" /> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2" />.
 		/// </summary>
 		/// <returns>An <see cref="T:System.Collections.Generic.ICollection`1" /> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2" />.</returns>
@@ -180,7 +184,9 @@ namespace DiztinGUIsh.core.util
 			AddWithNotification(item);
 		}
 
-        public void Clear()
+
+
+		public void Clear()
 		{
 			dictionary.Clear();
 
@@ -190,17 +196,14 @@ namespace DiztinGUIsh.core.util
 			PropertyChanged(this, new PropertyChangedEventArgs("Values"));
 		}
 
-        public bool Contains(KeyValuePair<TKey, TValue> item)
-		{
-			return dictionary.Contains(item);
-		}
+        public bool Contains(KeyValuePair<TKey, TValue> item) => dictionary.Contains(item);
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
 		{
 			dictionary.CopyTo(array, arrayIndex);
 		}
 
-		public int Count => dictionary.Count;
+        public int Count => dictionary.Count;
 
         public bool IsReadOnly => dictionary.IsReadOnly;
 
@@ -224,5 +227,41 @@ namespace DiztinGUIsh.core.util
 		}
 
 		#endregion
-	}
+
+
+		#region IDictionary
+
+        ICollection IDictionary.Keys => (ICollection)dictionary.Keys;
+        ICollection IDictionary.Values => (ICollection)dictionary.Values;
+		public void Add(object key, object value)
+        {
+            AddWithNotification((TKey)key, (TValue)value);
+        }
+        public IDictionaryEnumerator GetEnumerator()
+        {
+            return ((IDictionary)(dictionary)).GetEnumerator();
+        }
+
+        public void Remove(object key)
+        {
+            RemoveWithNotification((TKey)key);
+        }
+
+        public object this[object key]
+        {
+            get => dictionary[(TKey)key];
+            set => UpdateWithNotification((TKey)key, (TValue)value);
+        }
+        public bool Contains(object key) => dictionary.Contains((KeyValuePair<TKey, TValue>)key);
+        public void CopyTo(Array array, int index)
+        {
+            CopyTo((KeyValuePair<TKey, TValue>[])(array), index);
+        }
+
+        public object SyncRoot => null; // TODO?
+        public bool IsSynchronized => false; // TODO?
+        public bool IsFixedSize => false; // TODO?
+
+        #endregion
+    }
 }

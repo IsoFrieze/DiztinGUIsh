@@ -12,7 +12,7 @@ using ExtendedXmlSerializer.ContentModel.Format;
 //
 // This uses some hacky compression methods designed to preserve:
 // 1) newlines
-// 2) slight human readability for merging
+// 2) slight human readability for merging, so projects can be collaborated on in source control
 // 3) using pattern substitution tables that won't change from PC to PC.
 //
 // The easiest thing would be use zlib (and we can use it with the output of the entire XML if we want)

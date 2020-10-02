@@ -1,6 +1,6 @@
-﻿namespace DiztinGUIsh
+﻿namespace DiztinGUIsh.window.dialog
 {
-    partial class ImportROMDialog
+    partial class ImportRomDialog
     {
         /// <summary>
         /// Required designer variable.
@@ -28,9 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.detectMessage = new System.Windows.Forms.Label();
             this.checkData = new System.Windows.Forms.Label();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.cmbRomMapMode = new System.Windows.Forms.ComboBox();
             this.mapmode = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
@@ -76,8 +77,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.checkHeader = new System.Windows.Forms.CheckBox();
+            this.importRomSettingsBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.importRomSettingsBindingSource)).BeginInit();
             this.SuspendLayout();
             // 
             // detectMessage
@@ -100,23 +103,20 @@
             this.checkData.Text = "Does the following info look correct?";
             this.checkData.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
-            // comboBox1
+            // cmbRomMapMode
             // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
-            "(0) LoROM",
-            "(1) HiROM",
-            "(2) Super MMC",
-            "(3) SA-1 ROM",
-            "(3) SA-1 ROM (FuSoYa\'s 8MB mapper)",
-            "(4) SuperFX",
-            "(5) ExHiROM",
-            "(6) ExLoROM"});
-            this.comboBox1.Location = new System.Drawing.Point(103, 18);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(121, 21);
-            this.comboBox1.TabIndex = 1;
-            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.cmbRomMapMode.DataBindings.Add(new System.Windows.Forms.Binding("SelectedItem", this.importRomSettingsBindingSource, "ROMMapMode", true));
+            this.cmbRomMapMode.DataBindings.Add(new System.Windows.Forms.Binding("Text", this.importRomSettingsBindingSource, "ROMMapMode", true));
+            this.cmbRomMapMode.DataSource = this.importRomSettingsBindingSource;
+            this.cmbRomMapMode.FormattingEnabled = true;
+            this.cmbRomMapMode.Location = new System.Drawing.Point(103, 18);
+            this.cmbRomMapMode.Name = "cmbRomMapMode";
+            this.cmbRomMapMode.Size = new System.Drawing.Size(121, 21);
+            this.cmbRomMapMode.TabIndex = 1;
+            this.cmbRomMapMode.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.cmbRomMapMode.DropDownClosed += new System.EventHandler(this.comboBox1_DropDownClosed);
+            this.cmbRomMapMode.TextChanged += new System.EventHandler(this.comboBox1_TextChanged);
+            this.cmbRomMapMode.Validating += new System.ComponentModel.CancelEventHandler(this.comboBox1_Validating);
             // 
             // mapmode
             // 
@@ -208,7 +208,7 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.mapmode);
-            this.groupBox1.Controls.Add(this.comboBox1);
+            this.groupBox1.Controls.Add(this.cmbRomMapMode);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.romtitle);
             this.groupBox1.Controls.Add(this.label5);
@@ -606,7 +606,12 @@
             this.checkHeader.Text = "Auto generate flags for Internal ROM Header";
             this.checkHeader.UseVisualStyleBackColor = true;
             // 
-            // ImportROMDialog
+            // importRomSettingsBindingSource
+            // 
+            this.importRomSettingsBindingSource.DataSource = typeof(DiztinGUIsh.Project.ImportRomSettings);
+            this.importRomSettingsBindingSource.CurrentChanged += new System.EventHandler(this.importRomSettingsBindingSource_CurrentChanged);
+            // 
+            // ImportRomDialog
             // 
             this.AcceptButton = this.okay;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -623,7 +628,7 @@
             this.Controls.Add(this.checkData);
             this.Controls.Add(this.detectMessage);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Name = "ImportROMDialog";
+            this.Name = "ImportRomDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -633,6 +638,7 @@
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.importRomSettingsBindingSource)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -642,7 +648,7 @@
 
         private System.Windows.Forms.Label detectMessage;
         private System.Windows.Forms.Label checkData;
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.ComboBox cmbRomMapMode;
         private System.Windows.Forms.Label mapmode;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
@@ -688,5 +694,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox checkHeader;
+        private System.Windows.Forms.BindingSource importRomSettingsBindingSource;
     }
 }

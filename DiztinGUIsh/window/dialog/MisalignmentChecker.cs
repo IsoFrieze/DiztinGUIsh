@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
 {
@@ -32,7 +33,7 @@ namespace DiztinGUIsh
             while (found < 500 && offset < Data.GetROMSize())
             {
                 Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
-                int step = flag == Data.FlagType.Opcode ? Data.GetInstructionLength(offset) : Util.TypeStepSize(flag);
+                int step = flag == Data.FlagType.Opcode ? Data.GetInstructionLength(offset) : RomUtil.TypeStepSize(flag);
 
                 if (flag == Data.FlagType.Operand)
                 {
@@ -50,8 +51,8 @@ namespace DiztinGUIsh
                             textLog.Text += string.Format("{0} (0x{1}): {2} is not {3}\r\n",
                                 Util.NumberToBaseString(Data.ConvertPCtoSNES(offset + i), Util.NumberBase.Hexadecimal, 6, true),
                                 Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0),
-                                Util.TypeToString(Data.GetFlag(offset + i)),
-                                Util.TypeToString(check));
+                                RomUtil.TypeToString(Data.GetFlag(offset + i)),
+                                RomUtil.TypeToString(check));
                         }
                     }
                 }

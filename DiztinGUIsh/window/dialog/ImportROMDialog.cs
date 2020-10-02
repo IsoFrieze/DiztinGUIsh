@@ -1,63 +1,172 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using DiztinGUIsh.core.util;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window.dialog
 {
-    public partial class ImportROMDialog : Form
+    public partial class ImportRomDialog : Form
     {
-        private Project.ImportRomSettings importSettings;
-        private bool couldnt_detect_rom_type;
+        public Project.ImportRomSettings ImportSettings { get; protected set; }
+        public bool romTypeNotDetectedCorrectly = true;
 
-        private string title;
-        private int offset;
-        private string[,] vectorNames = new string[2, 6]
-        {
+        public string title;
+        public int RomSettingsOffset;
+        private readonly string[,] vectorNames = {
             { "Native_COP", "Native_BRK", "Native_ABORT", "Native_NMI", "Native_RESET", "Native_IRQ"},
             { "Emulation_COP", "Emulation_Unknown", "Emulation_ABORT", "Emulation_NMI", "Emulation_RESET", "Emulation_IRQBRK"}
         };
-        private TextBox[,] vectors;
-        private CheckBox[,] checkboxes;
+        private readonly TextBox[,] vectors;
+        private readonly CheckBox[,] checkboxes;
 
-        public Project.ImportRomSettings? PromptForImportSettings(string filename)
+        public ImportRomDialog()
         {
-            importSettings = new Project.ImportRomSettings
+            InitializeComponent();
+            vectors = new[,]
             {
-                rom_filename = filename,
-                rom_bytes = Util.ReadAllRomBytesFromFile(filename),
-                ROMMapMode = Util.DetectROMMapMode(importSettings.rom_bytes, out couldnt_detect_rom_type)
+                { textNativeCOP, textNativeBRK, textNativeABORT, textNativeNMI, textNativeRESET, textNativeIRQ },
+                { textEmuCOP, textEmuBRK, textEmuABORT, textEmuNMI, textEmuRESET, textEmuIRQ },
             };
+            checkboxes = new[,]
+            {
+                { checkboxNativeCOP, checkboxNativeBRK, checkboxNativeABORT, checkboxNativeNMI, checkboxNativeRESET, checkboxNativeIRQ },
+                { checkboxEmuCOP, checkboxEmuBRK, checkboxEmuABORT, checkboxEmuNMI, checkboxEmuRESET, checkboxEmuIRQ },
+            };
+        }
 
-            UpdateUIFromRomMapDetection();
+        public Project.ImportRomSettings PromptForImportSettings(string filename)
+        {
+            CreateRomImportSettingsFor(filename);
+
+            DataBind();
+
+            // UpdateUiFromRomMapDetection();
             UpdateOffsetAndSpeed();
 
             if (ShowDialog() != DialogResult.OK)
                 return null;
 
-            importSettings.InitialLabels = GetGeneratedLabels();
-            importSettings.InitialHeaderFlags = GetHeaderFlags();
+            ImportSettings.InitialLabels = GetGeneratedLabels();
+            ImportSettings.InitialHeaderFlags = GetHeaderFlags();
 
-            return importSettings;
+            return ImportSettings;
         }
 
-        public ImportROMDialog()
+        private void DataBind()
         {
-            InitializeComponent();
-            vectors = new TextBox[2, 6]
+            // common for everything on the page
+            /*importRomSettingsBindingSource.DataSource = ImportSettings;
+
+            // specific to this combo. datasource is a static list of enum values
+            var dataSource = Util.GetEnumDescriptions<Data.ROMMapMode>();
+            cmbRomMapMode.DataSource = new BindingSource(dataSource, null);
+            cmbRomMapMode.ValueMember = "Key";         // names of properties of each item on datasource.
+            cmbRomMapMode.DisplayMember = "Value";
+
+            // bind comboboxes "SelectedIndex" property to store its value in settings.ROMMapMode
+            cmbRomMapMode.DataBindings.Add(new Binding("SelectedIndex", ImportSettings, "ROMMapMode", false, DataSourceUpdateMode.OnPropertyChanged));
+            */
+
+            importRomSettingsBindingSource.DataSource = ImportSettings;
+
+            // specific to this combo. datasource is a static list of enum values
+            var dataSource = Util.GetEnumDescriptions<Data.ROMMapMode>();
+            cmbRomMapMode.DataSource = new BindingSource(dataSource, null);
+            cmbRomMapMode.ValueMember = "Key";         // names of properties of each item on datasource.
+            cmbRomMapMode.DisplayMember = "Value";
+
+            // bind comboboxes "SelectedIndex" property to store its value in settings.ROMMapMode
+            cmbRomMapMode.DataBindings.Add(new Binding("SelectedIndex", ImportSettings, "ROMMapMode", false, DataSourceUpdateMode.OnPropertyChanged));            
+    
+            /*
+            var dataSource = Util.GetEnumDescriptions<Data.ROMMapMode>();
+
+            var bs = new BindingSource(dataSource, null);
+            comboBox1.DataSource = bs;
+            comboBox1.ValueMember = "Key";
+            comboBox1.DisplayMember = "Value";
+
+            comboBox1.DataBindings.Add(new Binding("SelectedIndex", ImportSettings, "ROMMapMode", false, DataSourceUpdateMode.OnPropertyChanged));
+
+            bs.CurrentChanged += Bs_CurrentChanged;
+            bs.CurrentItemChanged += Bs_CurrentItemChanged;*/
+
+            // Call ResetBindings after manual update to update the textboxes.
+            // bindingSource1.ResetBindings(false);
+
+
+            //LoadEnumToCombo(comboBox1);
+            // comboBox1.DataSource = Enum.GetValues(typeof(Data.ROMMapMode));
+            // comboBox1.DataBindings.Add(new Binding("SelectedValue", ImportSettings.ROMMapMode, "StoreObjectROMMapMode"));
+
+            //comboBox1.DataBindings.Add(
+            //    new Binding("SelectedIndex", ImportSettings, "ROMMapMode"));
+
+            //rOMMapModeBindingSource.DataSource = Enum.GetValues(typeof(Data.ROMMapMode));
+            //importRomSettingsBindingSource.DataSource = ImportSettings.ROMMapMode;
+
+            // rOMMapModeBindingSource.DataSource = comboBox1DataSource;
+            // importRomSettingsBindingSource
+            // importRomSettingsBindingSource = new BindingSource(ImportSettings.ROMMapMode);
+        }
+
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // ImportSettings.ROMMapMode = SelectRomMapModeFromUi(comboBox1.SelectedIndex);
+            UpdateUI();
+        }
+
+        private void UpdateUI()
+        {
+            UpdateOffsetAndSpeed();
+            UpdateTextboxes();
+        }
+
+        void UpdateFromDatabinding(IBindableComponent sender)
+        {
+            // ValidateChildren();
+            //Validate(true);
+
+            // this seems to work the best to get the values flushed out in realtime
+            foreach (var i in sender.DataBindings)
             {
-                { textNativeCOP, textNativeBRK, textNativeABORT, textNativeNMI, textNativeRESET, textNativeIRQ },
-                { textEmuCOP, textEmuBRK, textEmuABORT, textEmuNMI, textEmuRESET, textEmuIRQ },
-            };
-            checkboxes = new CheckBox[2, 6]
+                var q = i as Binding;
+                // flushes the cached value back out to the real data structure
+                q.WriteValue();
+            }
+        }
+
+        private void importRomSettingsBindingSource_CurrentChanged(object sender, EventArgs e)
+        {
+            int x = 3;
+            UpdateUI();
+        }
+
+        private void comboBox1_DropDownClosed(object sender, EventArgs e)
+        {
+            int x = 3;
+        }
+
+        private void comboBox1_Validating(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            int x = 3;
+        }
+
+        private void comboBox1_TextChanged(object sender, EventArgs e)
+        { ;
+            //Validate(true);
+            UpdateFromDatabinding(sender as IBindableComponent);
+        }
+
+        private void CreateRomImportSettingsFor(string filename)
+        {
+            var romBytes = RomUtil.ReadAllRomBytesFromFile(filename);
+            ImportSettings = new Project.ImportRomSettings
             {
-                { checkboxNativeCOP, checkboxNativeBRK, checkboxNativeABORT, checkboxNativeNMI, checkboxNativeRESET, checkboxNativeIRQ },
-                { checkboxEmuCOP, checkboxEmuBRK, checkboxEmuABORT, checkboxEmuNMI, checkboxEmuRESET, checkboxEmuIRQ },
+                RomFilename = filename,
+                RomBytes = romBytes,
+                ROMMapMode = RomUtil.DetectROMMapMode(romBytes, out romTypeNotDetectedCorrectly)
             };
         }
 
@@ -72,10 +181,10 @@ namespace DiztinGUIsh
                     if (!checkboxes[i, j].Checked) 
                         continue;
 
-                    int index = offset + 15 + 0x10 * i + 2 * j;
-                    int val = importSettings.rom_bytes[index] + (importSettings.rom_bytes[index + 1] << 8);
-                    int pc = Util.ConvertSNESToPC(val, importSettings.ROMMapMode, importSettings.rom_bytes.Length);
-                    if (pc >= 0 && pc < importSettings.rom_bytes.Length && !labels.ContainsKey(val)) 
+                    int index = RomSettingsOffset + 15 + 0x10 * i + 2 * j;
+                    int val = ImportSettings.RomBytes[index] + (ImportSettings.RomBytes[index + 1] << 8);
+                    int pc = RomUtil.ConvertSNESToPC(val, ImportSettings.ROMMapMode, ImportSettings.RomBytes.Length);
+                    if (pc >= 0 && pc < ImportSettings.RomBytes.Length && !labels.ContainsKey(val)) 
                         labels.Add(val, new Label() {name = vectorNames[i, j]});
                 }
             }
@@ -87,39 +196,132 @@ namespace DiztinGUIsh
         {
             var flags = new Dictionary<int, Data.FlagType>();
 
-            if (checkHeader.Checked)
-            {
-                for (int i = 0; i < 0x15; i++) flags.Add(offset - 0x15 + i, Data.FlagType.Text);
-                for (int i = 0; i < 7; i++) flags.Add(offset + i, Data.FlagType.Data8Bit);
-                for (int i = 0; i < 4; i++) flags.Add(offset + 7 + i, Data.FlagType.Data16Bit);
-                for (int i = 0; i < 0x20; i++) flags.Add(offset + 11 + i, Data.FlagType.Pointer16Bit);
-
-                if (importSettings.rom_bytes[offset - 1] == 0)
-                {
-                    flags.Remove(offset - 1);
-                    flags.Add(offset - 1, Data.FlagType.Data8Bit);
-                    for (int i = 0; i < 0x10; i++) flags.Add(offset - 0x25 + i, Data.FlagType.Data8Bit);
-                }
-                else if (importSettings.rom_bytes[offset + 5] == 0x33)
-                {
-                    for (int i = 0; i < 6; i++) flags.Add(offset - 0x25 + i, Data.FlagType.Text);
-                    for (int i = 0; i < 10; i++) flags.Add(offset - 0x1F + i, Data.FlagType.Data8Bit);
-                }
-            }
+            if (checkHeader.Checked) 
+                RomUtil.GetHeaderFlags(RomSettingsOffset, flags, ImportSettings.RomBytes);
 
             return flags;
         }
 
-        private void UpdateUIFromRomMapDetection()
+        private void UpdateOffsetAndSpeed()
         {
-            if (couldnt_detect_rom_type)
+            RomSettingsOffset = RomUtil.GetRomSettingOffset(ImportSettings.ROMMapMode);
+            var romSpeed = ImportSettings.ROMSpeed;
+            var romBytes = ImportSettings.RomBytes;
+
+            romSpeed = RomUtil.GetRomSpeed(RomSettingsOffset, romBytes);
+
+            okay.Enabled = ImportSettings.ROMSpeed != Data.ROMSpeed.Unknown;
+        }
+
+        private bool IsOffsetInRange(int offset, int count = 0)
+        {
+            return offset > 0 && offset <= ImportSettings.RomBytes.Length;
+        }
+        
+        private void UpdateTextboxes()
+        {
+            if (IsProbablyValidDetection())
+            {
+                try {
+                    UpdateDetectedValues();
+                    return;
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
+
+            SetDefaultsIfDetectionFailed();
+        }
+
+        private bool IsProbablyValidDetection()
+        {
+            return 
+                ImportSettings.ROMSpeed != Data.ROMSpeed.Unknown && 
+                IsOffsetInRange(RomSettingsOffset);
+        }
+
+        private void SetDefaultsIfDetectionFailed()
+        {
+            romspeed.Text = "????";
+            romtitle.Text = "?????????????????????";
+            for (int i = 0; i < vectors.GetLength(0); i++)
+            for (int j = 0; j < vectors.GetLength(1); j++)
+                vectors[i, j].Text = "????";
+            return;
+        }
+
+        private void UpdateDetectedValues()
+        {
+            // caution: things can go wrong here if we didn't guess settings correctly,
+            // you usually want to call this function with a try/catch around it.
+
+            var romspeedStr = ImportSettings.ROMSpeed == Data.ROMSpeed.SlowROM ? "SlowROM" : "FastROM";
+            var romTitleName = RomUtil.GetRomTitleName(ImportSettings.RomBytes, RomSettingsOffset);
+
+            for (int i = 0; i < vectors.GetLength(0); i++)
+            {
+                for (int j = 0; j < vectors.GetLength(1); j++)
+                {
+                    int index = RomSettingsOffset + 15 + 0x10 * i + 2 * j;
+                    int val = ImportSettings.RomBytes[index] + (ImportSettings.RomBytes[index + 1] << 8);
+                    vectors[i, j].Text = Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal, 4);
+
+                    if (val < 0x8000)
+                    {
+                        checkboxes[i, j].Checked = false;
+                        checkboxes[i, j].Enabled = false;
+                    }
+                    else
+                    {
+                        checkboxes[i, j].Enabled = true;
+                    }
+                }
+            }
+
+            romspeed.Text = romspeedStr;
+            romtitle.Text = romTitleName;
+        }
+
+        private void ImportROMDialog_Load(object sender, EventArgs e)
+        {
+            UpdateTextboxes();
+        }
+
+        private void okay_Click(object sender, EventArgs e) { DialogResult = DialogResult.OK; }
+
+        private void cancel_Click(object sender, EventArgs e) { Close(); }
+
+
+        /*private Data.ROMMapMode SelectRomMapModeFromUi(int selectedIndex)
+        {
+            // TODO: there's definitely a better way. Databinding, or use a dict at worst.
+            var mode = selectedIndex switch
+            {
+                0 => Data.ROMMapMode.LoROM,
+                1 => Data.ROMMapMode.HiROM,
+                2 => Data.ROMMapMode.SuperMMC,
+                3 => Data.ROMMapMode.SA1ROM,
+                4 => Data.ROMMapMode.ExSA1ROM,
+                5 => Data.ROMMapMode.SuperFX,
+                6 => Data.ROMMapMode.ExHiROM,
+                7 => Data.ROMMapMode.ExLoROM,
+                _ => ImportSettings.ROMMapMode
+            };
+            return mode;
+        }
+
+        private void UpdateUiFromRomMapDetection()
+        {
+            if (romTypeNotDetectedCorrectly)
                 detectMessage.Text = "Couldn't auto detect ROM Map Mode!";
             else
-                detectMessage.Text = "ROM Map Mode Detected: " + Util.GetRomMapModeName(importSettings.ROMMapMode);
+                detectMessage.Text = "ROM Map Mode Detected: " + RomUtil.GetRomMapModeName(ImportSettings.ROMMapMode);
 
             // TODO: there's definitely a better way. probably have the control read from a data table,
             // then have it update itself based on the value of importSettings.ROMMapMode.
-            switch (importSettings.ROMMapMode)
+            switch (ImportSettings.ROMMapMode)
             {
                 case Data.ROMMapMode.LoROM:
                     comboBox1.SelectedIndex = 0;
@@ -127,8 +329,8 @@ namespace DiztinGUIsh
                 case Data.ROMMapMode.HiROM:
                     comboBox1.SelectedIndex = 1;
                     break;
-                case Data.ROMMapMode.ExHiROM:
-                    comboBox1.SelectedIndex = 6;
+                case Data.ROMMapMode.SuperMMC:
+                    comboBox1.SelectedIndex = 2;
                     break;
                 case Data.ROMMapMode.SA1ROM:
                     comboBox1.SelectedIndex = 3;
@@ -139,99 +341,13 @@ namespace DiztinGUIsh
                 case Data.ROMMapMode.SuperFX:
                     comboBox1.SelectedIndex = 5;
                     break;
-                case Data.ROMMapMode.SuperMMC:
-                    comboBox1.SelectedIndex = 2;
+                case Data.ROMMapMode.ExHiROM:
+                    comboBox1.SelectedIndex = 6;
                     break;
                 case Data.ROMMapMode.ExLoROM:
                     comboBox1.SelectedIndex = 7;
                     break;
-                default:
-                    break;
             }
-        }
-
-        private void UpdateOffsetAndSpeed()
-        {
-            offset = Util.GetRomSettingOffset(importSettings.ROMMapMode);
-            if (offset >= importSettings.rom_bytes.Length)
-            {
-                importSettings.ROMSpeed = Data.ROMSpeed.Unknown;
-                okay.Enabled = false;
-            } else
-            {
-                okay.Enabled = true;
-                importSettings.ROMSpeed = (importSettings.rom_bytes[offset] & 0x10) != 0 ? Data.ROMSpeed.FastROM : Data.ROMSpeed.SlowROM;
-            }
-        }
-
-        private void UpdateTextboxes()
-        {
-            if (importSettings.ROMSpeed == Data.ROMSpeed.Unknown)
-            {
-                romspeed.Text = "????";
-                romtitle.Text = "?????????????????????";
-                for (int i = 0; i < vectors.GetLength(0); i++) for (int j = 0; j < vectors.GetLength(1); j++) vectors[i, j].Text = "????";
-            } else
-            {
-                if (importSettings.ROMSpeed == Data.ROMSpeed.SlowROM) romspeed.Text = "SlowROM";
-                else romspeed.Text = "FastROM";
-
-                title = "";
-                for (int i = 0; i < 0x15; i++) title += (char)importSettings.rom_bytes[offset - 0x15 + i];
-                romtitle.Text = title;
-
-                for (int i = 0; i < vectors.GetLength(0); i++)
-                {
-                    for (int j = 0; j < vectors.GetLength(1); j++)
-                    {
-                        int index = offset + 15 + 0x10 * i + 2 * j;
-                        int val = importSettings.rom_bytes[index] + (importSettings.rom_bytes[index + 1] << 8);
-                        vectors[i, j].Text = Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal, 4);
-
-                        if (val < 0x8000)
-                        {
-                            checkboxes[i, j].Checked = false;
-                            checkboxes[i, j].Enabled = false;
-                        } else
-                        {
-                            checkboxes[i, j].Enabled = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        private void ImportROMDialog_Load(object sender, EventArgs e)
-        {
-            UpdateTextboxes();
-        }
-
-        private void okay_Click(object sender, EventArgs e)
-        {
-            this.DialogResult = DialogResult.OK;
-        }
-
-        private void cancel_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // TODO: there's definitely a better way, we'll get to it :)
-            switch (comboBox1.SelectedIndex)
-            {
-                case 0: importSettings.ROMMapMode = Data.ROMMapMode.LoROM; break;
-                case 1: importSettings.ROMMapMode = Data.ROMMapMode.HiROM; break;
-                case 2: importSettings.ROMMapMode = Data.ROMMapMode.SuperMMC; break;
-                case 3: importSettings.ROMMapMode = Data.ROMMapMode.SA1ROM; break;
-                case 4: importSettings.ROMMapMode = Data.ROMMapMode.ExSA1ROM; break;
-                case 5: importSettings.ROMMapMode = Data.ROMMapMode.SuperFX; break;
-                case 6: importSettings.ROMMapMode = Data.ROMMapMode.ExHiROM; break;
-                case 7: importSettings.ROMMapMode = Data.ROMMapMode.ExLoROM; break;
-            }
-            UpdateOffsetAndSpeed();
-            UpdateTextboxes();
-        }
+        }*/
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh
 {
@@ -21,9 +22,7 @@ namespace DiztinGUIsh
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            MainWindow window = new MainWindow();
-
-            if (args.Length > 0) window.OpenProject(args[0]);
+            var window = new MainWindow();
 
             Application.Run(window);
         }

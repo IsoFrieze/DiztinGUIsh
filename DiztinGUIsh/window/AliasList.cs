@@ -126,7 +126,7 @@ namespace DiztinGUIsh.window
             try
             {
                 using var sw = new StreamWriter(saveFileDialog1.FileName);
-                foreach (var pair in Data.Labels)
+                foreach (KeyValuePair<int, Label> pair in Data.Labels)
                 {
                     sw.WriteLine(
                         $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.name},{pair.Value.comment}");
@@ -295,7 +295,7 @@ namespace DiztinGUIsh.window
                 return;
 
             // TODO: replace with winforms databinding eventually
-            foreach (var item in Data.Labels)
+            foreach (KeyValuePair<int, Label> item in Data.Labels)
             {
                 RawAdd(item.Key, item.Value);
             }

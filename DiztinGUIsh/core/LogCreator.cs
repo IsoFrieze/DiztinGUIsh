@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
 {
@@ -143,7 +145,7 @@ namespace DiztinGUIsh
 
         public OutputResult CreateLog()
         {
-            bankSize = Util.GetBankSize(Data.RomMapMode);
+            bankSize = RomUtil.GetBankSize(Data.RomMapMode);
             errorCount = 0;
 
             // TODO: this label combination isn't working well. fix.
@@ -415,7 +417,7 @@ namespace DiztinGUIsh
             var listToPrint = new Dictionary<int, Label>();
 
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
-            foreach (var pair in Data.Labels)
+            foreach (KeyValuePair<int, Label> pair in Data.Labels)
             {
                 if (usedLabels.Contains(pair.Key)) 
                     continue;
@@ -435,7 +437,7 @@ namespace DiztinGUIsh
             if (Settings.includeUnusedLabels)
             {
                 SwitchOutputFile(pointer, $"{folder}/all-labels.txt");
-                foreach (var pair in Data.Labels)
+                foreach (KeyValuePair<int, Label> pair in Data.Labels)
                 {
                     // not the best place to add formatting, TODO: cleanup
                     var category = listToPrint.ContainsKey(pair.Key) ? "INLINE" : "EXTRA ";
@@ -484,7 +486,7 @@ namespace DiztinGUIsh
 
             // throw out some errors if stuff looks fishy
             Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
-            int step = flag == Data.FlagType.Opcode ? GetLineByteLength(offset) : Util.TypeStepSize(flag), size = Data.GetROMSize();
+            int step = flag == Data.FlagType.Opcode ? GetLineByteLength(offset) : RomUtil.TypeStepSize(flag), size = Data.GetROMSize();
             if (flag == Data.FlagType.Operand) StreamError.WriteLine("({0}) Offset 0x{1:X}: Bytes marked as operands formatted as Data.", ++errorCount, offset);
             else if (step > 1)
             {
@@ -492,12 +494,12 @@ namespace DiztinGUIsh
                 {
                     if (offset + i >= size)
                     {
-                        StreamError.WriteLine("({0}) Offset 0x{1:X}: {2} extends past the end of the ROM.", ++errorCount, offset, Util.TypeToString(check));
+                        StreamError.WriteLine("({0}) Offset 0x{1:X}: {2} extends past the end of the ROM.", ++errorCount, offset, RomUtil.TypeToString(check));
                         break;
                     }
                     else if (Data.GetFlag(offset + i) != check)
                     {
-                        StreamError.WriteLine("({0}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, Util.TypeToString(check), Util.TypeToString(Data.GetFlag(offset + i)));
+                        StreamError.WriteLine("({0}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, RomUtil.TypeToString(check), RomUtil.TypeToString(Data.GetFlag(offset + i)));
                         break;
                     }
                 }

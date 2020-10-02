@@ -112,6 +112,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="core\import\BizHawkCdl.cs" />
+    <Compile Include="core\util\ByteUtil.cs" />
     <Compile Include="core\util\LargeFilesReader.cs" />
     <Compile Include="core\util\ObservableDictionary.cs" />
     <Compile Include="core\util\RomUtil.cs" />
@@ -123,6 +124,13 @@
     <Compile Include="loadsave\xml_serializer\RomBytesXMLSerializer.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="window\dialog\TestForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="window\dialog\TestForm.Designer.cs">
+      <DependentUpon>TestForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="window\GuiUtil.cs" />
     <Compile Include="window\IProjectView.cs" />
     <Compile Include="core\Label.cs" />
     <Compile Include="window\ProjectController.cs" />
@@ -226,6 +234,9 @@
     <EmbeddedResource Include="window\dialog\InOutPointChecker.resx">
       <DependentUpon>InOutPointChecker.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="window\dialog\TestForm.resx">
+      <DependentUpon>TestForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="window\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -247,6 +258,14 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
+    <None Include="Properties\DataSources\Data.Architecture.datasource" />
+    <None Include="Properties\DataSources\Data.datasource" />
+    <None Include="Properties\DataSources\Data.FlagType.datasource" />
+    <None Include="Properties\DataSources\Data.InOutPoint.datasource" />
+    <None Include="Properties\DataSources\Data.ROMMapMode.datasource" />
+    <None Include="Properties\DataSources\Data.ROMSpeed.datasource" />
+    <None Include="Properties\DataSources\Project.datasource" />
+    <None Include="Properties\DataSources\Project.ImportRomSettings.datasource" />
     <None Include="Properties\DataSources\ROMByte.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

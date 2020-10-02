@@ -19,7 +19,22 @@ namespace DiztinGUIsh
         }
 
         public int Count => Bytes.Count;
+        public void Add(ROMByte romByte)
+        {
+            Bytes.Add(romByte);
+        }
 
+        public void Create(int size)
+        {
+            for (int i = 0; i < size; ++i)
+                Add(new ROMByte());
+        }
+        public void Clear()
+        {
+            Bytes.Clear();
+        }
+
+        #region Equality
         protected bool Equals(RomBytes other)
         {
             return Bytes.SequenceEqual(other.Bytes);
@@ -37,7 +52,9 @@ namespace DiztinGUIsh
         {
             return (Bytes != null ? Bytes.GetHashCode() : 0);
         }
+        #endregion
 
+        #region Enumerator
         public IEnumerator<ROMByte> GetEnumerator()
         {
             return Bytes.GetEnumerator();
@@ -47,10 +64,6 @@ namespace DiztinGUIsh
         {
             return GetEnumerator();
         }
-
-        public void Add(ROMByte romByte)
-        {
-            Bytes.Add(romByte);
-        }
+        #endregion
     }
 }

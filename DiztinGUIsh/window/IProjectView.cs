@@ -12,5 +12,6 @@ namespace DiztinGUIsh
         public delegate void LongRunningTaskHandler(Action task, string description = null);
         LongRunningTaskHandler TaskHandler { get; }
         void SelectOffset(int offset, int column=-1);
+        string AskToSelectNewRomFilename(string promptSubject, string promptText);
     }
 }

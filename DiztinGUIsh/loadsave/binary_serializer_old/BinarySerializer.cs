@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using DiztinGUIsh.core.util;
 using DiztinGUIsh.window;
 
 namespace DiztinGUIsh.loadsave.binary_serializer_old
@@ -31,7 +32,7 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
 
             byte[] everything = new byte[HEADER_SIZE + data.Length];
             everything[0] = versionToSave;
-            Util.StringToByteArray(Watermark).CopyTo(everything, 1);
+            ByteUtil.StringToByteArray(Watermark).CopyTo(everything, 1);
             data.CopyTo(everything, HEADER_SIZE);
 
             return data;
@@ -51,22 +52,22 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             };
 
             // version 0 needs to convert PC to SNES for some addresses
-            Util.AddressConverter converter = address => address;
+            ByteUtil.AddressConverter converter = address => address;
             if (version == 0)
                 converter = project.Data.ConvertPCtoSNES;
 
             // read mode, speed, size
             project.Data.RomMapMode = (Data.ROMMapMode)data[HEADER_SIZE];
             project.Data.RomSpeed = (Data.ROMSpeed)data[HEADER_SIZE + 1];
-            var size = Util.ByteArrayToInteger(data, HEADER_SIZE + 2);
+            var size = ByteUtil.ByteArrayToInteger(data, HEADER_SIZE + 2);
 
             // read internal title
             var pointer = HEADER_SIZE + 6;
-            for (var i = 0; i < 0x15; i++) 
-                project.InternalRomGameName += (char)data[pointer++];
+            RomUtil.ReadStringFromByteArray(data, RomUtil.LengthOfTitleName, pointer);
+            pointer += RomUtil.LengthOfTitleName;
 
             // read checksums
-            project.InternalCheckSum = Util.ByteArrayToInteger(data, pointer);
+            project.InternalCheckSum = ByteUtil.ByteArrayToInteger(data, pointer);
             pointer += 4;
 
             // read full filepath to the ROM .sfc file
@@ -74,11 +75,7 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
                 project.AttachedRomFilename += (char)data[pointer++];
             pointer++;
 
-            var rom = project.ReadFromOriginalRom();
-            if (rom == null)
-                throw new Exception("Couldn't open the ROM file!");
-
-            project.Data.Initiate(rom, project.Data.RomMapMode, project.Data.RomSpeed);
+            project.Data.RomBytes.Create(size);
 
             for (int i = 0; i < size; i++) project.Data.SetDataBank(i, data[pointer + i]);
             for (int i = 0; i < size; i++) project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
@@ -97,7 +94,7 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             return project;
         }
 
-        private static void SaveStringToBytes(string str, List<byte> bytes)
+        private static void SaveStringToBytes(string str, ICollection<byte> bytes)
         {
             // TODO: combine with Util.StringToByteArray() probably.
             if (str != null) {
@@ -120,7 +117,7 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             romSettings[1] = (byte)project.Data.GetROMSpeed();
 
             // save the size, 4 bytes
-            Util.IntegerIntoByteArray(size, romSettings, 2);
+            ByteUtil.IntegerIntoByteArray(size, romSettings, 2);
 
             var romName = project.Data.GetRomNameFromRomBytes();
             romName.ToCharArray().CopyTo(romSettings, 6);
@@ -135,10 +132,10 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             var all_labels = project.Data.Labels;
             var all_comments = project.Data.Comments;
 
-            Util.IntegerIntoByteList(all_labels.Count, label);
-            foreach (var pair in all_labels)
+            ByteUtil.IntegerIntoByteList(all_labels.Count, label);
+            foreach (KeyValuePair<int, Label> pair in all_labels)
             {
-                Util.IntegerIntoByteList(pair.Key, label);
+                ByteUtil.IntegerIntoByteList(pair.Key, label);
 
                 SaveStringToBytes(pair.Value.name, label);
                 if (version >= 2)
@@ -147,28 +144,52 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
                 }
             }
 
-            Util.IntegerIntoByteList(all_comments.Count, comment);
+            ByteUtil.IntegerIntoByteList(all_comments.Count, comment);
             foreach (KeyValuePair<int, string> pair in all_comments)
             {
-                Util.IntegerIntoByteList(pair.Key, comment);
+                ByteUtil.IntegerIntoByteList(pair.Key, comment);
                 SaveStringToBytes(pair.Value, comment);
             }
 
             // save current Rom full path - "c:\whatever\someRom.sfc"
-            byte[] romLocation = Util.StringToByteArray(project.AttachedRomFilename);
+            var romLocation = ByteUtil.StringToByteArray(project.AttachedRomFilename);
 
-            byte[] data = new byte[romSettings.Length + romLocation.Length + 8 * size + label.Count + comment.Count];
+            var data = new byte[romSettings.Length + romLocation.Length + 8 * size + label.Count + comment.Count];
             romSettings.CopyTo(data, 0);
             for (int i = 0; i < romLocation.Length; i++) data[romSettings.Length + i] = romLocation[i];
 
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + i] = (byte)project.Data.GetDataBank(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + size + i] = (byte)project.Data.GetDirectPage(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 2 * size + i] = (byte)(project.Data.GetDirectPage(i) >> 8);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 3 * size + i] = (byte)(project.Data.GetXFlag(i) ? 1 : 0);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 4 * size + i] = (byte)(project.Data.GetMFlag(i) ? 1 : 0);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 5 * size + i] = (byte)project.Data.GetFlag(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 6 * size + i] = (byte)project.Data.GetArchitecture(i);
-            for (int i = 0; i < size; i++) data[romSettings.Length + romLocation.Length + 7 * size + i] = (byte)project.Data.GetInOutPoint(i);
+            var readOps = new Func<int, byte>[]
+            {
+                i => (byte)project.Data.GetDataBank(i),
+                i => (byte)project.Data.GetDataBank(i),
+                i => (byte)project.Data.GetDirectPage(i),
+                i => (byte)(project.Data.GetDirectPage(i) >> 8),
+                i => (byte)(project.Data.GetXFlag(i) ? 1 : 0),
+                i => (byte)(project.Data.GetMFlag(i) ? 1 : 0),
+                i => (byte)project.Data.GetFlag(i),
+                i => (byte)project.Data.GetArchitecture(i),
+                i => (byte)project.Data.GetInOutPoint(i),
+            };
+
+            void ReadOperation(int startIdx, int whichOp)
+            {
+                if (whichOp <= 0 || whichOp > readOps.Length)
+                    throw new ArgumentOutOfRangeException(nameof(whichOp));
+
+                var baseidx = startIdx + whichOp * size;
+                var op = readOps[whichOp];
+                for (var i = 0; i < size; i++)
+                {
+                    data[baseidx + i] = (byte)op(i);
+                }
+            }
+
+            for (var i = 0; i < readOps.Length; ++i)
+            {
+                var start = romSettings.Length + romLocation.Length;
+                ReadOperation(start, i);
+            }
+            
             // ???
             label.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size);
             comment.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size + label.Count);
@@ -205,10 +226,10 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             }
         }
 
-        private void ReadComments(Project project, byte[] bytes, ref int pointer, Util.AddressConverter converter)
+        private void ReadComments(Project project, byte[] bytes, ref int pointer, ByteUtil.AddressConverter converter)
         {
             const int stringsPerEntry = 1;
-            pointer += Util.ReadStringsTable(bytes, pointer, stringsPerEntry, converter, 
+            pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter, 
                 (int offset, string[] strings) =>
             {
                 Debug.Assert(strings.Length == 1);
@@ -216,10 +237,10 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             });
         }
 
-        private void ReadLabels(Project project, byte[] bytes, ref int pointer, Util.AddressConverter converter, bool readAliasComments)
+        private void ReadLabels(Project project, byte[] bytes, ref int pointer, ByteUtil.AddressConverter converter, bool readAliasComments)
         {
             var stringsPerEntry = readAliasComments ? 2 : 1;
-            pointer += Util.ReadStringsTable(bytes, pointer, stringsPerEntry, converter,
+            pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter,
                 (int offset, string[] strings) =>
                 {
                     Debug.Assert(strings.Length == stringsPerEntry);

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Windows.Forms;
+using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
 {
@@ -81,16 +80,23 @@ namespace DiztinGUIsh
             LogWriterSettings.SetDefaults();
         }
 
-        public struct ImportRomSettings
+        public class ImportRomSettings
         {
-            public Data.ROMMapMode ROMMapMode;
-            public Data.ROMSpeed ROMSpeed;
+            // temp
+            private Data.ROMMapMode mode;
+            public Data.ROMMapMode ROMMapMode
+            {
+                get => mode;
+                set => mode = value;
+            }
 
-            public Dictionary<int, Label> InitialLabels;
-            public Dictionary<int, Data.FlagType> InitialHeaderFlags;
+            public Data.ROMSpeed ROMSpeed { get; set; }
 
-            public byte[] rom_bytes;
-            public string rom_filename;
+            public Dictionary<int, Label> InitialLabels { get; set; }
+            public Dictionary<int, Data.FlagType> InitialHeaderFlags { get; set; }
+
+            public byte[] RomBytes { get; set; }
+            public string RomFilename { get; set; }
         }
 
         private string projectFileName;
@@ -101,87 +107,28 @@ namespace DiztinGUIsh
         private Data data;
         private LogWriterSettings logWriterSettings;
 
-        public byte[] ReadFromOriginalRom()
+        public string ReadRomIfMatchesProject(string filename, out byte[] romBytes)
         {
-            string firstRomFileWeTried;
-            var nextFileToTry = firstRomFileWeTried = AttachedRomFilename;
-            byte[] rom;
-
-            do {
-                var error = ReadRomIfMatchesProject(nextFileToTry, out rom);
-                if (error == null)
-                    break;
-
-                // TODO: move to controller
-                nextFileToTry = PromptForNewRom($"{error} Link a new ROM now?");
-                if (nextFileToTry == null)
-                    return null;
-            } while (true);
-
-            AttachedRomFilename = nextFileToTry;
-
-            if (AttachedRomFilename != firstRomFileWeTried)
-                UnsavedChanges = true;
-
-            return rom;
-        }
-
-        private string ReadRomIfMatchesProject(string filename, out byte[] rom_bytes)
-        {
-            string error_msg = null;
+            string errorMsg = null;
 
             try {
-                rom_bytes = Util.ReadAllRomBytesFromFile(filename);
-                if (rom_bytes != null)
+                romBytes = RomUtil.ReadAllRomBytesFromFile(filename);
+                if (romBytes != null)
                 {
-                    error_msg = IsThisRomIsIdenticalToUs(rom_bytes);
-                    if (error_msg == null)
+                    errorMsg = IsThisRomIsIdenticalToUs(romBytes);
+                    if (errorMsg == null)
                         return null;
                 }
             } catch (Exception ex) {
-                error_msg = ex.Message;
+                errorMsg = ex.Message;
             }
 
-            rom_bytes = null;
-            return error_msg;
+            romBytes = null;
+            return errorMsg;
         }
 
         private string IsThisRomIsIdenticalToUs(byte[] romBytes) => 
-            Util.IsThisRomIsIdenticalToUs(romBytes, Data.RomMapMode, InternalRomGameName, InternalCheckSum);
-        private string PromptForNewRom(string promptText)
-        {
-            // TODO: put this in the view, hooked up through controller.
-
-            var dialogResult = MessageBox.Show(promptText, "Error",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Error);
-
-            return dialogResult == DialogResult.Yes ? PromptToSelectFile() : null;
-        }
-
-        private string PromptToSelectFile()
-        {
-            // TODO: move to controller
-            return Util.PromptToSelectFile(ProjectFileName);
-        }
-
-        public bool PostSerializationLoad()
-        {
-            // at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
-            // It would be easy to store the ROM bytes in the save file, but, for copyright reasons,
-            // we leave it out.
-            //
-            // So now, with all our metadata loaded successfully, we now open the .smc file on disk
-            // and marry the original rom's bytes with all of our metadata loaded from the project file.
-
-            Debug.Assert(Data.RomBytes != null && Data.Labels != null && Data.Comments != null);
-
-            var rom = ReadFromOriginalRom();
-            if (rom == null)
-                return false;
-
-            Data.CopyRomDataIn(rom);
-            return true;
-        }
+            RomUtil.IsThisRomIsIdenticalToUs(romBytes, Data.RomMapMode, InternalRomGameName, InternalCheckSum);
 
         #region Equality
         protected bool Equals(Project other)

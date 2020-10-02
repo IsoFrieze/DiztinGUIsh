@@ -8,6 +8,7 @@ namespace DiztinGUIsh
 {
     public class ROMByte
     {
+        #region Equality
         protected bool Equals(ROMByte other)
         {
             return Rom == other.Rom && EqualsButNoRomByte(other);
@@ -41,14 +42,15 @@ namespace DiztinGUIsh
                 return hashCode;
             }
         }
+        #endregion
 
         public byte Rom { get; set; } // never serialize this, read from ROM on load. for copyright reasons.
         public byte DataBank { get; set; }
         public int DirectPage { get; set; }
         public bool XFlag { get; set; }
         public bool MFlag { get; set; }
-        public Data.FlagType TypeFlag { get; set; }
-        public Data.Architecture Arch { get; set; }
-        public Data.InOutPoint Point { get; set; }
+        public Data.FlagType TypeFlag { get; set; } = Data.FlagType.Unreached;
+        public Data.Architecture Arch { get; set; } = Data.Architecture.CPU65C816;
+        public Data.InOutPoint Point { get; set; } = 0;
     }
 }

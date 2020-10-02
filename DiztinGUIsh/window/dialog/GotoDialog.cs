@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
 {
@@ -57,7 +58,7 @@ namespace DiztinGUIsh
                 NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
                 Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
 
-                if (Util.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
+                if (ByteUtil.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
                 {
                     onSuccess(txtChanged, address, noBase);
                     result = true;

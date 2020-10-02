@@ -5,7 +5,9 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
+using DiztinGUIsh.core.util;
 using DiztinGUIsh.Properties;
+using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh
 {
@@ -101,8 +103,16 @@ namespace DiztinGUIsh
 
         private void openLastProject()
         {
-            if (Settings.Default.LastOpenedFile != "")
-                OpenProject(Settings.Default.LastOpenedFile);
+            if (LastProjectFilename == "") 
+                return;
+
+            // safeguard: if we crash opening this project,
+            // then next time we load make sure we don't try it again.
+            // this will be reset later
+            var projectToOpen = LastProjectFilename;
+            LastProjectFilename = "";
+
+            OpenProject(projectToOpen);
         }
 
         public void UpdateWindowTitle()
@@ -149,27 +159,32 @@ namespace DiztinGUIsh
         private string PromptForOpenFilename()
         {
             // TODO: combine with another function in Project that looks like this
-            openFileDialog.InitialDirectory = Project.ProjectFileName;
-            return openFileDialog.ShowDialog() != DialogResult.OK ? openFileDialog.FileName : null;
+            openFileDialog.InitialDirectory = Project?.ProjectFileName ?? "";
+            return openFileDialog.ShowDialog() == DialogResult.OK ? openFileDialog.FileName : null;
         }
 
         private bool TryImportProject(string romFileToOpen)
         {
             try
             {
-                var importSettings = new ImportROMDialog().PromptForImportSettings(romFileToOpen);
+                var importSettings = PromptForImportSettings(romFileToOpen);
                 if (importSettings == null)
                     return false;
 
-                ProjectController.ImportRomAndCreateNewProject(importSettings.Value);
+                ProjectController.ImportRomAndCreateNewProject(importSettings);
                 return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "Error importing project", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             return false;
+        }
+
+        private static Project.ImportRomSettings PromptForImportSettings(string romFileToOpen)
+        {
+            return new ImportRomDialog().PromptForImportSettings(romFileToOpen);
         }
 
         private void openProjectToolStripMenuItem_Click(object sender, EventArgs e)
@@ -210,9 +225,10 @@ namespace DiztinGUIsh
 
         public void OnProjectOpened(string filename)
         {
-            LastProjectFilename = filename;
             UpdateSaveOptionStates(true, true);
             RefreshUI();
+
+            LastProjectFilename = filename; // do this last.
         }
 
         private void OnImportedProjectSuccess()
@@ -419,7 +435,7 @@ namespace DiztinGUIsh
 
         private int ViewOffset
         {
-            get => Project.CurrentViewOffset;
+            get => Project?.CurrentViewOffset ?? 0;
             set => Project.CurrentViewOffset = value;
         }
 
@@ -588,7 +604,7 @@ namespace DiztinGUIsh
                     e.Value = Util.NumberToBaseString(Project.Data.GetROMByte(row), DisplayBase);
                     break;
                 case 4:
-                    e.Value = Util.PointToString(Project.Data.GetInOutPoint(row));
+                    e.Value = RomUtil.PointToString(Project.Data.GetInOutPoint(row));
                     break;
                 case 5:
                     int len = Project.Data.GetInstructionLength(row);
@@ -601,7 +617,7 @@ namespace DiztinGUIsh
                     else e.Value = "";
                     break;
                 case 7:
-                    e.Value = Util.TypeToString(Project.Data.GetFlag(row));
+                    e.Value = RomUtil.TypeToString(Project.Data.GetFlag(row));
                     break;
                 case 8:
                     e.Value = Util.NumberToBaseString(Project.Data.GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
@@ -610,10 +626,10 @@ namespace DiztinGUIsh
                     e.Value = Util.NumberToBaseString(Project.Data.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
                     break;
                 case 10:
-                    e.Value = Util.BoolToSize(Project.Data.GetMFlag(row));
+                    e.Value = RomUtil.BoolToSize(Project.Data.GetMFlag(row));
                     break;
                 case 11:
-                    e.Value = Util.BoolToSize(Project.Data.GetXFlag(row));
+                    e.Value = RomUtil.BoolToSize(Project.Data.GetXFlag(row));
                     break;
                 case 12:
                     e.Value = Project.Data.GetComment(Project.Data.ConvertPCtoSNES(row));
@@ -817,7 +833,7 @@ namespace DiztinGUIsh
         private void Mark(int offset)
         {
             ProjectController.MarkChanged();
-            SelectOffset(Project.Data.Mark(offset, markFlag, Util.TypeStepSize(markFlag)));
+            SelectOffset(Project.Data.Mark(offset, markFlag, RomUtil.TypeStepSize(markFlag)));
             UpdatePercent();
             UpdateWindowTitle();
         }
@@ -1215,6 +1231,13 @@ namespace DiztinGUIsh
         private void toolStripOpenLast_Click(object sender, EventArgs e)
         {
             openLastProject();
+        }
+
+        public string AskToSelectNewRomFilename(string promptSubject, string promptText)
+        {
+            return GuiUtil.AskIfWeShouldSelectFilename(promptSubject, promptText, 
+                () => GuiUtil.PromptToSelectFile(Project.ProjectFileName)
+                );
         }
     }
 }

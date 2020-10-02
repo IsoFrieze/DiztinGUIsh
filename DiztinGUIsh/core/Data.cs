@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using DiztinGUIsh.core.util;
@@ -58,7 +58,24 @@ namespace DiztinGUIsh
 
         public enum ROMMapMode : byte
         {
-            LoROM, HiROM, ExHiROM, SA1ROM, ExSA1ROM, SuperFX, SuperMMC, ExLoROM
+            LoROM,
+
+            HiROM, 
+
+            ExHiROM, 
+
+            [Description("SA - 1 ROM")]
+            SA1ROM, 
+
+            [Description("SA-1 ROM (FuSoYa's 8MB mapper)")]
+            ExSA1ROM, 
+
+            SuperFX,
+
+            [Description("Super MMC")]
+            SuperMMC, 
+
+            ExLoROM
         }
 
         public enum ROMSpeed : byte
@@ -89,27 +106,15 @@ namespace DiztinGUIsh
             romMemoryOp = new Func<int, int>[] {GetROMByte, GetROMWord, GetROMLong, GetROMDoubleWord};
         }
 
-        public void Initiate(byte[] actualRomBytes, Data.ROMMapMode mode, Data.ROMSpeed speed)
+        public void CreateRomBytesFromRom(IEnumerable<byte> actualRomBytes)
         {
-            RomMapMode = mode;
-            RomSpeed = speed;
-            CreateRomBytesFromRom(actualRomBytes);
-        }
-
-        private void CreateRomBytesFromRom(IEnumerable<byte> actualRomBytes)
-        {
+            Debug.Assert(RomBytes.Count == 0);
+            RomBytes.Clear();
             foreach (var fileByte in actualRomBytes)
             {
                 RomBytes.Add(new ROMByte
                 {
                     Rom = fileByte,
-                    DataBank = 0,
-                    DirectPage = 0,
-                    XFlag = false,
-                    MFlag = false,
-                    TypeFlag = Data.FlagType.Unreached,
-                    Arch = Data.Architecture.CPU65C816,
-                    Point = 0
                 });
             }
         }
@@ -130,14 +135,14 @@ namespace DiztinGUIsh
 
         public int GetRomCheckSumsFromRomBytes()
         {
-            return Util.ByteArrayToInteger(GetRomBytes(0xFFDC, 4));
+            return ByteUtil.ByteArrayToInteger(GetRomBytes(0xFFDC, 4));
         }
 
         public void CopyRomDataIn(byte[] data)
         {
-            int size = data.Length;
+            var size = data.Length;
             Debug.Assert(RomBytes.Count == size);
-            for (int i = 0; i < size; i++)
+            for (var i = 0; i < size; i++)
             {
                 RomBytes[i].Rom = data[i];
             }
@@ -229,7 +234,7 @@ namespace DiztinGUIsh
 
         public int ConvertPCtoSNES(int offset)
         {
-            return Util.ConvertPCtoSNES(offset, RomMapMode, GetROMSpeed());
+            return RomUtil.ConvertPCtoSNES(offset, RomMapMode, GetROMSpeed());
         }
         public int GetROMByte(int i) => RomBytes[i].Rom;
         public int GetROMWord(int offset)
@@ -280,7 +285,7 @@ namespace DiztinGUIsh
 
         private int UnmirroredOffset(int offset)
         {
-            return Util.UnmirroredOffset(offset, GetROMSize());
+            return RomUtil.UnmirroredOffset(offset, GetROMSize());
         }
 
         public string GetFormattedBytes(int offset, int step, int bytes)
@@ -320,7 +325,7 @@ namespace DiztinGUIsh
 
         public int ConvertSNEStoPC(int address)
         {
-            return Util.ConvertSNESToPC(address, RomMapMode, GetROMSize());
+            return RomUtil.ConvertSNESToPC(address, RomMapMode, GetROMSize());
         }
 
         public string GetPointer(int offset, int bytes)
@@ -362,7 +367,7 @@ namespace DiztinGUIsh
         public string GetDefaultLabel(int offset)
         {
             var snes = ConvertPCtoSNES(offset);
-            var prefix = Util.TypeToLabel(GetFlag(offset));
+            var prefix = RomUtil.TypeToLabel(GetFlag(offset));
             var labelAddress = Util.NumberToBaseString(snes, Util.NumberBase.Hexadecimal, 6);
             return $"{prefix}_{labelAddress}";
         }
@@ -562,9 +567,9 @@ namespace DiztinGUIsh
                         break;
                     default:
                     {
-                        if (Util.TypeStepSize(flag) > 1)
+                        if (RomUtil.TypeStepSize(flag) > 1)
                         {
-                            int step = Util.TypeStepSize(flag);
+                            int step = RomUtil.TypeStepSize(flag);
                             for (int j = 1; j < step; j++)
                             {
                                 if (GetFlag(i + j) == flag) 
