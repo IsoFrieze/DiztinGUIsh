@@ -60,7 +60,7 @@
             // 
             // project_ImportRomSettingsBindingSource
             // 
-            this.project_ImportRomSettingsBindingSource.DataSource = typeof(DiztinGUIsh.Project.ImportRomSettings);
+            this.project_ImportRomSettingsBindingSource.DataSource = typeof(DiztinGUIsh.loadsave.ImportRomSettings);
             // 
             // rOMMapModeComboBox
             // 

@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using DiztinGUIsh.loadsave;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window
 {
     public class ProjectController
     {
@@ -92,7 +92,7 @@ namespace DiztinGUIsh
             });
         }
 
-        public void ImportRomAndCreateNewProject(Project.ImportRomSettings importSettings)
+        public void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
         {
             var project = ProjectFileManager.ImportRomAndCreateNewProject(importSettings);
             OnProjectOpenSuccess(project.ProjectFileName, project);

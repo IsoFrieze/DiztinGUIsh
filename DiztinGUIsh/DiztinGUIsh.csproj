@@ -117,6 +117,7 @@
     <Compile Include="core\util\ObservableDictionary.cs" />
     <Compile Include="core\util\RomUtil.cs" />
     <Compile Include="loadsave\binary_serializer_old\BinarySerializer.cs" />
+    <Compile Include="loadsave\ImportSettings.cs" />
     <Compile Include="loadsave\ProjectSerializer.cs" />
     <Compile Include="loadsave\ProjectFileManager.cs" />
     <Compile Include="loadsave\xml_serializer\ProjectXMLSerializer.cs" />
@@ -258,15 +259,9 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
-    <None Include="Properties\DataSources\Data.Architecture.datasource" />
-    <None Include="Properties\DataSources\Data.datasource" />
-    <None Include="Properties\DataSources\Data.FlagType.datasource" />
-    <None Include="Properties\DataSources\Data.InOutPoint.datasource" />
-    <None Include="Properties\DataSources\Data.ROMMapMode.datasource" />
-    <None Include="Properties\DataSources\Data.ROMSpeed.datasource" />
-    <None Include="Properties\DataSources\Project.datasource" />
-    <None Include="Properties\DataSources\Project.ImportRomSettings.datasource" />
-    <None Include="Properties\DataSources\ROMByte.datasource" />
+    <None Include="Properties\DataSources\DiztinGUIsh.loadsave.ImportRomSettings.datasource" />
+    <None Include="Properties\DataSources\DiztinGUIsh.window.dialog.ImportRomDialog+EnumMapper`1.datasource" />
+    <None Include="Properties\DataSources\DiztinGUIsh.window.dialog.ImportRomDialog+ImportRomViewModel.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

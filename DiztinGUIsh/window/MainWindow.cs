@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 using DiztinGUIsh.core.util;
+using DiztinGUIsh.loadsave;
 using DiztinGUIsh.Properties;
 using DiztinGUIsh.window.dialog;
 
@@ -165,24 +166,24 @@ namespace DiztinGUIsh
 
         private bool TryImportProject(string romFileToOpen)
         {
-            try
-            {
-                var importSettings = PromptForImportSettings(romFileToOpen);
-                if (importSettings == null)
-                    return false;
+            //try // temp remove this for debuggin.
+            //{
+            var importSettings = PromptForImportSettings(romFileToOpen);
+            if (importSettings == null)
+                return false;
 
-                ProjectController.ImportRomAndCreateNewProject(importSettings);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error importing project", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            ProjectController.ImportRomAndCreateNewProject(importSettings);
+            return true;
+            //}
+            //catch (Exception ex)
+            //{
+             //   MessageBox.Show(ex.Message, "Error importing project", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //}
 
             return false;
         }
 
-        private static Project.ImportRomSettings PromptForImportSettings(string romFileToOpen)
+        private static ImportRomSettings PromptForImportSettings(string romFileToOpen)
         {
             return new ImportRomDialog().PromptForImportSettings(romFileToOpen);
         }

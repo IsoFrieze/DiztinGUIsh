@@ -5,7 +5,15 @@ using DiztinGUIsh.Annotations;
 
 namespace DiztinGUIsh
 {
-    public class DizModel : INotifyPropertyChanged
+    public class DizDataModel : PropertyNotifyChanged
+    {
+
+    }
+    public class DizViewModel : PropertyNotifyChanged
+    {
+
+    }
+    public class PropertyNotifyChanged : INotifyPropertyChanged
     {
         // this stuff lets other parts of code subscribe to events that get fired anytime
         // properties of our class change.

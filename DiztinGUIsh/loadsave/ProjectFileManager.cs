@@ -130,7 +130,7 @@ namespace DiztinGUIsh.loadsave
             return data;
         }
 
-        public static Project ImportRomAndCreateNewProject(Project.ImportRomSettings importSettings)
+        public static Project ImportRomAndCreateNewProject(ImportRomSettings importSettings)
         {
             var project = new Project
             {

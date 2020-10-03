@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Windows.Forms;
+using DiztinGUIsh.loadsave;
 
 namespace DiztinGUIsh.window.dialog
 {
     public partial class TestForm : Form
     {
-        public Project.ImportRomSettings settings = new Project.ImportRomSettings()
+        public ImportRomSettings settings = new ImportRomSettings()
         {
             ROMMapMode = Data.ROMMapMode.SuperFX
         };

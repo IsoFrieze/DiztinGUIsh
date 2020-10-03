@@ -5,6 +5,6 @@
     Renaming the file extension or editing the content of this file may   
     cause the file to be unrecognizable by the program.
 -->
-<GenericObjectDataSource DisplayName="Data+FlagType" Version="1.0" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
-   <TypeInfo>DiztinGUIsh.Data+FlagType, DiztinGUIsh, Version=1.0.66.0, Culture=neutral, PublicKeyToken=null</TypeInfo>
+<GenericObjectDataSource DisplayName="ImportRomDialog+EnumMapper`1" Version="1.0" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+   <TypeInfo>DiztinGUIsh.window.dialog.ImportRomDialog+EnumMapper`1, DiztinGUIsh, Version=1.0.69.0, Culture=neutral, PublicKeyToken=null</TypeInfo>
 </GenericObjectDataSource>

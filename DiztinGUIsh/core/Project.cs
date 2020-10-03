@@ -4,7 +4,7 @@ using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
 {
-    public class Project : DizModel
+    public class Project : DizDataModel
     {
         // Any public properties will be automatically serialized to XML.
         // They require a get AND set. Order is important.
@@ -80,24 +80,6 @@ namespace DiztinGUIsh
             LogWriterSettings.SetDefaults();
         }
 
-        public class ImportRomSettings
-        {
-            // temp
-            private Data.ROMMapMode mode;
-            public Data.ROMMapMode ROMMapMode
-            {
-                get => mode;
-                set => mode = value;
-            }
-
-            public Data.ROMSpeed ROMSpeed { get; set; }
-
-            public Dictionary<int, Label> InitialLabels { get; set; }
-            public Dictionary<int, Data.FlagType> InitialHeaderFlags { get; set; }
-
-            public byte[] RomBytes { get; set; }
-            public string RomFilename { get; set; }
-        }
 
         private string projectFileName;
         private string attachedRomFilename;

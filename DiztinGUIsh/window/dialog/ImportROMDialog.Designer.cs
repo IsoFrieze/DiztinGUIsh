@@ -28,10 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.Label sourceLabel;
             this.detectMessage = new System.Windows.Forms.Label();
             this.checkData = new System.Windows.Forms.Label();
-            this.cmbRomMapMode = new System.Windows.Forms.ComboBox();
-            this.mapmode = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.cancel = new System.Windows.Forms.Button();
@@ -41,6 +40,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cmbRomMapMode = new System.Windows.Forms.ComboBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label13 = new System.Windows.Forms.Label();
             this.checkboxEmuIRQ = new System.Windows.Forms.CheckBox();
@@ -76,9 +76,19 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.checkHeader = new System.Windows.Forms.CheckBox();
+            sourceLabel = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // sourceLabel
+            // 
+            sourceLabel.AutoSize = true;
+            sourceLabel.Location = new System.Drawing.Point(14, 22);
+            sourceLabel.Name = "sourceLabel";
+            sourceLabel.Size = new System.Drawing.Size(83, 13);
+            sourceLabel.TabIndex = 5;
+            sourceLabel.Text = "Rom Map Mode";
             // 
             // detectMessage
             // 
@@ -99,27 +109,6 @@
             this.checkData.TabIndex = 1;
             this.checkData.Text = "Does the following info look correct?";
             this.checkData.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // cmbRomMapMode
-            // 
-            this.cmbRomMapMode.FormattingEnabled = true;
-            this.cmbRomMapMode.Location = new System.Drawing.Point(103, 18);
-            this.cmbRomMapMode.Name = "cmbRomMapMode";
-            this.cmbRomMapMode.Size = new System.Drawing.Size(121, 21);
-            this.cmbRomMapMode.TabIndex = 1;
-            this.cmbRomMapMode.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
-            this.cmbRomMapMode.DropDownClosed += new System.EventHandler(this.comboBox1_DropDownClosed);
-            this.cmbRomMapMode.TextChanged += new System.EventHandler(this.comboBox1_TextChanged);
-            this.cmbRomMapMode.Validating += new System.ComponentModel.CancelEventHandler(this.comboBox1_Validating);
-            // 
-            // mapmode
-            // 
-            this.mapmode.AutoSize = true;
-            this.mapmode.Location = new System.Drawing.Point(11, 21);
-            this.mapmode.Name = "mapmode";
-            this.mapmode.Size = new System.Drawing.Size(89, 13);
-            this.mapmode.TabIndex = 0;
-            this.mapmode.Text = "ROM Map Mode:";
             // 
             // label4
             // 
@@ -201,18 +190,26 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.mapmode);
             this.groupBox1.Controls.Add(this.cmbRomMapMode);
+            this.groupBox1.Controls.Add(sourceLabel);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.romtitle);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.romspeed);
             this.groupBox1.Location = new System.Drawing.Point(12, 74);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(235, 89);
+            this.groupBox1.Size = new System.Drawing.Size(374, 257);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "ROM Information";
+            // 
+            // cmbRomMapMode
+            // 
+            this.cmbRomMapMode.FormattingEnabled = true;
+            this.cmbRomMapMode.Location = new System.Drawing.Point(102, 18);
+            this.cmbRomMapMode.Name = "cmbRomMapMode";
+            this.cmbRomMapMode.Size = new System.Drawing.Size(142, 21);
+            this.cmbRomMapMode.TabIndex = 6;
             // 
             // groupBox2
             // 
@@ -606,7 +603,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
-            this.ClientSize = new System.Drawing.Size(261, 424);
+            this.ClientSize = new System.Drawing.Size(262, 424);
             this.Controls.Add(this.checkHeader);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -636,8 +633,6 @@
 
         private System.Windows.Forms.Label detectMessage;
         private System.Windows.Forms.Label checkData;
-        private System.Windows.Forms.ComboBox cmbRomMapMode;
-        private System.Windows.Forms.Label mapmode;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button cancel;
@@ -682,5 +677,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox checkHeader;
+        private System.Windows.Forms.ComboBox cmbRomMapMode;
     }
 }
