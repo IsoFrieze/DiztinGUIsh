@@ -1,13 +1,11 @@
 ﻿using DiztinGUIsh.window;
 using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 using DiztinGUIsh.core;
 using DiztinGUIsh.core.util;
-using DiztinGUIsh.loadsave;
 using DiztinGUIsh.Properties;
 using DiztinGUIsh.window.dialog;
 
@@ -96,10 +94,10 @@ namespace DiztinGUIsh
             UpdateUIFromSettings();
 
             if (Settings.Default.OpenLastFileAutomatically)
-                openLastProject();
+                OpenLastProject();
         }
 
-        private void openLastProject()
+        private void OpenLastProject()
         {
             if (LastProjectFilename == "") 
                 return;
@@ -132,10 +130,10 @@ namespace DiztinGUIsh
 
         }
 
-        public void UpdateSaveOptionStates(bool save, bool saveas)
+        public void UpdateSaveOptionStates(bool saveEnabled, bool saveAsEnabled)
         {
-            saveProjectToolStripMenuItem.Enabled = save;
-            saveProjectAsToolStripMenuItem.Enabled = saveas;
+            saveProjectToolStripMenuItem.Enabled = saveEnabled;
+            saveProjectAsToolStripMenuItem.Enabled = saveAsEnabled;
             exportLogToolStripMenuItem.Enabled = true;
         }
 
@@ -148,41 +146,14 @@ namespace DiztinGUIsh
             if (string.IsNullOrEmpty(romFilename))
                 return;
 
-            if (!TryImportProject(openFileDialog.FileName))
-                return;
-
-            OnImportedProjectSuccess();
+            ProjectController.ImportRomAndCreateNewProject(openFileDialog.FileName);
         }
 
         private string PromptForOpenFilename()
         {
-            // TODO: combine with another function in Project that looks like this
+            // TODO: combine with another function in Project that feels similar to this
             openFileDialog.InitialDirectory = Project?.ProjectFileName ?? "";
             return openFileDialog.ShowDialog() == DialogResult.OK ? openFileDialog.FileName : null;
-        }
-
-        private bool TryImportProject(string romFileToOpen)
-        {
-            //try // temp remove this for debuggin.
-            //{
-            var importSettings = PromptForImportSettings(romFileToOpen);
-            if (importSettings == null)
-                return false;
-
-            ProjectController.ImportRomAndCreateNewProject(importSettings);
-            return true;
-            //}
-            //catch (Exception ex)
-            //{
-             //   MessageBox.Show(ex.Message, "Error importing project", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //}
-
-            return false;
-        }
-
-        private static ImportRomSettings PromptForImportSettings(string romFileToOpen)
-        {
-            return new ImportRomDialog().PromptForImportSettings(romFileToOpen);
         }
 
         private void openProjectToolStripMenuItem_Click(object sender, EventArgs e)
@@ -197,7 +168,7 @@ namespace DiztinGUIsh
             OpenProject(openProjectFile.FileName);
         }
 
-        // TODO: state change needs to go in controller
+        // TODO: state change should be moved into the controller
         public string LastProjectFilename
         {
             get => Settings.Default.LastOpenedFile;
@@ -212,7 +183,7 @@ namespace DiztinGUIsh
 
         private void UpdateUIFromSettings()
         {
-            bool lastOpenedFilePresent = Settings.Default.LastOpenedFile != "";
+            var lastOpenedFilePresent = Settings.Default.LastOpenedFile != "";
             toolStripOpenLast.Enabled = lastOpenedFilePresent;
             toolStripOpenLast.Text = "Open Last File";
             if (lastOpenedFilePresent)
@@ -249,7 +220,6 @@ namespace DiztinGUIsh
         {
             LastProjectFilename = "";
         }
-
 
         public void OpenProject(string filename)
         {
@@ -297,9 +267,11 @@ namespace DiztinGUIsh
         private void importCDLToolStripMenuItem_Click(object sender, EventArgs e)
         {
             openCDLDialog.InitialDirectory = Project.ProjectFileName;
-            DialogResult result = openCDLDialog.ShowDialog();
-            if (result != DialogResult.OK) return;
-            if (!ContinueUnsavedChanges()) return;
+            if (openCDLDialog.ShowDialog() != DialogResult.OK) 
+                return;
+            
+            if (!ContinueUnsavedChanges()) 
+                return;
 
             var filename = openCDLDialog.FileName;
 
@@ -431,6 +403,13 @@ namespace DiztinGUIsh
 
         // DataGridView
 
+        // TODO: add a handler so we get notified when CurrentViewOffset changes.
+        // then, we split most of our functions up into
+        // 1. things that change ViewOffset
+        // 2. things that react to ViewOffset changes.
+        //
+        // This will allow more flexibility and synchronizing different views (i.e. main table, graphics, layout, etc)
+        // and this lets us save this value with the project file itself.
         private int ViewOffset
         {
             get => Project?.CurrentViewOffset ?? 0;
@@ -466,7 +445,7 @@ namespace DiztinGUIsh
             if (Project?.Data == null || Project.Data.GetROMSize() <= 0) 
                 return;
             int selRow = table.CurrentCell.RowIndex + ViewOffset, selCol = table.CurrentCell.ColumnIndex;
-            int amount = e.Delta / 0x18;
+            var amount = e.Delta / 0x18;
             ViewOffset -= amount;
             UpdateDataGridView();
             if (selRow < ViewOffset) selRow = ViewOffset;
@@ -1164,11 +1143,6 @@ namespace DiztinGUIsh
             moveWithStepToolStripMenuItem.Checked = MoveWithStep;
         }
 
-        public OpenFileDialog GetRomOpenFileDialog()
-        {
-            return openFileDialog;
-        }
-
         // sub windows
         public AliasList aliasList;
 
@@ -1228,7 +1202,7 @@ namespace DiztinGUIsh
 
         private void toolStripOpenLast_Click(object sender, EventArgs e)
         {
-            openLastProject();
+            OpenLastProject();
         }
 
         public string AskToSelectNewRomFilename(string promptSubject, string promptText)
@@ -1236,6 +1210,11 @@ namespace DiztinGUIsh
             return GuiUtil.PromptToConfirmAction(promptSubject, promptText, 
                 () => GuiUtil.PromptToSelectFile(Project.ProjectFileName)
                 );
+        }
+
+        public IImportRomDialogView GetImportView()
+        {
+            return new ImportRomDialog();
         }
     }
 }

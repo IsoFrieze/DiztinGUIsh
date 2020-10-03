@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using DiztinGUIsh.loadsave;
+using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
 {
@@ -92,6 +93,20 @@ namespace DiztinGUIsh.window
             });
         }
 
+        public bool ImportRomAndCreateNewProject(string ROMFilename)
+        {
+            // let the user select settings on the GUI
+            var importController = new ImportROMDialogController {View = ProjectView.GetImportView()};
+            importController.View.Controller = importController;
+            var importSettings = importController.PromptUserForRomSettings(ROMFilename);
+            if (importSettings == null)
+                return false;
+
+            // actually do the import
+            ImportRomAndCreateNewProject(importSettings);
+            return true;
+        }
+
         public void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
         {
             var project = ProjectFileManager.ImportRomAndCreateNewProject(importSettings);
@@ -132,7 +147,7 @@ namespace DiztinGUIsh.window
 
         public void UpdateExportSettings(LogWriterSettings selectedSettings)
         {
-            // TODO: ref readonly or similar here, to save us an extra copy of the struct.
+            // TODO: ref readonly or similar here, to save us an extra copy of the struct?
 
             Project.LogWriterSettings = selectedSettings;
         }

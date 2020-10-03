@@ -30,8 +30,11 @@ namespace DiztinGUIsh.core
 
         public enum Architecture : byte
         {
+            [Description("65C816")]
             CPU65C816 = 0x00,
+            [Description("SPC700")]
             APUSPC700 = 0x01,
+            [Description("SuperFX")]
             GPUSuperFX = 0x02
         }
 

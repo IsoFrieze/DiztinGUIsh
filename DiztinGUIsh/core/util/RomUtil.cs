@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace DiztinGUIsh.core.util
@@ -177,6 +178,7 @@ namespace DiztinGUIsh.core.util
             return repeatedOffset;
         }
 
+        // TODO: these can be attributes on the enum itself. like [AsmLabel("UNREACH")]
         public static string TypeToLabel(Data.FlagType flag)
         {
             return flag switch
@@ -261,17 +263,6 @@ namespace DiztinGUIsh.core.util
             };
         }
 
-        public static string ArchToString(Data.Architecture arch)
-        {
-            return arch switch
-            {
-                Data.Architecture.CPU65C816 => "65C816",
-                Data.Architecture.APUSPC700 => "SPC700",
-                Data.Architecture.GPUSuperFX => "SuperFX",
-                _ => ""
-            };
-        }
-
         public static string PointToString(Data.InOutPoint point)
         {
             string result;
@@ -350,6 +341,44 @@ namespace DiztinGUIsh.core.util
                 for (int i = 0; i < 10; i++) 
                     flags.Add(romSettingsOffset - 0x1F + i, Data.FlagType.Data8Bit);
             }
+        }
+
+
+        public static Dictionary<int, Label> GenerateVectorLabels(Dictionary<string, bool> vectorNames, int romSettingsOffset, IReadOnlyList<byte> romBytes, Data.ROMMapMode mode)
+        {
+            // TODO: probably better to just use a data structure for this instead of generating the 
+            // offsets with table/entry vars
+
+            var labels = new Dictionary<int, Label>();
+
+            var baseOffset = romSettingsOffset + 15;
+
+            var table = 0; const int tableCount = 2;
+            var entry = 0; const int entryCount = 6;
+            foreach (var vectorEntry in vectorNames)
+            {
+                Debug.Assert(table >= 0 && table < tableCount);
+                Debug.Assert(entry >= 0 && entry < entryCount);
+                // table = 0,1              // which table of Native vs Emulation
+                // entry = 0,1,2,3,4,5      // which offset
+                //
+                // 16*i = 16,32,
+
+                var index = baseOffset + (16 * table) + (2 * entry);
+                var offset = romBytes[index] + (romBytes[index + 1] << 8);
+                var pc = ConvertSNESToPC(offset, mode, romBytes.Count);
+                if (pc >= 0 && pc < romBytes.Count && !labels.ContainsKey(offset))
+                    labels.Add(offset, new Label() { name = vectorEntry.Key });
+
+                if (++entry < entryCount)
+                    continue;
+
+                entry = 0;
+                if (++table >= tableCount)
+                    break;
+            }
+
+            return labels;
         }
 
         public const int LengthOfTitleName = 0x15;

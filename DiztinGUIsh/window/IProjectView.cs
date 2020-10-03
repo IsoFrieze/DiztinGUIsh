@@ -1,4 +1,5 @@
 ﻿using System;
+using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh
 {
@@ -13,5 +14,6 @@ namespace DiztinGUIsh
         LongRunningTaskHandler TaskHandler { get; }
         void SelectOffset(int offset, int column=-1);
         string AskToSelectNewRomFilename(string promptSubject, string promptText);
+        IImportRomDialogView GetImportView();
     }
 }

@@ -82,6 +82,15 @@
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
+            // sourceLabel
+            // 
+            sourceLabel.AutoSize = true;
+            sourceLabel.Location = new System.Drawing.Point(14, 28);
+            sourceLabel.Name = "sourceLabel";
+            sourceLabel.Size = new System.Drawing.Size(83, 13);
+            sourceLabel.TabIndex = 5;
+            sourceLabel.Text = "Rom Map Mode";
+            // 
             // detectMessage
             // 
             this.detectMessage.AutoSize = true;
@@ -529,6 +538,7 @@
             this.checkHeader.TabIndex = 6;
             this.checkHeader.Text = "Auto generate flags for Internal ROM Header";
             this.checkHeader.UseVisualStyleBackColor = true;
+            this.checkHeader.CheckedChanged += new System.EventHandler(this.checkHeader_CheckedChanged);
             // 
             // label14
             // 
@@ -574,15 +584,6 @@
             this.label4.Size = new System.Drawing.Size(69, 13);
             this.label4.TabIndex = 2;
             this.label4.Text = "ROM Speed:";
-            // 
-            // sourceLabel
-            // 
-            sourceLabel.AutoSize = true;
-            sourceLabel.Location = new System.Drawing.Point(14, 28);
-            sourceLabel.Name = "sourceLabel";
-            sourceLabel.Size = new System.Drawing.Size(83, 13);
-            sourceLabel.TabIndex = 5;
-            sourceLabel.Text = "Rom Map Mode";
             // 
             // cmbRomMapMode
             // 
@@ -630,6 +631,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "New Project";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ImportRomDialog_FormClosing);
             this.Load += new System.EventHandler(this.ImportROMDialog_Load);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();

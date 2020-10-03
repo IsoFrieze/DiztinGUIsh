@@ -112,6 +112,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="core\import\BizHawkCdl.cs" />
+    <Compile Include="core\import\BSNESUsageMap.cs" />
     <Compile Include="core\util\ByteUtil.cs" />
     <Compile Include="core\util\LargeFilesReader.cs" />
     <Compile Include="core\util\ObservableDictionary.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="loadsave\xml_serializer\RomBytesXMLSerializer.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="window\dialog\ImportROMDialogController.cs" />
     <Compile Include="window\dialog\TestForm.cs">
       <SubType>Form</SubType>
     </Compile>
