@@ -6,9 +6,9 @@ using DiztinGUIsh.core;
 
 namespace DiztinGUIsh
 {
-    public class BizHawkCdl
+    public class BizHawkCdlImporter
     {
-        private Dictionary<string, IList<BizHawkCdl.Flag>> cdl = new Dictionary<string, IList<Flag>>();
+        private readonly Dictionary<string, IList<BizHawkCdlImporter.Flag>> cdl = new Dictionary<string, IList<Flag>>();
         
         [Flags]
         public enum Flag : byte
@@ -25,7 +25,7 @@ namespace DiztinGUIsh
 
         public static void Import(string filename, Data data)
         {
-            var cdl = new BizHawkCdl();
+            var cdl = new BizHawkCdlImporter();
             cdl.LoadFromFile(filename);
             cdl.CopyInto(data);
         }
@@ -75,21 +75,21 @@ namespace DiztinGUIsh
             for (var offset = 0; offset < size; offset++)
             {
                 var cdlFlag = cdlRomFlags[offset];
-                if (cdlFlag == BizHawkCdl.Flag.None)
+                if (cdlFlag == BizHawkCdlImporter.Flag.None)
                     continue;
 
                 var type = Data.FlagType.Unreached;
-                if ((cdlFlag & BizHawkCdl.Flag.ExecFirst) != 0)
+                if ((cdlFlag & BizHawkCdlImporter.Flag.ExecFirst) != 0)
                 {
                     type = Data.FlagType.Opcode;
-                    m = (cdlFlag & BizHawkCdl.Flag.CPUMFlag) != 0;
-                    x = (cdlFlag & BizHawkCdl.Flag.CPUXFlag) != 0;
+                    m = (cdlFlag & BizHawkCdlImporter.Flag.CPUMFlag) != 0;
+                    x = (cdlFlag & BizHawkCdlImporter.Flag.CPUXFlag) != 0;
                 }
-                else if ((cdlFlag & BizHawkCdl.Flag.ExecOperand) != 0)
+                else if ((cdlFlag & BizHawkCdlImporter.Flag.ExecOperand) != 0)
                     type = Data.FlagType.Operand;
-                else if ((cdlFlag & BizHawkCdl.Flag.CPUData) != 0)
+                else if ((cdlFlag & BizHawkCdlImporter.Flag.CPUData) != 0)
                     type = Data.FlagType.Data8Bit;
-                else if ((cdlFlag & BizHawkCdl.Flag.DMAData) != 0)
+                else if ((cdlFlag & BizHawkCdlImporter.Flag.DMAData) != 0)
                     type = Data.FlagType.Data8Bit;
                 data.Mark(offset, type, 1);
 

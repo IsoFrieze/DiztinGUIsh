@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using DiztinGUIsh.core.import;
 using DiztinGUIsh.loadsave;
 using DiztinGUIsh.window.dialog;
 
@@ -83,7 +84,7 @@ namespace DiztinGUIsh.window
 
         public void ImportBizHawkCDL(string filename)
         {
-            BizHawkCdl.Import(filename, Project.Data);
+            BizHawkCdlImporter.Import(filename, Project.Data);
 
             ProjectChanged?.Invoke(this, new ProjectChangedEventArgs()
             {
@@ -161,6 +162,37 @@ namespace DiztinGUIsh.window
         public void SelectOffset(int offset, int column = -1)
         {
             ProjectView.SelectOffset(offset, column);
+        }
+
+        public long ImportBSNESUsageMap(string fileName)
+        {
+            var importer = new BSNESUsageMapImporter();
+
+            var linesModified = importer.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data);
+
+            if (linesModified > 0)
+                MarkChanged();
+
+            return linesModified;
+        }
+
+        public long ImportBSNESTraceLogs(string[] fileNames)
+        {
+            var totalLinesSoFar = 0L;
+
+            var importer = new BSNESTraceLogImporter();
+
+            // caution: trace logs can be gigantic, even a few seconds can be > 1GB
+            // inside here, performance becomes critical.
+            LargeFilesReader.ReadFilesLines(fileNames, delegate (string line)
+            {
+                totalLinesSoFar += importer.ImportTraceLogLine(line, Project.Data);
+            });
+
+            if (totalLinesSoFar > 0)
+                MarkChanged();
+
+            return totalLinesSoFar;
         }
     }
 }

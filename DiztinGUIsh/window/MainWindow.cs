@@ -1161,12 +1161,9 @@ namespace DiztinGUIsh
             if (openUsageMapFile.ShowDialog() != DialogResult.OK) 
                 return;
 
-            var num_modified_flags = Project.Data.ImportUsageMap(File.ReadAllBytes(openUsageMapFile.FileName));
+            var numModifiedFlags = ProjectController.ImportBSNESUsageMap(openUsageMapFile.FileName);
 
-            if (num_modified_flags > 0)
-                ProjectController.MarkChanged();
-
-            MessageBox.Show($"Modified total {num_modified_flags} flags!", "Done",
+            MessageBox.Show($"Modified total {numModifiedFlags} flags!", "Done",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -1176,21 +1173,10 @@ namespace DiztinGUIsh
             if (openTraceLogDialog.ShowDialog() != DialogResult.OK)
                 return;
 
-            var totalLinesSoFar = 0L;
+            var numModifiedFlags = ProjectController.ImportBSNESTraceLogs(openUsageMapFile.FileNames);
 
-            // caution: trace logs can be gigantic, even a few seconds can be > 1GB
-            LargeFilesReader.ReadFilesLines(openTraceLogDialog.FileNames, delegate (string line)
-            {
-                totalLinesSoFar += Project.Data.ImportTraceLogLine(line);
-            });
-
-            if (totalLinesSoFar > 0)
-                ProjectController.MarkChanged();
-
-            MessageBox.Show(
-            $"Modified total {totalLinesSoFar} flags from {openTraceLogDialog.FileNames.Length} files!",
-            "Done",
-            MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($"Modified total {numModifiedFlags} flags from {openTraceLogDialog.FileNames.Length} files!", "Done", 
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void openLastProjectAutomaticallyToolStripMenuItem_Click(object sender, EventArgs e)

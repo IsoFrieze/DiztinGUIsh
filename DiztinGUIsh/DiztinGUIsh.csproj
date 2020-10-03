@@ -111,8 +111,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="core\import\BizHawkCdl.cs" />
-    <Compile Include="core\import\BSNESUsageMap.cs" />
+    <Compile Include="core\import\BizHawkCdlImporter.cs" />
+    <Compile Include="core\import\BSNESImporter.cs" />
     <Compile Include="core\util\ByteUtil.cs" />
     <Compile Include="core\util\LargeFilesReader.cs" />
     <Compile Include="core\util\ObservableDictionary.cs" />
