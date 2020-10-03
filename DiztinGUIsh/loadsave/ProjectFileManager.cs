@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using DiztinGUIsh.core;
 using DiztinGUIsh.loadsave.binary_serializer_old;
 using DiztinGUIsh.loadsave.xml_serializer;
 

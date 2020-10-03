@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using DiztinGUIsh.core;
 using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
@@ -51,8 +52,8 @@ namespace DiztinGUIsh
                             textLog.Text += string.Format("{0} (0x{1}): {2} is not {3}\r\n",
                                 Util.NumberToBaseString(Data.ConvertPCtoSNES(offset + i), Util.NumberBase.Hexadecimal, 6, true),
                                 Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0),
-                                RomUtil.TypeToString(Data.GetFlag(offset + i)),
-                                RomUtil.TypeToString(check));
+                                Util.GetEnumDescription(Data.GetFlag(offset + i)),
+                                Util.GetEnumDescription(check));
                         }
                     }
                 }

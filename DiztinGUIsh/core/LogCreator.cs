@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using DiztinGUIsh.core;
 using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
@@ -494,12 +495,12 @@ namespace DiztinGUIsh
                 {
                     if (offset + i >= size)
                     {
-                        StreamError.WriteLine("({0}) Offset 0x{1:X}: {2} extends past the end of the ROM.", ++errorCount, offset, RomUtil.TypeToString(check));
+                        StreamError.WriteLine("({0}) Offset 0x{1:X}: {2} extends past the end of the ROM.", ++errorCount, offset, Util.GetEnumDescription(check));
                         break;
                     }
                     else if (Data.GetFlag(offset + i) != check)
                     {
-                        StreamError.WriteLine("({0}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, RomUtil.TypeToString(check), RomUtil.TypeToString(Data.GetFlag(offset + i)));
+                        StreamError.WriteLine("({0}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, Util.GetEnumDescription(check), Util.GetEnumDescription(Data.GetFlag(offset + i)));
                         break;
                     }
                 }

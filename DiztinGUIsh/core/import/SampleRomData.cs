@@ -1,4 +1,5 @@
-﻿using DiztinGUIsh.core.util;
+﻿using DiztinGUIsh.core;
+using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
 {

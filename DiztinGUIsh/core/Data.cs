@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using DiztinGUIsh.core.util;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.core
 {
     public class Data
     {
@@ -15,16 +15,16 @@ namespace DiztinGUIsh
             Unreached = 0x00,
             Opcode = 0x10,
             Operand = 0x11,
-            Data8Bit = 0x20,
+            [Description("Data (8-bit)")] Data8Bit = 0x20,
             Graphics = 0x21,
             Music = 0x22,
             Empty = 0x23,
-            Data16Bit = 0x30,
-            Pointer16Bit = 0x31,
-            Data24Bit = 0x40,
-            Pointer24Bit = 0x41,
-            Data32Bit = 0x50,
-            Pointer32Bit = 0x51,
+            [Description("Data (16-bit)")] Data16Bit = 0x30,
+            [Description("Pointer (16-bit)")] Pointer16Bit = 0x31,
+            [Description("Data (24-bit)")] Data24Bit = 0x40,
+            [Description("Pointer (24-bit)")] Pointer24Bit = 0x41,
+            [Description("Data (32-bit)")] Data32Bit = 0x50,
+            [Description("Pointer (32-bit)")] Pointer32Bit = 0x51,
             Text = 0x60
         }
 

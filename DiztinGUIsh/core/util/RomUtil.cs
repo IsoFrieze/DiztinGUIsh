@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DiztinGUIsh.Annotations;
 
 namespace DiztinGUIsh.core.util
 {
@@ -54,7 +48,7 @@ namespace DiztinGUIsh.core.util
 
         public static int ConvertSNESToPC(int address, Data.ROMMapMode mode, int size)
         {
-            int _UnmirroredOffset(int offset) => RomUtil.UnmirroredOffset(offset, size);
+            int _UnmirroredOffset(int offset) => UnmirroredOffset(offset, size);
 
             // WRAM is N/A to PC addressing
             if ((address & 0xFE0000) == 0x7E0000) return -1;
@@ -161,30 +155,6 @@ namespace DiztinGUIsh.core.util
             return offset;
         }
 
-
-        // TODO: replace with Description() attribute
-        public static string TypeToString(Data.FlagType flag)
-        {
-            return flag switch
-            {
-                Data.FlagType.Unreached => "Unreached",
-                Data.FlagType.Opcode => "Opcode",
-                Data.FlagType.Operand => "Operand",
-                Data.FlagType.Data8Bit => "Data (8-bit)",
-                Data.FlagType.Graphics => "Graphics",
-                Data.FlagType.Music => "Music",
-                Data.FlagType.Empty => "Empty",
-                Data.FlagType.Data16Bit => "Data (16-bit)",
-                Data.FlagType.Pointer16Bit => "Pointer (16-bit)",
-                Data.FlagType.Data24Bit => "Data (24-bit)",
-                Data.FlagType.Pointer24Bit => "Pointer (24-bit)",
-                Data.FlagType.Data32Bit => "Data (32-bit)",
-                Data.FlagType.Pointer32Bit => "Pointer (32-bit)",
-                Data.FlagType.Text => "Text",
-                _ => ""
-            };
-        }
-
         public static int UnmirroredOffset(int offset, int size)
         {
             // most of the time this is true; for efficiency
@@ -205,23 +175,6 @@ namespace DiztinGUIsh.core.util
 
             while (repeatedOffset >= size) repeatedOffset -= sizeOfSmallerSection;
             return repeatedOffset;
-        }
-
-        // TODO: use new enum GetDescription() stuff.
-        public static string GetRomMapModeName(Data.ROMMapMode mode)
-        {
-            return mode switch
-            {
-                Data.ROMMapMode.ExSA1ROM => "SA-1 ROM (FuSoYa's 8MB mapper)",
-                Data.ROMMapMode.SA1ROM => "SA-1 ROM",
-                Data.ROMMapMode.SuperFX => "SuperFX",
-                Data.ROMMapMode.LoROM => "LoROM",
-                Data.ROMMapMode.HiROM => "HiROM",
-                Data.ROMMapMode.SuperMMC => "Super MMC",
-                Data.ROMMapMode.ExHiROM => "ExHiROM",
-                Data.ROMMapMode.ExLoROM => "ExLoROM",
-                _ => "Unknown mapping"
-            };
         }
 
         public static string TypeToLabel(Data.FlagType flag)
@@ -272,36 +225,28 @@ namespace DiztinGUIsh.core.util
             return 0;
         }
 
-        public static Data.ROMMapMode DetectROMMapMode(IReadOnlyList<byte> rom_bytes, out bool couldnt_detect)
+        public static Data.ROMMapMode DetectROMMapMode(IReadOnlyList<byte> romBytes, out bool detectedValidRomMapType)
         {
-            couldnt_detect = false;
+            detectedValidRomMapType = true;
 
-            if ((rom_bytes[Data.LOROM_SETTING_OFFSET] & 0xEF) == 0x23)
-            {
-                return rom_bytes.Count > 0x400000 ? Data.ROMMapMode.ExSA1ROM : Data.ROMMapMode.SA1ROM;
-            }
-            else if ((rom_bytes[Data.LOROM_SETTING_OFFSET] & 0xEC) == 0x20)
-            {
-                return (rom_bytes[Data.LOROM_SETTING_OFFSET + 1] & 0xF0) == 0x10 ? Data.ROMMapMode.SuperFX : Data.ROMMapMode.LoROM;
-            }
-            else if (rom_bytes.Count >= 0x10000 && (rom_bytes[Data.HIROM_SETTING_OFFSET] & 0xEF) == 0x21)
-            {
+            if ((romBytes[Data.LOROM_SETTING_OFFSET] & 0xEF) == 0x23)
+                return romBytes.Count > 0x400000 ? Data.ROMMapMode.ExSA1ROM : Data.ROMMapMode.SA1ROM;
+
+            if ((romBytes[Data.LOROM_SETTING_OFFSET] & 0xEC) == 0x20)
+                return (romBytes[Data.LOROM_SETTING_OFFSET + 1] & 0xF0) == 0x10 ? Data.ROMMapMode.SuperFX : Data.ROMMapMode.LoROM;
+
+            if (romBytes.Count >= 0x10000 && (romBytes[Data.HIROM_SETTING_OFFSET] & 0xEF) == 0x21)
                 return Data.ROMMapMode.HiROM;
-            }
-            else if (rom_bytes.Count >= 0x10000 && (rom_bytes[Data.HIROM_SETTING_OFFSET] & 0xE7) == 0x22)
-            {
+
+            if (romBytes.Count >= 0x10000 && (romBytes[Data.HIROM_SETTING_OFFSET] & 0xE7) == 0x22)
                 return Data.ROMMapMode.SuperMMC;
-            }
-            else if (rom_bytes.Count >= 0x410000 && (rom_bytes[Data.EXHIROM_SETTING_OFFSET] & 0xEF) == 0x25)
-            {
+
+            if (romBytes.Count >= 0x410000 && (romBytes[Data.EXHIROM_SETTING_OFFSET] & 0xEF) == 0x25)
                 return Data.ROMMapMode.ExHiROM;
-            }
-            else
-            {
-                // detection failed. take our best guess.....
-                couldnt_detect = true;
-                return rom_bytes.Count > 0x40000 ? Data.ROMMapMode.ExLoROM : Data.ROMMapMode.LoROM;
-            }
+
+            // detection failed. take our best guess.....
+            detectedValidRomMapType = false;
+            return romBytes.Count > 0x40000 ? Data.ROMMapMode.ExLoROM : Data.ROMMapMode.LoROM;
         }
 
         public static int GetRomSettingOffset(Data.ROMMapMode mode)
@@ -376,23 +321,34 @@ namespace DiztinGUIsh.core.util
             return rom;
         }
 
-        public static void GetHeaderFlags(int offset, IDictionary<int, Data.FlagType> flags, byte[] romBytes)
+        public static void GenerateHeaderFlags(int romSettingsOffset, IDictionary<int, Data.FlagType> flags, byte[] romBytes)
         {
-            for (int i = 0; i < LengthOfTitleName; i++) flags.Add(offset - 0x15 + i, Data.FlagType.Text);
-            for (int i = 0; i < 7; i++) flags.Add(offset + i, Data.FlagType.Data8Bit);
-            for (int i = 0; i < 4; i++) flags.Add(offset + 7 + i, Data.FlagType.Data16Bit);
-            for (int i = 0; i < 0x20; i++) flags.Add(offset + 11 + i, Data.FlagType.Pointer16Bit);
+            for (int i = 0; i < LengthOfTitleName; i++)
+                flags.Add(romSettingsOffset - LengthOfTitleName + i, Data.FlagType.Text);
+            
+            for (int i = 0; i < 7; i++) 
+                flags.Add(romSettingsOffset + i, Data.FlagType.Data8Bit);
+            
+            for (int i = 0; i < 4; i++) 
+                flags.Add(romSettingsOffset + 7 + i, Data.FlagType.Data16Bit);
+            
+            for (int i = 0; i < 0x20; i++) 
+                flags.Add(romSettingsOffset + 11 + i, Data.FlagType.Pointer16Bit);
 
-            if (romBytes[offset - 1] == 0)
+            if (romBytes[romSettingsOffset - 1] == 0)
             {
-                flags.Remove(offset - 1);
-                flags.Add(offset - 1, Data.FlagType.Data8Bit);
-                for (int i = 0; i < 0x10; i++) flags.Add(offset - 0x25 + i, Data.FlagType.Data8Bit);
+                flags.Remove(romSettingsOffset - 1);
+                flags.Add(romSettingsOffset - 1, Data.FlagType.Data8Bit);
+                for (int i = 0; i < 0x10; i++) 
+                    flags.Add(romSettingsOffset - 0x25 + i, Data.FlagType.Data8Bit);
             }
-            else if (romBytes[offset + 5] == 0x33)
+            else if (romBytes[romSettingsOffset + 5] == 0x33)
             {
-                for (int i = 0; i < 6; i++) flags.Add(offset - 0x25 + i, Data.FlagType.Text);
-                for (int i = 0; i < 10; i++) flags.Add(offset - 0x1F + i, Data.FlagType.Data8Bit);
+                for (int i = 0; i < 6; i++) 
+                    flags.Add(romSettingsOffset - 0x25 + i, Data.FlagType.Text);
+
+                for (int i = 0; i < 10; i++) 
+                    flags.Add(romSettingsOffset - 0x1F + i, Data.FlagType.Data8Bit);
             }
         }
 

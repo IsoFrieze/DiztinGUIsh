@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using DiztinGUIsh.core;
 using ExtendedXmlSerializer.ContentModel;
 using ExtendedXmlSerializer.ContentModel.Format;
 

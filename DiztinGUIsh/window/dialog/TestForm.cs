@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using DiztinGUIsh.core;
 using DiztinGUIsh.loadsave;
 
 namespace DiztinGUIsh.window.dialog

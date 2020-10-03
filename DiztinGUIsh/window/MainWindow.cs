@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
+using DiztinGUIsh.core;
 using DiztinGUIsh.core.util;
 using DiztinGUIsh.loadsave;
 using DiztinGUIsh.Properties;
@@ -14,8 +15,6 @@ namespace DiztinGUIsh
 {
     public partial class MainWindow : Form, IProjectView
     {
-        // temp: readonly project data model. eventually, get this ONLY from the controller.
-        // right now, it returns Project2 which will go away
         public Project Project { get; set; }
 
         public MainWindow()
@@ -43,8 +42,6 @@ namespace DiztinGUIsh
                 case ProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported:
                     OnImportedProjectSuccess();
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -618,7 +615,7 @@ namespace DiztinGUIsh
                     else e.Value = "";
                     break;
                 case 7:
-                    e.Value = RomUtil.TypeToString(Project.Data.GetFlag(row));
+                    e.Value = Util.GetEnumDescription(Project.Data.GetFlag(row));
                     break;
                 case 8:
                     e.Value = Util.NumberToBaseString(Project.Data.GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
@@ -1236,7 +1233,7 @@ namespace DiztinGUIsh
 
         public string AskToSelectNewRomFilename(string promptSubject, string promptText)
         {
-            return GuiUtil.AskIfWeShouldSelectFilename(promptSubject, promptText, 
+            return GuiUtil.PromptToConfirmAction(promptSubject, promptText, 
                 () => GuiUtil.PromptToSelectFile(Project.ProjectFileName)
                 );
         }

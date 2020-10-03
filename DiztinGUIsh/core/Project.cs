@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DiztinGUIsh.core;
 using DiztinGUIsh.core.util;
 
 namespace DiztinGUIsh
