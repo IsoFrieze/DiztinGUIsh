@@ -29,7 +29,8 @@ namespace DiztinGUIsh.window.dialog
                 = Util.GetEnumDescriptions<TEnum>();
         }
 
-        public class ImportRomViewModel
+        // hey. maybe we don't explicitly need this.
+        /*public class ImportRomViewModel
         {
             private readonly ImportRomSettings settings;
 
@@ -45,7 +46,7 @@ namespace DiztinGUIsh.window.dialog
                     RomMapMode.Source = settingsDataSource.ROMMapMode;
                 };
             }
-        }
+        }*/
 
 
         public string title;
@@ -92,49 +93,20 @@ namespace DiztinGUIsh.window.dialog
 
         private void DataBind()
         {
-            // importRomSettingsBindingSource.DataSource = ImportSettings;
-
-            // specific to this combo. datasource is a static list of enum values
-            var dataSource = ImportViewModel.RomMapMode.Descriptions;
-            var bs = new BindingSource(dataSource, null);
+            var enumValuesAndDescriptionsKVP = Util.GetEnumDescriptions<Data.ROMMapMode>();
+            var bs = new BindingSource(enumValuesAndDescriptionsKVP, null);
             bs.CurrentChanged += Bs_CurrentChanged;
 
-            // bind comboboxes "SelectedIndex" property to store its value in settings.ROMMapMode
-            /*cmbRomMapMode.DataBindings.Add(new Binding(
-                "SelectedIndex", ImportSettings,
-                "ROMMapMode", false,
-                DataSourceUpdateMode.OnPropertyChanged));*/
+            // var bs = new BindingSource(ImportViewModel.RomMapMode.Descriptions, null);
 
-
-            // try this next.
             cmbRomMapMode.DataBindings.Add(new Binding(
-                "SelectedValue", ImportSettings, // if not try SelectedValue
+                "SelectedValue", ImportSettings,
                 "ROMMapMode", false,
                 DataSourceUpdateMode.OnPropertyChanged));
 
             cmbRomMapMode.DataSource = bs;
             cmbRomMapMode.DisplayMember = "Value";
             cmbRomMapMode.ValueMember = "Key";         // names of properties of each item on datasource.
-
-            // importRomSettingsBindingSource.DataSource = ImportSettings;
-
-            // specific to this combo. datasource is a static list of enum values
-            // var bl = new BindingList<ImportRomViewModel>() {ImportViewModel};
-            //var bl = new [] {ImportViewModel};
-            //var bs = new BindingSource(bl, null);
-            //bs.CurrentChanged += Bs_CurrentChanged;
-
-            // ImportViewModel.RomMapMode.Source
-            // cmbRomMapMode.ValueMember = "Key";         // names of properties of each item on datasource
-            // cmbRomMapMode.DisplayMember = "Value";
-
-            // bind comboboxes "SelectedIndex" property to store its value in settings.ROMMapMode
-            /*comboBox1.DataBindings.Add(new Binding(
-                "SelectedValue", ImportViewModel,
-                "RomMapMode.Source", false,
-                DataSourceUpdateMode.OnPropertyChanged));*/
-
-            // cmbRomMapMode.DataSource = settingsBindingSource;
         }
 
         private void Bs_CurrentChanged(object sender, EventArgs e)
@@ -148,7 +120,7 @@ namespace DiztinGUIsh.window.dialog
             UpdateTextboxes();
         }
 
-        ImportRomViewModel ImportViewModel;
+        //ImportRomViewModel ImportViewModel;
 
         private void CreateRomImportSettingsFor(string filename)
         {
@@ -160,7 +132,7 @@ namespace DiztinGUIsh.window.dialog
                 ROMMapMode = RomUtil.DetectROMMapMode(romBytes, out romTypeNotDetectedCorrectly)
             };
 
-            ImportViewModel = new ImportRomViewModel(ImportSettings);
+            //ImportViewModel = new ImportRomViewModel(ImportSettings);
         }
 
         private Dictionary<int, Label> GetGeneratedLabels()
