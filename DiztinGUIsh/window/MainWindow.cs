@@ -1193,8 +1193,9 @@ namespace DiztinGUIsh
 
         public string AskToSelectNewRomFilename(string promptSubject, string promptText)
         {
+            string initialDir = null; // TODO: Project.ProjectFileName
             return GuiUtil.PromptToConfirmAction(promptSubject, promptText, 
-                () => GuiUtil.PromptToSelectFile(Project.ProjectFileName)
+                () => GuiUtil.PromptToSelectFile(initialDir)
                 );
         }
 
