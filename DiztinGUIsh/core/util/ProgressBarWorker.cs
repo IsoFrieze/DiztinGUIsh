@@ -3,7 +3,8 @@ using System.Threading;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh
-{ 
+{
+    // TODO: use https://www.wpf-tutorial.com/misc/multi-threading-with-the-backgroundworker/ backgroundworker
     public abstract class ProgressBarWorker
     {
         private ProgressDialog Dialog = null;
@@ -45,6 +46,9 @@ namespace DiztinGUIsh
 
             // setup, but don't start, the new thread
             backgroundThread = new Thread(new ThreadStart(Thread_Main));
+
+            // honestly, not sure about this. works around some Invoke() stuff
+            backgroundThread.SetApartmentState(ApartmentState.STA); 
         }
 
         // blocking function
