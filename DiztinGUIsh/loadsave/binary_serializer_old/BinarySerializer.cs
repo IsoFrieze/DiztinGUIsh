@@ -64,7 +64,7 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
 
             // read internal title
             var pointer = HEADER_SIZE + 6;
-            RomUtil.ReadStringFromByteArray(data, RomUtil.LengthOfTitleName, pointer);
+            project.InternalRomGameName = RomUtil.ReadStringFromByteArray(data, RomUtil.LengthOfTitleName, pointer);
             pointer += RomUtil.LengthOfTitleName;
 
             // read checksums
