@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using DiztinGUIsh.core.util;
+using IX.Observable;
 
 namespace DiztinGUIsh.core
 {
@@ -85,8 +86,8 @@ namespace DiztinGUIsh.core
         // when we figure it out.
         public ROMMapMode RomMapMode { get; set; }
         public ROMSpeed RomSpeed { get; set; }
-        public ObservableDictionary<int, string> Comments { get; set; } = new ObservableDictionary< int, string>();
-        public ObservableDictionary<int, Label> Labels { get; set; } = new ObservableDictionary< int, Label>();
+        public ObservableDictionary<int, string> Comments { get; set; } = new ObservableDictionary<int, string>();
+        public ObservableDictionary<int, Label> Labels { get; set; } = new ObservableDictionary<int, Label>();
         public RomBytes RomBytes { get; set; } = new RomBytes();
 
         private CPU65C816 CPU65C816 { get; set; }

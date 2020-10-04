@@ -1,5 +1,6 @@
 ﻿using DiztinGUIsh.core;
 using DiztinGUIsh.core.util;
+using IX.Observable;
 
 namespace DiztinGUIsh
 {
