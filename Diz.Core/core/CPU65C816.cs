@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DiztinGUIsh.core;
+﻿using DiztinGUIsh.core;
 
 namespace DiztinGUIsh
 {
@@ -269,7 +264,7 @@ namespace DiztinGUIsh
             return mn;
         }
 
-        private int BytesToShow(AddressMode mode)
+        private static int BytesToShow(AddressMode mode)
         {
             switch (mode)
             {
@@ -308,7 +303,7 @@ namespace DiztinGUIsh
         // {2} = operand 2 for block move
         private string GetInstructionFormatString(int offset)
         {
-            AddressMode mode = GetAddressMode(offset);
+            var mode = GetAddressMode(offset);
             switch (mode)
             {
                 case AddressMode.IMPLIED:
@@ -357,10 +352,17 @@ namespace DiztinGUIsh
 
         private AddressMode GetAddressMode(int offset)
         {
-            AddressMode mode = addressingModes[Data.GetROMByte(offset)];
-            if (mode == AddressMode.IMMEDIATE_M_FLAG_DEPENDENT) return Data.GetMFlag(offset) ? AddressMode.IMMEDIATE_8 : AddressMode.IMMEDIATE_16;
-            else if (mode == AddressMode.IMMEDIATE_X_FLAG_DEPENDENT) return Data.GetXFlag(offset) ? AddressMode.IMMEDIATE_8 : AddressMode.IMMEDIATE_16;
-            return mode;
+            var mode = addressingModes[Data.GetROMByte(offset)];
+            return mode switch
+            {
+                AddressMode.IMMEDIATE_M_FLAG_DEPENDENT => Data.GetMFlag(offset)
+                    ? AddressMode.IMMEDIATE_8
+                    : AddressMode.IMMEDIATE_16,
+                AddressMode.IMMEDIATE_X_FLAG_DEPENDENT => Data.GetXFlag(offset)
+                    ? AddressMode.IMMEDIATE_8
+                    : AddressMode.IMMEDIATE_16,
+                _ => mode
+            };
         }
 
         public enum AddressMode : byte
@@ -376,7 +378,7 @@ namespace DiztinGUIsh
             LONG, LONG_X_INDEX, BLOCK_MOVE, RELATIVE_8, RELATIVE_16
         }
 
-        private static string[] mnemonics =
+        private static readonly string[] mnemonics =
         {
             "BRK", "ORA", "COP", "ORA", "TSB", "ORA", "ASL", "ORA", "PHP", "ORA", "ASL", "PHD", "TSB", "ORA", "ASL", "ORA",
             "BPL", "ORA", "ORA", "ORA", "TRB", "ORA", "ASL", "ORA", "CLC", "ORA", "INC", "TCS", "TRB", "ORA", "ASL", "ORA",
@@ -396,7 +398,7 @@ namespace DiztinGUIsh
             "BEQ", "SBC", "SBC", "SBC", "PEA", "SBC", "INC", "SBC", "SED", "SBC", "PLX", "XCE", "JSR", "SBC", "INC", "SBC"
         };
 
-        private static AddressMode[] addressingModes =
+        private static readonly AddressMode[] addressingModes =
         {
             AddressMode.CONSTANT_8, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.CONSTANT_8, AddressMode.DIRECT_PAGE_S_INDEX,
             AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
