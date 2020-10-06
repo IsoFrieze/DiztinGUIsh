@@ -1,4 +1,5 @@
-﻿using DiztinGUIsh.core;
+﻿using Diz.Core.core;
+using DiztinGUIsh.core;
 using DiztinGUIsh.core.util;
 using IX.Observable;
 

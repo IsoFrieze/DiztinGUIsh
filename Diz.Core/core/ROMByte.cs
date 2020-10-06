@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DiztinGUIsh.core;
+﻿using DiztinGUIsh.core;
 
-namespace DiztinGUIsh
+namespace Diz.Core.core
 {
     public class ROMByte
     {
@@ -45,7 +40,10 @@ namespace DiztinGUIsh
         }
         #endregion
 
-        public byte Rom { get; set; } // never serialize this, read from ROM on load. for copyright reasons.
+        // holds the original byte from the source ROM
+        public byte Rom { get; set; } // never serialize this, read from ROM on load. (for copyright reasons)
+
+        // everything else is metadata that describes the source byte above
         public byte DataBank { get; set; }
         public int DirectPage { get; set; }
         public bool XFlag { get; set; }

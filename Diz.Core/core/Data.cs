@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using Diz.Core.core;
 using DiztinGUIsh.core.util;
 using IX.Observable;
 
