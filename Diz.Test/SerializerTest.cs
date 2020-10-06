@@ -25,8 +25,7 @@ namespace Diz.Test
     {
         public class Root
         {
-            // public ODWrapper<int, string> wrap { get; set; } = new ODWrapper<int, string>
-            public ODWrapper<int, string> ODW { get; set; } = new ODWrapper<int, string>()
+            public OdWrapper<int, string> ODW { get; set; } = new OdWrapper<int, string>()
             {
                 ObservableDict =
                 {
@@ -36,34 +35,20 @@ namespace Diz.Test
             };
         }
 
-        public class ODWrapper<TKey, TValue>//  : ICollection<KeyValuePair<TKey, TValue>>
+        public class OdWrapper<TKey, TValue>
         {
-            private ObservableDictionary<TKey, TValue> dict = new ObservableDictionary<TKey, TValue>();
-
-
-            public ObservableDictionary<TKey, TValue> ObservableDict
-            {
-                get => dict;
-                set => dict = value;
-            }
+            public ObservableDictionary<TKey, TValue> ObservableDict { get; set; } 
+                = new ObservableDictionary<TKey, TValue>();
 
             public Dictionary<TKey, TValue> DictToSave
             {
-                /*get
-                {
-                    return dict;
-                }
+                get => new Dictionary<TKey, TValue>(ObservableDict);
                 set
                 {
-                    dict = value;
-                }*/
-                get => new Dictionary<TKey, TValue>(dict);
-                set
-                {
-                    dict.Clear();
+                    ObservableDict.Clear();
                     foreach (var item in value)
                     {
-                        dict.Add(item);
+                        ObservableDict.Add(item);
                     }
                 }
             }
@@ -74,7 +59,7 @@ namespace Diz.Test
             return new ConfigurationContainer()
                 .EnableImplicitlyDefinedDefaultValues()
                 .EnableMemberExceptionHandling() // debug only
-                .Type<ODWrapper<int,string>>()
+                .Type<OdWrapper<int,string>>()
                 .Member(x=>x.ObservableDict)
                 .Ignore()
                 .UseOptimizedNamespaces()
