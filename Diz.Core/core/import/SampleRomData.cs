@@ -156,14 +156,14 @@ namespace DiztinGUIsh
                 new ROMByte {Rom = 0x34, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x6D, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             },
-            Comments = new ObservableDictionaryAdaptor<int, string>()
+            Comments = new ObservableDictionary<int, string>()
             {
                 {0x03, "this sets FastROM"},
                 {0x0F, "direct page = $2100"},
                 {0x21, "clear APU regs"},
                 {0x44, "this routine copies Test_Data to $7E0100"}
             },
-            Labels = new ObservableDictionaryAdaptor<int, Label>()
+            Labels = new ObservableDictionary<int, Label>()
             {
                 {0x00, new Label {name = "Emulation_RESET", comment = "Sample emulation reset location"}},
                 {0x0A, new Label {name = "FastRESET", comment = "Sample label"}},

@@ -89,8 +89,8 @@ namespace DiztinGUIsh.core
         public ROMMapMode RomMapMode { get; set; }
         public ROMSpeed RomSpeed { get; set; }
 
-        public ObservableDictionaryAdaptor<int,string> Comments { get; set; } = new ObservableDictionaryAdaptor<int, string>();
-        public ObservableDictionaryAdaptor<int, Label> Labels { get; set; } = new ObservableDictionaryAdaptor<int, Label>();
+        public ObservableDictionary<int,string> Comments { get; set; } = new ObservableDictionary<int, string>();
+        public ObservableDictionary<int, Label> Labels { get; set; } = new ObservableDictionary<int, Label>();
         public RomBytes RomBytes { get; set; } = new RomBytes();
 
         private CPU65C816 CPU65C816 { get; set; }

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using ExtendedXmlSerializer;
+using ExtendedXmlSerializer.Configuration;
 using IX.Observable;
 
 namespace DiztinGUIsh.core.util
@@ -8,9 +11,70 @@ namespace DiztinGUIsh.core.util
     // wrap an ObservableDictionary so we can implement non-generic IDictionary
     // this basically exists to work around ExtendedXmlSerializer trying to cast us to IDictionary and failing.
     // there's probably settings we can tweak in ExtendedXmlSerializer (particularly, Interceptor), and then
-    // we can remove the need for this adaptor.
+    // we can remove the need for this wrapper.
+    public class OdWrapper<TKey, TValue>
+    {
+        public ObservableDictionary<TKey, TValue> ObservableDict { get; set; }
+            = new ObservableDictionary<TKey, TValue>();
 
-    public class ObservableDictionaryAdaptor<TKey, TValue> : IDictionary, IEnumerable<KeyValuePair<TKey, TValue>>
+        public IDictionary DictToSave
+        {
+            get => new Dictionary<TKey, TValue>(ObservableDict);
+            set
+            {
+                ObservableDict.Clear();
+                foreach (DictionaryEntry item in value)
+                {
+                    ObservableDict.Add((TKey)item.Key, (TValue)item.Value);
+                }
+            }
+        }
+
+        #region Equality
+
+        protected bool Equals(OdWrapper<TKey, TValue> other)
+        {
+            return ObservableDict.SequenceEqual(other.ObservableDict);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((OdWrapper<TKey, TValue>)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (ObservableDict != null ? ObservableDict.GetHashCode() : 0);
+        }
+
+        #endregion
+    }
+
+    // this is pretty hacky.
+    // anytime you use OdWrapper, you need to use this to tell the xml serialize to ignore the ObservableDict property
+    // on OdWrapper.
+    //
+    // This really needs to go away and be solved more elegantly with some better use of ExtendedXmlSerializer.
+    //
+    // or... just move away from dictionaries for data storage. which would be a shame but probably easier
+    public static class ObservedDictionaryHelper { 
+        public static IConfigurationContainer AppendDisablingType<TKey, TValue>(this IConfigurationContainer @this)
+            => @this.EnableImplicitTyping(typeof(OdWrapper<TKey, TValue>))
+                .Type<OdWrapper<int, string>>()
+                .Member(x => x.ObservableDict)
+                .Ignore();
+    }
+
+
+
+
+
+    // older junkier attempts below. leaving for now, I'm still messing with this -Dom
+
+    /*public class ObservableDictionaryAdaptor<TKey, TValue> : IDictionary, IEnumerable<KeyValuePair<TKey, TValue>>
     {
         private readonly ObservableDictionary<TKey, TValue> dict = new ObservableDictionary<TKey, TValue>();
         public bool Contains(object key)
@@ -65,8 +129,10 @@ namespace DiztinGUIsh.core.util
 
         public int Count => dict.Count;
 
+#pragma warning disable CS0618
         public object SyncRoot => dict.SyncRoot;
 
+#pragma warning disable CS0618
         public bool IsSynchronized => dict.IsSynchronized;
         public ObservableDictionary<TKey, TValue> Dict => dict;
 
@@ -76,17 +142,75 @@ namespace DiztinGUIsh.core.util
         {
             return dict.ContainsKey(key);
         }
+    }*/
+
+    /*
+    public class OdWrapper<TKey, TValue> : IDictionary
+    {
+        public ObservableDictionary<TKey, TValue> ObservableDict { get; set; }
+            = new ObservableDictionary<TKey, TValue>();
+
+        public IDictionary DictToSave
+        {
+            get => new Dictionary<TKey, TValue>(ObservableDict);
+            set
+            {
+                ObservableDict.Clear();
+                foreach (DictionaryEntry item in value)
+                {
+                    ObservableDict.Add((TKey)item.Key, (TValue)item.Value);
+                }
+            }
+        }
+
+        #region Equality
+
+        protected bool Equals(OdWrapper<TKey, TValue> other)
+        {
+            return ObservableDict.SequenceEqual(other.ObservableDict);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((OdWrapper<TKey, TValue>)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (ObservableDict != null ? ObservableDict.GetHashCode() : 0);
+        }
+
+        #endregion
     }
-    class ODEnumerator<TKey, TValue> : IDictionaryEnumerator, IDisposable
+
+    /*
+    public class ODEnumerator_Full_But_Not_Working<TKey, TValue> : IDictionaryEnumerator, IDisposable
     {
         private readonly IEnumerator<KeyValuePair<TKey, TValue>> impl;
-        public void Dispose() { impl.Dispose(); }
+
+        public void Dispose()
+        {
+            impl.Dispose();
+        }
+
         public ODEnumerator(IDictionary<TKey, TValue> value)
         {
             impl = value.GetEnumerator();
         }
-        public void Reset() { impl.Reset(); }
-        public bool MoveNext() { return impl.MoveNext(); }
+
+        public void Reset()
+        {
+            impl.Reset();
+        }
+
+        public bool MoveNext()
+        {
+            return impl.MoveNext();
+        }
+
         public DictionaryEntry Entry
         {
             get
@@ -95,8 +219,10 @@ namespace DiztinGUIsh.core.util
                 return new DictionaryEntry(pair.Key, pair.Value);
             }
         }
+
         public object Key => impl.Current.Key;
         public object Value => impl.Current.Value;
         public object Current => Entry;
     }
+    */
 }

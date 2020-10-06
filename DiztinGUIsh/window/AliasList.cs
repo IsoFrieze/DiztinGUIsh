@@ -285,8 +285,8 @@ namespace DiztinGUIsh.window
 
             // todo: eventually use databinding/datasource, probably.
             // Todo: modify observabledictionary wrapper to avoid having to do the .Dict call here.
-            Data.Labels.Dict.PropertyChanged += Labels_PropertyChanged;
-            Data.Labels.Dict.CollectionChanged += Labels_CollectionChanged;
+            Data.Labels.PropertyChanged += Labels_PropertyChanged;
+            Data.Labels.CollectionChanged += Labels_CollectionChanged;
         }
 
         private void RepopulateFromData()
