@@ -32,6 +32,9 @@ namespace DiztinGUIsh
             Project = project;
             settings = project.LogWriterSettings; // copy
 
+            if (!settings.Validate())
+                settings.SetDefaults();
+
             InitializeComponent();
             UpdateUiFromProjectSettings();
             RegenerateSampleOutput();
@@ -64,20 +67,21 @@ namespace DiztinGUIsh
         // Prompt user for either a filename to save, or a folder location
         private string PromptForLogPathFromFileOrFolderDialog(bool askForFile)
         {
-            if (askForFile)
-            {
-                saveLogSingleFile.InitialDirectory = Project.ProjectFileName;
-                if (saveLogSingleFile.ShowDialog() == DialogResult.OK && saveLogSingleFile.FileName != "")
-                    return saveLogSingleFile.FileName;
-            }
-            else
-            {
-                chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.ProjectFileName);
-                if (chooseLogFolder.ShowDialog() == DialogResult.OK && chooseLogFolder.SelectedPath != "")
-                    return saveLogSingleFile.FileName;
-            }
+            return askForFile ? PromptSaveLogFile() : PromptSaveLogPath();
+        }
 
-            return null;
+        private string PromptSaveLogPath()
+        {
+            chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.ProjectFileName);
+            return chooseLogFolder.ShowDialog() == DialogResult.OK && chooseLogFolder.SelectedPath != ""
+                ? chooseLogFolder.SelectedPath : null;
+        }
+
+        private string PromptSaveLogFile()
+        {
+            saveLogSingleFile.InitialDirectory = Project.ProjectFileName;
+            return saveLogSingleFile.ShowDialog() == DialogResult.OK && saveLogSingleFile.FileName != ""
+                ? saveLogSingleFile.FileName : null;
         }
 
         private bool PromptForPath()

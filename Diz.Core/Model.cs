@@ -1,15 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using DiztinGUIsh.Annotations;
+using JetBrains.Annotations;
 
 namespace DiztinGUIsh
 {
     public class DizDataModel : PropertyNotifyChanged
-    {
-
-    }
-    public class DizViewModel : PropertyNotifyChanged
     {
 
     }

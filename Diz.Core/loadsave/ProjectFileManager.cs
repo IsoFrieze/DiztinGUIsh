@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 using DiztinGUIsh.core;
 using DiztinGUIsh.loadsave.binary_serializer_old;
 using DiztinGUIsh.loadsave.xml_serializer;
@@ -11,20 +10,6 @@ namespace DiztinGUIsh.loadsave
     public static class ProjectFileManager
     {
         public static Project Open(string filename, Func<string, string> romPromptFn)
-        {
-            try
-            {
-                return DoOpen(filename, romPromptFn);
-            }
-            catch (Exception e)
-            {
-                // TODO: remove direct GUI stuff from here.
-                MessageBox.Show(e.Message, "Error opening project file", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return null;
-            }
-        }
-
-        private static Project DoOpen(string filename, Func<string, string> romPromptFn)
         {
             var data = File.ReadAllBytes(filename);
 

@@ -4,7 +4,7 @@ using IX.Observable;
 
 namespace DiztinGUIsh
 {
-    internal class SampleRomData : Data
+    public class SampleRomData : Data
     {
         public static SampleRomData SampleData
         {

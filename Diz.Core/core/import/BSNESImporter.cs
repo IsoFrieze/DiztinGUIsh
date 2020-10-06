@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DiztinGUIsh.core.import
 {
-    class BSNESUsageMapImporter
+    public class BSNESUsageMapImporter
     {
         // TODO: move BsnesPlusUsage stuff to its own class outside of Data
         [Flags]
@@ -76,7 +76,7 @@ namespace DiztinGUIsh.core.import
         }
     }
 
-    class BSNESTraceLogImporter
+    public class BSNESTraceLogImporter
     {
         // this class exists for performance optimization ONLY.
         // class representing offsets into a trace log

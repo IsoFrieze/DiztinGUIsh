@@ -62,8 +62,13 @@ namespace DiztinGUIsh.window
         {
             Project project = null;
 
+            // TODO: try/catch for ProjectFileManager
             DoLongRunningTask(delegate {
-                project = ProjectFileManager.Open(filename, AskToSelectNewRomFilename);
+                try {
+                    project = ProjectFileManager.Open(filename, AskToSelectNewRomFilename);
+                } catch (Exception) {
+                    project = null;
+                }
             }, $"Opening {Path.GetFileName(filename)}...");
 
             if (project == null)
@@ -143,10 +148,10 @@ namespace DiztinGUIsh.window
 
         public void WriteAssemblyOutput()
         {
-            WriteAssemblyOutput(Project.LogWriterSettings);
+            WriteAssemblyOutput(Project.LogWriterSettings, true);
         }
 
-        private void WriteAssemblyOutput(LogWriterSettings settings)
+        private void WriteAssemblyOutput(LogWriterSettings settings, bool showProgressBarUpdates = false)
         {
             // kinda hate that we're passing in these...
             using var sw = new StreamWriter(settings.file);
@@ -160,7 +165,10 @@ namespace DiztinGUIsh.window
                 StreamError = er,
             };
 
-            var result = lc.CreateLog();
+            LogCreator.OutputResult result = null;
+            DoLongRunningTask(delegate {
+                result = lc.CreateLog();
+            }, $"Exporting assembly source code...");
 
             if (result.error_count == 0)
                 File.Delete(settings.error);

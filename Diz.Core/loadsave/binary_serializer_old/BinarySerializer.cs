@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using DiztinGUIsh.core;
 using DiztinGUIsh.core.util;
-using DiztinGUIsh.window;
 
 namespace DiztinGUIsh.loadsave.binary_serializer_old
 {
@@ -214,11 +210,11 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             }
             else if (version != LATEST_FILE_FORMAT_VERSION)
             {
-                MessageBox.Show(
+                throw new ArgumentException(
                     "This project file is in an older format.\n" +
                     "You may want to back up your work or 'Save As' in case the conversion goes wrong.\n" +
                     "The project file will be untouched until it is saved again.",
-                    "Project File Out of Date", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    "Project File Out of Date");
             }
 
             if (version < 0)

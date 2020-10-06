@@ -27,6 +27,8 @@ namespace DiztinGUIsh
         public string file;
         public string error;
 
+        public bool wasInitialized;
+
         public void SetDefaults()
         {
             format = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
@@ -37,6 +39,15 @@ namespace DiztinGUIsh
             printLabelSpecificComments = false;
             file = ""; // path to file or folder, rename
             error = ""; // path to file or folder, rename
+            wasInitialized = true;
+        }
+
+        public bool Validate()
+        {
+            // TODO: add more validation.
+
+            // for now, just make sure it was initialized somewhere by someone
+            return wasInitialized;
         }
     }
 
@@ -149,7 +160,7 @@ namespace DiztinGUIsh
             bankSize = RomUtil.GetBankSize(Data.RomMapMode);
             errorCount = 0;
 
-            // TODO: this label combination isn't working well. fix.
+            // TODO: this label combination idea isn't working well. fix.
             // could create a copy of the data in the controller before we get here and
             // pass that in. unsubscribe all the notify events from it first.
             // ehhhh... is that a little weird... maybe.
@@ -169,18 +180,10 @@ namespace DiztinGUIsh
 
             int bank = -1;
 
-            // show a progress bar while this happens
-            // TODO: this is view stuff, keep it out of here.
-            // call controller with "LongRunningTask"
-            ProgressBarJob.Loop(size, () =>
-            {
-                if (pointer >= size)
-                    return -1; // means "stop looping"
-
+            // perf: this is the meat of the export, takes a while
+            while (pointer < size) {
                 WriteAddress(ref pointer, ref bank);
-
-                return (long) pointer; // report current address as the progress
-            });
+            }
 
             WriteLabels(pointer);
 
