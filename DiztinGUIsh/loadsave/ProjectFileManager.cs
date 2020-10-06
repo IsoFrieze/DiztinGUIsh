@@ -41,7 +41,7 @@ namespace DiztinGUIsh.loadsave
             return project;
         }
 
-        private static bool PostSerialize(Project project, Func<string, string> romPromptFn)
+        public static bool PostSerialize(Project project, Func<string, string> romPromptFn)
         {
             // at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
             // It would be easy to store the ROM bytes in the save file, but, for copyright reasons,

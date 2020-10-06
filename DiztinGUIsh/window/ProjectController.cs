@@ -5,6 +5,27 @@ using DiztinGUIsh.core.import;
 using DiztinGUIsh.loadsave;
 using DiztinGUIsh.window.dialog;
 
+// Model-View-Controller architecture.
+// goal: while this class's purpose is to be the middleman between dumb GUI elements and 
+// our underlying data, we should strive to keep all direct GUI stuff out of this class.
+// i.e. it's OK for this class to deal with confirming the user wants to do something,
+// but not OK to directly use GUI functions to show a form. instead, it should reach
+// out to the view classes and ask them to do things like popup dialog boxes/change form elements/etc.
+//
+// The idea here is that because there's no direct GUI stuff going on, we can run automations
+// and unit testing on this class, and eventually add undo/redo support
+//
+// Where possible, let the GUI elements (forms) subscribe to data notifications on our model
+// instead of trying to middleman everything.
+//
+// This separation of concerns isn't perfect yet, but, keep it in mind as you add functionality.
+//
+// example:
+//   ProjectView -> A form that displays an opened project to the user
+//   ProjectController -> When the form needs to change any state, it talks to ProjectController
+//                        i.e. when user clicks "Open Project", it sends the filename to us for handling
+//   Project -> The actual data, the model. It knows nothing about GUI, just is the low-level business logic
+
 namespace DiztinGUIsh.window
 {
     public class ProjectController
@@ -70,7 +91,8 @@ namespace DiztinGUIsh.window
 
         private void Project_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            // TODO
+            // TODO: use this to listen to interesting change events in Project/Data
+            // so we can react appropriately.
         }
 
         public void SaveProject(string filename)

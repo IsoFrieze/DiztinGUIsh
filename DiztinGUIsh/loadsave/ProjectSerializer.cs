@@ -31,7 +31,7 @@ namespace DiztinGUIsh.loadsave
             {
                 for (int i = 0; i < project1.Data.RomBytes.Count; ++i)
                 {
-                    Debug.Assert(project1.Data.RomBytes[i].Equals(project2.Data.RomBytes[i]));
+                    Debug.Assert(project1.Data.RomBytes[i].EqualsButNoRomByte(project2.Data.RomBytes[i]));
                 }
 
                 Debug.Assert(project1.Data.RomBytes.Equals(project2.Data.RomBytes));

@@ -155,7 +155,7 @@ namespace DiztinGUIsh
             // ehhhh... is that a little weird... maybe.
             //
             // maybe just clone the list and use the local list instead, remove subscribes from just that.
-            AddLabelSource(Data.Labels);
+            AddLabelSource(Data.Labels.Dict);
             AddLabelSource(ExtraLabels);
 
             AddTemporaryLabels();

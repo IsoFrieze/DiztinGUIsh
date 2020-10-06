@@ -1,102 +1,20 @@
-﻿using System.Collections;
-using System.IO;
-using System.Reflection;
+﻿using System.IO;
 using System.Text;
 using System.Xml;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
 using ExtendedXmlSerializer;
-using ExtendedXmlSerializer.Configuration;
-using ExtendedXmlSerializer.ContentModel;
-using ExtendedXmlSerializer.ContentModel.Content;
-using ExtendedXmlSerializer.ContentModel.Format;
-using ExtendedXmlSerializer.Core;
-using ExtendedXmlSerializer.ExtensionModel;
 
 namespace DiztinGUIsh.loadsave.xml_serializer
 {
-    /*internal class ObservableDictionarySerializer : ISerializerExtension
-    {
-        public IServiceRepository Get(IServiceRepository parameter)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Execute(IServices parameter)
-        {
-            throw new System.NotImplementedException();
-        }
-    }
-
-
-    sealed class Extension : ISerializerExtension
-    {
-        public static Extension Default { get; } = new Extension();
-
-        Extension() { }
-
-        public IServiceRepository Get(IServiceRepository parameter) => parameter.DecorateContentsWith<Contents>()
-            .Then();
-
-        void ICommand<IServices>.Execute(IServices parameter) { }
-
-        sealed class Contents : IContents
-        {
-            readonly IContents _previous;
-            readonly ISerializer<int> _number;
-
-            public Contents(IContents previous)
-                : this(previous, new AnswerToEverythingSerializer(previous.Get(typeof(int)).For<int>())) { }
-
-            public Contents(IContents previous, ISerializer<int> number)
-            {
-                _previous = previous;
-                _number = number;
-            }
-
-            public ISerializer Get(TypeInfo parameter)
-                => parameter == typeof(int) ? _number.Adapt() : _previous.Get(parameter);
-        }
-
-        sealed class AnswerToEverythingSerializer : ISerializer<int>
-        {
-            readonly ISerializer<int> _previous;
-
-            public AnswerToEverythingSerializer(ISerializer<int> previous) => _previous = previous;
-
-            public int Get(IFormatReader parameter) => _previous.Get(parameter) + 42;
-
-            public void Write(IFormatWriter writer, int instance)
-            {
-                _previous.Write(writer, instance + 42);
-            }
-        }
-    }*/
-
     internal class ProjectXmlSerializer : ProjectSerializer
     {
         // NEVER CHANGE THIS ONE.
-        private const int FIRST_SAVE_FORMAT_VERSION = 100;
+      private const int FIRST_SAVE_FORMAT_VERSION = 100;
 
-        // increment this if you change the XML file format
-        private const int CURRENT_SAVE_FORMAT_VERSION = FIRST_SAVE_FORMAT_VERSION;
+      // increment this if you change the XML file format
+      private const int CURRENT_SAVE_FORMAT_VERSION = FIRST_SAVE_FORMAT_VERSION;
 
-        // update this if we are dropped support for really old save formats.
-        private const int EARLIEST_SUPPORTED_SAVE_FORMAT_VERSION = FIRST_SAVE_FORMAT_VERSION;
-
-        private static IExtendedXmlSerializer GetSerializer()
-        {
-            return new ConfigurationContainer()
-                .Type<RomBytes>().Register()
-                    .Serializer().Using(RomBytesSerializer.Default)
-                //.Type<ObservableDictionary<int, Label>>()
-                //.Extend(new ObservableDictionarySerializer())
-                .UseOptimizedNamespaces()
-                .UseAutoFormatting()
-                .EnableImplicitTyping(typeof(Data))
-                .EnableImplicitTyping(typeof(Label))
-                .Create();
-        }
+      // update this if we are dropped support for really old save formats.
+      private const int EARLIEST_SUPPORTED_SAVE_FORMAT_VERSION = FIRST_SAVE_FORMAT_VERSION;
 
         internal class Root
         {
@@ -108,7 +26,8 @@ namespace DiztinGUIsh.loadsave.xml_serializer
             // to change 'Project'
             public int SaveVersion { get; set; } = -1;
             public string Watermark { get; set; }
-
+            public string Extra1 { get; set; } = ""; // reserved for future use
+            public string Extra2 { get; set; } = ""; // reserved for future use
 
             // The actual project itself. Almost any change you want to make should go in here.
             public Project Project { get; set; }
@@ -116,11 +35,8 @@ namespace DiztinGUIsh.loadsave.xml_serializer
 
         public override byte[] Save(Project project)
         {
-            // TODO: figure out how to not save Project.unsavedChanges property in XML
-
             // Wrap the project in a top-level root element with some info about the XML file
-            // format version. Note that each serializer has its own implementation of this.
-
+            // format version. Note that each serializer has its own implementation of storing this metadata
             var rootElement = new Root()
             {
                 SaveVersion = CURRENT_SAVE_FORMAT_VERSION,
@@ -128,27 +44,36 @@ namespace DiztinGUIsh.loadsave.xml_serializer
                 Project = project,
             };
 
-            var xml_str = GetSerializer().Serialize(
+            var xmlStr = XmlSerializerSupport.GetSerializer().Serialize(
                 new XmlWriterSettings { Indent = true }, 
                 rootElement);
 
-            var final_bytes = Encoding.UTF8.GetBytes(xml_str);
+            var finalBytes = Encoding.UTF8.GetBytes(xmlStr);
 
             // if you want some sanity checking, run this to verify everything saved correctly
-            DebugVerifyProjectEquality(project, Load(final_bytes));
+            DebugVerifyProjectEquality(project, finalBytes);
+            // end debug
 
-            return final_bytes;
+            return finalBytes;
+        }
+
+        private void DebugVerifyProjectEquality(Project project1, byte[] finalBytes_project2)
+        {
+            var project2 = Load(finalBytes_project2);
+            ProjectFileManager.PostSerialize(project2, null);
+            DebugVerifyProjectEquality(project1, project2);
         }
 
         public override Project Load(byte[] data)
         {
-            // TODO: it would be much more reliable if we could deserialize the Root element ALONE
-            // first, check for version/watermark, and only then try to deserialize the rest of the doc.
+            // TODO: it would be much more user-friendly/reliable if we could deserialize the
+            // Root element ALONE first, check for valid version/watermark, and only then try
+            // to deserialize the rest of the doc.
             //
             // Also, we can do data migrations based on versioning, and ExtendedXmlSerializer
 
             var text = Encoding.UTF8.GetString(data);
-            var root = GetSerializer().Deserialize<Root>(text);
+            var root = XmlSerializerSupport.GetSerializer().Deserialize<Root>(text);
 
             if (root.Watermark != Watermark)
                 throw new InvalidDataException("This file doesn't appear to be a valid DiztinGUIsh XML file (missing/invalid watermark element in XML)");
