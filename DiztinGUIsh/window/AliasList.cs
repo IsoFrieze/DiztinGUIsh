@@ -127,7 +127,7 @@ namespace DiztinGUIsh.window
             try
             {
                 using var sw = new StreamWriter(saveFileDialog1.FileName);
-                foreach (KeyValuePair<int, Label> pair in Data.Labels)
+                foreach (KeyValuePair<int, Label> pair in Data.Labels.Dict)
                 {
                     sw.WriteLine(
                         $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.name},{pair.Value.comment}");
@@ -181,7 +181,7 @@ namespace DiztinGUIsh.window
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "Must enter a valid hex address.";
-                        } else if (oldAddress == -1 && Data.Labels.ContainsKey(val))
+                        } else if (oldAddress == -1 && Data.Labels.Dict.ContainsKey(val))
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "This address already has a label.";
@@ -285,8 +285,8 @@ namespace DiztinGUIsh.window
 
             // todo: eventually use databinding/datasource, probably.
             // Todo: modify observabledictionary wrapper to avoid having to do the .Dict call here.
-            Data.Labels.PropertyChanged += Labels_PropertyChanged;
-            Data.Labels.CollectionChanged += Labels_CollectionChanged;
+            Data.Labels.Dict.PropertyChanged += Labels_PropertyChanged;
+            Data.Labels.Dict.CollectionChanged += Labels_CollectionChanged;
         }
 
         private void RepopulateFromData()
@@ -297,7 +297,7 @@ namespace DiztinGUIsh.window
                 return;
 
             // TODO: replace with winforms databinding eventually
-            foreach (KeyValuePair<int, Label> item in Data.Labels)
+            foreach (KeyValuePair<int, Label> item in Data.Labels.Dict)
             {
                 RawAdd(item.Key, item.Value);
             }

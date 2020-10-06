@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Diz.Core.core;
+using Diz.Core.core.util;
 using DiztinGUIsh.core.util;
 using IX.Observable;
 
@@ -89,8 +90,8 @@ namespace DiztinGUIsh.core
         public ROMMapMode RomMapMode { get; set; }
         public ROMSpeed RomSpeed { get; set; }
 
-        public ObservableDictionary<int,string> Comments { get; set; } = new ObservableDictionary<int, string>();
-        public ObservableDictionary<int, Label> Labels { get; set; } = new ObservableDictionary<int, Label>();
+        public OdWrapper<int,string> Comments { get; set; } = new OdWrapper<int, string>();
+        public OdWrapper<int, Label> Labels { get; set; } = new OdWrapper<int, Label>();
         public RomBytes RomBytes { get; set; } = new RomBytes();
 
         private CPU65C816 CPU65C816 { get; set; }
@@ -172,14 +173,14 @@ namespace DiztinGUIsh.core
         }
         public string GetLabelName(int i)
         {
-            if (Labels.TryGetValue(i, out var val)) 
+            if (Labels.Dict.TryGetValue(i, out var val)) 
                 return val?.name ?? "";
 
             return "";
         }
         public string GetLabelComment(int i)
         {
-            if (Labels.TryGetValue(i, out var val)) 
+            if (Labels.Dict.TryGetValue(i, out var val)) 
                 return val?.comment ?? "";
 
             return "";
@@ -187,7 +188,7 @@ namespace DiztinGUIsh.core
 
         public void DeleteAllLabels()
         {
-            Labels.Clear();
+            Labels.Dict.Clear();
         }
 
         public void AddLabel(int offset, Label label, bool overwrite)
@@ -195,35 +196,35 @@ namespace DiztinGUIsh.core
             // adding null label removes it
             if (label == null)
             {
-                if (Labels.ContainsKey(offset))
-                    Labels.Remove(offset);
+                if (Labels.Dict.ContainsKey(offset))
+                    Labels.Dict.Remove(offset);
 
                 return;
             }
 
             if (overwrite)
             {
-                if (Labels.ContainsKey(offset))
-                    Labels.Remove(offset);
+                if (Labels.Dict.ContainsKey(offset))
+                    Labels.Dict.Remove(offset);
             }
 
-            if (!Labels.ContainsKey(offset))
+            if (!Labels.Dict.ContainsKey(offset))
             {
                 label.CleanUp();
-                Labels.Add(offset, label);
+                Labels.Dict.Add(offset, label);
             }
         }
 
-        public string GetComment(int i) => Comments.TryGetValue(i, out var val) ? val : "";
+        public string GetComment(int i) => Comments.Dict.TryGetValue(i, out var val) ? val : "";
         public void AddComment(int i, string v, bool overwrite)
         {
             if (v == null)
             {
-                if (Comments.ContainsKey(i)) Comments.Remove(i);
+                if (Comments.Dict.ContainsKey(i)) Comments.Dict.Remove(i);
             } else
             {
-                if (Comments.ContainsKey(i) && overwrite) Comments.Remove(i);
-                if (!Comments.ContainsKey(i)) Comments.Add(i, v);
+                if (Comments.Dict.ContainsKey(i) && overwrite) Comments.Dict.Remove(i);
+                if (!Comments.Dict.ContainsKey(i)) Comments.Dict.Add(i, v);
             }
         }
 
@@ -627,7 +628,7 @@ namespace DiztinGUIsh.core
         #region Equality
         protected bool Equals(Data other)
         {
-            return Labels.SequenceEqual(other.Labels) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
+            return Labels.Dict.SequenceEqual(other.Labels.Dict) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.Dict.SequenceEqual(other.Comments.Dict) && RomBytes.Equals(other.RomBytes);
         }
 
         public override bool Equals(object obj)

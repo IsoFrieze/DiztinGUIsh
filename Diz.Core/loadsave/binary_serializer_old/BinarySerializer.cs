@@ -129,8 +129,8 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
             var all_labels = project.Data.Labels;
             var all_comments = project.Data.Comments;
 
-            ByteUtil.IntegerIntoByteList(all_labels.Count, label);
-            foreach (KeyValuePair<int, Label> pair in all_labels)
+            ByteUtil.IntegerIntoByteList(all_labels.Dict.Count, label);
+            foreach (KeyValuePair<int, Label> pair in all_labels.Dict)
             {
                 ByteUtil.IntegerIntoByteList(pair.Key, label);
 
@@ -141,8 +141,8 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
                 }
             }
 
-            ByteUtil.IntegerIntoByteList(all_comments.Count, comment);
-            foreach (KeyValuePair<int, string> pair in all_comments)
+            ByteUtil.IntegerIntoByteList(all_comments.Dict.Count, comment);
+            foreach (KeyValuePair<int, string> pair in all_comments.Dict)
             {
                 ByteUtil.IntegerIntoByteList(pair.Key, comment);
                 SaveStringToBytes(pair.Value, comment);

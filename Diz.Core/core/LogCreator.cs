@@ -166,7 +166,7 @@ namespace DiztinGUIsh
             // ehhhh... is that a little weird... maybe.
             //
             // maybe just clone the list and use the local list instead, remove subscribes from just that.
-            AddLabelSource(Data.Labels);
+            AddLabelSource(Data.Labels.Dict);
             AddLabelSource(ExtraLabels);
 
             AddTemporaryLabels();
@@ -405,7 +405,7 @@ namespace DiztinGUIsh
             }
 
             var c1 = (Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0;
-            var c2 = (Data.Labels.TryGetValue(pointer, out var label) && label.name.Length > 0);
+            var c2 = (Data.Labels.Dict.TryGetValue(pointer, out var label) && label.name.Length > 0);
             if (c1 || c2)
                 StreamOutput.WriteLine(GetLine(pointer, "empty"));
 
@@ -421,7 +421,7 @@ namespace DiztinGUIsh
             var listToPrint = new Dictionary<int, Label>();
 
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
-            foreach (KeyValuePair<int, Label> pair in Data.Labels)
+            foreach (KeyValuePair<int, Label> pair in Data.Labels.Dict)
             {
                 if (usedLabels.Contains(pair.Key)) 
                     continue;
@@ -441,7 +441,7 @@ namespace DiztinGUIsh
             if (Settings.includeUnusedLabels)
             {
                 SwitchOutputFile(pointer, $"{folder}/all-labels.txt");
-                foreach (KeyValuePair<int, Label> pair in Data.Labels)
+                foreach (KeyValuePair<int, Label> pair in Data.Labels.Dict)
                 {
                     // not the best place to add formatting, TODO: cleanup
                     var category = listToPrint.ContainsKey(pair.Key) ? "INLINE" : "EXTRA ";

@@ -1,4 +1,5 @@
 ﻿using System.Xml;
+using Diz.Core.core.util;
 using DiztinGUIsh.core.util;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
@@ -20,8 +21,7 @@ namespace Diz.Test
         {
             public OdWrapper<int, string> ODW { get; set; } = new OdWrapper<int, string>()
             {
-                ObservableDict =
-                {
+                Dict = {
                     {1, "Xtest1"},
                     {2, "Xtest3"},
                 }
@@ -55,7 +55,11 @@ namespace Diz.Test
             return new ConfigurationContainer()
                 .EnableImplicitlyDefinedDefaultValues()
                 .EnableMemberExceptionHandling() // debug only
-                .AppendDisablingType<int, string>()
+
+                // .ApplyAllOdWrapperConfigurations() // the important one for ODWrapper
+
+                .AppendDisablingType<int,string>()
+
                 .UseOptimizedNamespaces()
                 .Create();
         }
@@ -84,6 +88,31 @@ namespace Diz.Test
         }
 
         readonly Root rootElementGood = new Root();
-        private const string xmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerTest-Root xmlns:ns1=\"clr-namespace:DiztinGUIsh.core.util;assembly=Diz.Core\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns=\"clr-namespace:Diz.Test;assembly=Diz.Test\"><ODW><DictToSave exs:type=\"sys:Dictionary[sys:int,sys:string]\"><sys:Item><Key>1</Key><Value>Xtest1</Value></sys:Item><sys:Item><Key>2</Key><Value>Xtest3</Value></sys:Item></DictToSave></ODW></SerializerTest-Root>";
+        string xmlShouldBe = "<?xml version=\"1.0" +
+                             "\" encoding=\"utf-8" +
+                             "\"?><SerializerTest-" +
+                             "Root xmlns:ns1=\"clr" +
+                             "-namespace:Diz.Core." +
+                             "core.util;assembly=D" +
+                             "iz.Core\" xmlns:exs=" +
+                             "\"https://extendedxm" +
+                             "lserializer.github.i" +
+                             "o/v2\" xmlns:sys=\"h" +
+                             "ttps://extendedxmlse" +
+                             "rializer.github.io/s" +
+                             "ystem\" xmlns=\"clr-" +
+                             "namespace:Diz.Test;a" +
+                             "ssembly=Diz.Test\"><" +
+                             "ODW><DictToSave exs:" +
+                             "type=\"sys:Dictionar" +
+                             "y[sys:int,sys:string" +
+                             "]\"><sys:Item><Key>1" +
+                             "</Key><Value>Xtest1<" +
+                             "/Value></sys:Item><s" +
+                             "ys:Item><Key>2</Key>" +
+                             "<Value>Xtest3</Value" +
+                             "></sys:Item></DictTo" +
+                             "Save></ODW></Seriali" +
+                             "zerTest-Root>";
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Diz.Core.core;
+using Diz.Core.core.util;
 using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
-using IX.Observable;
 
 namespace DiztinGUIsh
 {
@@ -156,21 +155,25 @@ namespace DiztinGUIsh
                 new ROMByte {Rom = 0x34, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x6D, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             },
-            Comments = new ObservableDictionary<int, string>()
+            Comments = new OdWrapper<int, string>()
             {
-                {0x03, "this sets FastROM"},
-                {0x0F, "direct page = $2100"},
-                {0x21, "clear APU regs"},
-                {0x44, "this routine copies Test_Data to $7E0100"}
+                Dict = {
+                    {0x03, "this sets FastROM"},
+                    {0x0F, "direct page = $2100"},
+                    {0x21, "clear APU regs"},
+                    {0x44, "this routine copies Test_Data to $7E0100"}
+                }
             },
-            Labels = new ObservableDictionary<int, Label>()
+            Labels = new OdWrapper<int, Label>()
             {
-                {0x00, new Label {name = "Emulation_RESET", comment = "Sample emulation reset location"}},
-                {0x0A, new Label {name = "FastRESET", comment = "Sample label"}},
-                {0x32, new Label {name = "Test_Indices"}},
-                {0x3A, new Label {name = "Pointer_Table"}},
-                {0x44, new Label {name = "First_Routine"}},
-                {0x5B, new Label {name = "Test_Data", comment = "Pretty cool huh?"}}
+                Dict = {
+                    {0x00, new Label {name = "Emulation_RESET", comment = "Sample emulation reset location"}},
+                    {0x0A, new Label {name = "FastRESET", comment = "Sample label"}},
+                    {0x32, new Label {name = "Test_Indices"}},
+                    {0x3A, new Label {name = "Pointer_Table"}},
+                    {0x44, new Label {name = "First_Routine"}},
+                    {0x5B, new Label {name = "Test_Data", comment = "Pretty cool huh?"}}
+                }
             },
             RomMapMode = ROMMapMode.LoROM,
             RomSpeed = ROMSpeed.FastROM,
