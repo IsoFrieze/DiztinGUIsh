@@ -8,7 +8,7 @@ namespace DiztinGUIsh.controller
     public interface IProjectView
     {
         Project Project { get; set; }
-        void OnProjectOpenFail();
+        void OnProjectOpenFail(string errorMsg);
         void OnProjectSaved();
         void OnExportFinished(LogCreator.OutputResult result);
 

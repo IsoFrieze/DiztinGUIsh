@@ -64,19 +64,21 @@ namespace DiztinGUIsh.controller
         public bool OpenProject(string filename)
         {
             Project project = null;
+            var errorMsg = "";
 
             // TODO: try/catch for ProjectFileManager
             DoLongRunningTask(delegate {
                 try {
                     project = ProjectFileManager.Open(filename, AskToSelectNewRomFilename);
-                } catch (Exception) {
+                } catch (Exception ex) {
                     project = null;
+                    errorMsg = ex.Message;
                 }
             }, $"Opening {Path.GetFileName(filename)}...");
 
             if (project == null)
             {
-                ProjectView.OnProjectOpenFail();
+                ProjectView.OnProjectOpenFail(errorMsg);
                 return false;
             }
 

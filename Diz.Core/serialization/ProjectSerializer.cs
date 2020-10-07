@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using Diz.Core.model;
-using DiztinGUIsh;
 
 namespace Diz.Core.serialization
 {

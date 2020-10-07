@@ -218,9 +218,10 @@ namespace DiztinGUIsh.window
             EnableSubWindows();
         }
 
-        public void OnProjectOpenFail()
+        public void OnProjectOpenFail(string errorMsg)
         {
             LastProjectFilename = "";
+            MessageBox.Show(errorMsg, "Error opening project", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         public void OpenProject(string filename)

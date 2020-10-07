@@ -36,8 +36,13 @@ namespace Diz.Core.util
             Debug.Assert(operationFNs.Count != 0);
         }
 
-        public static IConfigurationContainer ApplyAllOdWrapperConfigurations(this IConfigurationContainer @this) =>
-            operationFNs.Aggregate(@this, (current, fn) => fn(current));
+        public static IConfigurationContainer ApplyAllOdWrapperConfigurations(this IConfigurationContainer @this)
+        {
+            if (operationFNs.Count == 0)
+                return @this;
+
+            return operationFNs.Aggregate(@this, (current, fn) => fn(current));
+        }
     }
 
     // wrapper around an ObservableDictionary so we can implement non-generic IDictionary
