@@ -57,6 +57,8 @@ namespace DiztinGUIsh.loadsave.xml_serializer
             return finalBytes;
         }
 
+        // just for debugging purposes, compare two projects together to make sure they serialize/deserialize
+        // correctly.
         private void DebugVerifyProjectEquality(Project project1, byte[] finalBytes_project2)
         {
             var project2 = Load(finalBytes_project2);

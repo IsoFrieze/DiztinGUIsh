@@ -9,9 +9,8 @@ namespace DiztinGUIsh.core.util
 {
     public static class ByteUtil
     {
-        // take input addresses that look like this, and convert to an int.
-        // useful if pasting addresses from other editors/tools/asm/etc and
-        // generating a clean address.
+        // take input addresses that be in any formats that look like this, and convert to an int.
+        // This is useful if pasting addresses from other editors/tools/asm/etc trying to get a clean address.
         // C0FFFF
         // $C0FFFF
         // C7/AAAA
@@ -91,7 +90,8 @@ namespace DiztinGUIsh.core.util
         public static void IntegerIntoByteList(int a, List<byte> list)
         {
             byte[] arr = IntegerToByteArray(a);
-            for (int i = 0; i < arr.Length; i++) list.Add(arr[i]);
+            foreach (var t in arr)
+                list.Add(t);
         }
 
         public static int ByteArrayToInteger(byte[] data, int offset = 0)

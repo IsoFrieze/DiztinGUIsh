@@ -10,7 +10,7 @@ namespace DiztinGUIsh
         {
             get
             {
-                // take our sample data from below and construct some extra stuff into it.
+                // one-time: take our sample data from below and bolt some extra stuff on top of it.
                 // then, cache all this in a static read-only property
 
                 if (finalSampleData != null)

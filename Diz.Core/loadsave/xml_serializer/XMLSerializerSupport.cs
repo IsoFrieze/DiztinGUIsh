@@ -1,4 +1,5 @@
-﻿using DiztinGUIsh.core;
+﻿using Diz.Core.core.util;
+using DiztinGUIsh.core;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 
@@ -8,10 +9,13 @@ namespace DiztinGUIsh.loadsave.xml_serializer
     {
         public static IExtendedXmlSerializer GetSerializer()
         {
-            // var sourceD = new Data.ObservableDictionaryAdaptor<int, string>();
-            // IDictionary IDict = (IDictionary)sourceD;
+            // This configuration changes how parts of the data structures are serialized back/forth to XML.
+            // This is using the ExtendedXmlSerializer library, which has a zillion config options and is 
+            // awesome.
 
-            // TODO: doesn't work for saving ObservableDictionary related stuff yet. fix.
+            // TODO: doesn't work for saving ObservableDictionary related stuff yet. we are working
+            // around it with a wrapper, but, it's clumsy.  Somewhere in these options is a way to fix it,
+            // just gotta figure it out.
 
             return new ConfigurationContainer()
                 .Type<Project>()
@@ -19,31 +23,14 @@ namespace DiztinGUIsh.loadsave.xml_serializer
                 .Type<RomBytes>()
                 .Register().Serializer().Using(RomBytesSerializer.Default)
                 .Type<Data>()
-                //.Member(x => x.Comments).Ignore()
-                //.Member(x => x.Labels).Ignore()
-                // .Type<ObservableDictionary<int, string>>()
-                // .Extend(ObservableDictionaryExtension<int, string>.Default)
-                //.EnableImplicitTyping(typeof(Data.ObservableDictionaryAdaptor<int,string>))
-                //.Type<Data.ObservableDictionaryAdaptor<int, string>>()
-                //.Register().Serializer().ByCalling(dSerialize, dDeserialize)
-                //.Type<Data>()
-                //.Type<Data.ODIntString>()
-                //.WithInterceptor(new InterceptorGuy())
+
+                .ApplyAllOdWrapperConfigurations() // important for ODWrapper to serialize correctly.
+
                 .UseOptimizedNamespaces()
                 .UseAutoFormatting()
                 .EnableImplicitTyping(typeof(Data))
                 .EnableImplicitTyping(typeof(Label))
                 .Create();
         }
-
-        /*private static Data.ObservableDictionaryAdaptor<int, string> dDeserialize(IFormatReader arg)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static void dSerialize(IFormatWriter arg1, Data.ObservableDictionaryAdaptor<int, string> arg2)
-        {
-            throw new NotImplementedException();
-        }*/
     }
 }
