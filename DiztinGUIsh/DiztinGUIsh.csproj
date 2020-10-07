@@ -131,8 +131,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="window\LargeFilesReader.cs" />
-    <Compile Include="window\ProgressBarWorker.cs" />
+    <Compile Include="util\LargeFilesReader.cs" />
+    <Compile Include="util\ProgressBarWorker.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="window\dialog\ImportROMDialogController.cs" />
     <Compile Include="window\dialog\TestForm.cs">
@@ -141,9 +141,9 @@
     <Compile Include="window\dialog\TestForm.Designer.cs">
       <DependentUpon>TestForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="window\GuiUtil.cs" />
-    <Compile Include="window\IProjectView.cs" />
-    <Compile Include="window\ProjectController.cs" />
+    <Compile Include="util\GuiUtil.cs" />
+    <Compile Include="controller\IProjectView.cs" />
+    <Compile Include="controller\ProjectController.cs" />
     <Compile Include="window\dialog\About.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -299,6 +299,7 @@
       <Name>Diz.Core</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\GitInfo.2.1.2\build\GitInfo.targets" Condition="Exists('..\packages\GitInfo.2.1.2\build\GitInfo.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

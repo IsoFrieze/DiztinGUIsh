@@ -109,33 +109,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="core\CPU65C816.cs" />
-    <Compile Include="core\Data.cs" />
-    <Compile Include="core\import\BizHawkCdlImporter.cs" />
-    <Compile Include="core\import\BSNESImporter.cs" />
-    <Compile Include="core\import\SampleRomData.cs" />
-    <Compile Include="core\Label.cs" />
-    <Compile Include="core\LogCreator.cs" />
-    <Compile Include="core\Project.cs" />
-    <Compile Include="core\RomBytes.cs" />
-    <Compile Include="core\util\ByteUtil.cs" />
-    <Compile Include="core\util\ObservableDictionaryAdaptor.cs" />
-    <Compile Include="core\util\RomUtil.cs" />
-    <Compile Include="core\util\Util.cs" />
-    <Compile Include="loadsave\binary_serializer_old\BinarySerializer.cs" />
-    <Compile Include="loadsave\ImportSettings.cs" />
-    <Compile Include="loadsave\ProjectFileManager.cs" />
-    <Compile Include="loadsave\ProjectSerializer.cs" />
-    <Compile Include="loadsave\xml_serializer\ProjectXMLSerializer.cs" />
-    <Compile Include="loadsave\xml_serializer\RomBytesXMLSerializer.cs" />
-    <Compile Include="loadsave\xml_serializer\XMLSerializerSupport.cs" />
-    <Compile Include="Model.cs" />
+    <Compile Include="arch\CPU65C816.cs" />
+    <Compile Include="model\Data.cs" />
+    <Compile Include="import\BizHawkCdlImporter.cs" />
+    <Compile Include="import\BSNESImporter.cs" />
+    <Compile Include="SampleRomData.cs" />
+    <Compile Include="model\Label.cs" />
+    <Compile Include="export\LogCreator.cs" />
+    <Compile Include="model\Project.cs" />
+    <Compile Include="model\RomBytes.cs" />
+    <Compile Include="util\ByteUtil.cs" />
+    <Compile Include="util\ObservableDictionaryAdaptor.cs" />
+    <Compile Include="util\RomUtil.cs" />
+    <Compile Include="util\Util.cs" />
+    <Compile Include="serialization\binary_serializer_old\BinarySerializer.cs" />
+    <Compile Include="serialization\ImportSettings.cs" />
+    <Compile Include="serialization\ProjectFileManager.cs" />
+    <Compile Include="serialization\ProjectSerializer.cs" />
+    <Compile Include="serialization\xml_serializer\ProjectXMLSerializer.cs" />
+    <Compile Include="serialization\xml_serializer\RomBytesXMLSerializer.cs" />
+    <Compile Include="serialization\xml_serializer\XMLSerializerSupport.cs" />
+    <Compile Include="model\Model.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="core\ROMByte.cs" />
+    <Compile Include="model\ROMByte.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="util\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
