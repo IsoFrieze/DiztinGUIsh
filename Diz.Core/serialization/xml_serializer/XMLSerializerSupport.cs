@@ -1,6 +1,5 @@
 ﻿using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 
@@ -8,7 +7,7 @@ namespace Diz.Core.serialization.xml_serializer
 {
     public static class XmlSerializerSupport
     {
-        public static IExtendedXmlSerializer GetSerializer()
+        public static IConfigurationContainer GetSerializer()
         {
             // This configuration changes how parts of the data structures are serialized back/forth to XML.
             // This is using the ExtendedXmlSerializer library, which has a zillion config options and is 
@@ -30,8 +29,7 @@ namespace Diz.Core.serialization.xml_serializer
                 .UseOptimizedNamespaces()
                 .UseAutoFormatting()
                 .EnableImplicitTyping(typeof(Data))
-                .EnableImplicitTyping(typeof(Label))
-                .Create();
+                .EnableImplicitTyping(typeof(Label));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using Diz.Core.util;
 using DiztinGUIsh.window;
 
 namespace DiztinGUIsh
@@ -12,6 +13,9 @@ namespace DiztinGUIsh
         [STAThread]
         static void Main(string[] args)
         {
+            // hack. this needs to go away. register some types for the XML serializer to work.
+            OdWrapperRegistration.ForceStaticClassRegistration();
+
             if (Environment.OSVersion.Version.Major >= 6)
             {
                 SetProcessDPIAware();

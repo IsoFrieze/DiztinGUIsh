@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using Diz.Core.arch;
 using Diz.Core.util;
-using DiztinGUIsh;
 
 namespace Diz.Core.model
 {

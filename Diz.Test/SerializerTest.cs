@@ -1,5 +1,6 @@
 ﻿using System.Xml;
 using Diz.Core.model;
+using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
@@ -17,7 +18,7 @@ namespace Diz.Test
             this.testOutputHelper = testOutputHelper;
         }
 
-        public class Root
+        public class TestRoot
         {
             public OdWrapper<int, string> ODW { get; set; } = new OdWrapper<int, string>() { Dict = {
                 {1, "Z test1"},
@@ -30,7 +31,7 @@ namespace Diz.Test
 
             #region Equality
 
-            protected bool Equals(Root other)
+            protected bool Equals(TestRoot other)
             {
                 return Equals(ODW, other.ODW);
             }
@@ -40,7 +41,7 @@ namespace Diz.Test
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
-                return Equals((Root) obj);
+                return Equals((TestRoot) obj);
             }
 
             public override int GetHashCode()
@@ -51,27 +52,20 @@ namespace Diz.Test
             #endregion
         }
 
-        private static IExtendedXmlSerializer GetSerializer()
+        private static IConfigurationContainer GetSerializer()
         {
-            return new ConfigurationContainer()
-                .UseOptimizedNamespaces()
-                .EnableImplicitlyDefinedDefaultValues()
-
-                .EnableMemberExceptionHandling() // debug only
-
-                .ApplyAllOdWrapperConfigurations() // the important one for ODWrapper
-
-                .Create();
+            return XmlSerializerSupport.GetSerializer()
+                .EnableImplicitTyping(typeof(TestRoot));
         }
 
         [Fact]
         private void Serializer()
         {
-            var serializer = GetSerializer();
+            var serializer = GetSerializer().Create();
 
             var xmlStr = serializer.Serialize(
                 new XmlWriterSettings() {},
-                rootElementGood);
+                testRootElementGood);
 
             testOutputHelper.WriteLine(xmlStr);
 
@@ -81,14 +75,50 @@ namespace Diz.Test
         [Fact]
         private void DeSerialize()
         {
-            var serializer = GetSerializer();
-            var restoredRoot = serializer.Deserialize<Root>(xmlShouldBe);
+            var serializer = GetSerializer().Create();
+            var restoredRoot = serializer.Deserialize<TestRoot>(xmlShouldBe);
 
-            Assert.Equal(rootElementGood, restoredRoot);
+            Assert.Equal(testRootElementGood, restoredRoot);
         }
 
-        private readonly Root rootElementGood = new Root();
+        private readonly TestRoot testRootElementGood = new TestRoot();
 
-        private const string xmlShouldBe = "<?xml version=\"1.0" + "\" encoding=\"utf-8" + "\"?><SerializerTest-" + "Root xmlns:ns1=\"clr" + "-namespace:Diz.Core." + "core.util;assembly=D" + "iz.Core\" xmlns:exs=" + "\"https://extendedxm" + "lserializer.github.i" + "o/v2\" xmlns:sys=\"h" + "ttps://extendedxmlse" + "rializer.github.io/s" + "ystem\" xmlns:ns2=\"" + "clr-namespace:Diztin" + "GUIsh;assembly=Diz.C" + "ore\" xmlns=\"clr-na" + "mespace:Diz.Test;ass" + "embly=Diz.Test\"><OD" + "W><DictToSave exs:ty" + "pe=\"sys:Dictionary[" + "sys:int,sys:string]" + "\"><sys:Item><Key>1<" + "/Key><Value>Z test1<" + "/Value></sys:Item><s" + "ys:Item><Key>2</Key>" + "<Value>Z test3</Valu" + "e></sys:Item></DictT" + "oSave></ODW><ODW2><D" + "ictToSave exs:type=" + "\"sys:Dictionary[sys" + ":int,ns2:Label]\"><s" + "ys:Item><Key>100</Ke" + "y><Value><name>locat" + "ion1</name><comment>" + "c1</comment></Value>" + "</sys:Item><sys:Item" + "><Key>200</Key><Valu" + "e><name>location2</n" + "ame><comment>c2</com" + "ment></Value></sys:I" + "tem></DictToSave></O" + "DW2></SerializerTest" + "-Root>";
+        string xmlShouldBe = "<?xml version=\"1.0" +
+                     "\" encoding=\"utf-8" +
+                     "\"?><SerializerTest-" +
+                     "TestRoot xmlns:ns1=" +
+                     "\"clr-namespace:Diz." +
+                     "Core.util;assembly=D" +
+                     "iz.Core\" xmlns:exs=" +
+                     "\"https://extendedxm" +
+                     "lserializer.github.i" +
+                     "o/v2\" xmlns:sys=\"h" +
+                     "ttps://extendedxmlse" +
+                     "rializer.github.io/s" +
+                     "ystem\" xmlns:ns2=\"" +
+                     "clr-namespace:Diz.Co" +
+                     "re.model;assembly=Di" +
+                     "z.Core\"><ODW><DictT" +
+                     "oSave exs:type=\"sys" +
+                     ":Dictionary[sys:int," +
+                     "sys:string]\"><sys:I" +
+                     "tem Key=\"1\" Value=" +
+                     "\"Z test1\" /><sys:I" +
+                     "tem Key=\"2\" Value=" +
+                     "\"Z test3\" /></Dict" +
+                     "ToSave></ODW><ODW2><" +
+                     "DictToSave exs:type=" +
+                     "\"sys:Dictionary[sys" +
+                     ":int,ns2:Label]\"><s" +
+                     "ys:Item Key=\"100\">" +
+                     "<Value name=\"locati" +
+                     "on1\" comment=\"c1\"" +
+                     " /></sys:Item><sys:I" +
+                     "tem Key=\"200\"><Val" +
+                     "ue name=\"location2" +
+                     "\" comment=\"c2\" />" +
+                     "</sys:Item></DictToS" +
+                     "ave></ODW2></Seriali" +
+                     "zerTest-TestRoot>";
     }
 }

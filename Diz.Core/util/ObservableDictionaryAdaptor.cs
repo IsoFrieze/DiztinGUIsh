@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 using IX.Observable;
@@ -22,19 +22,13 @@ namespace Diz.Core.util
             => @this
                 .EnableImplicitTyping(typeof(OdWrapper<TKey, TValue>))
                 .Type<OdWrapper<TKey, TValue>>()
-                .Member(x => x.Dict).Ignore(); // the important bit
+                .Member(x => x.Dict).Ignore(); // this is the heart of everything
 
         private static readonly List<Func<IConfigurationContainer, IConfigurationContainer>> operationFNs = new List<Func<IConfigurationContainer, IConfigurationContainer>>();
 
         // allow multiple OdWrapper type combos to be excluded.
-        public static void Register<TKey, TValue>()
-        {
-            Func<IConfigurationContainer, IConfigurationContainer> fn = container =>
-                container.AppendDisablingType<TKey, TValue>();
-
-            operationFNs.Add(fn);
-            Debug.Assert(operationFNs.Count != 0);
-        }
+        public static void Register<TKey, TValue>() => 
+            operationFNs.Add(container => container.AppendDisablingType<TKey, TValue>());
 
         public static IConfigurationContainer ApplyAllOdWrapperConfigurations(this IConfigurationContainer @this)
         {
@@ -42,6 +36,20 @@ namespace Diz.Core.util
                 return @this;
 
             return operationFNs.Aggregate(@this, (current, fn) => fn(current));
+        }
+
+        // helper method to force the static stuff in the above classes to start at Program start.
+        // we need an approach that doesn't rely on this to work.
+        public static void ForceStaticClassRegistration()
+        {
+            foreach (var typeHandle in AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(asm=>asm.DefinedTypes)
+                .SelectMany(typeInfo => typeInfo.DeclaredProperties)
+                .Where(propertyInfo=>propertyInfo.PropertyType.Name.Contains("OdWrapper"))
+                .Select(propertyInfo=>propertyInfo.PropertyType.TypeHandle)
+            ) {
+                RuntimeHelpers.RunClassConstructor(typeHandle); // will call OdWrapper.Register for each generic type
+            }
         }
     }
 
@@ -59,7 +67,7 @@ namespace Diz.Core.util
         // The app code should use this directly.
         public ObservableDictionary<TKey, TValue> Dict { get; set; } = new ObservableDictionary<TKey,TValue>();
 
-        private static bool _registered = false;
+        private static bool _registered = Register();
 
         // Expose a copy of Dict just for the XML serialization.
         // App code should NOT touch this except for XML save/load.
@@ -74,13 +82,17 @@ namespace Diz.Core.util
                 }
             }
         }
-        public OdWrapper()
+
+        public OdWrapper() { Register(); }
+
+        private static bool Register()
         {
-            if (_registered) // reminder: this is per-<TKey/TValue> combo
-                return;
+            if (_registered) // reminder: this is unique per-<TKey/TValue> combo
+                return true;
 
             OdWrapperRegistration.Register<TKey, TValue>();
             _registered = true;
+            return true;
         }
 
         #region Equality
