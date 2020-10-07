@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using DiztinGUIsh.core;
+using Diz.Core.model;
+using Diz.Core.util;
 
 namespace DiztinGUIsh
 {
@@ -44,7 +38,7 @@ namespace DiztinGUIsh
             return count;
         }
 
-        private bool updatingText = false;
+        private bool updatingText;
 
         private void UpdateText(TextBox selected)
         {

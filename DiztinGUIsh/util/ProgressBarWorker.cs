@@ -7,11 +7,11 @@ namespace DiztinGUIsh
     // TODO: use https://www.wpf-tutorial.com/misc/multi-threading-with-the-backgroundworker/ backgroundworker
     public abstract class ProgressBarWorker
     {
-        private ProgressDialog Dialog = null;
-        private bool IsRunning = false;
-        private Thread backgroundThread = null;
-        public bool IsMarquee { get; set; } = false;
-        public string TextOverride { get; set; } = null;
+        private ProgressDialog Dialog;
+        private bool IsRunning;
+        private Thread backgroundThread;
+        public bool IsMarquee { get; set; }
+        public string TextOverride { get; set; }
 
         protected void UpdateProgress(int i)
         {
@@ -45,7 +45,7 @@ namespace DiztinGUIsh
             Dialog = new ProgressDialog(IsMarquee, TextOverride);
 
             // setup, but don't start, the new thread
-            backgroundThread = new Thread(new ThreadStart(Thread_Main));
+            backgroundThread = new Thread(Thread_Main);
 
             // honestly, not sure about this. works around some Invoke() stuff
             backgroundThread.SetApartmentState(ApartmentState.STA); 
@@ -94,7 +94,7 @@ namespace DiztinGUIsh
         // a version that keeps calling 'callback' until it returns -1
         public static void Loop(long maxProgress, NextAction callback, string overrideTxt = null)
         {
-            var j = new ProgressBarJob()
+            var j = new ProgressBarJob
             {
                 MaxProgress = maxProgress,
                 Callback = callback,
@@ -127,15 +127,15 @@ namespace DiztinGUIsh
             } while (progress > 0);
         }
 
-        private int previousProgress = 0;
+        private int previousProgress;
 
         protected void UpdateProgress(long currentProgress)
         {
             if (MaxProgress <= 0)
                 return;
 
-            float percent = (float)(currentProgress) / (float)MaxProgress;
-            int progressValue = (int)(percent * 100);
+            var percent = currentProgress / (float)MaxProgress;
+            var progressValue = (int)(percent * 100);
 
             if (progressValue <= previousProgress)
                 return;

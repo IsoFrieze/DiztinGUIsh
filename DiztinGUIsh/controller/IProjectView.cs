@@ -1,7 +1,9 @@
 ﻿using System;
+using Diz.Core.export;
+using Diz.Core.model;
 using DiztinGUIsh.window.dialog;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.controller
 {
     public interface IProjectView
     {

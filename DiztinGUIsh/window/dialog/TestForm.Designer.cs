@@ -1,4 +1,6 @@
-﻿namespace DiztinGUIsh.window.dialog
+﻿using Diz.Core.serialization;
+
+namespace DiztinGUIsh.window.dialog
 {
     partial class TestForm
     {
@@ -60,7 +62,7 @@
             // 
             // project_ImportRomSettingsBindingSource
             // 
-            this.project_ImportRomSettingsBindingSource.DataSource = typeof(DiztinGUIsh.loadsave.ImportRomSettings);
+            this.project_ImportRomSettingsBindingSource.DataSource = typeof(ImportRomSettings);
             // 
             // rOMMapModeComboBox
             // 

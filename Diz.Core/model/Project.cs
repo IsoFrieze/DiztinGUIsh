@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
+using Diz.Core.export;
+using Diz.Core.util;
+using DiztinGUIsh;
 
-namespace DiztinGUIsh
+namespace Diz.Core.model
 {
     public class Project : DizDataModel
     {

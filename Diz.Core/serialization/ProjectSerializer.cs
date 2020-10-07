@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Diz.Core.model;
+using DiztinGUIsh;
 
-namespace DiztinGUIsh.loadsave
+namespace Diz.Core.serialization
 {
     abstract class ProjectSerializer
     {
@@ -25,11 +22,11 @@ namespace DiztinGUIsh.loadsave
             return Load(File.ReadAllBytes(filename));
         }
 
-        protected static void DebugVerifyProjectEquality(Project project1, Project project2, bool deepcut = true)
+        protected static void DebugVerifyProjectEquality(Project project1, Project project2, bool deepCut = true)
         {
-            if (deepcut)
+            if (deepCut)
             {
-                for (int i = 0; i < project1.Data.RomBytes.Count; ++i)
+                for (var i = 0; i < project1.Data.RomBytes.Count; ++i)
                 {
                     Debug.Assert(project1.Data.RomBytes[i].EqualsButNoRomByte(project2.Data.RomBytes[i]));
                 }

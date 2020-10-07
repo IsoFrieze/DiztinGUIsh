@@ -1,6 +1,6 @@
 ﻿using System.Xml;
-using Diz.Core.core.util;
-using DiztinGUIsh;
+using Diz.Core.model;
+using Diz.Core.util;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 using Xunit;

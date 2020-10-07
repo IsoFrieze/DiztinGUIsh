@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
+using Diz.Core.model;
+using Diz.Core.util;
 
 namespace DiztinGUIsh
 {
@@ -34,27 +27,21 @@ namespace DiztinGUIsh
             while (found < 500 && offset < Data.GetROMSize())
             {
                 Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
-                int step = flag == Data.FlagType.Opcode ? Data.GetInstructionLength(offset) : RomUtil.TypeStepSize(flag);
+                var step = flag == Data.FlagType.Opcode ? Data.GetInstructionLength(offset) : RomUtil.TypeStepSize(flag);
 
                 if (flag == Data.FlagType.Operand)
                 {
                     found++;
-                    textLog.Text += string.Format("{0} (0x{1}): Operand without Opcode\r\n",
-                        Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6, true),
-                        Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0));
+                    textLog.Text +=
+                        $"{Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6, true)} (0x{Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0)}): Operand without Opcode\r\n";
                 } else if (step > 1)
                 {
-                    for (int i = 1; i < step; i++)
+                    for (var i = 1; i < step; i++)
                     {
-                        if (Data.GetFlag(offset + i) != check)
-                        {
-                            found++;
-                            textLog.Text += string.Format("{0} (0x{1}): {2} is not {3}\r\n",
-                                Util.NumberToBaseString(Data.ConvertPCtoSNES(offset + i), Util.NumberBase.Hexadecimal, 6, true),
-                                Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0),
-                                Util.GetEnumDescription(Data.GetFlag(offset + i)),
-                                Util.GetEnumDescription(check));
-                        }
+                        if (Data.GetFlag(offset + i) == check) continue;
+                        found++;
+                        textLog.Text +=
+                            $"{Util.NumberToBaseString(Data.ConvertPCtoSNES(offset + i), Util.NumberBase.Hexadecimal, 6, true)} (0x{Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0)}): {Util.GetEnumDescription(Data.GetFlag(offset + i))} is not {Util.GetEnumDescription(check)}\r\n";
                     }
                 }
 

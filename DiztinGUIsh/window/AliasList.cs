@@ -7,7 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using DiztinGUIsh.core;
+using Diz.Core.model;
+using Diz.Core.util;
+using DiztinGUIsh.controller;
+using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window
 {
@@ -185,7 +188,7 @@ namespace DiztinGUIsh.window
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "This address already has a label.";
-                            var x = Data.Labels;
+
                             Console.WriteLine(Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal));
                         } else if (dataGridView1.EditingControl != null)
                         {

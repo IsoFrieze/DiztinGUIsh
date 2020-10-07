@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
-using DiztinGUIsh.loadsave;
+using Diz.Core.model;
+using Diz.Core.serialization;
+using Diz.Core.util;
 
 namespace DiztinGUIsh.window.dialog
 {

@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using DiztinGUIsh.core;
+using Diz.Core.model;
+using Diz.Core.util;
 
 namespace DiztinGUIsh
 {
@@ -110,7 +104,7 @@ namespace DiztinGUIsh
             value = property.SelectedIndex == 1 ? Data.GetDataBank(start) : Data.GetDirectPage(start);
         }
 
-        private bool updatingText = false;
+        private bool updatingText;
 
         private void UpdateText(TextBox selected)
         {
@@ -136,39 +130,33 @@ namespace DiztinGUIsh
 
         private void textCount_TextChanged(object sender, EventArgs e)
         {
-            if (!updatingText)
+            if (updatingText) return;
+            updatingText = true;
+            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+
+            if (int.TryParse(textCount.Text, style, null, out var result))
             {
-                updatingText = true;
-                NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-
-                int result = 0;
-                if (int.TryParse(textCount.Text, style, null, out result))
-                {
-                    count = result;
-                    end = start + count;
-                }
-
-                UpdateText(textCount);
+                count = result;
+                end = start + count;
             }
+
+            UpdateText(textCount);
         }
 
         private void textEnd_TextChanged(object sender, EventArgs e)
         {
-            if (!updatingText)
+            if (updatingText) return;
+            updatingText = true;
+            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+
+            if (int.TryParse(textEnd.Text, style, null, out var result))
             {
-                updatingText = true;
-                NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-
-                int result = 0;
-                if (int.TryParse(textEnd.Text, style, null, out result))
-                {
-                    if (radioROM.Checked) result = Data.ConvertSNEStoPC(result);
-                    end = result;
-                    count = end - start;
-                }
-
-                UpdateText(textEnd);
+                if (radioROM.Checked) result = Data.ConvertSNEStoPC(result);
+                end = result;
+                count = end - start;
             }
+
+            UpdateText(textEnd);
         }
 
         private void property_SelectedIndexChanged(object sender, EventArgs e)
@@ -178,10 +166,9 @@ namespace DiztinGUIsh
 
         private void regValue_TextChanged(object sender, EventArgs e)
         {
-            NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
-            int result = 0;
-            if (int.TryParse(regValue.Text, style, null, out result))
+            if (int.TryParse(regValue.Text, style, null, out var result))
             {
                 value = result;
             }
@@ -194,26 +181,23 @@ namespace DiztinGUIsh
 
         private void cancel_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void textStart_TextChanged(object sender, EventArgs e)
         {
-            if (!updatingText)
+            if (updatingText) return;
+            updatingText = true;
+            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+
+            if (int.TryParse(textStart.Text, style, null, out var result))
             {
-                updatingText = true;
-                NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-
-                int result = 0;
-                if (int.TryParse(textStart.Text, style, null, out result))
-                {
-                    if (radioROM.Checked) result = Data.ConvertSNEStoPC(result);
-                    start = result;
-                    count = end - start;
-                }
-
-                UpdateText(textStart);
+                if (radioROM.Checked) result = Data.ConvertSNEStoPC(result);
+                start = result;
+                count = end - start;
             }
+
+            UpdateText(textStart);
         }
 
         private void radioHex_CheckedChanged(object sender, EventArgs e)

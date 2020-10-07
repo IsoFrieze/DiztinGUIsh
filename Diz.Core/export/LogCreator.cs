@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
+using Diz.Core.model;
+using Diz.Core.util;
 
-namespace DiztinGUIsh
+namespace Diz.Core.export
 {
     public struct LogWriterSettings
     {

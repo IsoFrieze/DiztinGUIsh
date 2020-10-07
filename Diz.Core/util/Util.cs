@@ -6,7 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
-namespace DiztinGUIsh
+namespace Diz.Core.util
 {
     public static class Util
     {

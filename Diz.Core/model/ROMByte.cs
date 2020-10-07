@@ -1,6 +1,4 @@
-﻿using DiztinGUIsh.core;
-
-namespace Diz.Core.core
+﻿namespace Diz.Core.model
 {
     public class ROMByte
     {
@@ -19,8 +17,7 @@ namespace Diz.Core.core
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ROMByte) obj);
+            return obj.GetType() == this.GetType() && Equals((ROMByte) obj);
         }
 
         public override int GetHashCode()

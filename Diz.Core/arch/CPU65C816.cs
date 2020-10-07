@@ -1,6 +1,7 @@
-﻿using DiztinGUIsh.core;
+﻿using Diz.Core.model;
+using Diz.Core.util;
 
-namespace DiztinGUIsh
+namespace Diz.Core.arch
 {
     public class CPU65C816
     {
@@ -11,9 +12,9 @@ namespace DiztinGUIsh
         }
         public int Step(int offset, bool branch, bool force, int prevOffset)
         {
-            int opcode = Data.GetROMByte(offset);
-            int prevDirectPage = Data.GetDirectPage(offset);
-            int prevDataBank = Data.GetDataBank(offset);
+            var opcode = Data.GetROMByte(offset);
+            var prevDirectPage = Data.GetDirectPage(offset);
+            var prevDataBank = Data.GetDataBank(offset);
             bool prevX = Data.GetXFlag(offset), prevM = Data.GetMFlag(offset);
 
             while (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
@@ -38,9 +39,9 @@ namespace DiztinGUIsh
             Data.SetXFlag(offset, prevX);
             Data.SetMFlag(offset, prevM);
 
-            int length = GetInstructionLength(offset);
+            var length = GetInstructionLength(offset);
 
-            for (int i = 1; i < length; i++)
+            for (var i = 1; i < length; i++)
             {
                 Data.SetFlag(offset + i, Data.FlagType.Operand);
                 Data.SetDataBank(offset + i, prevDataBank);
@@ -51,17 +52,17 @@ namespace DiztinGUIsh
 
             MarkInOutPoints(offset);
 
-            int nextOffset = offset + length;
+            var nextOffset = offset + length;
 
-            if (!force && (opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
-                || (branch && (opcode == 0x10 || opcode == 0x30 || opcode == 0x50 // BPL BMI BVC
-                || opcode == 0x70 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 // BVS BCC BCS BNE
-                || opcode == 0xF0 || opcode == 0x20 || opcode == 0x22)))) // BEQ JSR JSL
-            {
-                int iaNextOffsetPC = Data.ConvertSNEStoPC(GetIntermediateAddress(offset, true));
-                if (iaNextOffsetPC >= 0) 
-                    nextOffset = iaNextOffsetPC;
-            }
+            if (force || (opcode != 0x4C && opcode != 0x5C && opcode != 0x80 && opcode != 0x82 && (!branch ||
+                (opcode != 0x10 && opcode != 0x30 && opcode != 0x50 && opcode != 0x70 && opcode != 0x90 &&
+                 opcode != 0xB0 && opcode != 0xD0 && opcode != 0xF0 && opcode != 0x20 &&
+                 opcode != 0x22)))) 
+                return nextOffset;
+
+            var iaNextOffsetPc = Data.ConvertSNEStoPC(GetIntermediateAddress(offset, true));
+            if (iaNextOffsetPc >= 0) 
+                nextOffset = iaNextOffsetPc;
 
             return nextOffset;
         }
@@ -69,7 +70,7 @@ namespace DiztinGUIsh
         public int GetIntermediateAddress(int offset, bool resolve)
         {
             int bank, directPage, operand, programCounter;
-            int opcode = Data.GetROMByte(offset);
+            var opcode = Data.GetROMByte(offset);
 
             var mode = GetAddressMode(offset);
             switch (mode)
@@ -246,22 +247,22 @@ namespace DiztinGUIsh
 
         private string GetMnemonic(int offset, bool showHint = true)
         {
-            string mn = mnemonics[Data.GetROMByte(offset)];
-            if (showHint)
-            {
-                AddressMode mode = GetAddressMode(offset);
-                int count = BytesToShow(mode);
+            var mn = mnemonics[Data.GetROMByte(offset)];
+            if (!showHint) 
+                return mn;
 
-                if (mode == AddressMode.CONSTANT_8 || mode == AddressMode.RELATIVE_16 || mode == AddressMode.RELATIVE_8) return mn;
-                
-                switch (count)
-                {
-                    case 1: return mn += ".B";
-                    case 2: return mn += ".W";
-                    case 3: return mn += ".L";
-                }
-            }
-            return mn;
+            var mode = GetAddressMode(offset);
+            var count = BytesToShow(mode);
+
+            if (mode == AddressMode.CONSTANT_8 || mode == AddressMode.RELATIVE_16 || mode == AddressMode.RELATIVE_8) return mn;
+
+            return count switch
+            {
+                1 => mn += ".B",
+                2 => mn += ".W",
+                3 => mn += ".L",
+                _ => mn
+            };
         }
 
         private static int BytesToShow(AddressMode mode)

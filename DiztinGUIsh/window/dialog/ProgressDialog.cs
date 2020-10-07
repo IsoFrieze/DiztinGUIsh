@@ -12,7 +12,7 @@ namespace DiztinGUIsh.window.dialog
 {
     public partial class ProgressDialog : Form
     {
-        private readonly string overrideText = null;
+        private readonly string overrideText;
 
         public ProgressDialog(bool marquee = false, string textOverride = null)
         {

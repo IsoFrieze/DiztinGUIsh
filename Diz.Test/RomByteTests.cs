@@ -1,5 +1,4 @@
-﻿using Diz.Core.core;
-using DiztinGUIsh.core;
+﻿using Diz.Core.model;
 using Xunit;
 
 namespace Diz.Test

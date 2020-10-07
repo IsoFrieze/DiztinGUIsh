@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows.Forms;
+using Diz.Core.util;
 
 namespace DiztinGUIsh.window
 {

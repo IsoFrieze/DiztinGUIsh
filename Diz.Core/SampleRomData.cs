@@ -1,8 +1,7 @@
-﻿using Diz.Core.core;
-using Diz.Core.core.util;
-using DiztinGUIsh.core;
+﻿using Diz.Core.model;
+using Diz.Core.util;
 
-namespace DiztinGUIsh
+namespace Diz.Core
 {
     public class SampleRomData : Data
     {

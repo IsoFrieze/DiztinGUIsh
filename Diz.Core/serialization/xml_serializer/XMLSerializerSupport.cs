@@ -1,9 +1,10 @@
-﻿using Diz.Core.core.util;
-using DiztinGUIsh.core;
+﻿using Diz.Core.model;
+using Diz.Core.util;
+using DiztinGUIsh;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 
-namespace DiztinGUIsh.loadsave.xml_serializer
+namespace Diz.Core.serialization.xml_serializer
 {
     public static class XmlSerializerSupport
     {

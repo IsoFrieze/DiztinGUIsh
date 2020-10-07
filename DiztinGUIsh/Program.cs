@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using DiztinGUIsh.window;
 
 namespace DiztinGUIsh
 {

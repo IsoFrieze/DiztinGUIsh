@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Diz.Core.model;
 
-namespace DiztinGUIsh.core.import
+namespace Diz.Core.import
 {
     public class BSNESUsageMapImporter
     {

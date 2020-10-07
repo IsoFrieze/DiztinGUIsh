@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
+using Diz.Core.model;
+using Diz.Core.util;
+using DiztinGUIsh;
 
-namespace DiztinGUIsh.loadsave.binary_serializer_old
+namespace Diz.Core.serialization.binary_serializer_old
 {
     internal class BinarySerializer : ProjectSerializer
     {
@@ -25,9 +26,9 @@ namespace DiztinGUIsh.loadsave.binary_serializer_old
         public override byte[] Save(Project project)
         {
             const int versionToSave = LATEST_FILE_FORMAT_VERSION;
-            byte[] data = SaveVersion(project, versionToSave);
+            var data = SaveVersion(project, versionToSave);
 
-            byte[] everything = new byte[HEADER_SIZE + data.Length];
+            var everything = new byte[HEADER_SIZE + data.Length];
             everything[0] = versionToSave;
             ByteUtil.StringToByteArray(Watermark).CopyTo(everything, 1);
             data.CopyTo(everything, HEADER_SIZE);

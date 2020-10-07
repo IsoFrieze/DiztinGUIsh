@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Diz.Core.core;
-using DiztinGUIsh.core;
+using Diz.Core.model;
+using DiztinGUIsh;
 using ExtendedXmlSerializer.ContentModel;
 using ExtendedXmlSerializer.ContentModel.Format;
 
@@ -22,7 +22,7 @@ using ExtendedXmlSerializer.ContentModel.Format;
 // is a must.  We aim for a tradeoff between decent compression and some small semblance of human readability.
 //
 // It's not.. super-pretty code, but it compresses well.
-namespace DiztinGUIsh.loadsave.xml_serializer
+namespace Diz.Core.serialization.xml_serializer
 {
     sealed class RomBytesSerializer : ISerializer<RomBytes>
     {

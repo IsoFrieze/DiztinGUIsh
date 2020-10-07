@@ -1,8 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
-using DiztinGUIsh.core.import;
-using DiztinGUIsh.loadsave;
+using Diz.Core.export;
+using Diz.Core.import;
+using Diz.Core.model;
+using Diz.Core.serialization;
+using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
 
 // Model-View-Controller architecture.
@@ -12,7 +15,7 @@ using DiztinGUIsh.window.dialog;
 // but not OK to directly use GUI functions to show a form. instead, it should reach
 // out to the view classes and ask them to do things like popup dialog boxes/change form elements/etc.
 //
-// The idea here is that because there's no direct GUI stuff going on, we can run automations
+// The idea here is that because there's no direct GUI stuff going on, we can run automation
 // and unit testing on this class, and eventually add undo/redo support
 //
 // Where possible, let the GUI elements (forms) subscribe to data notifications on our model
@@ -26,7 +29,7 @@ using DiztinGUIsh.window.dialog;
 //                        i.e. when user clicks "Open Project", it sends the filename to us for handling
 //   Project -> The actual data, the model. It knows nothing about GUI, just is the low-level business logic
 
-namespace DiztinGUIsh.window
+namespace DiztinGUIsh.controller
 {
     public class ProjectController
     {
@@ -168,7 +171,7 @@ namespace DiztinGUIsh.window
             LogCreator.OutputResult result = null;
             DoLongRunningTask(delegate {
                 result = lc.CreateLog();
-            }, $"Exporting assembly source code...");
+            }, "Exporting assembly source code...");
 
             if (result.error_count == 0)
                 File.Delete(settings.error);

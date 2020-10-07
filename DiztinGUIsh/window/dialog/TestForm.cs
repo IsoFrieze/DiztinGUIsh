@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using DiztinGUIsh.core;
-using DiztinGUIsh.loadsave;
+using Diz.Core.model;
+using Diz.Core.serialization;
+using Diz.Core.util;
 
 namespace DiztinGUIsh.window.dialog
 {

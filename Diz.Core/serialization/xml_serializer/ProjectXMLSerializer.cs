@@ -1,9 +1,11 @@
 ﻿using System.IO;
 using System.Text;
 using System.Xml;
+using Diz.Core.model;
+using DiztinGUIsh;
 using ExtendedXmlSerializer;
 
-namespace DiztinGUIsh.loadsave.xml_serializer
+namespace Diz.Core.serialization.xml_serializer
 {
     internal class ProjectXmlSerializer : ProjectSerializer
     {

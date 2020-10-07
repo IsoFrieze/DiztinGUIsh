@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Diz.Core.util;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.util
 {
     public class LargeFilesReader : ProgressBarWorker
     {
@@ -21,29 +22,28 @@ namespace DiztinGUIsh
             }
 
             BytesReadFromPreviousFiles = 0L;
-            foreach (var filename in Filenames) {
-                using (var fs = File.Open(filename, FileMode.Open, FileAccess.Read))
-                using (var bs = new BufferedStream(fs))
-                using (var sr = new StreamReader(bs))
+            foreach (var filename in Filenames)
+            {
+                using var fs = File.Open(filename, FileMode.Open, FileAccess.Read);
+                using var bs = new BufferedStream(fs);
+                using var sr = new StreamReader(bs);
+                string line;
+                while ((line = sr.ReadLine()) != null)
                 {
-                    string line;
-                    while ((line = sr.ReadLine()) != null)
-                    {
-                        this.LineReadCallback(line);
-                        this.UpdateProgress(fs.Position);
-                    }
-
-                    BytesReadFromPreviousFiles += fs.Length;
+                    LineReadCallback(line);
+                    UpdateProgress(fs.Position);
                 }
+
+                BytesReadFromPreviousFiles += fs.Length;
             }
         }
 
-        private int previousProgress = 0;
+        private int previousProgress;
 
         protected void UpdateProgress(long currentPositionInBytes)
         {
-            float percent = (float)(BytesReadFromPreviousFiles + currentPositionInBytes) / (float)SumFileLengthsInBytes;
-            int progressValue = (int)(percent * 100);
+            var percent = (BytesReadFromPreviousFiles + currentPositionInBytes) / (float)SumFileLengthsInBytes;
+            var progressValue = (int)(percent * 100);
 
             if (progressValue <= previousProgress)
                 return;

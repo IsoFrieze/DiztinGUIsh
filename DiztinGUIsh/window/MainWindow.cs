@@ -1,15 +1,17 @@
-﻿using DiztinGUIsh.window;
-using System;
+﻿using System;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
+using Diz.Core.export;
+using Diz.Core.model;
+using Diz.Core.util;
+using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 using DiztinGUIsh.window.dialog;
+using Label = Diz.Core.model.Label;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window
 {
     public partial class MainWindow : Form, IProjectView
     {
@@ -388,12 +390,12 @@ namespace DiztinGUIsh
                 if (Project.Data.GetFlag(i) == Data.FlagType.Unreached)
                     totalUnreached++;
             int reached = size - totalUnreached;
-            percentComplete.Text = string.Format("{0:N3}% ({1:D}/{2:D})", reached * 100.0 / size, reached, size);
+            percentComplete.Text = $"{reached * 100.0 / size:N3}% ({reached:D}/{size:D})";
         }
 
         public void UpdateMarkerLabel()
         {
-            currentMarker.Text = string.Format("Marker: {0}", markFlag.ToString());
+            currentMarker.Text = $"Marker: {markFlag.ToString()}";
         }
 
         public void InvalidateTable()
@@ -584,14 +586,12 @@ namespace DiztinGUIsh
                     e.Value = RomUtil.PointToString(Project.Data.GetInOutPoint(row));
                     break;
                 case 5:
-                    int len = Project.Data.GetInstructionLength(row);
-                    if (row + len <= Project.Data.GetROMSize()) e.Value = Project.Data.GetInstruction(row);
-                    else e.Value = "";
+                    var len = Project.Data.GetInstructionLength(row);
+                    e.Value = row + len <= Project.Data.GetROMSize() ? Project.Data.GetInstruction(row) : "";
                     break;
                 case 6:
-                    int ia = Project.Data.GetIntermediateAddressOrPointer(row);
-                    if (ia >= 0) e.Value = Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6);
-                    else e.Value = "";
+                    var ia = Project.Data.GetIntermediateAddressOrPointer(row);
+                    e.Value = ia >= 0 ? Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6) : "";
                     break;
                 case 7:
                     e.Value = Util.GetEnumDescription(Project.Data.GetFlag(row));
@@ -940,7 +940,7 @@ namespace DiztinGUIsh
             if (result != DialogResult.OK) 
                 return;
 
-            int offset = go.GetPcOffset();
+            var offset = go.GetPcOffset();
             if (offset >= 0 && offset < Project.Data.GetROMSize()) 
                 SelectOffset(offset);
             else

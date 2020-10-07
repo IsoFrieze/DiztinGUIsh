@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Diz.Core.model;
 
-namespace DiztinGUIsh.core.util
+namespace Diz.Core.util
 {
     public static class RomUtil
     {

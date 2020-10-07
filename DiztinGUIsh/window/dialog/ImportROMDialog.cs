@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Security;
 using System.Windows.Forms;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
-using DiztinGUIsh.loadsave;
+using Diz.Core.model;
+using Diz.Core.serialization;
+using Diz.Core.util;
 
 namespace DiztinGUIsh.window.dialog
 {
@@ -140,7 +138,7 @@ namespace DiztinGUIsh.window.dialog
             SetDefaultsIfDetectionFailed();
         }
 
-        private bool IsOffsetInRange(int offset, int count = 0) =>
+        private bool IsOffsetInRange(int offset) =>
             offset > 0 && offset <= ImportSettings.RomBytes.Length;
 
         private bool IsProbablyValidDetection() => 

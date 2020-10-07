@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
+﻿using System.Collections.Generic;
+using Diz.Core.model;
+using DiztinGUIsh;
 
-namespace DiztinGUIsh.loadsave
+namespace Diz.Core.serialization
 {
     public class ImportRomSettings : PropertyNotifyChanged
     {

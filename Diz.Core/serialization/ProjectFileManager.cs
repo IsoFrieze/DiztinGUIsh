@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using DiztinGUIsh.core;
-using DiztinGUIsh.loadsave.binary_serializer_old;
-using DiztinGUIsh.loadsave.xml_serializer;
+using Diz.Core.model;
+using Diz.Core.serialization.binary_serializer_old;
+using Diz.Core.serialization.xml_serializer;
+using Diz.Core.util;
 
-namespace DiztinGUIsh.loadsave
+namespace Diz.Core.serialization
 {
     public static class ProjectFileManager
     {

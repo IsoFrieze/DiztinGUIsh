@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using DiztinGUIsh.core;
+using Diz.Core.model;
 
-namespace DiztinGUIsh
+namespace Diz.Core.import
 {
     public class BizHawkCdlImporter
     {

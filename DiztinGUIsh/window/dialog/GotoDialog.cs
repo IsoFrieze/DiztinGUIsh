@@ -1,17 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using DiztinGUIsh.core;
-using DiztinGUIsh.core.util;
+using Diz.Core.model;
+using Diz.Core.util;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window.dialog
 {
     public partial class GotoDialog : Form
     {
@@ -47,7 +40,7 @@ namespace DiztinGUIsh
             this.DialogResult = DialogResult.OK;
         }
 
-        private bool updatingText = false;
+        private bool updatingText;
 
         private bool UpdateTextChanged(string txtChanged, Action<string, int, Util.NumberBase> onSuccess)
         {
@@ -56,8 +49,8 @@ namespace DiztinGUIsh
             {
                 updatingText = true;
 
-                NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-                Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
+                var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+                var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
 
                 if (ByteUtil.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
                 {
@@ -76,7 +69,7 @@ namespace DiztinGUIsh
 
         private void UpdateUI()
         {
-            bool valid = true;
+            var valid = true;
             lblError.Text = "";
 
             if (!IsPCOffsetValid())
@@ -162,17 +155,13 @@ namespace DiztinGUIsh
 
         private void radioHex_CheckedChanged(object sender, EventArgs e)
         {
-            if (radioHex.Checked)
-            {
-                int result;
-                if (int.TryParse(textPC.Text, out result))
+            if (radioHex.Checked) {
+                if (int.TryParse(textPC.Text, out var result))
                 {
                     textPC.Text = Util.NumberToBaseString(result, Util.NumberBase.Hexadecimal, 0);
                 }
-            } else
-            {
-                int result;
-                if (int.TryParse(textPC.Text, NumberStyles.HexNumber, null, out result))
+            } else {
+                if (int.TryParse(textPC.Text, NumberStyles.HexNumber, null, out var result))
                 {
                     textPC.Text = result.ToString();
                 }

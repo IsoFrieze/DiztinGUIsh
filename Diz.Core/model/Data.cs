@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using Diz.Core.core;
-using Diz.Core.core.util;
-using DiztinGUIsh.core.util;
-using IX.Observable;
+using Diz.Core.arch;
+using Diz.Core.util;
+using DiztinGUIsh;
 
-namespace DiztinGUIsh.core
+namespace Diz.Core.model
 {
     public class Data
     {

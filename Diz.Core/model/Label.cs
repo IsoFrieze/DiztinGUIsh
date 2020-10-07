@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DiztinGUIsh
+﻿namespace Diz.Core.model
 {
     // represent a label at a particular address
     // NOTE: you can have labels at addresses in:

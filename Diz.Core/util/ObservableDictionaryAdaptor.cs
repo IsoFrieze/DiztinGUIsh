@@ -7,7 +7,7 @@ using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 using IX.Observable;
 
-namespace Diz.Core.core.util
+namespace Diz.Core.util
 {
     // OdwWrapper is wrapping an issue we are having where ExtendedXmlSerializer is having issues
     // serializing ObservableDictionary<> correctly.  It's failing to cast to IDictionary, which is either

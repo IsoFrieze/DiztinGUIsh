@@ -2,7 +2,9 @@
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using DiztinGUIsh.core;
+using Diz.Core;
+using Diz.Core.export;
+using Diz.Core.model;
 
 namespace DiztinGUIsh
 {
@@ -10,7 +12,6 @@ namespace DiztinGUIsh
     // end.
     public partial class ExportDisassembly : Form
     {
-        private Data Data => Project.Data;
         private readonly Project Project;
 
         // Our copy. At the end, if everything is correct, we'll return this.
@@ -160,8 +161,6 @@ namespace DiztinGUIsh
             // make a copy, but override the FormatStructure so it's all in one file
             var sampleSettings = settings;
             sampleSettings.structure = LogCreator.FormatStructure.SingleFile;
-
-            Data sampleData = SampleRomData.SampleData;
 
             var lc = new LogCreator()
             {

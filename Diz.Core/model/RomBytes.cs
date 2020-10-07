@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Diz.Core.core;
 
-namespace DiztinGUIsh
+namespace Diz.Core.model
 {
     public class RomBytes : IEnumerable<ROMByte>
     {
