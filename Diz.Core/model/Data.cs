@@ -554,9 +554,9 @@ namespace Diz.Core.model
                         break;
                     default:
                     {
-                        if (RomUtil.TypeStepSize(flag) > 1)
+                        if (RomUtil.GetByteLengthForFlag(flag) > 1)
                         {
-                            int step = RomUtil.TypeStepSize(flag);
+                            int step = RomUtil.GetByteLengthForFlag(flag);
                             for (int j = 1; j < step; j++)
                             {
                                 if (GetFlag(i + j) == flag) 

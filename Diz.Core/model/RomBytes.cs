@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Diz.Core.model
@@ -18,20 +20,45 @@ namespace Diz.Core.model
             set => Bytes[i] = value;
         }
 
-        public int Count => Bytes.Count;
+        private int countOverride = -1;
+        public int CountOverride
+        {
+            get => countOverride;
+            set
+            {
+                ValidateCountOverride(value);
+                countOverride = value;
+            }
+        }
+
+        private void ValidateCountOverride() => ValidateCountOverride(CountOverride);
+        private void ValidateCountOverride(int overrideValue)
+        {
+            if (overrideValue < -1 || overrideValue > Bytes.Count)
+                throw new ArgumentOutOfRangeException();
+        }
+
+        public int Count => CountOverride != -1 ? CountOverride : Bytes.Count;
         public void Add(ROMByte romByte)
         {
+            if (countOverride != -1)
+                throw new InvalidOperationException("Can't modify list when .CountOverride is set");
+
             Bytes.Add(romByte);
         }
 
         public void Create(int size)
         {
-            for (int i = 0; i < size; ++i)
+            if (countOverride != -1)
+                throw new InvalidOperationException("Can't modify list when .CountOverride is set");
+
+            for (var i = 0; i < size; ++i)
                 Add(new ROMByte());
         }
         public void Clear()
         {
             Bytes.Clear();
+            countOverride = -1;
         }
 
         #region Equality

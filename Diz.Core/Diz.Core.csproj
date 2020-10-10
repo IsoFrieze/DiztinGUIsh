@@ -110,6 +110,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="arch\CPU65C816.cs" />
+    <Compile Include="export\LogCreator.ErrorChecking.cs" />
+    <Compile Include="export\LogCreator.Setup.cs" />
+    <Compile Include="export\LogOutput.cs" />
+    <Compile Include="export\LogWriterSettings.cs" />
     <Compile Include="model\Data.cs" />
     <Compile Include="import\BizHawkCdlImporter.cs" />
     <Compile Include="import\BSNESImporter.cs" />

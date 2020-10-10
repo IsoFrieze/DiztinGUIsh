@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
+using Diz.Core.export;
 using Diz.Core.model;
 
 namespace Diz.Core.util
@@ -202,7 +204,7 @@ namespace Diz.Core.util
             };
         }
 
-        public static int TypeStepSize(Data.FlagType flag)
+        public static int GetByteLengthForFlag(Data.FlagType flag)
         {
             switch (flag)
             {
@@ -383,5 +385,19 @@ namespace Diz.Core.util
         }
 
         public const int LengthOfTitleName = 0x15;
+
+        public static LogCreator.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
+        {
+            var sampleRomData = SampleRomData.SampleData;
+            sampleSettings.structure = LogCreator.FormatStructure.SingleFile;
+            sampleSettings.fileOrFolderOutPath = "";
+            sampleSettings.outputToString = true;
+            var lc = new LogCreator()
+            {
+                Settings = sampleSettings,
+                Data = sampleRomData,
+            };
+            return lc.CreateLog();
+        }
     }
 }

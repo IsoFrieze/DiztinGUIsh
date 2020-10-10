@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using Diz.Core;
 using Diz.Core.export;
 using Diz.Core.model;
+using Diz.Core.util;
 
 namespace DiztinGUIsh
 {
@@ -33,7 +34,7 @@ namespace DiztinGUIsh
             Project = project;
             settings = project.LogWriterSettings; // copy
 
-            if (!settings.Validate())
+            if (settings.Validate() != "")
                 settings.SetDefaults();
 
             InitializeComponent();
@@ -88,18 +89,12 @@ namespace DiztinGUIsh
         private bool PromptForPath()
         {
             var singleFile = settings.structure == LogCreator.FormatStructure.SingleFile;
-            var path = PromptForLogPathFromFileOrFolderDialog(singleFile);
+            var fileOrFolderPath = PromptForLogPathFromFileOrFolderDialog(singleFile);
 
-            if (string.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(fileOrFolderPath))
                 return false;
 
-            // kinda weird. we should probably just pass
-            // the containing folder name and let LogCreator handle these details
-            if (!singleFile)
-                path += "/main.asm";
-
-            settings.file = path;
-            settings.error = Path.GetDirectoryName(path) + "/error.txt";
+            settings.fileOrFolderOutPath = fileOrFolderPath;
 
             return true;
         }
@@ -141,7 +136,8 @@ namespace DiztinGUIsh
 
         private void RegenerateSampleOutput()
         {
-            textSample.Text = CreateSampleOutput();
+            var result = RomUtil.GetSampleAssemblyOutput(settings);
+            textSample.Text = result.outputStr;
         }
 
         private void chkPrintLabelSpecificComments_CheckedChanged(object sender, EventArgs e)
@@ -152,29 +148,6 @@ namespace DiztinGUIsh
         private void chkIncludeUnusedLabels_CheckedChanged(object sender, EventArgs e)
         {
             settings.includeUnusedLabels = chkIncludeUnusedLabels.Checked;
-        }
-        private string CreateSampleOutput()
-        {
-            using var mem = new MemoryStream();
-            using var sw = new StreamWriter(mem);
-
-            // make a copy, but override the FormatStructure so it's all in one file
-            var sampleSettings = settings;
-            sampleSettings.structure = LogCreator.FormatStructure.SingleFile;
-
-            var lc = new LogCreator()
-            {
-                Settings = sampleSettings,
-                Data = SampleRomData.SampleData,
-                StreamOutput = sw,
-                StreamError = StreamWriter.Null,
-            };
-
-            lc.CreateLog();
-
-            sw.Flush();
-            mem.Seek(0, SeekOrigin.Begin);
-            return Encoding.UTF8.GetString(mem.ToArray(), 0, (int)mem.Length);
         }
     }
 }

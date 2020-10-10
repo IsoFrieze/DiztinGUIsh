@@ -1,57 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using Diz.Core.model;
 using Diz.Core.util;
 using IX.Observable;
 
 namespace Diz.Core.export
 {
-    public struct LogWriterSettings
-    {
-        // struct because we want to make a bunch of copies of this struct.
-        // The plumbing could use a pass of something like 'ref readonly' because:
-        // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/ref#reference-return-values
-
-        public string format;
-        public int dataPerLine;
-        public LogCreator.FormatUnlabeled unlabeled;
-        public LogCreator.FormatStructure structure;
-        public bool includeUnusedLabels;
-        public bool printLabelSpecificComments;
-
-        // these are both paths to files or folders. TODO: rename for better description
-        public string file;
-        public string error;
-
-        public bool wasInitialized;
-
-        public void SetDefaults()
-        {
-            format = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
-            dataPerLine = 8;
-            unlabeled = LogCreator.FormatUnlabeled.ShowInPoints;
-            structure = LogCreator.FormatStructure.OneBankPerFile;
-            includeUnusedLabels = false;
-            printLabelSpecificComments = false;
-            file = ""; // path to file or folder, rename
-            error = ""; // path to file or folder, rename
-            wasInitialized = true;
-        }
-
-        public bool Validate()
-        {
-            // TODO: add more validation.
-
-            // for now, just make sure it was initialized somewhere by someone
-            return wasInitialized;
-        }
-    }
-
-    public class LogCreator
+    public partial class LogCreator
     {
         public enum FormatUnlabeled
         {
@@ -66,124 +21,38 @@ namespace Diz.Core.export
             OneBankPerFile = 1
         }
 
-        public class OutputResult
-        {
-            public bool success;
-            public int error_count;
-        }
-
-        private class AssemblerHandler : Attribute
-        {
-            public string token;
-            public int length;
-        }
-
-        public StreamWriter StreamOutput { get; set; }
-        public StreamWriter StreamError { get; set; }
         public LogWriterSettings Settings { get; set; }
         public Data Data { get; set; }
 
+        protected LogCreatorOutput output;
+        protected Dictionary<int, Label> ExtraLabels { get; set; } = new Dictionary<int, Label>();
+        protected List<Tuple<string, int>> parseList;
+        protected List<int> labelsWeVisited;
+        protected int bankSize;
+        protected ObservableDictionary<int, Label> backupOfOriginalLabelsBeforeModifying;
 
-        // dont use directly except to cache attributes
-        private static Dictionary<string, Tuple<MethodInfo, int>> parameters;
-
-        // safe to use directly.
-        private static Dictionary<string, Tuple<MethodInfo, int>> Parameters
+        public virtual OutputResult CreateLog()
         {
-            get
-            {
-                CacheAssemblerAttributeInfo();
-                return parameters;
-            }
-        }
+            OutputResult result;
 
-        private Dictionary<int, Label> ExtraLabels { get; set; } = new Dictionary<int, Label>();
-        private List<Tuple<string, int>> parseList;
-        private List<int> labelsWeVisited;
-        private int errorCount, bankSize;
-        private string folder;
-        private ObservableDictionary<int, Label> backupOfOriginalLabelsBeforeModifying;
-
-        private static void CacheAssemblerAttributeInfo()
-        {
-            if (parameters != null)
-                return;
-
-            parameters = new Dictionary<string, Tuple<MethodInfo, int>>();
-
-            var methodsWithAttributes = typeof(LogCreator)
-                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(
-                    x => x.GetCustomAttributes(typeof(AssemblerHandler), false).FirstOrDefault() != null
-                );
-
-            foreach (var method in methodsWithAttributes)
-            {
-                var assemblerHandler = method.GetCustomAttribute<AssemblerHandler>();
-                var token = assemblerHandler.token;
-                var length = assemblerHandler.length;
-
-                // check your method signature if you hit this stuff.
-                Debug.Assert(method.GetParameters().Length == 2);
-
-                Debug.Assert(method.GetParameters()[0].ParameterType == typeof(int));
-                Debug.Assert(method.GetParameters()[0].Name == "offset" || method.GetParameters()[0].Name == "snesOffset");
-
-                Debug.Assert(method.GetParameters()[1].ParameterType == typeof(int));
-                Debug.Assert(method.GetParameters()[1].Name == "length");
-
-                Debug.Assert(method.ReturnType == typeof(string));
-
-                parameters.Add(token, (new Tuple<MethodInfo, int>(method, length)));
-            }
-
-            Debug.Assert(parameters.Count != 0);
-        }
-
-        public string GetParameter(int offset, string parameter, int length)
-        {
-            if (!Parameters.TryGetValue(parameter, out var methodAndLength))
-            {
-                throw new InvalidDataException($"Unknown parameter: {parameter}");
-            }
-
-            var methodInfo = methodAndLength.Item1;
-            var callParams = new object[] { offset, length };
-
-            var returnValue = methodInfo.Invoke(this, callParams);
-
-            Debug.Assert(returnValue is string);
-            return returnValue as string;
-        }
-
-        public OutputResult CreateLog()
-        {
             try
             {
                 Init();
                 WriteLog();
+                result = GetResult();
+                CloseOutput(result);
             }
             finally
             {
-                Cleanup();
+                Cleanup(); // critical to ALWAYS do this so we restore labels
             }
 
-            return new OutputResult()
-            {
-                error_count = errorCount,
-                success = true,
-            };
+            return result;
         }
 
-        private void Cleanup()
+        protected virtual void Init()
         {
-            // restore original labels. SUPER IMPORTANT THIS HAPPENS WHen WE'RE DONE
-            // TODO: make this unnecessary by not modifying the underlying data.
-            RestoreUnderlyingDataLabels();
-        }
-
-        private void Init()
-        {
+            InitOutput();
             SetupParseList();
 
             bankSize = RomUtil.GetBankSize(Data.RomMapMode);
@@ -194,31 +63,56 @@ namespace Diz.Core.export
             WriteGeneratedLabelsIntoUnderlyingData(); // MODIFIES DATA. MAKE SURE TO UNDO THIS.
         }
 
-        private void WriteLog()
+        private void InitOutput()
         {
-            var size = Data.GetROMSize();
-            var pointer = WriteMainIncludes(size);
+            if (Settings.outputToString)
+                output = new LogCreatorStringOutput();
+            else
+                output = new LogCreatorStreamOutput();
 
-            var bank = -1;
+            output.Init(this);
+        }
 
-            // perf: this is the meat of the export, takes a while
-            while (pointer < size)
+        protected virtual void Cleanup()
+        {
+            // restore original labels. SUPER IMPORTANT THIS HAPPENS WHen WE'RE DONE
+            // TODO: make this unnecessary by not modifying the underlying data.
+            RestoreUnderlyingDataLabels();
+        }
+
+        protected void RestoreUnderlyingDataLabels()
+        {
+            // SUPER IMPORTANT. THIS MUST GET DONE, ALWAYS. PROTECT THIS WITH TRY/CATCH
+
+            if (backupOfOriginalLabelsBeforeModifying != null)
+                Data.Labels.Dict = backupOfOriginalLabelsBeforeModifying;
+
+            backupOfOriginalLabelsBeforeModifying = null;
+        }
+
+
+        private void CloseOutput(OutputResult result)
+        {
+            output?.Finish(result);
+            output = null;
+        }
+
+        private OutputResult GetResult()
+        {
+            var result = new OutputResult()
             {
-                WriteAddress(ref pointer, ref bank);
-            }
+                error_count = errorCount,
+                success = true,
+                logCreator = this
+            };
 
-            WriteLabels(pointer);
+            if (Settings.outputToString)
+                result.outputStr = ((LogCreatorStringOutput)output)?.OutputString;
 
-            if (Settings.structure == FormatStructure.OneBankPerFile)
-                StreamOutput.Close();
+            return result;
         }
 
-        private void RestoreUnderlyingDataLabels()
-        {
-            Data.Labels.Dict = backupOfOriginalLabelsBeforeModifying;
-        }
-
-        private void WriteGeneratedLabelsIntoUnderlyingData()
+        protected void WriteGeneratedLabelsIntoUnderlyingData()
         {
             // WARNING: THIS MODIFIES THE UNDERLYING DATA TO ADD MORE LABELS
             // *** if not properly cleaned up, the original project file's label list can get trashed. ***
@@ -240,96 +134,53 @@ namespace Diz.Core.export
             }
         }
 
-        private int WriteMainIncludes(int size)
+        protected virtual void WriteLog()
         {
+            var size = 0x7B; // Data.GetROMSize(); // HACK!!!!!! DONT CHECK IN
+
+            WriteMainIncludes(size);
+            var pointer = WriteMainAssembly(size);
+            WriteLabels(pointer);
+        }
+
+        private int WriteMainAssembly(int size)
+        {
+            // perf: this is the meat of the export, takes a while
             var pointer = 0;
-            if (Settings.structure == FormatStructure.OneBankPerFile)
+            var bank = -1;
+            while (pointer < size)
             {
-                folder = Path.GetDirectoryName(((FileStream) StreamOutput.BaseStream).Name);
-                StreamOutput.WriteLine(GetLine(pointer, "map"));
-                StreamOutput.WriteLine(GetLine(pointer, "empty"));
-                for (var i = 0; i < size; i += bankSize)
-                    StreamOutput.WriteLine(GetLine(i, "incsrc"));
-
-                StreamOutput.WriteLine(GetLine(-1, "incsrc"));
+                WriteAddress(ref pointer, ref bank);
             }
-            else
-            {
-                StreamOutput.WriteLine(GetLine(pointer, "map"));
-                StreamOutput.WriteLine(GetLine(pointer, "empty"));
-            }
-
             return pointer;
         }
 
-        public string GetLabelName(int i)
+        protected void WriteSpecial(string special)
         {
-            return Data.GetLabelName(i);
-        }
-        public string GetLabelComment(int i)
-        {
-            return Data.GetLabelComment(i);
+            const int doesntMatter = 0;
+            var line = GetLine(doesntMatter, "map");
+            output.WriteLine(line);
         }
 
-        public void AddExtraLabel(int i, Label v)
+        protected void WriteMainIncludes(int size)
         {
-            Debug.Assert(v != null);
-            if (ExtraLabels.ContainsKey(i))
+            WriteSpecial("map");
+            WriteSpecial("empty");
+            WriteMainBankIncludes(size);
+        }
+
+        private void WriteMainBankIncludes(int size)
+        {
+            if (Settings.structure != FormatStructure.OneBankPerFile)
                 return;
 
-            v.CleanUp();
+            for (var i = 0; i < size; i += bankSize)
+                output.WriteLine(GetLine(i, "incsrc"));
 
-            ExtraLabels.Add(i, v);
+            output.WriteLine(GetLine(-1, "incsrc"));
         }
 
-        // Generate labels like "CODE_856469" and "DATA_763525"
-        // These will be combined with the original labels to produce our final assembly
-        // These labels exist only for the duration of this export, and then are discarded.
-        //
-        // TODO: generate some nice looking "+"/"-" labels here.
-        private void GenerateAdditionalExtraLabels()
-        {
-            for (var pointer = 0; pointer < Data.GetROMSize();)
-            {
-                var offset = GetAddressOfAnyUsefulLabelsAt(pointer, out var length);
-                pointer += length;
-
-                if (offset == -1)
-                    continue;
-
-                AddExtraLabel(offset, new Label() {
-                    name = Data.GetDefaultLabel(pointer)
-                });
-            }
-        }
-
-        private int GetAddressOfAnyUsefulLabelsAt(int pcoffset, out int length)
-        {
-            length = GetLineByteLength(pcoffset);
-            switch (Settings.unlabeled)
-            {
-                case FormatUnlabeled.ShowNone:
-                    return -1;
-                case FormatUnlabeled.ShowAll:
-                    return Data.ConvertPCtoSNES(pcoffset);
-            }
-
-            var flag = Data.GetFlag(pcoffset);
-            var usefulToCreateLabelFrom = 
-                flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit ||
-                flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit;
-
-            if (!usefulToCreateLabelFrom) 
-                return -1;
-
-            var ia = Data.GetIntermediateAddressOrPointer(pcoffset);
-            if (ia >= 0 && Data.ConvertSNEStoPC(ia) >= 0)
-                return ia;
-
-            return -1;
-        }
-
-        private void SetupParseList()
+        protected void SetupParseList()
         {
             var split = Settings.format.Split('%');
             parseList = new List<Tuple<string, int>>();
@@ -358,101 +209,126 @@ namespace Diz.Core.export
             }
         }
 
-        private void WriteAddress(ref int pointer, ref int bank)
+        protected void WriteAddress(ref int pointer, ref int currentBank)
         {
-            var snes = Data.ConvertPCtoSNES(pointer);
-            if ((snes >> 16) != bank)
-            {
-                // TODO: combine w/ SwitchOutputFile?
-                if (Settings.structure == FormatStructure.OneBankPerFile)
-                {
-                    StreamOutput.Close();
-                    StreamOutput = new StreamWriter(
-                        $"{folder}/bank_{Util.NumberToBaseString((snes >> 16), Util.NumberBase.Hexadecimal, 2)}.asm");
-                }
+            var snesAddress = Data.ConvertPCtoSNES(pointer);
+            SwitchBanksIfNeeded(pointer, ref currentBank, snesAddress);
 
-                StreamOutput.WriteLine(GetLine(pointer, "empty"));
-                StreamOutput.WriteLine(GetLine(pointer, "org"));
-                StreamOutput.WriteLine(GetLine(pointer, "empty"));
-                if ((snes % bankSize) != 0)
-                    StreamError.WriteLine("({0}) Offset 0x{1:X}: An instruction crossed a bank boundary.", ++errorCount, pointer);
-                bank = snes >> 16;
-            }
+            var anyBranchesPresent = (Data.GetInOutPoint(pointer) & Data.InOutPoint.ReadPoint) != 0;
+            var anyLabelsPresent = Data.Labels.Dict.TryGetValue(pointer, out var label) && label.name.Length > 0;
+            
+            // TODO is c2 wrong? should it be 'snesAddress' instead of 'pointer' ?
 
-            var c1 = (Data.GetInOutPoint(pointer) & (Data.InOutPoint.ReadPoint)) != 0;
-            var c2 = (Data.Labels.Dict.TryGetValue(pointer, out var label) && label.name.Length > 0);
-            if (c1 || c2)
-                StreamOutput.WriteLine(GetLine(pointer, "empty"));
+            if (anyBranchesPresent || anyLabelsPresent)
+                output.WriteLine(GetLine(pointer, "empty"));
 
-            StreamOutput.WriteLine(GetLine(pointer, null));
-            if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) StreamOutput.WriteLine(GetLine(pointer, "empty"));
+            output.WriteLine(GetLine(pointer, null));
+            if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) output.WriteLine(GetLine(pointer, "empty"));
             pointer += GetLineByteLength(pointer);
         }
 
-        private void WriteLabels(int pointer)
+        private void SwitchBanksIfNeeded(int pointer, ref int currentBank, int snesAddress)
         {
-            SwitchOutputFile(pointer, $"{folder}/labels.asm");
+            var thisBank = snesAddress >> 16;
 
-            var listToPrint = new Dictionary<int, Label>();
+            if (thisBank == currentBank)
+                return;
+
+            OpenNewBank(pointer, thisBank);
+            currentBank = thisBank;
+
+            if ((snesAddress % bankSize) == 0) 
+                return;
+
+            ReportError(pointer, "An instruction crossed a bank boundary.");
+        }
+
+        private void OpenNewBank(int pointer, int thisBank)
+        {
+            output.SwitchToBank(thisBank);
+
+            output.WriteLine(GetLine(pointer, "empty"));
+            output.WriteLine(GetLine(pointer, "org"));
+            output.WriteLine(GetLine(pointer, "empty"));
+        }
+
+        protected void WriteLabels(int pointer)
+        {
+            var unvisitedLabels = GetUnvisitedLabels();
+            WriteAnyUnivisitedLabels(pointer, unvisitedLabels);
+            PrintAllLabelsIfRequested(pointer, unvisitedLabels);
+        }
+
+        private Dictionary<int, Label> GetUnvisitedLabels()
+        {
+            var unvisitedLabels = new Dictionary<int, Label>();
 
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
             foreach (KeyValuePair<int, Label> pair in Data.Labels.Dict)
             {
-                if (labelsWeVisited.Contains(pair.Key)) 
+                if (labelsWeVisited.Contains(pair.Key))
                     continue;
 
                 // this label was not defined elsewhere in our disassembly, so we need to include it in labels.asm
-                listToPrint.Add(pair.Key, pair.Value);
+                unvisitedLabels.Add(pair.Key, pair.Value);
             }
 
-            foreach (var pair in listToPrint)
-            {
-                StreamOutput.WriteLine(GetLine(pair.Key, "labelassign"));
-            }
+            return unvisitedLabels;
+        }
 
+        private void WriteAnyUnivisitedLabels(int pointer, Dictionary<int, Label> unvisitedLabels)
+        {
+            SwitchOutputStream(pointer, "labels");
+
+            foreach (var pair in unvisitedLabels)
+                output.WriteLine(GetLine(pair.Key, "labelassign"));
+        }
+
+        private void PrintAllLabelsIfRequested(int pointer, Dictionary<int, Label> unvisitedLabels)
+        {
             // part 2: optional: if requested, print all labels regardless of use.
             // Useful for debugging, documentation, or reverse engineering workflow.
             // this file shouldn't need to be included in the build, it's just reference documentation
-            if (Settings.includeUnusedLabels)
+
+            if (!Settings.includeUnusedLabels) 
+                return;
+
+            SwitchOutputStream(pointer, "all-labels.txt"); // TODO: csv in the future. escape commas
+            foreach (KeyValuePair<int, Label> pair in Data.Labels.Dict)
             {
-                SwitchOutputFile(pointer, $"{folder}/all-labels.txt");
-                foreach (KeyValuePair<int, Label> pair in Data.Labels.Dict)
-                {
-                    // not the best place to add formatting, TODO: cleanup
-                    var category = listToPrint.ContainsKey(pair.Key) ? "INLINE" : "EXTRA ";
-                    StreamOutput.WriteLine($";!^!-{category}-! " + GetLine(pair.Key, "labelassign"));
-                }
+                // not the best place to add formatting, TODO: cleanup
+                var category = unvisitedLabels.ContainsKey(pair.Key) ? "UNUSED" : "USED";
+                output.WriteLine($";!^!-{category}-! " + GetLine(pair.Key, "labelassign"));
             }
         }
 
-        private void SwitchOutputFile(int pointer, string path)
+        protected void SwitchOutputStream(int pointer, string streamName)
         {
-            if (Settings.structure == FormatStructure.OneBankPerFile)
-            {
-                StreamOutput.Close();
-                StreamOutput = new StreamWriter(path);
-            }
-            else
-            {
-                StreamOutput.WriteLine(GetLine(pointer, "empty"));
-            }
+            output.SwitchToStream(streamName);
+
+            // write an extra blank line if we would normally switch files here
+            if (Settings.structure == FormatStructure.SingleFile)
+                output.WriteLine(GetLine(pointer, "empty"));
         }
 
         // --------------------------
         #region WriteOperations
 
-        private string GetLine(int offset, string special)
+        protected string GetLine(int offset, string special)
         {
+            var isSpecial = special != null;
             var line = "";
+
             foreach (var t in parseList)
             {
                 if (t.Item2 == int.MaxValue) // string literal
                 {
                     line += t.Item1;
                 }
-                else if (special != null) // special parameter (replaces code & everything else = empty)
+                else if (isSpecial) // special parameter (replaces code & everything else = empty)
                 {
-                    line += GetParameter(offset, "%" + (t.Item1 == "code" ? special : "empty"), t.Item2);
+                    var v1 = (t.Item1 == "code" ? special : "empty");
+                    line += GetParameter(offset, $"%{v1}", t.Item2);
                 }
                 else // normal parameter
                 {
@@ -460,39 +336,30 @@ namespace Diz.Core.export
                 }
             }
 
-            if (special != null) 
-                return line;
-
-            // throw out some errors if stuff looks fishy
-            Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
-            int step = flag == Data.FlagType.Opcode ? GetLineByteLength(offset) : RomUtil.TypeStepSize(flag), size = Data.GetROMSize();
-            if (flag == Data.FlagType.Operand) StreamError.WriteLine("({0}) Offset 0x{1:X}: Bytes marked as operands formatted as Data.", ++errorCount, offset);
-            else if (step > 1)
-            {
-                for (var i = 1; i < step; i++)
-                {
-                    if (offset + i >= size)
-                    {
-                        StreamError.WriteLine("({0}) Offset 0x{1:X}: {2} extends past the end of the ROM.", ++errorCount, offset, Util.GetEnumDescription(check));
-                        break;
-                    }
-                    else if (Data.GetFlag(offset + i) != check)
-                    {
-                        StreamError.WriteLine("({0}) Offset 0x{1:X}: Expected {2}, but got {3} instead.", ++errorCount, offset + i, Util.GetEnumDescription(check), Util.GetEnumDescription(Data.GetFlag(offset + i)));
-                        break;
-                    }
-                }
-            }
-            var ia = Data.GetIntermediateAddress(offset, true);
-            if (ia >= 0 && flag == Data.FlagType.Opcode && Data.GetInOutPoint(offset) == Data.InOutPoint.OutPoint && Data.GetFlag(Data.ConvertSNEStoPC(ia)) != Data.FlagType.Opcode)
-            {
-                StreamError.WriteLine("({0}) Offset 0x{1:X}: Branch or jump instruction to a non-instruction.", ++errorCount, offset);
-            }
-
+            if (!isSpecial)
+                CheckForErrorsAtLine(offset);
+            
             return line;
         }
 
-        private int GetLineByteLength(int offset)
+        private void CheckForErrorsAtLine(int offset)
+        {
+            // throw out some errors if stuff looks fishy
+            ErrorIfOperand(offset);
+            ErrorIfAdjacentOperandsSeemWrong(offset);
+            ErrorIfBranchToNonInstruction(offset);
+        }
+
+        private Data.FlagType GetFlagButSwapOpcodeForOperand(int offset)
+        {
+            var flag = Data.GetFlag(offset);
+            if (flag == Data.FlagType.Opcode)
+                return Data.FlagType.Operand;
+
+            return flag;
+        }
+
+        protected int GetLineByteLength(int offset)
         {
             int max = 1, step = 1;
             var size = Data.GetROMSize();
@@ -543,47 +410,22 @@ namespace Diz.Core.export
                 min < max &&
                 offset + min < size &&
                 Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
-                GetLabelName(Data.ConvertPCtoSNES(offset + min)) == "" &&
+                Data.GetLabelName(Data.ConvertPCtoSNES(offset + min)) == "" &&
                 (offset + min) / bankSize == myBank
             ) min += step;
             return min;
         }
 
-        public static bool ValidateFormat(string formatString)
-        {
-            var tokens = formatString.ToLower().Split('%');
-
-            // not valid if format has an odd amount of %s
-            if (tokens.Length % 2 == 0) return false;
-
-            for (int i = 1; i < tokens.Length; i += 2)
-            {
-                int indexOfColon = tokens[i].IndexOf(':');
-                string kind = indexOfColon >= 0 ? tokens[i].Substring(0, indexOfColon) : tokens[i];
-
-                // not valid if base token isn't one we know of
-                if (!Parameters.ContainsKey(kind))
-                    return false;
-
-                // not valid if parameter isn't an integer
-                int oof;
-                if (indexOfColon >= 0 && !int.TryParse(tokens[i].Substring(indexOfColon + 1), out oof)) 
-                    return false;
-            }
-
-            return true;
-        }
-
         // just a %
         [AssemblerHandler(token = "", length = 1)]
-        private string GetPercent(int offset, int length)
+        protected string GetPercent(int offset, int length)
         {
             return "%";
         }
 
         // all spaces
         [AssemblerHandler(token = "%empty", length = 1)]
-        private string GetEmpty(int offset, int length)
+        protected string GetEmpty(int offset, int length)
         {
             return string.Format("{0," + length + "}", "");
         }
@@ -591,7 +433,7 @@ namespace Diz.Core.export
         // trim to length
         // negative length = right justified
         [AssemblerHandler(token = "label", length = -22)]
-        private string GetLabel(int offset, int length)
+        protected string GetLabel(int offset, int length)
         {
             // what we're given: a PC offset in ROM.
             // what we need to find: any labels (SNES addresses) that refer to it.
@@ -603,7 +445,7 @@ namespace Diz.Core.export
             // TODO: eventually, support multiple labels tagging the same address, it may not always be just one.
             
             var snesOffset = Data.ConvertPCtoSNES(offset); 
-            var label = GetLabelName(snesOffset);
+            var label = Data.GetLabelName(snesOffset);
             if (label == null)
                 return "";
             
@@ -615,7 +457,7 @@ namespace Diz.Core.export
 
         // trim to length
         [AssemblerHandler(token = "code", length = 37)]
-        private string GetCode(int offset, int length)
+        protected string GetCode(int offset, int length)
         {
             var bytes = GetLineByteLength(offset);
             string code = "";
@@ -660,14 +502,14 @@ namespace Diz.Core.export
         }
 
         [AssemblerHandler(token = "%org", length = 37)]
-        private string GetORG(int offset, int length)
+        protected string GetORG(int offset, int length)
         {
             string org = "ORG " + Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6, true);
             return string.Format("{0," + (length * -1) + "}", org);
         }
 
         [AssemblerHandler(token = "%map", length = 37)]
-        private string GetMap(int offset, int length)
+        protected string GetMap(int offset, int length)
         {
             string s = "";
             switch (Data.RomMapMode)
@@ -685,7 +527,7 @@ namespace Diz.Core.export
 
         // 0+ = bank_xx.asm, -1 = labels.asm
         [AssemblerHandler(token = "%incsrc", length = 1)]
-        private string GetIncSrc(int offset, int length)
+        protected string GetIncSrc(int offset, int length)
         {
             string s = "incsrc \"labels.asm\"";
             if (offset >= 0)
@@ -697,7 +539,7 @@ namespace Diz.Core.export
         }
 
         [AssemblerHandler(token = "%bankcross", length = 1)]
-        private string GetBankCross(int offset, int length)
+        protected string GetBankCross(int offset, int length)
         {
             string s = "check bankcross off";
             return string.Format("{0," + (length * -1) + "}", s);
@@ -705,7 +547,7 @@ namespace Diz.Core.export
 
         // length forced to 6
         [AssemblerHandler(token = "ia", length = 6)]
-        private string GetIntermediateAddress(int offset, int length)
+        protected string GetIntermediateAddress(int offset, int length)
         {
             int ia = Data.GetIntermediateAddressOrPointer(offset);
             return ia >= 0 ? Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6) : "      ";
@@ -713,21 +555,21 @@ namespace Diz.Core.export
 
         // length forced to 6
         [AssemblerHandler(token = "pc", length = 6)]
-        private string GetProgramCounter(int offset, int length)
+        protected string GetProgramCounter(int offset, int length)
         {
             return Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6);
         }
 
         // trim to length
         [AssemblerHandler(token = "offset", length = -6)]
-        private string GetOffset(int offset, int length)
+        protected string GetOffset(int offset, int length)
         {
             return string.Format("{0," + (length * -1) + "}", Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0));
         }
 
         // length forced to 8
         [AssemblerHandler(token = "bytes", length = 8)]
-        private string GetRawBytes(int offset, int length)
+        protected string GetRawBytes(int offset, int length)
         {
             string bytes = "";
             if (Data.GetFlag(offset) == Data.FlagType.Opcode)
@@ -742,28 +584,29 @@ namespace Diz.Core.export
 
         // trim to length
         [AssemblerHandler(token = "comment", length = 1)]
-        private string GetComment(int snesOffset, int length)
+        protected string GetComment(int offset, int length)
         {
+            var snesOffset = Data.ConvertPCtoSNES(offset);
             return string.Format("{0," + (length * -1) + "}", Data.GetComment(snesOffset));
         }
 
         // length forced to 2
         [AssemblerHandler(token = "b", length = 2)]
-        private string GetDataBank(int offset, int length)
+        protected string GetDataBank(int offset, int length)
         {
             return Util.NumberToBaseString(Data.GetDataBank(offset), Util.NumberBase.Hexadecimal, 2);
         }
 
         // length forced to 4
         [AssemblerHandler(token = "d", length = 4)]
-        private string GetDirectPage(int offset, int length)
+        protected string GetDirectPage(int offset, int length)
         {
             return Util.NumberToBaseString(Data.GetDirectPage(offset), Util.NumberBase.Hexadecimal, 4);
         }
 
         // if length == 1, M/m, else 08/16
         [AssemblerHandler(token = "m", length = 1)]
-        private string GetMFlag(int offset, int length)
+        protected string GetMFlag(int offset, int length)
         {
             var m = Data.GetMFlag(offset);
             if (length == 1) return m ? "M" : "m";
@@ -772,7 +615,7 @@ namespace Diz.Core.export
 
         // if length == 1, X/x, else 08/16
         [AssemblerHandler(token = "x", length = 1)]
-        private string GetXFlag(int offset, int length)
+        protected string GetXFlag(int offset, int length)
         {
             var x = Data.GetXFlag(offset);
             if (length == 1) return x ? "X" : "x";
@@ -781,11 +624,11 @@ namespace Diz.Core.export
 
         // output label at snes offset, and its value
         [AssemblerHandler(token = "%labelassign", length = 1)]
-        private string GetLabelAssign(int offset, int length)
+        protected string GetLabelAssign(int offset, int length)
         {
-            var labelName = GetLabelName(offset);
+            var labelName = Data.GetLabelName(offset);
             var offsetStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true);
-            var labelComment = GetLabelComment(offset);
+            var labelComment = Data.GetLabelComment(offset);
 
             if (string.IsNullOrEmpty(labelName))
                 return "";

@@ -158,25 +158,16 @@ namespace DiztinGUIsh.controller
 
         private void WriteAssemblyOutput(LogWriterSettings settings, bool showProgressBarUpdates = false)
         {
-            // kinda hate that we're passing in these...
-            using var sw = new StreamWriter(settings.file);
-            using var er = new StreamWriter(settings.error);
-            
             var lc = new LogCreator()
             {
                 Settings = settings,
                 Data = Project.Data,
-                StreamOutput = sw,
-                StreamError = er,
             };
 
             LogCreator.OutputResult result = null;
             DoLongRunningTask(delegate {
                 result = lc.CreateLog();
             }, "Exporting assembly source code...");
-
-            if (result.error_count == 0)
-                File.Delete(settings.error);
 
             ProjectView.OnExportFinished(result);
         }

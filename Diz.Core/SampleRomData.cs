@@ -5,7 +5,37 @@ namespace Diz.Core
 {
     public class SampleRomData : Data
     {
-        public static readonly SampleRomData SampleData = new SampleRomData
+        public static SampleRomData SampleData
+        {
+            get
+            {
+                // one-time: take our sample data from below and bolt some extra stuff on top of it.
+                // then, cache all this in a static read-only property
+
+                if (finalSampleData != null)
+                    return finalSampleData;
+
+                // tricky: this sample data can be used to populate the "sample assembly output"
+                // window to demo some features. One thing we'd like to demo is showing generated
+                // labels that reach into "unreached" code (i.e. labels like "UNREACH_XXXXX")
+                //
+                // To accomplish this, we'll pad the size of the sample ROM data to 32k, but,
+                // we'll tell the assembly exporter to limit to the first couple hundred bytes by
+                // only assembling bytes up to BaseSampleData.SizeOverride.
+                // var overrideSize = BaseSampleData.RomBytes.Count;
+                while (BaseSampleData.RomBytes.Count < 0x8000)
+                    BaseSampleData.RomBytes.Add(new ROMByte());
+                // BaseSampleData.RomBytes.CountOverride = overrideSize;
+                // TODO 0x7B
+
+                finalSampleData = BaseSampleData;
+                return BaseSampleData;
+            }
+        }
+
+        private static SampleRomData finalSampleData;
+
+        private static readonly SampleRomData BaseSampleData = new SampleRomData
         {
             // random sample code I made up; hopefully it shows a little bit of
             // everything so you can see how the settings will effect the output

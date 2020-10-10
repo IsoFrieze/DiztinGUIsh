@@ -811,7 +811,7 @@ namespace DiztinGUIsh.window
         private void Mark(int offset)
         {
             ProjectController.MarkChanged();
-            SelectOffset(Project.Data.Mark(offset, markFlag, RomUtil.TypeStepSize(markFlag)));
+            SelectOffset(Project.Data.Mark(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag)));
             UpdatePercent();
             UpdateWindowTitle();
         }
