@@ -5,30 +5,12 @@ namespace Diz.Core
 {
     public class SampleRomData : Data
     {
-        public static SampleRomData SampleData
-        {
-            get
-            {
-                // one-time: take our sample data from below and bolt some extra stuff on top of it.
-                // then, cache all this in a static read-only property
-
-                if (finalSampleData != null)
-                    return finalSampleData;
-
-                while (BaseSampleData.RomBytes.Count < 0x8000)
-                    BaseSampleData.RomBytes.Add(new ROMByte());
-
-                finalSampleData = BaseSampleData;
-                return BaseSampleData;
-            }
-        }
-
-        private static SampleRomData finalSampleData;
-
-        private static readonly SampleRomData BaseSampleData = new SampleRomData
+        public static readonly SampleRomData SampleData = new SampleRomData
         {
             // random sample code I made up; hopefully it shows a little bit of
             // everything so you can see how the settings will effect the output
+            RomMapMode = ROMMapMode.LoROM,
+            RomSpeed = ROMSpeed.FastROM,
             RomBytes = new RomBytes {
                 new ROMByte {Rom = 0x78, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, Point = InOutPoint.InPoint},
                 new ROMByte {Rom = 0xA9, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true},
@@ -174,8 +156,6 @@ namespace Diz.Core
                     {0x5B, new Label {name = "Test_Data", comment = "Pretty cool huh?"}}
                 }
             },
-            RomMapMode = ROMMapMode.LoROM,
-            RomSpeed = ROMSpeed.FastROM,
         };
     }
 }

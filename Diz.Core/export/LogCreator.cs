@@ -177,7 +177,7 @@ namespace Diz.Core.export
             var size = Data.GetROMSize();
             var pointer = WriteMainIncludes(size);
 
-            int bank = -1;
+            var bank = -1;
 
             // perf: this is the meat of the export, takes a while
             while (pointer < size) {
