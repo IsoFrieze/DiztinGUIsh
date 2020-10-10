@@ -87,8 +87,11 @@ namespace Diz.Core.model
         public ROMMapMode RomMapMode { get; set; }
         public ROMSpeed RomSpeed { get; set; }
 
+        // dictionaries store in SNES address format (since memory labels can't be represented as a PC address)
         public OdWrapper<int,string> Comments { get; set; } = new OdWrapper<int, string>();
         public OdWrapper<int, Label> Labels { get; set; } = new OdWrapper<int, Label>();
+
+        // RomBytes stored as PC file offset addresses (since ROM will always be mapped to disk)
         public RomBytes RomBytes { get; set; } = new RomBytes();
 
         private CPU65C816 CPU65C816 { get; set; }

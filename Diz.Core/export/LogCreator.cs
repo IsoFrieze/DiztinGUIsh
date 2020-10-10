@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Diz.Core.model;
 using Diz.Core.util;
+using IX.Observable;
 
 namespace Diz.Core.export
 {
@@ -98,9 +99,10 @@ namespace Diz.Core.export
 
         private Dictionary<int, Label> ExtraLabels { get; set; } = new Dictionary<int, Label>();
         private List<Tuple<string, int>> parseList;
-        private List<int> usedLabels;
+        private List<int> labelsWeVisited;
         private int errorCount, bankSize;
         private string folder;
+        private ObservableDictionary<int, Label> backupOfOriginalLabelsBeforeModifying;
 
         private static void CacheAssemblerAttributeInfo()
         {
@@ -125,7 +127,7 @@ namespace Diz.Core.export
                 Debug.Assert(method.GetParameters().Length == 2);
 
                 Debug.Assert(method.GetParameters()[0].ParameterType == typeof(int));
-                Debug.Assert(method.GetParameters()[0].Name == "offset");
+                Debug.Assert(method.GetParameters()[0].Name == "offset" || method.GetParameters()[0].Name == "snesOffset");
 
                 Debug.Assert(method.GetParameters()[1].ParameterType == typeof(int));
                 Debug.Assert(method.GetParameters()[1].Name == "length");
@@ -156,31 +158,52 @@ namespace Diz.Core.export
 
         public OutputResult CreateLog()
         {
-            bankSize = RomUtil.GetBankSize(Data.RomMapMode);
-            errorCount = 0;
+            try
+            {
+                Init();
+                WriteLog();
+            }
+            finally
+            {
+                Cleanup();
+            }
 
-            // TODO: this label combination idea isn't working well. fix.
-            // could create a copy of the data in the controller before we get here and
-            // pass that in. unsubscribe all the notify events from it first.
-            // ehhhh... is that a little weird... maybe.
-            //
-            // maybe just clone the list and use the local list instead, remove subscribes from just that.
-            AddLabelSource(Data.Labels.Dict);
-            AddLabelSource(ExtraLabels);
+            return new OutputResult()
+            {
+                error_count = errorCount,
+                success = true,
+            };
+        }
 
-            AddTemporaryLabels();
+        private void Cleanup()
+        {
+            // restore original labels. SUPER IMPORTANT THIS HAPPENS WHen WE'RE DONE
+            // TODO: make this unnecessary by not modifying the underlying data.
+            RestoreUnderlyingDataLabels();
+        }
 
-            usedLabels = new List<int>();
-
+        private void Init()
+        {
             SetupParseList();
 
+            bankSize = RomUtil.GetBankSize(Data.RomMapMode);
+            errorCount = 0;
+            labelsWeVisited = new List<int>();
+
+            GenerateAdditionalExtraLabels();
+            WriteGeneratedLabelsIntoUnderlyingData(); // MODIFIES DATA. MAKE SURE TO UNDO THIS.
+        }
+
+        private void WriteLog()
+        {
             var size = Data.GetROMSize();
             var pointer = WriteMainIncludes(size);
 
             var bank = -1;
 
             // perf: this is the meat of the export, takes a while
-            while (pointer < size) {
+            while (pointer < size)
+            {
                 WriteAddress(ref pointer, ref bank);
             }
 
@@ -188,12 +211,33 @@ namespace Diz.Core.export
 
             if (Settings.structure == FormatStructure.OneBankPerFile)
                 StreamOutput.Close();
+        }
 
-            return new OutputResult()
+        private void RestoreUnderlyingDataLabels()
+        {
+            Data.Labels.Dict = backupOfOriginalLabelsBeforeModifying;
+        }
+
+        private void WriteGeneratedLabelsIntoUnderlyingData()
+        {
+            // WARNING: THIS MODIFIES THE UNDERLYING DATA TO ADD MORE LABELS
+            // *** if not properly cleaned up, the original project file's label list can get trashed. ***
+            // always call this FN with a try/finally that cleans up after.
+
+            // TODO: I really don't like us modifying and restoring the
+            // underlying labels or anything in Data. Data should ideally be immutable by us.
+            // we should either clone all of Data before modifying, or generate these labels on the fly.
+            backupOfOriginalLabelsBeforeModifying = Data.Labels.Dict;
+            Data.Labels.Dict = new ObservableDictionary<int, Label>(Data.Labels.Dict);
+
+            // write the new generated labels in, don't let them overwrite any real labels
+            // i.e. if the user defined a label like "PlayerSwimmingSprites", and our auto-generated
+            // labels also contain a label at the same address, then ignore our auto-generated label,
+            // only use the explicit user-created label.
+            foreach (var label in ExtraLabels)
             {
-                error_count = errorCount,
-                success = true,
-            };
+                Data.AddLabel(label.Key, label.Value, false);
+            }
         }
 
         private int WriteMainIncludes(int size)
@@ -218,36 +262,15 @@ namespace Diz.Core.export
             return pointer;
         }
 
-        private List<IDictionary<int, Label>> LabelSources { get; set; } = new List<IDictionary<int, Label>>();
-
-        public void AddLabelSource(IDictionary<int, Label> labelSource)
-        {
-            LabelSources.Add(labelSource);
-        }
-
         public string GetLabelName(int i)
         {
-            foreach (var labelDict in LabelSources)
-            {
-                if (labelDict.TryGetValue(i, out var val))
-                    return val?.name ?? "";
-            }
-
-            return "";
+            return Data.GetLabelName(i);
         }
         public string GetLabelComment(int i)
         {
-            foreach (var labelDict in LabelSources)
-            {
-                if (labelDict.TryGetValue(i, out var val))
-                    return val?.comment ?? "";
-            }
-
-            return "";
+            return Data.GetLabelComment(i);
         }
 
-        // NOTE: we should refactor this and the stuff in Data to make a new class called
-        // LabelCollection or similar.
         public void AddExtraLabel(int i, Label v)
         {
             Debug.Assert(v != null);
@@ -259,13 +282,12 @@ namespace Diz.Core.export
             ExtraLabels.Add(i, v);
         }
 
-
         // Generate labels like "CODE_856469" and "DATA_763525"
         // These will be combined with the original labels to produce our final assembly
         // These labels exist only for the duration of this export, and then are discarded.
         //
         // TODO: generate some nice looking "+"/"-" labels here.
-        /*private void GenerateAdditionalExtraLabels()
+        private void GenerateAdditionalExtraLabels()
         {
             for (var pointer = 0; pointer < Data.GetROMSize();)
             {
@@ -276,23 +298,23 @@ namespace Diz.Core.export
                     continue;
 
                 AddExtraLabel(offset, new Label() {
-                    name = Data.GetDefaultLabel(offset)
+                    name = Data.GetDefaultLabel(pointer)
                 });
             }
         }
 
-        private int GetAddressOfAnyUsefulLabelsAt(int pointer, out int length)
+        private int GetAddressOfAnyUsefulLabelsAt(int pcoffset, out int length)
         {
-            length = GetLineByteLength(pointer);
+            length = GetLineByteLength(pcoffset);
             switch (Settings.unlabeled)
             {
                 case FormatUnlabeled.ShowNone:
                     return -1;
                 case FormatUnlabeled.ShowAll:
-                    return Data.ConvertPCtoSNES(pointer);
+                    return Data.ConvertPCtoSNES(pcoffset);
             }
 
-            var flag = Data.GetFlag(pointer);
+            var flag = Data.GetFlag(pcoffset);
             var usefulToCreateLabelFrom = 
                 flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit ||
                 flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit;
@@ -300,57 +322,18 @@ namespace Diz.Core.export
             if (!usefulToCreateLabelFrom) 
                 return -1;
 
-            var ia = Data.GetIntermediateAddressOrPointer(pointer);
+            var ia = Data.GetIntermediateAddressOrPointer(pcoffset);
             if (ia >= 0 && Data.ConvertSNEStoPC(ia) >= 0)
                 return ia;
 
             return -1;
-        }*/
-
-        private void AddTemporaryLabels()
-        {
-            List<int> addMe = new List<int>();
-            int pointer = 0;
-
-            while (pointer < Data.GetROMSize())
-            {
-                int length = GetLineByteLength(pointer);
-                Data.FlagType flag = Data.GetFlag(pointer);
-
-                var flagsOK = (flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit ||
-                               flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit);
-
-                if (Settings.unlabeled == FormatUnlabeled.ShowAll)
-                    addMe.Add(pointer);
-                else if (Settings.unlabeled != FormatUnlabeled.ShowNone && flagsOK)
-                {
-                    int ia = Data.GetIntermediateAddressOrPointer(pointer);
-                    int pc = Data.ConvertSNEStoPC(ia);
-                    if (pc >= 0) addMe.Add(pc);
-                }
-
-                pointer += length;
-            }
-
-            // TODO +/- labels
-            for (int i = 0; i < addMe.Count; i++)
-            {
-                var offset = addMe[i];
-                var p1 = offset;
-                var p2 = Data.GetDefaultLabel(offset);
-                // Data.AddLabel(p1, p2, false);
-                AddExtraLabel(p1, new Label()
-                {
-                    name = p2
-                });
-            }
         }
 
         private void SetupParseList()
         {
-            string[] split = Settings.format.Split('%');
+            var split = Settings.format.Split('%');
             parseList = new List<Tuple<string, int>>();
-            for (int i = 0; i < split.Length; i++)
+            for (var i = 0; i < split.Length; i++)
             {
                 if (i % 2 == 0) parseList.Add(Tuple.Create(split[i], int.MaxValue));
                 else
@@ -361,13 +344,6 @@ namespace Diz.Core.export
 
                     if (colon < 0)
                     {
-                        /*
-                        if (colon < 0) 
-                           list.Add(Tuple.Create(split[i], parameters[split[i]].Item2));
-                        else 
-                           list.Add(Tuple.Create(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1))));
-                        */
-
                         var s1 = split[i];
                         var s2 = Parameters[s1].Item2;
                         tuple = Tuple.Create(s1, s2);
@@ -422,7 +398,7 @@ namespace Diz.Core.export
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
             foreach (KeyValuePair<int, Label> pair in Data.Labels.Dict)
             {
-                if (usedLabels.Contains(pair.Key)) 
+                if (labelsWeVisited.Contains(pair.Key)) 
                     continue;
 
                 // this label was not defined elsewhere in our disassembly, so we need to include it in labels.asm
@@ -617,13 +593,23 @@ namespace Diz.Core.export
         [AssemblerHandler(token = "label", length = -22)]
         private string GetLabel(int offset, int length)
         {
-            var snes = Data.ConvertPCtoSNES(offset);
-            var label = GetLabelName(snes);
+            // what we're given: a PC offset in ROM.
+            // what we need to find: any labels (SNES addresses) that refer to it.
+            //
+            // i.e. given that we are at PC offset = 0,
+            // we find valid SNES offsets mirrored of 0xC08000 and 0x808000 which both refer to the same place
+            // 
+            // TODO: we need to deal with that mirroring here
+            // TODO: eventually, support multiple labels tagging the same address, it may not always be just one.
+            
+            var snesOffset = Data.ConvertPCtoSNES(offset); 
+            var label = GetLabelName(snesOffset);
             if (label == null)
                 return "";
             
-            usedLabels.Add(snes);
-            bool noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
+            labelsWeVisited.Add(snesOffset);
+
+            var noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
             return string.Format("{0," + (length * -1) + "}", label + (noColon ? "" : ":"));
         }
 
@@ -756,9 +742,9 @@ namespace Diz.Core.export
 
         // trim to length
         [AssemblerHandler(token = "comment", length = 1)]
-        private string GetComment(int offset, int length)
+        private string GetComment(int snesOffset, int length)
         {
-            return string.Format("{0," + (length * -1) + "}", Data.GetComment(Data.ConvertPCtoSNES(offset)));
+            return string.Format("{0," + (length * -1) + "}", Data.GetComment(snesOffset));
         }
 
         // length forced to 2

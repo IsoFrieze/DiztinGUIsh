@@ -236,10 +236,14 @@ namespace Diz.Core.arch
         private string FormatOperandAddress(int offset, AddressMode mode)
         {
             int address = Data.GetIntermediateAddress(offset);
-            if (address < 0) return "";
-            if (Data.GetLabelName(address) != "") return Data.GetLabelName(address);
+            if (address < 0) 
+                return "";
 
-            int count = BytesToShow(mode);
+            var label = Data.GetLabelName(address);
+            if (label != "") 
+                return label;
+
+            var count = BytesToShow(mode);
             if (mode == AddressMode.RELATIVE_8 || mode == AddressMode.RELATIVE_16) address = Data.GetROMWord(offset + 1);
             address &= ~(-1 << (8 * count));
             return Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 2 * count, true);
