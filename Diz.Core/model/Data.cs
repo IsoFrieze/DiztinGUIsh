@@ -99,7 +99,6 @@ namespace Diz.Core.model
         public Data()
         {
             CPU65C816 = new CPU65C816(this);
-            romMemoryOp = new Func<int, int>[] {GetROMByte, GetROMWord, GetROMLong, GetROMDoubleWord};
         }
 
         public void CreateRomBytesFromRom(IEnumerable<byte> actualRomBytes)
@@ -301,7 +300,7 @@ namespace Diz.Core.model
 
                 switch (step)
                 {
-                    case 1: res += NumberToBaseString(offset + i, step); break;
+                    case 1: res += Util.NumberToBaseString(GetROMByte(offset + i), Util.NumberBase.Hexadecimal, 2, true); break;
                     case 2: res += Util.NumberToBaseString(GetROMWord(offset + i), Util.NumberBase.Hexadecimal, 4, true); break;
                     case 3: res += Util.NumberToBaseString(GetROMLong(offset + i), Util.NumberBase.Hexadecimal, 6, true); break;
                     case 4: res += Util.NumberToBaseString(GetROMDoubleWord(offset + i), Util.NumberBase.Hexadecimal, 8, true); break;
@@ -309,14 +308,6 @@ namespace Diz.Core.model
             }
 
             return res;
-        }
-
-        private readonly Func<int, int>[] romMemoryOp;
-
-        private string NumberToBaseString(int offset, int num_bytes)
-        {
-            return Util.NumberToBaseString(romMemoryOp[num_bytes](offset), 
-                Util.NumberBase.Hexadecimal, num_bytes*2, true);
         }
 
         public int ConvertSNEStoPC(int address)
