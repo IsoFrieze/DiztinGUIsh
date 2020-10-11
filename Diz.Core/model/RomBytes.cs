@@ -19,46 +19,21 @@ namespace Diz.Core.model
             get => Bytes[i];
             set => Bytes[i] = value;
         }
-
-        private int countOverride = -1;
-        public int CountOverride
-        {
-            get => countOverride;
-            set
-            {
-                ValidateCountOverride(value);
-                countOverride = value;
-            }
-        }
-
-        private void ValidateCountOverride() => ValidateCountOverride(CountOverride);
-        private void ValidateCountOverride(int overrideValue)
-        {
-            if (overrideValue < -1 || overrideValue > Bytes.Count)
-                throw new ArgumentOutOfRangeException();
-        }
-
-        public int Count => CountOverride != -1 ? CountOverride : Bytes.Count;
+        
+        public int Count => Bytes.Count;
         public void Add(ROMByte romByte)
         {
-            if (countOverride != -1)
-                throw new InvalidOperationException("Can't modify list when .CountOverride is set");
-
             Bytes.Add(romByte);
         }
 
         public void Create(int size)
         {
-            if (countOverride != -1)
-                throw new InvalidOperationException("Can't modify list when .CountOverride is set");
-
             for (var i = 0; i < size; ++i)
                 Add(new ROMByte());
         }
         public void Clear()
         {
             Bytes.Clear();
-            countOverride = -1;
         }
 
         #region Equality
