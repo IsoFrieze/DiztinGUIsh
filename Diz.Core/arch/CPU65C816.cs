@@ -67,6 +67,8 @@ namespace Diz.Core.arch
             return nextOffset;
         }
 
+        // input: ROM offset
+        // return: a SNES address
         public int GetIntermediateAddress(int offset, bool resolve)
         {
             int bank, directPage, operand, programCounter;

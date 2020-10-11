@@ -110,33 +110,31 @@ namespace Diz.Core.export
         // TODO: generate some nice looking "+"/"-" labels here.
         protected void GenerateAdditionalExtraLabels()
         {
-            var pointer = 0;
+            if (Settings.unlabeled == FormatUnlabeled.ShowNone)
+                return;
 
-            while (pointer < Data.GetROMSize())
+            for (var pointer = 0; pointer < Data.GetROMSize(); pointer += GetLineByteLength(pointer))
             {
-                var offset = GetAddressOfAnyUsefulLabelsAt(pointer, out var length);
-                pointer += length;
-
-                if (offset == -1)
-                    continue;
-
-                AddExtraLabel(offset, new Label()
-                {
-                    name = Data.GetDefaultLabel(pointer)
-                });
+                GenerateLabelIfNeededAt(pointer);
             }
         }
 
-        protected int GetAddressOfAnyUsefulLabelsAt(int pcoffset, out int length)
+        private void GenerateLabelIfNeededAt(int pcoffset)
         {
-            length = GetLineByteLength(pcoffset);
-            switch (Settings.unlabeled)
-            {
-                case FormatUnlabeled.ShowNone:
-                    return -1;
-                case FormatUnlabeled.ShowAll:
-                    return Data.ConvertPCtoSNES(pcoffset);
-            }
+            var snes = GetAddressOfAnyUsefulLabelsAt(pcoffset);
+            if (snes == -1) 
+                return;
+
+            var labelName = Data.GetDefaultLabel(snes);
+            AddExtraLabel(snes, new Label() {
+                name = labelName,
+            });
+        }
+
+        protected int GetAddressOfAnyUsefulLabelsAt(int pcoffset)
+        {
+            if (Settings.unlabeled == FormatUnlabeled.ShowAll) 
+                return Data.ConvertPCtoSNES(pcoffset); // this may not be right either...
 
             var flag = Data.GetFlag(pcoffset);
             var usefulToCreateLabelFrom =
@@ -146,11 +144,9 @@ namespace Diz.Core.export
             if (!usefulToCreateLabelFrom)
                 return -1;
 
-            var ia = Data.GetIntermediateAddressOrPointer(pcoffset);
-            if (ia >= 0 && Data.ConvertSNEStoPC(ia) >= 0)
-                return ia;
-
-            return -1;
+            var snesIa = Data.GetIntermediateAddressOrPointer(pcoffset);
+            var pc = Data.ConvertSNEStoPC(snesIa);
+            return pc >= 0 ? snesIa : -1;
         }
 
         public static bool ValidateFormat(string formatString)

@@ -392,6 +392,7 @@ namespace Diz.Core.util
             sampleSettings.structure = LogCreator.FormatStructure.SingleFile;
             sampleSettings.fileOrFolderOutPath = "";
             sampleSettings.outputToString = true;
+            sampleSettings.romSizeOverride = sampleRomData.OriginalRomSizeBeforePadding;
             var lc = new LogCreator()
             {
                 Settings = sampleSettings,

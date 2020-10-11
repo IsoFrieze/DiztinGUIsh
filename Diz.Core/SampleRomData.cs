@@ -22,16 +22,16 @@ namespace Diz.Core
                 // To accomplish this, we'll pad the size of the sample ROM data to 32k, but,
                 // we'll tell the assembly exporter to limit to the first couple hundred bytes by
                 // only assembling bytes up to BaseSampleData.SizeOverride.
-                // var overrideSize = BaseSampleData.RomBytes.Count;
+                BaseSampleData.OriginalRomSizeBeforePadding = BaseSampleData.RomBytes.Count;
                 while (BaseSampleData.RomBytes.Count < 0x8000)
                     BaseSampleData.RomBytes.Add(new ROMByte());
-                // BaseSampleData.RomBytes.CountOverride = overrideSize;
-                // TODO 0x7B
 
                 finalSampleData = BaseSampleData;
                 return BaseSampleData;
             }
         }
+
+        public int OriginalRomSizeBeforePadding { get; set; }
 
         private static SampleRomData finalSampleData;
 
@@ -121,18 +121,36 @@ namespace Diz.Core
                 new ROMByte {Rom = 0xA2, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x1F, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x00, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
+
+                // --------------------------
+                // highlighting a particular section here
+                // we will use this for unit tests as well.
+
+                // LDA.W Test_Data,X
                 new ROMByte {Rom = 0xBD, TypeFlag = FlagType.Opcode, MFlag = true, Point = InOutPoint.InPoint, DataBank = 0x80, DirectPage = 0x2100},
-                new ROMByte {Rom = 0x5B, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-                new ROMByte {Rom = 0x80, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
+                new ROMByte {Rom = 0x5B, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100}, // Test_Data
+                new ROMByte {Rom = 0x80, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100}, // Test_Data
+                
+                // STA.W $0100,X
                 new ROMByte {Rom = 0x9D, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x00, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x01, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
+                
+                // DEX
                 new ROMByte {Rom = 0xCA, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
+
+                // BPL CODE_80804F
                 new ROMByte {Rom = 0x10, TypeFlag = FlagType.Opcode, MFlag = true, Point = InOutPoint.OutPoint, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0xF7, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
+                
+                // ------------------------------------
+
                 new ROMByte {Rom = 0xAB, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x28, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x60, TypeFlag = FlagType.Opcode, Point = InOutPoint.EndPoint, DataBank = 0x80, DirectPage = 0x2100},
+                
+                // --------------------------
+                
                 new ROMByte {Rom = 0x45, TypeFlag = FlagType.Data8Bit, Point = InOutPoint.ReadPoint, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x8D, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x69, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},

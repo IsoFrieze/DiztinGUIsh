@@ -134,9 +134,14 @@ namespace Diz.Core.export
             }
         }
 
+        public int GetRomSize()
+        {
+            return Settings.romSizeOverride != -1 ? Settings.romSizeOverride : Data.GetROMSize();
+        }
+
         protected virtual void WriteLog()
         {
-            var size = 0x7B; // Data.GetROMSize(); // HACK!!!!!! DONT CHECK IN
+            var size = GetRomSize();
 
             WriteMainIncludes(size);
             var pointer = WriteMainAssembly(size);
@@ -158,7 +163,7 @@ namespace Diz.Core.export
         protected void WriteSpecial(string special)
         {
             const int doesntMatter = 0;
-            var line = GetLine(doesntMatter, "map");
+            var line = GetLine(doesntMatter, special);
             output.WriteLine(line);
         }
 
@@ -223,7 +228,10 @@ namespace Diz.Core.export
                 output.WriteLine(GetLine(pointer, "empty"));
 
             output.WriteLine(GetLine(pointer, null));
-            if ((Data.GetInOutPoint(pointer) & (Data.InOutPoint.EndPoint)) != 0) output.WriteLine(GetLine(pointer, "empty"));
+
+            if ((Data.GetInOutPoint(pointer) & Data.InOutPoint.EndPoint) != 0) 
+                output.WriteLine(GetLine(pointer, "empty"));
+
             pointer += GetLineByteLength(pointer);
         }
 

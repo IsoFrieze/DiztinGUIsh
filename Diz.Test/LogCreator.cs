@@ -1,53 +1,182 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using Diz.Core;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.util;
-using ExtendedXmlSerializer;
-using Moq;
-using Moq.Protected;
 using Xunit;
 
 namespace Diz.Test
 {
     public sealed class LogCreatorTests
     {
-        [Fact]
-        public void TestEqualsButNotCompareByte()
+        public class ParsedOutput
         {
-            var settings = new LogWriterSettings();
-            settings.SetDefaults();
-            settings.structure = LogCreator.FormatStructure.SingleFile;
-
-            var expectedLabels = new Dictionary<int, string>()
+            protected bool Equals(ParsedOutput other)
             {
-                {0, "Emulation_RESET"},
-                {10, "FastRESET"},
-                {50, "}Test_Indices"},
-                {58, "Pointer_Table"},
-                {68, "First_Routine"},
-                {91, "Test_Data"},
-                {32767, "}UNREACH_80FFFF"},
-                {21, "CODE_808015"},
-                {16384, "}UNREACH_80C000"},
-                {123, "UNREACH_80807B"},
-                {324, "UNREACH_808144"},
-                {452, "UNREACH_8081C4"},
-                {522, "UNREACH_80820A"},
-                {79, "CODE_80804F"}
+                return label == other.label && instr == other.instr && pc == other.pc && rawbytes == other.rawbytes && ia == other.ia && realcomment == other.realcomment;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((ParsedOutput) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = label.GetHashCode();
+                    hashCode = (hashCode * 397) ^ instr.GetHashCode();
+                    hashCode = (hashCode * 397) ^ pc.GetHashCode();
+                    hashCode = (hashCode * 397) ^ rawbytes.GetHashCode();
+                    hashCode = (hashCode * 397) ^ ia.GetHashCode();
+                    hashCode = (hashCode * 397) ^ realcomment.GetHashCode();
+                    return hashCode;
+                }
+            }
+
+            public string label;
+            public string instr;
+
+            public string pc;
+            public string rawbytes;
+            public string ia;
+
+            public string realcomment;
+        }
+
+        public static ParsedOutput ParseLine(string line)
+        {
+            if (line == "")
+                return null;
+
+            var output = new ParsedOutput();
+
+            var split = line.Split(new[] {';'}, 2,options:StringSplitOptions.None);
+            var main = split[0].Trim(); 
+            var comment = split[1].Trim();
+
+            var csplit = comment.Split(new[] { '|' }, 3, options: StringSplitOptions.None);
+            output.pc = csplit[0].Trim();
+            output.rawbytes = csplit[1].Trim();
+
+            var iasplit = csplit[2].Split(new[] { ';' }, 2, options: StringSplitOptions.None);
+            output.ia = iasplit[0].Trim();
+            output.realcomment = iasplit[1].Trim();
+
+            var msplit = main.Split(new[] { ':' }, 2, options: StringSplitOptions.None);
+            var m1 = msplit[0].Trim();
+            var m2  = msplit.Length > 1 ? msplit[1].Trim() : "";
+
+            if (m2 != "")
+            {
+                output.label = m1;
+                output.instr = m2;
+            }
+            else
+            {
+                output.label = "";
+                output.instr = m1;
+            }
+
+            return output;
+        }
+
+        public List<ParsedOutput> ParseAll(string lines) =>
+            lines.Split(new[] {'\n'})
+                .Select(line => ParseLine(line.Trim()))
+                .ToList();
+
+        [Fact]
+        public void TestAFewLines()
+        {
+            var expectedRaw =
+                //          label:       instructions                         ;PC    |rawbytes|ia
+                "                        lorom                                ;      |        |      ;  \r\n" +
+                "                                                             ;      |        |      ;  \r\n" +
+                "                                                             ;      |        |      ;  \r\n" +
+                "                        ORG $808000                          ;      |        |      ;  \r\n" +
+                "                                                             ;      |        |      ;  \r\n" +
+                "           CODE_808000: LDA.W Test_Data,X                    ;808000|BD5B80  |80805B;  \r\n" +
+                "                        STA.W $0100,X                        ;808003|9D0001  |800100;  \r\n" +
+                "           Test22:      DEX                                  ;808006|CA      |      ;  \r\n" +
+                "                        BPL CODE_808000                      ;808007|10F7    |808000;  \r\n" +
+                "                                                             ;      |        |      ;  \r\n" +
+                "                        Test_Data = $80805B                  ;      |        |      ;  \r\n";
+
+            var expectedOut = ParseAll(expectedRaw);
+
+            var inputData = new Data
+            {
+                Labels = new OdWrapper<int, Label>
+                {
+                    Dict =
+                    {
+                        {0x808000 + 0x06, new Label {name = "Test22"}},
+                        {0x808000 + 0x5B, new Label {name = "Test_Data", comment = "Pretty cool huh?"}},
+                        // the CODE_XXXXXX labels are autogenerated
+                    }
+                },
+                RomMapMode = Data.ROMMapMode.LoROM,
+                RomSpeed = Data.ROMSpeed.FastROM,
+                RomBytes =
+                {
+                    // --------------------------
+                    // highlighting a particular section here
+                    // we will use this for unit tests as well.
+
+                    // CODE_808000: LDA.W Test_Data,X
+                    new ROMByte {Rom = 0xBD, TypeFlag = Data.FlagType.Opcode, MFlag = true, Point = Data.InOutPoint.InPoint, DataBank = 0x80, DirectPage = 0x2100},
+                    new ROMByte {Rom = 0x5B, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100}, // Test_Data
+                    new ROMByte {Rom = 0x80, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100}, // Test_Data
+                
+                    // STA.W $0100,X
+                    new ROMByte {Rom = 0x9D, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
+                    new ROMByte {Rom = 0x00, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
+                    new ROMByte {Rom = 0x01, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
+                
+                    // DEX
+                    new ROMByte {Rom = 0xCA, TypeFlag = Data.FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
+
+                    // BPL CODE_808000
+                    new ROMByte {Rom = 0x10, TypeFlag = Data.FlagType.Opcode, MFlag = true, Point = Data.InOutPoint.OutPoint, DataBank = 0x80, DirectPage = 0x2100},
+                    new ROMByte {Rom = 0xF7, TypeFlag = Data.FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
+                
+                    // ------------------------------------
+                }
             };
 
-            var mock = new Mock<LogCreator>();
-            mock.Protected()
-                .Setup("RestoreUnderlyingDataLabels")
-                .Callback(() =>
-                {
-                    // int x = 3;
-                });
+            var settings = new LogWriterSettings();
+            settings.SetDefaults();
+            settings.outputToString = true;
+            settings.structure = LogCreator.FormatStructure.SingleFile;
 
-            var result = RomUtil.GetSampleAssemblyOutput(settings);
+            var lc = new LogCreator()
+            {
+                Data=inputData, 
+                Settings = settings,
+            };
+
+            var result = lc.CreateLog();
+
+            Assert.True(result.logCreator != null);
+            Assert.True(result.outputStr != null);
+            Assert.True(result.error_count == 0);
+
+            var actualOut = ParseAll(result.outputStr);
+
+            Assert.Equal(expectedOut.Count, actualOut.Count);
+
+            for (var i = 0; i < expectedOut.Count; ++i)
+            {
+                Assert.Equal(expectedOut[i], actualOut[i]);
+            }
+
+            Assert.True(expectedOut.SequenceEqual(actualOut));
         }
     }
 }

@@ -351,10 +351,10 @@ namespace Diz.Core.model
             return text + "\"";
         }
 
-        public string GetDefaultLabel(int offset)
+        public string GetDefaultLabel(int snes)
         {
-            var snes = ConvertPCtoSNES(offset);
-            var prefix = RomUtil.TypeToLabel(GetFlag(offset));
+            var pcoffset = ConvertSNEStoPC(snes);
+            var prefix = RomUtil.TypeToLabel(GetFlag(pcoffset));
             var labelAddress = Util.NumberToBaseString(snes, Util.NumberBase.Hexadecimal, 6);
             return $"{prefix}_{labelAddress}";
         }
