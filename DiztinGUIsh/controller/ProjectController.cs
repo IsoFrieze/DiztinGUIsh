@@ -65,11 +65,15 @@ namespace DiztinGUIsh.controller
         {
             Project project = null;
             var errorMsg = "";
+            var warningMsg = "";
 
             // TODO: try/catch for ProjectFileManager
             DoLongRunningTask(delegate {
-                try {
-                    project = ProjectFileManager.Open(filename, AskToSelectNewRomFilename);
+                try
+                {
+                    var result = ProjectFileManager.Open(filename, AskToSelectNewRomFilename);
+                    project = result.project;
+                    warningMsg = result.warning;
                 } catch (Exception ex) {
                     project = null;
                     errorMsg = ex.Message;
@@ -81,6 +85,9 @@ namespace DiztinGUIsh.controller
                 ProjectView.OnProjectOpenFail(errorMsg);
                 return false;
             }
+
+            if (warningMsg != "")
+                ProjectView.OnProjectOpenWarning(warningMsg);
 
             OnProjectOpenSuccess(filename, project);
             return true;

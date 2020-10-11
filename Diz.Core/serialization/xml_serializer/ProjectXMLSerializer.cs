@@ -63,12 +63,14 @@ namespace Diz.Core.serialization.xml_serializer
         // correctly.
         private void DebugVerifyProjectEquality(Project project1, byte[] finalBytes_project2)
         {
-            var project2 = Load(finalBytes_project2);
+            var result = Load(finalBytes_project2);
+            var project2 = result.project;
+
             ProjectFileManager.PostSerialize(project2, null);
             DebugVerifyProjectEquality(project1, project2);
         }
 
-        public override Project Load(byte[] data)
+        public override (Project project, string warning) Load(byte[] data)
         {
             // TODO: it would be much more user-friendly/reliable if we could deserialize the
             // Root element ALONE first, check for valid version/watermark, and only then try
@@ -95,8 +97,9 @@ namespace Diz.Core.serialization.xml_serializer
             }
 
             var project = root.Project;
+            var warning = "";
 
-            return project;
+            return (project, warning);
         }
     }
 }

@@ -17,5 +17,6 @@ namespace DiztinGUIsh.controller
         void SelectOffset(int offset, int column=-1);
         string AskToSelectNewRomFilename(string promptSubject, string promptText);
         IImportRomDialogView GetImportView();
+        void OnProjectOpenWarning(string warningMsg);
     }
 }

@@ -10,7 +10,7 @@ namespace Diz.Core.serialization
 {
     public static class ProjectFileManager
     {
-        public static Project Open(string filename, Func<string, string> romPromptFn)
+        public static (Project project, string warning) Open(string filename, Func<string, string> romPromptFn)
         {
             var data = File.ReadAllBytes(filename);
 
@@ -18,13 +18,13 @@ namespace Diz.Core.serialization
                 data = Util.TryUnzip(data);
 
             var serializer = GetSerializerForFormat(data);
-            var project = serializer.Load(data);
+            var result = serializer.Load(data);
 
-            project.ProjectFileName = filename;
+            result.project.ProjectFileName = filename;
 
-            PostSerialize(project, romPromptFn);
+            PostSerialize(result.project, romPromptFn);
 
-            return project;
+            return result;
         }
 
         public static bool PostSerialize(Project project, Func<string, string> romPromptFn)

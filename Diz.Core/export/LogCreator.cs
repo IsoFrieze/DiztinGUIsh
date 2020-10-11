@@ -241,8 +241,6 @@ namespace Diz.Core.export
             var isLocationAReadPoint = (Data.GetInOutPoint(pointer) & Data.InOutPoint.ReadPoint) != 0;
             var anyLabelsPresent = Data.Labels.Dict.TryGetValue(pointer, out var label) && label.name.Length > 0;
 
-            // TODO is c2 wrong? should it be 'snesAddress' instead of 'pointer' ?
-
             if (isLocationAReadPoint || anyLabelsPresent)
                 output.WriteLine(GetLine(pointer, "empty"));
         }

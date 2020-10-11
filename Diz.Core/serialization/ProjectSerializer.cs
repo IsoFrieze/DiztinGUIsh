@@ -9,14 +9,14 @@ namespace Diz.Core.serialization
         public const string Watermark = "DiztinGUIsh";
 
         public abstract byte[] Save(Project project);
-        public abstract Project Load(byte[] data);
+        public abstract (Project project, string warning) Load(byte[] data);
 
         public void SaveToFile(Project project, string filename)
         {
             File.WriteAllBytes(filename, Save(project));
         }
         
-        public Project LoadFromFile(string filename)
+        public (Project project, string warning) LoadFromFile(string filename)
         {
             return Load(File.ReadAllBytes(filename));
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh;
@@ -36,7 +37,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             return data;
         }
 
-        public override Project Load(byte[] data)
+        public override (Project project, string warning) Load(byte[] data)
         {
             if (!IsBinaryFileFormat(data))
                 throw new InvalidDataException($"This is not a binary serialized project file!");
@@ -89,7 +90,15 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             project.UnsavedChanges = false;
 
-            return project;
+            var warning = "";
+            if (version != LATEST_FILE_FORMAT_VERSION)
+            {
+                warning = "This project file is in an older format.\n" +
+                              "You may want to back up your work or 'Save As' in case the conversion goes wrong.\n" +
+                              "The project file will be untouched until it is saved again.";
+            }
+
+            return (project, warning);
         }
 
         private static void SaveStringToBytes(string str, ICollection<byte> bytes)
@@ -208,14 +217,6 @@ namespace Diz.Core.serialization.binary_serializer_old
             {
                 throw new ArgumentException(
                     "This DiztinGUIsh file uses a newer file format! You'll need to download the newest version of DiztinGUIsh to open it.");
-            }
-            else if (version != LATEST_FILE_FORMAT_VERSION)
-            {
-                throw new ArgumentException(
-                    "This project file is in an older format.\n" +
-                    "You may want to back up your work or 'Save As' in case the conversion goes wrong.\n" +
-                    "The project file will be untouched until it is saved again.",
-                    "Project File Out of Date");
             }
 
             if (version < 0)

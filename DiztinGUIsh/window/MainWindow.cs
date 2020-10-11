@@ -1204,5 +1204,10 @@ namespace DiztinGUIsh.window
         {
             return new ImportRomDialog();
         }
+
+        public void OnProjectOpenWarning(string warningMsg)
+        {
+            MessageBox.Show(warningMsg, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 }
