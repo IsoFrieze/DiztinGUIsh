@@ -53,8 +53,7 @@
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>resource\diz-4.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>DiztinGUIsh.Program</StartupObject>
@@ -268,6 +267,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="diz-4.ico" />
     <Content Include="resource\diz-4.png" />
     <Content Include="resource\diz-4.ico" />
     <Content Include="resource\diz.ico" />

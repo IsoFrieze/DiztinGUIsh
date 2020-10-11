@@ -41,9 +41,22 @@ namespace DiztinGUIsh
             get
             {
                 var attributes = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false);
-                return attributes.Length == 0 
-                    ? "" 
-                    : ((AssemblyDescriptionAttribute)attributes[0]).Description;
+                var assembly = attributes.Length == 0 
+                    ? null 
+                    : ((AssemblyDescriptionAttribute)attributes[0]);
+
+                if (assembly == null)
+                    return "";
+
+                var description =
+                    assembly.Description + "\r\n" + "\r\n" + "Build info:\r\n" +
+                    "Git branch: " + ThisAssembly.Git.Branch + "\r\n" +
+                    "Git commit: " + ThisAssembly.Git.Commit + "\r\n" +
+                    "Git repo URL: " + ThisAssembly.Git.RepositoryUrl + "\r\n" +
+                    "Git tag: " + ThisAssembly.Git.Tag + "\r\n" +
+                    "Git last commit date: " + ThisAssembly.Git.CommitDate + "\r\n";
+
+                return description;
             }
         }
 
@@ -76,6 +89,11 @@ namespace DiztinGUIsh
         #endregion
 
         private void About_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void okButton_Click(object sender, EventArgs e)
         {
 
         }
