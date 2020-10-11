@@ -26,9 +26,10 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationRevision>1</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -57,6 +58,18 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>DiztinGUIsh.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>B5957BD4F7F637E843EB8B06E2C40D418498E46C</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>DiztinGUIsh_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IX.Abstractions, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
@@ -246,6 +259,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="DiztinGUIsh_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="Properties\DataSources\DiztinGUIsh.loadsave.ImportRomSettings.datasource" />
     <None Include="Properties\DataSources\DiztinGUIsh.window.dialog.ImportRomDialog+EnumMapper`1.datasource" />
