@@ -5,6 +5,7 @@ using Diz.Core.util;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 using IX.Observable;
+using IX.StandardExtensions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -33,7 +34,9 @@ namespace Diz.Test
             #region Equality
             protected bool Equals(TestRoot other)
             {
-                return Equals(ODW, other.ODW) && Equals(ODW2, other.ODW2);
+                return
+                    System.Linq.Enumerable.SequenceEqual(ODW, other.ODW) &&
+                    System.Linq.Enumerable.SequenceEqual(ODW2, other.ODW2);
             }
 
             public override bool Equals(object obj)
@@ -85,42 +88,6 @@ namespace Diz.Test
 
         private readonly TestRoot testRootElementGood = new TestRoot();
 
-        string xmlShouldBe = "<?xml version=\"1.0" +
-                     "\" encoding=\"utf-8" +
-                     "\"?><SerializerTest-" +
-                     "TestRoot xmlns:ns1=" +
-                     "\"clr-namespace:Diz." +
-                     "Core.util;assembly=D" +
-                     "iz.Core\" xmlns:exs=" +
-                     "\"https://extendedxm" +
-                     "lserializer.github.i" +
-                     "o/v2\" xmlns:sys=\"h" +
-                     "ttps://extendedxmlse" +
-                     "rializer.github.io/s" +
-                     "ystem\" xmlns:ns2=\"" +
-                     "clr-namespace:Diz.Co" +
-                     "re.model;assembly=Di" +
-                     "z.Core\"><ODW><DictT" +
-                     "oSave exs:type=\"sys" +
-                     ":Dictionary[sys:int," +
-                     "sys:string]\"><sys:I" +
-                     "tem Key=\"1\" Value=" +
-                     "\"Z test1\" /><sys:I" +
-                     "tem Key=\"2\" Value=" +
-                     "\"Z test3\" /></Dict" +
-                     "ToSave></ODW><ODW2><" +
-                     "DictToSave exs:type=" +
-                     "\"sys:Dictionary[sys" +
-                     ":int,ns2:Label]\"><s" +
-                     "ys:Item Key=\"100\">" +
-                     "<Value name=\"locati" +
-                     "on1\" comment=\"c1\"" +
-                     " /></sys:Item><sys:I" +
-                     "tem Key=\"200\"><Val" +
-                     "ue name=\"location2" +
-                     "\" comment=\"c2\" />" +
-                     "</sys:Item></DictToS" +
-                     "ave></ODW2></Seriali" +
-                     "zerTest-TestRoot>";
+        string xmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerTest-TestRoot xmlns:ns1=\"clr-namespace:IX.Observable;assembly=IX.Observable\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:ns2=\"clr-namespace:Diz.Core.model;assembly=Diz.Core\"><ODW AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"1\" Value=\"Z test1\" /><sys:Item Key=\"2\" Value=\"Z test3\" /></ODW><ODW2 AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"100\"><Value name=\"location1\" comment=\"c1\" /></sys:Item><sys:Item Key=\"200\"><Value name=\"location2\" comment=\"c2\" /></sys:Item></ODW2></SerializerTest-TestRoot>";
     }
 }
