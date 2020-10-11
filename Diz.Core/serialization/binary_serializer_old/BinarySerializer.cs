@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh;
 
 namespace Diz.Core.serialization.binary_serializer_old
 {
@@ -139,8 +137,8 @@ namespace Diz.Core.serialization.binary_serializer_old
             var all_labels = project.Data.Labels;
             var all_comments = project.Data.Comments;
 
-            ByteUtil.IntegerIntoByteList(all_labels.Dict.Count, label);
-            foreach (KeyValuePair<int, Label> pair in all_labels.Dict)
+            ByteUtil.IntegerIntoByteList(all_labels.Count, label);
+            foreach (var pair in all_labels)
             {
                 ByteUtil.IntegerIntoByteList(pair.Key, label);
 
@@ -151,8 +149,8 @@ namespace Diz.Core.serialization.binary_serializer_old
                 }
             }
 
-            ByteUtil.IntegerIntoByteList(all_comments.Dict.Count, comment);
-            foreach (KeyValuePair<int, string> pair in all_comments.Dict)
+            ByteUtil.IntegerIntoByteList(all_comments.Count, comment);
+            foreach (KeyValuePair<int, string> pair in all_comments)
             {
                 ByteUtil.IntegerIntoByteList(pair.Key, comment);
                 SaveStringToBytes(pair.Value, comment);

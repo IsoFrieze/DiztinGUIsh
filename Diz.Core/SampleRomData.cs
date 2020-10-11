@@ -1,5 +1,6 @@
 ﻿using Diz.Core.model;
 using Diz.Core.util;
+using IX.Observable;
 
 namespace Diz.Core
 {
@@ -184,25 +185,21 @@ namespace Diz.Core
                 new ROMByte {Rom = 0x34, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
                 new ROMByte {Rom = 0x6D, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             },
-            Comments = new OdWrapper<int, string>()
+            Comments = new ObservableDictionary<int, string>()
             {
-                Dict = {
-                    {0x808000 + 0x03, "this sets FastROM"},
-                    {0x808000 + 0x0F, "direct page = $2100"},
-                    {0x808000 + 0x21, "clear APU regs"},
-                    {0x808000 + 0x44, "this routine copies Test_Data to $7E0100"}
-                }
+                {0x808000 + 0x03, "this sets FastROM"},
+                {0x808000 + 0x0F, "direct page = $2100"},
+                {0x808000 + 0x21, "clear APU regs"},
+                {0x808000 + 0x44, "this routine copies Test_Data to $7E0100"}
             },
-            Labels = new OdWrapper<int, Label>()
+            Labels = new ObservableDictionary<int, Label>()
             {
-                Dict = {
-                    {0x808000 + 0x00, new Label {name = "Emulation_RESET", comment = "Sample emulation reset location"}},
-                    {0x808000 + 0x0A, new Label {name = "FastRESET", comment = "Sample label"}},
-                    {0x808000 + 0x32, new Label {name = "Test_Indices"}},
-                    {0x808000 + 0x3A, new Label {name = "Pointer_Table"}},
-                    {0x808000 + 0x44, new Label {name = "First_Routine"}},
-                    {0x808000 + 0x5B, new Label {name = "Test_Data", comment = "Pretty cool huh?"}}
-                }
+                {0x808000 + 0x00, new Label {name = "Emulation_RESET", comment = "Sample emulation reset location"}},
+                {0x808000 + 0x0A, new Label {name = "FastRESET", comment = "Sample label"}},
+                {0x808000 + 0x32, new Label {name = "Test_Indices"}},
+                {0x808000 + 0x3A, new Label {name = "Pointer_Table"}},
+                {0x808000 + 0x44, new Label {name = "First_Routine"}},
+                {0x808000 + 0x5B, new Label {name = "Test_Data", comment = "Pretty cool huh?"}}
             },
         };
     }

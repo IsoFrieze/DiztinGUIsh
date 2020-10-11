@@ -4,6 +4,7 @@ using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
+using IX.Observable;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -20,20 +21,19 @@ namespace Diz.Test
 
         public class TestRoot
         {
-            public OdWrapper<int, string> ODW { get; set; } = new OdWrapper<int, string>() { Dict = {
+            public ObservableDictionary<int, string> ODW { get; set; } = new ObservableDictionary<int, string>() {
                 {1, "Z test1"},
                 {2, "Z test3"},
-            }};
-            public OdWrapper<int, Label> ODW2 { get; set; } = new OdWrapper<int, Label>() { Dict = {
+            };
+            public ObservableDictionary<int, Label> ODW2 { get; set; } = new ObservableDictionary<int, Label>() {
                 {100, new Label {comment = "c1", name = "location1"}},
                 {200, new Label {comment = "c2", name = "location2"}},
-            }};
+            };
 
             #region Equality
-
             protected bool Equals(TestRoot other)
             {
-                return Equals(ODW, other.ODW);
+                return Equals(ODW, other.ODW) && Equals(ODW2, other.ODW2);
             }
 
             public override bool Equals(object obj)
@@ -41,14 +41,16 @@ namespace Diz.Test
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
-                return Equals((TestRoot) obj);
+                return Equals((TestRoot)obj);
             }
 
             public override int GetHashCode()
             {
-                return (ODW != null ? ODW.GetHashCode() : 0);
+                unchecked
+                {
+                    return ((ODW != null ? ODW.GetHashCode() : 0) * 397) ^ (ODW2 != null ? ODW2.GetHashCode() : 0);
+                }
             }
-
             #endregion
         }
 

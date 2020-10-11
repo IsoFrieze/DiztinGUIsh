@@ -24,8 +24,6 @@ namespace Diz.Core.serialization.xml_serializer
                 .Register().Serializer().Using(RomBytesSerializer.Default)
                 .Type<Data>()
 
-                .ApplyAllOdWrapperConfigurations() // important for ODWrapper to serialize correctly.
-
                 .UseOptimizedNamespaces()
                 .UseAutoFormatting()
                 .EnableImplicitTyping(typeof(Data))

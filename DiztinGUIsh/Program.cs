@@ -13,9 +13,6 @@ namespace DiztinGUIsh
         [STAThread]
         static void Main(string[] args)
         {
-            // hack. this needs to go away. register some types for the XML serializer to work.
-            OdWrapperRegistration.ForceStaticClassRegistration();
-
             if (Environment.OSVersion.Version.Major >= 6)
             {
                 SetProcessDPIAware();

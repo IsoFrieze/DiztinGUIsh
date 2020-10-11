@@ -85,7 +85,7 @@ namespace Diz.Core.export
             // SUPER IMPORTANT. THIS MUST GET DONE, ALWAYS. PROTECT THIS WITH TRY/CATCH
 
             if (backupOfOriginalLabelsBeforeModifying != null)
-                Data.Labels.Dict = backupOfOriginalLabelsBeforeModifying;
+                Data.Labels = backupOfOriginalLabelsBeforeModifying;
 
             backupOfOriginalLabelsBeforeModifying = null;
         }
@@ -121,8 +121,8 @@ namespace Diz.Core.export
             // TODO: I really don't like us modifying and restoring the
             // underlying labels or anything in Data. Data should ideally be immutable by us.
             // we should either clone all of Data before modifying, or generate these labels on the fly.
-            backupOfOriginalLabelsBeforeModifying = Data.Labels.Dict;
-            Data.Labels.Dict = new ObservableDictionary<int, Label>(Data.Labels.Dict);
+            backupOfOriginalLabelsBeforeModifying = Data.Labels;
+            Data.Labels = new ObservableDictionary<int, Label>(Data.Labels);
 
             // write the new generated labels in, don't let them overwrite any real labels
             // i.e. if the user defined a label like "PlayerSwimmingSprites", and our auto-generated
@@ -239,7 +239,7 @@ namespace Diz.Core.export
         private void WriteBlankLineIfStartingNewParagraph(int pointer)
         {
             var isLocationAReadPoint = (Data.GetInOutPoint(pointer) & Data.InOutPoint.ReadPoint) != 0;
-            var anyLabelsPresent = Data.Labels.Dict.TryGetValue(pointer, out var label) && label.name.Length > 0;
+            var anyLabelsPresent = Data.Labels.TryGetValue(pointer, out var label) && label.name.Length > 0;
 
             if (isLocationAReadPoint || anyLabelsPresent)
                 output.WriteLine(GetLine(pointer, "empty"));
@@ -284,7 +284,7 @@ namespace Diz.Core.export
             var unvisitedLabels = new Dictionary<int, Label>();
 
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
-            foreach (KeyValuePair<int, Label> pair in Data.Labels.Dict)
+            foreach (var pair in Data.Labels)
             {
                 if (labelsWeVisited.Contains(pair.Key))
                     continue;
@@ -314,7 +314,7 @@ namespace Diz.Core.export
                 return;
 
             SwitchOutputStream(pointer, "all-labels.txt"); // TODO: csv in the future. escape commas
-            foreach (KeyValuePair<int, Label> pair in Data.Labels.Dict)
+            foreach (var pair in Data.Labels)
             {
                 // not the best place to add formatting, TODO: cleanup
                 var category = unvisitedLabels.ContainsKey(pair.Key) ? "UNUSED" : "USED";
