@@ -25,6 +25,9 @@ namespace DiztinGUIsh
             Application.SetCompatibleTextRenderingDefault(false);
             var window = new MainWindow();
 
+            if (args.Length > 0) 
+                window.OpenProject(args[0]);
+
             Application.Run(window);
         }
 

@@ -135,12 +135,6 @@
     <Compile Include="util\ProgressBarWorker.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="window\dialog\ImportROMDialogController.cs" />
-    <Compile Include="window\dialog\TestForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="window\dialog\TestForm.Designer.cs">
-      <DependentUpon>TestForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="util\GuiUtil.cs" />
     <Compile Include="controller\IProjectView.cs" />
     <Compile Include="controller\ProjectController.cs" />
@@ -235,9 +229,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="window\dialog\InOutPointChecker.resx">
       <DependentUpon>InOutPointChecker.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="window\dialog\TestForm.resx">
-      <DependentUpon>TestForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="window\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>

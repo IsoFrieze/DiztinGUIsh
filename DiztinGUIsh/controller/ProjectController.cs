@@ -67,7 +67,6 @@ namespace DiztinGUIsh.controller
             var errorMsg = "";
             var warningMsg = "";
 
-            // TODO: try/catch for ProjectFileManager
             DoLongRunningTask(delegate {
                 try
                 {
