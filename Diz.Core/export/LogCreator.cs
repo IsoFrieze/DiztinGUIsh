@@ -216,27 +216,41 @@ namespace Diz.Core.export
 
         protected void WriteAddress(ref int pointer, ref int currentBank)
         {
-            var snesAddress = Data.ConvertPCtoSNES(pointer);
-            SwitchBanksIfNeeded(pointer, ref currentBank, snesAddress);
+            SwitchBanksIfNeeded(pointer, ref currentBank);
 
-            var anyBranchesPresent = (Data.GetInOutPoint(pointer) & Data.InOutPoint.ReadPoint) != 0;
-            var anyLabelsPresent = Data.Labels.Dict.TryGetValue(pointer, out var label) && label.name.Length > 0;
-            
-            // TODO is c2 wrong? should it be 'snesAddress' instead of 'pointer' ?
-
-            if (anyBranchesPresent || anyLabelsPresent)
-                output.WriteLine(GetLine(pointer, "empty"));
-
-            output.WriteLine(GetLine(pointer, null));
-
-            if ((Data.GetInOutPoint(pointer) & Data.InOutPoint.EndPoint) != 0) 
-                output.WriteLine(GetLine(pointer, "empty"));
+            WriteBlankLineIfStartingNewParagraph(pointer);
+            WriteTheRealLine(pointer);
+            WriteBlankLineIfEndPoint(pointer);
 
             pointer += GetLineByteLength(pointer);
         }
 
-        private void SwitchBanksIfNeeded(int pointer, ref int currentBank, int snesAddress)
+        private void WriteTheRealLine(int pointer)
         {
+            output.WriteLine(GetLine(pointer, null));
+        }
+
+        private void WriteBlankLineIfEndPoint(int pointer)
+        {
+            if ((Data.GetInOutPoint(pointer) & Data.InOutPoint.EndPoint) != 0)
+                output.WriteLine(GetLine(pointer, "empty"));
+        }
+
+        private void WriteBlankLineIfStartingNewParagraph(int pointer)
+        {
+            var isLocationAReadPoint = (Data.GetInOutPoint(pointer) & Data.InOutPoint.ReadPoint) != 0;
+            var anyLabelsPresent = Data.Labels.Dict.TryGetValue(pointer, out var label) && label.name.Length > 0;
+
+            // TODO is c2 wrong? should it be 'snesAddress' instead of 'pointer' ?
+
+            if (isLocationAReadPoint || anyLabelsPresent)
+                output.WriteLine(GetLine(pointer, "empty"));
+        }
+
+        private void SwitchBanksIfNeeded(int pointer, ref int currentBank)
+        {
+            var snesAddress = Data.ConvertPCtoSNES(pointer);
+
             var thisBank = snesAddress >> 16;
 
             if (thisBank == currentBank)
@@ -245,7 +259,7 @@ namespace Diz.Core.export
             OpenNewBank(pointer, thisBank);
             currentBank = thisBank;
 
-            if ((snesAddress % bankSize) == 0) 
+            if (snesAddress % bankSize == 0) 
                 return;
 
             ReportError(pointer, "An instruction crossed a bank boundary.");
