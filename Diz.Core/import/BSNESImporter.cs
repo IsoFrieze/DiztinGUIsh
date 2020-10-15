@@ -262,6 +262,7 @@ namespace Diz.Core.import
                 var oldXflag = Data.GetXFlag(pc);
                 var oldMFlag = Data.GetMFlag(pc);
 
+                // note: we'll sometimes get false positives because of the mirroring in DP and DB.
                 var modified =
                     oldFlag != flagType ||
                     oldDB != dataBank ||
