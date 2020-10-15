@@ -131,7 +131,7 @@ namespace Diz.Core.model
 
         public int GetRomCheckSumsFromRomBytes()
         {
-            return ByteUtil.ByteArrayToInteger(GetRomBytes(0xFFDC, 4));
+            return ByteUtil.ByteArrayToInt32(GetRomBytes(0xFFDC, 4));
         }
 
         public void CopyRomDataIn(byte[] data)

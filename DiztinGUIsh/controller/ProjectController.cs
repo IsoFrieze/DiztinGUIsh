@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Security.Policy;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
@@ -37,12 +39,17 @@ namespace DiztinGUIsh.controller
         public Project Project { get; private set; }
 
         public delegate void ProjectChangedEvent(object sender, ProjectChangedEventArgs e);
+
         public event ProjectChangedEvent ProjectChanged;
 
         public class ProjectChangedEventArgs
         {
-            public enum ProjectChangedType {
-                Invalid, Saved, Opened, Imported
+            public enum ProjectChangedType
+            {
+                Invalid,
+                Saved,
+                Opened,
+                Imported
             }
 
             public ProjectChangedType ChangeType;
@@ -67,13 +74,16 @@ namespace DiztinGUIsh.controller
             var errorMsg = "";
             var warningMsg = "";
 
-            DoLongRunningTask(delegate {
+            DoLongRunningTask(delegate
+            {
                 try
                 {
                     var result = ProjectFileManager.Open(filename, AskToSelectNewRomFilename);
                     project = result.project;
                     warningMsg = result.warning;
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     project = null;
                     errorMsg = ex.Message;
                 }
@@ -113,10 +123,8 @@ namespace DiztinGUIsh.controller
 
         public void SaveProject(string filename)
         {
-            DoLongRunningTask(delegate
-            {
-                ProjectFileManager.Save(Project, filename);
-            }, $"Saving {Path.GetFileName(filename)}...");
+            DoLongRunningTask(delegate { ProjectFileManager.Save(Project, filename); },
+                $"Saving {Path.GetFileName(filename)}...");
             ProjectView.OnProjectSaved();
         }
 
@@ -171,9 +179,7 @@ namespace DiztinGUIsh.controller
             };
 
             LogCreator.OutputResult result = null;
-            DoLongRunningTask(delegate {
-                result = lc.CreateLog();
-            }, "Exporting assembly source code...");
+            DoLongRunningTask(delegate { result = lc.CreateLog(); }, "Exporting assembly source code...");
 
             ProjectView.OnExportFinished(result);
         }
@@ -212,19 +218,39 @@ namespace DiztinGUIsh.controller
         {
             var totalLinesSoFar = 0L;
 
-            var importer = new BSNESTraceLogImporter();
+            var importer = new BSNESTraceLogImporter(Project.Data);
 
             // caution: trace logs can be gigantic, even a few seconds can be > 1GB
             // inside here, performance becomes critical.
-            LargeFilesReader.ReadFilesLines(fileNames, delegate (string line)
-            {
-                totalLinesSoFar += importer.ImportTraceLogLine(line, Project.Data);
-            });
+            LargeFilesReader.ReadFilesLines(fileNames,
+                delegate(string line) { totalLinesSoFar += importer.ImportTraceLogLine(line).numChanged; });
 
             if (totalLinesSoFar > 0)
                 MarkChanged();
 
             return totalLinesSoFar;
+        }
+
+        public int ImportBsnesTraceLogsBinary(string[] filenames)
+        {
+            var importer = new BSNESTraceLogImporter(Project.Data);
+
+            var totalModified = 0;
+            foreach (var file in filenames)
+            {
+                using Stream source = File.OpenRead(file);
+                const int bytesPerPacket = 22;
+                var buffer = new byte[bytesPerPacket];
+                int bytesRead;
+                while ((bytesRead = source.Read(buffer, 0, bytesPerPacket)) > 0)
+                {
+                    Debug.Assert(bytesRead == 22);
+                    var result = importer.ImportTraceLogLineBinary(buffer);
+                    totalModified += result.numChanged;
+                }
+            }
+
+            return totalModified;
         }
     }
 }

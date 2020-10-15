@@ -30,7 +30,7 @@ namespace Diz.Core.util
                 return "The linked ROM is too small. It can't be opened.";
 
             var internalGameNameToVerify = GetRomTitleName(rom, romSettingsOffset);
-            var checksumToVerify = ByteUtil.ByteArrayToInteger(rom, romSettingsOffset + 7);
+            var checksumToVerify = ByteUtil.ByteArrayToInt32(rom, romSettingsOffset + 7);
 
             if (internalGameNameToVerify != requiredGameNameMatch)
                 return $"The linked ROM's internal name '{internalGameNameToVerify}' doesn't " +

@@ -37,12 +37,12 @@ namespace Diz.Core.util
             var strings = new List<string>();
 
             var pos = starting_index;
-            var num_table_entries = ByteArrayToInteger(bytes, pos);
+            var num_table_entries = ByteArrayToInt32(bytes, pos);
             pos += 4;
 
             for (var entry = 0; entry < num_table_entries; ++entry)
             {
-                var offset = converter(ByteArrayToInteger(bytes, pos));
+                var offset = converter(ByteArrayToInt32(bytes, pos));
                 pos += 4;
 
                 strings.Clear();
@@ -91,13 +91,28 @@ namespace Diz.Core.util
                 list.Add(t);
         }
 
-        public static int ByteArrayToInteger(byte[] data, int offset = 0)
+        public static int ByteArrayToInt32(byte[] data, int offset = 0)
         {
             return
                 data[offset] |
                 (data[offset + 1] << 8) |
                 (data[offset + 2] << 16) |
                 (data[offset + 3] << 24);
+        }
+
+        public static int ByteArrayToInt24(byte[] data, int offset = 0)
+        {
+            return
+                data[offset] |
+                (data[offset + 1] << 8) |
+                (data[offset + 2] << 16);
+        }
+
+        public static int ByteArrayToInt16(byte[] data, int offset = 0)
+        {
+            return
+                data[offset] |
+                (data[offset + 1] << 8);
         }
 
         public static byte[] StringToByteArray(string s)

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using Diz.Core.model;
+using Diz.Core.util;
 
 namespace Diz.Core.import
 {
@@ -75,6 +78,15 @@ namespace Diz.Core.import
 
     public class BSNESTraceLogImporter
     {
+        private readonly Data Data;
+        int romSize;
+
+        public BSNESTraceLogImporter(Data data)
+        {
+            Data = data;
+            romSize = Data.GetROMSize();
+        }
+
         // this class exists for performance optimization ONLY.
         // class representing offsets into a trace log
         // we calculate it once from sample data and hang onto it
@@ -87,9 +99,17 @@ namespace Diz.Core.import
             // index of the start of the info
             public readonly int
                 addr,
-                D, DB,
+                D,
+                DB,
                 flags,
-                f_N, f_V, f_M, f_X, f_D, f_I, f_Z, f_C;
+                f_N,
+                f_V,
+                f_M,
+                f_X,
+                f_D,
+                f_I,
+                f_Z,
+                f_C;
 
             public CachedTraceLineIndex()
             {
@@ -117,7 +137,7 @@ namespace Diz.Core.import
 
         private static readonly CachedTraceLineIndex CachedIdx = new CachedTraceLineIndex();
 
-        public int ImportTraceLogLine(string line, Data data)
+        public (int numChanged, int numLinesAnalyzed) ImportTraceLogLine(string line)
         {
             // caution: very performance-sensitive function, please take care when making modifications
             // string.IndexOf() is super-slow too.
@@ -130,12 +150,12 @@ namespace Diz.Core.import
             }
 
             if (line.Length < 80)
-                return 0;
+                return (0,0);
 
             int snesAddress = GetHexValueAt(0, 6);
-            int pc = data.ConvertSNEStoPC(snesAddress);
+            int pc = Data.ConvertSNEStoPC(snesAddress);
             if (pc == -1)
-                return 0;
+                return (0, 0);
 
             // TODO: error treatment / validation
 
@@ -148,22 +168,128 @@ namespace Diz.Core.import
             // 'M' = unchecked in bsnesplus debugger UI = (8bit), 'm' or '.' = checked (16bit)
             bool mflag_set = line[CachedIdx.f_M] == 'M';
 
-            data.SetFlag(pc, Data.FlagType.Opcode);
+            return SetFromTraceData(pc, dataBank, directPage, xflag_set, mflag_set);
+        }
 
-            int modified = 0;
-            int size = data.GetROMSize();
-            do
-            {
-                data.SetDataBank(pc, dataBank);
-                data.SetDirectPage(pc, directPage);
-                data.SetXFlag(pc, xflag_set);
-                data.SetMFlag(pc, mflag_set);
+        // this is same as above but, reads the same data from a binary format. this is for
+        // performance reasons to try and stream the data live from BSNES
+        public (int numChanged, int numLinesAnalyzed) ImportTraceLogLineBinary(byte[] bytes)
+        {
+            // extremely performance-intensive function. be really careful when adding stuff
 
-                pc++;
-                modified++;
-            } while (pc < size && data.GetFlag(pc) == Data.FlagType.Operand);
+            Debug.Assert(bytes.Length == 22);
+            var pointer = 0;
 
-            return modified;
+            // -----------------------------
+
+            var watermark = bytes[pointer++];
+            if (watermark != 0xEE)
+                return (0, 0);
+
+            var snesAddress = ByteUtil.ByteArrayToInt24(bytes, pointer);
+            pointer += 3;
+
+            var pc = Data.ConvertSNEStoPC(snesAddress);
+            if (pc == -1)
+                return (0, 0);
+
+            var opcodeLen = bytes[pointer++];
+
+            // skip opcodes. NOTE: must read all 5 butes but only use up to 'opcode_len' bytes 
+            //var op  = bytes[pointer++];
+            //var op0 = bytes[pointer++];
+            //var op1 = bytes[pointer++];
+            //var op2 = bytes[pointer++];
+            pointer += 4;
+
+            // skip A register
+            pointer += 2;
+
+            // skip X register
+            pointer += 2;
+
+            // skip Y register
+            pointer += 2;
+
+            // skip S register
+            pointer += 2;
+
+            var directPage = ByteUtil.ByteArrayToInt24(bytes, pointer);
+            pointer += 2;
+
+            var dataBank = bytes[pointer++];
+
+            // skip, flag 'e' for emulation mode or not
+            // var emuFlag = bytes[pointer++] == 0x01;
+            pointer++;
+
+            // the real flags, we mainly care about X and M
+            var flags = bytes[pointer++];
+            // n = flags & 0x80;
+            // v = flags & 0x40;
+            // m = flags & 0x20;
+            // d = flags & 0x08;
+            // i = flags & 0x04;
+            // z = flags & 0x02;
+            // c = flags & 0x01;
+            var xflagSet = (flags & 0x10) != 0;
+            var mflagSet = (flags & 0x20) != 0;
+
+            Debug.Assert(pointer == bytes.Length);
+
+            return SetFromTraceData(pc, dataBank, directPage, xflagSet, mflagSet, opcodeLen);
+        }
+
+        // returns the number of bytes actually changed
+        private (int numChanged, int numLinesAnalyzed) SetFromTraceData(int pc, int dataBank, int directPage, bool xflagSet, bool mflagSet,
+            int opcodeLen = -1)
+        {
+            // extremely performance-intensive function. be really careful when adding stuff
+
+            // set this data for us and any following operands
+            var currentIndex = 0;
+            var totalModified = 0;
+            bool keepGoing;
+
+            do {
+                var flagType = currentIndex == 0 ? Data.FlagType.Opcode : Data.FlagType.Operand;
+
+                var modified = false;
+
+                modified |= Data.GetFlag(pc) != flagType;
+                Data.SetFlag(pc, flagType);
+
+                modified |= Data.GetDataBank(pc) != dataBank;
+                Data.SetDataBank(pc, dataBank);
+
+                modified |= Data.GetDirectPage(pc) != directPage;
+                Data.SetDirectPage(pc, directPage);
+
+                modified |= Data.GetXFlag(pc) != xflagSet;
+                Data.SetXFlag(pc, xflagSet);
+
+                modified |= Data.GetMFlag(pc) != mflagSet;
+                Data.SetMFlag(pc, mflagSet);
+
+                if (modified)
+                    totalModified++;
+
+                pc++; // note: should we check for crossing banks? probably should stop there.
+                currentIndex++;
+
+                if (opcodeLen != -1)
+                {
+                    // we know the # of bytes that should follow our opcode, so mark that many bytes
+                    keepGoing = currentIndex < opcodeLen;
+                }
+                else
+                {
+                    // only continue if the next bytes were already marked as operands
+                    keepGoing = Data.GetFlag(pc) == Data.FlagType.Operand;
+                }
+            } while (pc < romSize && keepGoing);
+
+            return (totalModified, currentIndex);
         }
     }
 }

@@ -65,10 +65,8 @@
             this.saveProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveProjectAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.exportLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importCDLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importTraceLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importUsageMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -137,6 +135,11 @@
             this.openUsageMapFile = new System.Windows.Forms.OpenFileDialog();
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
+            this.importUsageMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importTraceLogBinary = new System.Windows.Forms.ToolStripMenuItem();
+            this.importTraceLogText = new System.Windows.Forms.ToolStripMenuItem();
+            this.importCDLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -373,10 +376,8 @@
             this.saveProjectToolStripMenuItem,
             this.saveProjectAsToolStripMenuItem,
             this.toolStripSeparator1,
+            this.toolStripMenuItem2,
             this.exportLogToolStripMenuItem,
-            this.importCDLToolStripMenuItem,
-            this.importTraceLogToolStripMenuItem,
-            this.importUsageMapToolStripMenuItem,
             this.toolStripSeparator7,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -430,6 +431,18 @@
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(232, 6);
             // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.importUsageMapToolStripMenuItem,
+            this.importCDLToolStripMenuItem,
+            this.toolStripSeparator8,
+            this.importTraceLogText,
+            this.importTraceLogBinary});
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(235, 22);
+            this.toolStripMenuItem2.Text = "Import";
+            // 
             // exportLogToolStripMenuItem
             // 
             this.exportLogToolStripMenuItem.Enabled = false;
@@ -438,31 +451,6 @@
             this.exportLogToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.exportLogToolStripMenuItem.Text = "Export Disassembly...";
             this.exportLogToolStripMenuItem.Click += new System.EventHandler(this.exportLogToolStripMenuItem_Click);
-            // 
-            // importCDLToolStripMenuItem
-            // 
-            this.importCDLToolStripMenuItem.Enabled = false;
-            this.importCDLToolStripMenuItem.Name = "importCDLToolStripMenuItem";
-            this.importCDLToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.importCDLToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
-            this.importCDLToolStripMenuItem.Text = "Import CDL...";
-            this.importCDLToolStripMenuItem.Click += new System.EventHandler(this.importCDLToolStripMenuItem_Click);
-            // 
-            // importTraceLogToolStripMenuItem
-            // 
-            this.importTraceLogToolStripMenuItem.Enabled = false;
-            this.importTraceLogToolStripMenuItem.Name = "importTraceLogToolStripMenuItem";
-            this.importTraceLogToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
-            this.importTraceLogToolStripMenuItem.Text = "Import Trace Log...";
-            this.importTraceLogToolStripMenuItem.Click += new System.EventHandler(this.ImportTraceLogToolStripMenuItem_Click);
-            // 
-            // importUsageMapToolStripMenuItem
-            // 
-            this.importUsageMapToolStripMenuItem.Enabled = false;
-            this.importUsageMapToolStripMenuItem.Name = "importUsageMapToolStripMenuItem";
-            this.importUsageMapToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
-            this.importUsageMapToolStripMenuItem.Text = "Import Usage Map...";
-            this.importUsageMapToolStripMenuItem.Click += new System.EventHandler(this.ImportUsageMapToolStripMenuItem_Click);
             // 
             // toolStripSeparator7
             // 
@@ -1009,6 +997,44 @@
             // 
             this.openCDLDialog.Filter = "BizHawk Code Data Logger Files|*.cdl|All Files|*.*";
             // 
+            // importUsageMapToolStripMenuItem
+            // 
+            this.importUsageMapToolStripMenuItem.Enabled = false;
+            this.importUsageMapToolStripMenuItem.Name = "importUsageMapToolStripMenuItem";
+            this.importUsageMapToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
+            this.importUsageMapToolStripMenuItem.Text = "Import BSNES Usage Map...";
+            this.importUsageMapToolStripMenuItem.Click += new System.EventHandler(this.importUsageMapToolStripMenuItem_Click_1);
+            // 
+            // importTraceLogBinary
+            // 
+            this.importTraceLogBinary.Enabled = false;
+            this.importTraceLogBinary.Name = "importTraceLogBinary";
+            this.importTraceLogBinary.Size = new System.Drawing.Size(253, 22);
+            this.importTraceLogBinary.Text = "Import BSNES Trace Log (Binary)...";
+            this.importTraceLogBinary.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
+            // 
+            // importTraceLogText
+            // 
+            this.importTraceLogText.Enabled = false;
+            this.importTraceLogText.Name = "importTraceLogText";
+            this.importTraceLogText.Size = new System.Drawing.Size(253, 22);
+            this.importTraceLogText.Text = "Import BSNES Trace Log...";
+            this.importTraceLogText.Click += new System.EventHandler(this.toolStripMenuItem3_Click);
+            // 
+            // importCDLToolStripMenuItem
+            // 
+            this.importCDLToolStripMenuItem.Enabled = false;
+            this.importCDLToolStripMenuItem.Name = "importCDLToolStripMenuItem";
+            this.importCDLToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
+            this.importCDLToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
+            this.importCDLToolStripMenuItem.Text = "Import CDL...";
+            this.importCDLToolStripMenuItem.Click += new System.EventHandler(this.importCDLToolStripMenuItem_Click_1);
+            // 
+            // toolStripSeparator8
+            // 
+            this.toolStripSeparator8.Name = "toolStripSeparator8";
+            this.toolStripSeparator8.Size = new System.Drawing.Size(250, 6);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -1050,7 +1076,6 @@
         private System.Windows.Forms.ToolStripMenuItem saveProjectAsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exportLogToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem importCDLToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem stepOverToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem stepInToolStripMenuItem;
@@ -1110,11 +1135,9 @@
         private System.Windows.Forms.ToolStripStatusLabel currentMarker;
         private System.Windows.Forms.ToolStripMenuItem rescanForInOutPointsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem githubToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem importTraceLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gotoNextUnreachedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moveWithStepToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem importUsageMapToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog openUsageMapFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnAlias;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnPC;
@@ -1129,11 +1152,17 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnM;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnX;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnComment;
-        private System.Windows.Forms.OpenFileDialog openTraceLogDialog;
+        public System.Windows.Forms.OpenFileDialog openTraceLogDialog;
         private System.Windows.Forms.ToolStripMenuItem labelListToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog openCDLDialog;
         private System.Windows.Forms.ToolStripMenuItem toolStripOpenLast;
         private System.Windows.Forms.ToolStripMenuItem openLastProjectAutomaticallyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem importUsageMapToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importCDLToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
+        private System.Windows.Forms.ToolStripMenuItem importTraceLogText;
+        private System.Windows.Forms.ToolStripMenuItem importTraceLogBinary;
     }
 }
 

@@ -267,35 +267,6 @@ namespace DiztinGUIsh.window
             }
         }
 
-        private void importCDLToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            openCDLDialog.InitialDirectory = Project.ProjectFileName;
-            if (openCDLDialog.ShowDialog() != DialogResult.OK) 
-                return;
-            
-            if (!ContinueUnsavedChanges()) 
-                return;
-
-            var filename = openCDLDialog.FileName;
-
-            try
-            {
-                ProjectController.ImportBizHawkCDL(filename);
-            }
-            catch (InvalidDataException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (EndOfStreamException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
-            UpdatePercent();
-            UpdateWindowTitle();
-            InvalidateTable();
-        }
-
         public ProjectController ProjectController { get; protected set; }
 
         private void exportLogToolStripMenuItem_Click(object sender, EventArgs e)
@@ -421,6 +392,8 @@ namespace DiztinGUIsh.window
 
         private int rowsToShow;
 
+        private bool importerMenuItemsEnabled;
+
         private void UpdateDataGridView()
         {
             if (Project?.Data == null || Project.Data.GetROMSize() <= 0)
@@ -439,8 +412,16 @@ namespace DiztinGUIsh.window
             vScrollBar1.Value = ViewOffset;
             table.RowCount = rowsToShow;
 
-            importTraceLogToolStripMenuItem.Enabled = true;
-            importUsageMapToolStripMenuItem.Enabled = true;
+            importerMenuItemsEnabled = true;
+            UpdateImporterEnabledStatus();
+        }
+
+        private void UpdateImporterEnabledStatus()
+        {
+            importUsageMapToolStripMenuItem.Enabled = importerMenuItemsEnabled;
+            importCDLToolStripMenuItem.Enabled = importerMenuItemsEnabled;
+            importTraceLogBinary.Enabled = importerMenuItemsEnabled;
+            importTraceLogText.Enabled = importerMenuItemsEnabled;
         }
 
         private void table_MouseWheel(object sender, MouseEventArgs e)
@@ -1157,29 +1138,6 @@ namespace DiztinGUIsh.window
             aliasList.Show();
         }
 
-        private void ImportUsageMapToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (openUsageMapFile.ShowDialog() != DialogResult.OK) 
-                return;
-
-            var numModifiedFlags = ProjectController.ImportBSNESUsageMap(openUsageMapFile.FileName);
-
-            MessageBox.Show($"Modified total {numModifiedFlags} flags!", "Done",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        private void ImportTraceLogToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            openTraceLogDialog.Multiselect = true;
-            if (openTraceLogDialog.ShowDialog() != DialogResult.OK)
-                return;
-
-            var numModifiedFlags = ProjectController.ImportBSNESTraceLogs(openUsageMapFile.FileNames);
-
-            MessageBox.Show($"Modified total {numModifiedFlags} flags from {openTraceLogDialog.FileNames.Length} files!", "Done", 
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
         private void openLastProjectAutomaticallyToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.OpenLastFileAutomatically = openLastProjectAutomaticallyToolStripMenuItem.Checked;
@@ -1208,6 +1166,73 @@ namespace DiztinGUIsh.window
         public void OnProjectOpenWarning(string warningMsg)
         {
             MessageBox.Show(warningMsg, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            if (openUsageMapFile.ShowDialog() != DialogResult.OK)
+                return;
+
+            var numModifiedFlags = ProjectController.ImportBSNESUsageMap(openUsageMapFile.FileName);
+
+            MessageBox.Show($"Modified total {numModifiedFlags} flags!", "Done",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void toolStripMenuItem3_Click(object sender, EventArgs e)
+        {
+            openTraceLogDialog.Multiselect = true;
+            if (openTraceLogDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            var numModifiedFlags = ProjectController.ImportBSNESTraceLogs(openTraceLogDialog.FileNames);
+
+            MessageBox.Show($"Modified total {numModifiedFlags} flags from {openTraceLogDialog.FileNames.Length} files!", "Done",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            /*openTraceLogDialog.Multiselect = true;
+            if (openTraceLogDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            var numModifiedFlags = ProjectController.ImportBsnesTraceLogsBinary(openTraceLogDialog.FileNames);
+
+            MessageBox.Show($"Modified total {numModifiedFlags} flags from {openTraceLogDialog.FileNames.Length} files!", "Done",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);*/
+
+            var bsnesForm = new BSNESTraceLogBinaryMonitor(this);
+            bsnesForm.ShowDialog();
+        }
+
+        private void importCDLToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            openCDLDialog.InitialDirectory = Project.ProjectFileName;
+            if (openCDLDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            if (!ContinueUnsavedChanges())
+                return;
+
+            var filename = openCDLDialog.FileName;
+
+            try
+            {
+                ProjectController.ImportBizHawkCDL(filename);
+            }
+            catch (InvalidDataException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (EndOfStreamException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            UpdatePercent();
+            UpdateWindowTitle();
+            InvalidateTable();
         }
     }
 }
