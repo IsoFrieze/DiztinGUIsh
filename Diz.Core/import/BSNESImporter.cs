@@ -254,25 +254,29 @@ namespace Diz.Core.import
             do {
                 var flagType = currentIndex == 0 ? Data.FlagType.Opcode : Data.FlagType.Operand;
 
-                var modified = false;
+                // this code could be simplified, but, makes it easier to see
+                // exactly what is changing
+                var oldFlag = Data.GetFlag(pc);
+                var oldDB = Data.GetDataBank(pc);
+                var oldDP = Data.GetDirectPage(pc);
+                var oldXflag = Data.GetXFlag(pc);
+                var oldMFlag = Data.GetMFlag(pc);
 
-                modified |= Data.GetFlag(pc) != flagType;
-                Data.SetFlag(pc, flagType);
-
-                modified |= Data.GetDataBank(pc) != dataBank;
-                Data.SetDataBank(pc, dataBank);
-
-                modified |= Data.GetDirectPage(pc) != directPage;
-                Data.SetDirectPage(pc, directPage);
-
-                modified |= Data.GetXFlag(pc) != xflagSet;
-                Data.SetXFlag(pc, xflagSet);
-
-                modified |= Data.GetMFlag(pc) != mflagSet;
-                Data.SetMFlag(pc, mflagSet);
+                var modified =
+                    oldFlag != flagType ||
+                    oldDB != dataBank ||
+                    oldDP != directPage ||
+                    oldXflag != xflagSet ||
+                    oldMFlag != mflagSet;
 
                 if (modified)
                     totalModified++;
+
+                Data.SetFlag(pc, flagType);
+                Data.SetDataBank(pc, dataBank);
+                Data.SetDirectPage(pc, directPage);
+                Data.SetXFlag(pc, xflagSet);
+                Data.SetMFlag(pc, mflagSet);
 
                 pc++; // note: should we check for crossing banks? probably should stop there.
                 currentIndex++;
