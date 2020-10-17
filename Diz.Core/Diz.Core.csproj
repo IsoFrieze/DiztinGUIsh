@@ -114,9 +114,11 @@
     <Compile Include="export\LogCreator.Setup.cs" />
     <Compile Include="export\LogOutput.cs" />
     <Compile Include="export\LogWriterSettings.cs" />
+    <Compile Include="import\BSNESTraceLogCapture.cs" />
+    <Compile Include="import\BSNESTraceLogImporter.cs" />
     <Compile Include="model\Data.cs" />
     <Compile Include="import\BizHawkCdlImporter.cs" />
-    <Compile Include="import\BSNESImporter.cs" />
+    <Compile Include="import\BSNESUsageMapImporter.cs" />
     <Compile Include="SampleRomData.cs" />
     <Compile Include="model\Label.cs" />
     <Compile Include="export\LogCreator.cs" />

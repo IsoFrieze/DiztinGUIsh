@@ -440,6 +440,9 @@ namespace DiztinGUIsh.window
 
         private void vScrollBar1_ValueChanged(object sender, EventArgs e)
         {
+            if (table.CurrentCell == null)
+                return;
+
             int selOffset = table.CurrentCell.RowIndex + ViewOffset;
             ViewOffset = vScrollBar1.Value;
             UpdateDataGridView();
@@ -1202,8 +1205,10 @@ namespace DiztinGUIsh.window
             MessageBox.Show($"Modified total {numModifiedFlags} flags from {openTraceLogDialog.FileNames.Length} files!", "Done",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);*/
 
-            var bsnesForm = new BSNESTraceLogBinaryMonitor(this);
+            var bsnesForm = new BSNESTraceLogBinaryMonitorForm(this);
             bsnesForm.ShowDialog();
+
+            RefreshUI();
         }
 
         private void importCDLToolStripMenuItem_Click_1(object sender, EventArgs e)

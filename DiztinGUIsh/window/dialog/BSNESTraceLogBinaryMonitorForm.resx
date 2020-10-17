@@ -126,7 +126,20 @@
   <metadata name="backgroundWorker2_processQueue.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>335, 17</value>
   </metadata>
+  <data name="label18.Text" xml:space="preserve">
+    <value>What is this? 
+Connect via socket to BSNES plus and capture live tracelog as you play the game in realtime or play back a movie/recording/TAS.
+
+As each instruction is visited by the CPU, info like X,M,DB,D and flags are capture and logged in Diz.  This will greatly aid in dissasembly.
+
+If you're just starting a ROM hacking project from scratch, you want to see this capture a lot of modified data for X,M,DP,DB and marking bytes as Opcode/Operands.
+
+If you're far into a ROM hacking project, you will start seeing fewer NEWLY DISCOVERED modifications here. Try playing through different parts of the game, menus, every combination of searching you can do to allow this tool to discover as much as it can.
+
+When you close this window, try exporting your disassembly and see how much you uncovered!
+</value>
+  </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>108</value>
+    <value>36</value>
   </metadata>
 </root>

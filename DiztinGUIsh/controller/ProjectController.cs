@@ -216,26 +216,26 @@ namespace DiztinGUIsh.controller
 
         public long ImportBSNESTraceLogs(string[] fileNames)
         {
-            var totalLinesSoFar = 0L;
-
             var importer = new BSNESTraceLogImporter(Project.Data);
 
             // caution: trace logs can be gigantic, even a few seconds can be > 1GB
             // inside here, performance becomes critical.
             LargeFilesReader.ReadFilesLines(fileNames,
-                delegate(string line) { totalLinesSoFar += importer.ImportTraceLogLine(line).numChanged; });
+                (line) =>
+                {
+                    importer.ImportTraceLogLine(line);
+                });
 
-            if (totalLinesSoFar > 0)
+            if (importer.CurrentStats.numRomBytesModified > 0)
                 MarkChanged();
 
-            return totalLinesSoFar;
+            return importer.CurrentStats.numRomBytesModified;
         }
 
-        public int ImportBsnesTraceLogsBinary(string[] filenames)
+        public long ImportBsnesTraceLogsBinary(string[] filenames)
         {
             var importer = new BSNESTraceLogImporter(Project.Data);
 
-            var totalModified = 0;
             foreach (var file in filenames)
             {
                 using Stream source = File.OpenRead(file);
@@ -245,12 +245,11 @@ namespace DiztinGUIsh.controller
                 while ((bytesRead = source.Read(buffer, 0, bytesPerPacket)) > 0)
                 {
                     Debug.Assert(bytesRead == 22);
-                    var result = importer.ImportTraceLogLineBinary(buffer);
-                    totalModified += result.numChanged;
+                    importer.ImportTraceLogLineBinary(buffer);
                 }
             }
 
-            return totalModified;
+            return importer.CurrentStats.numRomBytesModified;
         }
     }
 }

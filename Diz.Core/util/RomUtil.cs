@@ -9,6 +9,16 @@ namespace Diz.Core.util
 {
     public static class RomUtil
     {
+        public static int CalculateSNESOffsetWithWrap(int snesAddress, int offset)
+        {
+            return (GetBankFromSNESAddress(snesAddress) << 16) + ((snesAddress + offset) & 0xFFFF);
+        }
+
+        private static int GetBankFromSNESAddress(int snesAddress)
+        {
+            return (snesAddress >> 16) & 0xFF;
+        }
+
         public static int GetBankSize(Data.ROMMapMode mode)
         {
             // todo

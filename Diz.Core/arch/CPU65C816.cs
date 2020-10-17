@@ -41,6 +41,17 @@ namespace Diz.Core.arch
 
             var length = GetInstructionLength(offset);
 
+            // TODO: I don't think this is handling execution bank boundary wrapping correctly? -Dom
+            // If we run over the edge of a bank, we need to go back to the beginning of that bank, not go into
+            // the next one.  While this should be really rare, it's technically valid.
+            //
+            // docs: http://www.6502.org/tutorials/65c816opcodes.html#5.1.2
+            // [Note that although the 65C816 has a 24-bit address space, the Program Counter is only a 16-bit register and
+            // the Program Bank Register is a separate (8-bit) register. This means that instruction execution wraps at bank
+            // boundaries. This is true even if the bank boundary occurs in the middle of the instruction.]
+            //
+            // TODO: check other areas, anywhere we're accessing a Rom address plus some offset, might need to wrap
+            // in most situations.
             for (var i = 1; i < length; i++)
             {
                 Data.SetFlag(offset + i, Data.FlagType.Operand);
