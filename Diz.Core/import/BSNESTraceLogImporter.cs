@@ -126,11 +126,16 @@ namespace Diz.Core.import
 
         // this is same as above but, reads the same data from a binary format. this is for
         // performance reasons to try and stream the data live from BSNES
-        public void ImportTraceLogLineBinary(byte[] bytes)
+        public void ImportTraceLogLineBinary(byte[] bytes, bool abridgedFormat=true)
         {
             // extremely performance-intensive function. be really careful when adding stuff
 
-            Debug.Assert(bytes.Length == 21);
+            if (abridgedFormat) {
+                Debug.Assert(bytes.Length == 8);
+            } else {
+                Debug.Assert(bytes.Length == 21);
+            }
+
             var pointer = 0;
 
             // -----------------------------
@@ -139,35 +144,12 @@ namespace Diz.Core.import
 
             var opcodeLen = bytes[pointer++];
 
-            // skip opcodes. NOTE: must read all 5 bytes but only use up to 'opcode_len' bytes 
-            //var op  = bytes[pointer++];
-            //var op0 = bytes[pointer++];
-            //var op1 = bytes[pointer++];
-            //var op2 = bytes[pointer++];
-            pointer += 4;
-
-            // skip A register
-            pointer += 2;
-
-            // skip X register
-            pointer += 2;
-
-            // skip Y register
-            pointer += 2;
-
-            // skip S register
-            pointer += 2;
-
             var directPage = ByteUtil.ByteArrayToInt16(bytes, pointer);
             pointer += 2;
 
             var dataBank = bytes[pointer++];
 
-            // skip, flag 'e' for emulation mode or not
-            // var emuFlag = bytes[pointer++] == 0x01;
-            pointer++;
-
-            // the real flags, we mainly care about X and M
+            // the flags register
             var flags = bytes[pointer++];
             // n = flags & 0x80;
             // v = flags & 0x40;
@@ -176,8 +158,36 @@ namespace Diz.Core.import
             // i = flags & 0x04;
             // z = flags & 0x02;
             // c = flags & 0x01;
+
+            // we only care about X and M flags
             var xflagSet = (flags & 0x10) != 0;
             var mflagSet = (flags & 0x20) != 0;
+
+            if (!abridgedFormat)
+            {
+                // skip opcodes. NOTE: must read all 5 bytes but only use up to 'opcode_len' bytes 
+                //var op  = bytes[pointer++];
+                //var op0 = bytes[pointer++];
+                //var op1 = bytes[pointer++];
+                //var op2 = bytes[pointer++];
+                pointer += 4;
+
+                // skip A register
+                pointer += 2;
+
+                // skip X register
+                pointer += 2;
+
+                // skip Y register
+                pointer += 2;
+
+                // skip S register
+                pointer += 2;
+
+                // skip, flag 'e' for emulation mode or not
+                // skip E(emu) flag <-- NOTE: we might... want this someday.
+                pointer += 1;
+            }
 
             Debug.Assert(pointer == bytes.Length);
 

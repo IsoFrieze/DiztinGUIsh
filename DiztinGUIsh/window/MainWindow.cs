@@ -1196,15 +1196,6 @@ namespace DiztinGUIsh.window
 
         private void toolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            /*openTraceLogDialog.Multiselect = true;
-            if (openTraceLogDialog.ShowDialog() != DialogResult.OK)
-                return;
-
-            var numModifiedFlags = ProjectController.ImportBsnesTraceLogsBinary(openTraceLogDialog.FileNames);
-
-            MessageBox.Show($"Modified total {numModifiedFlags} flags from {openTraceLogDialog.FileNames.Length} files!", "Done",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);*/
-
             var bsnesForm = new BSNESTraceLogBinaryMonitorForm(this);
             bsnesForm.ShowDialog();
 

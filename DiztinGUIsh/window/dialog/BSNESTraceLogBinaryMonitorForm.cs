@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
+using ByteSizeLib;
+using Diz.Core.import;
 
 namespace DiztinGUIsh.window.dialog
 {
@@ -69,22 +71,24 @@ namespace DiztinGUIsh.window.dialog
             if (capturing == null) 
                 return;
 
-            lblQueueSize.Text = capturing.QueueLength.ToString();
+            var (stats, totalQueueBytes) = capturing.GetStats();
+
+            var qItemCount = capturing.QueueLength.ToString();
+            var qByteCount = ByteSize.FromBytes(totalQueueBytes).ToString("0.00");
+
+            lblQueueSize.Text = $"{qByteCount} (num groups: {qItemCount})";
 
             // TODO: use databinding
-            var stats = capturing.GetStats(); // copy
-            lblTotalProcessed.Text = stats.numRomBytesAnalyzed.ToString();
-            lblNumberModified.Text = stats.numRomBytesModified.ToString();
-            lblModifiedDBs.Text = stats.numDBModified.ToString();
-            lblModifiedDPs.Text = stats.numDpModified.ToString();
-            lblModifiedFlags.Text = stats.numMarksModified.ToString();
-            lblModifiedXFlags.Text = stats.numXFlagsModified.ToString();
-            lblModifiedMFlags.Text = stats.numMFlagsModified.ToString();
-        }
 
-        private void BSNESTraceLogBinaryMonitorForm_Load(object sender, EventArgs e)
-        {
+            const string format = "0.00";
 
+            lblTotalProcessed.Text = ByteSize.FromBytes(stats.numRomBytesAnalyzed).ToString(format);
+            lblNumberModified.Text = ByteSize.FromBytes(stats.numRomBytesModified).ToString(format);
+            lblModifiedDBs.Text = ByteSize.FromBytes(stats.numDBModified).ToString(format);
+            lblModifiedDPs.Text = ByteSize.FromBytes(stats.numDpModified).ToString(format);
+            lblModifiedFlags.Text = ByteSize.FromBytes(stats.numMarksModified).ToString(format);
+            lblModifiedXFlags.Text = ByteSize.FromBytes(stats.numXFlagsModified).ToString(format);
+            lblModifiedMFlags.Text = ByteSize.FromBytes(stats.numMFlagsModified).ToString(format);
         }
     }
 }

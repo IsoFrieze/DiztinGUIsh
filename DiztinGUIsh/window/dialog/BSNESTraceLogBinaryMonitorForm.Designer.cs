@@ -320,7 +320,6 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "BSNESTraceLogBinaryMonitorForm";
             this.Text = "BSNES Live Tracelog Capture";
-            this.Load += new System.EventHandler(this.BSNESTraceLogBinaryMonitorForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
