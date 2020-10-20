@@ -93,6 +93,24 @@ namespace Diz.Core.util
             }
         }
 
+        public static byte[] ReadNext(Stream stream, int count, out int bytesRead)
+        {
+            var buffer = new byte[count];
+            bytesRead = 0;
+            var offset = 0;
+
+            while (count > 0 && (bytesRead = stream.Read(buffer, offset, count)) > 0)
+            {
+                count -= bytesRead;
+                offset += bytesRead;
+            }
+
+            if (count > 0)
+                throw new EndOfStreamException();
+
+            return buffer;
+        }
+
         public static string GetEnumDescription(Enum value)
         {
             // example:
@@ -110,8 +128,7 @@ namespace Diz.Core.util
 
         // take a enum type that has [Description] attributes,
         // return a List with with kvp pairs of enum vs description
-        public static List<KeyValuePair<TEnum, string>>
-            GetEnumDescriptions<TEnum>() where TEnum : Enum
+        public static List<KeyValuePair<TEnum, string>> GetEnumDescriptions<TEnum>() where TEnum : Enum
         {
             var type = typeof(TEnum);
             return Enum.GetValues(type)

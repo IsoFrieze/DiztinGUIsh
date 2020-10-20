@@ -1,133 +1,109 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.ComponentModel;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Diz.Core.model;
 using Diz.Core.util;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 namespace Diz.Core.import
 {
+    // TODO: can probably replace this better with Dataflow TPL, investigate
+
     public class BSNESTraceLogCapture
     {
-        private CancellationTokenSource cancelToken;
-        private BackgroundWorker socketWorker, dataWorker;
-
-        struct Packet
-        {
-            public byte[] bytes;
-            public int uncompressedSize;
-        }
-
-        private BlockingCollection<Packet> queue; // thread-safe
-        public int QueueLength => queue?.Count ?? 0;
-
-        public bool Running => dataWorker != null && socketWorker != null;
-
-        public event EventHandler Finished;
-
-        public delegate void ThreadErrorEvent(Exception e);
-        public event ThreadErrorEvent Error;
-        public bool Finishing { get; protected set; }
-
-        // keep thread safety in mind for variables below this line
+        private WorkerTaskManager taskManager;
+        private BSNESImportStreamProcessor streamProcessor;
 
         private readonly ReaderWriterLockSlim importerLock = new ReaderWriterLockSlim();
         private BSNESTraceLogImporter importer;
+        private int bytesToProcess = 0;
+        private int compressedBlocksToProcess = 0;
         private BSNESTraceLogImporter.Stats cachedStats;
-        private int bytesInQueue;
-        
-        public (BSNESTraceLogImporter.Stats, int) GetStats()
+
+        public bool Running { get; protected set; }
+
+        public int BytesToProcess => bytesToProcess;
+        public int BlocksToProcess => compressedBlocksToProcess;
+        public bool Finishing => streamProcessor?.CancelToken?.IsCancellationRequested ?? false;
+
+        public void Run(Data data)
         {
-            if (importer == null) 
-                return (cachedStats, 0);
-
-            var cachedBytesInQueue = 0;
-
+            Setup(data);
             try
             {
-                importerLock.EnterReadLock();
-                cachedStats = importer.CurrentStats;
-                cachedBytesInQueue = bytesInQueue;
+                Main();
+                taskManager.WaitForAllTasksToComplete();
             }
             finally
             {
-                importerLock.ExitReadLock();
+                Shutdown();
             }
-
-            return (cachedStats, cachedBytesInQueue);
         }
 
-        public void Start(Data data)
+        private void Shutdown()
         {
-            importer = new BSNESTraceLogImporter(data);
-
-            cancelToken = new CancellationTokenSource();
-            queue = new BlockingCollection<Packet>();
-            bytesInQueue = 0;
-
-            socketWorker = new BackgroundWorker();
-            dataWorker = new BackgroundWorker();
-
-            socketWorker.DoWork += SocketWorker_DoWork;
-            dataWorker.DoWork += DataWorker_DoWork;
-
-            socketWorker.WorkerSupportsCancellation = dataWorker.WorkerSupportsCancellation = true;
-
-            socketWorker.RunWorkerCompleted += SocketWorker_RunWorkerCompleted;
-            dataWorker.RunWorkerCompleted += DataWorker_RunWorkerCompleted;
-
-            Thread.MemoryBarrier();
-
-            socketWorker.RunWorkerAsync();
-            dataWorker.RunWorkerAsync();
+            taskManager = null;
+            streamProcessor = null;
+            importer = null;
+            Running = false;
         }
 
-        private void SocketWorker_DoWork(object sender, DoWorkEventArgs e)
+        private void Setup(Data data)
+        {
+            Running = true;
+            importer = new BSNESTraceLogImporter(data);
+            streamProcessor = new BSNESImportStreamProcessor();
+            taskManager = new WorkerTaskManager();
+        }
+
+        private static NetworkStream Connect()
         {
             var tcpClient = new TcpClient();
-            var ipEndPoint = new IPEndPoint(IPAddress.Loopback, 27015);
+            //await tcpClient.ConnectAsync(IPAddress.Loopback, 27015);
+            //return tcpClient.GetStream();
+            tcpClient.Connect(IPAddress.Loopback, 27015);
+            return tcpClient.GetStream();
+        }
 
-            tcpClient.Connect(ipEndPoint);
-            var networkStream = tcpClient.GetStream();
+        private void Main()
+        {
+            var networkStream = Connect();
+            ProcessStreamData(networkStream);
+        }
 
-            while (!socketWorker.CancellationPending && !cancelToken.IsCancellationRequested)
+        private void ProcessStreamData(Stream networkStream)
+        {
+            using var enumerator = streamProcessor.GetCompressedWorkItems(networkStream).GetEnumerator();
+            while (!streamProcessor.CancelToken.IsCancellationRequested && enumerator.MoveNext())
             {
-                // perf: huge volume of data coming in.
-                // need to get the data read from the server as fast as possible.
-                // do minimal processing here then dump it over to the other thread for real processing.
-                ReadNextFromSocket(networkStream);
+                var compressedItems = enumerator.Current;
+                taskManager.Run(() => ProcessCompressedWorkItem(compressedItems));
+                States_MarkQueued(compressedItems);
             }
         }
 
-        private void ReadNextFromSocket(Stream networkStream)
+        private async void ProcessCompressedWorkItem(BSNESImportStreamProcessor.CompressedWorkItems compressedItems)
         {
-            const int headerSize = 9;
-            var buffer = ReadNext(networkStream, headerSize, out var bytesRead);
-            Debug.Assert(buffer.Length == headerSize);
+            var subTasks = BSNESImportStreamProcessor.ProcessCompressedWorkItems(compressedItems)
+                .Select(workItem => taskManager.Run(() => { ProcessWorkItem(workItem); }))
+                .ToList();
 
-            if (buffer[0] != 'Z') {
-                throw new InvalidDataException($"expected header byte of 'Z', got {buffer[0]} instead.");
-            }
+            await Task.WhenAll(subTasks);
+            Stats_MarkCompleted(compressedItems);
+        }
 
-            var originalDataSizeBytes = ByteUtil.ByteArrayToInt32(buffer, 1);
-            var compressedDataSize = ByteUtil.ByteArrayToInt32(buffer, 5);
-
-            buffer = ReadNext(networkStream, compressedDataSize, out bytesRead);
-            Debug.Assert(buffer.Length == compressedDataSize);
-
-            // add it compressed.
-            queue.Add(new Packet() {bytes=buffer, uncompressedSize = originalDataSizeBytes});
-            
-            // this is just neat stats. it's optional, remove if performance becomes an issue (seems unlikely)
+        // this is just neat stats. it's optional, remove if performance becomes an issue (seems unlikely)
+        private void States_MarkQueued(BSNESImportStreamProcessor.CompressedWorkItems compressedItems)
+        {
             try
             {
                 importerLock.EnterWriteLock();
-                bytesInQueue += compressedDataSize;
+                bytesToProcess += compressedItems.Bytes.Length;
+                compressedBlocksToProcess++;
             }
             finally
             {
@@ -135,94 +111,26 @@ namespace Diz.Core.import
             }
         }
 
-        private static byte[] ReadNext(Stream networkStream, int count, out int bytesRead)
-        {
-            var buffer = new byte[count];
-            bytesRead = 0;
-            var offset = 0;
-
-            while (count > 0 && (bytesRead = networkStream.Read(buffer, offset, count)) > 0)
-            {
-                count -= bytesRead;
-                offset += bytesRead;
-            }
-
-            if (count > 0)
-                throw new EndOfStreamException();
-
-            return buffer;
-        }
-
-        private void DataWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            // TODO: we're officially CPU bound now.
-            // probably should create multiple parallel workers
-            // to take items off the compressed queue
-            // and add them to an uncompressed queue
-
-            while (!dataWorker.CancellationPending && !cancelToken.IsCancellationRequested)
-            {
-                try
-                {
-                    // TODO: use cancelToken here instead of timeout. (can't get it to work right now...)
-                    if (!queue.TryTake(out var packet, 100))
-                        continue;
-
-                    var decompressedData = new byte[packet.uncompressedSize];
-                    var decompressedLength = 0;
-                    using (var memory = new MemoryStream(packet.bytes))
-                    using (var inflater = new InflaterInputStream(memory))
-                    {
-                        decompressedLength = inflater.Read(decompressedData, 0, decompressedData.Length);
-                    }
-                    Debug.Assert(decompressedLength == packet.uncompressedSize);
-
-                    using (var stream = new MemoryStream(decompressedData))
-                    {
-                        var header = new byte[2];
-                        while (stream.Read(header, 0, 2) == 2)
-                        {
-                            var id = header[0];
-                            var len = header[1];
-
-                            if (id != 0xEE && id != 0xEF)
-                                throw new InvalidDataException("Missing expected watermark from unzipped data");
-
-                            var abridgedFormat = id == 0xEE;
-
-                            var buffer = new byte[len];
-                            var bytesRead = stream.Read(buffer, 0, buffer.Length);
-                            if (bytesRead != buffer.Length)
-                                throw new InvalidDataException("Didn't read enough bytes from unzipped data");
-
-                            ProcessOneInstruction(buffer, abridgedFormat);
-                        }
-                    }
-
-                    // optional, but nice stats.
-                    try
-                    {
-                        importerLock.EnterWriteLock();
-                        bytesInQueue -= packet.bytes.Length;
-                    }
-                    finally
-                    {
-                        importerLock.ExitWriteLock();
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-            }
-        }
-
-        private void ProcessOneInstruction(byte[] buffer, bool abridgedFormat)
+        private void Stats_MarkCompleted(BSNESImportStreamProcessor.CompressedWorkItems compressedItems)
         {
             try
             {
                 importerLock.EnterWriteLock();
-                importer.ImportTraceLogLineBinary(buffer, abridgedFormat);
+                bytesToProcess -= compressedItems.Bytes.Length;
+                compressedBlocksToProcess--;
+            }
+            finally
+            {
+                importerLock.ExitWriteLock();
+            }
+        }
+
+        private void ProcessWorkItem(BSNESImportStreamProcessor.WorkItem workItem)
+        {
+            try
+            {
+                importerLock.EnterWriteLock();
+                importer.ImportTraceLogLineBinary(workItem.Buffer, workItem.AbridgedFormat);
             }
             finally
             {
@@ -232,58 +140,29 @@ namespace Diz.Core.import
 
         public void SignalToStop()
         {
-            Finishing = true;
-
-            cancelToken.Cancel(false);
-            socketWorker.CancelAsync();
-            dataWorker.CancelAsync();
+            streamProcessor?.CancelToken?.Cancel();
+            taskManager.StartFinishing();
         }
 
-        private void DataWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        public (BSNESTraceLogImporter.Stats stats, int bytesToProcess) GetStats()
         {
-            dataWorker = null;
-            OnAnyThreadFinished(e);
-        }
+            if (importer == null)
+                return (cachedStats, 0);
 
-        private void SocketWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            socketWorker = null;
-            OnAnyThreadFinished(e);
-        }
+            var cachedBytesInQueue = 0;
 
-        private void OnAnyThreadFinished(RunWorkerCompletedEventArgs e)
-        {
-            if (e.Error != null)
-                OnThreadError(e.Error);
+            try
+            {
+                importerLock.EnterReadLock();
+                cachedStats = importer.CurrentStats;
+                cachedBytesInQueue = bytesToProcess;
+            }
+            finally
+            {
+                importerLock.ExitReadLock();
+            }
 
-            SignalIfFinished();
-        }
-
-        private void SignalIfFinished()
-        {
-            if (dataWorker == null && socketWorker == null)
-                OnFinished();
-        }
-
-        protected virtual void OnFinished()
-        {
-            Finishing = false;
-
-            importer = null;
-
-            cancelToken = null;
-            queue = null;
-            bytesInQueue = 0;
-            socketWorker = dataWorker = null;
-
-            Thread.MemoryBarrier();
-
-            Finished?.Invoke(this, EventArgs.Empty);
-        }
-
-        protected virtual void OnThreadError(Exception e)
-        {
-            Error?.Invoke(e);
+            return (cachedStats, cachedBytesInQueue);
         }
     }
 }

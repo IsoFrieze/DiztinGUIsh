@@ -29,13 +29,10 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BSNESTraceLogBinaryMonitorForm));
             this.btnStart = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.lblQueueSize = new System.Windows.Forms.Label();
-            this.backgroundWorker1_pipeReader = new System.ComponentModel.BackgroundWorker();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.backgroundWorker2_processQueue = new System.ComponentModel.BackgroundWorker();
             this.btnFinish = new System.Windows.Forms.Button();
             this.lblTotalProcessed = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -56,23 +53,28 @@
             this.label15 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
-            this.label18 = new System.Windows.Forms.Label();
+            this.lblResultStatus = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.pictureGreenSpinner = new System.Windows.Forms.PictureBox();
+            this.button1 = new System.Windows.Forms.Button();
+            this.cartesianChart1 = new LiveCharts.WinForms.CartesianChart();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureGreenSpinner)).BeginInit();
             this.SuspendLayout();
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(252, 19);
+            this.btnStart.Location = new System.Drawing.Point(478, 12);
             this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(130, 38);
+            this.btnStart.Size = new System.Drawing.Size(64, 38);
             this.btnStart.TabIndex = 0;
-            this.btnStart.Text = "Capture from BSNES-PLUS";
+            this.btnStart.Text = "Start Capture";
             this.btnStart.UseVisualStyleBackColor = true;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 44);
+            this.label1.Location = new System.Drawing.Point(15, 44);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(60, 13);
             this.label1.TabIndex = 1;
@@ -81,7 +83,7 @@
             // lblQueueSize
             // 
             this.lblQueueSize.AutoSize = true;
-            this.lblQueueSize.Location = new System.Drawing.Point(131, 44);
+            this.lblQueueSize.Location = new System.Drawing.Point(149, 44);
             this.lblQueueSize.Name = "lblQueueSize";
             this.lblQueueSize.Size = new System.Drawing.Size(13, 13);
             this.lblQueueSize.TabIndex = 2;
@@ -95,18 +97,18 @@
             // btnFinish
             // 
             this.btnFinish.Enabled = false;
-            this.btnFinish.Location = new System.Drawing.Point(388, 19);
+            this.btnFinish.Location = new System.Drawing.Point(413, 12);
             this.btnFinish.Name = "btnFinish";
-            this.btnFinish.Size = new System.Drawing.Size(91, 38);
+            this.btnFinish.Size = new System.Drawing.Size(59, 38);
             this.btnFinish.TabIndex = 3;
-            this.btnFinish.Text = "Finish";
+            this.btnFinish.Text = "Stop Capture";
             this.btnFinish.UseVisualStyleBackColor = true;
             this.btnFinish.Click += new System.EventHandler(this.btnFinish_Click);
             // 
             // lblTotalProcessed
             // 
             this.lblTotalProcessed.AutoSize = true;
-            this.lblTotalProcessed.Location = new System.Drawing.Point(131, 254);
+            this.lblTotalProcessed.Location = new System.Drawing.Point(428, 174);
             this.lblTotalProcessed.Name = "lblTotalProcessed";
             this.lblTotalProcessed.Size = new System.Drawing.Size(13, 13);
             this.lblTotalProcessed.TabIndex = 6;
@@ -115,16 +117,16 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(15, 254);
+            this.label4.Location = new System.Drawing.Point(303, 174);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(99, 13);
+            this.label4.Size = new System.Drawing.Size(117, 13);
             this.label4.TabIndex = 5;
-            this.label4.Text = "# Bytes Considered";
+            this.label4.Text = "# Instructions Analyzed";
             // 
             // lblStatus
             // 
             this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(131, 24);
+            this.lblStatus.Location = new System.Drawing.Point(149, 24);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(13, 13);
             this.lblStatus.TabIndex = 8;
@@ -142,7 +144,7 @@
             // lblNumberModified
             // 
             this.lblNumberModified.AutoSize = true;
-            this.lblNumberModified.Location = new System.Drawing.Point(131, 279);
+            this.lblNumberModified.Location = new System.Drawing.Point(428, 199);
             this.lblNumberModified.Name = "lblNumberModified";
             this.lblNumberModified.Size = new System.Drawing.Size(13, 13);
             this.lblNumberModified.TabIndex = 10;
@@ -151,16 +153,16 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(15, 279);
+            this.label3.Location = new System.Drawing.Point(303, 199);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(86, 13);
+            this.label3.Size = new System.Drawing.Size(114, 13);
             this.label3.TabIndex = 9;
-            this.label3.Text = "# Bytes Modified";
+            this.label3.Text = "# Instructions Modified";
             // 
             // lblModifiedXFlags
             // 
             this.lblModifiedXFlags.AutoSize = true;
-            this.lblModifiedXFlags.Location = new System.Drawing.Point(128, 126);
+            this.lblModifiedXFlags.Location = new System.Drawing.Point(146, 126);
             this.lblModifiedXFlags.Name = "lblModifiedXFlags";
             this.lblModifiedXFlags.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedXFlags.TabIndex = 12;
@@ -178,7 +180,7 @@
             // lblModifiedMFlags
             // 
             this.lblModifiedMFlags.AutoSize = true;
-            this.lblModifiedMFlags.Location = new System.Drawing.Point(128, 152);
+            this.lblModifiedMFlags.Location = new System.Drawing.Point(146, 152);
             this.lblModifiedMFlags.Name = "lblModifiedMFlags";
             this.lblModifiedMFlags.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedMFlags.TabIndex = 14;
@@ -196,7 +198,7 @@
             // lblModifiedDPs
             // 
             this.lblModifiedDPs.AutoSize = true;
-            this.lblModifiedDPs.Location = new System.Drawing.Point(128, 176);
+            this.lblModifiedDPs.Location = new System.Drawing.Point(146, 176);
             this.lblModifiedDPs.Name = "lblModifiedDPs";
             this.lblModifiedDPs.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedDPs.TabIndex = 16;
@@ -214,7 +216,7 @@
             // lblModifiedDBs
             // 
             this.lblModifiedDBs.AutoSize = true;
-            this.lblModifiedDBs.Location = new System.Drawing.Point(128, 201);
+            this.lblModifiedDBs.Location = new System.Drawing.Point(146, 201);
             this.lblModifiedDBs.Name = "lblModifiedDBs";
             this.lblModifiedDBs.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedDBs.TabIndex = 18;
@@ -232,7 +234,7 @@
             // lblModifiedFlags
             // 
             this.lblModifiedFlags.AutoSize = true;
-            this.lblModifiedFlags.Location = new System.Drawing.Point(128, 102);
+            this.lblModifiedFlags.Location = new System.Drawing.Point(146, 102);
             this.lblModifiedFlags.Name = "lblModifiedFlags";
             this.lblModifiedFlags.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedFlags.TabIndex = 20;
@@ -243,9 +245,9 @@
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(12, 102);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(108, 13);
+            this.label14.Size = new System.Drawing.Size(127, 13);
             this.label14.TabIndex = 19;
-            this.label14.Text = "Bytes Marked w/type";
+            this.label14.Text = "# Instructions Uncovered";
             // 
             // label15
             // 
@@ -271,29 +273,71 @@
             // 
             this.label17.AutoSize = true;
             this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(12, 232);
+            this.label17.Location = new System.Drawing.Point(300, 152);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(57, 13);
             this.label17.TabIndex = 23;
             this.label17.Text = "Summary";
             // 
-            // label18
+            // lblResultStatus
             // 
-            this.label18.AutoSize = true;
-            this.label18.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label18.Location = new System.Drawing.Point(5, 314);
-            this.label18.MaximumSize = new System.Drawing.Size(500, 0);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(497, 221);
-            this.label18.TabIndex = 24;
-            this.label18.Text = resources.GetString("label18.Text");
+            this.lblResultStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblResultStatus.Location = new System.Drawing.Point(310, 102);
+            this.lblResultStatus.Name = "lblResultStatus";
+            this.lblResultStatus.Size = new System.Drawing.Size(236, 37);
+            this.lblResultStatus.TabIndex = 26;
+            this.lblResultStatus.Text = "--jhgasdjhfgasjhdgfhjasdfgasdf kfhfjhf";
+            this.lblResultStatus.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Location = new System.Drawing.Point(306, 81);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(43, 13);
+            this.label7.TabIndex = 25;
+            this.label7.Text = "Result";
+            // 
+            // pictureGreenSpinner
+            // 
+            this.pictureGreenSpinner.Image = global::DiztinGUIsh.Properties.Resources._1603231497loading_green;
+            this.pictureGreenSpinner.Location = new System.Drawing.Point(303, 12);
+            this.pictureGreenSpinner.Name = "pictureGreenSpinner";
+            this.pictureGreenSpinner.Size = new System.Drawing.Size(46, 37);
+            this.pictureGreenSpinner.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureGreenSpinner.TabIndex = 27;
+            this.pictureGreenSpinner.TabStop = false;
+            // 
+            // button1
+            // 
+            this.button1.Enabled = false;
+            this.button1.Location = new System.Drawing.Point(355, 12);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(52, 38);
+            this.button1.TabIndex = 28;
+            this.button1.Text = "Help";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // cartesianChart1
+            // 
+            this.cartesianChart1.Location = new System.Drawing.Point(12, 233);
+            this.cartesianChart1.Name = "cartesianChart1";
+            this.cartesianChart1.Size = new System.Drawing.Size(533, 292);
+            this.cartesianChart1.TabIndex = 29;
+            this.cartesianChart1.Text = "cartesianChart1";
             // 
             // BSNESTraceLogBinaryMonitorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(505, 539);
-            this.Controls.Add(this.label18);
+            this.ClientSize = new System.Drawing.Size(557, 537);
+            this.Controls.Add(this.cartesianChart1);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.pictureGreenSpinner);
+            this.Controls.Add(this.lblResultStatus);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.label17);
             this.Controls.Add(this.label16);
             this.Controls.Add(this.label15);
@@ -320,6 +364,9 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "BSNESTraceLogBinaryMonitorForm";
             this.Text = "BSNES Live Tracelog Capture";
+            this.Load += new System.EventHandler(this.BSNESTraceLogBinaryMonitorForm_Load);
+            this.Shown += new System.EventHandler(this.BSNESTraceLogBinaryMonitorForm_Shown);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureGreenSpinner)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -330,9 +377,7 @@
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label lblQueueSize;
-        private System.ComponentModel.BackgroundWorker backgroundWorker1_pipeReader;
         private System.Windows.Forms.Timer timer1;
-        private System.ComponentModel.BackgroundWorker backgroundWorker2_processQueue;
         private System.Windows.Forms.Button btnFinish;
         private System.Windows.Forms.Label lblTotalProcessed;
         private System.Windows.Forms.Label label4;
@@ -353,6 +398,10 @@
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label17;
-        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label lblResultStatus;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.PictureBox pictureGreenSpinner;
+        private System.Windows.Forms.Button button1;
+        private LiveCharts.WinForms.CartesianChart cartesianChart1;
     }
 }

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Drawing;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ByteSizeLib;
 using Diz.Core.import;
@@ -12,12 +15,13 @@ namespace DiztinGUIsh.window.dialog
     // eventually, if we want to do that we need to retrofit the rest of the app to take advantage of that.
     public partial class BSNESTraceLogBinaryMonitorForm : Form
     {
-        private MainWindow MainWindow;
+        private readonly MainWindow mainWindow;
         private BSNESTraceLogCapture capturing;
+        private string lastError;
 
         public BSNESTraceLogBinaryMonitorForm(MainWindow window)
         {
-            MainWindow = window;
+            mainWindow = window;
             InitializeComponent();
         }
 
@@ -26,69 +30,49 @@ namespace DiztinGUIsh.window.dialog
             timer1.Enabled = true;
             btnFinish.Enabled = true;
             btnStart.Enabled = false;
-            
-            capturing = new BSNESTraceLogCapture();
-            capturing.Finished += CapturingFinished;
-            capturing.Error += Capturing_Error;
 
-            capturing.Start(MainWindow.Project.Data);
+            capturing = new BSNESTraceLogCapture();
+
+            Start();
         }
 
-        private void Capturing_Error(Exception e)
+        private async void Start()
         {
-            MessageBox.Show(e.Message, "Worker Error");
+            // TODO: error handling is busted here.
+            await Task.Run(() => {
+                capturing.Run(mainWindow.Project.Data);
+            }).ContinueWith(task => {
+                this.InvokeIfRequired(() => CapturingFinished(task.Exception));
+            });
+            UpdateUI();
         }
 
         private void btnFinish_Click(object sender, EventArgs e)
         {
-            timer1.Enabled = false;
-
             capturing?.SignalToStop();
-
             UpdateUI();
         }
 
-        private void CapturingFinished(object sender, EventArgs e)
+        private void CapturingFinished(AggregateException ex)
         {
+            if (ex != null) {
+                OnError(ex);
+            }
+
+            timer1.Enabled = false;
+            capturing = null;
             UpdateUI();
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void timer1_Tick(object sender, EventArgs e) => UpdateUI();
+
+        private void OnError(AggregateException e)
         {
-            UpdateUI();
-        }
+            Console.WriteLine(e.ToString());
+            lastError = e.InnerExceptions.Select(ex => ex.Message).Aggregate((line, val) => line += val + "\n");
+        }   
 
-        private void UpdateUI()
-        {
-            var running = capturing?.Running ?? false;
-            var finishing = capturing?.Finishing ?? false;
-
-            lblStatus.Text = !running ? "Not running" : finishing ? "Stopping..." : "Running";
-
-            btnFinish.Enabled = !finishing && running;
-            btnStart.Enabled = !running;
-
-            if (capturing == null) 
-                return;
-
-            var (stats, totalQueueBytes) = capturing.GetStats();
-
-            var qItemCount = capturing.QueueLength.ToString();
-            var qByteCount = ByteSize.FromBytes(totalQueueBytes).ToString("0.00");
-
-            lblQueueSize.Text = $"{qByteCount} (num groups: {qItemCount})";
-
-            // TODO: use databinding
-
-            const string format = "0.00";
-
-            lblTotalProcessed.Text = ByteSize.FromBytes(stats.numRomBytesAnalyzed).ToString(format);
-            lblNumberModified.Text = ByteSize.FromBytes(stats.numRomBytesModified).ToString(format);
-            lblModifiedDBs.Text = ByteSize.FromBytes(stats.numDBModified).ToString(format);
-            lblModifiedDPs.Text = ByteSize.FromBytes(stats.numDpModified).ToString(format);
-            lblModifiedFlags.Text = ByteSize.FromBytes(stats.numMarksModified).ToString(format);
-            lblModifiedXFlags.Text = ByteSize.FromBytes(stats.numXFlagsModified).ToString(format);
-            lblModifiedMFlags.Text = ByteSize.FromBytes(stats.numMFlagsModified).ToString(format);
-        }
+        private void BSNESTraceLogBinaryMonitorForm_Load(object sender, EventArgs e) => UpdateUI();
+        private void BSNESTraceLogBinaryMonitorForm_Shown(object sender, EventArgs e) => UpdateUI();
     }
 }
