@@ -66,6 +66,11 @@
             this.saveProjectAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.importUsageMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importCDLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
+            this.importTraceLogText = new System.Windows.Forms.ToolStripMenuItem();
+            this.importTraceLogBinary = new System.Windows.Forms.ToolStripMenuItem();
             this.exportLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -135,11 +140,6 @@
             this.openUsageMapFile = new System.Windows.Forms.OpenFileDialog();
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
-            this.importUsageMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importTraceLogBinary = new System.Windows.Forms.ToolStripMenuItem();
-            this.importTraceLogText = new System.Windows.Forms.ToolStripMenuItem();
-            this.importCDLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -442,6 +442,44 @@
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(235, 22);
             this.toolStripMenuItem2.Text = "Import";
+            // 
+            // importUsageMapToolStripMenuItem
+            // 
+            this.importUsageMapToolStripMenuItem.Enabled = false;
+            this.importUsageMapToolStripMenuItem.Name = "importUsageMapToolStripMenuItem";
+            this.importUsageMapToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
+            this.importUsageMapToolStripMenuItem.Text = "Import BSNES Usage Map...";
+            this.importUsageMapToolStripMenuItem.Click += new System.EventHandler(this.importUsageMapToolStripMenuItem_Click_1);
+            // 
+            // importCDLToolStripMenuItem
+            // 
+            this.importCDLToolStripMenuItem.Enabled = false;
+            this.importCDLToolStripMenuItem.Name = "importCDLToolStripMenuItem";
+            this.importCDLToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
+            this.importCDLToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
+            this.importCDLToolStripMenuItem.Text = "Import CDL...";
+            this.importCDLToolStripMenuItem.Click += new System.EventHandler(this.importCDLToolStripMenuItem_Click_1);
+            // 
+            // toolStripSeparator8
+            // 
+            this.toolStripSeparator8.Name = "toolStripSeparator8";
+            this.toolStripSeparator8.Size = new System.Drawing.Size(250, 6);
+            // 
+            // importTraceLogText
+            // 
+            this.importTraceLogText.Enabled = false;
+            this.importTraceLogText.Name = "importTraceLogText";
+            this.importTraceLogText.Size = new System.Drawing.Size(253, 22);
+            this.importTraceLogText.Text = "Import BSNES Trace Log...";
+            this.importTraceLogText.Click += new System.EventHandler(this.toolStripMenuItem3_Click);
+            // 
+            // importTraceLogBinary
+            // 
+            this.importTraceLogBinary.Enabled = false;
+            this.importTraceLogBinary.Name = "importTraceLogBinary";
+            this.importTraceLogBinary.Size = new System.Drawing.Size(253, 22);
+            this.importTraceLogBinary.Text = "Import BSNES Trace Log (Binary)...";
+            this.importTraceLogBinary.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
             // 
             // exportLogToolStripMenuItem
             // 
@@ -812,7 +850,6 @@
             // 
             // visualMapToolStripMenuItem
             // 
-            this.visualMapToolStripMenuItem.Enabled = false;
             this.visualMapToolStripMenuItem.Name = "visualMapToolStripMenuItem";
             this.visualMapToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
             this.visualMapToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
@@ -996,44 +1033,6 @@
             // openCDLDialog
             // 
             this.openCDLDialog.Filter = "BizHawk Code Data Logger Files|*.cdl|All Files|*.*";
-            // 
-            // importUsageMapToolStripMenuItem
-            // 
-            this.importUsageMapToolStripMenuItem.Enabled = false;
-            this.importUsageMapToolStripMenuItem.Name = "importUsageMapToolStripMenuItem";
-            this.importUsageMapToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.importUsageMapToolStripMenuItem.Text = "Import BSNES Usage Map...";
-            this.importUsageMapToolStripMenuItem.Click += new System.EventHandler(this.importUsageMapToolStripMenuItem_Click_1);
-            // 
-            // importTraceLogBinary
-            // 
-            this.importTraceLogBinary.Enabled = false;
-            this.importTraceLogBinary.Name = "importTraceLogBinary";
-            this.importTraceLogBinary.Size = new System.Drawing.Size(253, 22);
-            this.importTraceLogBinary.Text = "Import BSNES Trace Log (Binary)...";
-            this.importTraceLogBinary.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
-            // 
-            // importTraceLogText
-            // 
-            this.importTraceLogText.Enabled = false;
-            this.importTraceLogText.Name = "importTraceLogText";
-            this.importTraceLogText.Size = new System.Drawing.Size(253, 22);
-            this.importTraceLogText.Text = "Import BSNES Trace Log...";
-            this.importTraceLogText.Click += new System.EventHandler(this.toolStripMenuItem3_Click);
-            // 
-            // importCDLToolStripMenuItem
-            // 
-            this.importCDLToolStripMenuItem.Enabled = false;
-            this.importCDLToolStripMenuItem.Name = "importCDLToolStripMenuItem";
-            this.importCDLToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.importCDLToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.importCDLToolStripMenuItem.Text = "Import CDL...";
-            this.importCDLToolStripMenuItem.Click += new System.EventHandler(this.importCDLToolStripMenuItem_Click_1);
-            // 
-            // toolStripSeparator8
-            // 
-            this.toolStripSeparator8.Name = "toolStripSeparator8";
-            this.toolStripSeparator8.Size = new System.Drawing.Size(250, 6);
             // 
             // MainWindow
             // 

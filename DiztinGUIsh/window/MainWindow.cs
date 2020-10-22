@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
+using System.Windows.Media;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 using DiztinGUIsh.window.dialog;
+using Color = System.Drawing.Color;
 using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window
@@ -879,10 +880,12 @@ namespace DiztinGUIsh.window
             if (Project.Data.GetFlag(unreached) == Data.FlagType.Unreached) SelectOffset(unreached, 1);
         }
 
+        private VisualizerForm visualForm;
+
         private void visualMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // TODO
-            // visual map window
+            visualForm ??= new VisualizerForm(this);
+            visualForm.Show();
         }
 
         private void graphicsWindowToolStripMenuItem_Click(object sender, EventArgs e)
