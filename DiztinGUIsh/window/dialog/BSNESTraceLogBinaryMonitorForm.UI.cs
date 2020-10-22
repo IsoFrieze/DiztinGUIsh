@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
+using System.Windows.Media;
 using ByteSizeLib;
 using Diz.Core.import;
 using LiveCharts;
 using LiveCharts.Wpf;
+using Color = System.Drawing.Color;
 
 namespace DiztinGUIsh.window.dialog
 {
@@ -12,11 +13,14 @@ namespace DiztinGUIsh.window.dialog
     {
         private bool initializedChart;
         private readonly ChartValues<long> chartValuesBytesModified = new ChartValues<long>();
+        private long chartValueBytesModified_previous = 0;
 
         private void AppendToChart((BSNESTraceLogImporter.Stats stats, int bytesInQueue) currentStats)
         {
             InitChart();
-            chartValuesBytesModified.Add(currentStats.stats.numRomBytesModified);
+            var diffBytes = currentStats.stats.numRomBytesModified - chartValueBytesModified_previous;
+            chartValueBytesModified_previous = currentStats.stats.numRomBytesModified;
+            chartValuesBytesModified.Add(diffBytes);
         }
 
         private void InitChart()
@@ -30,6 +34,7 @@ namespace DiztinGUIsh.window.dialog
                 {
                     Title = "Instructions Modified",
                     Values = chartValuesBytesModified,
+                    PointGeometry = Geometry.Empty,
                 },
             };
 

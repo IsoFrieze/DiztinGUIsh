@@ -88,12 +88,53 @@ namespace Diz.Core.import
 
         private async void ProcessCompressedWorkItem(BSNESImportStreamProcessor.CompressedWorkItems compressedItems)
         {
-            var subTasks = BSNESImportStreamProcessor.ProcessCompressedWorkItems(compressedItems)
-                .Select(workItem => taskManager.Run(() => { ProcessWorkItem(workItem); }))
-                .ToList();
+            // tune this as needed.
+            // we want parallel jobs going, but, we don't want too many of them at once.
+            // average # workItems per CompressedWorkItem is like 12K currently.
+            const int numItemsPerTask = 6000;
+
+            using var enumerator = BSNESImportStreamProcessor.ProcessCompressedWorkItems(compressedItems).GetEnumerator();
+
+            bool keepGoing;
+            var itemsRemainingBeforeSend = numItemsPerTask;
+            var subTasks = new List<Task>();
+            var workItemsForThisTask = new List<BSNESImportStreamProcessor.WorkItem>();
+
+            do
+            {
+                var endOfList = !enumerator.MoveNext();
+                keepGoing = !streamProcessor.CancelToken.IsCancellationRequested && !endOfList;
+
+                if (!endOfList)
+                {
+                    workItemsForThisTask.Add(enumerator.Current);
+                    itemsRemainingBeforeSend--;
+                }
+
+                var shouldSendNow = !keepGoing || itemsRemainingBeforeSend == 0;
+                if (!shouldSendNow) 
+                    continue;
+
+                var workItemsCopy = new List<BSNESImportStreamProcessor.WorkItem>(workItemsForThisTask);
+                subTasks.Add(taskManager.Run(() =>
+                {
+                    ProcessWorkItems(workItemsCopy);
+                }));
+
+                itemsRemainingBeforeSend = numItemsPerTask;
+                workItemsForThisTask.Clear();
+            } while (keepGoing);
 
             await Task.WhenAll(subTasks);
             Stats_MarkCompleted(compressedItems);
+        }
+
+        private void ProcessWorkItems(IEnumerable<BSNESImportStreamProcessor.WorkItem> workItemsForThisTask)
+        {
+            foreach (var workItem in workItemsForThisTask)
+            {
+                ProcessWorkItem(workItem);
+            }
         }
 
         // this is just neat stats. it's optional, remove if performance becomes an issue (seems unlikely)
@@ -129,6 +170,7 @@ namespace Diz.Core.import
         {
             try
             {
+                // definitely hitting lock contention.
                 importerLock.EnterWriteLock();
                 importer.ImportTraceLogLineBinary(workItem.Buffer, workItem.AbridgedFormat);
             }
