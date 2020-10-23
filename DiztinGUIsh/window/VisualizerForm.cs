@@ -29,13 +29,11 @@ namespace DiztinGUIsh.window
 
         private void RomVisual_MarkedDirty(object sender, System.EventArgs e)
         {
-            Invalidate();
             pictureBox1.Invalidate();
         }
 
         private void RomVisual_ImageDataUpdated(object sender, System.EventArgs e)
         {
-            Refresh();
             pictureBox1.Refresh();
             Application.DoEvents();
 
