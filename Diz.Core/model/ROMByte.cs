@@ -1,7 +1,81 @@
-﻿namespace Diz.Core.model
+﻿using System.ComponentModel;
+using DiztinGUIsh;
+
+namespace Diz.Core.model
 {
-    public class ROMByte
+    public class ROMByte : DizDataModel
     {
+        // never modify directly. only go through the public fields
+        private byte rom;
+        private byte dataBank;
+        private int directPage;
+        private bool xFlag;
+        private bool mFlag;
+        private Data.FlagType typeFlag = Data.FlagType.Unreached;
+        private Data.Architecture arch = Data.Architecture.CPU65C816;
+        private Data.InOutPoint point = 0;
+
+        // holds the original byte from the source ROM
+        public byte Rom
+        {
+            get => rom;
+            set => SetField(ref rom, value);
+        } // never serialize this, read from ROM on load. (for copyright reasons)
+
+        // everything else is metadata that describes the source byte above
+        public byte DataBank
+        {
+            get => dataBank;
+            set => SetField(ref dataBank, value);
+        }
+
+        public int DirectPage
+        {
+            get => directPage;
+            set => SetField(ref directPage, value);
+        }
+
+        public bool XFlag
+        {
+            get => xFlag;
+            set => SetField(ref xFlag, value);
+        }
+
+        public bool MFlag
+        {
+            get => mFlag;
+            set => SetField(ref mFlag, value);
+        }
+
+        public Data.FlagType TypeFlag
+        {
+            get => typeFlag;
+            set => SetField(ref typeFlag, value);
+        }
+
+        public Data.Architecture Arch
+        {
+            get => arch;
+            set => SetField(ref arch, value);
+        }
+
+        public Data.InOutPoint Point
+        {
+            get => point;
+            set => SetField(ref point, value);
+        }
+
+        // don't serialize. cached copy of our offset in parent collection
+        public int Offset { get; private set; } = -1;
+
+        public void SetCachedOffset(int offset)
+        {
+            // not in love with this or that we're caching it. would be cool if we didn't
+            // need Offset, or could just derive this (quickly) from the base list.
+            Offset = offset;
+        }
+
+
         #region Equality
         protected bool Equals(ROMByte other)
         {
@@ -17,7 +91,7 @@
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((ROMByte) obj);
+            return obj.GetType() == this.GetType() && Equals((ROMByte)obj);
         }
 
         public override int GetHashCode()
@@ -29,24 +103,12 @@
                 hashCode = (hashCode * 397) ^ DirectPage;
                 hashCode = (hashCode * 397) ^ XFlag.GetHashCode();
                 hashCode = (hashCode * 397) ^ MFlag.GetHashCode();
-                hashCode = (hashCode * 397) ^ (int) TypeFlag;
-                hashCode = (hashCode * 397) ^ (int) Arch;
-                hashCode = (hashCode * 397) ^ (int) Point;
+                hashCode = (hashCode * 397) ^ (int)TypeFlag;
+                hashCode = (hashCode * 397) ^ (int)Arch;
+                hashCode = (hashCode * 397) ^ (int)Point;
                 return hashCode;
             }
         }
         #endregion
-
-        // holds the original byte from the source ROM
-        public byte Rom { get; set; } // never serialize this, read from ROM on load. (for copyright reasons)
-
-        // everything else is metadata that describes the source byte above
-        public byte DataBank { get; set; }
-        public int DirectPage { get; set; }
-        public bool XFlag { get; set; }
-        public bool MFlag { get; set; }
-        public Data.FlagType TypeFlag { get; set; } = Data.FlagType.Unreached;
-        public Data.Architecture Arch { get; set; } = Data.Architecture.CPU65C816;
-        public Data.InOutPoint Point { get; set; } = 0;
     }
 }

@@ -1,12 +1,14 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
 using System.Windows.Forms;
-using Diz.Core.model;
+using Diz.Core.util;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window
 {
     public partial class VisualizerForm : Form
     {
         private readonly MainWindow mainWindow;
+        private readonly RomVisual romVisual = new RomVisual();
 
         public VisualizerForm(MainWindow window)
         {
@@ -14,67 +16,44 @@ namespace DiztinGUIsh.window
             InitializeComponent();
         }
 
-        private Bitmap bitmap;
-
-        private Color GetColorForFlag(Data.FlagType flag)
+        private void VisualizerForm_Load(object sender, System.EventArgs e)
         {
-            return flag switch
-            {
-                Data.FlagType.Unreached => Color.Black,
-                Data.FlagType.Opcode => Color.Yellow,
-                Data.FlagType.Operand => Color.YellowGreen,
-                Data.FlagType.Graphics => Color.LightPink,
-                Data.FlagType.Music => Color.PowderBlue,
-                Data.FlagType.Data8Bit => Color.NavajoWhite,
-                Data.FlagType.Data16Bit => Color.NavajoWhite,
-                Data.FlagType.Data24Bit => Color.NavajoWhite,
-                Data.FlagType.Data32Bit => Color.NavajoWhite,
-                Data.FlagType.Pointer16Bit => Color.Orchid,
-                Data.FlagType.Pointer24Bit => Color.Orchid,
-                Data.FlagType.Pointer32Bit => Color.Orchid,
-                Data.FlagType.Text => Color.Aquamarine,
-                Data.FlagType.Empty => Color.DarkSlateGray,
-                _ => Color.DarkSlateGray
-            };
+            romVisual.Project = mainWindow.Project;
+            pictureBox1.Image = romVisual.Bitmap;
+
+            romVisual.ImageDataUpdated += RomVisual_ImageDataUpdated;
+            romVisual.MarkedDirty += RomVisual_MarkedDirty;
+
+            Width = pictureBox1.Width + 40;
         }
 
-        void GenerateImage()
+        private void RomVisual_MarkedDirty(object sender, System.EventArgs e)
         {
-            if (bitmap != null)
-                return;
+            Invalidate();
+            pictureBox1.Invalidate();
+        }
 
-            const int pixels_per_bank = 0xFFFF;
-            const int bank_height = 48;
-            const int bank_width = pixels_per_bank / bank_height;
+        private void RomVisual_ImageDataUpdated(object sender, System.EventArgs e)
+        {
+            Refresh();
+            pictureBox1.Refresh();
+            Application.DoEvents();
 
-            const int num_banks = 64;
+            // ugly hack city.
+            pictureBox1.Image = null;
+            pictureBox1.Image = romVisual.Bitmap;
+        }
 
-            const int total_height = bank_height * num_banks;
-            const int total_width = bank_width;
-
-            bitmap = new Bitmap(total_width, total_height);
-
-            for (var y = 0; y < bitmap.Height; y++)
-            {
-                for (var x = 0; x < bitmap.Width; x++)
-                {
-                    var romOffset = y * bank_width + x;
-                    var romFlag = mainWindow.Project.Data.RomBytes[romOffset].TypeFlag;
-                    var color = GetColorForFlag(romFlag);
-                    bitmap.SetPixel(x, y, color);
-                }
-            }
+        private void VisualizerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason != CloseReason.UserClosing) return;
+            e.Cancel = true;
+            Hide();
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            GenerateImage();
-            e.Graphics.DrawImage(bitmap, 0, 0, bitmap.Width, bitmap.Height);
-        }
-
-        private void VisualizerForm_Load(object sender, System.EventArgs e)
-        {
-
+            romVisual?.Refresh();
         }
     }
 }

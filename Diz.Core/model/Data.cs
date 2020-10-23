@@ -1,105 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using Diz.Core.arch;
 using Diz.Core.util;
-using IX.Observable;
+using DiztinGUIsh;
 
 namespace Diz.Core.model
 {
-    public class Data
+    public partial class Data : DizDataModel
     {
-        public enum FlagType : byte
-        {
-            Unreached = 0x00,
-            Opcode = 0x10,
-            Operand = 0x11,
-            [Description("Data (8-bit)")] Data8Bit = 0x20,
-            Graphics = 0x21,
-            Music = 0x22,
-            Empty = 0x23,
-            [Description("Data (16-bit)")] Data16Bit = 0x30,
-            [Description("Pointer (16-bit)")] Pointer16Bit = 0x31,
-            [Description("Data (24-bit)")] Data24Bit = 0x40,
-            [Description("Pointer (24-bit)")] Pointer24Bit = 0x41,
-            [Description("Data (32-bit)")] Data32Bit = 0x50,
-            [Description("Pointer (32-bit)")] Pointer32Bit = 0x51,
-            Text = 0x60
-        }
-
-        public enum Architecture : byte
-        {
-            [Description("65C816")]
-            CPU65C816 = 0x00,
-            [Description("SPC700")]
-            APUSPC700 = 0x01,
-            [Description("SuperFX")]
-            GPUSuperFX = 0x02
-        }
-
-        [Flags]
-        public enum InOutPoint : byte
-        {
-            InPoint = 0x01,
-            OutPoint = 0x02,
-            EndPoint = 0x04,
-            ReadPoint = 0x08
-        }
-
-        public enum ROMMapMode : byte
-        {
-            LoROM,
-
-            HiROM, 
-
-            ExHiROM, 
-
-            [Description("SA - 1 ROM")]
-            SA1ROM, 
-
-            [Description("SA-1 ROM (FuSoYa's 8MB mapper)")]
-            ExSA1ROM, 
-
-            SuperFX,
-
-            [Description("Super MMC")]
-            SuperMMC, 
-
-            ExLoROM
-        }
-
-        public enum ROMSpeed : byte
-        {
-            SlowROM, FastROM, Unknown
-        }
-
-        public const int
-            LOROM_SETTING_OFFSET = 0x7FD5,
-            HIROM_SETTING_OFFSET = 0xFFD5,
-            EXHIROM_SETTING_OFFSET = 0x40FFD5,
-            EXLOROM_SETTING_OFFSET = 0x407FD5;
-
-        // Note: order of these properties matters for the load/save process. Keep 'RomBytes' LAST
-        // TODO: should be a way in the XML serializer to control the order, remove this comment
-        // when we figure it out.
-        public ROMMapMode RomMapMode { get; set; }
-        public ROMSpeed RomSpeed { get; set; }
-
-        // dictionaries store in SNES address format (since memory labels can't be represented as a PC address)
-        public ObservableDictionary<int,string> Comments { get; set; } = new ObservableDictionary<int, string>();
-        public ObservableDictionary<int, Label> Labels { get; set; } = new ObservableDictionary<int, Label>();
-
-        // RomBytes stored as PC file offset addresses (since ROM will always be mapped to disk)
-        public RomBytes RomBytes { get; set; } = new RomBytes();
-
-        private CPU65C816 CPU65C816 { get; set; }
+        private readonly CPU65C816 cpu65C816; // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something
 
         public Data()
         {
-            CPU65C816 = new CPU65C816(this);
+            cpu65C816 = new CPU65C816(this);
         }
 
         public void CreateRomBytesFromRom(IEnumerable<byte> actualRomBytes)
@@ -155,9 +69,9 @@ namespace Diz.Core.model
         public void SetInOutPoint(int i, InOutPoint point) => RomBytes[i].Point |= point;
         public void ClearInOutPoint(int i) => RomBytes[i].Point = 0;
         public int GetDataBank(int i) => RomBytes[i].DataBank;
-        public void SetDataBank(int i, int dbank) => RomBytes[i].DataBank = (byte)dbank;
+        public void SetDataBank(int i, int dBank) => RomBytes[i].DataBank = (byte)dBank;
         public int GetDirectPage(int i) => RomBytes[i].DirectPage;
-        public void SetDirectPage(int i, int dpage) => RomBytes[i].DirectPage = 0xFFFF & dpage;
+        public void SetDirectPage(int i, int dPage) => RomBytes[i].DirectPage = 0xFFFF & dPage;
         public bool GetXFlag(int i) => RomBytes[i].XFlag;
         public void SetXFlag(int i, bool x) => RomBytes[i].XFlag = x;
         public bool GetMFlag(int i) => RomBytes[i].MFlag;
@@ -255,26 +169,31 @@ namespace Diz.Core.model
         {
             switch (GetFlag(offset))
             {
-                case Data.FlagType.Unreached:
-                case Data.FlagType.Opcode:
+                case FlagType.Unreached:
+                case FlagType.Opcode:
                     return GetIntermediateAddress(offset, true);
-                case Data.FlagType.Pointer16Bit:
+                case FlagType.Pointer16Bit:
                     int bank = GetDataBank(offset);
                     return (bank << 16) | GetROMWord(offset);
-                case Data.FlagType.Pointer24Bit:
-                case Data.FlagType.Pointer32Bit:
+                case FlagType.Pointer24Bit:
+                case FlagType.Pointer32Bit:
                     return GetROMLong(offset);
             }
             return -1;
+        }
+
+        public int GetBankSize()
+        {
+            return RomUtil.GetBankSize(RomMapMode);
         }
 
         public int OpcodeByteLength(int offset)
         {
             return GetArchitecture(offset) switch
             {
-                Data.Architecture.CPU65C816 => CPU65C816.GetInstructionLength(offset),
-                Data.Architecture.APUSPC700 => 1,
-                Data.Architecture.GPUSuperFX => 1,
+                Architecture.CPU65C816 => cpu65C816.GetInstructionLength(offset),
+                Architecture.APUSPC700 => 1,
+                Architecture.GPUSuperFX => 1,
                 _ => 1
             };
         }
@@ -318,7 +237,7 @@ namespace Diz.Core.model
 
         public string GetPointer(int offset, int bytes)
         {
-            int ia = -1;
+            var ia = -1;
             string format = "", param = "";
             switch (bytes)
             {
@@ -340,15 +259,15 @@ namespace Diz.Core.model
                     break;
             }
 
-            int pc = ConvertSNEStoPC(ia);
+            var pc = ConvertSNEStoPC(ia);
             if (pc >= 0 && GetLabelName(ia) != "") param = GetLabelName(ia);
             return string.Format(format, param);
         }
 
         public string GetFormattedText(int offset, int bytes)
         {
-            string text = "db \"";
-            for (int i = 0; i < bytes; i++) text += (char)GetROMByte(offset + i);
+            var text = "db \"";
+            for (var i = 0; i < bytes; i++) text += (char)GetROMByte(offset + i);
             return text + "\"";
         }
 
@@ -364,16 +283,16 @@ namespace Diz.Core.model
         {
             return GetArchitecture(offset) switch
             {
-                Data.Architecture.CPU65C816 => CPU65C816.Step(offset, branch, force, prevOffset),
-                Data.Architecture.APUSPC700 => offset,
-                Data.Architecture.GPUSuperFX => offset,
+                Architecture.CPU65C816 => cpu65C816.Step(offset, branch, force, prevOffset),
+                Architecture.APUSPC700 => offset,
+                Architecture.GPUSuperFX => offset,
                 _ => offset
             };
         }
 
         public int AutoStep(int offset, bool harsh, int amount)
         {
-            int newOffset = offset, prevOffset = offset - 1, nextOffset = offset;
+            int newOffset = offset, prevOffset = offset - 1, nextOffset;
             if (harsh)
             {
                 while (newOffset < offset + amount)
@@ -393,17 +312,17 @@ namespace Diz.Core.model
                 {
                     switch (GetArchitecture(newOffset))
                     {
-                        case Data.Architecture.CPU65C816:
+                        case Architecture.CPU65C816:
                             if (seenBranches.Contains(newOffset))
                             {
                                 keepGoing = false;
                                 break;
                             }
 
-                            int opcode = GetROMByte(newOffset);
+                            var opcode = GetROMByte(newOffset);
 
                             nextOffset = Step(newOffset, false, false, prevOffset);
-                            int jumpOffset = Step(newOffset, true, false, prevOffset);
+                            var jumpOffset = Step(newOffset, true, false, prevOffset);
 
                             if (opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 // RTI WAI STP SED
                                 || opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42 // XCE BRK COP WDM
@@ -456,8 +375,8 @@ namespace Diz.Core.model
                                 newOffset = nextOffset;
                             }
                             break;
-                        case Data.Architecture.APUSPC700:
-                        case Data.Architecture.GPUSuperFX:
+                        case Architecture.APUSPC700:
+                        case Architecture.GPUSuperFX:
                             nextOffset = Step(newOffset, false, true, prevOffset);
                             prevOffset = newOffset;
                             newOffset = nextOffset;
@@ -465,13 +384,13 @@ namespace Diz.Core.model
                     }
 
                     var flag = GetFlag(newOffset);
-                    if (!(flag == Data.FlagType.Unreached || flag == Data.FlagType.Opcode || flag == Data.FlagType.Operand)) keepGoing = false;
+                    if (!(flag == FlagType.Unreached || flag == FlagType.Opcode || flag == FlagType.Operand)) keepGoing = false;
                 }
             }
             return newOffset;
         }
 
-        public int Mark(int offset, Data.FlagType type, int count)
+        public int Mark(int offset, FlagType type, int count)
         {
             int i, size = GetROMSize();
             for (i = 0; i < count && offset + i < size; i++) SetFlag(offset + i, type);
@@ -506,7 +425,7 @@ namespace Diz.Core.model
             return offset + i < size ? offset + i : size - 1;
         }
 
-        public int MarkArchitechture(int offset, Data.Architecture arch, int count)
+        public int MarkArchitechture(int offset, Architecture arch, int count)
         {
             int i, size = GetROMSize();
             for (i = 0; i < count && offset + i < size; i++) SetArchitechture(offset + i, arch);
@@ -517,9 +436,9 @@ namespace Diz.Core.model
         {
             return GetArchitecture(offset) switch
             {
-                Data.Architecture.CPU65C816 => CPU65C816.GetInstructionLength(offset),
-                Data.Architecture.APUSPC700 => 1,
-                Data.Architecture.GPUSuperFX => 1,
+                Architecture.CPU65C816 => cpu65C816.GetInstructionLength(offset),
+                Architecture.APUSPC700 => 1,
+                Architecture.GPUSuperFX => 1,
                 _ => 1
             };
         }
@@ -539,17 +458,17 @@ namespace Diz.Core.model
                         int len = GetInstructionLength(i);
                         for (var j = 1; j < len && i + j < size; j++)
                         {
-                            if (GetFlag(i + j) != Data.FlagType.Operand)
+                            if (GetFlag(i + j) != FlagType.Operand)
                             {
-                                SetFlag(i + j, Data.FlagType.Operand);
+                                SetFlag(i + j, FlagType.Operand);
                                 count++;
                             }
                         }
                         i += len - 1;
                         break;
                     }
-                    case Data.FlagType.Operand:
-                        SetFlag(i, Data.FlagType.Opcode);
+                    case FlagType.Operand:
+                        SetFlag(i, FlagType.Opcode);
                         count++;
                         i--;
                         break;
@@ -578,17 +497,17 @@ namespace Diz.Core.model
 
         public void RescanInOutPoints()
         {
-            for (int i = 0; i < GetROMSize(); i++) ClearInOutPoint(i);
+            for (var i = 0; i < GetROMSize(); i++) ClearInOutPoint(i);
 
-            for (int i = 0; i < GetROMSize(); i++)
+            for (var i = 0; i < GetROMSize(); i++)
             {
-                if (GetFlag(i) == Data.FlagType.Opcode)
+                if (GetFlag(i) == FlagType.Opcode)
                 {
                     switch (GetArchitecture(i))
                     {
-                        case Data.Architecture.CPU65C816: CPU65C816.MarkInOutPoints(i); break;
-                        case Data.Architecture.APUSPC700: break;
-                        case Data.Architecture.GPUSuperFX: break;
+                        case Architecture.CPU65C816: cpu65C816.MarkInOutPoints(i); break;
+                        case Architecture.APUSPC700: break;
+                        case Architecture.GPUSuperFX: break;
                     }
                 }
             }
@@ -599,9 +518,9 @@ namespace Diz.Core.model
             // FIX ME: log and generation of dp opcodes. search references
             return GetArchitecture(offset) switch
             {
-                Data.Architecture.CPU65C816 => CPU65C816.GetIntermediateAddress(offset, resolve),
-                Data.Architecture.APUSPC700 => -1,
-                Data.Architecture.GPUSuperFX => -1,
+                Architecture.CPU65C816 => cpu65C816.GetIntermediateAddress(offset, resolve),
+                Architecture.APUSPC700 => -1,
+                Architecture.GPUSuperFX => -1,
                 _ => -1
             };
         }
@@ -610,39 +529,16 @@ namespace Diz.Core.model
         {
             return GetArchitecture(offset) switch
             {
-                Data.Architecture.CPU65C816 => CPU65C816.GetInstruction(offset),
-                Data.Architecture.APUSPC700 => "",
-                Data.Architecture.GPUSuperFX => "",
+                Architecture.CPU65C816 => cpu65C816.GetInstruction(offset),
+                Architecture.APUSPC700 => "",
+                Architecture.GPUSuperFX => "",
                 _ => ""
             };
         }
 
-        #region Equality
-        protected bool Equals(Data other)
+        public int GetNumberOfBanks()
         {
-            return Labels.SequenceEqual(other.Labels) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
+            return RomBytes.Count / GetBankSize();
         }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Data)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = Labels.GetHashCode();
-                hashCode = (hashCode * 397) ^ (int)RomMapMode;
-                hashCode = (hashCode * 397) ^ (int)RomSpeed;
-                hashCode = (hashCode * 397) ^ Comments.GetHashCode();
-                hashCode = (hashCode * 397) ^ RomBytes.GetHashCode();
-                return hashCode;
-            }
-        }
-        #endregion
     }
 }

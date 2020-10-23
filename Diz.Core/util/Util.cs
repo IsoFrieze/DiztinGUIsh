@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using Diz.Core.model;
 
 namespace Diz.Core.util
 {
@@ -118,26 +120,66 @@ namespace Diz.Core.util
             // value = ExSA1ROM (one particular entry from the enum)
             // description = "SA-1 ROM (FuSoYa's 8MB mapper)",   (contents of [Description] attribute)
 
-            var type = value.GetType();
-            var memberInfo = type.GetField(value.ToString());
-            var descAttr = (Attribute.GetCustomAttribute(memberInfo, typeof(DescriptionAttribute)) as DescriptionAttribute);
-            var name = descAttr?.Description ?? value.ToString();
-            return name;
+            return GetEnumAttribute(
+                value, 
+                (DescriptionAttribute d) => d?.Description
+                ) ?? value.ToString();
         }
 
+        public static TResult GetEnumAttribute<TAttribute, TResult>(Enum value, Func<TAttribute, TResult> getValueFn) where TAttribute : Attribute
+        {
+            var type = value.GetType();
+            var memberInfo = type.GetField(value.ToString());
+            var descAttr = ((TAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(TAttribute)));
+            return getValueFn(descAttr);
+        }
 
         // take a enum type that has [Description] attributes,
         // return a List with with kvp pairs of enum vs description
         public static List<KeyValuePair<TEnum, string>> GetEnumDescriptions<TEnum>() where TEnum : Enum
         {
+            return GetEnumInfo<TEnum, string>((value) => GetEnumDescription(value));
+        }
+
+        // perf: might be a little slow, caution when in tight loops
+        public static List<KeyValuePair<TEnum, KnownColor>> GetEnumColorDescriptions<TEnum>() where TEnum : Enum
+        {
+            return GetEnumInfo<TEnum, KnownColor>((value) => GetEnumColor(value));
+        }
+
+        private static KnownColor GetEnumColor(Enum value)
+        {
+            return GetEnumAttribute(
+                value,
+                (Data.ColorDescriptionAttribute d) => d?.Color
+            ) ?? KnownColor.Black;
+        }
+
+        public static List<KeyValuePair<TEnum, TType>> GetEnumInfo<TEnum, TType>(Func<TEnum, TType> getValue) where TEnum : Enum
+        {
             var type = typeof(TEnum);
             return Enum.GetValues(type)
                 .Cast<TEnum>()
                 .Select(value => new
-                    KeyValuePair<TEnum, string>(key: value, value: GetEnumDescription(value))
+                    KeyValuePair<TEnum, TType>(key: value, value: getValue(value))
                 )
                 .OrderBy(item => item.Key)
                 .ToList();
+        }
+
+        // sadly, this entire conversion is a bit slow so, cache it as we look it up
+        private static readonly Dictionary<Data.FlagType, Color> CachedROMFlagColors =
+            new Dictionary<Data.FlagType, Color>();
+
+        public static Color GetColorFromFlag(Data.FlagType romFlag)
+        {
+            if (CachedROMFlagColors.TryGetValue(romFlag, out var color))
+                return color;
+
+            color = Color.FromKnownColor(GetEnumColor(romFlag)); // slow (comparatively)
+            CachedROMFlagColors[romFlag] = color;
+
+            return color;
         }
     }
 }

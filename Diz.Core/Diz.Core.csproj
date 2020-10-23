@@ -35,6 +35,9 @@
     <Reference Include="ExtendedXmlSerializer, Version=3.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ExtendedXmlSerializer.3.4.1\lib\net452\ExtendedXmlSerializer.dll</HintPath>
     </Reference>
+    <Reference Include="FastBitmapLib, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FastBitmapLib.2.0.0\lib\net452\FastBitmapLib.dll</HintPath>
+    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib, Version=1.3.0.8, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpZipLib.1.3.0\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
@@ -83,6 +86,7 @@
     </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Interactive, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Interactive.4.1.1\lib\net45\System.Interactive.dll</HintPath>
     </Reference>
@@ -120,6 +124,9 @@
     <Compile Include="import\BSNESImportStreamProcessor.cs" />
     <Compile Include="import\BSNESTraceLogCapture.cs" />
     <Compile Include="import\BSNESTraceLogImporter.cs" />
+    <Compile Include="model\Data.Constants.cs" />
+    <Compile Include="model\Data.Properties.cs" />
+    <Compile Include="util\RomVisual.cs" />
     <Compile Include="util\WorkerTaskManager.cs" />
     <Compile Include="model\Data.cs" />
     <Compile Include="import\BizHawkCdlImporter.cs" />

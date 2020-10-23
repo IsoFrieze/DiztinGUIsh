@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using System.Windows.Media;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -92,6 +91,7 @@ namespace DiztinGUIsh.window
                 new object[] { true });
 
             aliasList = new AliasList(this);
+            visualForm = new VisualizerForm(this);
 
             UpdatePanels();
             UpdateUIFromSettings();
@@ -884,7 +884,6 @@ namespace DiztinGUIsh.window
 
         private void visualMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            visualForm ??= new VisualizerForm(this);
             visualForm.Show();
         }
 

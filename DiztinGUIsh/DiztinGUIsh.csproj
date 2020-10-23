@@ -75,6 +75,9 @@
     <Reference Include="ByteSize, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ByteSize.2.0.0\lib\net45\ByteSize.dll</HintPath>
     </Reference>
+    <Reference Include="FastBitmapLib, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FastBitmapLib.2.0.0\lib\net452\FastBitmapLib.dll</HintPath>
+    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib, Version=1.3.0.8, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpZipLib.1.3.0\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
@@ -105,8 +108,8 @@
     <Reference Include="JetBrains.Annotations, Version=2020.1.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.Annotations.2020.1.0\lib\net20\JetBrains.Annotations.dll</HintPath>
     </Reference>
-    <Reference Include="LightInject, Version=6.3.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\LightInject.6.3.5\lib\net46\LightInject.dll</HintPath>
+    <Reference Include="LightInject, Version=6.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\LightInject.6.4.0\lib\net46\LightInject.dll</HintPath>
     </Reference>
     <Reference Include="LiveCharts, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
       <HintPath>..\packages\LiveCharts.0.9.7\lib\net45\LiveCharts.dll</HintPath>
@@ -224,6 +227,18 @@
     <Compile Include="window\AliasList.Designer.cs">
       <DependentUpon>AliasList.cs</DependentUpon>
     </Compile>
+    <Compile Include="window\usercontrols\BankLegend.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="window\usercontrols\BankLegend.Designer.cs">
+      <DependentUpon>BankLegend.cs</DependentUpon>
+    </Compile>
+    <Compile Include="window\usercontrols\BankLegendItem.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="window\usercontrols\BankLegendItem.Designer.cs">
+      <DependentUpon>BankLegendItem.cs</DependentUpon>
+    </Compile>
     <Compile Include="window\VisualizerForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -276,6 +291,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="window\dialog\InOutPointChecker.resx">
       <DependentUpon>InOutPointChecker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="window\usercontrols\BankLegend.resx">
+      <DependentUpon>BankLegend.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="window\usercontrols\BankLegendItem.resx">
+      <DependentUpon>BankLegendItem.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="window\VisualizerForm.resx">
       <DependentUpon>VisualizerForm.cs</DependentUpon>
