@@ -1189,6 +1189,8 @@ namespace DiztinGUIsh.window
 
         private void toolStripMenuItem3_Click(object sender, EventArgs e)
         {
+            // TODO: differentiate between binary and text format
+
             openTraceLogDialog.Multiselect = true;
             if (openTraceLogDialog.ShowDialog() != DialogResult.OK)
                 return;
@@ -1197,14 +1199,6 @@ namespace DiztinGUIsh.window
 
             MessageBox.Show($"Modified total {numModifiedFlags} flags from {openTraceLogDialog.FileNames.Length} files!", "Done",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        private void toolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            var bsnesForm = new BSNESTraceLogBinaryMonitorForm(this);
-            bsnesForm.ShowDialog();
-
-            RefreshUI();
         }
 
         private void importCDLToolStripMenuItem_Click_1(object sender, EventArgs e)
@@ -1234,6 +1228,14 @@ namespace DiztinGUIsh.window
             UpdatePercent();
             UpdateWindowTitle();
             InvalidateTable();
+        }
+
+        private void importTraceLogBinary_Click(object sender, EventArgs e)
+        {
+            var bsnesForm = new BSNESTraceLogBinaryMonitorForm(this);
+            bsnesForm.ShowDialog();
+
+            RefreshUI();
         }
     }
 }

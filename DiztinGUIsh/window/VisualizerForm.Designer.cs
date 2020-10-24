@@ -30,8 +30,8 @@
         {
             this.panelTop = new System.Windows.Forms.Panel();
             this.panelLegend = new System.Windows.Forms.Panel();
-            this.panelBottom = new System.Windows.Forms.Panel();
             this.bankLegend1 = new DiztinGUIsh.window.usercontrols.BankLegend();
+            this.panelBottom = new System.Windows.Forms.Panel();
             this.romImage1 = new DiztinGUIsh.window.usercontrols.RomImage();
             this.panelTop.SuspendLayout();
             this.panelLegend.SuspendLayout();
@@ -40,11 +40,12 @@
             // 
             // panelTop
             // 
+            this.panelTop.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelTop.Controls.Add(this.panelLegend);
             this.panelTop.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelTop.Location = new System.Drawing.Point(0, 0);
             this.panelTop.Name = "panelTop";
-            this.panelTop.Size = new System.Drawing.Size(846, 123);
+            this.panelTop.Size = new System.Drawing.Size(765, 154);
             this.panelTop.TabIndex = 1;
             // 
             // panelLegend
@@ -53,19 +54,8 @@
             this.panelLegend.Dock = System.Windows.Forms.DockStyle.Left;
             this.panelLegend.Location = new System.Drawing.Point(0, 0);
             this.panelLegend.Name = "panelLegend";
-            this.panelLegend.Size = new System.Drawing.Size(567, 123);
+            this.panelLegend.Size = new System.Drawing.Size(567, 152);
             this.panelLegend.TabIndex = 0;
-            // 
-            // panelBottom
-            // 
-            this.panelBottom.AutoScroll = true;
-            this.panelBottom.AutoSize = true;
-            this.panelBottom.Controls.Add(this.romImage1);
-            this.panelBottom.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelBottom.Location = new System.Drawing.Point(0, 123);
-            this.panelBottom.Name = "panelBottom";
-            this.panelBottom.Size = new System.Drawing.Size(846, 401);
-            this.panelBottom.TabIndex = 2;
             // 
             // bankLegend1
             // 
@@ -73,13 +63,25 @@
             this.bankLegend1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.bankLegend1.Location = new System.Drawing.Point(0, 0);
             this.bankLegend1.Name = "bankLegend1";
-            this.bankLegend1.Size = new System.Drawing.Size(567, 123);
+            this.bankLegend1.Size = new System.Drawing.Size(567, 152);
             this.bankLegend1.TabIndex = 0;
+            // 
+            // panelBottom
+            // 
+            this.panelBottom.AutoScroll = true;
+            this.panelBottom.AutoSize = true;
+            this.panelBottom.Controls.Add(this.romImage1);
+            this.panelBottom.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelBottom.Location = new System.Drawing.Point(0, 154);
+            this.panelBottom.Name = "panelBottom";
+            this.panelBottom.Size = new System.Drawing.Size(765, 363);
+            this.panelBottom.TabIndex = 2;
             // 
             // romImage1
             // 
-            this.romImage1.Location = new System.Drawing.Point(12, 6);
+            this.romImage1.Location = new System.Drawing.Point(0, 0);
             this.romImage1.Name = "romImage1";
+            this.romImage1.Project = null;
             this.romImage1.Size = new System.Drawing.Size(854, 421);
             this.romImage1.TabIndex = 0;
             // 
@@ -88,7 +90,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(846, 524);
+            this.ClientSize = new System.Drawing.Size(765, 517);
             this.Controls.Add(this.panelBottom);
             this.Controls.Add(this.panelTop);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;

@@ -9,49 +9,12 @@ namespace Diz.Core.util
 {
     public class RomVisual
     {
-        public bool AutoRefresh { get; set; } = true;
-
-        public Data Data => Project?.Data;
-
         public event EventHandler ImageDataUpdated;
         public event EventHandler MarkedDirty;
 
-        public Bitmap Bitmap
-        {
-            get
-            {
-                Refresh();
-                return bitmap;
-            }
-        }
+        public bool AutoRefresh { get; set; } = true;
 
-        public int PixelsPerBank => Data.GetBankSize();
-
-        public int BankHeightPixels
-        {
-            get => bankHeightPixels;
-            set
-            {
-                ValidateHeight(value);
-                bankHeightPixels = value;
-            }
-        }
-
-        public int BankWidthPixels
-        {
-            get
-            {
-                ValidateHeight(BankHeightPixels);
-                return PixelsPerBank / BankHeightPixels;
-            }
-        }
-
-        public void ValidateHeight(int heightPixels)
-        {
-            if (PixelsPerBank % heightPixels != 0)
-                throw new ArgumentException(
-                    "Selected Bank Height doesn't evenly divide. (pick a height that's a power of 2)");
-        }
+        public Data Data => Project?.Data;
 
         public Project Project
         {
@@ -67,20 +30,6 @@ namespace Diz.Core.util
             }
         }
 
-        private Bitmap bitmap;
-        private Project project;
-        private readonly object dirtyLock = new object();
-
-        private void RomBytes_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            AllDirty = true;
-        }
-
-        public bool AllDirty { get; set; } = true;
-        public Dictionary<int, ROMByte> DirtyRomBytes = new Dictionary<int, ROMByte>();
-        private int bankHeightPixels = 64;
-
         public bool IsDirty
         {
             get
@@ -88,10 +37,82 @@ namespace Diz.Core.util
                 lock (dirtyLock)
                 {
                     return AllDirty ||
-                           (AutoRefresh && DirtyRomBytes.Count > 0) ||
+                           (AutoRefresh && dirtyRomBytes.Count > 0) ||
                            bitmap == null;
                 }
             }
+        }
+
+        public Bitmap Bitmap
+        {
+            get
+            {
+                Refresh();
+                return bitmap;
+            }
+        }
+
+        public int RomStartingOffset
+        {
+            get => romStartingOffset;
+            set
+            {
+                if (value < 0 || value >= project.Data.RomBytes.Count)
+                    throw new ArgumentOutOfRangeException();
+
+                romStartingOffset = value;
+            }
+        }
+
+        public int LengthOverride
+        {
+            get => lengthOverride;
+            set
+            {
+                if (value != -1 && (value == 0 || RomStartingOffset + value >= project.Data.RomBytes.Count))
+                    throw new ArgumentOutOfRangeException();
+
+                lengthOverride = value;
+            }
+        }
+
+        public int PixelCount => lengthOverride != -1 ? lengthOverride : project.Data.RomBytes.Count;
+
+        public int Width
+        {
+            get => width;
+            set
+            {
+                if (Width <= 0)
+                    throw new ArgumentOutOfRangeException();
+
+                width = value;
+            }
+        }
+
+        // this rounds up the height by one pixel if needed, meaning our last row can be incomplete if Width doesn't divide evenly into Length
+        public int Height => (int)Math.Ceiling(PixelCount / (double)Width);
+
+        public bool AllDirty { get; set; } = true;
+
+        private int romStartingOffset = 0;
+        private int lengthOverride = -1;
+        private int width = 1024;
+        private Bitmap bitmap;
+        private Project project;
+
+        private readonly object dirtyLock = new object();
+        private readonly Dictionary<int, ROMByte> dirtyRomBytes = new Dictionary<int, ROMByte>();
+
+        private void RomBytes_CollectionChanged(object sender,
+            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            AllDirty = true;
+        }
+
+        private bool OffsetInRange(int offset)
+        {
+            return (offset >= romStartingOffset && offset < romStartingOffset + lengthOverride);
         }
 
         private void RomBytes_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -100,6 +121,9 @@ namespace Diz.Core.util
                 return;
 
             if (e.PropertyName != "TypeFlag")
+                return;
+
+            if (!OffsetInRange(romByte.Offset))
                 return;
 
             MarkDirty(romByte);
@@ -111,7 +135,7 @@ namespace Diz.Core.util
             AllDirty = true;
             lock (dirtyLock)
             {
-                DirtyRomBytes.Clear();
+                dirtyRomBytes.Clear();
             }
 
             RegenerateImage();
@@ -131,24 +155,32 @@ namespace Diz.Core.util
                 return;
             }
 
-            var totalHeight = BankHeightPixels * Data.GetNumberOfBanks();
-            var totalWidth = BankWidthPixels;
+            var h = Height;
+            var w = Width;
 
-            var shouldRecreateBitmap = bitmap == null ||
-                                 bitmap.Width != totalWidth ||
-                                 bitmap.Height != totalHeight;
-
+            var shouldRecreateBitmap = bitmap == null || bitmap.Width != w || bitmap.Height != h;
             if (shouldRecreateBitmap)
-                bitmap = new Bitmap(totalWidth, totalHeight);
+                bitmap = new Bitmap(w, h);
 
             var romBytes = ConsumeRomDirtyBytes();
+            var currentPixel = 0;
 
             var fastBitmap = new FastBitmap(bitmap); // needs compiler flag "/unsafe" enabled
             using (fastBitmap.Lock())
             {
                 foreach (var romByte in romBytes)
                 {
-                    SetPixel(romByte, fastBitmap, totalWidth);
+                    SetPixel(romByte, fastBitmap);
+                    ++currentPixel;
+                }
+
+                // rom bytes may not fully fill up the last row. fill it in with
+                // blank pixels
+                while (currentPixel < w*h)
+                {
+                    var (x, y) = ConvertPixelIndexToXY(currentPixel);
+                    fastBitmap.SetPixel(x, y, Color.SlateGray);
+                    ++currentPixel;
                 }
             }
 
@@ -168,20 +200,31 @@ namespace Diz.Core.util
             lock (dirtyLock)
             {
                 // make a copy so we can release the lock.
-                romBytes = new List<ROMByte>(DirtyRomBytes.Values.Select(kvp => kvp));
-                DirtyRomBytes.Clear();
+                romBytes = new List<ROMByte>(dirtyRomBytes.Values.Select(kvp => kvp));
+                dirtyRomBytes.Clear();
             }
 
             return romBytes;
         }
 
-        private static void SetPixel(ROMByte romByte, FastBitmap fastBitmap, int bankWidthPixels)
+        private (int x, int y) ConvertPixelIndexToXY(int offset)
         {
-            var romOffset = romByte.Offset;
-            var y = romOffset / bankWidthPixels;
-            var x = romOffset - (y * bankWidthPixels);
+            var y = offset / Width;
+            var x = offset - (y * Width);
+            return (x, y);
+        }
+
+        private void SetPixel(ROMByte romByte, FastBitmap fastBitmap)
+        {
+            var pixelIndex = ConvertRomOffsetToPixelIndex(romByte.Offset);
+            var (x, y) = ConvertPixelIndexToXY(pixelIndex);
             var color = Util.GetColorFromFlag(romByte.TypeFlag);
             fastBitmap.SetPixel(x, y, color);
+        }
+
+        private int ConvertRomOffsetToPixelIndex(int romByteOffset)
+        {
+            return romByteOffset - RomStartingOffset;
         }
 
         protected virtual void OnBitmapUpdated()
@@ -193,10 +236,10 @@ namespace Diz.Core.util
         {
             lock (dirtyLock)
             {
-                if (!DirtyRomBytes.ContainsKey(romByte.Offset))
-                    DirtyRomBytes.Add(romByte.Offset, romByte);
+                if (!dirtyRomBytes.ContainsKey(romByte.Offset))
+                    dirtyRomBytes.Add(romByte.Offset, romByte);
                 else
-                    DirtyRomBytes[romByte.Offset] = romByte;
+                    dirtyRomBytes[romByte.Offset] = romByte;
             }
 
             MarkedDirty?.Invoke(this, EventArgs.Empty);
