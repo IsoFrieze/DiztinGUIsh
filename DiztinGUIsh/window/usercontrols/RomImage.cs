@@ -4,6 +4,8 @@ using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
 
+// this usercontrol is JUST to show the raw image data (no markup, formatting, etc)
+
 namespace DiztinGUIsh.window.usercontrols
 {
     public partial class RomImage : UserControl
@@ -11,16 +13,11 @@ namespace DiztinGUIsh.window.usercontrols
         public event EventHandler RedrawOccurred;
 
         public RomVisual ROMVisual { get; } = new RomVisual();
-        private Project project;
 
         public Project Project
         {
-            get => project;
-            set
-            {
-                project = value;
-                ROMVisual.Project = project;
-            }
+            get => ROMVisual.Project;
+            set => ROMVisual.Project = value;
         }
 
         public RomImage()
@@ -68,6 +65,9 @@ namespace DiztinGUIsh.window.usercontrols
 
         protected virtual void OnRedrawOccurred()
         {
+            Width = ROMVisual.Width;
+            Height = ROMVisual.Height;
+
             RedrawOccurred?.Invoke(this, EventArgs.Empty);
         }
     }

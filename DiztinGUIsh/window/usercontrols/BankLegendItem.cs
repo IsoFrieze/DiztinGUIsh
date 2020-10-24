@@ -1,6 +1,8 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
+// just shows one color and one label for Rom visualizer. like ("blue" = 8bit pointer)
+
 namespace DiztinGUIsh.window.usercontrols
 {
     public partial class BankLegendItem : UserControl

@@ -3,6 +3,8 @@ using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
 
+// shows all the legend items in a collection
+
 namespace DiztinGUIsh.window.usercontrols
 {
     public partial class BankLegend : UserControl

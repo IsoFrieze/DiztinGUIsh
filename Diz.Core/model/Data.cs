@@ -551,5 +551,18 @@ namespace Diz.Core.model
         {
             return RomBytes.Count / GetBankSize();
         }
+
+        public string GetBankName(int bankIndex)
+        {
+            var bankSnesByte = GetSNESBankByte(bankIndex);
+            return Util.NumberToBaseString(bankSnesByte, Util.NumberBase.Hexadecimal, 2);
+        }
+
+        private int GetSNESBankByte(int bankIndex)
+        {
+            var bankStartingPCOffset = bankIndex << 16;
+            var bankSNESNumber = ConvertPCtoSNES(bankStartingPCOffset) >> 16;
+            return bankSNESNumber;
+        }
     }
 }

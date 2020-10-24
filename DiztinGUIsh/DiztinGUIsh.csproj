@@ -239,6 +239,18 @@
     <Compile Include="window\usercontrols\BankLegendItem.Designer.cs">
       <DependentUpon>BankLegendItem.cs</DependentUpon>
     </Compile>
+    <Compile Include="window\usercontrols\RomBankVisualizer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="window\usercontrols\RomBankVisualizer.Designer.cs">
+      <DependentUpon>RomBankVisualizer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="window\usercontrols\RomFullVisualizer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="window\usercontrols\RomFullVisualizer.Designer.cs">
+      <DependentUpon>RomFullVisualizer.cs</DependentUpon>
+    </Compile>
     <Compile Include="window\usercontrols\RomImage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -303,6 +315,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="window\usercontrols\BankLegendItem.resx">
       <DependentUpon>BankLegendItem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="window\usercontrols\RomBankVisualizer.resx">
+      <DependentUpon>RomBankVisualizer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="window\usercontrols\RomFullVisualizer.resx">
+      <DependentUpon>RomFullVisualizer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="window\usercontrols\RomImage.resx">
       <DependentUpon>RomImage.cs</DependentUpon>

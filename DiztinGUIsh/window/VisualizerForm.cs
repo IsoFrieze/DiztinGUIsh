@@ -32,9 +32,6 @@ namespace DiztinGUIsh.window
         {
             if (!(sender is RomImage romImage))
                 return;
-
-            romImage1.Width = romImage.ROMVisual.Bitmap.Width;
-            romImage1.Height = romImage.ROMVisual.Bitmap.Height;
         }
 
         private void VisualizerForm_Load(object sender, System.EventArgs e)
