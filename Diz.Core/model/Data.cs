@@ -19,6 +19,10 @@ namespace Diz.Core.model
         public void CreateRomBytesFromRom(IEnumerable<byte> actualRomBytes)
         {
             Debug.Assert(RomBytes.Count == 0);
+            
+            var previousNotificationState = RomBytes.SendNotificationChangedEvents;
+            RomBytes.SendNotificationChangedEvents = false;
+
             RomBytes.Clear();
             foreach (var fileByte in actualRomBytes)
             {
@@ -27,6 +31,8 @@ namespace Diz.Core.model
                     Rom = fileByte,
                 });
             }
+
+            RomBytes.SendNotificationChangedEvents = previousNotificationState;
         }
 
         private byte[] GetRomBytes(int pcOffset, int count)
@@ -50,12 +56,17 @@ namespace Diz.Core.model
 
         public void CopyRomDataIn(byte[] data)
         {
+            var previousNotificationState = RomBytes.SendNotificationChangedEvents;
+            RomBytes.SendNotificationChangedEvents = false;
+
             var size = data.Length;
             Debug.Assert(RomBytes.Count == size);
             for (var i = 0; i < size; i++)
             {
                 RomBytes[i].Rom = data[i];
             }
+
+            RomBytes.SendNotificationChangedEvents = previousNotificationState;
         }
 
         public int GetROMSize() => RomBytes?.Count ?? 0;

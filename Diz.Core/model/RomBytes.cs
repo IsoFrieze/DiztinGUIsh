@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace Diz.Core.model
         // This class needs to do these things that are special:
         // 1) Be handled specially by our custom XML serializer (compresses to save disk space)
         // 2) Handle Equals() by comparing each element in the list (SequenceEqual)
-        public ObservableList<ROMByte> Bytes { get; } = new ObservableList<ROMByte>();
+        public ObservableCollection<ROMByte> Bytes { get; } = new ObservableCollection<ROMByte>();
         public ROMByte this[int i]
         {
             get => Bytes[i];
@@ -23,11 +24,13 @@ namespace Diz.Core.model
 
         public RomBytes()
         {
-            Bytes.PropertyChanged += Bytes_PropertyChanged;
+            // Bytes.PropertyChanged += Bytes_PropertyChanged;
             Bytes.CollectionChanged += Bytes_CollectionChanged;
         }
 
         public int Count => Bytes.Count;
+        public bool SendNotificationChangedEvents { get; set; } = true;
+
         public void Add(ROMByte romByte)
         {
             Bytes.Add(romByte);
@@ -83,18 +86,20 @@ namespace Diz.Core.model
         {
             if (e.NewItems != null)
                 foreach (ROMByte item in e.NewItems)
-                    item.PropertyChanged += Bytes_PropertyChanged;
+                    item.PropertyChanged += RomByteObjectChanged;
 
             if (e.OldItems != null)
                 foreach (ROMByte item in e.OldItems)
-                    item.PropertyChanged -= Bytes_PropertyChanged;
+                    item.PropertyChanged -= RomByteObjectChanged;
 
-            CollectionChanged?.Invoke(sender, e);
+            if (SendNotificationChangedEvents)
+                CollectionChanged?.Invoke(sender, e);
         }
 
-        private void Bytes_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void RomByteObjectChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            PropertyChanged?.Invoke(sender, e);
+            if (SendNotificationChangedEvents)
+                PropertyChanged?.Invoke(sender, e);
         }
     }
 }

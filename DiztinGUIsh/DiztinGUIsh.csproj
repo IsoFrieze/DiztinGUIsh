@@ -239,6 +239,12 @@
     <Compile Include="window\usercontrols\BankLegendItem.Designer.cs">
       <DependentUpon>BankLegendItem.cs</DependentUpon>
     </Compile>
+    <Compile Include="window\usercontrols\RomImage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="window\usercontrols\RomImage.Designer.cs">
+      <DependentUpon>RomImage.cs</DependentUpon>
+    </Compile>
     <Compile Include="window\VisualizerForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -297,6 +303,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="window\usercontrols\BankLegendItem.resx">
       <DependentUpon>BankLegendItem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="window\usercontrols\RomImage.resx">
+      <DependentUpon>RomImage.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="window\VisualizerForm.resx">
       <DependentUpon>VisualizerForm.cs</DependentUpon>

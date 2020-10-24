@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Security.AccessControl;
 using Diz.Core.model;
 using FastBitmapLib;
 
@@ -51,7 +49,8 @@ namespace Diz.Core.util
         public void ValidateHeight(int heightPixels)
         {
             if (PixelsPerBank % heightPixels != 0)
-                throw new ArgumentException("Selected Bank Height doesn't evenly divide. (pick a height that's a power of 2)");
+                throw new ArgumentException(
+                    "Selected Bank Height doesn't evenly divide. (pick a height that's a power of 2)");
         }
 
         public Project Project
@@ -70,6 +69,7 @@ namespace Diz.Core.util
 
         private Bitmap bitmap;
         private Project project;
+        private readonly object dirtyLock = new object();
 
         private void RomBytes_CollectionChanged(object sender,
             System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -81,9 +81,18 @@ namespace Diz.Core.util
         public Dictionary<int, ROMByte> DirtyRomBytes = new Dictionary<int, ROMByte>();
         private int bankHeightPixels = 64;
 
-        public bool NeedsUpdate =>
-            AllDirty ||
-            (AutoRefresh && DirtyRomBytes.Count > 0);
+        public bool IsDirty
+        {
+            get
+            {
+                lock (dirtyLock)
+                {
+                    return AllDirty ||
+                           (AutoRefresh && DirtyRomBytes.Count > 0) ||
+                           bitmap == null;
+                }
+            }
+        }
 
         private void RomBytes_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
@@ -100,13 +109,17 @@ namespace Diz.Core.util
         {
             bitmap = null;
             AllDirty = true;
-            DirtyRomBytes.Clear();
+            lock (dirtyLock)
+            {
+                DirtyRomBytes.Clear();
+            }
+
             RegenerateImage();
         }
 
         public void Refresh()
         {
-            if (bitmap == null || NeedsUpdate)
+            if (IsDirty)
                 RegenerateImage();
         }
 
@@ -121,20 +134,16 @@ namespace Diz.Core.util
             var totalHeight = BankHeightPixels * Data.GetNumberOfBanks();
             var totalWidth = BankWidthPixels;
 
-            // requires use of the /unsafe compiler flag, because we're manipulating memory directly.
-            // needed because the system bitmap SetPixel() operation is super-slow.
-            var shouldRecreate = bitmap == null || 
-                           bitmap.Width != totalWidth || 
-                           bitmap.Height != totalHeight;
+            var shouldRecreateBitmap = bitmap == null ||
+                                 bitmap.Width != totalWidth ||
+                                 bitmap.Height != totalHeight;
 
-            if (shouldRecreate)
+            if (shouldRecreateBitmap)
                 bitmap = new Bitmap(totalWidth, totalHeight);
 
-            var romBytes = AllDirty ? 
-                Data.RomBytes.ToList() : 
-                DirtyRomBytes.Values.Select(kvp => kvp);
+            var romBytes = ConsumeRomDirtyBytes();
 
-            var fastBitmap = new FastBitmap(bitmap);
+            var fastBitmap = new FastBitmap(bitmap); // needs compiler flag "/unsafe" enabled
             using (fastBitmap.Lock())
             {
                 foreach (var romByte in romBytes)
@@ -143,10 +152,27 @@ namespace Diz.Core.util
                 }
             }
 
-            DirtyRomBytes.Clear();
             AllDirty = false;
-
             OnBitmapUpdated();
+        }
+
+        // returns the RomBytes we should use to update our image
+        // this can either be ALL RomBytes, or, a small set of dirty RomBytes that were changed
+        // since our last redraw.
+        private IEnumerable<ROMByte> ConsumeRomDirtyBytes()
+        {
+            if (AllDirty)
+                return Data.RomBytes.ToList();
+
+            IEnumerable<ROMByte> romBytes;
+            lock (dirtyLock)
+            {
+                // make a copy so we can release the lock.
+                romBytes = new List<ROMByte>(DirtyRomBytes.Values.Select(kvp => kvp));
+                DirtyRomBytes.Clear();
+            }
+
+            return romBytes;
         }
 
         private static void SetPixel(ROMByte romByte, FastBitmap fastBitmap, int bankWidthPixels)
@@ -165,10 +191,13 @@ namespace Diz.Core.util
 
         protected virtual void MarkDirty(ROMByte romByte)
         {
-            if (!DirtyRomBytes.ContainsKey(romByte.Offset))
-                DirtyRomBytes.Add(romByte.Offset, romByte);
-            else
-                DirtyRomBytes[romByte.Offset] = romByte;
+            lock (dirtyLock)
+            {
+                if (!DirtyRomBytes.ContainsKey(romByte.Offset))
+                    DirtyRomBytes.Add(romByte.Offset, romByte);
+                else
+                    DirtyRomBytes[romByte.Offset] = romByte;
+            }
 
             MarkedDirty?.Invoke(this, EventArgs.Empty);
         }

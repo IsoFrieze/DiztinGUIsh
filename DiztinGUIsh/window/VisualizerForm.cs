@@ -1,14 +1,23 @@
-﻿using System.Collections.Generic;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
+using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window
 {
     public partial class VisualizerForm : Form
     {
         private readonly MainWindow mainWindow;
-        private readonly RomVisual romVisual = new RomVisual();
+        private Project project;
+
+        public Project Project
+        {
+            get => project;
+            set
+            {
+                project = value;
+                romImage1.Project = project;
+            }
+        }
 
         public VisualizerForm(MainWindow window)
         {
@@ -18,28 +27,9 @@ namespace DiztinGUIsh.window
 
         private void VisualizerForm_Load(object sender, System.EventArgs e)
         {
-            romVisual.Project = mainWindow.Project;
-            pictureBox1.Image = romVisual.Bitmap;
-
-            romVisual.ImageDataUpdated += RomVisual_ImageDataUpdated;
-            romVisual.MarkedDirty += RomVisual_MarkedDirty;
-
-            Width = pictureBox1.Width + 40;
-        }
-
-        private void RomVisual_MarkedDirty(object sender, System.EventArgs e)
-        {
-            pictureBox1.Invalidate();
-        }
-
-        private void RomVisual_ImageDataUpdated(object sender, System.EventArgs e)
-        {
-            pictureBox1.Refresh();
-            Application.DoEvents();
-
-            // ugly hack city.
-            pictureBox1.Image = null;
-            pictureBox1.Image = romVisual.Bitmap;
+            // hack to make room for the scrollbar
+            // I wish docking dealt with this, or maybe I set it up wrong...
+            Width = romImage1.Width + 40;
         }
 
         private void VisualizerForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -47,11 +37,6 @@ namespace DiztinGUIsh.window
             if (e.CloseReason != CloseReason.UserClosing) return;
             e.Cancel = true;
             Hide();
-        }
-
-        private void pictureBox1_Paint(object sender, PaintEventArgs e)
-        {
-            romVisual?.Refresh();
         }
     }
 }

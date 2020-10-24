@@ -197,6 +197,9 @@ namespace DiztinGUIsh.window
 
         public void OnProjectOpened(string filename)
         {
+            visualForm.Project = Project;
+            // TODO: do this with aliaslist too.
+
             UpdateSaveOptionStates(true, true);
             RefreshUI();
 
