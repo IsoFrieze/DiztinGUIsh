@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -7,7 +8,9 @@ namespace DiztinGUIsh.window.usercontrols
 {
     public partial class RomImage : UserControl
     {
-        private readonly RomVisual romVisual = new RomVisual();
+        public event EventHandler RedrawOccurred;
+
+        public RomVisual ROMVisual { get; } = new RomVisual();
         private Project project;
 
         public Project Project
@@ -16,7 +19,7 @@ namespace DiztinGUIsh.window.usercontrols
             set
             {
                 project = value;
-                romVisual.Project = project;
+                ROMVisual.Project = project;
             }
         }
 
@@ -37,28 +40,35 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void Redraw(Graphics graphics = null)
         {
-            if (romVisual?.Bitmap == null)
+            if (ROMVisual?.Bitmap == null)
                 return;
 
             graphics ??= CreateGraphics();
 
-            var width = romVisual.Bitmap.Width;
-            var height = romVisual.Bitmap.Height;
-            graphics.DrawImage(romVisual.Bitmap, 0, 0, width, height);
+            var width = ROMVisual.Bitmap.Width;
+            var height = ROMVisual.Bitmap.Height;
+            graphics.DrawImage(ROMVisual.Bitmap, 0, 0, width, height);
+
+            OnRedrawOccurred();
         }
 
         private void RedrawIfNeeded()
         {
-            if (!Visible || !romVisual.IsDirty)
+            if (!Visible || !ROMVisual.IsDirty)
                 return;
 
-            romVisual.Refresh();
+            ROMVisual.Refresh();
             Redraw();
         }
 
         private void timer1_Tick(object sender, System.EventArgs e)
         {
             RedrawIfNeeded();
+        }
+
+        protected virtual void OnRedrawOccurred()
+        {
+            RedrawOccurred?.Invoke(this, EventArgs.Empty);
         }
     }
 }
