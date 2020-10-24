@@ -38,8 +38,6 @@ namespace Diz.Core.serialization.xml_serializer
 
         public RomBytes Get(IFormatReader parameter)
         {
-            var romBytesOut = new RomBytes();
-
             var lines = parameter.Content().Split(new char[] { '\n' }, 3).ToList();
             var options = lines[1].Split(new char[] { ',' }).ToList();
             lines = lines[2].Split(new char[] { '\n' }).ToList();
@@ -55,12 +53,17 @@ namespace Diz.Core.serialization.xml_serializer
             if (options.Exists(s => s == "compress_groupblocks"))
                 DecodeCompression_GroupsBlocks(ref lines);
 
-            int lineNum = 0;
+            // perf: allocate all at once, don't use List.Add() one at a time
+            var capacity = lines.Count;
+            var romBytes = new ROMByte[capacity];
+
+            var lineNum = 0;
             try
             {
+                // TODO: romBytesOut.SendNotificationChangedEvents = false;
                 foreach (var line in lines)
                 {
-                    romBytesOut.Add(DecodeRomByte(line));
+                    romBytes[lineNum] = DecodeRomByte(line);
                     lineNum++;
                 }
             }
@@ -70,6 +73,8 @@ namespace Diz.Core.serialization.xml_serializer
                 throw;
             }
 
+            var romBytesOut = new RomBytes();
+            romBytesOut.SetFrom(romBytes);
             return romBytesOut;
         }
 
@@ -116,11 +121,11 @@ namespace Diz.Core.serialization.xml_serializer
             var lines = new List<string>();
             foreach (var rb in instance)
             {
-                var encoded = EncodeByte(rb);
-                lines.Add(encoded);
+                var encodedTxt = EncodeByte(rb);
+                lines.Add(encodedTxt);
 
                 // debug check, optional:
-                var decoded = DecodeRomByte(encoded);
+                var decoded = DecodeRomByte(encodedTxt);
                 Debug.Assert(decoded.EqualsButNoRomByte(rb));
             }
 

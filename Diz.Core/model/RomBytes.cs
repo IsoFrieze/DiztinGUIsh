@@ -10,12 +10,28 @@ namespace Diz.Core.model
 {
     public class RomBytes : IEnumerable<ROMByte>, INotifyCollectionChanged, INotifyPropertyChanged
     {
+        private ObservableCollection<ROMByte> bytes;
+
         // TODO: might be able to do something more generic now that other refactorings are completed.
         //
         // This class needs to do these things that are special:
         // 1) Be handled specially by our custom XML serializer (compresses to save disk space)
         // 2) Handle Equals() by comparing each element in the list (SequenceEqual)
-        public ObservableCollection<ROMByte> Bytes { get; } = new ObservableCollection<ROMByte>();
+        private ObservableCollection<ROMByte> Bytes
+        {
+            get => bytes;
+            set
+            {
+                bytes = value;
+
+                bytes.CollectionChanged += Bytes_CollectionChanged;
+                foreach (var romByte in bytes)
+                {
+                    romByte.PropertyChanged += RomByteObjectChanged;
+                }
+            }
+        }
+
         public ROMByte this[int i]
         {
             get => Bytes[i];
@@ -24,8 +40,12 @@ namespace Diz.Core.model
 
         public RomBytes()
         {
-            // Bytes.PropertyChanged += Bytes_PropertyChanged;
-            Bytes.CollectionChanged += Bytes_CollectionChanged;
+            Bytes = new ObservableCollection<ROMByte>();
+        }
+
+        public void SetFrom(ROMByte[] romBytes)
+        {
+            Bytes = new ObservableCollection<ROMByte>(romBytes);
         }
 
         public int Count => Bytes.Count;
