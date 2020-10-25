@@ -137,7 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompressionTest.cs" />
-    <Compile Include="Fake64Test.cs" />
+    <Compile Include="MiscTests.cs" />
     <Compile Include="LogCreator.cs" />
     <Compile Include="RomByteTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
