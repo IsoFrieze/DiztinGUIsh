@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using Diz.Core.arch;
 using IX.Observable;
 
 namespace Diz.Core.model

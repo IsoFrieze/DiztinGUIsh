@@ -2,7 +2,6 @@
 using System.Text;
 using System.Xml;
 using Diz.Core.model;
-using DiztinGUIsh;
 using ExtendedXmlSerializer;
 
 namespace Diz.Core.serialization.xml_serializer

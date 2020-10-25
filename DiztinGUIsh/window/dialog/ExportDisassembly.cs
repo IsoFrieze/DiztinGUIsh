@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using System.Windows.Forms;
-using Diz.Core;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.util;

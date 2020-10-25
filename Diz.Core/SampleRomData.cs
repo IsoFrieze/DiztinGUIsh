@@ -1,5 +1,4 @@
 ﻿using Diz.Core.model;
-using Diz.Core.util;
 using IX.Observable;
 
 namespace Diz.Core

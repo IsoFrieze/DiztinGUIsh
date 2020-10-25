@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Diz.Core.serialization.xml_serializer;
-using Diz.Core.util;
-using IX.System.Collections.Generic;
 using Xunit;
 
 namespace Diz.Test

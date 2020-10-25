@@ -1,11 +1,9 @@
 ﻿using System.Xml;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
-using Diz.Core.util;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 using IX.Observable;
-using IX.StandardExtensions;
 using Xunit;
 using Xunit.Abstractions;
 

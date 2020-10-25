@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
-using Diz.Core.util;
 using IX.Observable;
 using Xunit;
 

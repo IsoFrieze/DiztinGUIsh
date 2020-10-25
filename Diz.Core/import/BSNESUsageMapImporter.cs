@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.ExceptionServices;
 using Diz.Core.model;
 
 namespace Diz.Core.import

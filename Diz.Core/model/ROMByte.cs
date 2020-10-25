@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using DiztinGUIsh;
+﻿using DiztinGUIsh;
 
 namespace Diz.Core.model
 {

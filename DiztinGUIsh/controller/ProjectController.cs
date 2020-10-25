@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Policy;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;

@@ -1,12 +1,7 @@
-﻿using System.Xml;
-using Diz.Core;
+﻿using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
-using ExtendedXmlSerializer;
-using ExtendedXmlSerializer.Configuration;
-using IX.Observable;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Diz.Test
 {
