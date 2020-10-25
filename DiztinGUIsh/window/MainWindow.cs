@@ -91,7 +91,6 @@ namespace DiztinGUIsh.window
                 new object[] { true });
 
             aliasList = new AliasList(this);
-            visualForm = new VisualizerForm(this);
 
             UpdatePanels();
             UpdateUIFromSettings();
@@ -197,7 +196,9 @@ namespace DiztinGUIsh.window
 
         public void OnProjectOpened(string filename)
         {
-            visualForm.Project = Project;
+            if (visualForm != null)
+                visualForm.Project = Project;
+
             // TODO: do this with aliaslist too.
 
             UpdateSaveOptionStates(true, true);
@@ -883,10 +884,9 @@ namespace DiztinGUIsh.window
             if (Project.Data.GetFlag(unreached) == Data.FlagType.Unreached) SelectOffset(unreached, 1);
         }
 
-        private VisualizerForm visualForm;
-
         private void visualMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            visualForm ??= new VisualizerForm(this);
             visualForm.Show();
         }
 
@@ -1135,6 +1135,7 @@ namespace DiztinGUIsh.window
 
         // sub windows
         public AliasList aliasList;
+        private VisualizerForm visualForm;
 
         private void EnableSubWindows()
         {
