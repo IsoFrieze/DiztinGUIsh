@@ -13,14 +13,14 @@ namespace DiztinGUIsh.window.dialog
         {
             InitializeComponent();
             Data = data;
-            textROM.Text = Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6);
+            textROM.Text = Util.NumberToBaseString(Data.ConvertPCtoSnes(offset), Util.NumberBase.Hexadecimal, 6);
             textPC.Text = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0);
         }
 
         private void GotoDialog_Load(object sender, EventArgs e)
         {
             textROM.SelectAll();
-            UpdateUI();
+            UpdateUi();
         }
 
         private int ParseOffset(string text)
@@ -67,12 +67,12 @@ namespace DiztinGUIsh.window.dialog
         // precondition: unvalidated input in textbox
         // postcondtion: valid text is in both textboxes, or, button is greyed out and error message displayed.
 
-        private void UpdateUI()
+        private void UpdateUi()
         {
             var valid = true;
             lblError.Text = "";
 
-            if (!IsPCOffsetValid())
+            if (!IsPcOffsetValid())
             {
                 lblError.Text = "Invalid PC Offset";
                 valid = false;
@@ -87,15 +87,15 @@ namespace DiztinGUIsh.window.dialog
             go.Enabled = valid;
         }
 
-        private bool IsValidPCAddress(int pc)
+        private bool IsValidPcAddress(int pc)
         {
-            return pc >= 0 && pc < Data.GetROMSize();
+            return pc >= 0 && pc < Data.GetRomSize();
         }
 
-        private bool IsPCOffsetValid()
+        private bool IsPcOffsetValid()
         {
             var offset = GetPcOffset();
-            return IsValidPCAddress(offset);
+            return IsValidPcAddress(offset);
         }
 
         private bool IsRomAddressValid()
@@ -104,33 +104,33 @@ namespace DiztinGUIsh.window.dialog
             if (address < 0)
                 return false;
             
-            return IsValidPCAddress(Data.ConvertSNEStoPC(address));
+            return IsValidPcAddress(Data.ConvertSnesToPc(address));
         }
 
         private void textROM_TextChanged(object sender, EventArgs e)
         {
             UpdateTextChanged(textROM.Text,(finaltext, address, noBase) =>
             {
-                int pc = Data.ConvertSNEStoPC(address);
+                int pc = Data.ConvertSnesToPc(address);
                 
                 textROM.Text = finaltext;
                 textPC.Text = Util.NumberToBaseString(pc, noBase, 0);
             });
 
-            UpdateUI();
+            UpdateUi();
         }
 
         private void textPC_TextChanged(object sender, EventArgs e)
         {
             UpdateTextChanged(textPC.Text, (finaltext, offset, noBase) =>
             {
-                int addr = Data.ConvertPCtoSNES(offset);
+                int addr = Data.ConvertPCtoSnes(offset);
 
                 textPC.Text = finaltext;
                 textROM.Text = Util.NumberToBaseString(addr, noBase, 6);
             });
 
-            UpdateUI();
+            UpdateUi();
         }
 
         private void go_Click(object sender, EventArgs e)

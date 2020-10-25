@@ -31,13 +31,14 @@ namespace Diz.Core.serialization.xml_serializer
     {
         // let the outer XML class do the heavy lifting on versioning.
         // but, let's add one here just because this specific class is complex.
-        private const int CURRENT_DATA_FORMAT_VERSION = 200;
+        private const int CurrentDataFormatVersion = 200;
 
         public static RomBytesSerializer Default { get; } = new RomBytesSerializer();
 
-        public bool compress_groupblock = true;
-        public bool compress_using_table_1 = true;
-        public int numTasksToUse = 10;
+        private const bool CompressGroupBlock = true;
+        private const bool CompressUsingTable1 = true;
+        private const int NumTasksToUse = 10;
+
 
         public RomBytes Get(IFormatReader parameter)
         {
@@ -46,19 +47,19 @@ namespace Diz.Core.serialization.xml_serializer
             return FinishRead(romBytes);
         }
 
-        private ROMByte[] DecodeAllBytes(List<string> allLines)
+        private RomByte[] DecodeAllBytes(List<string> allLines)
         {
-            if (numTasksToUse == 1)
+            if (NumTasksToUse == 1)
                 return DecodeRomBytes(allLines, 0);
 
             var nextIndex = 0;
-            var workListCount = allLines.Count / numTasksToUse;
+            var workListCount = allLines.Count / NumTasksToUse;
 
-            var tasks = new List<Task<ROMByte[]>>(numTasksToUse);
+            var tasks = new List<Task<RomByte[]>>(NumTasksToUse);
 
-            for (var t = 0; t < numTasksToUse; ++t)
+            for (var t = 0; t < NumTasksToUse; ++t)
             {
-                var lastThread = t == numTasksToUse - 1;
+                var lastThread = t == NumTasksToUse - 1;
 
                 if (lastThread)
                     workListCount = allLines.Count - nextIndex;
@@ -71,7 +72,7 @@ namespace Diz.Core.serialization.xml_serializer
 
                 // ReSharper disable once AccessToStaticMemberViaDerivedType
                 var index = nextIndex;
-                var task = Task<ROMByte[]>.Run(() => DecodeRomBytes(workList, index));
+                var task = Task<RomByte[]>.Run(() => DecodeRomBytes(workList, index));
                 tasks.Add(task);
 
                 nextIndex += workListCount;
@@ -82,10 +83,10 @@ namespace Diz.Core.serialization.xml_serializer
             return continuation.Result.SelectMany(i => i).ToArray();
         }
 
-        private static ROMByte[] DecodeRomBytes(List<string> lines, int startingLineNum)
+        private static RomByte[] DecodeRomBytes(List<string> lines, int startingLineNum)
         {
             // perf: allocate all at once, don't use List.Add() one at a time
-            var romBytes = new ROMByte[lines.Count];
+            var romBytes = new RomByte[lines.Count];
             var currentLineNum = startingLineNum;
 
             var romByteEncoding = new RomByteEncoding();
@@ -109,7 +110,7 @@ namespace Diz.Core.serialization.xml_serializer
             return romBytes;
         }
 
-        private static RomBytes FinishRead(ROMByte[] romBytes)
+        private static RomBytes FinishRead(RomByte[] romBytes)
         {
             var romBytesOut = new RomBytes();
             romBytesOut.SetFrom(romBytes);
@@ -155,18 +156,18 @@ namespace Diz.Core.serialization.xml_serializer
 
                 var split = versionOption.Split(':');
                 Debug.Assert(split.Length == 2);
-                if (!int.TryParse(split[1], out var version_num))
+                if (!int.TryParse(split[1], out var versionNum))
                     throw new InvalidDataException(
                         $"Couldn't parse version # from version tag");
 
-                if (version_num > CURRENT_DATA_FORMAT_VERSION)
+                if (versionNum > CurrentDataFormatVersion)
                     throw new InvalidDataException(
-                        $"Newer file format detected: {version_num}. This version of distinguish only supports data table formats up to {CURRENT_DATA_FORMAT_VERSION}.");
+                        $"Newer file format detected: {versionNum}. This version of distinguish only supports data table formats up to {CurrentDataFormatVersion}.");
 
                 // In the future, we can add migrations here for older version. For now, just reject it.
-                if (version_num < CURRENT_DATA_FORMAT_VERSION)
+                if (versionNum < CurrentDataFormatVersion)
                     throw new InvalidDataException(
-                        $"Newer file format detected: {version_num}. This version of distinguish only supports data table formats up to {CURRENT_DATA_FORMAT_VERSION}.");
+                        $"Newer file format detected: {versionNum}. This version of distinguish only supports data table formats up to {CurrentDataFormatVersion}.");
             }
             catch (Exception ex)
             {
@@ -178,7 +179,7 @@ namespace Diz.Core.serialization.xml_serializer
         {
             var options = new List<string>
             {
-                $"version:{CURRENT_DATA_FORMAT_VERSION}",
+                $"version:{CurrentDataFormatVersion}",
             };
 
             var romByteEncoding = new RomByteEncoding();
@@ -196,13 +197,13 @@ namespace Diz.Core.serialization.xml_serializer
 #endif
             }
 
-            if (compress_groupblock)
+            if (CompressGroupBlock)
             {
                 options.Add("compress_groupblocks");
                 RepeaterCompression.Compress(ref lines);
             }
 
-            if (compress_using_table_1)
+            if (CompressUsingTable1)
             {
                 options.Add("compress_table_1");
                 SubstitutionCompression.EncodeCompression_Table1(ref lines);

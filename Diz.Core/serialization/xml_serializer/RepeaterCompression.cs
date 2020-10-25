@@ -45,7 +45,7 @@ namespace Diz.Core.serialization.xml_serializer
 
             // adjustable, just pick something > 8 or it's not worth the optimization.
             // we want to catch large consecutive blocks of data.
-            const int min_number_repeats_before_we_bother = 8;
+            const int minNumberRepeatsBeforeWeBother = 8;
 
             int totalLinesDebug = 0;
 
@@ -69,7 +69,7 @@ namespace Diz.Core.serialization.xml_serializer
                     consecutive++;
                 }
 
-                if (consecutive >= min_number_repeats_before_we_bother)
+                if (consecutive >= minNumberRepeatsBeforeWeBother)
                 {
                     // replace multiple repeated lines with one new statement
                     output.Add($"r {consecutive.ToString()} {lastLine}");

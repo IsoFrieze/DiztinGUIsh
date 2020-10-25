@@ -2,7 +2,7 @@
 
 namespace Diz.Core.model
 {
-    public class ROMByte : DizDataModel
+    public class RomByte : DizDataModel
     {
         // never modify directly. only go through the public fields
         private byte rom;
@@ -11,7 +11,7 @@ namespace Diz.Core.model
         private bool xFlag;
         private bool mFlag;
         private Data.FlagType typeFlag = Data.FlagType.Unreached;
-        private Data.Architecture arch = Data.Architecture.CPU65C816;
+        private Data.Architecture arch = Data.Architecture.Cpu65C816;
         private Data.InOutPoint point = 0;
 
         // holds the original byte from the source ROM
@@ -76,12 +76,12 @@ namespace Diz.Core.model
 
 
         #region Equality
-        protected bool Equals(ROMByte other)
+        protected bool Equals(RomByte other)
         {
             return Rom == other.Rom && EqualsButNoRomByte(other);
         }
 
-        public bool EqualsButNoRomByte(ROMByte other)
+        public bool EqualsButNoRomByte(RomByte other)
         {
             return DataBank == other.DataBank && DirectPage == other.DirectPage && XFlag == other.XFlag && MFlag == other.MFlag && TypeFlag == other.TypeFlag && Arch == other.Arch && Point == other.Point;
         }
@@ -90,7 +90,7 @@ namespace Diz.Core.model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((ROMByte)obj);
+            return obj.GetType() == this.GetType() && Equals((RomByte)obj);
         }
 
         public override int GetHashCode()

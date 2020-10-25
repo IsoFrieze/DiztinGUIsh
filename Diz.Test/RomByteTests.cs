@@ -5,10 +5,10 @@ namespace Diz.Test
 {
     public sealed class RomByteTests
     {
-        private static ROMByte SampleRomByte1()
+        private static RomByte SampleRomByte1()
         {
-            return new ROMByte() {
-                Arch = Data.Architecture.APUSPC700,
+            return new RomByte() {
+                Arch = Data.Architecture.Apuspc700,
                 DataBank = 90,
                 DirectPage = 3,
                 MFlag = true,
@@ -19,7 +19,7 @@ namespace Diz.Test
             };
         }
 
-        private static ROMByte SampleRomByte2()
+        private static RomByte SampleRomByte2()
         {
             // same as above, but just change .Rom
             var rb = SampleRomByte1();

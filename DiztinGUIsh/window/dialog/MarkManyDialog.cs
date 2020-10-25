@@ -10,12 +10,12 @@ namespace DiztinGUIsh
     {
         private int start, end, count, value;
 
-        private Data Data;
+        private Data data;
 
         public MarkManyDialog(int offset, int column, Data data)
         {
             InitializeComponent();
-            Data = data;
+            this.data = data;
 
             switch (column)
             {
@@ -26,7 +26,7 @@ namespace DiztinGUIsh
                 default: property.SelectedIndex = 0; break;
             }
             start = offset;
-            int rest = Data.GetROMSize() - start;
+            int rest = this.data.GetRomSize() - start;
             count = rest < 0x10 ? rest : 0x10;
             end = start + count;
 
@@ -85,9 +85,9 @@ namespace DiztinGUIsh
                 case 5:
                     switch (archCombo.SelectedIndex)
                     {
-                        case 0: return Data.Architecture.CPU65C816;
-                        case 1: return Data.Architecture.APUSPC700;
-                        case 2: return Data.Architecture.GPUSuperFX;
+                        case 0: return Data.Architecture.Cpu65C816;
+                        case 1: return Data.Architecture.Apuspc700;
+                        case 2: return Data.Architecture.GpuSuperFx;
                     }
                     break;
             }
@@ -101,7 +101,7 @@ namespace DiztinGUIsh
             mxCombo.Visible = (property.SelectedIndex == 3 || property.SelectedIndex == 4);
             archCombo.Visible = (property.SelectedIndex == 5);
             regValue.MaxLength = (property.SelectedIndex == 1 ? 3 : 5);
-            value = property.SelectedIndex == 1 ? Data.GetDataBank(start) : Data.GetDirectPage(start);
+            value = property.SelectedIndex == 1 ? data.GetDataBank(start) : data.GetDirectPage(start);
         }
 
         private bool updatingText;
@@ -110,7 +110,7 @@ namespace DiztinGUIsh
         {
             Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
             int digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
-            int size = Data.GetROMSize();
+            int size = data.GetRomSize();
             int maxValue = property.SelectedIndex == 1 ? 0x100 : 0x10000;
 
             if (start < 0) start = 0;
@@ -121,8 +121,8 @@ namespace DiztinGUIsh
             if (value >= maxValue) value = maxValue - 1;
 
             updatingText = true;
-            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioROM.Checked ? Data.ConvertPCtoSNES(start) : start, noBase, digits);
-            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? Data.ConvertPCtoSNES(end) : end, noBase, digits);
+            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioROM.Checked ? data.ConvertPCtoSnes(start) : start, noBase, digits);
+            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? data.ConvertPCtoSnes(end) : end, noBase, digits);
             if (selected != textCount) textCount.Text = Util.NumberToBaseString(count, noBase, 0);
             if (selected != regValue) regValue.Text = Util.NumberToBaseString(value, noBase, 0);
             updatingText = false;
@@ -151,7 +151,7 @@ namespace DiztinGUIsh
 
             if (int.TryParse(textEnd.Text, style, null, out var result))
             {
-                if (radioROM.Checked) result = Data.ConvertSNEStoPC(result);
+                if (radioROM.Checked) result = data.ConvertSnesToPc(result);
                 end = result;
                 count = end - start;
             }
@@ -192,7 +192,7 @@ namespace DiztinGUIsh
 
             if (int.TryParse(textStart.Text, style, null, out var result))
             {
-                if (radioROM.Checked) result = Data.ConvertSNEStoPC(result);
+                if (radioROM.Checked) result = data.ConvertSnesToPc(result);
                 start = result;
                 count = end - start;
             }

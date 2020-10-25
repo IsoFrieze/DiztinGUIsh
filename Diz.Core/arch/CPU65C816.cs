@@ -3,41 +3,41 @@ using Diz.Core.util;
 
 namespace Diz.Core.arch
 {
-    public class CPU65C816
+    public class Cpu65C816
     {
-        private readonly Data Data;
-        public CPU65C816(Data data)
+        private readonly Data data;
+        public Cpu65C816(Data data)
         {
-            Data = data;
+            this.data = data;
         }
         public int Step(int offset, bool branch, bool force, int prevOffset)
         {
-            var opcode = Data.GetROMByte(offset);
-            var prevDirectPage = Data.GetDirectPage(offset);
-            var prevDataBank = Data.GetDataBank(offset);
-            bool prevX = Data.GetXFlag(offset), prevM = Data.GetMFlag(offset);
+            var opcode = data.GetRomByte(offset);
+            var prevDirectPage = data.GetDirectPage(offset);
+            var prevDataBank = data.GetDataBank(offset);
+            bool prevX = data.GetXFlag(offset), prevM = data.GetMFlag(offset);
 
-            while (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
-            if (prevOffset >= 0 && Data.GetFlag(prevOffset) == Data.FlagType.Opcode)
+            while (prevOffset >= 0 && data.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
+            if (prevOffset >= 0 && data.GetFlag(prevOffset) == Data.FlagType.Opcode)
             {
-                prevDirectPage = Data.GetDirectPage(prevOffset);
-                prevDataBank = Data.GetDataBank(prevOffset);
-                prevX = Data.GetXFlag(prevOffset);
-                prevM = Data.GetMFlag(prevOffset);
+                prevDirectPage = data.GetDirectPage(prevOffset);
+                prevDataBank = data.GetDataBank(prevOffset);
+                prevX = data.GetXFlag(prevOffset);
+                prevM = data.GetMFlag(prevOffset);
             }
 
             if (opcode == 0xC2 || opcode == 0xE2) // REP SEP
             {
-                prevX = (Data.GetROMByte(offset + 1) & 0x10) != 0 ? opcode == 0xE2 : prevX;
-                prevM = (Data.GetROMByte(offset + 1) & 0x20) != 0 ? opcode == 0xE2 : prevM;
+                prevX = (data.GetRomByte(offset + 1) & 0x10) != 0 ? opcode == 0xE2 : prevX;
+                prevM = (data.GetRomByte(offset + 1) & 0x20) != 0 ? opcode == 0xE2 : prevM;
             }
 
             // set first byte first, so the instruction length is correct
-            Data.SetFlag(offset, Data.FlagType.Opcode);
-            Data.SetDataBank(offset, prevDataBank);
-            Data.SetDirectPage(offset, prevDirectPage);
-            Data.SetXFlag(offset, prevX);
-            Data.SetMFlag(offset, prevM);
+            data.SetFlag(offset, Data.FlagType.Opcode);
+            data.SetDataBank(offset, prevDataBank);
+            data.SetDirectPage(offset, prevDirectPage);
+            data.SetXFlag(offset, prevX);
+            data.SetMFlag(offset, prevM);
 
             var length = GetInstructionLength(offset);
 
@@ -54,11 +54,11 @@ namespace Diz.Core.arch
             // in most situations.
             for (var i = 1; i < length; i++)
             {
-                Data.SetFlag(offset + i, Data.FlagType.Operand);
-                Data.SetDataBank(offset + i, prevDataBank);
-                Data.SetDirectPage(offset + i, prevDirectPage);
-                Data.SetXFlag(offset + i, prevX);
-                Data.SetMFlag(offset + i, prevM);
+                data.SetFlag(offset + i, Data.FlagType.Operand);
+                data.SetDataBank(offset + i, prevDataBank);
+                data.SetDirectPage(offset + i, prevDirectPage);
+                data.SetXFlag(offset + i, prevX);
+                data.SetMFlag(offset + i, prevM);
             }
 
             MarkInOutPoints(offset);
@@ -71,7 +71,7 @@ namespace Diz.Core.arch
                  opcode != 0x22)))) 
                 return nextOffset;
 
-            var iaNextOffsetPc = Data.ConvertSNEStoPC(GetIntermediateAddress(offset, true));
+            var iaNextOffsetPc = data.ConvertSnesToPc(GetIntermediateAddress(offset, true));
             if (iaNextOffsetPc >= 0) 
                 nextOffset = iaNextOffsetPc;
 
@@ -83,58 +83,58 @@ namespace Diz.Core.arch
         public int GetIntermediateAddress(int offset, bool resolve)
         {
             int bank, directPage, operand, programCounter;
-            var opcode = Data.GetROMByte(offset);
+            var opcode = data.GetRomByte(offset);
 
             var mode = GetAddressMode(offset);
             switch (mode)
             {
-                case AddressMode.DIRECT_PAGE:
-                case AddressMode.DIRECT_PAGE_X_INDEX:
-                case AddressMode.DIRECT_PAGE_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_INDIRECT:
-                case AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT:
-                case AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_LONG_INDIRECT:
-                case AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX:
+                case AddressMode.DirectPage:
+                case AddressMode.DirectPageXIndex:
+                case AddressMode.DirectPageYIndex:
+                case AddressMode.DirectPageIndirect:
+                case AddressMode.DirectPageXIndexIndirect:
+                case AddressMode.DirectPageIndirectYIndex:
+                case AddressMode.DirectPageLongIndirect:
+                case AddressMode.DirectPageLongIndirectYIndex:
                     if (resolve)
                     {
-                        directPage = Data.GetDirectPage(offset);
-                        operand = Data.GetROMByte(offset + 1);
+                        directPage = data.GetDirectPage(offset);
+                        operand = data.GetRomByte(offset + 1);
                         return (directPage + operand) & 0xFFFF;
                     }
                     else
                     {
-                        goto case AddressMode.DIRECT_PAGE_S_INDEX;
+                        goto case AddressMode.DirectPageSIndex;
                     }
-                case AddressMode.DIRECT_PAGE_S_INDEX:
-                case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
-                    return Data.GetROMByte(offset + 1);
-                case AddressMode.ADDRESS:
-                case AddressMode.ADDRESS_X_INDEX:
-                case AddressMode.ADDRESS_Y_INDEX:
-                case AddressMode.ADDRESS_X_INDEX_INDIRECT:
+                case AddressMode.DirectPageSIndex:
+                case AddressMode.DirectPageSIndexIndirectYIndex:
+                    return data.GetRomByte(offset + 1);
+                case AddressMode.Address:
+                case AddressMode.AddressXIndex:
+                case AddressMode.AddressYIndex:
+                case AddressMode.AddressXIndexIndirect:
                     bank = (opcode == 0x20 || opcode == 0x4C || opcode == 0x7C || opcode == 0xFC) ?
-                        Data.ConvertPCtoSNES(offset) >> 16 :
-                        Data.GetDataBank(offset);
-                    operand = Data.GetROMWord(offset + 1); 
+                        data.ConvertPCtoSnes(offset) >> 16 :
+                        data.GetDataBank(offset);
+                    operand = data.GetRomWord(offset + 1); 
                     return (bank << 16) | operand;
-                case AddressMode.ADDRESS_INDIRECT:
-                case AddressMode.ADDRESS_LONG_INDIRECT:
-                    operand = Data.GetROMWord(offset + 1);
+                case AddressMode.AddressIndirect:
+                case AddressMode.AddressLongIndirect:
+                    operand = data.GetRomWord(offset + 1);
                     return operand;
-                case AddressMode.LONG:
-                case AddressMode.LONG_X_INDEX:
-                    operand = Data.GetROMLong(offset + 1);
+                case AddressMode.Long:
+                case AddressMode.LongXIndex:
+                    operand = data.GetRomLong(offset + 1);
                     return operand;
-                case AddressMode.RELATIVE_8:
-                    programCounter = Data.ConvertPCtoSNES(offset + 2);
+                case AddressMode.Relative8:
+                    programCounter = data.ConvertPCtoSnes(offset + 2);
                     bank = programCounter >> 16;
-                    offset = (sbyte)Data.GetROMByte(offset + 1);
+                    offset = (sbyte)data.GetRomByte(offset + 1);
                     return (bank << 16) | ((programCounter + offset) & 0xFFFF);
-                case AddressMode.RELATIVE_16:
-                    programCounter = Data.ConvertPCtoSNES(offset + 3);
+                case AddressMode.Relative16:
+                    programCounter = data.ConvertPCtoSnes(offset + 3);
                     bank = programCounter >> 16;
-                    offset = (short)Data.GetROMWord(offset + 1);
+                    offset = (short)data.GetRomWord(offset + 1);
                     return (bank << 16) | ((programCounter + offset) & 0xFFFF);
             }
             return -1;
@@ -146,18 +146,18 @@ namespace Diz.Core.arch
             string format = GetInstructionFormatString(offset);
             string mnemonic = GetMnemonic(offset);
             string op1 = "", op2 = "";
-            if (mode == AddressMode.BLOCK_MOVE)
+            if (mode == AddressMode.BlockMove)
             {
-                op1 = Util.NumberToBaseString(Data.GetROMByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
-                op2 = Util.NumberToBaseString(Data.GetROMByte(offset + 2), Util.NumberBase.Hexadecimal, 2, true);
+                op1 = Util.NumberToBaseString(data.GetRomByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
+                op2 = Util.NumberToBaseString(data.GetRomByte(offset + 2), Util.NumberBase.Hexadecimal, 2, true);
             }
-            else if (mode == AddressMode.CONSTANT_8 || mode == AddressMode.IMMEDIATE_8)
+            else if (mode == AddressMode.Constant8 || mode == AddressMode.Immediate8)
             {
-                op1 = Util.NumberToBaseString(Data.GetROMByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
+                op1 = Util.NumberToBaseString(data.GetRomByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
             }
-            else if (mode == AddressMode.IMMEDIATE_16)
+            else if (mode == AddressMode.Immediate16)
             {
-                op1 = Util.NumberToBaseString(Data.GetROMWord(offset + 1), Util.NumberBase.Hexadecimal, 4, true);
+                op1 = Util.NumberToBaseString(data.GetRomWord(offset + 1), Util.NumberBase.Hexadecimal, 4, true);
             }
             else
             {
@@ -179,35 +179,35 @@ namespace Diz.Core.arch
         {
             switch (mode)
             {
-                case AddressMode.IMPLIED:
-                case AddressMode.ACCUMULATOR:
+                case AddressMode.Implied:
+                case AddressMode.Accumulator:
                     return 1;
-                case AddressMode.CONSTANT_8:
-                case AddressMode.IMMEDIATE_8:
-                case AddressMode.DIRECT_PAGE:
-                case AddressMode.DIRECT_PAGE_X_INDEX:
-                case AddressMode.DIRECT_PAGE_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_S_INDEX:
-                case AddressMode.DIRECT_PAGE_INDIRECT:
-                case AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT:
-                case AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_LONG_INDIRECT:
-                case AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX:
-                case AddressMode.RELATIVE_8:
+                case AddressMode.Constant8:
+                case AddressMode.Immediate8:
+                case AddressMode.DirectPage:
+                case AddressMode.DirectPageXIndex:
+                case AddressMode.DirectPageYIndex:
+                case AddressMode.DirectPageSIndex:
+                case AddressMode.DirectPageIndirect:
+                case AddressMode.DirectPageXIndexIndirect:
+                case AddressMode.DirectPageIndirectYIndex:
+                case AddressMode.DirectPageSIndexIndirectYIndex:
+                case AddressMode.DirectPageLongIndirect:
+                case AddressMode.DirectPageLongIndirectYIndex:
+                case AddressMode.Relative8:
                     return 2;
-                case AddressMode.IMMEDIATE_16:
-                case AddressMode.ADDRESS:
-                case AddressMode.ADDRESS_X_INDEX:
-                case AddressMode.ADDRESS_Y_INDEX:
-                case AddressMode.ADDRESS_INDIRECT:
-                case AddressMode.ADDRESS_X_INDEX_INDIRECT:
-                case AddressMode.ADDRESS_LONG_INDIRECT:
-                case AddressMode.BLOCK_MOVE:
-                case AddressMode.RELATIVE_16:
+                case AddressMode.Immediate16:
+                case AddressMode.Address:
+                case AddressMode.AddressXIndex:
+                case AddressMode.AddressYIndex:
+                case AddressMode.AddressIndirect:
+                case AddressMode.AddressXIndexIndirect:
+                case AddressMode.AddressLongIndirect:
+                case AddressMode.BlockMove:
+                case AddressMode.Relative16:
                     return 3;
-                case AddressMode.LONG:
-                case AddressMode.LONG_X_INDEX:
+                case AddressMode.Long:
+                case AddressMode.LongXIndex:
                     return 4;
             }
 
@@ -216,62 +216,62 @@ namespace Diz.Core.arch
 
         public void MarkInOutPoints(int offset)
         {
-            int opcode = Data.GetROMByte(offset);
-            int iaOffsetPC = Data.ConvertSNEStoPC(Data.GetIntermediateAddress(offset, true));
+            int opcode = data.GetRomByte(offset);
+            int iaOffsetPc = data.ConvertSnesToPc(data.GetIntermediateAddress(offset, true));
 
             // set read point on EA
-            if (iaOffsetPC >= 0 && ( // these are all read/write/math instructions
+            if (iaOffsetPc >= 0 && ( // these are all read/write/math instructions
                 ((opcode & 0x04) != 0) || ((opcode & 0x0F) == 0x01) || ((opcode & 0x0F) == 0x03) ||
                 ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
                 (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
                 (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
-            ) Data.SetInOutPoint(iaOffsetPC, Data.InOutPoint.ReadPoint);
+            ) data.SetInOutPoint(iaOffsetPc, Data.InOutPoint.ReadPoint);
 
             // set end point on offset
             if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
                 || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
                 || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC // BRL STP JML
-            ) Data.SetInOutPoint(offset, Data.InOutPoint.EndPoint);
+            ) data.SetInOutPoint(offset, Data.InOutPoint.EndPoint);
 
             // set out point on offset
             // set in point on EA
-            if (iaOffsetPC >= 0 && (
+            if (iaOffsetPc >= 0 && (
                 opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
                 || opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70  // BPL BMI BVC BVS
                 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0  // BCC BCS BNE BEQ
                 || opcode == 0x20 || opcode == 0x22)) // JSR JSL
             {
-                Data.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
-                Data.SetInOutPoint(iaOffsetPC, Data.InOutPoint.InPoint);
+                data.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
+                data.SetInOutPoint(iaOffsetPc, Data.InOutPoint.InPoint);
             }
         }
 
         private string FormatOperandAddress(int offset, AddressMode mode)
         {
-            int address = Data.GetIntermediateAddress(offset);
+            int address = data.GetIntermediateAddress(offset);
             if (address < 0) 
                 return "";
 
-            var label = Data.GetLabelName(address);
+            var label = data.GetLabelName(address);
             if (label != "") 
                 return label;
 
             var count = BytesToShow(mode);
-            if (mode == AddressMode.RELATIVE_8 || mode == AddressMode.RELATIVE_16) address = Data.GetROMWord(offset + 1);
+            if (mode == AddressMode.Relative8 || mode == AddressMode.Relative16) address = data.GetRomWord(offset + 1);
             address &= ~(-1 << (8 * count));
             return Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 2 * count, true);
         }
 
         private string GetMnemonic(int offset, bool showHint = true)
         {
-            var mn = mnemonics[Data.GetROMByte(offset)];
+            var mn = Mnemonics[data.GetRomByte(offset)];
             if (!showHint) 
                 return mn;
 
             var mode = GetAddressMode(offset);
             var count = BytesToShow(mode);
 
-            if (mode == AddressMode.CONSTANT_8 || mode == AddressMode.RELATIVE_16 || mode == AddressMode.RELATIVE_8) return mn;
+            if (mode == AddressMode.Constant8 || mode == AddressMode.Relative16 || mode == AddressMode.Relative8) return mn;
 
             return count switch
             {
@@ -286,31 +286,31 @@ namespace Diz.Core.arch
         {
             switch (mode)
             {
-                case AddressMode.CONSTANT_8:
-                case AddressMode.IMMEDIATE_8:
-                case AddressMode.DIRECT_PAGE:
-                case AddressMode.DIRECT_PAGE_X_INDEX:
-                case AddressMode.DIRECT_PAGE_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_S_INDEX:
-                case AddressMode.DIRECT_PAGE_INDIRECT:
-                case AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT:
-                case AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
-                case AddressMode.DIRECT_PAGE_LONG_INDIRECT:
-                case AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX:
-                case AddressMode.RELATIVE_8:
+                case AddressMode.Constant8:
+                case AddressMode.Immediate8:
+                case AddressMode.DirectPage:
+                case AddressMode.DirectPageXIndex:
+                case AddressMode.DirectPageYIndex:
+                case AddressMode.DirectPageSIndex:
+                case AddressMode.DirectPageIndirect:
+                case AddressMode.DirectPageXIndexIndirect:
+                case AddressMode.DirectPageIndirectYIndex:
+                case AddressMode.DirectPageSIndexIndirectYIndex:
+                case AddressMode.DirectPageLongIndirect:
+                case AddressMode.DirectPageLongIndirectYIndex:
+                case AddressMode.Relative8:
                     return 1;
-                case AddressMode.IMMEDIATE_16:
-                case AddressMode.ADDRESS:
-                case AddressMode.ADDRESS_X_INDEX:
-                case AddressMode.ADDRESS_Y_INDEX:
-                case AddressMode.ADDRESS_INDIRECT:
-                case AddressMode.ADDRESS_X_INDEX_INDIRECT:
-                case AddressMode.ADDRESS_LONG_INDIRECT:
-                case AddressMode.RELATIVE_16:
+                case AddressMode.Immediate16:
+                case AddressMode.Address:
+                case AddressMode.AddressXIndex:
+                case AddressMode.AddressYIndex:
+                case AddressMode.AddressIndirect:
+                case AddressMode.AddressXIndexIndirect:
+                case AddressMode.AddressLongIndirect:
+                case AddressMode.Relative16:
                     return 2;
-                case AddressMode.LONG:
-                case AddressMode.LONG_X_INDEX:
+                case AddressMode.Long:
+                case AddressMode.LongXIndex:
                     return 3;
             }
             return 0;
@@ -324,45 +324,45 @@ namespace Diz.Core.arch
             var mode = GetAddressMode(offset);
             switch (mode)
             {
-                case AddressMode.IMPLIED:
+                case AddressMode.Implied:
                     return "{0}";
-                case AddressMode.ACCUMULATOR:
+                case AddressMode.Accumulator:
                     return "{0} A";
-                case AddressMode.CONSTANT_8:
-                case AddressMode.IMMEDIATE_8:
-                case AddressMode.IMMEDIATE_16:
+                case AddressMode.Constant8:
+                case AddressMode.Immediate8:
+                case AddressMode.Immediate16:
                     return "{0} #{1}";
-                case AddressMode.DIRECT_PAGE:
-                case AddressMode.ADDRESS:
-                case AddressMode.LONG:
-                case AddressMode.RELATIVE_8:
-                case AddressMode.RELATIVE_16:
+                case AddressMode.DirectPage:
+                case AddressMode.Address:
+                case AddressMode.Long:
+                case AddressMode.Relative8:
+                case AddressMode.Relative16:
                     return "{0} {1}";
-                case AddressMode.DIRECT_PAGE_X_INDEX:
-                case AddressMode.ADDRESS_X_INDEX:
-                case AddressMode.LONG_X_INDEX:
+                case AddressMode.DirectPageXIndex:
+                case AddressMode.AddressXIndex:
+                case AddressMode.LongXIndex:
                     return "{0} {1},X";
-                case AddressMode.DIRECT_PAGE_Y_INDEX:
-                case AddressMode.ADDRESS_Y_INDEX:
+                case AddressMode.DirectPageYIndex:
+                case AddressMode.AddressYIndex:
                     return "{0} {1},Y";
-                case AddressMode.DIRECT_PAGE_S_INDEX:
+                case AddressMode.DirectPageSIndex:
                     return "{0} {1},S";
-                case AddressMode.DIRECT_PAGE_INDIRECT:
-                case AddressMode.ADDRESS_INDIRECT:
+                case AddressMode.DirectPageIndirect:
+                case AddressMode.AddressIndirect:
                     return "{0} ({1})";
-                case AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT:
-                case AddressMode.ADDRESS_X_INDEX_INDIRECT:
+                case AddressMode.DirectPageXIndexIndirect:
+                case AddressMode.AddressXIndexIndirect:
                     return "{0} ({1},X)";
-                case AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX:
+                case AddressMode.DirectPageIndirectYIndex:
                     return "{0} ({1}),Y";
-                case AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX:
+                case AddressMode.DirectPageSIndexIndirectYIndex:
                     return "{0} ({1},S),Y";
-                case AddressMode.DIRECT_PAGE_LONG_INDIRECT:
-                case AddressMode.ADDRESS_LONG_INDIRECT:
+                case AddressMode.DirectPageLongIndirect:
+                case AddressMode.AddressLongIndirect:
                     return "{0} [{1}]";
-                case AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX:
+                case AddressMode.DirectPageLongIndirectYIndex:
                     return "{0} [{1}],Y";
-                case AddressMode.BLOCK_MOVE:
+                case AddressMode.BlockMove:
                     return "{0} {1},{2}";
             }
             return "";
@@ -370,33 +370,33 @@ namespace Diz.Core.arch
 
         private AddressMode GetAddressMode(int offset)
         {
-            var mode = addressingModes[Data.GetROMByte(offset)];
+            var mode = AddressingModes[data.GetRomByte(offset)];
             return mode switch
             {
-                AddressMode.IMMEDIATE_M_FLAG_DEPENDENT => Data.GetMFlag(offset)
-                    ? AddressMode.IMMEDIATE_8
-                    : AddressMode.IMMEDIATE_16,
-                AddressMode.IMMEDIATE_X_FLAG_DEPENDENT => Data.GetXFlag(offset)
-                    ? AddressMode.IMMEDIATE_8
-                    : AddressMode.IMMEDIATE_16,
+                AddressMode.ImmediateMFlagDependent => data.GetMFlag(offset)
+                    ? AddressMode.Immediate8
+                    : AddressMode.Immediate16,
+                AddressMode.ImmediateXFlagDependent => data.GetXFlag(offset)
+                    ? AddressMode.Immediate8
+                    : AddressMode.Immediate16,
                 _ => mode
             };
         }
 
         public enum AddressMode : byte
         {
-            IMPLIED, ACCUMULATOR, CONSTANT_8, IMMEDIATE_8, IMMEDIATE_16,
-            IMMEDIATE_X_FLAG_DEPENDENT, IMMEDIATE_M_FLAG_DEPENDENT,
-            DIRECT_PAGE, DIRECT_PAGE_X_INDEX, DIRECT_PAGE_Y_INDEX,
-            DIRECT_PAGE_S_INDEX, DIRECT_PAGE_INDIRECT, DIRECT_PAGE_X_INDEX_INDIRECT,
-            DIRECT_PAGE_INDIRECT_Y_INDEX, DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX,
-            DIRECT_PAGE_LONG_INDIRECT, DIRECT_PAGE_LONG_INDIRECT_Y_INDEX,
-            ADDRESS, ADDRESS_X_INDEX, ADDRESS_Y_INDEX, ADDRESS_INDIRECT,
-            ADDRESS_X_INDEX_INDIRECT, ADDRESS_LONG_INDIRECT,
-            LONG, LONG_X_INDEX, BLOCK_MOVE, RELATIVE_8, RELATIVE_16
+            Implied, Accumulator, Constant8, Immediate8, Immediate16,
+            ImmediateXFlagDependent, ImmediateMFlagDependent,
+            DirectPage, DirectPageXIndex, DirectPageYIndex,
+            DirectPageSIndex, DirectPageIndirect, DirectPageXIndexIndirect,
+            DirectPageIndirectYIndex, DirectPageSIndexIndirectYIndex,
+            DirectPageLongIndirect, DirectPageLongIndirectYIndex,
+            Address, AddressXIndex, AddressYIndex, AddressIndirect,
+            AddressXIndexIndirect, AddressLongIndirect,
+            Long, LongXIndex, BlockMove, Relative8, Relative16
         }
 
-        private static readonly string[] mnemonics =
+        private static readonly string[] Mnemonics =
         {
             "BRK", "ORA", "COP", "ORA", "TSB", "ORA", "ASL", "ORA", "PHP", "ORA", "ASL", "PHD", "TSB", "ORA", "ASL", "ORA",
             "BPL", "ORA", "ORA", "ORA", "TRB", "ORA", "ASL", "ORA", "CLC", "ORA", "INC", "TCS", "TRB", "ORA", "ASL", "ORA",
@@ -416,79 +416,79 @@ namespace Diz.Core.arch
             "BEQ", "SBC", "SBC", "SBC", "PEA", "SBC", "INC", "SBC", "SED", "SBC", "PLX", "XCE", "JSR", "SBC", "INC", "SBC"
         };
 
-        private static readonly AddressMode[] addressingModes =
+        private static readonly AddressMode[] AddressingModes =
         {
-            AddressMode.CONSTANT_8, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.CONSTANT_8, AddressMode.DIRECT_PAGE_S_INDEX,
-            AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
-            AddressMode.IMPLIED, AddressMode.IMMEDIATE_M_FLAG_DEPENDENT, AddressMode.ACCUMULATOR, AddressMode.IMPLIED,
-            AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.LONG,
-            AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX, AddressMode.DIRECT_PAGE_INDIRECT, AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX,
-            AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX,
-            AddressMode.IMPLIED, AddressMode.ADDRESS_Y_INDEX, AddressMode.ACCUMULATOR, AddressMode.IMPLIED,
-            AddressMode.ADDRESS, AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.LONG_X_INDEX,
+            AddressMode.Constant8, AddressMode.DirectPageXIndexIndirect, AddressMode.Constant8, AddressMode.DirectPageSIndex,
+            AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPageLongIndirect,
+            AddressMode.Implied, AddressMode.ImmediateMFlagDependent, AddressMode.Accumulator, AddressMode.Implied,
+            AddressMode.Address, AddressMode.Address, AddressMode.Address, AddressMode.Long,
+            AddressMode.Relative8, AddressMode.DirectPageIndirectYIndex, AddressMode.DirectPageIndirect, AddressMode.DirectPageSIndexIndirectYIndex,
+            AddressMode.DirectPage, AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageLongIndirectYIndex,
+            AddressMode.Implied, AddressMode.AddressYIndex, AddressMode.Accumulator, AddressMode.Implied,
+            AddressMode.Address, AddressMode.AddressXIndex, AddressMode.AddressXIndex, AddressMode.LongXIndex,
 
-            AddressMode.ADDRESS, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.LONG, AddressMode.DIRECT_PAGE_S_INDEX,
-            AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
-            AddressMode.IMPLIED, AddressMode.IMMEDIATE_M_FLAG_DEPENDENT, AddressMode.ACCUMULATOR, AddressMode.IMPLIED,
-            AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.LONG,
-            AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX, AddressMode.DIRECT_PAGE_INDIRECT, AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX,
-            AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX,
-            AddressMode.IMPLIED, AddressMode.ADDRESS_Y_INDEX, AddressMode.ACCUMULATOR, AddressMode.IMPLIED,
-            AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.LONG_X_INDEX,
+            AddressMode.Address, AddressMode.DirectPageXIndexIndirect, AddressMode.Long, AddressMode.DirectPageSIndex,
+            AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPageLongIndirect,
+            AddressMode.Implied, AddressMode.ImmediateMFlagDependent, AddressMode.Accumulator, AddressMode.Implied,
+            AddressMode.Address, AddressMode.Address, AddressMode.Address, AddressMode.Long,
+            AddressMode.Relative8, AddressMode.DirectPageIndirectYIndex, AddressMode.DirectPageIndirect, AddressMode.DirectPageSIndexIndirectYIndex,
+            AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageLongIndirectYIndex,
+            AddressMode.Implied, AddressMode.AddressYIndex, AddressMode.Accumulator, AddressMode.Implied,
+            AddressMode.AddressXIndex, AddressMode.AddressXIndex, AddressMode.AddressXIndex, AddressMode.LongXIndex,
 
-            AddressMode.IMPLIED, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.CONSTANT_8, AddressMode.DIRECT_PAGE_S_INDEX,
-            AddressMode.BLOCK_MOVE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
-            AddressMode.IMPLIED, AddressMode.IMMEDIATE_M_FLAG_DEPENDENT, AddressMode.ACCUMULATOR, AddressMode.IMPLIED,
-            AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.LONG,
-            AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX, AddressMode.DIRECT_PAGE_INDIRECT, AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX,
-            AddressMode.BLOCK_MOVE, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX,
-            AddressMode.IMPLIED, AddressMode.ADDRESS_Y_INDEX, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.LONG, AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.LONG_X_INDEX,
+            AddressMode.Implied, AddressMode.DirectPageXIndexIndirect, AddressMode.Constant8, AddressMode.DirectPageSIndex,
+            AddressMode.BlockMove, AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPageLongIndirect,
+            AddressMode.Implied, AddressMode.ImmediateMFlagDependent, AddressMode.Accumulator, AddressMode.Implied,
+            AddressMode.Address, AddressMode.Address, AddressMode.Address, AddressMode.Long,
+            AddressMode.Relative8, AddressMode.DirectPageIndirectYIndex, AddressMode.DirectPageIndirect, AddressMode.DirectPageSIndexIndirectYIndex,
+            AddressMode.BlockMove, AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageLongIndirectYIndex,
+            AddressMode.Implied, AddressMode.AddressYIndex, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.Long, AddressMode.AddressXIndex, AddressMode.AddressXIndex, AddressMode.LongXIndex,
 
-            AddressMode.IMPLIED, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.RELATIVE_16, AddressMode.DIRECT_PAGE_S_INDEX,
-            AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
-            AddressMode.IMPLIED, AddressMode.IMMEDIATE_M_FLAG_DEPENDENT, AddressMode.ACCUMULATOR, AddressMode.IMPLIED,
-            AddressMode.ADDRESS_INDIRECT, AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.LONG,
-            AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX, AddressMode.DIRECT_PAGE_INDIRECT, AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX,
-            AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX,
-            AddressMode.IMPLIED, AddressMode.ADDRESS_Y_INDEX, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.ADDRESS_X_INDEX_INDIRECT, AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.LONG_X_INDEX,
+            AddressMode.Implied, AddressMode.DirectPageXIndexIndirect, AddressMode.Relative16, AddressMode.DirectPageSIndex,
+            AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPageLongIndirect,
+            AddressMode.Implied, AddressMode.ImmediateMFlagDependent, AddressMode.Accumulator, AddressMode.Implied,
+            AddressMode.AddressIndirect, AddressMode.Address, AddressMode.Address, AddressMode.Long,
+            AddressMode.Relative8, AddressMode.DirectPageIndirectYIndex, AddressMode.DirectPageIndirect, AddressMode.DirectPageSIndexIndirectYIndex,
+            AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageLongIndirectYIndex,
+            AddressMode.Implied, AddressMode.AddressYIndex, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.AddressXIndexIndirect, AddressMode.AddressXIndex, AddressMode.AddressXIndex, AddressMode.LongXIndex,
 
-            AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.RELATIVE_16, AddressMode.DIRECT_PAGE_S_INDEX,
-            AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
-            AddressMode.IMPLIED, AddressMode.IMMEDIATE_M_FLAG_DEPENDENT, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.LONG,
-            AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX, AddressMode.DIRECT_PAGE_INDIRECT, AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX,
-            AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_Y_INDEX, AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX,
-            AddressMode.IMPLIED, AddressMode.ADDRESS_Y_INDEX, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.ADDRESS, AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.LONG_X_INDEX,
+            AddressMode.Relative8, AddressMode.DirectPageXIndexIndirect, AddressMode.Relative16, AddressMode.DirectPageSIndex,
+            AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPageLongIndirect,
+            AddressMode.Implied, AddressMode.ImmediateMFlagDependent, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.Address, AddressMode.Address, AddressMode.Address, AddressMode.Long,
+            AddressMode.Relative8, AddressMode.DirectPageIndirectYIndex, AddressMode.DirectPageIndirect, AddressMode.DirectPageSIndexIndirectYIndex,
+            AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageYIndex, AddressMode.DirectPageLongIndirectYIndex,
+            AddressMode.Implied, AddressMode.AddressYIndex, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.Address, AddressMode.AddressXIndex, AddressMode.AddressXIndex, AddressMode.LongXIndex,
 
-            AddressMode.IMMEDIATE_X_FLAG_DEPENDENT, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.IMMEDIATE_X_FLAG_DEPENDENT, AddressMode.DIRECT_PAGE_S_INDEX,
-            AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
-            AddressMode.IMPLIED, AddressMode.IMMEDIATE_M_FLAG_DEPENDENT, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.LONG,
-            AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX, AddressMode.DIRECT_PAGE_INDIRECT, AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX,
-            AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_Y_INDEX, AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX,
-            AddressMode.IMPLIED, AddressMode.ADDRESS_Y_INDEX, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_Y_INDEX, AddressMode.LONG_X_INDEX,
+            AddressMode.ImmediateXFlagDependent, AddressMode.DirectPageXIndexIndirect, AddressMode.ImmediateXFlagDependent, AddressMode.DirectPageSIndex,
+            AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPageLongIndirect,
+            AddressMode.Implied, AddressMode.ImmediateMFlagDependent, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.Address, AddressMode.Address, AddressMode.Address, AddressMode.Long,
+            AddressMode.Relative8, AddressMode.DirectPageIndirectYIndex, AddressMode.DirectPageIndirect, AddressMode.DirectPageSIndexIndirectYIndex,
+            AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageYIndex, AddressMode.DirectPageLongIndirectYIndex,
+            AddressMode.Implied, AddressMode.AddressYIndex, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.AddressXIndex, AddressMode.AddressXIndex, AddressMode.AddressYIndex, AddressMode.LongXIndex,
 
-            AddressMode.IMMEDIATE_X_FLAG_DEPENDENT, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.CONSTANT_8, AddressMode.DIRECT_PAGE_S_INDEX,
-            AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
-            AddressMode.IMPLIED, AddressMode.IMMEDIATE_M_FLAG_DEPENDENT, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.LONG,
-            AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX, AddressMode.DIRECT_PAGE_INDIRECT, AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX,
-            AddressMode.DIRECT_PAGE_INDIRECT, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX,
-            AddressMode.IMPLIED, AddressMode.ADDRESS_Y_INDEX, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.ADDRESS_LONG_INDIRECT, AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.LONG_X_INDEX,
+            AddressMode.ImmediateXFlagDependent, AddressMode.DirectPageXIndexIndirect, AddressMode.Constant8, AddressMode.DirectPageSIndex,
+            AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPageLongIndirect,
+            AddressMode.Implied, AddressMode.ImmediateMFlagDependent, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.Address, AddressMode.Address, AddressMode.Address, AddressMode.Long,
+            AddressMode.Relative8, AddressMode.DirectPageIndirectYIndex, AddressMode.DirectPageIndirect, AddressMode.DirectPageSIndexIndirectYIndex,
+            AddressMode.DirectPageIndirect, AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageLongIndirectYIndex,
+            AddressMode.Implied, AddressMode.AddressYIndex, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.AddressLongIndirect, AddressMode.AddressXIndex, AddressMode.AddressXIndex, AddressMode.LongXIndex,
 
-            AddressMode.IMMEDIATE_X_FLAG_DEPENDENT, AddressMode.DIRECT_PAGE_X_INDEX_INDIRECT, AddressMode.CONSTANT_8, AddressMode.DIRECT_PAGE_S_INDEX,
-            AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE, AddressMode.DIRECT_PAGE_LONG_INDIRECT,
-            AddressMode.IMPLIED, AddressMode.IMMEDIATE_M_FLAG_DEPENDENT, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.ADDRESS, AddressMode.LONG,
-            AddressMode.RELATIVE_8, AddressMode.DIRECT_PAGE_INDIRECT_Y_INDEX, AddressMode.DIRECT_PAGE_INDIRECT, AddressMode.DIRECT_PAGE_S_INDEX_INDIRECT_Y_INDEX,
-            AddressMode.ADDRESS, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_X_INDEX, AddressMode.DIRECT_PAGE_LONG_INDIRECT_Y_INDEX,
-            AddressMode.IMPLIED, AddressMode.ADDRESS_Y_INDEX, AddressMode.IMPLIED, AddressMode.IMPLIED,
-            AddressMode.ADDRESS_X_INDEX_INDIRECT, AddressMode.ADDRESS_X_INDEX, AddressMode.ADDRESS_X_INDEX, AddressMode.LONG_X_INDEX,
+            AddressMode.ImmediateXFlagDependent, AddressMode.DirectPageXIndexIndirect, AddressMode.Constant8, AddressMode.DirectPageSIndex,
+            AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPageLongIndirect,
+            AddressMode.Implied, AddressMode.ImmediateMFlagDependent, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.Address, AddressMode.Address, AddressMode.Address, AddressMode.Long,
+            AddressMode.Relative8, AddressMode.DirectPageIndirectYIndex, AddressMode.DirectPageIndirect, AddressMode.DirectPageSIndexIndirectYIndex,
+            AddressMode.Address, AddressMode.DirectPageXIndex, AddressMode.DirectPageXIndex, AddressMode.DirectPageLongIndirectYIndex,
+            AddressMode.Implied, AddressMode.AddressYIndex, AddressMode.Implied, AddressMode.Implied,
+            AddressMode.AddressXIndexIndirect, AddressMode.AddressXIndex, AddressMode.AddressXIndex, AddressMode.LongXIndex,
         };
     }
 }

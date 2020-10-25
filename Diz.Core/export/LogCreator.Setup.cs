@@ -14,21 +14,21 @@ namespace Diz.Core.export
     {
         protected class AssemblerHandler : Attribute
         {
-            public string token;
-            public int length;
+            public string Token;
+            public int Length;
         }
 
         public class OutputResult
         {
-            public bool success;
-            public int error_count = -1;
-            public LogCreator logCreator;
-            public string outputStr = ""; // only set if outputString=true
+            public bool Success;
+            public int ErrorCount = -1;
+            public LogCreator LogCreator;
+            public string OutputStr = ""; // only set if outputString=true
         }
 
 
         // DONT use directly [except to setup the caching]
-        protected static Dictionary<string, Tuple<MethodInfo, int>> parameters;
+        protected static Dictionary<string, Tuple<MethodInfo, int>> parametersCache;
 
         // SAFE to use directly.
         protected static Dictionary<string, Tuple<MethodInfo, int>> Parameters
@@ -36,16 +36,16 @@ namespace Diz.Core.export
             get
             {
                 CacheAssemblerAttributeInfo();
-                return parameters;
+                return parametersCache;
             }
         }
 
         protected static void CacheAssemblerAttributeInfo()
         {
-            if (parameters != null)
+            if (parametersCache != null)
                 return;
 
-            parameters = new Dictionary<string, Tuple<MethodInfo, int>>();
+            parametersCache = new Dictionary<string, Tuple<MethodInfo, int>>();
 
             var methodsWithAttributes = typeof(LogCreator)
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
@@ -56,8 +56,8 @@ namespace Diz.Core.export
             foreach (var method in methodsWithAttributes)
             {
                 var assemblerHandler = method.GetCustomAttribute<AssemblerHandler>();
-                var token = assemblerHandler.token;
-                var length = assemblerHandler.length;
+                var token = assemblerHandler.Token;
+                var length = assemblerHandler.Length;
 
                 // check your method signature if you hit this stuff.
                 Debug.Assert(method.GetParameters().Length == 2);
@@ -70,10 +70,10 @@ namespace Diz.Core.export
 
                 Debug.Assert(method.ReturnType == typeof(string));
 
-                parameters.Add(token, (new Tuple<MethodInfo, int>(method, length)));
+                parametersCache.Add(token, (new Tuple<MethodInfo, int>(method, length)));
             }
 
-            Debug.Assert(parameters.Count != 0);
+            Debug.Assert(parametersCache.Count != 0);
         }
 
         protected string GetParameter(int offset, string parameter, int length)
@@ -110,10 +110,10 @@ namespace Diz.Core.export
         // TODO: generate some nice looking "+"/"-" labels here.
         protected void GenerateAdditionalExtraLabels()
         {
-            if (Settings.unlabeled == FormatUnlabeled.ShowNone)
+            if (Settings.Unlabeled == FormatUnlabeled.ShowNone)
                 return;
 
-            for (var pointer = 0; pointer < Data.GetROMSize(); pointer += GetLineByteLength(pointer))
+            for (var pointer = 0; pointer < Data.GetRomSize(); pointer += GetLineByteLength(pointer))
             {
                 GenerateLabelIfNeededAt(pointer);
             }
@@ -127,14 +127,14 @@ namespace Diz.Core.export
 
             var labelName = Data.GetDefaultLabel(snes);
             AddExtraLabel(snes, new Label() {
-                name = labelName,
+                Name = labelName,
             });
         }
 
         protected int GetAddressOfAnyUsefulLabelsAt(int pcoffset)
         {
-            if (Settings.unlabeled == FormatUnlabeled.ShowAll) 
-                return Data.ConvertPCtoSNES(pcoffset); // this may not be right either...
+            if (Settings.Unlabeled == FormatUnlabeled.ShowAll) 
+                return Data.ConvertPCtoSnes(pcoffset); // this may not be right either...
 
             var flag = Data.GetFlag(pcoffset);
             var usefulToCreateLabelFrom =
@@ -145,7 +145,7 @@ namespace Diz.Core.export
                 return -1;
 
             var snesIa = Data.GetIntermediateAddressOrPointer(pcoffset);
-            var pc = Data.ConvertSNEStoPC(snesIa);
+            var pc = Data.ConvertSnesToPc(snesIa);
             return pc >= 0 ? snesIa : -1;
         }
 

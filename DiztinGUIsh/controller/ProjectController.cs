@@ -133,7 +133,7 @@ namespace DiztinGUIsh.controller
             ProjectView.OnProjectSaved();
         }
 
-        public void ImportBizHawkCDL(string filename)
+        public void ImportBizHawkCdl(string filename)
         {
             BizHawkCdlImporter.Import(filename, Project.Data);
 
@@ -145,12 +145,12 @@ namespace DiztinGUIsh.controller
             });
         }
 
-        public bool ImportRomAndCreateNewProject(string ROMFilename)
+        public bool ImportRomAndCreateNewProject(string romFilename)
         {
             // let the user select settings on the GUI
-            var importController = new ImportROMDialogController {View = ProjectView.GetImportView()};
+            var importController = new ImportRomDialogController {View = ProjectView.GetImportView()};
             importController.View.Controller = importController;
-            var importSettings = importController.PromptUserForRomSettings(ROMFilename);
+            var importSettings = importController.PromptUserForRomSettings(romFilename);
             if (importSettings == null)
                 return false;
 
@@ -207,9 +207,9 @@ namespace DiztinGUIsh.controller
             ProjectView.SelectOffset(offset, column);
         }
 
-        public long ImportBSNESUsageMap(string fileName)
+        public long ImportBsnesUsageMap(string fileName)
         {
-            var importer = new BSNESUsageMapImporter();
+            var importer = new BsnesUsageMapImporter();
 
             var linesModified = importer.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data);
 
@@ -219,9 +219,9 @@ namespace DiztinGUIsh.controller
             return linesModified;
         }
 
-        public long ImportBSNESTraceLogs(string[] fileNames)
+        public long ImportBsnesTraceLogs(string[] fileNames)
         {
-            var importer = new BSNESTraceLogImporter(Project.Data);
+            var importer = new BsnesTraceLogImporter(Project.Data);
 
             // caution: trace logs can be gigantic, even a few seconds can be > 1GB
             // inside here, performance becomes critical.
@@ -231,15 +231,15 @@ namespace DiztinGUIsh.controller
                     importer.ImportTraceLogLine(line);
                 });
 
-            if (importer.CurrentStats.numRomBytesModified > 0)
+            if (importer.CurrentStats.NumRomBytesModified > 0)
                 MarkChanged();
 
-            return importer.CurrentStats.numRomBytesModified;
+            return importer.CurrentStats.NumRomBytesModified;
         }
 
         public long ImportBsnesTraceLogsBinary(string[] filenames)
         {
-            var importer = new BSNESTraceLogImporter(Project.Data);
+            var importer = new BsnesTraceLogImporter(Project.Data);
 
             foreach (var file in filenames)
             {
@@ -254,7 +254,7 @@ namespace DiztinGUIsh.controller
                 }
             }
 
-            return importer.CurrentStats.numRomBytesModified;
+            return importer.CurrentStats.NumRomBytesModified;
         }
     }
 }

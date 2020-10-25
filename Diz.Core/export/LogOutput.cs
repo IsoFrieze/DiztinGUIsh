@@ -26,74 +26,74 @@ namespace Diz.Core.export
 
     public class LogCreatorStringOutput : LogCreatorOutput
     {
-        protected StringBuilder outputBuilder = new StringBuilder();
-        protected StringBuilder errorBuilder = new StringBuilder();
+        protected StringBuilder OutputBuilder = new StringBuilder();
+        protected StringBuilder ErrorBuilder = new StringBuilder();
 
-        public string OutputString => outputBuilder.ToString();
-        public string ErrorString => errorBuilder.ToString();
+        public string OutputString => OutputBuilder.ToString();
+        public string ErrorString => ErrorBuilder.ToString();
 
         protected override void Init()
         {
-            Debug.Assert(LogCreator.Settings.outputToString && LogCreator.Settings.structure == LogCreator.FormatStructure.SingleFile);
+            Debug.Assert(LogCreator.Settings.OutputToString && LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile);
         }
 
-        public override void WriteLine(string line) => outputBuilder.AppendLine(line);
-        public override void WriteErrorLine(string line) => errorBuilder.AppendLine(line);
+        public override void WriteLine(string line) => OutputBuilder.AppendLine(line);
+        public override void WriteErrorLine(string line) => ErrorBuilder.AppendLine(line);
 
         public override void Finish(LogCreator.OutputResult result)
         {
-            result.outputStr = OutputString;
+            result.OutputStr = OutputString;
         }
     }
 
     public class LogCreatorStreamOutput : LogCreatorOutput
     {
-        protected Dictionary<string, StreamWriter> outputStreams = new Dictionary<string, StreamWriter>();
-        protected StreamWriter errorOutputStream;
+        protected Dictionary<string, StreamWriter> OutputStreams = new Dictionary<string, StreamWriter>();
+        protected StreamWriter ErrorOutputStream;
 
         // references to stuff in outputStreams
         private string activeStreamName;
         private StreamWriter activeOutputStream;
 
-        protected string folder;
-        protected string filename; // if set to single file output moe.
+        protected string Folder;
+        protected string Filename; // if set to single file output moe.
 
         protected override void Init()
         {
-            var basePath = LogCreator.Settings.fileOrFolderOutPath;
+            var basePath = LogCreator.Settings.FileOrFolderOutPath;
 
-            if (LogCreator.Settings.structure == LogCreator.FormatStructure.OneBankPerFile)
+            if (LogCreator.Settings.Structure == LogCreator.FormatStructure.OneBankPerFile)
                 basePath += "\\"; // force it to treat it as a path. not the best way.
 
-            folder = Path.GetDirectoryName(basePath);
+            Folder = Path.GetDirectoryName(basePath);
 
-            if (LogCreator.Settings.structure == LogCreator.FormatStructure.SingleFile)
+            if (LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile)
             {
-                filename = Path.GetFileName(LogCreator.Settings.fileOrFolderOutPath);
-                SwitchToStream(filename);
+                Filename = Path.GetFileName(LogCreator.Settings.FileOrFolderOutPath);
+                SwitchToStream(Filename);
             }
             else
             {
                 SwitchToStream("main");
             }
 
-            SwitchToStream(LogCreator.Settings.errorFilename, isErrorStream: true);
+            SwitchToStream(LogCreator.Settings.ErrorFilename, isErrorStream: true);
         }
 
         public override void Finish(LogCreator.OutputResult result)
         {
-            foreach (var stream in outputStreams)
+            foreach (var stream in OutputStreams)
             {
                 stream.Value.Close();
             }
-            outputStreams.Clear();
+            OutputStreams.Clear();
 
             activeOutputStream = null;
-            errorOutputStream = null;
+            ErrorOutputStream = null;
             activeStreamName = "";
 
-            if (result.error_count == 0)
-                File.Delete(BuildStreamPath(LogCreator.Settings.errorFilename));
+            if (result.ErrorCount == 0)
+                File.Delete(BuildStreamPath(LogCreator.Settings.ErrorFilename));
         }
 
         public override void SwitchToBank(int bankNum)
@@ -105,18 +105,18 @@ namespace Diz.Core.export
         public override void SwitchToStream(string streamName, bool isErrorStream = false)
         {
             // don't switch off the main file IF we're only supposed to be outputting one file
-            if (LogCreator.Settings.structure == LogCreator.FormatStructure.SingleFile &&
+            if (LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile &&
                 !string.IsNullOrEmpty(activeStreamName))
                 return;
 
-            var whichStream = outputStreams.TryGetValue(streamName, out var outputStream) 
+            var whichStream = OutputStreams.TryGetValue(streamName, out var outputStream) 
                 ? outputStream 
                 : OpenNewStream(streamName);
 
             if (!isErrorStream)
                 SetActiveStream(streamName, whichStream);
             else
-                errorOutputStream = whichStream;
+                ErrorOutputStream = whichStream;
         }
 
         public void SetActiveStream(string streamName, StreamWriter streamWriter)
@@ -128,13 +128,13 @@ namespace Diz.Core.export
         protected virtual StreamWriter OpenNewStream(string streamName)
         {
             var streamWriter = new StreamWriter(BuildStreamPath(streamName));
-            outputStreams.Add(streamName, streamWriter);
+            OutputStreams.Add(streamName, streamWriter);
             return streamWriter;
         }
 
         private string BuildStreamPath(string streamName)
         {
-            var fullOutputPath = Path.Combine(folder, streamName);
+            var fullOutputPath = Path.Combine(Folder, streamName);
 
             if (!Path.HasExtension(fullOutputPath))
                 fullOutputPath += ".asm";
@@ -149,7 +149,7 @@ namespace Diz.Core.export
 
         public override void WriteErrorLine(string line)
         {
-            errorOutputStream?.WriteLine(line);
+            ErrorOutputStream?.WriteLine(line);
         }
     }
 }

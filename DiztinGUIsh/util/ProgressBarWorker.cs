@@ -7,8 +7,8 @@ namespace DiztinGUIsh
     // TODO: use https://www.wpf-tutorial.com/misc/multi-threading-with-the-backgroundworker/ backgroundworker
     public abstract class ProgressBarWorker
     {
-        private ProgressDialog Dialog;
-        private bool IsRunning;
+        private ProgressDialog dialog;
+        private bool isRunning;
         private Thread backgroundThread;
         public bool IsMarquee { get; set; }
         public string TextOverride { get; set; }
@@ -16,7 +16,7 @@ namespace DiztinGUIsh
         protected void UpdateProgress(int i)
         {
             // i must be in range of 0 to 100
-            Dialog.UpdateProgress(i);
+            dialog.UpdateProgress(i);
         }
 
         protected abstract void Thread_DoWork();
@@ -36,13 +36,13 @@ namespace DiztinGUIsh
 
         protected virtual void Setup()
         {
-            if (IsRunning)
+            if (isRunning)
                 throw new InvalidOperationException(
                     "Progress bar already running, existing job must finish first");
 
-            IsRunning = true;
+            isRunning = true;
 
-            Dialog = new ProgressDialog(IsMarquee, TextOverride);
+            dialog = new ProgressDialog(IsMarquee, TextOverride);
 
             // setup, but don't start, the new thread
             backgroundThread = new Thread(Thread_Main);
@@ -55,7 +55,7 @@ namespace DiztinGUIsh
         private void WaitForJobToFinish()
         {
             // blocks til worker thread closes this dialog box
-            Dialog.ShowDialog();
+            dialog.ShowDialog();
         }
 
         // called from a new worker thread
@@ -65,14 +65,14 @@ namespace DiztinGUIsh
             {
                 // BAD APPROACH. we should instead get an event
                 // I'm too lazy right now. TODO FIXME
-                while (!Dialog.Visible)
+                while (!dialog.Visible)
                     Thread.Sleep(50);
 
                 Thread_DoWork();
             }
             finally
             {
-                IsRunning = false;
+                isRunning = false;
                 SignalJobIsDone();
             }
         }
@@ -80,7 +80,7 @@ namespace DiztinGUIsh
         private void SignalJobIsDone()
         {
             // unblock the main thread from ShowDialog()
-            Dialog?.BeginInvoke(new Action(() => Dialog.Close()));
+            dialog?.BeginInvoke(new Action(() => dialog.Close()));
         }
     }
 }

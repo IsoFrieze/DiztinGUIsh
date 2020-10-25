@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Diz.Core.util;
 using IX.Observable;
 
 namespace Diz.Core.model
@@ -7,8 +8,8 @@ namespace Diz.Core.model
     {
         // don't modify these directly, always go through the public properties so
         // other objects can subscribe to modification notifications
-        private ROMMapMode romMapMode;
-        private ROMSpeed romSpeed = ROMSpeed.Unknown;
+        private RomMapMode romMapMode;
+        private RomSpeed romSpeed = RomSpeed.Unknown;
         private ObservableDictionary<int, string> comments = new ObservableDictionary<int, string>();
         private ObservableDictionary<int, Label> labels = new ObservableDictionary<int, Label>();
         private RomBytes romBytes = new RomBytes();
@@ -16,13 +17,13 @@ namespace Diz.Core.model
         // Note: order of these public properties matters for the load/save process. Keep 'RomBytes' LAST
         // TODO: should be a way in the XML serializer to control the order, remove this comment
         // when we figure it out.
-        public ROMMapMode RomMapMode
+        public RomMapMode RomMapMode
         {
             get => romMapMode;
             set => SetField(ref romMapMode, value);
         }
 
-        public ROMSpeed RomSpeed
+        public RomSpeed RomSpeed
         {
             get => romSpeed;
             set => SetField(ref romSpeed, value);

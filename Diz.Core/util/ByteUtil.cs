@@ -32,15 +32,15 @@ namespace Diz.Core.util
 
         public delegate int AddressConverter(int address);
 
-        public static int ReadStringsTable(byte[] bytes, int starting_index, int stringsPerEntry, AddressConverter converter, Action<int, string[]> processTableEntry)
+        public static int ReadStringsTable(byte[] bytes, int startingIndex, int stringsPerEntry, AddressConverter converter, Action<int, string[]> processTableEntry)
         {
             var strings = new List<string>();
 
-            var pos = starting_index;
-            var num_table_entries = ByteArrayToInt32(bytes, pos);
+            var pos = startingIndex;
+            var numTableEntries = ByteArrayToInt32(bytes, pos);
             pos += 4;
 
-            for (var entry = 0; entry < num_table_entries; ++entry)
+            for (var entry = 0; entry < numTableEntries; ++entry)
             {
                 var offset = converter(ByteArrayToInt32(bytes, pos));
                 pos += 4;
@@ -54,17 +54,17 @@ namespace Diz.Core.util
                 processTableEntry(offset, strings.ToArray());
             }
 
-            return pos - starting_index;
+            return pos - startingIndex;
         }
 
-        public static int ReadNullTerminatedString(byte[] bytes, int starting_offset, out string str)
+        public static int ReadNullTerminatedString(byte[] bytes, int startingOffset, out string str)
         {
             str = "";
-            var pos = starting_offset;
+            var pos = startingOffset;
             while (bytes[pos] != 0)
                 str += (char)bytes[pos++];
             pos++;
-            return pos - starting_offset;
+            return pos - startingOffset;
         }
 
         public static byte[] IntegerToByteArray(int a)

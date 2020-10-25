@@ -168,16 +168,16 @@ namespace Diz.Core.util
         }
 
         // sadly, this entire conversion is a bit slow so, cache it as we look it up
-        private static readonly Dictionary<Data.FlagType, Color> CachedROMFlagColors =
+        private static readonly Dictionary<Data.FlagType, Color> CachedRomFlagColors =
             new Dictionary<Data.FlagType, Color>();
 
         public static Color GetColorFromFlag(Data.FlagType romFlag)
         {
-            if (CachedROMFlagColors.TryGetValue(romFlag, out var color))
+            if (CachedRomFlagColors.TryGetValue(romFlag, out var color))
                 return color;
 
             color = Color.FromKnownColor(GetEnumColor(romFlag)); // slow (comparatively)
-            CachedROMFlagColors[romFlag] = color;
+            CachedRomFlagColors[romFlag] = color;
 
             return color;
         }

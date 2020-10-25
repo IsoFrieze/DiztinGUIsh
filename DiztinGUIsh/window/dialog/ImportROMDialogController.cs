@@ -9,14 +9,14 @@ namespace DiztinGUIsh.window.dialog
     {
         bool PromptToConfirmAction(string msg);
         bool ShowAndWaitForUserToConfirmSettings();
-        ImportROMDialogController Controller { get; set; }
+        ImportRomDialogController Controller { get; set; }
     }
 
-    public class ImportROMDialogController
+    public class ImportRomDialogController
     {
         public IImportRomDialogView View { get; set; }
         public ImportRomSettings ImportSettings { get; protected set; }
-        public Data.ROMMapMode? DetectedMapMode { get; protected set; }
+        public RomMapMode? DetectedMapMode { get; protected set; }
         
         public int RomSettingsOffset { get; set; }= -1;
         public bool ShouldCheckHeader { get; set; } = true;
@@ -46,11 +46,11 @@ namespace DiztinGUIsh.window.dialog
             {
                 RomFilename = filename,
                 RomBytes = romBytes,
-                ROMMapMode = RomUtil.DetectROMMapMode(romBytes, out var detectedMapModeSuccess)
+                RomMapMode = RomUtil.DetectRomMapMode(romBytes, out var detectedMapModeSuccess)
             };
 
             if (detectedMapModeSuccess)
-                DetectedMapMode = ImportSettings.ROMMapMode;
+                DetectedMapMode = ImportSettings.RomMapMode;
 
             OnSettingsCreated();
         }
@@ -74,7 +74,7 @@ namespace DiztinGUIsh.window.dialog
                 if (!Warn("ROM Map type couldn't be detected."))
                     return false;
             }
-            else if (DetectedMapMode.Value != ImportSettings.ROMMapMode)
+            else if (DetectedMapMode.Value != ImportSettings.RomMapMode)
             {
                 if (!Warn("The ROM map type selected is different than what was detected."))
                     return false;
@@ -85,7 +85,7 @@ namespace DiztinGUIsh.window.dialog
 
         private Dictionary<int, Label> GenerateVectorLabels() =>
             RomUtil.GenerateVectorLabels(
-                VectorTableEntriesEnabled, RomSettingsOffset, ImportSettings.RomBytes, ImportSettings.ROMMapMode);
+                VectorTableEntriesEnabled, RomSettingsOffset, ImportSettings.RomBytes, ImportSettings.RomMapMode);
 
         public Dictionary<int, Data.FlagType> GenerateHeaderFlags()
         {

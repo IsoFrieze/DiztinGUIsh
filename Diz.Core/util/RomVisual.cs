@@ -102,7 +102,7 @@ namespace Diz.Core.util
         private Project project;
 
         private readonly object dirtyLock = new object();
-        private readonly Dictionary<int, ROMByte> dirtyRomBytes = new Dictionary<int, ROMByte>();
+        private readonly Dictionary<int, RomByte> dirtyRomBytes = new Dictionary<int, RomByte>();
 
         private void RomBytes_CollectionChanged(object sender,
             System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -117,7 +117,7 @@ namespace Diz.Core.util
 
         private void RomBytes_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (!(sender is ROMByte romByte))
+            if (!(sender is RomByte romByte))
                 return;
 
             if (e.PropertyName != "TypeFlag")
@@ -178,7 +178,7 @@ namespace Diz.Core.util
                 // blank pixels
                 while (currentPixel < w*h)
                 {
-                    var (x, y) = ConvertPixelIndexToXY(currentPixel);
+                    var (x, y) = ConvertPixelIndexToXy(currentPixel);
                     fastBitmap.SetPixel(x, y, Color.SlateGray);
                     ++currentPixel;
                 }
@@ -191,33 +191,33 @@ namespace Diz.Core.util
         // returns the RomBytes we should use to update our image
         // this can either be ALL RomBytes, or, a small set of dirty RomBytes that were changed
         // since our last redraw.
-        private IEnumerable<ROMByte> ConsumeRomDirtyBytes()
+        private IEnumerable<RomByte> ConsumeRomDirtyBytes()
         {
             if (AllDirty)
                 return Data.RomBytes.ToList();
 
-            IEnumerable<ROMByte> romBytes;
+            IEnumerable<RomByte> romBytes;
             lock (dirtyLock)
             {
                 // make a copy so we can release the lock.
-                romBytes = new List<ROMByte>(dirtyRomBytes.Values.Select(kvp => kvp));
+                romBytes = new List<RomByte>(dirtyRomBytes.Values.Select(kvp => kvp));
                 dirtyRomBytes.Clear();
             }
 
             return romBytes;
         }
 
-        private (int x, int y) ConvertPixelIndexToXY(int offset)
+        private (int x, int y) ConvertPixelIndexToXy(int offset)
         {
             var y = offset / Width;
             var x = offset - (y * Width);
             return (x, y);
         }
 
-        private void SetPixel(ROMByte romByte, FastBitmap fastBitmap)
+        private void SetPixel(RomByte romByte, FastBitmap fastBitmap)
         {
             var pixelIndex = ConvertRomOffsetToPixelIndex(romByte.Offset);
-            var (x, y) = ConvertPixelIndexToXY(pixelIndex);
+            var (x, y) = ConvertPixelIndexToXy(pixelIndex);
             var color = Util.GetColorFromFlag(romByte.TypeFlag);
             fastBitmap.SetPixel(x, y, color);
         }
@@ -232,7 +232,7 @@ namespace Diz.Core.util
             ImageDataUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        protected virtual void MarkDirty(ROMByte romByte)
+        protected virtual void MarkDirty(RomByte romByte)
         {
             lock (dirtyLock)
             {

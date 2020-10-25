@@ -13,13 +13,13 @@ namespace Diz.Core.serialization.xml_serializer
     {
         public class FlagEncodeEntry
         {
-            public char c;
-            public Data.FlagType f;
+            public char C;
+            public Data.FlagType F;
         };
 
         // totally dumb but saves time vs slow Byte.Parse(x, isHex)
         // idea credit: Daniel-Lemire
-        public static readonly int[] hexAsciiToDigit = {
+        public static readonly int[] HexAsciiToDigit = {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,
@@ -37,7 +37,7 @@ namespace Diz.Core.serialization.xml_serializer
 
         public static byte ByteParseHex1(char hexChar)
         {
-            var result = hexAsciiToDigit[hexChar];
+            var result = HexAsciiToDigit[hexChar];
             if (result == -1)
                 throw new InvalidDataException("Invalid hex digit");
 
@@ -59,25 +59,25 @@ namespace Diz.Core.serialization.xml_serializer
                 ByteParseHex1(hexChar4);
         }
 
-        private static readonly List<FlagEncodeEntry> flagEncodeTable = new List<FlagEncodeEntry> {
-            new FlagEncodeEntry() {f = Data.FlagType.Unreached, c = 'U'},
+        private static readonly List<FlagEncodeEntry> FlagEncodeTable = new List<FlagEncodeEntry> {
+            new FlagEncodeEntry() {F = Data.FlagType.Unreached, C = 'U'},
 
-            new FlagEncodeEntry() {f = Data.FlagType.Opcode, c = '+'},
-            new FlagEncodeEntry() {f = Data.FlagType.Operand, c = '.'},
+            new FlagEncodeEntry() {F = Data.FlagType.Opcode, C = '+'},
+            new FlagEncodeEntry() {F = Data.FlagType.Operand, C = '.'},
 
-            new FlagEncodeEntry() {f = Data.FlagType.Graphics, c = 'G'},
-            new FlagEncodeEntry() {f = Data.FlagType.Music, c = 'M'},
-            new FlagEncodeEntry() {f = Data.FlagType.Empty, c = 'X'},
-            new FlagEncodeEntry() {f = Data.FlagType.Text, c = 'T'},
+            new FlagEncodeEntry() {F = Data.FlagType.Graphics, C = 'G'},
+            new FlagEncodeEntry() {F = Data.FlagType.Music, C = 'M'},
+            new FlagEncodeEntry() {F = Data.FlagType.Empty, C = 'X'},
+            new FlagEncodeEntry() {F = Data.FlagType.Text, C = 'T'},
 
-            new FlagEncodeEntry() {f = Data.FlagType.Data8Bit, c = 'A'},
-            new FlagEncodeEntry() {f = Data.FlagType.Data16Bit, c = 'B'},
-            new FlagEncodeEntry() {f = Data.FlagType.Data24Bit, c = 'C'},
-            new FlagEncodeEntry() {f = Data.FlagType.Data32Bit, c = 'D'},
+            new FlagEncodeEntry() {F = Data.FlagType.Data8Bit, C = 'A'},
+            new FlagEncodeEntry() {F = Data.FlagType.Data16Bit, C = 'B'},
+            new FlagEncodeEntry() {F = Data.FlagType.Data24Bit, C = 'C'},
+            new FlagEncodeEntry() {F = Data.FlagType.Data32Bit, C = 'D'},
 
-            new FlagEncodeEntry() {f = Data.FlagType.Pointer16Bit, c = 'E'},
-            new FlagEncodeEntry() {f = Data.FlagType.Pointer24Bit, c = 'F'},
-            new FlagEncodeEntry() {f = Data.FlagType.Pointer32Bit, c = 'G'},
+            new FlagEncodeEntry() {F = Data.FlagType.Pointer16Bit, C = 'E'},
+            new FlagEncodeEntry() {F = Data.FlagType.Pointer24Bit, C = 'F'},
+            new FlagEncodeEntry() {F = Data.FlagType.Pointer32Bit, C = 'G'},
         };
 
         private readonly StringBuilder cachedPadSb = new StringBuilder(LineMaxLen);
@@ -85,11 +85,11 @@ namespace Diz.Core.serialization.xml_serializer
         private const int LineMaxLen = 9;
 
         // note: performance-intensive function. be really careful when adding stuff here.
-        public ROMByte DecodeRomByte(string line)
+        public RomByte DecodeRomByte(string line)
         {
             var input = PrepLine(line);
 
-            var newByte = new ROMByte();
+            var newByte = new RomByte();
 
             var flagTxt = input[0];
             var otherFlags1 = Fake64Encoding.DecodeHackyBase64(input[1]);
@@ -106,12 +106,12 @@ namespace Diz.Core.serialization.xml_serializer
             newByte.Point = (Data.InOutPoint)((otherFlags1 >> 4) & 0xF);
 
             var found = false;
-            foreach (var e in flagEncodeTable)
+            foreach (var e in FlagEncodeTable)
             {
-                if (e.c != flagTxt)
+                if (e.C != flagTxt)
                     continue;
 
-                newByte.TypeFlag = e.f;
+                newByte.TypeFlag = e.F;
                 found = true;
                 break;
             }
@@ -142,7 +142,7 @@ namespace Diz.Core.serialization.xml_serializer
             return cachedPadSb;
         }
 
-        public string EncodeByte(ROMByte instance)
+        public string EncodeByte(RomByte instance)
         {
             // use a custom formatter here to save space. there are a LOT of ROMBytes.
             // despite that we're still going for:
@@ -158,11 +158,11 @@ namespace Diz.Core.serialization.xml_serializer
             // NOTE: must be uppercase letter or "=" or "-"
             // if you add things here, make sure you understand the compression settings above.
             var flagTxt = ' ';
-            foreach (var e in flagEncodeTable)
+            foreach (var e in FlagEncodeTable)
             {
-                if (e.f == instance.TypeFlag)
+                if (e.F == instance.TypeFlag)
                 {
-                    flagTxt = e.c;
+                    flagTxt = e.C;
                     break;
                 }
             }
@@ -178,12 +178,12 @@ namespace Diz.Core.serialization.xml_serializer
                                             // LEAVE OFF THE LAST 2 BITS. it'll mess with the base64 below
             );
             // reminder: when decoding, have to cut off all but the first 6 bits
-            var o1_str = Fake64Encoding.EncodeHackyBase64(otherFlags1);
-            Debug.Assert(Fake64Encoding.DecodeHackyBase64(o1_str) == otherFlags1);
+            var o1Str = Fake64Encoding.EncodeHackyBase64(otherFlags1);
+            Debug.Assert(Fake64Encoding.DecodeHackyBase64(o1Str) == otherFlags1);
 
             if (!instance.XFlag && !instance.MFlag && instance.Point == 0)
             {
-                Debug.Assert(o1_str == '0'); // sanity
+                Debug.Assert(o1Str == '0'); // sanity
             }
 
             // this is basically going to be "0" almost 100% of the time.
@@ -191,15 +191,15 @@ namespace Diz.Core.serialization.xml_serializer
             byte otherFlags2 = (byte)(
                 (byte)instance.Arch << 0 // 2 bits
             );
-            var o2_str = otherFlags2.ToString("X1"); Debug.Assert(o2_str.Length == 1);
+            var o2Str = otherFlags2.ToString("X1"); Debug.Assert(o2Str.Length == 1);
 
             // ordering: put DB and D on the end, they're likely to be zero and compressible
             var sb = new StringBuilder(9);
             sb.Append(flagTxt);
-            sb.Append(o1_str);
+            sb.Append(o1Str);
             sb.Append(instance.DataBank.ToString("X2"));
             sb.Append(instance.DirectPage.ToString("X4"));
-            sb.Append(o2_str);
+            sb.Append(o2Str);
 
             Debug.Assert(sb.Length == 9);
             var data = sb.ToString();

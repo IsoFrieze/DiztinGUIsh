@@ -9,7 +9,7 @@ using Color = System.Drawing.Color;
 
 namespace DiztinGUIsh.window.dialog
 {
-    public partial class BSNESTraceLogBinaryMonitorForm
+    public partial class BsnesTraceLogBinaryMonitorForm
     {
         private bool initializedChart;
         private readonly ChartValues<long> chartValuesBytesModified = new ChartValues<long>();
@@ -18,7 +18,7 @@ namespace DiztinGUIsh.window.dialog
         //private const int refreshGraphEveryNDataPoints = 100;
         //private int dataPointsIn = -1;
 
-        private void AppendToChart((BSNESTraceLogImporter.Stats stats, int bytesInQueue) currentStats)
+        private void AppendToChart((BsnesTraceLogImporter.Stats stats, int bytesInQueue) currentStats)
         {
             InitChart();
 
@@ -54,7 +54,7 @@ namespace DiztinGUIsh.window.dialog
             initializedChart = true;
         }
 
-        private void UpdateUI()
+        private void UpdateUi()
         {
             var running = capturing?.Running ?? false;
             var finishing = capturing?.Finishing ?? false;
@@ -96,13 +96,13 @@ namespace DiztinGUIsh.window.dialog
 
             // TODO: use databinding
 
-            lblTotalProcessed.Text = ByteSize.FromBytes(stats.numRomBytesAnalyzed).ToString("0.00");
-            lblNumberModified.Text = ByteSize.FromBytes(stats.numRomBytesModified).ToString("0.00");
-            lblModifiedDBs.Text = ByteSize.FromBytes(stats.numDBModified).ToString("0.00");
-            lblModifiedDPs.Text = ByteSize.FromBytes(stats.numDpModified).ToString("0.00");
-            lblModifiedFlags.Text = ByteSize.FromBytes(stats.numMarksModified).ToString("0.00");
-            lblModifiedXFlags.Text = ByteSize.FromBytes(stats.numXFlagsModified).ToString("0.00");
-            lblModifiedMFlags.Text = ByteSize.FromBytes(stats.numMFlagsModified).ToString("0.00");
+            lblTotalProcessed.Text = ByteSize.FromBytes(stats.NumRomBytesAnalyzed).ToString("0.00");
+            lblNumberModified.Text = ByteSize.FromBytes(stats.NumRomBytesModified).ToString("0.00");
+            lblModifiedDBs.Text = ByteSize.FromBytes(stats.NumDbModified).ToString("0.00");
+            lblModifiedDPs.Text = ByteSize.FromBytes(stats.NumDpModified).ToString("0.00");
+            lblModifiedFlags.Text = ByteSize.FromBytes(stats.NumMarksModified).ToString("0.00");
+            lblModifiedXFlags.Text = ByteSize.FromBytes(stats.NumXFlagsModified).ToString("0.00");
+            lblModifiedMFlags.Text = ByteSize.FromBytes(stats.NumMFlagsModified).ToString("0.00");
         }
 
         private void button1_Click(object sender, EventArgs e)

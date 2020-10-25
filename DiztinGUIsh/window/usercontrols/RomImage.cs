@@ -12,12 +12,12 @@ namespace DiztinGUIsh.window.usercontrols
     {
         public event EventHandler RedrawOccurred;
 
-        public RomVisual ROMVisual { get; } = new RomVisual();
+        public RomVisual RomVisual { get; } = new RomVisual();
 
         public Project Project
         {
-            get => ROMVisual.Project;
-            set => ROMVisual.Project = value;
+            get => RomVisual.Project;
+            set => RomVisual.Project = value;
         }
 
         public RomImage()
@@ -37,24 +37,24 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void Redraw(Graphics graphics = null)
         {
-            if (ROMVisual?.Bitmap == null)
+            if (RomVisual?.Bitmap == null)
                 return;
 
             graphics ??= CreateGraphics();
 
-            var width = ROMVisual.Bitmap.Width;
-            var height = ROMVisual.Bitmap.Height;
-            graphics.DrawImage(ROMVisual.Bitmap, 0, 0, width, height);
+            var width = RomVisual.Bitmap.Width;
+            var height = RomVisual.Bitmap.Height;
+            graphics.DrawImage(RomVisual.Bitmap, 0, 0, width, height);
 
             OnRedrawOccurred();
         }
 
         private void RedrawIfNeeded()
         {
-            if (!Visible || !ROMVisual.IsDirty)
+            if (!Visible || !RomVisual.IsDirty)
                 return;
 
-            ROMVisual.Refresh();
+            RomVisual.Refresh();
             Redraw();
         }
 
@@ -65,8 +65,8 @@ namespace DiztinGUIsh.window.usercontrols
 
         protected virtual void OnRedrawOccurred()
         {
-            Width = ROMVisual.Width;
-            Height = ROMVisual.Height;
+            Width = RomVisual.Width;
+            Height = RomVisual.Height;
 
             RedrawOccurred?.Invoke(this, EventArgs.Empty);
         }

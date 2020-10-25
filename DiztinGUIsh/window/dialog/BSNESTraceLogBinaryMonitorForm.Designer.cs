@@ -1,6 +1,6 @@
 ﻿namespace DiztinGUIsh.window.dialog
 {
-    partial class BSNESTraceLogBinaryMonitorForm
+    partial class BsnesTraceLogBinaryMonitorForm
     {
         /// <summary>
         /// Required designer variable.
@@ -362,7 +362,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnStart);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Name = "BSNESTraceLogBinaryMonitorForm";
+            this.Name = "BsnesTraceLogBinaryMonitorForm";
             this.Text = "BSNES Live Tracelog Capture";
             this.Load += new System.EventHandler(this.BSNESTraceLogBinaryMonitorForm_Load);
             this.Shown += new System.EventHandler(this.BSNESTraceLogBinaryMonitorForm_Shown);

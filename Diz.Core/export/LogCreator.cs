@@ -24,12 +24,12 @@ namespace Diz.Core.export
         public LogWriterSettings Settings { get; set; }
         public Data Data { get; set; }
 
-        protected LogCreatorOutput output;
+        protected LogCreatorOutput Output;
         protected Dictionary<int, Label> ExtraLabels { get; set; } = new Dictionary<int, Label>();
-        protected List<Tuple<string, int>> parseList;
-        protected List<int> labelsWeVisited;
-        protected int bankSize;
-        protected ObservableDictionary<int, Label> backupOfOriginalLabelsBeforeModifying;
+        protected List<Tuple<string, int>> ParseList;
+        protected List<int> LabelsWeVisited;
+        protected int BankSize;
+        protected ObservableDictionary<int, Label> BackupOfOriginalLabelsBeforeModifying;
 
         public virtual OutputResult CreateLog()
         {
@@ -55,9 +55,9 @@ namespace Diz.Core.export
             InitOutput();
             SetupParseList();
 
-            bankSize = RomUtil.GetBankSize(Data.RomMapMode);
-            errorCount = 0;
-            labelsWeVisited = new List<int>();
+            BankSize = RomUtil.GetBankSize(Data.RomMapMode);
+            ErrorCount = 0;
+            LabelsWeVisited = new List<int>();
 
             GenerateAdditionalExtraLabels();
             WriteGeneratedLabelsIntoUnderlyingData(); // MODIFIES DATA. MAKE SURE TO UNDO THIS.
@@ -65,12 +65,12 @@ namespace Diz.Core.export
 
         private void InitOutput()
         {
-            if (Settings.outputToString)
-                output = new LogCreatorStringOutput();
+            if (Settings.OutputToString)
+                Output = new LogCreatorStringOutput();
             else
-                output = new LogCreatorStreamOutput();
+                Output = new LogCreatorStreamOutput();
 
-            output.Init(this);
+            Output.Init(this);
         }
 
         protected virtual void Cleanup()
@@ -84,30 +84,30 @@ namespace Diz.Core.export
         {
             // SUPER IMPORTANT. THIS MUST GET DONE, ALWAYS. PROTECT THIS WITH TRY/CATCH
 
-            if (backupOfOriginalLabelsBeforeModifying != null)
-                Data.Labels = backupOfOriginalLabelsBeforeModifying;
+            if (BackupOfOriginalLabelsBeforeModifying != null)
+                Data.Labels = BackupOfOriginalLabelsBeforeModifying;
 
-            backupOfOriginalLabelsBeforeModifying = null;
+            BackupOfOriginalLabelsBeforeModifying = null;
         }
 
 
         private void CloseOutput(OutputResult result)
         {
-            output?.Finish(result);
-            output = null;
+            Output?.Finish(result);
+            Output = null;
         }
 
         private OutputResult GetResult()
         {
             var result = new OutputResult()
             {
-                error_count = errorCount,
-                success = true,
-                logCreator = this
+                ErrorCount = ErrorCount,
+                Success = true,
+                LogCreator = this
             };
 
-            if (Settings.outputToString)
-                result.outputStr = ((LogCreatorStringOutput)output)?.OutputString;
+            if (Settings.OutputToString)
+                result.OutputStr = ((LogCreatorStringOutput)Output)?.OutputString;
 
             return result;
         }
@@ -121,7 +121,7 @@ namespace Diz.Core.export
             // TODO: I really don't like us modifying and restoring the
             // underlying labels or anything in Data. Data should ideally be immutable by us.
             // we should either clone all of Data before modifying, or generate these labels on the fly.
-            backupOfOriginalLabelsBeforeModifying = Data.Labels;
+            BackupOfOriginalLabelsBeforeModifying = Data.Labels;
             Data.Labels = new ObservableDictionary<int, Label>(Data.Labels);
 
             // write the new generated labels in, don't let them overwrite any real labels
@@ -136,7 +136,7 @@ namespace Diz.Core.export
 
         public int GetRomSize()
         {
-            return Settings.romSizeOverride != -1 ? Settings.romSizeOverride : Data.GetROMSize();
+            return Settings.RomSizeOverride != -1 ? Settings.RomSizeOverride : Data.GetRomSize();
         }
 
         protected virtual void WriteLog()
@@ -164,7 +164,7 @@ namespace Diz.Core.export
         {
             const int doesntMatter = 0;
             var line = GetLine(doesntMatter, special);
-            output.WriteLine(line);
+            Output.WriteLine(line);
         }
 
         protected void WriteMainIncludes(int size)
@@ -176,22 +176,22 @@ namespace Diz.Core.export
 
         private void WriteMainBankIncludes(int size)
         {
-            if (Settings.structure != FormatStructure.OneBankPerFile)
+            if (Settings.Structure != FormatStructure.OneBankPerFile)
                 return;
 
-            for (var i = 0; i < size; i += bankSize)
-                output.WriteLine(GetLine(i, "incsrc"));
+            for (var i = 0; i < size; i += BankSize)
+                Output.WriteLine(GetLine(i, "incsrc"));
 
-            output.WriteLine(GetLine(-1, "incsrc"));
+            Output.WriteLine(GetLine(-1, "incsrc"));
         }
 
         protected void SetupParseList()
         {
-            var split = Settings.format.Split('%');
-            parseList = new List<Tuple<string, int>>();
+            var split = Settings.Format.Split('%');
+            ParseList = new List<Tuple<string, int>>();
             for (var i = 0; i < split.Length; i++)
             {
-                if (i % 2 == 0) parseList.Add(Tuple.Create(split[i], int.MaxValue));
+                if (i % 2 == 0) ParseList.Add(Tuple.Create(split[i], int.MaxValue));
                 else
                 {
                     var colon = split[i].IndexOf(':');
@@ -209,7 +209,7 @@ namespace Diz.Core.export
                         tuple = Tuple.Create(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1)));
                     }
 
-                    parseList.Add(tuple);
+                    ParseList.Add(tuple);
                 }
             }
         }
@@ -227,27 +227,27 @@ namespace Diz.Core.export
 
         private void WriteTheRealLine(int pointer)
         {
-            output.WriteLine(GetLine(pointer, null));
+            Output.WriteLine(GetLine(pointer, null));
         }
 
         private void WriteBlankLineIfEndPoint(int pointer)
         {
             if ((Data.GetInOutPoint(pointer) & Data.InOutPoint.EndPoint) != 0)
-                output.WriteLine(GetLine(pointer, "empty"));
+                Output.WriteLine(GetLine(pointer, "empty"));
         }
 
         private void WriteBlankLineIfStartingNewParagraph(int pointer)
         {
             var isLocationAReadPoint = (Data.GetInOutPoint(pointer) & Data.InOutPoint.ReadPoint) != 0;
-            var anyLabelsPresent = Data.Labels.TryGetValue(pointer, out var label) && label.name.Length > 0;
+            var anyLabelsPresent = Data.Labels.TryGetValue(pointer, out var label) && label.Name.Length > 0;
 
             if (isLocationAReadPoint || anyLabelsPresent)
-                output.WriteLine(GetLine(pointer, "empty"));
+                Output.WriteLine(GetLine(pointer, "empty"));
         }
 
         private void SwitchBanksIfNeeded(int pointer, ref int currentBank)
         {
-            var snesAddress = Data.ConvertPCtoSNES(pointer);
+            var snesAddress = Data.ConvertPCtoSnes(pointer);
 
             var thisBank = snesAddress >> 16;
 
@@ -257,7 +257,7 @@ namespace Diz.Core.export
             OpenNewBank(pointer, thisBank);
             currentBank = thisBank;
 
-            if (snesAddress % bankSize == 0) 
+            if (snesAddress % BankSize == 0) 
                 return;
 
             ReportError(pointer, "An instruction crossed a bank boundary.");
@@ -265,11 +265,11 @@ namespace Diz.Core.export
 
         private void OpenNewBank(int pointer, int thisBank)
         {
-            output.SwitchToBank(thisBank);
+            Output.SwitchToBank(thisBank);
 
-            output.WriteLine(GetLine(pointer, "empty"));
-            output.WriteLine(GetLine(pointer, "org"));
-            output.WriteLine(GetLine(pointer, "empty"));
+            Output.WriteLine(GetLine(pointer, "empty"));
+            Output.WriteLine(GetLine(pointer, "org"));
+            Output.WriteLine(GetLine(pointer, "empty"));
         }
 
         protected void WriteLabels(int pointer)
@@ -286,7 +286,7 @@ namespace Diz.Core.export
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
             foreach (var pair in Data.Labels)
             {
-                if (labelsWeVisited.Contains(pair.Key))
+                if (LabelsWeVisited.Contains(pair.Key))
                     continue;
 
                 // this label was not defined elsewhere in our disassembly, so we need to include it in labels.asm
@@ -301,7 +301,7 @@ namespace Diz.Core.export
             SwitchOutputStream(pointer, "labels");
 
             foreach (var pair in unvisitedLabels)
-                output.WriteLine(GetLine(pair.Key, "labelassign"));
+                Output.WriteLine(GetLine(pair.Key, "labelassign"));
         }
 
         private void PrintAllLabelsIfRequested(int pointer, Dictionary<int, Label> unvisitedLabels)
@@ -310,7 +310,7 @@ namespace Diz.Core.export
             // Useful for debugging, documentation, or reverse engineering workflow.
             // this file shouldn't need to be included in the build, it's just reference documentation
 
-            if (!Settings.includeUnusedLabels) 
+            if (!Settings.IncludeUnusedLabels) 
                 return;
 
             SwitchOutputStream(pointer, "all-labels.txt"); // TODO: csv in the future. escape commas
@@ -318,17 +318,17 @@ namespace Diz.Core.export
             {
                 // not the best place to add formatting, TODO: cleanup
                 var category = unvisitedLabels.ContainsKey(pair.Key) ? "UNUSED" : "USED";
-                output.WriteLine($";!^!-{category}-! " + GetLine(pair.Key, "labelassign"));
+                Output.WriteLine($";!^!-{category}-! " + GetLine(pair.Key, "labelassign"));
             }
         }
 
         protected void SwitchOutputStream(int pointer, string streamName)
         {
-            output.SwitchToStream(streamName);
+            Output.SwitchToStream(streamName);
 
             // write an extra blank line if we would normally switch files here
-            if (Settings.structure == FormatStructure.SingleFile)
-                output.WriteLine(GetLine(pointer, "empty"));
+            if (Settings.Structure == FormatStructure.SingleFile)
+                Output.WriteLine(GetLine(pointer, "empty"));
         }
 
         // --------------------------
@@ -339,7 +339,7 @@ namespace Diz.Core.export
             var isSpecial = special != null;
             var line = "";
 
-            foreach (var t in parseList)
+            foreach (var t in ParseList)
             {
                 if (t.Item2 == int.MaxValue) // string literal
                 {
@@ -382,7 +382,7 @@ namespace Diz.Core.export
         protected int GetLineByteLength(int offset)
         {
             int max = 1, step = 1;
-            var size = Data.GetROMSize();
+            var size = Data.GetRomSize();
 
             switch (Data.GetFlag(offset))
             {
@@ -394,22 +394,22 @@ namespace Diz.Core.export
                 case Data.FlagType.Graphics:
                 case Data.FlagType.Music:
                 case Data.FlagType.Empty:
-                    max = Settings.dataPerLine;
+                    max = Settings.DataPerLine;
                     break;
                 case Data.FlagType.Text:
                     max = 21;
                     break;
                 case Data.FlagType.Data16Bit:
                     step = 2;
-                    max = Settings.dataPerLine;
+                    max = Settings.DataPerLine;
                     break;
                 case Data.FlagType.Data24Bit:
                     step = 3;
-                    max = Settings.dataPerLine;
+                    max = Settings.DataPerLine;
                     break;
                 case Data.FlagType.Data32Bit:
                     step = 4;
-                    max = Settings.dataPerLine;
+                    max = Settings.DataPerLine;
                     break;
                 case Data.FlagType.Pointer16Bit:
                     step = 2;
@@ -425,26 +425,26 @@ namespace Diz.Core.export
                     break;
             }
 
-            int min = step, myBank = offset / bankSize;
+            int min = step, myBank = offset / BankSize;
             while (
                 min < max &&
                 offset + min < size &&
                 Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
-                Data.GetLabelName(Data.ConvertPCtoSNES(offset + min)) == "" &&
-                (offset + min) / bankSize == myBank
+                Data.GetLabelName(Data.ConvertPCtoSnes(offset + min)) == "" &&
+                (offset + min) / BankSize == myBank
             ) min += step;
             return min;
         }
 
         // just a %
-        [AssemblerHandler(token = "", length = 1)]
+        [AssemblerHandler(Token = "", Length = 1)]
         protected string GetPercent(int offset, int length)
         {
             return "%";
         }
 
         // all spaces
-        [AssemblerHandler(token = "%empty", length = 1)]
+        [AssemblerHandler(Token = "%empty", Length = 1)]
         protected string GetEmpty(int offset, int length)
         {
             return string.Format("{0," + length + "}", "");
@@ -452,7 +452,7 @@ namespace Diz.Core.export
 
         // trim to length
         // negative length = right justified
-        [AssemblerHandler(token = "label", length = -22)]
+        [AssemblerHandler(Token = "label", Length = -22)]
         protected string GetLabel(int offset, int length)
         {
             // what we're given: a PC offset in ROM.
@@ -464,19 +464,19 @@ namespace Diz.Core.export
             // TODO: we need to deal with that mirroring here
             // TODO: eventually, support multiple labels tagging the same address, it may not always be just one.
             
-            var snesOffset = Data.ConvertPCtoSNES(offset); 
+            var snesOffset = Data.ConvertPCtoSnes(offset); 
             var label = Data.GetLabelName(snesOffset);
             if (label == null)
                 return "";
             
-            labelsWeVisited.Add(snesOffset);
+            LabelsWeVisited.Add(snesOffset);
 
             var noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
             return string.Format("{0," + (length * -1) + "}", label + (noColon ? "" : ":"));
         }
 
         // trim to length
-        [AssemblerHandler(token = "code", length = 37)]
+        [AssemblerHandler(Token = "code", Length = 37)]
         protected string GetCode(int offset, int length)
         {
             var bytes = GetLineByteLength(offset);
@@ -521,44 +521,44 @@ namespace Diz.Core.export
             return string.Format("{0," + (length * -1) + "}", code);
         }
 
-        [AssemblerHandler(token = "%org", length = 37)]
-        protected string GetORG(int offset, int length)
+        [AssemblerHandler(Token = "%org", Length = 37)]
+        protected string GetOrg(int offset, int length)
         {
-            string org = "ORG " + Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6, true);
+            string org = "ORG " + Util.NumberToBaseString(Data.ConvertPCtoSnes(offset), Util.NumberBase.Hexadecimal, 6, true);
             return string.Format("{0," + (length * -1) + "}", org);
         }
 
-        [AssemblerHandler(token = "%map", length = 37)]
+        [AssemblerHandler(Token = "%map", Length = 37)]
         protected string GetMap(int offset, int length)
         {
             string s = "";
             switch (Data.RomMapMode)
             {
-                case Data.ROMMapMode.LoROM: s = "lorom"; break;
-                case Data.ROMMapMode.HiROM: s = "hirom"; break;
-                case Data.ROMMapMode.SA1ROM: s = "sa1rom"; break; // todo
-                case Data.ROMMapMode.ExSA1ROM: s = "exsa1rom"; break; // todo
-                case Data.ROMMapMode.SuperFX: s = "sfxrom"; break; // todo
-                case Data.ROMMapMode.ExHiROM: s = "exhirom"; break;
-                case Data.ROMMapMode.ExLoROM: s = "exlorom"; break;
+                case RomMapMode.LoRom: s = "lorom"; break;
+                case RomMapMode.HiRom: s = "hirom"; break;
+                case RomMapMode.Sa1Rom: s = "sa1rom"; break; // todo
+                case RomMapMode.ExSa1Rom: s = "exsa1rom"; break; // todo
+                case RomMapMode.SuperFx: s = "sfxrom"; break; // todo
+                case RomMapMode.ExHiRom: s = "exhirom"; break;
+                case RomMapMode.ExLoRom: s = "exlorom"; break;
             }
             return string.Format("{0," + (length * -1) + "}", s);
         }
 
         // 0+ = bank_xx.asm, -1 = labels.asm
-        [AssemblerHandler(token = "%incsrc", length = 1)]
+        [AssemblerHandler(Token = "%incsrc", Length = 1)]
         protected string GetIncSrc(int offset, int length)
         {
             string s = "incsrc \"labels.asm\"";
             if (offset >= 0)
             {
-                int bank = Data.ConvertPCtoSNES(offset) >> 16;
+                int bank = Data.ConvertPCtoSnes(offset) >> 16;
                 s = string.Format("incsrc \"bank_{0}.asm\"", Util.NumberToBaseString(bank, Util.NumberBase.Hexadecimal, 2));
             }
             return string.Format("{0," + (length * -1) + "}", s);
         }
 
-        [AssemblerHandler(token = "%bankcross", length = 1)]
+        [AssemblerHandler(Token = "%bankcross", Length = 1)]
         protected string GetBankCross(int offset, int length)
         {
             string s = "check bankcross off";
@@ -566,7 +566,7 @@ namespace Diz.Core.export
         }
 
         // length forced to 6
-        [AssemblerHandler(token = "ia", length = 6)]
+        [AssemblerHandler(Token = "ia", Length = 6)]
         protected string GetIntermediateAddress(int offset, int length)
         {
             int ia = Data.GetIntermediateAddressOrPointer(offset);
@@ -574,21 +574,21 @@ namespace Diz.Core.export
         }
 
         // length forced to 6
-        [AssemblerHandler(token = "pc", length = 6)]
+        [AssemblerHandler(Token = "pc", Length = 6)]
         protected string GetProgramCounter(int offset, int length)
         {
-            return Util.NumberToBaseString(Data.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6);
+            return Util.NumberToBaseString(Data.ConvertPCtoSnes(offset), Util.NumberBase.Hexadecimal, 6);
         }
 
         // trim to length
-        [AssemblerHandler(token = "offset", length = -6)]
+        [AssemblerHandler(Token = "offset", Length = -6)]
         protected string GetOffset(int offset, int length)
         {
             return string.Format("{0," + (length * -1) + "}", Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0));
         }
 
         // length forced to 8
-        [AssemblerHandler(token = "bytes", length = 8)]
+        [AssemblerHandler(Token = "bytes", Length = 8)]
         protected string GetRawBytes(int offset, int length)
         {
             string bytes = "";
@@ -596,36 +596,36 @@ namespace Diz.Core.export
             {
                 for (var i = 0; i < Data.GetInstructionLength(offset); i++)
                 {
-                    bytes += Util.NumberToBaseString(Data.GetROMByte(offset + i), Util.NumberBase.Hexadecimal);
+                    bytes += Util.NumberToBaseString(Data.GetRomByte(offset + i), Util.NumberBase.Hexadecimal);
                 }
             }
             return $"{bytes,-8}";
         }
 
         // trim to length
-        [AssemblerHandler(token = "comment", length = 1)]
+        [AssemblerHandler(Token = "comment", Length = 1)]
         protected string GetComment(int offset, int length)
         {
-            var snesOffset = Data.ConvertPCtoSNES(offset);
+            var snesOffset = Data.ConvertPCtoSnes(offset);
             return string.Format("{0," + (length * -1) + "}", Data.GetComment(snesOffset));
         }
 
         // length forced to 2
-        [AssemblerHandler(token = "b", length = 2)]
+        [AssemblerHandler(Token = "b", Length = 2)]
         protected string GetDataBank(int offset, int length)
         {
             return Util.NumberToBaseString(Data.GetDataBank(offset), Util.NumberBase.Hexadecimal, 2);
         }
 
         // length forced to 4
-        [AssemblerHandler(token = "d", length = 4)]
+        [AssemblerHandler(Token = "d", Length = 4)]
         protected string GetDirectPage(int offset, int length)
         {
             return Util.NumberToBaseString(Data.GetDirectPage(offset), Util.NumberBase.Hexadecimal, 4);
         }
 
         // if length == 1, M/m, else 08/16
-        [AssemblerHandler(token = "m", length = 1)]
+        [AssemblerHandler(Token = "m", Length = 1)]
         protected string GetMFlag(int offset, int length)
         {
             var m = Data.GetMFlag(offset);
@@ -634,7 +634,7 @@ namespace Diz.Core.export
         }
 
         // if length == 1, X/x, else 08/16
-        [AssemblerHandler(token = "x", length = 1)]
+        [AssemblerHandler(Token = "x", Length = 1)]
         protected string GetXFlag(int offset, int length)
         {
             var x = Data.GetXFlag(offset);
@@ -643,7 +643,7 @@ namespace Diz.Core.export
         }
 
         // output label at snes offset, and its value
-        [AssemblerHandler(token = "%labelassign", length = 1)]
+        [AssemblerHandler(Token = "%labelassign", Length = 1)]
         protected string GetLabelAssign(int offset, int length)
         {
             var labelName = Data.GetLabelName(offset);
@@ -658,7 +658,7 @@ namespace Diz.Core.export
             var finalCommentText = "";
 
             // TODO: sorry, probably not the best way to stuff this in here, consider putting it in the %comment% section in the future. -Dom
-            if (Settings.printLabelSpecificComments && labelComment != "")
+            if (Settings.PrintLabelSpecificComments && labelComment != "")
                 finalCommentText = $"; !^ {labelComment} ^!";
 
             string s = $"{labelName} = {offsetStr}{finalCommentText}";

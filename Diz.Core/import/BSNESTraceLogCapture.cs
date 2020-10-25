@@ -11,16 +11,16 @@ namespace Diz.Core.import
 {
     // TODO: can probably replace this better with Dataflow TPL, investigate
 
-    public class BSNESTraceLogCapture
+    public class BsnesTraceLogCapture
     {
         private WorkerTaskManager taskManager;
-        private BSNESImportStreamProcessor streamProcessor;
+        private BsnesImportStreamProcessor streamProcessor;
 
         private readonly ReaderWriterLockSlim importerLock = new ReaderWriterLockSlim();
-        private BSNESTraceLogImporter importer;
+        private BsnesTraceLogImporter importer;
         private int bytesToProcess = 0;
         private int compressedBlocksToProcess = 0;
-        private BSNESTraceLogImporter.Stats cachedStats;
+        private BsnesTraceLogImporter.Stats cachedStats;
 
         public bool Running { get; protected set; }
 
@@ -53,8 +53,8 @@ namespace Diz.Core.import
         private void Setup(Data data)
         {
             Running = true;
-            importer = new BSNESTraceLogImporter(data);
-            streamProcessor = new BSNESImportStreamProcessor();
+            importer = new BsnesTraceLogImporter(data);
+            streamProcessor = new BsnesImportStreamProcessor();
             taskManager = new WorkerTaskManager();
         }
 
@@ -82,19 +82,19 @@ namespace Diz.Core.import
             }
         }
 
-        private async void ProcessCompressedWorkItem(BSNESImportStreamProcessor.CompressedWorkItems compressedItems)
+        private async void ProcessCompressedWorkItem(BsnesImportStreamProcessor.CompressedWorkItems compressedItems)
         {
             // tune this as needed.
             // we want parallel jobs going, but, we don't want too many of them at once.
             // average # workItems per CompressedWorkItem is like 12K currently.
             const int numItemsPerTask = 6000;
 
-            using var enumerator = BSNESImportStreamProcessor.ProcessCompressedWorkItems(compressedItems).GetEnumerator();
+            using var enumerator = BsnesImportStreamProcessor.ProcessCompressedWorkItems(compressedItems).GetEnumerator();
 
             bool keepGoing;
             var itemsRemainingBeforeSend = numItemsPerTask;
             var subTasks = new List<Task>();
-            var workItemsForThisTask = new List<BSNESImportStreamProcessor.WorkItem>();
+            var workItemsForThisTask = new List<BsnesImportStreamProcessor.WorkItem>();
 
             do
             {
@@ -111,7 +111,7 @@ namespace Diz.Core.import
                 if (!shouldSendNow) 
                     continue;
 
-                var workItemsCopy = new List<BSNESImportStreamProcessor.WorkItem>(workItemsForThisTask);
+                var workItemsCopy = new List<BsnesImportStreamProcessor.WorkItem>(workItemsForThisTask);
                 subTasks.Add(taskManager.Run(() =>
                 {
                     ProcessWorkItems(workItemsCopy);
@@ -125,7 +125,7 @@ namespace Diz.Core.import
             Stats_MarkCompleted(compressedItems);
         }
 
-        private void ProcessWorkItems(IEnumerable<BSNESImportStreamProcessor.WorkItem> workItemsForThisTask)
+        private void ProcessWorkItems(IEnumerable<BsnesImportStreamProcessor.WorkItem> workItemsForThisTask)
         {
             foreach (var workItem in workItemsForThisTask)
             {
@@ -134,7 +134,7 @@ namespace Diz.Core.import
         }
 
         // this is just neat stats. it's optional, remove if performance becomes an issue (seems unlikely)
-        private void States_MarkQueued(BSNESImportStreamProcessor.CompressedWorkItems compressedItems)
+        private void States_MarkQueued(BsnesImportStreamProcessor.CompressedWorkItems compressedItems)
         {
             try
             {
@@ -148,7 +148,7 @@ namespace Diz.Core.import
             }
         }
 
-        private void Stats_MarkCompleted(BSNESImportStreamProcessor.CompressedWorkItems compressedItems)
+        private void Stats_MarkCompleted(BsnesImportStreamProcessor.CompressedWorkItems compressedItems)
         {
             try
             {
@@ -162,7 +162,7 @@ namespace Diz.Core.import
             }
         }
 
-        private void ProcessWorkItem(BSNESImportStreamProcessor.WorkItem workItem)
+        private void ProcessWorkItem(BsnesImportStreamProcessor.WorkItem workItem)
         {
             try
             {
@@ -182,7 +182,7 @@ namespace Diz.Core.import
             taskManager.StartFinishing();
         }
 
-        public (BSNESTraceLogImporter.Stats stats, int bytesToProcess) GetStats()
+        public (BsnesTraceLogImporter.Stats stats, int bytesToProcess) GetStats()
         {
             if (importer == null)
                 return (cachedStats, 0);

@@ -12,7 +12,7 @@ namespace Diz.Core.serialization.xml_serializer
             public string ShortTextToEncode;
         }
 
-        private static readonly List<CompressionEntry> table1 = new List<CompressionEntry>
+        private static readonly List<CompressionEntry> Table1 = new List<CompressionEntry>
         {
             new CompressionEntry() {LongTextPattern = "0001E", ShortTextToEncode="ZQ"},
             new CompressionEntry() {LongTextPattern = "B0001", ShortTextToEncode="Zq"},
@@ -32,7 +32,7 @@ namespace Diz.Core.serialization.xml_serializer
             {
                 // shouldn't matter much but, apply in reverse to ensure it's done the same
                 // way as the encoding process
-                foreach (var e in table1.Reverse<CompressionEntry>())
+                foreach (var e in Table1.Reverse<CompressionEntry>())
                 {
                     lines[i] = lines[i].Replace(e.ShortTextToEncode, e.LongTextPattern);
                 }
@@ -48,7 +48,7 @@ namespace Diz.Core.serialization.xml_serializer
             // and make a Table2, add that here without having to bump the file version.
             for (var i = 0; i < lines.Count; ++i)
             {
-                foreach (var e in table1)
+                foreach (var e in Table1)
                 {
                     Debug.Assert(!lines[i].Contains(e.ShortTextToEncode));
                     lines[i] = lines[i].Replace(e.LongTextPattern, e.ShortTextToEncode);

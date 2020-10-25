@@ -1,23 +1,24 @@
 ﻿using System.Collections.Generic;
 using Diz.Core.model;
+using Diz.Core.util;
 using DiztinGUIsh;
 
 namespace Diz.Core.serialization
 {
     public class ImportRomSettings : PropertyNotifyChanged
     {
-        private Data.ROMMapMode mode;
-        private Data.ROMSpeed romSpeed;
+        private RomMapMode mode;
+        private RomSpeed romSpeed;
         private byte[] romBytes;
         private string romFilename;
 
-        public Data.ROMMapMode ROMMapMode
+        public RomMapMode RomMapMode
         {
             get => mode;
             set => SetField(ref mode, value);
         }
 
-        public Data.ROMSpeed ROMSpeed
+        public RomSpeed RomSpeed
         {
             get => romSpeed;
             set => SetField(ref romSpeed, value);

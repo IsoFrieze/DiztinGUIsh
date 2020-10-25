@@ -14,19 +14,19 @@
 
     public class Label
     {
-        public string name = "";        // name of the label
-        public string comment = "";     // user-generated text, comment only
+        public string Name = "";        // name of the label
+        public string Comment = "";     // user-generated text, comment only
         public void CleanUp()
         {
-            comment ??= "";
-            name ??= "";
+            Comment ??= "";
+            Name ??= "";
         }
 
         #region Equality
 
         protected bool Equals(Label other)
         {
-            return name == other.name && comment == other.comment;
+            return Name == other.Name && Comment == other.Comment;
         }
 
         public override bool Equals(object obj)
@@ -40,7 +40,7 @@
         {
             unchecked
             {
-                return ((name != null ? name.GetHashCode() : 0) * 397) ^ (comment != null ? comment.GetHashCode() : 0);
+                return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Comment != null ? Comment.GetHashCode() : 0);
             }
         }
 

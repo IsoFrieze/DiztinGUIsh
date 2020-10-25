@@ -11,7 +11,7 @@ namespace DiztinGUIsh
     // end.
     public partial class ExportDisassembly : Form
     {
-        private readonly Project Project;
+        private readonly Project project;
 
         // Our copy. At the end, if everything is correct, we'll return this.
         private LogWriterSettings settings;
@@ -29,7 +29,7 @@ namespace DiztinGUIsh
 
         public ExportDisassembly(Project project)
         {
-            Project = project;
+            this.project = project;
             settings = project.LogWriterSettings; // copy
 
             if (settings.Validate() != "")
@@ -43,12 +43,12 @@ namespace DiztinGUIsh
         public void UpdateUiFromProjectSettings()
         {
             // TODO: in the future, replace this with databinding so we don't have to do it manually
-            numData.Value = settings.dataPerLine;
-            textFormat.Text = settings.format;
-            comboUnlabeled.SelectedIndex = (int)settings.unlabeled;
-            comboStructure.SelectedIndex = (int)settings.structure;
-            chkIncludeUnusedLabels.Checked = settings.includeUnusedLabels;
-            chkPrintLabelSpecificComments.Checked = settings.printLabelSpecificComments;
+            numData.Value = settings.DataPerLine;
+            textFormat.Text = settings.Format;
+            comboUnlabeled.SelectedIndex = (int)settings.Unlabeled;
+            comboStructure.SelectedIndex = (int)settings.Structure;
+            chkIncludeUnusedLabels.Checked = settings.IncludeUnusedLabels;
+            chkPrintLabelSpecificComments.Checked = settings.PrintLabelSpecificComments;
         }
 
         private void cancel_Click(object sender, EventArgs e)
@@ -72,27 +72,27 @@ namespace DiztinGUIsh
 
         private string PromptSaveLogPath()
         {
-            chooseLogFolder.SelectedPath = Path.GetDirectoryName(Project.ProjectFileName);
+            chooseLogFolder.SelectedPath = Path.GetDirectoryName(project.ProjectFileName);
             return chooseLogFolder.ShowDialog() == DialogResult.OK && chooseLogFolder.SelectedPath != ""
                 ? chooseLogFolder.SelectedPath : null;
         }
 
         private string PromptSaveLogFile()
         {
-            saveLogSingleFile.InitialDirectory = Project.ProjectFileName;
+            saveLogSingleFile.InitialDirectory = project.ProjectFileName;
             return saveLogSingleFile.ShowDialog() == DialogResult.OK && saveLogSingleFile.FileName != ""
                 ? saveLogSingleFile.FileName : null;
         }
 
         private bool PromptForPath()
         {
-            var singleFile = settings.structure == LogCreator.FormatStructure.SingleFile;
+            var singleFile = settings.Structure == LogCreator.FormatStructure.SingleFile;
             var fileOrFolderPath = PromptForLogPathFromFileOrFolderDialog(singleFile);
 
             if (string.IsNullOrEmpty(fileOrFolderPath))
                 return false;
 
-            settings.fileOrFolderOutPath = fileOrFolderPath;
+            settings.FileOrFolderOutPath = fileOrFolderPath;
 
             return true;
         }
@@ -101,7 +101,7 @@ namespace DiztinGUIsh
         {
             if (ValidateFormat())
             {
-                settings.format = textFormat.Text.ToLower();
+                settings.Format = textFormat.Text.ToLower();
                 RegenerateSampleOutput();
                 button2.Enabled = true;
             } else {
@@ -112,19 +112,19 @@ namespace DiztinGUIsh
 
         private void numData_ValueChanged(object sender, EventArgs e)
         {
-            settings.dataPerLine = (int)numData.Value;
+            settings.DataPerLine = (int)numData.Value;
             RegenerateSampleOutput();
         }
 
         private void comboUnlabeled_SelectedIndexChanged(object sender, EventArgs e)
         {
-            settings.unlabeled = (LogCreator.FormatUnlabeled)comboUnlabeled.SelectedIndex;
+            settings.Unlabeled = (LogCreator.FormatUnlabeled)comboUnlabeled.SelectedIndex;
             RegenerateSampleOutput();
         }
 
         private void comboStructure_SelectedIndexChanged(object sender, EventArgs e)
         {
-            settings.structure = (LogCreator.FormatStructure)comboStructure.SelectedIndex;
+            settings.Structure = (LogCreator.FormatStructure)comboStructure.SelectedIndex;
         }
 
         private bool ValidateFormat()
@@ -135,17 +135,17 @@ namespace DiztinGUIsh
         private void RegenerateSampleOutput()
         {
             var result = RomUtil.GetSampleAssemblyOutput(settings);
-            textSample.Text = result.outputStr;
+            textSample.Text = result.OutputStr;
         }
 
         private void chkPrintLabelSpecificComments_CheckedChanged(object sender, EventArgs e)
         {
-            settings.printLabelSpecificComments = chkPrintLabelSpecificComments.Checked;
+            settings.PrintLabelSpecificComments = chkPrintLabelSpecificComments.Checked;
         }
 
         private void chkIncludeUnusedLabels_CheckedChanged(object sender, EventArgs e)
         {
-            settings.includeUnusedLabels = chkIncludeUnusedLabels.Checked;
+            settings.IncludeUnusedLabels = chkIncludeUnusedLabels.Checked;
         }
     }
 }

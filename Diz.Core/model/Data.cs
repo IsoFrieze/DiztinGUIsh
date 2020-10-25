@@ -9,11 +9,11 @@ namespace Diz.Core.model
 {
     public partial class Data : DizDataModel
     {
-        private readonly CPU65C816 cpu65C816; // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something
+        private readonly Cpu65C816 cpu65C816; // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something
 
         public Data()
         {
-            cpu65C816 = new CPU65C816(this);
+            cpu65C816 = new Cpu65C816(this);
         }
 
         public void CreateRomBytesFromRom(IEnumerable<byte> actualRomBytes)
@@ -26,7 +26,7 @@ namespace Diz.Core.model
             RomBytes.Clear();
             foreach (var fileByte in actualRomBytes)
             {
-                RomBytes.Add(new ROMByte
+                RomBytes.Add(new RomByte
                 {
                     Rom = fileByte,
                 });
@@ -39,7 +39,7 @@ namespace Diz.Core.model
         {
             byte[] output = new byte[count];
             for (int i = 0; i < output.Length; i++)
-                output[i] = (byte)GetROMByte(ConvertSNEStoPC(pcOffset + i));
+                output[i] = (byte)GetRomByte(ConvertSnesToPc(pcOffset + i));
 
             return output;
         }
@@ -69,9 +69,7 @@ namespace Diz.Core.model
             RomBytes.SendNotificationChangedEvents = previousNotificationState;
         }
 
-        public int GetROMSize() => RomBytes?.Count ?? 0;
-        public ROMMapMode GetROMMapMode() => RomMapMode;
-        public ROMSpeed GetROMSpeed() => RomSpeed;
+        public int GetRomSize() => RomBytes?.Count ?? 0;
         public FlagType GetFlag(int i) => RomBytes[i].TypeFlag;
         public void SetFlag(int i, FlagType flag) => RomBytes[i].TypeFlag = flag;
         public Architecture GetArchitecture(int i) => RomBytes[i].Arch;
@@ -87,11 +85,11 @@ namespace Diz.Core.model
         public void SetXFlag(int i, bool x) => RomBytes[i].XFlag = x;
         public bool GetMFlag(int i) => RomBytes[i].MFlag;
         public void SetMFlag(int i, bool m) => RomBytes[i].MFlag = m;
-        public int GetMXFlags(int i)
+        public int GetMxFlags(int i)
         {
             return (RomBytes[i].MFlag ? 0x20 : 0) | (RomBytes[i].XFlag ? 0x10 : 0);
         }
-        public void SetMXFlags(int i, int mx)
+        public void SetMxFlags(int i, int mx)
         {
             RomBytes[i].MFlag = ((mx & 0x20) != 0);
             RomBytes[i].XFlag = ((mx & 0x10) != 0);
@@ -99,14 +97,14 @@ namespace Diz.Core.model
         public string GetLabelName(int i)
         {
             if (Labels.TryGetValue(i, out var val)) 
-                return val?.name ?? "";
+                return val?.Name ?? "";
 
             return "";
         }
         public string GetLabelComment(int i)
         {
             if (Labels.TryGetValue(i, out var val)) 
-                return val?.comment ?? "";
+                return val?.Comment ?? "";
 
             return "";
         }
@@ -153,27 +151,27 @@ namespace Diz.Core.model
             }
         }
 
-        public int ConvertPCtoSNES(int offset)
+        public int ConvertPCtoSnes(int offset)
         {
-            return RomUtil.ConvertPCtoSNES(offset, RomMapMode, GetROMSpeed());
+            return RomUtil.ConvertPCtoSnes(offset, RomMapMode, RomSpeed);
         }
-        public int GetROMByte(int i) => RomBytes[i].Rom;
-        public int GetROMWord(int offset)
+        public int GetRomByte(int i) => RomBytes[i].Rom;
+        public int GetRomWord(int offset)
         {
-            if (offset + 1 < GetROMSize())
-                return GetROMByte(offset) + (GetROMByte(offset + 1) << 8);
+            if (offset + 1 < GetRomSize())
+                return GetRomByte(offset) + (GetRomByte(offset + 1) << 8);
             return -1;
         }
-        public int GetROMLong(int offset)
+        public int GetRomLong(int offset)
         {
-            if (offset + 2 < GetROMSize())
-                return GetROMByte(offset) + (GetROMByte(offset + 1) << 8) + (GetROMByte(offset + 2) << 16);
+            if (offset + 2 < GetRomSize())
+                return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16);
             return -1;
         }
-        public int GetROMDoubleWord(int offset)
+        public int GetRomDoubleWord(int offset)
         {
-            if (offset + 3 < GetROMSize())
-                return GetROMByte(offset) + (GetROMByte(offset + 1) << 8) + (GetROMByte(offset + 2) << 16) + (GetROMByte(offset + 3) << 24);
+            if (offset + 3 < GetRomSize())
+                return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16) + (GetRomByte(offset + 3) << 24);
             return -1;
         }
         public int GetIntermediateAddressOrPointer(int offset)
@@ -185,10 +183,10 @@ namespace Diz.Core.model
                     return GetIntermediateAddress(offset, true);
                 case FlagType.Pointer16Bit:
                     int bank = GetDataBank(offset);
-                    return (bank << 16) | GetROMWord(offset);
+                    return (bank << 16) | GetRomWord(offset);
                 case FlagType.Pointer24Bit:
                 case FlagType.Pointer32Bit:
-                    return GetROMLong(offset);
+                    return GetRomLong(offset);
             }
             return -1;
         }
@@ -202,16 +200,16 @@ namespace Diz.Core.model
         {
             return GetArchitecture(offset) switch
             {
-                Architecture.CPU65C816 => cpu65C816.GetInstructionLength(offset),
-                Architecture.APUSPC700 => 1,
-                Architecture.GPUSuperFX => 1,
+                Architecture.Cpu65C816 => cpu65C816.GetInstructionLength(offset),
+                Architecture.Apuspc700 => 1,
+                Architecture.GpuSuperFx => 1,
                 _ => 1
             };
         }
 
         private int UnmirroredOffset(int offset)
         {
-            return RomUtil.UnmirroredOffset(offset, GetROMSize());
+            return RomUtil.UnmirroredOffset(offset, GetRomSize());
         }
 
         public string GetFormattedBytes(int offset, int step, int bytes)
@@ -231,19 +229,19 @@ namespace Diz.Core.model
 
                 switch (step)
                 {
-                    case 1: res += Util.NumberToBaseString(GetROMByte(offset + i), Util.NumberBase.Hexadecimal, 2, true); break;
-                    case 2: res += Util.NumberToBaseString(GetROMWord(offset + i), Util.NumberBase.Hexadecimal, 4, true); break;
-                    case 3: res += Util.NumberToBaseString(GetROMLong(offset + i), Util.NumberBase.Hexadecimal, 6, true); break;
-                    case 4: res += Util.NumberToBaseString(GetROMDoubleWord(offset + i), Util.NumberBase.Hexadecimal, 8, true); break;
+                    case 1: res += Util.NumberToBaseString(GetRomByte(offset + i), Util.NumberBase.Hexadecimal, 2, true); break;
+                    case 2: res += Util.NumberToBaseString(GetRomWord(offset + i), Util.NumberBase.Hexadecimal, 4, true); break;
+                    case 3: res += Util.NumberToBaseString(GetRomLong(offset + i), Util.NumberBase.Hexadecimal, 6, true); break;
+                    case 4: res += Util.NumberToBaseString(GetRomDoubleWord(offset + i), Util.NumberBase.Hexadecimal, 8, true); break;
                 }
             }
 
             return res;
         }
 
-        public int ConvertSNEStoPC(int address)
+        public int ConvertSnesToPc(int address)
         {
-            return RomUtil.ConvertSNESToPC(address, RomMapMode, GetROMSize());
+            return RomUtil.ConvertSnesToPc(address, RomMapMode, GetRomSize());
         }
 
         public string GetPointer(int offset, int bytes)
@@ -253,24 +251,24 @@ namespace Diz.Core.model
             switch (bytes)
             {
                 case 2:
-                    ia = (GetDataBank(offset) << 16) | GetROMWord(offset);
+                    ia = (GetDataBank(offset) << 16) | GetRomWord(offset);
                     format = "dw {0}";
-                    param = Util.NumberToBaseString(GetROMWord(offset), Util.NumberBase.Hexadecimal, 4, true);
+                    param = Util.NumberToBaseString(GetRomWord(offset), Util.NumberBase.Hexadecimal, 4, true);
                     break;
                 case 3:
-                    ia = GetROMLong(offset);
+                    ia = GetRomLong(offset);
                     format = "dl {0}";
-                    param = Util.NumberToBaseString(GetROMLong(offset), Util.NumberBase.Hexadecimal, 6, true);
+                    param = Util.NumberToBaseString(GetRomLong(offset), Util.NumberBase.Hexadecimal, 6, true);
                     break;
                 case 4:
-                    ia = GetROMLong(offset);
+                    ia = GetRomLong(offset);
                     format = "dl {0}" +
-                             $" : db {Util.NumberToBaseString(GetROMByte(offset + 3), Util.NumberBase.Hexadecimal, 2, true)}";
-                    param = Util.NumberToBaseString(GetROMLong(offset), Util.NumberBase.Hexadecimal, 6, true);
+                             $" : db {Util.NumberToBaseString(GetRomByte(offset + 3), Util.NumberBase.Hexadecimal, 2, true)}";
+                    param = Util.NumberToBaseString(GetRomLong(offset), Util.NumberBase.Hexadecimal, 6, true);
                     break;
             }
 
-            var pc = ConvertSNEStoPC(ia);
+            var pc = ConvertSnesToPc(ia);
             if (pc >= 0 && GetLabelName(ia) != "") param = GetLabelName(ia);
             return string.Format(format, param);
         }
@@ -278,13 +276,13 @@ namespace Diz.Core.model
         public string GetFormattedText(int offset, int bytes)
         {
             var text = "db \"";
-            for (var i = 0; i < bytes; i++) text += (char)GetROMByte(offset + i);
+            for (var i = 0; i < bytes; i++) text += (char)GetRomByte(offset + i);
             return text + "\"";
         }
 
         public string GetDefaultLabel(int snes)
         {
-            var pcoffset = ConvertSNEStoPC(snes);
+            var pcoffset = ConvertSnesToPc(snes);
             var prefix = RomUtil.TypeToLabel(GetFlag(pcoffset));
             var labelAddress = Util.NumberToBaseString(snes, Util.NumberBase.Hexadecimal, 6);
             return $"{prefix}_{labelAddress}";
@@ -294,9 +292,9 @@ namespace Diz.Core.model
         {
             return GetArchitecture(offset) switch
             {
-                Architecture.CPU65C816 => cpu65C816.Step(offset, branch, force, prevOffset),
-                Architecture.APUSPC700 => offset,
-                Architecture.GPUSuperFX => offset,
+                Architecture.Cpu65C816 => cpu65C816.Step(offset, branch, force, prevOffset),
+                Architecture.Apuspc700 => offset,
+                Architecture.GpuSuperFx => offset,
                 _ => offset
             };
         }
@@ -323,14 +321,14 @@ namespace Diz.Core.model
                 {
                     switch (GetArchitecture(newOffset))
                     {
-                        case Architecture.CPU65C816:
+                        case Architecture.Cpu65C816:
                             if (seenBranches.Contains(newOffset))
                             {
                                 keepGoing = false;
                                 break;
                             }
 
-                            var opcode = GetROMByte(newOffset);
+                            var opcode = GetRomByte(newOffset);
 
                             nextOffset = Step(newOffset, false, false, prevOffset);
                             var jumpOffset = Step(newOffset, true, false, prevOffset);
@@ -347,7 +345,7 @@ namespace Diz.Core.model
 
                             if (opcode == 0x08) // PHP
                             {
-                                stack.Push(GetMXFlags(newOffset));
+                                stack.Push(GetMxFlags(newOffset));
                             }
                             else if (opcode == 0x28) // PLP
                             {
@@ -357,7 +355,7 @@ namespace Diz.Core.model
                                 }
                                 else
                                 {
-                                    SetMXFlags(newOffset, stack.Pop());
+                                    SetMxFlags(newOffset, stack.Pop());
                                 }
                             }
 
@@ -386,8 +384,8 @@ namespace Diz.Core.model
                                 newOffset = nextOffset;
                             }
                             break;
-                        case Architecture.APUSPC700:
-                        case Architecture.GPUSuperFX:
+                        case Architecture.Apuspc700:
+                        case Architecture.GpuSuperFx:
                             nextOffset = Step(newOffset, false, true, prevOffset);
                             prevOffset = newOffset;
                             newOffset = nextOffset;
@@ -403,42 +401,42 @@ namespace Diz.Core.model
 
         public int Mark(int offset, FlagType type, int count)
         {
-            int i, size = GetROMSize();
+            int i, size = GetRomSize();
             for (i = 0; i < count && offset + i < size; i++) SetFlag(offset + i, type);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public int MarkDataBank(int offset, int db, int count)
         {
-            int i, size = GetROMSize();
+            int i, size = GetRomSize();
             for (i = 0; i < count && offset + i < size; i++) SetDataBank(offset + i, db);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public int MarkDirectPage(int offset, int dp, int count)
         {
-            int i, size = GetROMSize();
+            int i, size = GetRomSize();
             for (i = 0; i < count && offset + i < size; i++) SetDirectPage(offset + i, dp);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public int MarkXFlag(int offset, bool x, int count)
         {
-            int i, size = GetROMSize();
+            int i, size = GetRomSize();
             for (i = 0; i < count && offset + i < size; i++) SetXFlag(offset + i, x);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public int MarkMFlag(int offset, bool m, int count)
         {
-            int i, size = GetROMSize();
+            int i, size = GetRomSize();
             for (i = 0; i < count && offset + i < size; i++) SetMFlag(offset + i, m);
             return offset + i < size ? offset + i : size - 1;
         }
 
         public int MarkArchitechture(int offset, Architecture arch, int count)
         {
-            int i, size = GetROMSize();
+            int i, size = GetRomSize();
             for (i = 0; i < count && offset + i < size; i++) SetArchitechture(offset + i, arch);
             return offset + i < size ? offset + i : size - 1;
         }
@@ -447,16 +445,16 @@ namespace Diz.Core.model
         {
             return GetArchitecture(offset) switch
             {
-                Architecture.CPU65C816 => cpu65C816.GetInstructionLength(offset),
-                Architecture.APUSPC700 => 1,
-                Architecture.GPUSuperFX => 1,
+                Architecture.Cpu65C816 => cpu65C816.GetInstructionLength(offset),
+                Architecture.Apuspc700 => 1,
+                Architecture.GpuSuperFx => 1,
                 _ => 1
             };
         }
 
         public int FixMisalignedFlags()
         {
-            int count = 0, size = GetROMSize();
+            int count = 0, size = GetRomSize();
 
             for (var i = 0; i < size; i++)
             {
@@ -508,17 +506,17 @@ namespace Diz.Core.model
 
         public void RescanInOutPoints()
         {
-            for (var i = 0; i < GetROMSize(); i++) ClearInOutPoint(i);
+            for (var i = 0; i < GetRomSize(); i++) ClearInOutPoint(i);
 
-            for (var i = 0; i < GetROMSize(); i++)
+            for (var i = 0; i < GetRomSize(); i++)
             {
                 if (GetFlag(i) == FlagType.Opcode)
                 {
                     switch (GetArchitecture(i))
                     {
-                        case Architecture.CPU65C816: cpu65C816.MarkInOutPoints(i); break;
-                        case Architecture.APUSPC700: break;
-                        case Architecture.GPUSuperFX: break;
+                        case Architecture.Cpu65C816: cpu65C816.MarkInOutPoints(i); break;
+                        case Architecture.Apuspc700: break;
+                        case Architecture.GpuSuperFx: break;
                     }
                 }
             }
@@ -529,9 +527,9 @@ namespace Diz.Core.model
             // FIX ME: log and generation of dp opcodes. search references
             return GetArchitecture(offset) switch
             {
-                Architecture.CPU65C816 => cpu65C816.GetIntermediateAddress(offset, resolve),
-                Architecture.APUSPC700 => -1,
-                Architecture.GPUSuperFX => -1,
+                Architecture.Cpu65C816 => cpu65C816.GetIntermediateAddress(offset, resolve),
+                Architecture.Apuspc700 => -1,
+                Architecture.GpuSuperFx => -1,
                 _ => -1
             };
         }
@@ -540,9 +538,9 @@ namespace Diz.Core.model
         {
             return GetArchitecture(offset) switch
             {
-                Architecture.CPU65C816 => cpu65C816.GetInstruction(offset),
-                Architecture.APUSPC700 => "",
-                Architecture.GPUSuperFX => "",
+                Architecture.Cpu65C816 => cpu65C816.GetInstruction(offset),
+                Architecture.Apuspc700 => "",
+                Architecture.GpuSuperFx => "",
                 _ => ""
             };
         }
@@ -554,15 +552,15 @@ namespace Diz.Core.model
 
         public string GetBankName(int bankIndex)
         {
-            var bankSnesByte = GetSNESBankByte(bankIndex);
+            var bankSnesByte = GetSnesBankByte(bankIndex);
             return Util.NumberToBaseString(bankSnesByte, Util.NumberBase.Hexadecimal, 2);
         }
 
-        private int GetSNESBankByte(int bankIndex)
+        private int GetSnesBankByte(int bankIndex)
         {
-            var bankStartingPCOffset = bankIndex << 16;
-            var bankSNESNumber = ConvertPCtoSNES(bankStartingPCOffset) >> 16;
-            return bankSNESNumber;
+            var bankStartingPcOffset = bankIndex << 16;
+            var bankSnesNumber = ConvertPCtoSnes(bankStartingPcOffset) >> 16;
+            return bankSnesNumber;
         }
     }
 }

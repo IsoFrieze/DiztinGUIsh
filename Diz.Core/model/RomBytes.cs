@@ -7,16 +7,16 @@ using System.Linq;
 
 namespace Diz.Core.model
 {
-    public class RomBytes : IEnumerable<ROMByte>, INotifyCollectionChanged, INotifyPropertyChanged
+    public class RomBytes : IEnumerable<RomByte>, INotifyCollectionChanged, INotifyPropertyChanged
     {
-        private ObservableCollection<ROMByte> bytes;
+        private ObservableCollection<RomByte> bytes;
 
         // TODO: might be able to do something more generic now that other refactorings are completed.
         //
         // This class needs to do these things that are special:
         // 1) Be handled specially by our custom XML serializer (compresses to save disk space)
         // 2) Handle Equals() by comparing each element in the list (SequenceEqual)
-        private ObservableCollection<ROMByte> Bytes
+        private ObservableCollection<RomByte> Bytes
         {
             get => bytes;
             set
@@ -31,7 +31,7 @@ namespace Diz.Core.model
             }
         }
 
-        public ROMByte this[int i]
+        public RomByte this[int i]
         {
             get => Bytes[i];
             set => Bytes[i] = value;
@@ -39,18 +39,18 @@ namespace Diz.Core.model
 
         public RomBytes()
         {
-            Bytes = new ObservableCollection<ROMByte>();
+            Bytes = new ObservableCollection<RomByte>();
         }
 
-        public void SetFrom(ROMByte[] romBytes)
+        public void SetFrom(RomByte[] romBytes)
         {
-            Bytes = new ObservableCollection<ROMByte>(romBytes);
+            Bytes = new ObservableCollection<RomByte>(romBytes);
         }
 
         public int Count => Bytes.Count;
         public bool SendNotificationChangedEvents { get; set; } = true;
 
-        public void Add(ROMByte romByte)
+        public void Add(RomByte romByte)
         {
             Bytes.Add(romByte);
             romByte.SetCachedOffset(Bytes.Count - 1); // I don't love this....
@@ -59,7 +59,7 @@ namespace Diz.Core.model
         public void Create(int size)
         {
             for (var i = 0; i < size; ++i)
-                Add(new ROMByte());
+                Add(new RomByte());
         }
         public void Clear()
         {
@@ -87,7 +87,7 @@ namespace Diz.Core.model
         #endregion
 
         #region Enumerator
-        public IEnumerator<ROMByte> GetEnumerator()
+        public IEnumerator<RomByte> GetEnumerator()
         {
             return Bytes.GetEnumerator();
         }
@@ -104,11 +104,11 @@ namespace Diz.Core.model
         private void Bytes_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
-                foreach (ROMByte item in e.NewItems)
+                foreach (RomByte item in e.NewItems)
                     item.PropertyChanged += RomByteObjectChanged;
 
             if (e.OldItems != null)
-                foreach (ROMByte item in e.OldItems)
+                foreach (RomByte item in e.OldItems)
                     item.PropertyChanged -= RomByteObjectChanged;
 
             if (SendNotificationChangedEvents)

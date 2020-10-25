@@ -6,41 +6,41 @@ using Diz.Core.util;
 
 namespace Diz.Core.import
 {
-    public class BSNESTraceLogImporter
+    public class BsnesTraceLogImporter
     {
-        private Data Data;
+        private Data data;
         int romSize;
         public struct Stats
         {
-            public long numRomBytesAnalyzed;
-            public long numRomBytesModified;
+            public long NumRomBytesAnalyzed;
+            public long NumRomBytesModified;
 
-            public long numXFlagsModified;
-            public long numMFlagsModified;
-            public long numDBModified;
-            public long numDpModified;
-            public long numMarksModified;
+            public long NumXFlagsModified;
+            public long NumMFlagsModified;
+            public long NumDbModified;
+            public long NumDpModified;
+            public long NumMarksModified;
         }
 
         public Stats CurrentStats;
 
         public Data GetData()
         {
-            return Data;
+            return data;
         }
 
-        public BSNESTraceLogImporter(Data data)
+        public BsnesTraceLogImporter(Data data)
         {
-            Data = data;
-            romSize = Data.GetROMSize();
+            this.data = data;
+            romSize = this.data.GetRomSize();
 
-            CurrentStats.numRomBytesAnalyzed = 0;
-            CurrentStats.numRomBytesModified = 0;
-            CurrentStats.numXFlagsModified = 0;
-            CurrentStats.numMFlagsModified = 0;
-            CurrentStats.numDBModified = 0;
-            CurrentStats.numDpModified = 0;
-            CurrentStats.numMarksModified = 0;
+            CurrentStats.NumRomBytesAnalyzed = 0;
+            CurrentStats.NumRomBytesModified = 0;
+            CurrentStats.NumXFlagsModified = 0;
+            CurrentStats.NumMFlagsModified = 0;
+            CurrentStats.NumDbModified = 0;
+            CurrentStats.NumDpModified = 0;
+            CurrentStats.NumMarksModified = 0;
         }
 
         // this class exists for performance optimization ONLY.
@@ -54,18 +54,18 @@ namespace Diz.Core.import
 
             // index of the start of the info
             public readonly int
-                addr,
+                Addr,
                 D,
-                DB,
-                flags,
-                f_N,
-                f_V,
-                f_M,
-                f_X,
-                f_D,
-                f_I,
-                f_Z,
-                f_C;
+                Db,
+                Flags,
+                FN,
+                FV,
+                FM,
+                FX,
+                FD,
+                FI,
+                FZ,
+                FC;
 
             public CachedTraceLineIndex()
             {
@@ -74,20 +74,20 @@ namespace Diz.Core.import
                     return sample.IndexOf(token) + token.Length;
                 }
 
-                addr = 0;
+                Addr = 0;
                 D = SkipToken("D:");
-                DB = SkipToken("DB:");
-                flags = DB + 3;
+                Db = SkipToken("DB:");
+                Flags = Db + 3;
 
                 // flags: nvmxdizc
-                f_N = flags + 0;
-                f_V = flags + 1;
-                f_M = flags + 2;
-                f_X = flags + 3;
-                f_D = flags + 4;
-                f_I = flags + 5;
-                f_Z = flags + 6;
-                f_C = flags + 7;
+                FN = Flags + 0;
+                FV = Flags + 1;
+                FM = Flags + 2;
+                FX = Flags + 3;
+                FD = Flags + 4;
+                FI = Flags + 5;
+                FZ = Flags + 6;
+                FC = Flags + 7;
             }
         }
 
@@ -113,15 +113,15 @@ namespace Diz.Core.import
             // TODO: error treatment / validation
 
             var directPage = GetHexValueAt(CachedIdx.D, 4);
-            var dataBank = GetHexValueAt(CachedIdx.DB, 2);
+            var dataBank = GetHexValueAt(CachedIdx.Db, 2);
 
             // 'X' = unchecked in bsnesplus debugger UI = (8bit), 'x' or '.' = checked (16bit)
-            var xflag_set = line[CachedIdx.f_X] == 'X';
+            var xflagSet = line[CachedIdx.FX] == 'X';
 
             // 'M' = unchecked in bsnesplus debugger UI = (8bit), 'm' or '.' = checked (16bit)
-            var mflag_set = line[CachedIdx.f_M] == 'M';
+            var mflagSet = line[CachedIdx.FM] == 'M';
 
-            SetOpcodeAndOperandsFromTraceData(snesAddress, dataBank, directPage, xflag_set, mflag_set);
+            SetOpcodeAndOperandsFromTraceData(snesAddress, dataBank, directPage, xflagSet, mflagSet);
         }
 
         // this is same as above but, reads the same data from a binary format. this is for
@@ -208,7 +208,7 @@ namespace Diz.Core.import
                 if (!SetOneRomByteFromTraceData(snesAddress, dataBank, directPage, xflagSet, mflagSet, opcodeLen, currentIndex)) 
                     break;
 
-                snesAddress = RomUtil.CalculateSNESOffsetWithWrap(snesAddress, 1);
+                snesAddress = RomUtil.CalculateSnesOffsetWithWrap(snesAddress, 1);
                 currentIndex++;
             }
         }
@@ -216,10 +216,10 @@ namespace Diz.Core.import
         private bool SetOneRomByteFromTraceData(int snesAddress, int dataBank, int directPage, bool xflagSet, bool mflagSet,
             int opcodeLen, int currentIndex)
         {
-            CurrentStats.numRomBytesAnalyzed++;
+            CurrentStats.NumRomBytesAnalyzed++;
 
-            var pc = Data.ConvertSNEStoPC(snesAddress);
-            if (!IsOKToSetThisRomByte(pc, currentIndex, opcodeLen)) 
+            var pc = data.ConvertSnesToPc(snesAddress);
+            if (!IsOkToSetThisRomByte(pc, currentIndex, opcodeLen)) 
                 return false;
 
             var flagType = currentIndex == 0 ? Data.FlagType.Opcode : Data.FlagType.Operand;
@@ -231,16 +231,16 @@ namespace Diz.Core.import
             // flipping and re-flipping bytes, but still maintain correctness with the game itself.
 
             // actually do the update
-            Data.SetFlag(pc, flagType);
-            Data.SetDataBank(pc, dataBank);
-            Data.SetDirectPage(pc, directPage);
-            Data.SetXFlag(pc, xflagSet);
-            Data.SetMFlag(pc, mflagSet);
+            data.SetFlag(pc, flagType);
+            data.SetDataBank(pc, dataBank);
+            data.SetDirectPage(pc, directPage);
+            data.SetXFlag(pc, xflagSet);
+            data.SetMFlag(pc, mflagSet);
 
             return true;
         }
 
-        private bool IsOKToSetThisRomByte(int pc, int opIndex, int instructionByteLen)
+        private bool IsOkToSetThisRomByte(int pc, int opIndex, int instructionByteLen)
         {
             if (pc < 0 || pc >= romSize)
                 return false;
@@ -275,26 +275,26 @@ namespace Diz.Core.import
                 // just play it safe and stop at the first thing that's NOT an Operand.
                 //
                 // Calling code should ideally not let us get to here, and instead supply us with a valid instructionByteLen
-                return Data.GetFlag(pc) == Data.FlagType.Operand;
+                return data.GetFlag(pc) == Data.FlagType.Operand;
             }
         }
 
         private void LogStats(int pc, int dataBank, int directPage, bool xflagSet, bool mflagSet, Data.FlagType flagType)
         {
-            var mMarks = Data.GetFlag(pc) != flagType;
-            var mDb = Data.GetDataBank(pc) != dataBank;
-            var mDp = Data.GetDirectPage(pc) != directPage;
-            var mX = Data.GetXFlag(pc) != xflagSet;
-            var mM = Data.GetMFlag(pc) != mflagSet;
+            var mMarks = data.GetFlag(pc) != flagType;
+            var mDb = data.GetDataBank(pc) != dataBank;
+            var mDp = data.GetDirectPage(pc) != directPage;
+            var mX = data.GetXFlag(pc) != xflagSet;
+            var mM = data.GetMFlag(pc) != mflagSet;
 
             if (mMarks || mDb || mDp || mX || mM)
-                CurrentStats.numRomBytesModified++;
+                CurrentStats.NumRomBytesModified++;
 
-            CurrentStats.numMarksModified += mMarks ? 1 : 0;
-            CurrentStats.numDBModified += mDb ? 1 : 0;
-            CurrentStats.numDpModified += mDp ? 1 : 0;
-            CurrentStats.numXFlagsModified += mX ? 1 : 0;
-            CurrentStats.numMFlagsModified += mM ? 1 : 0;
+            CurrentStats.NumMarksModified += mMarks ? 1 : 0;
+            CurrentStats.NumDbModified += mDb ? 1 : 0;
+            CurrentStats.NumDpModified += mDp ? 1 : 0;
+            CurrentStats.NumXFlagsModified += mX ? 1 : 0;
+            CurrentStats.NumMFlagsModified += mM ? 1 : 0;
         }
     }
 }

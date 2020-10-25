@@ -6,7 +6,7 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 namespace Diz.Core.import
 {
-    public class BSNESImportStreamProcessor
+    public class BsnesImportStreamProcessor
     {
         public struct CompressedWorkItems
         {

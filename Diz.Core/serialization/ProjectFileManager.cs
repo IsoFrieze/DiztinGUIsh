@@ -130,8 +130,8 @@ namespace Diz.Core.serialization
                 Data = new Data()
             };
 
-            project.Data.RomMapMode = importSettings.ROMMapMode;
-            project.Data.RomSpeed = importSettings.ROMSpeed;
+            project.Data.RomMapMode = importSettings.RomMapMode;
+            project.Data.RomSpeed = importSettings.RomSpeed;
             project.Data.CreateRomBytesFromRom(importSettings.RomBytes);
 
             foreach (var pair in importSettings.InitialLabels)

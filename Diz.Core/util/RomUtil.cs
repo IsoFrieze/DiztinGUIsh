@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using Diz.Core.export;
@@ -6,33 +7,60 @@ using Diz.Core.model;
 
 namespace Diz.Core.util
 {
+    public enum RomSpeed : byte
+    {
+        SlowRom,
+        FastRom,
+        Unknown
+    }
+    
+    public enum RomMapMode : byte
+    {
+        LoRom,
+
+        HiRom,
+
+        ExHiRom,
+
+        [Description("SA - 1 ROM")] Sa1Rom,
+
+        [Description("SA-1 ROM (FuSoYa's 8MB mapper)")]
+        ExSa1Rom,
+
+        SuperFx,
+
+        [Description("Super MMC")] SuperMmc,
+
+        ExLoRom
+    }
+    
     public static class RomUtil
     {
-        public static int CalculateSNESOffsetWithWrap(int snesAddress, int offset)
+        public static int CalculateSnesOffsetWithWrap(int snesAddress, int offset)
         {
-            return (GetBankFromSNESAddress(snesAddress) << 16) + ((snesAddress + offset) & 0xFFFF);
+            return (GetBankFromSnesAddress(snesAddress) << 16) + ((snesAddress + offset) & 0xFFFF);
         }
 
-        private static int GetBankFromSNESAddress(int snesAddress)
+        private static int GetBankFromSnesAddress(int snesAddress)
         {
             return (snesAddress >> 16) & 0xFF;
         }
 
-        public static int GetBankSize(Data.ROMMapMode mode)
+        public static int GetBankSize(RomMapMode mode)
         {
             // todo
-            return mode == Data.ROMMapMode.LoROM ? 0x8000 : 0x10000;
+            return mode == RomMapMode.LoRom ? 0x8000 : 0x10000;
         }
 
-        public static Data.ROMSpeed GetRomSpeed(int offset, IReadOnlyList<byte> romBytes) =>
+        public static RomSpeed GetRomSpeed(int offset, IReadOnlyList<byte> romBytes) =>
             offset < romBytes.Count
-                ? (romBytes[offset] & 0x10) != 0 ? Data.ROMSpeed.FastROM : Data.ROMSpeed.SlowROM
-                : Data.ROMSpeed.Unknown;
+                ? (romBytes[offset] & 0x10) != 0 ? RomSpeed.FastRom : RomSpeed.SlowRom
+                : RomSpeed.Unknown;
 
         // verify the data in the provided ROM bytes matches the data we expect it to have.
         // returns error message if it's not identical, or null if everything is OK.
         public static string IsThisRomIsIdenticalToUs(byte[] rom,
-            Data.ROMMapMode mode, string requiredGameNameMatch, int requiredRomChecksumMatch)
+            RomMapMode mode, string requiredGameNameMatch, int requiredRomChecksumMatch)
         {
             var romSettingsOffset = GetRomSettingOffset(mode);
             if (rom.Length <= romSettingsOffset + 10)
@@ -59,9 +87,9 @@ namespace Diz.Core.util
             return internalGameNameToVerify;
         }
 
-        public static int ConvertSNESToPC(int address, Data.ROMMapMode mode, int size)
+        public static int ConvertSnesToPc(int address, RomMapMode mode, int size)
         {
-            int _UnmirroredOffset(int offset) => UnmirroredOffset(offset, size);
+            int UnmirroredOffset(int offset) => RomUtil.UnmirroredOffset(offset, size);
 
             // WRAM is N/A to PC addressing
             if ((address & 0xFE0000) == 0x7E0000) return -1;
@@ -71,66 +99,66 @@ namespace Diz.Core.util
 
             switch (mode)
             {
-                case Data.ROMMapMode.LoROM:
+                case RomMapMode.LoRom:
                 {
                     // SRAM is N/A to PC addressing
                     if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) 
                         return -1;
 
-                    return _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                    return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                 }
-                case Data.ROMMapMode.HiROM:
+                case RomMapMode.HiRom:
                 {
-                    return _UnmirroredOffset(address & 0x3FFFFF);
+                    return UnmirroredOffset(address & 0x3FFFFF);
                 }
-                case Data.ROMMapMode.SuperMMC:
+                case RomMapMode.SuperMmc:
                 {
-                    return _UnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
+                    return UnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
                 }
-                case Data.ROMMapMode.SA1ROM:
-                case Data.ROMMapMode.ExSA1ROM:
+                case RomMapMode.Sa1Rom:
+                case RomMapMode.ExSa1Rom:
                 {
                     // BW-RAM is N/A to PC addressing
                     if (address >= 0x400000 && address <= 0x7FFFFF) return -1;
 
                     if (address >= 0xC00000)
-                        return mode == Data.ROMMapMode.ExSA1ROM ? _UnmirroredOffset(address & 0x7FFFFF) : _UnmirroredOffset(address & 0x3FFFFF);
+                        return mode == RomMapMode.ExSa1Rom ? UnmirroredOffset(address & 0x7FFFFF) : UnmirroredOffset(address & 0x3FFFFF);
 
                     if (address >= 0x800000) address -= 0x400000;
 
                     // SRAM is N/A to PC addressing
                     if (((address & 0x8000) == 0)) return -1;
 
-                    return _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                    return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                 }
-                case Data.ROMMapMode.SuperFX:
+                case RomMapMode.SuperFx:
                 {
                     // BW-RAM is N/A to PC addressing
                     if (address >= 0x600000 && address <= 0x7FFFFF) 
                         return -1;
 
                     if (address < 0x400000)
-                        return _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
 
                     if (address < 0x600000)
-                        return _UnmirroredOffset(address & 0x3FFFFF);
+                        return UnmirroredOffset(address & 0x3FFFFF);
 
                     if (address < 0xC00000)
-                        return 0x200000 + _UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        return 0x200000 + UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
 
-                    return 0x400000 + _UnmirroredOffset(address & 0x3FFFFF);
+                    return 0x400000 + UnmirroredOffset(address & 0x3FFFFF);
                 }
-                case Data.ROMMapMode.ExHiROM:
+                case RomMapMode.ExHiRom:
                 {
-                    return _UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
+                    return UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
                 }
-                case Data.ROMMapMode.ExLoROM:
+                case RomMapMode.ExLoRom:
                 {
                     // SRAM is N/A to PC addressing
                     if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) 
                         return -1;
 
-                    return _UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
+                    return UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
                 }
                 default:
                 {
@@ -139,25 +167,25 @@ namespace Diz.Core.util
             }
         }
 
-        public static int ConvertPCtoSNES(int offset, Data.ROMMapMode romMapMode, Data.ROMSpeed romSpeed)
+        public static int ConvertPCtoSnes(int offset, RomMapMode romMapMode, RomSpeed romSpeed)
         {
             switch (romMapMode)
             {
-                case Data.ROMMapMode.LoROM:
+                case RomMapMode.LoRom:
                     offset = ((offset & 0x3F8000) << 1) | 0x8000 | (offset & 0x7FFF);
-                    if (romSpeed == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
+                    if (romSpeed == RomSpeed.FastRom || offset >= 0x7E0000) offset |= 0x800000;
                     return offset;
-                case Data.ROMMapMode.HiROM:
+                case RomMapMode.HiRom:
                     offset |= 0x400000;
-                    if (romSpeed == Data.ROMSpeed.FastROM || offset >= 0x7E0000) offset |= 0x800000;
+                    if (romSpeed == RomSpeed.FastRom || offset >= 0x7E0000) offset |= 0x800000;
                     return offset;
-                case Data.ROMMapMode.ExHiROM when offset < 0x40000:
+                case RomMapMode.ExHiRom when offset < 0x40000:
                     offset |= 0xC00000;
                     return offset;
-                case Data.ROMMapMode.ExHiROM:
+                case RomMapMode.ExHiRom:
                     if (offset >= 0x7E0000) offset &= 0x3FFFFF;
                     return offset;
-                case Data.ROMMapMode.ExSA1ROM when offset >= 0x400000:
+                case RomMapMode.ExSa1Rom when offset >= 0x400000:
                     offset += 0x800000;
                     return offset;
             }
@@ -239,39 +267,39 @@ namespace Diz.Core.util
             return 0;
         }
 
-        public static Data.ROMMapMode DetectROMMapMode(IReadOnlyList<byte> romBytes, out bool detectedValidRomMapType)
+        public static RomMapMode DetectRomMapMode(IReadOnlyList<byte> romBytes, out bool detectedValidRomMapType)
         {
             detectedValidRomMapType = true;
 
-            if ((romBytes[Data.LOROM_SETTING_OFFSET] & 0xEF) == 0x23)
-                return romBytes.Count > 0x400000 ? Data.ROMMapMode.ExSA1ROM : Data.ROMMapMode.SA1ROM;
+            if ((romBytes[Data.LoromSettingOffset] & 0xEF) == 0x23)
+                return romBytes.Count > 0x400000 ? RomMapMode.ExSa1Rom : RomMapMode.Sa1Rom;
 
-            if ((romBytes[Data.LOROM_SETTING_OFFSET] & 0xEC) == 0x20)
-                return (romBytes[Data.LOROM_SETTING_OFFSET + 1] & 0xF0) == 0x10 ? Data.ROMMapMode.SuperFX : Data.ROMMapMode.LoROM;
+            if ((romBytes[Data.LoromSettingOffset] & 0xEC) == 0x20)
+                return (romBytes[Data.LoromSettingOffset + 1] & 0xF0) == 0x10 ? RomMapMode.SuperFx : RomMapMode.LoRom;
 
-            if (romBytes.Count >= 0x10000 && (romBytes[Data.HIROM_SETTING_OFFSET] & 0xEF) == 0x21)
-                return Data.ROMMapMode.HiROM;
+            if (romBytes.Count >= 0x10000 && (romBytes[Data.HiromSettingOffset] & 0xEF) == 0x21)
+                return RomMapMode.HiRom;
 
-            if (romBytes.Count >= 0x10000 && (romBytes[Data.HIROM_SETTING_OFFSET] & 0xE7) == 0x22)
-                return Data.ROMMapMode.SuperMMC;
+            if (romBytes.Count >= 0x10000 && (romBytes[Data.HiromSettingOffset] & 0xE7) == 0x22)
+                return RomMapMode.SuperMmc;
 
-            if (romBytes.Count >= 0x410000 && (romBytes[Data.EXHIROM_SETTING_OFFSET] & 0xEF) == 0x25)
-                return Data.ROMMapMode.ExHiROM;
+            if (romBytes.Count >= 0x410000 && (romBytes[Data.ExhiromSettingOffset] & 0xEF) == 0x25)
+                return RomMapMode.ExHiRom;
 
             // detection failed. take our best guess.....
             detectedValidRomMapType = false;
-            return romBytes.Count > 0x40000 ? Data.ROMMapMode.ExLoROM : Data.ROMMapMode.LoROM;
+            return romBytes.Count > 0x40000 ? RomMapMode.ExLoRom : RomMapMode.LoRom;
         }
 
-        public static int GetRomSettingOffset(Data.ROMMapMode mode)
+        public static int GetRomSettingOffset(RomMapMode mode)
         {
             return mode switch
             {
-                Data.ROMMapMode.LoROM => Data.LOROM_SETTING_OFFSET,
-                Data.ROMMapMode.HiROM => Data.HIROM_SETTING_OFFSET,
-                Data.ROMMapMode.ExHiROM => Data.EXHIROM_SETTING_OFFSET,
-                Data.ROMMapMode.ExLoROM => Data.EXLOROM_SETTING_OFFSET,
-                _ => Data.LOROM_SETTING_OFFSET
+                RomMapMode.LoRom => Data.LoromSettingOffset,
+                RomMapMode.HiRom => Data.HiromSettingOffset,
+                RomMapMode.ExHiRom => Data.ExhiromSettingOffset,
+                RomMapMode.ExLoRom => Data.ExloromSettingOffset,
+                _ => Data.LoromSettingOffset
             };
         }
 
@@ -356,7 +384,7 @@ namespace Diz.Core.util
         }
 
 
-        public static Dictionary<int, Label> GenerateVectorLabels(Dictionary<string, bool> vectorNames, int romSettingsOffset, IReadOnlyList<byte> romBytes, Data.ROMMapMode mode)
+        public static Dictionary<int, Label> GenerateVectorLabels(Dictionary<string, bool> vectorNames, int romSettingsOffset, IReadOnlyList<byte> romBytes, RomMapMode mode)
         {
             // TODO: probably better to just use a data structure for this instead of generating the 
             // offsets with table/entry vars
@@ -378,9 +406,9 @@ namespace Diz.Core.util
 
                 var index = baseOffset + (16 * table) + (2 * entry);
                 var offset = romBytes[index] + (romBytes[index + 1] << 8);
-                var pc = ConvertSNESToPC(offset, mode, romBytes.Count);
+                var pc = ConvertSnesToPc(offset, mode, romBytes.Count);
                 if (pc >= 0 && pc < romBytes.Count && !labels.ContainsKey(offset))
-                    labels.Add(offset, new Label() { name = vectorEntry.Key });
+                    labels.Add(offset, new Label() { Name = vectorEntry.Key });
 
                 if (++entry < entryCount)
                     continue;
@@ -398,10 +426,10 @@ namespace Diz.Core.util
         public static LogCreator.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
         {
             var sampleRomData = SampleRomData.SampleData;
-            sampleSettings.structure = LogCreator.FormatStructure.SingleFile;
-            sampleSettings.fileOrFolderOutPath = "";
-            sampleSettings.outputToString = true;
-            sampleSettings.romSizeOverride = sampleRomData.OriginalRomSizeBeforePadding;
+            sampleSettings.Structure = LogCreator.FormatStructure.SingleFile;
+            sampleSettings.FileOrFolderOutPath = "";
+            sampleSettings.OutputToString = true;
+            sampleSettings.RomSizeOverride = sampleRomData.OriginalRomSizeBeforePadding;
             var lc = new LogCreator()
             {
                 Settings = sampleSettings,

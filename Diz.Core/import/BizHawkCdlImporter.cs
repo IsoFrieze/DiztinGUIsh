@@ -16,11 +16,11 @@ namespace Diz.Core.import
             None = 0x00,
             ExecFirst = 0x01,
             ExecOperand = 0x02,
-            CPUData = 0x04,
-            DMAData = 0x08,
-            CPUXFlag = 0x10,
-            CPUMFlag = 0x20,
-            BRR = 0x80
+            CpuData = 0x04,
+            DmaData = 0x08,
+            CpuxFlag = 0x10,
+            CpumFlag = 0x20,
+            Brr = 0x80
         }
 
         public static void Import(string filename, Data data)
@@ -69,7 +69,7 @@ namespace Diz.Core.import
                 throw new InvalidDataException("The CDL file does not contain CARTROM block.");
             }
 
-            var size = Math.Min(cdlRomFlags.Count, data.GetROMSize());
+            var size = Math.Min(cdlRomFlags.Count, data.GetRomSize());
             bool m = false;
             bool x = false;
             for (var offset = 0; offset < size; offset++)
@@ -82,14 +82,14 @@ namespace Diz.Core.import
                 if ((cdlFlag & BizHawkCdlImporter.Flag.ExecFirst) != 0)
                 {
                     type = Data.FlagType.Opcode;
-                    m = (cdlFlag & BizHawkCdlImporter.Flag.CPUMFlag) != 0;
-                    x = (cdlFlag & BizHawkCdlImporter.Flag.CPUXFlag) != 0;
+                    m = (cdlFlag & BizHawkCdlImporter.Flag.CpumFlag) != 0;
+                    x = (cdlFlag & BizHawkCdlImporter.Flag.CpuxFlag) != 0;
                 }
                 else if ((cdlFlag & BizHawkCdlImporter.Flag.ExecOperand) != 0)
                     type = Data.FlagType.Operand;
-                else if ((cdlFlag & BizHawkCdlImporter.Flag.CPUData) != 0)
+                else if ((cdlFlag & BizHawkCdlImporter.Flag.CpuData) != 0)
                     type = Data.FlagType.Data8Bit;
-                else if ((cdlFlag & BizHawkCdlImporter.Flag.DMAData) != 0)
+                else if ((cdlFlag & BizHawkCdlImporter.Flag.DmaData) != 0)
                     type = Data.FlagType.Data8Bit;
                 data.Mark(offset, type, 1);
 

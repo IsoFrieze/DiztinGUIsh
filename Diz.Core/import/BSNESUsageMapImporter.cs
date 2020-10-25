@@ -3,7 +3,7 @@ using Diz.Core.model;
 
 namespace Diz.Core.import
 {
-    public class BSNESUsageMapImporter
+    public class BsnesUsageMapImporter
     {
         // TODO: move BsnesPlusUsage stuff to its own class outside of Data
         [Flags]
@@ -20,13 +20,13 @@ namespace Diz.Core.import
         // move out of here to extension method or just external method
         public int ImportUsageMap(byte[] usageMap, Data data)
         {
-            int size = data.GetROMSize();
+            int size = data.GetRomSize();
             int modified = 0;
             int prevFlags = 0;
 
             for (int map = 0; map <= 0xFFFFFF; map++)
             {
-                var i = data.ConvertSNEStoPC(map);
+                var i = data.ConvertSnesToPc(map);
 
                 if (i == -1 || i >= size)
                 {
@@ -59,7 +59,7 @@ namespace Diz.Core.import
                         data.SetFlag(i, Data.FlagType.Opcode);
                     }
 
-                    data.SetMXFlags(i, prevFlags);
+                    data.SetMxFlags(i, prevFlags);
                     modified++;
                 }
                 else if (flags.HasFlag(BsnesPlusUsage.UsageRead))

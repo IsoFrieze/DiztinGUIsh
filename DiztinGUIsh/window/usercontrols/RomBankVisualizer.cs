@@ -16,8 +16,8 @@ namespace DiztinGUIsh.window.usercontrols
             InitializeComponent();
 
             romImage1.Project = project;
-            romImage1.ROMVisual.RomStartingOffset = startingRomOffset;
-            romImage1.ROMVisual.LengthOverride = length;
+            romImage1.RomVisual.RomStartingOffset = startingRomOffset;
+            romImage1.RomVisual.LengthOverride = length;
             lblBankName.Text = bankName;
         }
     }

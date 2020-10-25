@@ -5,13 +5,13 @@ namespace Diz.Core.export
 {
     public partial class LogCreator
     {
-        protected int errorCount;
+        protected int ErrorCount;
 
         private void ReportError(int offset, string msg)
         {
-            ++errorCount;
+            ++ErrorCount;
             var offsetMsg = offset >= 0 ? $" Offset 0x{offset:X}" : "";
-            output.WriteErrorLine($"({errorCount}){offsetMsg}: {msg}");
+            Output.WriteErrorLine($"({ErrorCount}){offsetMsg}: {msg}");
         }
 
         private void ErrorIfOperand(int offset)
@@ -72,7 +72,7 @@ namespace Diz.Core.export
 
         private bool DoesIndirectAddressPointToOpcode(int ia)
         {
-            return Data.GetFlag(Data.ConvertSNEStoPC(ia)) == Data.FlagType.Opcode;
+            return Data.GetFlag(Data.ConvertSnesToPc(ia)) == Data.FlagType.Opcode;
         }
 
         private bool IsOpcodeOutboundJump(int offset)
@@ -83,7 +83,7 @@ namespace Diz.Core.export
 
         private bool IsOffsetInRange(int offset)
         {
-            return offset >= 0 && offset < Data.GetROMSize();
+            return offset >= 0 && offset < Data.GetRomSize();
         }
 
         private int GetByteLengthFollowing(int offset)

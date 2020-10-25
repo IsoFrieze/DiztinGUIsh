@@ -62,9 +62,9 @@ namespace Diz.Core.model
 
         public enum Architecture : byte
         {
-            [Description("65C816")] CPU65C816 = 0x00,
-            [Description("SPC700")] APUSPC700 = 0x01,
-            [Description("SuperFX")] GPUSuperFX = 0x02
+            [Description("65C816")] Cpu65C816 = 0x00,
+            [Description("SPC700")] Apuspc700 = 0x01,
+            [Description("SuperFX")] GpuSuperFx = 0x02
         }
 
         [Flags]
@@ -75,37 +75,10 @@ namespace Diz.Core.model
             EndPoint = 0x04,
             ReadPoint = 0x08
         }
-
-        public enum ROMMapMode : byte
-        {
-            LoROM,
-
-            HiROM,
-
-            ExHiROM,
-
-            [Description("SA - 1 ROM")] SA1ROM,
-
-            [Description("SA-1 ROM (FuSoYa's 8MB mapper)")]
-            ExSA1ROM,
-
-            SuperFX,
-
-            [Description("Super MMC")] SuperMMC,
-
-            ExLoROM
-        }
-
-        public enum ROMSpeed : byte
-        {
-            SlowROM,
-            FastROM,
-            Unknown
-        }
-
-        public const int LOROM_SETTING_OFFSET = 0x7FD5;
-        public const int HIROM_SETTING_OFFSET = 0xFFD5;
-        public const int EXHIROM_SETTING_OFFSET = 0x40FFD5;
-        public const int EXLOROM_SETTING_OFFSET = 0x407FD5;
+        
+        public const int LoromSettingOffset = 0x7FD5;
+        public const int HiromSettingOffset = 0xFFD5;
+        public const int ExhiromSettingOffset = 0x40FFD5;
+        public const int ExloromSettingOffset = 0x407FD5;
     }
 }

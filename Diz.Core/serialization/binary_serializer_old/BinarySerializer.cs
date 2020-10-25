@@ -10,8 +10,8 @@ namespace Diz.Core.serialization.binary_serializer_old
 {
     internal class BinarySerializer : ProjectSerializer
     {
-        public const int HEADER_SIZE = 0x100;
-        private const int LATEST_FILE_FORMAT_VERSION = 2;
+        public const int HeaderSize = 0x100;
+        private const int LatestFileFormatVersion = 2;
 
         public static bool IsBinaryFileFormat(byte[] data)
         {
@@ -24,13 +24,13 @@ namespace Diz.Core.serialization.binary_serializer_old
 
         public override byte[] Save(Project project)
         {
-            const int versionToSave = LATEST_FILE_FORMAT_VERSION;
+            const int versionToSave = LatestFileFormatVersion;
             var data = SaveVersion(project, versionToSave);
 
-            var everything = new byte[HEADER_SIZE + data.Length];
+            var everything = new byte[HeaderSize + data.Length];
             everything[0] = versionToSave;
             ByteUtil.StringToByteArray(Watermark).CopyTo(everything, 1);
-            data.CopyTo(everything, HEADER_SIZE);
+            data.CopyTo(everything, HeaderSize);
 
             return data;
         }
@@ -51,15 +51,15 @@ namespace Diz.Core.serialization.binary_serializer_old
             // version 0 needs to convert PC to SNES for some addresses
             ByteUtil.AddressConverter converter = address => address;
             if (version == 0)
-                converter = project.Data.ConvertPCtoSNES;
+                converter = project.Data.ConvertPCtoSnes;
 
             // read mode, speed, size
-            project.Data.RomMapMode = (Data.ROMMapMode)data[HEADER_SIZE];
-            project.Data.RomSpeed = (Data.ROMSpeed)data[HEADER_SIZE + 1];
-            var size = ByteUtil.ByteArrayToInt32(data, HEADER_SIZE + 2);
+            project.Data.RomMapMode = (RomMapMode)data[HeaderSize];
+            project.Data.RomSpeed = (RomSpeed)data[HeaderSize + 1];
+            var size = ByteUtil.ByteArrayToInt32(data, HeaderSize + 2);
 
             // read internal title
-            var pointer = HEADER_SIZE + 6;
+            var pointer = HeaderSize + 6;
             project.InternalRomGameName = RomUtil.ReadStringFromByteArray(data, RomUtil.LengthOfTitleName, pointer);
             pointer += RomUtil.LengthOfTitleName;
 
@@ -89,7 +89,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             project.UnsavedChanges = false;
 
             var warning = "";
-            if (version != LATEST_FILE_FORMAT_VERSION)
+            if (version != LatestFileFormatVersion)
             {
                 warning = "This project file is in an older format.\n" +
                               "You may want to back up your work or 'Save As' in case the conversion goes wrong.\n" +
@@ -114,12 +114,12 @@ namespace Diz.Core.serialization.binary_serializer_old
         {
             ValidateSaveVersion(version);
 
-            int size = project.Data.GetROMSize();
+            int size = project.Data.GetRomSize();
             byte[] romSettings = new byte[31];
 
             // save these two
-            romSettings[0] = (byte)project.Data.GetROMMapMode();
-            romSettings[1] = (byte)project.Data.GetROMSpeed();
+            romSettings[0] = (byte)project.Data.RomMapMode;
+            romSettings[1] = (byte)project.Data.RomSpeed;
 
             // save the size, 4 bytes
             ByteUtil.IntegerIntoByteArray(size, romSettings, 2);
@@ -134,23 +134,23 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             // save all labels ad comments
             List<byte> label = new List<byte>(), comment = new List<byte>();
-            var all_labels = project.Data.Labels;
-            var all_comments = project.Data.Comments;
+            var allLabels = project.Data.Labels;
+            var allComments = project.Data.Comments;
 
-            ByteUtil.IntegerIntoByteList(all_labels.Count, label);
-            foreach (var pair in all_labels)
+            ByteUtil.IntegerIntoByteList(allLabels.Count, label);
+            foreach (var pair in allLabels)
             {
                 ByteUtil.IntegerIntoByteList(pair.Key, label);
 
-                SaveStringToBytes(pair.Value.name, label);
+                SaveStringToBytes(pair.Value.Name, label);
                 if (version >= 2)
                 {
-                    SaveStringToBytes(pair.Value.comment, label);
+                    SaveStringToBytes(pair.Value.Comment, label);
                 }
             }
 
-            ByteUtil.IntegerIntoByteList(all_comments.Count, comment);
-            foreach (KeyValuePair<int, string> pair in all_comments)
+            ByteUtil.IntegerIntoByteList(allComments.Count, comment);
+            foreach (KeyValuePair<int, string> pair in allComments)
             {
                 ByteUtil.IntegerIntoByteList(pair.Key, comment);
                 SaveStringToBytes(pair.Value, comment);
@@ -204,14 +204,14 @@ namespace Diz.Core.serialization.binary_serializer_old
         }
 
         private static void ValidateSaveVersion(int version) {
-            if (version < 1 || version > LATEST_FILE_FORMAT_VERSION) {
+            if (version < 1 || version > LatestFileFormatVersion) {
                 throw new ArgumentException($"Saving: Invalid save version requested for saving: {version}.");
             }
         }
 
         private static void ValidateProjectFileVersion(int version)
         {
-            if (version > LATEST_FILE_FORMAT_VERSION)
+            if (version > LatestFileFormatVersion)
             {
                 throw new ArgumentException(
                     "This DiztinGUIsh file uses a newer file format! You'll need to download the newest version of DiztinGUIsh to open it.");
@@ -243,8 +243,8 @@ namespace Diz.Core.serialization.binary_serializer_old
                     Debug.Assert(strings.Length == stringsPerEntry);
                     var label = new Label
                     {
-                        name = strings[0],
-                        comment = strings.ElementAtOrDefault(1)
+                        Name = strings[0],
+                        Comment = strings.ElementAtOrDefault(1)
                     };
                     label.CleanUp();
                     project.Data.AddLabel(offset, label, true);

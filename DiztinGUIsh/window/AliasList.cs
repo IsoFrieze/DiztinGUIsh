@@ -20,7 +20,7 @@ namespace DiztinGUIsh.window
         private ProjectController ProjectController => parentWindow?.ProjectController;
         private Data Data => ProjectController?.Project?.Data;
 
-        public bool locked;
+        public bool Locked;
         private int currentlyEditing = -1;
         
         public AliasList(MainWindow main)
@@ -47,7 +47,7 @@ namespace DiztinGUIsh.window
             if (!int.TryParse((string) dataGridView1.SelectedRows[0].Cells[0].Value, NumberStyles.HexNumber, null,
                 out var val)) return;
 
-            var offset = Data.ConvertSNEStoPC(val);
+            var offset = Data.ConvertSnesToPc(val);
             if (offset >= 0)
             {
                 ProjectController.SelectOffset(offset);
@@ -90,13 +90,13 @@ namespace DiztinGUIsh.window
                     errLine = i + 1;
 
                     SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
-                    SplitOnFirstComma(remainder, out label.name, out label.comment);
+                    SplitOnFirstComma(remainder, out label.Name, out label.Comment);
 
                     label.CleanUp();
 
-                    label.name = label.name.Trim();
-                    if (!validLabelChars.Match(label.name).Success)
-                        throw new InvalidDataException("invalid label name: " + label.name);
+                    label.Name = label.Name.Trim();
+                    if (!validLabelChars.Match(label.Name).Success)
+                        throw new InvalidDataException("invalid label name: " + label.Name);
 
                     newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), label);
                 }
@@ -133,7 +133,7 @@ namespace DiztinGUIsh.window
                 foreach (var pair in Data.Labels)
                 {
                     sw.WriteLine(
-                        $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.name},{pair.Value.comment}");
+                        $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.Name},{pair.Value.Comment}");
                 }
             } catch (Exception)
             {
@@ -145,9 +145,9 @@ namespace DiztinGUIsh.window
         {
             if (!int.TryParse((string) dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null,
                 out var val)) return;
-            locked = true;
+            Locked = true;
             Data.AddLabel(val, null, true);
-            locked = false;
+            Locked = false;
             parentWindow.InvalidateTable(); // TODO: move to mainwindow, use notifychanged in mainwindow for this
         }
 
@@ -170,8 +170,8 @@ namespace DiztinGUIsh.window
 
             var labelLabel = new Label
             {
-                name = (string) dataGridView1.Rows[e.RowIndex].Cells[1].Value,
-                comment = (string)dataGridView1.Rows[e.RowIndex].Cells[2].Value,
+                Name = (string) dataGridView1.Rows[e.RowIndex].Cells[1].Value,
+                Comment = (string)dataGridView1.Rows[e.RowIndex].Cells[2].Value,
             };
 
             toolStripStatusLabel1.Text = "";
@@ -199,26 +199,26 @@ namespace DiztinGUIsh.window
                 case 1:
                     {
                         val = oldAddress;
-                        labelLabel.name = e.FormattedValue.ToString();
+                        labelLabel.Name = e.FormattedValue.ToString();
                         // todo (validate for valid label characters)
                         break;
                     }
                 case 2:
                     {
                         val = oldAddress;
-                        labelLabel.comment = e.FormattedValue.ToString();
+                        labelLabel.Comment = e.FormattedValue.ToString();
                         // todo (validate for valid comment characters, if any)
                         break;
                     }
             }
 
-            locked = true;
+            Locked = true;
             if (currentlyEditing >= 0)
             {
                 if (val >= 0) Data.AddLabel(oldAddress, null, true);
                 Data.AddLabel(val, labelLabel, true);
             }
-            locked = false;
+            Locked = false;
 
             currentlyEditing = -1;
             parentWindow.InvalidateTable();  // TODO: move to mainwindow, use notifychanged in mainwindow for this
@@ -226,7 +226,7 @@ namespace DiztinGUIsh.window
 
         public void AddRow(int address, Label alias)
         {
-            if (locked) 
+            if (Locked) 
                 return;
             RawAdd(address, alias);
             dataGridView1.Invalidate();
@@ -234,12 +234,12 @@ namespace DiztinGUIsh.window
 
         private void RawAdd(int address, Label alias)
         {
-            dataGridView1.Rows.Add(Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6), alias.name, alias.comment);
+            dataGridView1.Rows.Add(Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6), alias.Name, alias.Comment);
         }
 
         public void RemoveRow(int address)
         {
-            if (locked) 
+            if (Locked) 
                 return;
 
             for (var index = 0; index < dataGridView1.Rows.Count; index++)

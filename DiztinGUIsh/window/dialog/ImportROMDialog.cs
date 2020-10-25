@@ -25,8 +25,8 @@ namespace DiztinGUIsh.window.dialog
         private readonly TextBox[,] vectors;
         private readonly CheckBox[,] checkboxes;
 
-        private ImportROMDialogController controller;
-        public ImportROMDialogController Controller
+        private ImportRomDialogController controller;
+        public ImportRomDialogController Controller
         {
             get => controller;
             set
@@ -53,7 +53,7 @@ namespace DiztinGUIsh.window.dialog
         private void DataBind()
         {
             Debug.Assert(ImportSettings != null);
-            GuiUtil.BindListControlToEnum<Data.ROMMapMode>(cmbRomMapMode, ImportSettings, "ROMMapMode");
+            GuiUtil.BindListControlToEnum<RomMapMode>(cmbRomMapMode, ImportSettings, "ROMMapMode");
 
             checkHeader.Checked = Controller.ShouldCheckHeader; // todo: databind this instead.
             ImportSettings.PropertyChanged += ImportSettingsOnPropertyChanged;
@@ -67,15 +67,15 @@ namespace DiztinGUIsh.window.dialog
         private void Controller_SettingsCreated()
         {
             DataBind();
-            RefreshUI();
+            RefreshUi();
         }
 
         private void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            RefreshUI();
+            RefreshUi();
         }
 
-        private void RefreshUI()
+        private void RefreshUi()
         {
             UpdateOffsetAndSpeed();
             UpdateTextboxes();
@@ -85,7 +85,7 @@ namespace DiztinGUIsh.window.dialog
         }
 
         private string GetDetectionMessage() => 
-            Controller.DetectedMapMode.HasValue ? Util.GetEnumDescription(ImportSettings.ROMMapMode) : "Couldn't auto detect ROM Map Mode!";
+            Controller.DetectedMapMode.HasValue ? Util.GetEnumDescription(ImportSettings.RomMapMode) : "Couldn't auto detect ROM Map Mode!";
 
         public void UpdateVectorTable()
         {
@@ -111,13 +111,13 @@ namespace DiztinGUIsh.window.dialog
 
         private void UpdateOffsetAndSpeed()
         {
-            Controller.RomSettingsOffset = RomUtil.GetRomSettingOffset(ImportSettings.ROMMapMode);
-            ImportSettings.ROMSpeed = RomUtil.GetRomSpeed(Controller.RomSettingsOffset, ImportSettings.RomBytes);
+            Controller.RomSettingsOffset = RomUtil.GetRomSettingOffset(ImportSettings.RomMapMode);
+            ImportSettings.RomSpeed = RomUtil.GetRomSpeed(Controller.RomSettingsOffset, ImportSettings.RomBytes);
         }
 
         private void UpdateOkayButtonEnabled()
         {
-            okay.Enabled = ImportSettings.ROMSpeed != Data.ROMSpeed.Unknown;
+            okay.Enabled = ImportSettings.RomSpeed != RomSpeed.Unknown;
         }
 
         private void UpdateTextboxes()
@@ -142,7 +142,7 @@ namespace DiztinGUIsh.window.dialog
             offset > 0 && offset <= ImportSettings.RomBytes.Length;
 
         private bool IsProbablyValidDetection() => 
-            ImportSettings.ROMSpeed != Data.ROMSpeed.Unknown && IsOffsetInRange(Controller.RomSettingsOffset);
+            ImportSettings.RomSpeed != RomSpeed.Unknown && IsOffsetInRange(Controller.RomSettingsOffset);
 
         private void SetDefaultsIfDetectionFailed()
         {
@@ -176,14 +176,14 @@ namespace DiztinGUIsh.window.dialog
                     }
                 }
             }
-            var romSpeedStr = Util.GetEnumDescription(ImportSettings.ROMSpeed);
+            var romSpeedStr = Util.GetEnumDescription(ImportSettings.RomSpeed);
             var romTitleName = RomUtil.GetRomTitleName(ImportSettings.RomBytes, Controller.RomSettingsOffset);
 
             romspeed.Text = romSpeedStr;
             romtitle.Text = romTitleName;
         }
 
-        private void ImportROMDialog_Load(object sender, EventArgs e) => RefreshUI();
+        private void ImportROMDialog_Load(object sender, EventArgs e) => RefreshUi();
 
         private void okay_Click(object sender, EventArgs e)
         {
