@@ -13,10 +13,10 @@ namespace DiztinGUIsh.window.dialog
     {
         private bool initializedChart;
         private readonly ChartValues<long> chartValuesBytesModified = new ChartValues<long>();
-        private long chartValueBytesModified_previous = 0;
+        //private long chartValueBytesModified_previous = 0;
 
-        private const int refreshGraphEveryNDataPoints = 100;
-        private int dataPointsIn = -1;
+        //private const int refreshGraphEveryNDataPoints = 100;
+        //private int dataPointsIn = -1;
 
         private void AppendToChart((BSNESTraceLogImporter.Stats stats, int bytesInQueue) currentStats)
         {
