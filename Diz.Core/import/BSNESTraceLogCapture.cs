@@ -63,8 +63,6 @@ namespace Diz.Core.import
         private static NetworkStream Connect()
         {
             var tcpClient = new TcpClient();
-            //await tcpClient.ConnectAsync(IPAddress.Loopback, 27015);
-            //return tcpClient.GetStream();
             tcpClient.Connect(IPAddress.Loopback, 27015);
             return tcpClient.GetStream();
         }
