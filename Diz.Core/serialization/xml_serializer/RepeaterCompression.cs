@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Diz.Core.serialization.xml_serializer
 {
-    public class RepeaterCompression
+    public static class RepeaterCompression
     {
         public static void Decompress(ref List<string> lines)
         {
@@ -24,7 +24,7 @@ namespace Diz.Core.serialization.xml_serializer
                     throw new InvalidDataException("Invalid repeater command");
 
                 var count = int.Parse(split[1]);
-                for (int i = 0; i < count; ++i)
+                for (var i = 0; i < count; ++i)
                 {
                     output.Add(split[2]);
                 }
@@ -47,15 +47,15 @@ namespace Diz.Core.serialization.xml_serializer
             // we want to catch large consecutive blocks of data.
             const int minNumberRepeatsBeforeWeBother = 8;
 
-            int totalLinesDebug = 0;
+            var totalLinesDebug = 0;
 
             for (var i = 1; i < lines.Count; ++i)
             {
                 var line = lines[i];
                 Debug.Assert(!line.StartsWith("r"));
 
-                bool different = line != lastLine;
-                bool finalLine = i == lines.Count - 1;
+                var different = line != lastLine;
+                var finalLine = i == lines.Count - 1;
 
                 if (!different)
                 {
@@ -63,10 +63,6 @@ namespace Diz.Core.serialization.xml_serializer
 
                     if (!finalLine)
                         continue;
-
-                    // special case for the final line.
-                    // since our loop only ever prints out the LAST line, we have to handle this separately.
-                    consecutive++;
                 }
 
                 if (consecutive >= minNumberRepeatsBeforeWeBother)
