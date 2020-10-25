@@ -11,11 +11,11 @@ using Xunit.Abstractions;
 
 namespace Diz.Test
 {
-    public class SerializerTest
+    public class SerializerDictionaryTest
     {
         private readonly ITestOutputHelper testOutputHelper;
 
-        public SerializerTest(ITestOutputHelper testOutputHelper)
+        public SerializerDictionaryTest(ITestOutputHelper testOutputHelper)
         {
             this.testOutputHelper = testOutputHelper;
         }

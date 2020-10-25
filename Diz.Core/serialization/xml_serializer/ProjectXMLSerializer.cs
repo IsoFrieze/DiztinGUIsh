@@ -7,7 +7,7 @@ using ExtendedXmlSerializer;
 
 namespace Diz.Core.serialization.xml_serializer
 {
-    internal class ProjectXmlSerializer : ProjectSerializer
+    public class ProjectXmlSerializer : ProjectSerializer
     {
         // NEVER CHANGE THIS ONE.
       private const int FIRST_SAVE_FORMAT_VERSION = 100;

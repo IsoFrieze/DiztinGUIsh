@@ -126,6 +126,10 @@
     <Compile Include="import\BSNESTraceLogImporter.cs" />
     <Compile Include="model\Data.Constants.cs" />
     <Compile Include="model\Data.Properties.cs" />
+    <Compile Include="serialization\xml_serializer\RepeaterCompression.cs" />
+    <Compile Include="serialization\xml_serializer\RomByteEncoding.cs" />
+    <Compile Include="serialization\xml_serializer\SubstitutionCompression.cs" />
+    <Compile Include="util\Fake64Encoding.cs" />
     <Compile Include="util\RomVisual.cs" />
     <Compile Include="util\WorkerTaskManager.cs" />
     <Compile Include="model\Data.cs" />

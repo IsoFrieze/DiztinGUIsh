@@ -4,7 +4,7 @@ using Diz.Core.model;
 
 namespace Diz.Core.serialization
 {
-    abstract class ProjectSerializer
+    public abstract class ProjectSerializer
     {
         public const string Watermark = "DiztinGUIsh";
 

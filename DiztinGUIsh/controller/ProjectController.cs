@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Security.Policy;
 using Diz.Core.export;
 using Diz.Core.import;
@@ -78,9 +79,14 @@ namespace DiztinGUIsh.controller
             {
                 try
                 {
-                    var result = ProjectFileManager.Open(filename, AskToSelectNewRomFilename);
-                    project = result.project;
-                    warningMsg = result.warning;
+                    var (project1, warning) = ProjectFileManager.Open(filename, AskToSelectNewRomFilename);
+                    project = project1;
+                    warningMsg = warning;
+                }
+                catch (AggregateException ex)
+                {
+                    project = null;
+                    errorMsg = ex.InnerExceptions.Select(e => e.Message).Aggregate((line, val) => line += val + "\n");
                 }
                 catch (Exception ex)
                 {
