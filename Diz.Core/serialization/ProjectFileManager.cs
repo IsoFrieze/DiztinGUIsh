@@ -12,6 +12,8 @@ namespace Diz.Core.serialization
     {
         public static (Project project, string warning) Open(string filename, Func<string, string> romPromptFn)
         {
+            Trace.WriteLine("Opening Project START");
+
             var data = File.ReadAllBytes(filename);
 
             if (!IsUncompressedProject(filename))
@@ -24,6 +26,7 @@ namespace Diz.Core.serialization
 
             PostSerialize(result.project, romPromptFn);
 
+            Trace.WriteLine("Opening Project END");
             return result;
         }
 
