@@ -20,11 +20,11 @@ namespace Diz.Test
 
         public class TestRoot
         {
-            public ObservableDictionary<int, string> Odw { get; set; } = new ObservableDictionary<int, string>() {
+            public ObservableDictionary<int, string> ODW { get; set; } = new ObservableDictionary<int, string>() {
                 {1, "Z test1"},
                 {2, "Z test3"},
             };
-            public ObservableDictionary<int, Label> Odw2 { get; set; } = new ObservableDictionary<int, Label>() {
+            public ObservableDictionary<int, Label> ODW2 { get; set; } = new ObservableDictionary<int, Label>() {
                 {100, new Label {Comment = "c1", Name = "location1"}},
                 {200, new Label {Comment = "c2", Name = "location2"}},
             };
@@ -33,8 +33,8 @@ namespace Diz.Test
             protected bool Equals(TestRoot other)
             {
                 return
-                    System.Linq.Enumerable.SequenceEqual(Odw, other.Odw) &&
-                    System.Linq.Enumerable.SequenceEqual(Odw2, other.Odw2);
+                    System.Linq.Enumerable.SequenceEqual(ODW, other.ODW) &&
+                    System.Linq.Enumerable.SequenceEqual(ODW2, other.ODW2);
             }
 
             public override bool Equals(object obj)
@@ -49,7 +49,7 @@ namespace Diz.Test
             {
                 unchecked
                 {
-                    return ((Odw != null ? Odw.GetHashCode() : 0) * 397) ^ (Odw2 != null ? Odw2.GetHashCode() : 0);
+                    return ((ODW != null ? ODW.GetHashCode() : 0) * 397) ^ (ODW2 != null ? ODW2.GetHashCode() : 0);
                 }
             }
             #endregion
@@ -86,6 +86,6 @@ namespace Diz.Test
 
         private readonly TestRoot testRootElementGood = new TestRoot();
 
-        string xmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerTest-TestRoot xmlns:ns1=\"clr-namespace:IX.Observable;assembly=IX.Observable\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:ns2=\"clr-namespace:Diz.Core.model;assembly=Diz.Core\"><ODW AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"1\" Value=\"Z test1\" /><sys:Item Key=\"2\" Value=\"Z test3\" /></ODW><ODW2 AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"100\"><Value Name=\"location1\" comment=\"c1\" /></sys:Item><sys:Item Key=\"200\"><Value Name=\"location2\" comment=\"c2\" /></sys:Item></ODW2></SerializerTest-TestRoot>";
+        string xmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerDictionaryTest-TestRoot xmlns:ns1=\"clr-namespace:IX.Observable;assembly=IX.Observable\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:ns2=\"clr-namespace:Diz.Core.model;assembly=Diz.Core\"><ODW AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"1\" Value=\"Z test1\" /><sys:Item Key=\"2\" Value=\"Z test3\" /></ODW><ODW2 AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"100\"><Value Name=\"location1\" Comment=\"c1\" /></sys:Item><sys:Item Key=\"200\"><Value Name=\"location2\" Comment=\"c2\" /></sys:Item></ODW2></SerializerDictionaryTest-TestRoot>";
     }
 }

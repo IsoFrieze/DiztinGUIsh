@@ -52,7 +52,7 @@ namespace Diz.Core.serialization.xml_serializer
             var finalBytes = Encoding.UTF8.GetBytes(xmlStr);
 
             // if you want some sanity checking, run this to verify everything saved correctly
-            DebugVerifyProjectEquality(project, finalBytes);
+            // DebugVerifyProjectEquality(project, finalBytes);
             // end debug
 
             return finalBytes;
@@ -60,13 +60,13 @@ namespace Diz.Core.serialization.xml_serializer
 
         // just for debugging purposes, compare two projects together to make sure they serialize/deserialize
         // correctly.
-        private void DebugVerifyProjectEquality(Project project1, byte[] finalBytesProject2)
+        private void DebugVerifyProjectEquality(Project originalProjectWeJustSaved, byte[] projectBytesWeJustSerialized)
         {
-            var result = Load(finalBytesProject2);
+            var result = Load(projectBytesWeJustSerialized);
             var project2 = result.project;
 
-            ProjectFileManager.PostSerialize(project2, null);
-            DebugVerifyProjectEquality(project1, project2);
+            new ProjectFileManager().PostSerialize(project2);
+            DebugVerifyProjectEquality(originalProjectWeJustSaved, project2);
         }
 
         public override (Project project, string warning) Load(byte[] data)

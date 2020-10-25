@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Diz.Core.arch;
 using Diz.Core.util;
@@ -54,17 +55,18 @@ namespace Diz.Core.model
             return ByteUtil.ByteArrayToInt32(GetRomBytes(0xFFDC, 4));
         }
 
-        public void CopyRomDataIn(byte[] data)
+        public void CopyRomDataIn(IEnumerable<byte> trueRomBytes)
         {
             var previousNotificationState = RomBytes.SendNotificationChangedEvents;
             RomBytes.SendNotificationChangedEvents = false;
-
-            var size = data.Length;
-            Debug.Assert(RomBytes.Count == size);
-            for (var i = 0; i < size; i++)
+            
+            var i = 0;
+            foreach (var b in trueRomBytes)
             {
-                RomBytes[i].Rom = data[i];
+                RomBytes[i].Rom = b;
+                ++i;
             }
+            Debug.Assert(RomBytes.Count == i);
 
             RomBytes.SendNotificationChangedEvents = previousNotificationState;
         }
@@ -561,6 +563,13 @@ namespace Diz.Core.model
             var bankStartingPcOffset = bankIndex << 16;
             var bankSnesNumber = ConvertPCtoSnes(bankStartingPcOffset) >> 16;
             return bankSnesNumber;
+        }
+
+        // get the actual ROM file bytes (i.e. the contents of the SMC file on the disk)
+        // note: don't save these anywhere because the data is copyrighted.
+        public IEnumerable<byte> GetFileBytes()
+        {
+            return RomBytes.Select(b => b.Rom);
         }
     }
 }

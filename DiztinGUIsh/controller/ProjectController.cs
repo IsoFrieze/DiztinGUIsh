@@ -78,7 +78,11 @@ namespace DiztinGUIsh.controller
             {
                 try
                 {
-                    var (project1, warning) = ProjectFileManager.Open(filename, AskToSelectNewRomFilename);
+                    var (project1, warning) = new ProjectFileManager()
+                    {
+                        RomPromptFn = AskToSelectNewRomFilename
+                    }.Open(filename);
+                    
                     project = project1;
                     warningMsg = warning;
                 }
@@ -128,7 +132,7 @@ namespace DiztinGUIsh.controller
 
         public void SaveProject(string filename)
         {
-            DoLongRunningTask(delegate { ProjectFileManager.Save(Project, filename); },
+            DoLongRunningTask(delegate { new ProjectFileManager().Save(Project, filename); },
                 $"Saving {Path.GetFileName(filename)}...");
             ProjectView.OnProjectSaved();
         }
@@ -161,7 +165,7 @@ namespace DiztinGUIsh.controller
 
         public void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
         {
-            var project = ProjectFileManager.ImportRomAndCreateNewProject(importSettings);
+            var project = BaseProjectFileManager.ImportRomAndCreateNewProject(importSettings);
             OnProjectOpenSuccess(project.ProjectFileName, project);
         }
 

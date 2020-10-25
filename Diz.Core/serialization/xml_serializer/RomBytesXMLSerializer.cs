@@ -37,8 +37,7 @@ namespace Diz.Core.serialization.xml_serializer
 
         private const bool CompressGroupBlock = true;
         private const bool CompressUsingTable1 = true;
-        private const int NumTasksToUse = 10;
-
+        private readonly int numTasksToUse = 10;
 
         public RomBytes Get(IFormatReader parameter)
         {
@@ -49,17 +48,17 @@ namespace Diz.Core.serialization.xml_serializer
 
         private RomByte[] DecodeAllBytes(List<string> allLines)
         {
-            if (NumTasksToUse == 1)
+            if (numTasksToUse == 1)
                 return DecodeRomBytes(allLines, 0);
 
             var nextIndex = 0;
-            var workListCount = allLines.Count / NumTasksToUse;
+            var workListCount = allLines.Count / numTasksToUse;
 
-            var tasks = new List<Task<RomByte[]>>(NumTasksToUse);
+            var tasks = new List<Task<RomByte[]>>(numTasksToUse);
 
-            for (var t = 0; t < NumTasksToUse; ++t)
+            for (var t = 0; t < numTasksToUse; ++t)
             {
-                var lastThread = t == NumTasksToUse - 1;
+                var lastThread = t == numTasksToUse - 1;
 
                 if (lastThread)
                     workListCount = allLines.Count - nextIndex;

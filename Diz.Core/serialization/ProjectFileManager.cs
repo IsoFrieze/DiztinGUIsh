@@ -8,9 +8,41 @@ using Diz.Core.util;
 
 namespace Diz.Core.serialization
 {
-    public static class ProjectFileManager
+    public class ProjectFileManager : BaseProjectFileManager
     {
-        public static (Project project, string warning) Open(string filename, Func<string, string> romPromptFn)
+        public Func<string, string> RomPromptFn { get; set; }
+        
+        // TODO: move romPromptFn to be a field instead of a param passed around.
+        protected override byte[] ReadFromOriginalRom(Project project)
+        {
+            string firstRomFileWeTried;
+            var nextFileToTry = firstRomFileWeTried = project.AttachedRomFilename;
+            byte[] rom;
+
+            // try to open a ROM that matches us, if not, ask the user until they give up
+            do
+            {
+                var error = project.ReadRomIfMatchesProject(nextFileToTry, out rom);
+                if (error == null)
+                    break;
+
+                nextFileToTry = RomPromptFn(error);
+                if (nextFileToTry == null)
+                    return null;
+            } while (true);
+
+            project.AttachedRomFilename = nextFileToTry;
+
+            if (project.AttachedRomFilename != firstRomFileWeTried)
+                project.UnsavedChanges = true;
+
+            return rom;
+        }
+    }
+    
+    public abstract class BaseProjectFileManager
+    {
+        public (Project project, string warning) Open(string filename)
         {
             Trace.WriteLine("Opening Project START");
 
@@ -24,13 +56,13 @@ namespace Diz.Core.serialization
 
             result.project.ProjectFileName = filename;
 
-            PostSerialize(result.project, romPromptFn);
+            PostSerialize(result.project);
 
             Trace.WriteLine("Opening Project END");
             return result;
         }
 
-        public static bool PostSerialize(Project project, Func<string, string> romPromptFn)
+        public bool PostSerialize(Project project)
         {
             // at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
             // It would be easy to store the ROM bytes in the save file, but, for copyright reasons,
@@ -44,40 +76,13 @@ namespace Diz.Core.serialization
             Debug.Assert(data.Labels != null && data.Comments != null);
             Debug.Assert(data.RomBytes != null && data.RomBytes.Count > 0);
 
-            var rom = ReadFromOriginalRom(project, romPromptFn);
+            var rom = ReadFromOriginalRom(project);
             if (rom == null)
                 return false;
 
             data.CopyRomDataIn(rom);
             return true;
         }
-
-        public static byte[] ReadFromOriginalRom(Project project, Func<string, string> romPromptFn)
-        {
-            string firstRomFileWeTried;
-            var nextFileToTry = firstRomFileWeTried = project.AttachedRomFilename;
-            byte[] rom;
-
-            // try to open a ROM that matches us, if not, ask the user until they give up
-            do
-            {
-                var error = project.ReadRomIfMatchesProject(nextFileToTry, out rom);
-                if (error == null)
-                    break;
-
-                nextFileToTry = romPromptFn(error);
-                if (nextFileToTry == null)
-                    return null;
-            } while (true);
-
-            project.AttachedRomFilename = nextFileToTry;
-
-            if (project.AttachedRomFilename != firstRomFileWeTried)
-                project.UnsavedChanges = true;
-
-            return rom;
-        }
-
 
         private static ProjectSerializer GetSerializerForFormat(byte[] data)
         {
@@ -92,7 +97,7 @@ namespace Diz.Core.serialization
             return Path.GetExtension(filename).Equals(".dizraw", StringComparison.InvariantCultureIgnoreCase);
         }
 
-        public static void Save(Project project, string filename)
+        public void Save(Project project, string filename)
         {
             // Everything saves in XML format from here on out.
             // Binary format is deprecated.
@@ -101,7 +106,7 @@ namespace Diz.Core.serialization
             Save(project, filename, defaultSerializer);
         }
 
-        private static void Save(Project project, string filename, ProjectSerializer serializer)
+        private void Save(Project project, string filename, ProjectSerializer serializer)
         {
             var data = DoSave(project, filename, serializer);
 
@@ -110,7 +115,7 @@ namespace Diz.Core.serialization
             project.ProjectFileName = filename;
         }
 
-        private static byte[] DoSave(Project project, string filename, ProjectSerializer serializer)
+        private byte[] DoSave(Project project, string filename, ProjectSerializer serializer)
         {
             var data = serializer.Save(project);
 
@@ -149,5 +154,7 @@ namespace Diz.Core.serialization
 
             return project;
         }
+
+        protected abstract byte[] ReadFromOriginalRom(Project project);
     }
 }
