@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 using Diz.Core.model;
 
 // this usercontrol shows:
@@ -11,6 +12,8 @@ namespace DiztinGUIsh.window.usercontrols
 {
     public partial class RomBankVisualizer : UserControl
     {
+        public event EventHandler RedrawOccurred;
+
         public RomBankVisualizer(Project project, int startingRomOffset, int length, string bankName)
         {
             InitializeComponent();
@@ -19,6 +22,18 @@ namespace DiztinGUIsh.window.usercontrols
             romImage1.ROMVisual.RomStartingOffset = startingRomOffset;
             romImage1.ROMVisual.LengthOverride = length;
             lblBankName.Text = bankName;
+
+            romImage1.RedrawOccurred += RomImage1_RedrawOccurred;
+        }
+
+        private void RomImage1_RedrawOccurred(object sender, System.EventArgs e)
+        {
+            OnRedrawOccurred();
+        }
+
+        protected virtual void OnRedrawOccurred()
+        {
+            RedrawOccurred?.Invoke(this, EventArgs.Empty);
         }
     }
 }

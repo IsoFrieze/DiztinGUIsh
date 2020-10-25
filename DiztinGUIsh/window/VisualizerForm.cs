@@ -16,7 +16,7 @@ namespace DiztinGUIsh.window
             set
             {
                 project = value;
-                romImage1.Project = project;
+                romFullVisualizer1.Project = project;
             }
         }
 
@@ -24,21 +24,13 @@ namespace DiztinGUIsh.window
         {
             mainWindow = window;
             InitializeComponent();
-
-            romImage1.RedrawOccurred += RomImage1_RedrawOccurred;
-        }
-
-        private void RomImage1_RedrawOccurred(object sender, System.EventArgs e)
-        {
-            if (!(sender is RomImage romImage))
-                return;
         }
 
         private void VisualizerForm_Load(object sender, System.EventArgs e)
         {
             // hack to make room for the scrollbar
             // I wish docking dealt with this, or maybe I set it up wrong...
-            Width = romImage1.Width + 40;
+            Width = romFullVisualizer1.Width + 40;
         }
 
         private void VisualizerForm_FormClosing(object sender, FormClosingEventArgs e)
