@@ -45,6 +45,10 @@ namespace Diz.Core.model
         public void SetFrom(RomByte[] romBytes)
         {
             Bytes = new ObservableCollection<RomByte>(romBytes);
+            for (var i = 0; i < romBytes.Length; ++i)
+            {
+                romBytes[i].SetCachedOffset(i);
+            }
         }
 
         public int Count => Bytes.Count;

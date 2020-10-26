@@ -30,6 +30,8 @@ namespace DiztinGUIsh.window
             // hack to make room for the scrollbar
             // I wish docking dealt with this, or maybe I set it up wrong...
             Width = romFullVisualizer1.Width + 40;
+
+            romFullVisualizer1.Project = mainWindow.Project;
         }
 
         private void VisualizerForm_FormClosing(object sender, FormClosingEventArgs e)

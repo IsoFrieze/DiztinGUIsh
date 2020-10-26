@@ -30,8 +30,8 @@
         {
             this.lblBankName = new System.Windows.Forms.Label();
             this.romImage1 = new DiztinGUIsh.window.usercontrols.RomImage();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.tableLayoutPanel1.SuspendLayout();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblBankName
@@ -46,26 +46,26 @@
             // 
             // romImage1
             // 
-            this.romImage1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.romImage1.Location = new System.Drawing.Point(60, 3);
+            this.romImage1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.romImage1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.romImage1.Location = new System.Drawing.Point(60, 18);
+            this.romImage1.MinimumSize = new System.Drawing.Size(400, 10);
             this.romImage1.Name = "romImage1";
             this.romImage1.Project = null;
-            this.romImage1.Size = new System.Drawing.Size(663, 165);
+            this.romImage1.Size = new System.Drawing.Size(500, 10);
             this.romImage1.TabIndex = 1;
             // 
-            // tableLayoutPanel1
+            // flowLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.Controls.Add(this.romImage1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.lblBankName, 0, 0);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 1;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(726, 171);
-            this.tableLayoutPanel1.TabIndex = 2;
+            this.flowLayoutPanel1.AutoSize = true;
+            this.flowLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flowLayoutPanel1.Controls.Add(this.lblBankName);
+            this.flowLayoutPanel1.Controls.Add(this.romImage1);
+            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(563, 31);
+            this.flowLayoutPanel1.TabIndex = 2;
             // 
             // RomBankVisualizer
             // 
@@ -73,12 +73,14 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.Controls.Add(this.tableLayoutPanel1);
+            this.BackColor = System.Drawing.Color.SeaGreen;
+            this.Controls.Add(this.flowLayoutPanel1);
             this.Name = "RomBankVisualizer";
-            this.Size = new System.Drawing.Size(729, 174);
-            this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel1.PerformLayout();
+            this.Size = new System.Drawing.Size(563, 31);
+            this.flowLayoutPanel1.ResumeLayout(false);
+            this.flowLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -86,6 +88,6 @@
 
         private System.Windows.Forms.Label lblBankName;
         private RomImage romImage1;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
     }
 }

@@ -32,7 +32,7 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void RomImage_Paint(object sender, PaintEventArgs e)
         {
-            Redraw(e.Graphics);
+            // Redraw(e.Graphics);
         }
 
         private void Redraw(Graphics graphics = null)
@@ -65,10 +65,10 @@ namespace DiztinGUIsh.window.usercontrols
 
         protected virtual void OnRedrawOccurred()
         {
-            Width = RomVisual.Width;
-            Height = RomVisual.Height;
+            //Width = RomVisual.Width;
+            //Height = RomVisual.Height;
 
-            RedrawOccurred?.Invoke(this, EventArgs.Empty);
+            // RedrawOccurred?.Invoke(this, EventArgs.Empty);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace DiztinGUIsh.window.usercontrols
 {
     public partial class RomBankVisualizer : UserControl
     {
-        public event EventHandler RedrawOccurred;
+        //public event EventHandler RedrawOccurred;
 
         public RomBankVisualizer(Project project, int startingRomOffset, int length, string bankName)
         {
@@ -23,17 +23,17 @@ namespace DiztinGUIsh.window.usercontrols
             romImage1.RomVisual.LengthOverride = length;
             lblBankName.Text = bankName;
 
-            romImage1.RedrawOccurred += RomImage1_RedrawOccurred;
+            //romImage1.RedrawOccurred += RomImage1_RedrawOccurred;
         }
 
         private void RomImage1_RedrawOccurred(object sender, System.EventArgs e)
         {
-            OnRedrawOccurred();
+            //OnRedrawOccurred();
         }
 
-        protected virtual void OnRedrawOccurred()
+        private void OnRedrawOccurred()
         {
-            RedrawOccurred?.Invoke(this, EventArgs.Empty);
+            //RedrawOccurred?.Invoke(this, EventArgs.Empty);
         }
     }
 }

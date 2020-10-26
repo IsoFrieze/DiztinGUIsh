@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
 using Diz.Core.model;
 
@@ -17,16 +18,18 @@ namespace DiztinGUIsh.window.usercontrols
             get => project;
             set
             {
-                UpdateControls();
+                DeleteControls();
                 project = value;
+                if (project != null)
+                    Init();
             }
         }
 
-        private void UpdateControls()
+        private void DeleteControls()
         {
-            foreach (var rbv in BankControls)
+            foreach (var rbv in BankControls.Where(rbv => Controls.Contains(rbv)))
             {
-                // TODO
+                Controls.Remove(rbv);
             }
         }
 
@@ -61,8 +64,8 @@ namespace DiztinGUIsh.window.usercontrols
             BankControls.Add(bankControl);
 
             flowLayoutPanel1.Controls.Add(bankControl);
-            flowLayoutPanel1.AutoSize = true;
-            flowLayoutPanel1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            //flowLayoutPanel1.AutoSize = true;
+            //flowLayoutPanel1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         }
 
         /*private void BankControl_RedrawOccurred(object sender, EventArgs e)

@@ -26,7 +26,7 @@ namespace Diz.Core.util
                 if (project?.Data == null) return;
                 project.Data.RomBytes.PropertyChanged += RomBytes_PropertyChanged;
                 project.Data.RomBytes.CollectionChanged += RomBytes_CollectionChanged;
-                InvalidateImage();
+                // InvalidateImage();
             }
         }
 
@@ -69,7 +69,7 @@ namespace Diz.Core.util
             get => lengthOverride;
             set
             {
-                if (value != -1 && (value == 0 || RomStartingOffset + value >= project.Data.RomBytes.Count))
+                if (value != -1 && (value == 0 || RomStartingOffset + value > project.Data.RomBytes.Count))
                     throw new ArgumentOutOfRangeException();
 
                 lengthOverride = value;
@@ -77,6 +77,8 @@ namespace Diz.Core.util
         }
 
         public int PixelCount => lengthOverride != -1 ? lengthOverride : project.Data.RomBytes.Count;
+
+        private int RomMaxOffsetAllowed => RomStartingOffset + PixelCount - 1;
 
         public int Width
         {
@@ -194,7 +196,11 @@ namespace Diz.Core.util
         private IEnumerable<RomByte> ConsumeRomDirtyBytes()
         {
             if (AllDirty)
-                return Data.RomBytes.ToList();
+                return Data.RomBytes
+                    .Where(rb => 
+                        rb.Offset >= RomStartingOffset && rb.Offset <= RomMaxOffsetAllowed
+                    )
+                    .ToList();
 
             IEnumerable<RomByte> romBytes;
             lock (dirtyLock)
