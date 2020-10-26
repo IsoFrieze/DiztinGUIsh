@@ -10,8 +10,6 @@ namespace DiztinGUIsh.window.usercontrols
 {
     public partial class RomImage : UserControl
     {
-        public event EventHandler RedrawOccurred;
-
         public RomVisual RomVisual { get; } = new RomVisual();
 
         public Project Project
@@ -28,16 +26,18 @@ namespace DiztinGUIsh.window.usercontrols
         {
             // if there's a reason to track ROM byte changes, hook in here
             // romVisual.MarkedDirty += RomVisual_MarkedDirty;
+
+            UpdateDimensions();
         }
 
         private void RomImage_Paint(object sender, PaintEventArgs e)
         {
-            // Redraw(e.Graphics);
+            Redraw(e.Graphics);
         }
 
         private void Redraw(Graphics graphics = null)
         {
-            if (RomVisual?.Bitmap == null)
+            if (RomVisual?.Bitmap == null || updatingDimensions)
                 return;
 
             graphics ??= CreateGraphics();
@@ -45,8 +45,6 @@ namespace DiztinGUIsh.window.usercontrols
             var width = RomVisual.Bitmap.Width;
             var height = RomVisual.Bitmap.Height;
             graphics.DrawImage(RomVisual.Bitmap, 0, 0, width, height);
-
-            OnRedrawOccurred();
         }
 
         private void RedrawIfNeeded()
@@ -63,12 +61,12 @@ namespace DiztinGUIsh.window.usercontrols
             RedrawIfNeeded();
         }
 
-        protected virtual void OnRedrawOccurred()
-        {
-            //Width = RomVisual.Width;
-            //Height = RomVisual.Height;
+        private bool updatingDimensions = false;
 
-            // RedrawOccurred?.Invoke(this, EventArgs.Empty);
+        private void UpdateDimensions()
+        {
+            Width = RomVisual.Width;
+            Height = RomVisual.Height;
         }
     }
 }
