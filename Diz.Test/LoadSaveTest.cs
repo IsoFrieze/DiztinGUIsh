@@ -47,7 +47,7 @@ namespace Diz.Test
             var projectFileManager = new ProjectFileManager();
             var (project, warning) = projectFileManager.Open(openFile);
 
-            Assert.Equal(warning, "");
+            Assert.Equal("", warning);
             Assert.True(project.Data.RomBytes.Count >= 0x1000 * 64);
             
             return project;
