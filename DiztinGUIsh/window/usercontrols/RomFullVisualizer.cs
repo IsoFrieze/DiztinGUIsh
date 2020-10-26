@@ -59,25 +59,8 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void AddNewControl(RomBankVisualizer bankControl)
         {
-            // bankControl.RedrawOccurred += BankControl_RedrawOccurred;
-
             BankControls.Add(bankControl);
-
             flowLayoutPanel1.Controls.Add(bankControl);
-            //flowLayoutPanel1.AutoSize = true;
-            //flowLayoutPanel1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         }
-
-        /*private void BankControl_RedrawOccurred(object sender, EventArgs e)
-        {
-            OnRedrawOccurred();
-        }
-
-        public event EventHandler<EventArgs> RedrawOccurred;
-
-        protected virtual void OnRedrawOccurred()
-        {
-            RedrawOccurred?.Invoke(this, EventArgs.Empty);
-        }*/
     }
 }

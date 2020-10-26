@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -37,7 +36,7 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void Redraw(Graphics graphics = null)
         {
-            if (RomVisual?.Bitmap == null || updatingDimensions)
+            if (RomVisual?.Bitmap == null)
                 return;
 
             graphics ??= CreateGraphics();
@@ -60,8 +59,6 @@ namespace DiztinGUIsh.window.usercontrols
         {
             RedrawIfNeeded();
         }
-
-        private bool updatingDimensions = false;
 
         private void UpdateDimensions()
         {
