@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
 using Diz.Core;
 using Diz.Core.model;
+using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Diz.Test
 {
@@ -31,6 +33,57 @@ namespace Diz.Test
             // serialization and deserialization
             Assert.True(warning == "");
             Assert.True(sampleProject.Equals(deserializedProject));
+        }
+        
+        private readonly ITestOutputHelper output;
+
+        public LoadSaveTest(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+        
+        private static Project OpenProject(string openFile)
+        {
+            var projectFileManager = new ProjectFileManager();
+            var (project, warning) = projectFileManager.Open(openFile);
+
+            Assert.Equal(warning, "");
+            Assert.True(project.Data.RomBytes.Count >= 0x1000 * 64);
+            
+            return project;
+        }
+
+        [Fact(Skip = "Performance Test")]
+        private void OpenFilePerformanceTest()
+        {
+            var s = Stopwatch.StartNew();
+            s.Start();
+            
+            var openFile = "D:\\projects\\cthack\\src\\rom\\Chrono Trigger - CTHACKv3 - master copy.xml.dizraw";
+            var project = OpenProject(openFile);
+
+            s.Stop();
+
+            output.WriteLine($"runtime: {s.ElapsedMilliseconds:N0}, #bytes={project.Data.RomBytes.Count}");
+        }
+
+
+        [Fact(Skip = "Performance Test")]
+        private void SaveFilePerformanceTest()
+        {
+            var openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST";
+            var project = OpenProject(openFile);
+            
+            var s = Stopwatch.StartNew();
+            s.Start();
+
+            var data = new ProjectXmlSerializer().Save(project);
+
+            s.Stop();
+            
+            Assert.True(data.Length != 0);
+
+            output.WriteLine($"runtime: {s.ElapsedMilliseconds:N0}");
         }
     }
 }

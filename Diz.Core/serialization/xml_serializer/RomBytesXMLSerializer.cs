@@ -37,7 +37,7 @@ namespace Diz.Core.serialization.xml_serializer
 
         private const bool CompressGroupBlock = true;
         private const bool CompressUsingTable1 = true;
-        private readonly int numTasksToUse = 10;
+        public int numTasksToUse = 5; // seems like the sweet spot
 
         public RomBytes Get(IFormatReader parameter)
         {
@@ -49,30 +49,19 @@ namespace Diz.Core.serialization.xml_serializer
         private RomByte[] DecodeAllBytes(List<string> allLines)
         {
             if (numTasksToUse == 1)
-                return DecodeRomBytes(allLines, 0);
+                return DecodeRomBytes(allLines, 0, allLines.Count);
+
+            var tasks = new List<Task<RomByte[]>>(numTasksToUse);
 
             var nextIndex = 0;
             var workListCount = allLines.Count / numTasksToUse;
 
-            var tasks = new List<Task<RomByte[]>>(numTasksToUse);
-
             for (var t = 0; t < numTasksToUse; ++t)
             {
-                var lastThread = t == numTasksToUse - 1;
-
-                if (lastThread)
+                if (t == numTasksToUse - 1)
                     workListCount = allLines.Count - nextIndex;
 
-                var workList = new List<string>(workListCount);
-                for (var i = 0; i < workListCount; ++i)
-                {
-                    workList.Add(allLines[nextIndex + i]);
-                }
-
-                // ReSharper disable once AccessToStaticMemberViaDerivedType
-                var index = nextIndex;
-                var task = Task<RomByte[]>.Run(() => DecodeRomBytes(workList, index));
-                tasks.Add(task);
+                tasks.Add(CreateDecodeRomBytesTask(allLines, nextIndex, workListCount));
 
                 nextIndex += workListCount;
             }
@@ -82,27 +71,31 @@ namespace Diz.Core.serialization.xml_serializer
             return continuation.Result.SelectMany(i => i).ToArray();
         }
 
-        private static RomByte[] DecodeRomBytes(List<string> lines, int startingLineNum)
+        private static Task<RomByte[]> CreateDecodeRomBytesTask(List<string> allLines, int nextIndex, int workListCount)
+        {
+            // ReSharper disable once AccessToStaticMemberViaDerivedType
+            return Task<RomByte[]>.Run(() => DecodeRomBytes(allLines, nextIndex, workListCount));
+        }
+
+        private static RomByte[] DecodeRomBytes(IReadOnlyList<string> allLines, int startIndex, int count)
         {
             // perf: allocate all at once, don't use List.Add() one at a time
-            var romBytes = new RomByte[lines.Count];
-            var currentLineNum = startingLineNum;
-
+            var romBytes = new RomByte[count];
             var romByteEncoding = new RomByteEncoding();
+            var i = 0;
 
             try
             {
-                var i = 0;
-                foreach (var line in lines)
+                while (i < count)
                 {
+                    var line = allLines[startIndex + i];
                     romBytes[i] = romByteEncoding.DecodeRomByte(line);
-                    currentLineNum++;
-                    i++;
+                    ++i;
                 }
             }
             catch (Exception ex)
             {
-                ex.Data.Add("ParseLineNum", "Near line# " + currentLineNum);
+                ex.Data.Add("ParseLineNum", "Near line# " + (startIndex + i));
                 throw;
             }
 
