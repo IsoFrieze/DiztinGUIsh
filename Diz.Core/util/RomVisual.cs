@@ -164,7 +164,7 @@ namespace Diz.Core.util
             if (shouldRecreateBitmap)
                 bitmap = new Bitmap(w, h);
 
-            var romBytes = ConsumeRomDirtyBytes();
+            var romBytes = ConsumeRomDirtyBytes(out var usedDirtyList);
             var currentPixel = 0;
 
             var fastBitmap = new FastBitmap(bitmap); // needs compiler flag "/unsafe" enabled
@@ -176,13 +176,16 @@ namespace Diz.Core.util
                     ++currentPixel;
                 }
 
-                // rom bytes may not fully fill up the last row. fill it in with
-                // blank pixels
-                while (currentPixel < w*h)
+                if (!usedDirtyList)
                 {
-                    var (x, y) = ConvertPixelIndexToXy(currentPixel);
-                    fastBitmap.SetPixel(x, y, Color.SlateGray);
-                    ++currentPixel;
+                    // rom bytes may not fully fill up the last row. fill it in with
+                    // blank pixels
+                    while (currentPixel < w * h)
+                    {
+                        var (x, y) = ConvertPixelIndexToXy(currentPixel);
+                        fastBitmap.SetPixel(x, y, Color.SlateGray);
+                        ++currentPixel;
+                    }
                 }
             }
 
@@ -193,8 +196,10 @@ namespace Diz.Core.util
         // returns the RomBytes we should use to update our image
         // this can either be ALL RomBytes, or, a small set of dirty RomBytes that were changed
         // since our last redraw.
-        private IEnumerable<RomByte> ConsumeRomDirtyBytes()
+        private IEnumerable<RomByte> ConsumeRomDirtyBytes(out bool usedDirtyList)
         {
+            usedDirtyList = false;
+
             if (AllDirty)
                 return Data.RomBytes
                     .Where(rb => 
@@ -202,6 +207,7 @@ namespace Diz.Core.util
                     )
                     .ToList();
 
+            usedDirtyList = true;
             IEnumerable<RomByte> romBytes;
             lock (dirtyLock)
             {
