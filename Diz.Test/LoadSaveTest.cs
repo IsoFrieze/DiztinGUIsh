@@ -11,7 +11,7 @@ namespace Diz.Test
     public class LoadSaveTest
     {
         [Fact]
-        private void SerializeAndDeserialize()
+        private void FullSerializeAndDeserialize()
         {
             // use the sample data to fake a project
             var sampleProject = new Project {Data = SampleRomData.SampleData};
