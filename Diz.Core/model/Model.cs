@@ -17,9 +17,18 @@ namespace DiztinGUIsh
         // Just hook up SetField() to the 'set' param of any property you would like to 
         // expose to outside classes.
         public event PropertyChangedEventHandler PropertyChanged;
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        protected bool SetField<T>(ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            if (compareRefOnly)
+            {
+                if (ReferenceEquals(field, value))
+                    return false;
+            } 
+            else if (EqualityComparer<T>.Default.Equals(field, value))
+            {
+                return false;
+            }
+
             field = value;
             OnPropertyChanged(propertyName);
             return true;
