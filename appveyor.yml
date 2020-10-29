@@ -1,0 +1,8 @@
+image: Visual Studio 2019
+
+before_build:
+- nuget restore
+
+build:
+  project: DiztinGUIsh.sln
+  # verbosity: minimal
