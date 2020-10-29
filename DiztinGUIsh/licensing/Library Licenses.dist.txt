@@ -1,0 +1,61 @@
+Castle.Core	http://www.apache.org/licenses/LICENSE-2.0.html	Apache 2.0												
+xunit	https://raw.githubusercontent.com/xunit/xunit/master/license.txt	Apache 2.0												
+xunit.abstractions	https://raw.githubusercontent.com/xunit/xunit/master/license.txt	Apache 2.0												
+xunit.analyzers	https://raw.githubusercontent.com/xunit/xunit.analyzers/master/LICENSE	Apache 2.0												
+xunit.assert	https://raw.githubusercontent.com/xunit/xunit/master/license.txt	Apache 2.0												
+xunit.core	https://raw.githubusercontent.com/xunit/xunit/master/license.txt	Apache 2.0												
+xunit.extensibility.core	https://raw.githubusercontent.com/xunit/xunit/master/license.txt	Apache 2.0												
+xunit.extensibility.execution	https://raw.githubusercontent.com/xunit/xunit/master/license.txt	Apache 2.0												
+xunit.runner.console	https://raw.githubusercontent.com/xunit/xunit/master/license.txt	Apache 2.0												
+Moq	https://raw.githubusercontent.com/moq/moq4/master/License.txt	BSD 3clause												
+ByteSize	https://github.com/omar/ByteSize/blob/master/LICENSE	MIT												
+ExtendedXmlSerializer	https://github.com/ExtendedXmlSerializer/home/blob/master/LICENSE	MIT												
+FastBitmapLib	https://licenses.nuget.org/MIT	MIT												
+GitInfo	https://licenses.nuget.org/MIT	MIT												
+IX.Abstractions	https://licenses.nuget.org/MIT	MIT												
+IX.Abstractions.Collections	https://licenses.nuget.org/MIT	MIT												
+IX.Abstractions.Threading	https://licenses.nuget.org/MIT	MIT												
+IX.Observable	https://licenses.nuget.org/MIT	MIT												
+IX.StandardExtensions	https://licenses.nuget.org/MIT	MIT												
+IX.StandardExtensions.ComponentModel	https://licenses.nuget.org/MIT	MIT												
+IX.StandardExtensions.Threading	https://licenses.nuget.org/MIT	MIT												
+IX.Undoable	https://licenses.nuget.org/MIT	MIT												
+JetBrains.Annotations	https://licenses.nuget.org/MIT	MIT												
+LightInject	https://licenses.nuget.org/MIT	MIT												
+LiveCharts	https://github.com/beto-rodriguez/Live-Charts/blob/master/LICENSE.TXT	MIT												
+NReco.LambdaParser	https://raw.githubusercontent.com/nreco/lambdaparser/master/LICENSE	MIT												
+SharpZipLib	https://licenses.nuget.org/MIT	MIT												
+Sprache	https://github.com/sprache/Sprache/blob/master/licence.txt	MIT												
+xunit.runner.visualstudio	https://licenses.nuget.org/MIT	MIT												
+--------------------------------------------------														
+"MOQ
+BSD 3-Clause License
+
+Copyright (c) 2007, Clarius Consulting, Manas Technology Solutions, InSTEDD,
+and Contributors. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+    * Neither the names of the copyright holders nor the names of its
+    contributors may be used to endorse or promote products derived from this
+    software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ""AS IS""
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."														
+--------------------------------------------------														

@@ -1,29 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using Diz.Core.model;
+using Diz.Core.util;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window.dialog
 {
     public partial class GotoDialog : Form
     {
-        public GotoDialog(int offset)
+        public Data Data { get; set; }
+        public GotoDialog(int offset, Data data)
         {
             InitializeComponent();
-            textROM.Text = Util.NumberToBaseString(Util.ConvertPCtoSNES(offset), Util.NumberBase.Hexadecimal, 6);
+            Data = data;
+            textROM.Text = Util.NumberToBaseString(Data.ConvertPCtoSnes(offset), Util.NumberBase.Hexadecimal, 6);
             textPC.Text = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0);
         }
 
         private void GotoDialog_Load(object sender, EventArgs e)
         {
             textROM.SelectAll();
-            UpdateUI();
+            UpdateUi();
         }
 
         private int ParseOffset(string text)
@@ -43,7 +40,7 @@ namespace DiztinGUIsh
             this.DialogResult = DialogResult.OK;
         }
 
-        private bool updatingText = false;
+        private bool updatingText;
 
         private bool UpdateTextChanged(string txtChanged, Action<string, int, Util.NumberBase> onSuccess)
         {
@@ -52,10 +49,10 @@ namespace DiztinGUIsh
             {
                 updatingText = true;
 
-                NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-                Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
+                var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+                var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
 
-                if (Util.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
+                if (ByteUtil.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
                 {
                     onSuccess(txtChanged, address, noBase);
                     result = true;
@@ -70,12 +67,12 @@ namespace DiztinGUIsh
         // precondition: unvalidated input in textbox
         // postcondtion: valid text is in both textboxes, or, button is greyed out and error message displayed.
 
-        private void UpdateUI()
+        private void UpdateUi()
         {
-            bool valid = true;
+            var valid = true;
             lblError.Text = "";
 
-            if (!IsPCOffsetValid())
+            if (!IsPcOffsetValid())
             {
                 lblError.Text = "Invalid PC Offset";
                 valid = false;
@@ -90,15 +87,15 @@ namespace DiztinGUIsh
             go.Enabled = valid;
         }
 
-        private bool IsValidPCAddress(int pc)
+        private bool IsValidPcAddress(int pc)
         {
-            return pc >= 0 && pc < Data.GetROMSize();
+            return pc >= 0 && pc < Data.GetRomSize();
         }
 
-        private bool IsPCOffsetValid()
+        private bool IsPcOffsetValid()
         {
             var offset = GetPcOffset();
-            return IsValidPCAddress(offset);
+            return IsValidPcAddress(offset);
         }
 
         private bool IsRomAddressValid()
@@ -107,33 +104,33 @@ namespace DiztinGUIsh
             if (address < 0)
                 return false;
             
-            return IsValidPCAddress(Util.ConvertSNEStoPC(address));
+            return IsValidPcAddress(Data.ConvertSnesToPc(address));
         }
 
         private void textROM_TextChanged(object sender, EventArgs e)
         {
             UpdateTextChanged(textROM.Text,(finaltext, address, noBase) =>
             {
-                int pc = Util.ConvertSNEStoPC(address);
+                int pc = Data.ConvertSnesToPc(address);
                 
                 textROM.Text = finaltext;
                 textPC.Text = Util.NumberToBaseString(pc, noBase, 0);
             });
 
-            UpdateUI();
+            UpdateUi();
         }
 
         private void textPC_TextChanged(object sender, EventArgs e)
         {
             UpdateTextChanged(textPC.Text, (finaltext, offset, noBase) =>
             {
-                int addr = Util.ConvertPCtoSNES(offset);
+                int addr = Data.ConvertPCtoSnes(offset);
 
                 textPC.Text = finaltext;
                 textROM.Text = Util.NumberToBaseString(addr, noBase, 6);
             });
 
-            UpdateUI();
+            UpdateUi();
         }
 
         private void go_Click(object sender, EventArgs e)
@@ -158,15 +155,13 @@ namespace DiztinGUIsh
 
         private void radioHex_CheckedChanged(object sender, EventArgs e)
         {
-            if (radioHex.Checked)
-            {
-                if (int.TryParse(textPC.Text, out int result))
+            if (radioHex.Checked) {
+                if (int.TryParse(textPC.Text, out var result))
                 {
                     textPC.Text = Util.NumberToBaseString(result, Util.NumberBase.Hexadecimal, 0);
                 }
-            } else
-            {
-                if (int.TryParse(textPC.Text, NumberStyles.HexNumber, null, out int result))
+            } else {
+                if (int.TryParse(textPC.Text, NumberStyles.HexNumber, null, out var result))
                 {
                     textPC.Text = result.ToString();
                 }

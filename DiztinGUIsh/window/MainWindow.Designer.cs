@@ -1,4 +1,4 @@
-﻿namespace DiztinGUIsh
+﻿namespace DiztinGUIsh.window
 {
     partial class MainWindow
     {
@@ -61,12 +61,16 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripOpenLast = new System.Windows.Forms.ToolStripMenuItem();
             this.saveProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveProjectAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.exportLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.importUsageMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importCDLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importTraceLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
+            this.importTraceLogText = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -118,6 +122,10 @@
             this.binaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.moveWithStepToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openLastProjectAutomaticallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.labelListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importCaptureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importTraceLogBinary = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewHelpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.githubToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -126,14 +134,14 @@
             this.percentComplete = new System.Windows.Forms.ToolStripStatusLabel();
             this.seperator1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.currentMarker = new System.Windows.Forms.ToolStripStatusLabel();
-            this.openROMFile = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.openProjectFile = new System.Windows.Forms.OpenFileDialog();
             this.saveProjectFile = new System.Windows.Forms.SaveFileDialog();
             this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
-            this.saveLogSingleFile = new System.Windows.Forms.SaveFileDialog();
-            this.chooseLogFolder = new System.Windows.Forms.FolderBrowserDialog();
+            this.openUsageMapFile = new System.Windows.Forms.OpenFileDialog();
+            this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
-            this.labelListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.closeProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -181,7 +189,7 @@
             this.table.ShowCellToolTips = false;
             this.table.ShowEditingIcon = false;
             this.table.ShowRowErrors = false;
-            this.table.Size = new System.Drawing.Size(700, 500);
+            this.table.Size = new System.Drawing.Size(746, 492);
             this.table.TabIndex = 1;
             this.table.TabStop = false;
             this.table.VirtualMode = true;
@@ -192,12 +200,14 @@
             // ColumnAlias
             // 
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ColumnAlias.DefaultCellStyle = dataGridViewCellStyle1;
             this.ColumnAlias.HeaderText = "Label";
             this.ColumnAlias.MaxInputLength = 60;
+            this.ColumnAlias.MinimumWidth = 6;
             this.ColumnAlias.Name = "ColumnAlias";
             this.ColumnAlias.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.ColumnAlias.Width = 130;
             // 
             // ColumnPC
             // 
@@ -206,10 +216,11 @@
             this.ColumnPC.DefaultCellStyle = dataGridViewCellStyle2;
             this.ColumnPC.HeaderText = "PC";
             this.ColumnPC.MaxInputLength = 6;
+            this.ColumnPC.MinimumWidth = 6;
             this.ColumnPC.Name = "ColumnPC";
             this.ColumnPC.ReadOnly = true;
             this.ColumnPC.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.ColumnPC.Width = 45;
+            this.ColumnPC.Width = 58;
             // 
             // ColumnChar
             // 
@@ -218,6 +229,7 @@
             this.ColumnChar.DefaultCellStyle = dataGridViewCellStyle3;
             this.ColumnChar.HeaderText = "@";
             this.ColumnChar.MaxInputLength = 1;
+            this.ColumnChar.MinimumWidth = 6;
             this.ColumnChar.Name = "ColumnChar";
             this.ColumnChar.ReadOnly = true;
             this.ColumnChar.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
@@ -230,10 +242,11 @@
             this.ColumnHex.DefaultCellStyle = dataGridViewCellStyle4;
             this.ColumnHex.HeaderText = "#";
             this.ColumnHex.MaxInputLength = 3;
+            this.ColumnHex.MinimumWidth = 6;
             this.ColumnHex.Name = "ColumnHex";
             this.ColumnHex.ReadOnly = true;
             this.ColumnHex.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.ColumnHex.Width = 20;
+            this.ColumnHex.Width = 26;
             // 
             // ColumnPoints
             // 
@@ -242,9 +255,10 @@
             this.ColumnPoints.DefaultCellStyle = dataGridViewCellStyle5;
             this.ColumnPoints.HeaderText = "<*>";
             this.ColumnPoints.MaxInputLength = 3;
+            this.ColumnPoints.MinimumWidth = 6;
             this.ColumnPoints.Name = "ColumnPoints";
             this.ColumnPoints.ReadOnly = true;
-            this.ColumnPoints.Width = 26;
+            this.ColumnPoints.Width = 34;
             // 
             // ColumnInstruction
             // 
@@ -253,9 +267,11 @@
             this.ColumnInstruction.DefaultCellStyle = dataGridViewCellStyle6;
             this.ColumnInstruction.HeaderText = "Instruction";
             this.ColumnInstruction.MaxInputLength = 64;
+            this.ColumnInstruction.MinimumWidth = 6;
             this.ColumnInstruction.Name = "ColumnInstruction";
             this.ColumnInstruction.ReadOnly = true;
             this.ColumnInstruction.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.ColumnInstruction.Width = 125;
             // 
             // ColumnIA
             // 
@@ -264,19 +280,21 @@
             this.ColumnIA.DefaultCellStyle = dataGridViewCellStyle7;
             this.ColumnIA.HeaderText = "IA";
             this.ColumnIA.MaxInputLength = 6;
+            this.ColumnIA.MinimumWidth = 6;
             this.ColumnIA.Name = "ColumnIA";
             this.ColumnIA.ReadOnly = true;
             this.ColumnIA.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.ColumnIA.Width = 45;
+            this.ColumnIA.Width = 58;
             // 
             // ColumnFlag
             // 
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ColumnFlag.DefaultCellStyle = dataGridViewCellStyle8;
             this.ColumnFlag.HeaderText = "Flag";
+            this.ColumnFlag.MinimumWidth = 6;
             this.ColumnFlag.Name = "ColumnFlag";
             this.ColumnFlag.ReadOnly = true;
-            this.ColumnFlag.Width = 80;
+            this.ColumnFlag.Width = 86;
             // 
             // ColumnDB
             // 
@@ -285,9 +303,10 @@
             this.ColumnDB.DefaultCellStyle = dataGridViewCellStyle9;
             this.ColumnDB.HeaderText = "B";
             this.ColumnDB.MaxInputLength = 2;
+            this.ColumnDB.MinimumWidth = 6;
             this.ColumnDB.Name = "ColumnDB";
             this.ColumnDB.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.ColumnDB.Width = 20;
+            this.ColumnDB.Width = 26;
             // 
             // ColumnDP
             // 
@@ -296,9 +315,10 @@
             this.ColumnDP.DefaultCellStyle = dataGridViewCellStyle10;
             this.ColumnDP.HeaderText = "D";
             this.ColumnDP.MaxInputLength = 4;
+            this.ColumnDP.MinimumWidth = 6;
             this.ColumnDP.Name = "ColumnDP";
             this.ColumnDP.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.ColumnDP.Width = 32;
+            this.ColumnDP.Width = 42;
             // 
             // ColumnM
             // 
@@ -307,9 +327,10 @@
             this.ColumnM.DefaultCellStyle = dataGridViewCellStyle11;
             this.ColumnM.HeaderText = "M";
             this.ColumnM.MaxInputLength = 2;
+            this.ColumnM.MinimumWidth = 6;
             this.ColumnM.Name = "ColumnM";
             this.ColumnM.ReadOnly = true;
-            this.ColumnM.Width = 20;
+            this.ColumnM.Width = 26;
             // 
             // ColumnX
             // 
@@ -318,22 +339,25 @@
             this.ColumnX.DefaultCellStyle = dataGridViewCellStyle12;
             this.ColumnX.HeaderText = "X";
             this.ColumnX.MaxInputLength = 2;
+            this.ColumnX.MinimumWidth = 6;
             this.ColumnX.Name = "ColumnX";
             this.ColumnX.ReadOnly = true;
-            this.ColumnX.Width = 20;
+            this.ColumnX.Width = 26;
             // 
             // ColumnComment
             // 
             this.ColumnComment.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             dataGridViewCellStyle13.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle13.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle13.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ColumnComment.DefaultCellStyle = dataGridViewCellStyle13;
             this.ColumnComment.HeaderText = "Comment";
+            this.ColumnComment.MinimumWidth = 6;
             this.ColumnComment.Name = "ColumnComment";
             this.ColumnComment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // menuStrip1
             // 
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
@@ -341,7 +365,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(717, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(765, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -350,12 +374,13 @@
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newProjectToolStripMenuItem,
             this.openProjectToolStripMenuItem,
+            this.toolStripOpenLast,
+            this.closeProjectToolStripMenuItem,
             this.saveProjectToolStripMenuItem,
             this.saveProjectAsToolStripMenuItem,
             this.toolStripSeparator1,
+            this.toolStripMenuItem2,
             this.exportLogToolStripMenuItem,
-            this.importCDLToolStripMenuItem,
-            this.importTraceLogToolStripMenuItem,
             this.toolStripSeparator7,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -377,6 +402,13 @@
             this.openProjectToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.openProjectToolStripMenuItem.Text = "Open Project...";
             this.openProjectToolStripMenuItem.Click += new System.EventHandler(this.openProjectToolStripMenuItem_Click);
+            // 
+            // toolStripOpenLast
+            // 
+            this.toolStripOpenLast.Name = "toolStripOpenLast";
+            this.toolStripOpenLast.Size = new System.Drawing.Size(235, 22);
+            this.toolStripOpenLast.Text = "Open Last Project";
+            this.toolStripOpenLast.Click += new System.EventHandler(this.toolStripOpenLast_Click);
             // 
             // saveProjectToolStripMenuItem
             // 
@@ -402,6 +434,47 @@
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(232, 6);
             // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.importUsageMapToolStripMenuItem,
+            this.importCDLToolStripMenuItem,
+            this.toolStripSeparator8,
+            this.importTraceLogText});
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(235, 22);
+            this.toolStripMenuItem2.Text = "Import";
+            // 
+            // importUsageMapToolStripMenuItem
+            // 
+            this.importUsageMapToolStripMenuItem.Enabled = false;
+            this.importUsageMapToolStripMenuItem.Name = "importUsageMapToolStripMenuItem";
+            this.importUsageMapToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.importUsageMapToolStripMenuItem.Text = "Import BSNES Usage Map...";
+            this.importUsageMapToolStripMenuItem.Click += new System.EventHandler(this.importUsageMapToolStripMenuItem_Click_1);
+            // 
+            // importCDLToolStripMenuItem
+            // 
+            this.importCDLToolStripMenuItem.Enabled = false;
+            this.importCDLToolStripMenuItem.Name = "importCDLToolStripMenuItem";
+            this.importCDLToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
+            this.importCDLToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.importCDLToolStripMenuItem.Text = "Import CDL...";
+            this.importCDLToolStripMenuItem.Click += new System.EventHandler(this.importCDLToolStripMenuItem_Click_1);
+            // 
+            // toolStripSeparator8
+            // 
+            this.toolStripSeparator8.Name = "toolStripSeparator8";
+            this.toolStripSeparator8.Size = new System.Drawing.Size(215, 6);
+            // 
+            // importTraceLogText
+            // 
+            this.importTraceLogText.Enabled = false;
+            this.importTraceLogText.Name = "importTraceLogText";
+            this.importTraceLogText.Size = new System.Drawing.Size(218, 22);
+            this.importTraceLogText.Text = "Import BSNES Trace Log...";
+            this.importTraceLogText.Click += new System.EventHandler(this.importBsnesTracelogText_Click);
+            // 
             // exportLogToolStripMenuItem
             // 
             this.exportLogToolStripMenuItem.Enabled = false;
@@ -410,22 +483,6 @@
             this.exportLogToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.exportLogToolStripMenuItem.Text = "Export Disassembly...";
             this.exportLogToolStripMenuItem.Click += new System.EventHandler(this.exportLogToolStripMenuItem_Click);
-            // 
-            // importCDLToolStripMenuItem
-            // 
-            this.importCDLToolStripMenuItem.Enabled = false;
-            this.importCDLToolStripMenuItem.Name = "importCDLToolStripMenuItem";
-            this.importCDLToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.importCDLToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
-            this.importCDLToolStripMenuItem.Text = "Import CDL...";
-            this.importCDLToolStripMenuItem.Click += new System.EventHandler(this.importCDLToolStripMenuItem_Click);
-            // 
-            // importTraceLogToolStripMenuItem
-            // 
-            this.importTraceLogToolStripMenuItem.Enabled = false;
-            this.importTraceLogToolStripMenuItem.Name = "importTraceLogToolStripMenuItem";
-            this.importTraceLogToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
-            this.importTraceLogToolStripMenuItem.Text = "Import Trace Log...";
             // 
             // toolStripSeparator7
             // 
@@ -780,14 +837,14 @@
             this.graphicsWindowToolStripMenuItem,
             this.constantsToolStripMenuItem,
             this.optionsToolStripMenuItem,
-            this.labelListToolStripMenuItem});
+            this.labelListToolStripMenuItem,
+            this.importCaptureToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
             this.viewToolStripMenuItem.Text = "&Tools";
             // 
             // visualMapToolStripMenuItem
             // 
-            this.visualMapToolStripMenuItem.Enabled = false;
             this.visualMapToolStripMenuItem.Name = "visualMapToolStripMenuItem";
             this.visualMapToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
             this.visualMapToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
@@ -842,7 +899,8 @@
             // optionsToolStripMenuItem
             // 
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.moveWithStepToolStripMenuItem});
+            this.moveWithStepToolStripMenuItem,
+            this.openLastProjectAutomaticallyToolStripMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
             this.optionsToolStripMenuItem.Text = "Options";
@@ -852,9 +910,40 @@
             this.moveWithStepToolStripMenuItem.Checked = true;
             this.moveWithStepToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.moveWithStepToolStripMenuItem.Name = "moveWithStepToolStripMenuItem";
-            this.moveWithStepToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
+            this.moveWithStepToolStripMenuItem.Size = new System.Drawing.Size(244, 22);
             this.moveWithStepToolStripMenuItem.Text = "Move With Step";
             this.moveWithStepToolStripMenuItem.Click += new System.EventHandler(this.moveWithStepToolStripMenuItem_Click);
+            // 
+            // openLastProjectAutomaticallyToolStripMenuItem
+            // 
+            this.openLastProjectAutomaticallyToolStripMenuItem.Name = "openLastProjectAutomaticallyToolStripMenuItem";
+            this.openLastProjectAutomaticallyToolStripMenuItem.Size = new System.Drawing.Size(244, 22);
+            this.openLastProjectAutomaticallyToolStripMenuItem.Text = "Open Last Project Automatically";
+            this.openLastProjectAutomaticallyToolStripMenuItem.Click += new System.EventHandler(this.openLastProjectAutomaticallyToolStripMenuItem_Click);
+            // 
+            // labelListToolStripMenuItem
+            // 
+            this.labelListToolStripMenuItem.Enabled = false;
+            this.labelListToolStripMenuItem.Name = "labelListToolStripMenuItem";
+            this.labelListToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.labelListToolStripMenuItem.Text = "Label List";
+            this.labelListToolStripMenuItem.Click += new System.EventHandler(this.labelListToolStripMenuItem_Click);
+            // 
+            // importCaptureToolStripMenuItem
+            // 
+            this.importCaptureToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.importTraceLogBinary});
+            this.importCaptureToolStripMenuItem.Name = "importCaptureToolStripMenuItem";
+            this.importCaptureToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.importCaptureToolStripMenuItem.Text = "Live Capture";
+            // 
+            // importTraceLogBinary
+            // 
+            this.importTraceLogBinary.Enabled = false;
+            this.importTraceLogBinary.Name = "importTraceLogBinary";
+            this.importTraceLogBinary.Size = new System.Drawing.Size(207, 22);
+            this.importTraceLogBinary.Text = "BSNESPlus Trace Logging";
+            this.importTraceLogBinary.Click += new System.EventHandler(this.importTraceLogBinary_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -890,13 +979,15 @@
             // 
             // statusStrip1
             // 
+            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.percentComplete,
             this.seperator1,
             this.currentMarker});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 524);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 516);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(717, 22);
+            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 15, 0);
+            this.statusStrip1.Size = new System.Drawing.Size(765, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -919,59 +1010,60 @@
             this.currentMarker.Size = new System.Drawing.Size(110, 17);
             this.currentMarker.Text = "Marker: Data (8-bit)";
             // 
-            // openROMFile
+            // openFileDialog
             // 
-            this.openROMFile.Filter = "SNES ROM Images|*.smc;*.sfc|All files|*.*";
+            this.openFileDialog.Filter = "SNES ROM Images|*.smc;*.sfc|All files|*.*";
             // 
             // openProjectFile
             // 
-            this.openProjectFile.Filter = "DiztinGUIsh Project Files|*.diz|DiztinGUIsh Project Files (Uncompressed)|*.dizraw" +
-    "|All Files|*.*";
+            this.openProjectFile.Filter = "DiztinGUIsh Project Files|*.diz;*.dizraw|All Files|*.*";
             // 
             // saveProjectFile
             // 
-            this.saveProjectFile.Filter = "DiztinGUIsh Project Files|*.diz|DiztinGUIsh Project Files (Uncompressed)|*.dizraw" +
-    "|All Files|*.*";
+            this.saveProjectFile.Filter = "DiztinGUIsh Project Files|*.diz;*.dizraw|All Files|*.*";
             this.saveProjectFile.Title = "New Project.diz";
             // 
             // vScrollBar1
             // 
             this.vScrollBar1.Enabled = false;
-            this.vScrollBar1.Location = new System.Drawing.Point(700, 24);
+            this.vScrollBar1.Location = new System.Drawing.Point(746, 24);
             this.vScrollBar1.Maximum = 32768;
             this.vScrollBar1.Name = "vScrollBar1";
-            this.vScrollBar1.Size = new System.Drawing.Size(17, 500);
+            this.vScrollBar1.Size = new System.Drawing.Size(17, 492);
             this.vScrollBar1.TabIndex = 2;
             this.vScrollBar1.ValueChanged += new System.EventHandler(this.vScrollBar1_ValueChanged);
             // 
-            // saveLogSingleFile
+            // openUsageMapFile
             // 
-            this.saveLogSingleFile.Filter = "Assembly Files|*.asm|All Files|*.*";
+            this.openUsageMapFile.Filter = "bsnes-plus usage map files|*.bin";
             // 
-            // labelListToolStripMenuItem
+            // openTraceLogDialog
             // 
-            this.labelListToolStripMenuItem.Enabled = false;
-            this.labelListToolStripMenuItem.Name = "labelListToolStripMenuItem";
-            this.labelListToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
-            this.labelListToolStripMenuItem.Text = "Label List";
-            this.labelListToolStripMenuItem.Click += new System.EventHandler(this.labelListToolStripMenuItem_Click);
+            this.openTraceLogDialog.Filter = "bsnes-plus trace log|*.log";
             // 
             // openCDLDialog
             // 
             this.openCDLDialog.Filter = "BizHawk Code Data Logger Files|*.cdl|All Files|*.*";
             // 
+            // closeProjectToolStripMenuItem
+            // 
+            this.closeProjectToolStripMenuItem.Name = "closeProjectToolStripMenuItem";
+            this.closeProjectToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
+            this.closeProjectToolStripMenuItem.Text = "Close Project";
+            this.closeProjectToolStripMenuItem.Click += new System.EventHandler(this.closeProjectToolStripMenuItem_Click);
+            // 
             // MainWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(717, 546);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.ClientSize = new System.Drawing.Size(765, 538);
             this.Controls.Add(this.vScrollBar1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.table);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
-            this.MinimumSize = new System.Drawing.Size(733, 200);
+            this.MinimumSize = new System.Drawing.Size(780, 196);
             this.Name = "MainWindow";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "DiztinGUIsh";
@@ -1001,7 +1093,6 @@
         private System.Windows.Forms.ToolStripMenuItem saveProjectAsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exportLogToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem importCDLToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem stepOverToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem stepInToolStripMenuItem;
@@ -1051,7 +1142,7 @@
         private System.Windows.Forms.ToolStripMenuItem viewHelpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripStatusLabel percentComplete;
-        private System.Windows.Forms.OpenFileDialog openROMFile;
+        private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.OpenFileDialog openProjectFile;
         private System.Windows.Forms.SaveFileDialog saveProjectFile;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
@@ -1061,10 +1152,10 @@
         private System.Windows.Forms.ToolStripStatusLabel currentMarker;
         private System.Windows.Forms.ToolStripMenuItem rescanForInOutPointsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem githubToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem importTraceLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gotoNextUnreachedToolStripMenuItem;
-        private System.Windows.Forms.SaveFileDialog saveLogSingleFile;
-        private System.Windows.Forms.FolderBrowserDialog chooseLogFolder;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem moveWithStepToolStripMenuItem;
+        private System.Windows.Forms.OpenFileDialog openUsageMapFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnAlias;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnPC;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnChar;
@@ -1078,10 +1169,19 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnM;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnX;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnComment;
-        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem moveWithStepToolStripMenuItem;
+        public System.Windows.Forms.OpenFileDialog openTraceLogDialog;
         private System.Windows.Forms.ToolStripMenuItem labelListToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog openCDLDialog;
+        private System.Windows.Forms.ToolStripMenuItem toolStripOpenLast;
+        private System.Windows.Forms.ToolStripMenuItem openLastProjectAutomaticallyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem importUsageMapToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importCDLToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
+        private System.Windows.Forms.ToolStripMenuItem importTraceLogText;
+        private System.Windows.Forms.ToolStripMenuItem importCaptureToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importTraceLogBinary;
+        private System.Windows.Forms.ToolStripMenuItem closeProjectToolStripMenuItem;
     }
 }
 

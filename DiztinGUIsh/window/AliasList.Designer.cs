@@ -28,10 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle18 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle16 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle17 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle15 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.Address = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Alias = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -43,6 +43,7 @@
             this.jump = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.btnImportReplace = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -58,14 +59,14 @@
             this.Address,
             this.Alias,
             this.Comment});
-            dataGridViewCellStyle18.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle18.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle18.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle18.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle18.SelectionBackColor = System.Drawing.Color.CornflowerBlue;
-            dataGridViewCellStyle18.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle18.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle18;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.CornflowerBlue;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridView1.Location = new System.Drawing.Point(0, 29);
             this.dataGridView1.Margin = new System.Windows.Forms.Padding(0);
             this.dataGridView1.Name = "dataGridView1";
@@ -88,8 +89,8 @@
             // 
             // Address
             // 
-            dataGridViewCellStyle16.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Address.DefaultCellStyle = dataGridViewCellStyle16;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Address.DefaultCellStyle = dataGridViewCellStyle1;
             this.Address.HeaderText = "PC";
             this.Address.MaxInputLength = 6;
             this.Address.Name = "Address";
@@ -97,8 +98,8 @@
             // 
             // Alias
             // 
-            dataGridViewCellStyle17.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Alias.DefaultCellStyle = dataGridViewCellStyle17;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Alias.DefaultCellStyle = dataGridViewCellStyle2;
             this.Alias.HeaderText = "Label";
             this.Alias.MaxInputLength = 60;
             this.Alias.Name = "Alias";
@@ -106,8 +107,8 @@
             // 
             // Comment
             // 
-            dataGridViewCellStyle15.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Comment.DefaultCellStyle = dataGridViewCellStyle15;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Comment.DefaultCellStyle = dataGridViewCellStyle3;
             this.Comment.HeaderText = "Comment";
             this.Comment.MaxInputLength = 800;
             this.Comment.Name = "Comment";
@@ -118,15 +119,15 @@
             this.import.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.import.Location = new System.Drawing.Point(70, 3);
             this.import.Name = "import";
-            this.import.Size = new System.Drawing.Size(62, 23);
+            this.import.Size = new System.Drawing.Size(116, 23);
             this.import.TabIndex = 1;
-            this.import.Text = "Import...";
+            this.import.Text = "Import (Append) ...";
             this.import.UseVisualStyleBackColor = true;
-            this.import.Click += new System.EventHandler(this.import_Click);
+            this.import.Click += new System.EventHandler(this.importAppend_Click);
             // 
             // export
             // 
-            this.export.Location = new System.Drawing.Point(136, 3);
+            this.export.Location = new System.Drawing.Point(338, 3);
             this.export.Name = "export";
             this.export.Size = new System.Drawing.Size(62, 23);
             this.export.TabIndex = 2;
@@ -167,12 +168,24 @@
             // 
             this.saveFileDialog1.Filter = "Comma Separated Value Files|*.csv|Text Files|*.txt|All Files|*.*";
             // 
+            // btnImportReplace
+            // 
+            this.btnImportReplace.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnImportReplace.Location = new System.Drawing.Point(192, 3);
+            this.btnImportReplace.Name = "btnImportReplace";
+            this.btnImportReplace.Size = new System.Drawing.Size(132, 23);
+            this.btnImportReplace.TabIndex = 5;
+            this.btnImportReplace.Text = "Import (Replace) ...";
+            this.btnImportReplace.UseVisualStyleBackColor = true;
+            this.btnImportReplace.Click += new System.EventHandler(this.btnImportReplace_Click);
+            // 
             // AliasList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.import;
             this.ClientSize = new System.Drawing.Size(402, 364);
+            this.Controls.Add(this.btnImportReplace);
             this.Controls.Add(this.jump);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.export);
@@ -186,7 +199,6 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Label List";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AliasList_FormClosing);
-            this.Load += new System.EventHandler(this.AliasList_Load);
             this.Resize += new System.EventHandler(this.AliasList_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.statusStrip1.ResumeLayout(false);
@@ -209,5 +221,6 @@
         private System.Windows.Forms.Button jump;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.Button btnImportReplace;
     }
 }

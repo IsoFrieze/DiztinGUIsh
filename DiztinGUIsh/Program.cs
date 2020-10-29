@@ -1,24 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using DiztinGUIsh.window;
 
 namespace DiztinGUIsh
 {
-    static class Program
+    internal static class Program
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
+        
         [STAThread]
         static void Main(string[] args)
         {
+            var openFile = "";
+            if (args.Length > 0)
+                openFile = args[0];
+            
+            RunNormally(openFile);
+        }
+
+        private static void RunNormally(string openFile = "")
+        {
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                SetProcessDPIAware();
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            MainWindow window = new MainWindow();
+            var window = new MainWindow();
 
-            if (args.Length > 0) window.openProject(args[0]);
+            if (openFile != "")
+                window.ProjectController.OpenProject("");
 
             Application.Run(window);
         }
