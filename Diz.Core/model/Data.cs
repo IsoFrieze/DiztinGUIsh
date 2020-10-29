@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,8 @@ namespace Diz.Core.model
 {
     public partial class Data : DizDataModel
     {
-        private readonly Cpu65C816 cpu65C816; // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something
+        // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something that operates on Data
+        private readonly Cpu65C816 cpu65C816;
 
         public Data()
         {
@@ -38,8 +40,8 @@ namespace Diz.Core.model
 
         private byte[] GetRomBytes(int pcOffset, int count)
         {
-            byte[] output = new byte[count];
-            for (int i = 0; i < output.Length; i++)
+            var output = new byte[count];
+            for (var i = 0; i < output.Length; i++)
                 output[i] = (byte)GetRomByte(ConvertSnesToPc(pcOffset + i));
 
             return output;
@@ -75,7 +77,7 @@ namespace Diz.Core.model
         public FlagType GetFlag(int i) => RomBytes[i].TypeFlag;
         public void SetFlag(int i, FlagType flag) => RomBytes[i].TypeFlag = flag;
         public Architecture GetArchitecture(int i) => RomBytes[i].Arch;
-        public void SetArchitechture(int i, Architecture arch) => RomBytes[i].Arch = arch;
+        public void SetArchitecture(int i, Architecture arch) => RomBytes[i].Arch = arch;
         public InOutPoint GetInOutPoint(int i) => RomBytes[i].Point;
         public void SetInOutPoint(int i, InOutPoint point) => RomBytes[i].Point |= point;
         public void ClearInOutPoint(int i) => RomBytes[i].Point = 0;
@@ -401,47 +403,21 @@ namespace Diz.Core.model
             return newOffset;
         }
 
-        public int Mark(int offset, FlagType type, int count)
+        public int Mark(Action<int> MarkAction, int offset, int count)
         {
             int i, size = GetRomSize();
-            for (i = 0; i < count && offset + i < size; i++) SetFlag(offset + i, type);
+            for (i = 0; i < count && offset + i < size; i++) 
+                MarkAction(offset + i);
+            
             return offset + i < size ? offset + i : size - 1;
         }
 
-        public int MarkDataBank(int offset, int db, int count)
-        {
-            int i, size = GetRomSize();
-            for (i = 0; i < count && offset + i < size; i++) SetDataBank(offset + i, db);
-            return offset + i < size ? offset + i : size - 1;
-        }
-
-        public int MarkDirectPage(int offset, int dp, int count)
-        {
-            int i, size = GetRomSize();
-            for (i = 0; i < count && offset + i < size; i++) SetDirectPage(offset + i, dp);
-            return offset + i < size ? offset + i : size - 1;
-        }
-
-        public int MarkXFlag(int offset, bool x, int count)
-        {
-            int i, size = GetRomSize();
-            for (i = 0; i < count && offset + i < size; i++) SetXFlag(offset + i, x);
-            return offset + i < size ? offset + i : size - 1;
-        }
-
-        public int MarkMFlag(int offset, bool m, int count)
-        {
-            int i, size = GetRomSize();
-            for (i = 0; i < count && offset + i < size; i++) SetMFlag(offset + i, m);
-            return offset + i < size ? offset + i : size - 1;
-        }
-
-        public int MarkArchitechture(int offset, Architecture arch, int count)
-        {
-            int i, size = GetRomSize();
-            for (i = 0; i < count && offset + i < size; i++) SetArchitechture(offset + i, arch);
-            return offset + i < size ? offset + i : size - 1;
-        }
+        public int MarkTypeFlag(int offset, FlagType type, int count) => Mark(i => SetFlag(i, type), offset, count);
+        public int MarkDataBank(int offset, int db, int count) => Mark(i => SetDataBank(i, db), offset, count);
+        public int MarkDirectPage(int offset, int dp, int count) => Mark(i => SetDirectPage(i, dp), offset, count);
+        public int MarkXFlag(int offset, bool x, int count) => Mark(i => SetXFlag(i, x), offset, count);
+        public int MarkMFlag(int offset, bool m, int count) => Mark(i => SetMFlag(i, m), offset, count);
+        public int MarkArchitecture(int offset, Architecture arch, int count) => Mark(i => SetArchitecture(i, arch), offset, count);
 
         public int GetInstructionLength(int offset)
         {
@@ -566,7 +542,7 @@ namespace Diz.Core.model
         }
 
         // get the actual ROM file bytes (i.e. the contents of the SMC file on the disk)
-        // note: don't save these anywhere because the data is copyrighted.
+        // note: don't save these anywhere permanent because ROM data is usually copyrighted.
         public IEnumerable<byte> GetFileBytes()
         {
             return RomBytes.Select(b => b.Rom);
