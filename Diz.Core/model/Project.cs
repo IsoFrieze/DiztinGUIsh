@@ -7,14 +7,18 @@ namespace Diz.Core.model
 {
     public class Project : DizDataModel
     {
-        // Any public properties will be automatically serialized to XML.
-        // They require a get AND set. Order is important.
+        // Any public properties will be automatically serialized to XML unless noted.
+        // They will require a get AND set.
+        // Order is important.
+
+        // not saved in XML
         public string ProjectFileName
         {
             get => projectFileName;
             set => SetField(ref projectFileName, value);
         }
 
+        // not saved in XML
         public string AttachedRomFilename
         {
             get => attachedRomFilename;
@@ -81,7 +85,7 @@ namespace Diz.Core.model
             LogWriterSettings.SetDefaults();
         }
 
-
+        // don't access these backing fields directly, instead, always use the properties
         private string projectFileName;
         private string attachedRomFilename;
         private bool unsavedChanges;
