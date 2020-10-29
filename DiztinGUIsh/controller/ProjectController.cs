@@ -49,7 +49,8 @@ namespace DiztinGUIsh.controller
                 Invalid,
                 Saved,
                 Opened,
-                Imported
+                Imported,
+                Closing
             }
 
             public ProjectChangedType ChangeType;
@@ -157,6 +158,8 @@ namespace DiztinGUIsh.controller
             var importSettings = importController.PromptUserForRomSettings(romFilename);
             if (importSettings == null)
                 return false;
+            
+            CloseProject();
 
             // actually do the import
             ImportRomAndCreateNewProject(importSettings);
@@ -227,6 +230,10 @@ namespace DiztinGUIsh.controller
         {
             var importer = new BsnesTraceLogImporter(Project.Data);
 
+            // TODO: differentiate between binary-formatted and text-formatted files
+            // probably look for a newline within 80 characters
+            // call importer.ImportTraceLogLineBinary()
+
             // caution: trace logs can be gigantic, even a few seconds can be > 1GB
             // inside here, performance becomes critical.
             LargeFilesReader.ReadFilesLines(fileNames,
@@ -259,6 +266,19 @@ namespace DiztinGUIsh.controller
             }
 
             return importer.CurrentStats.NumRomBytesModified;
+        }
+
+        public void CloseProject()
+        {
+            if (Project == null)
+                return;
+
+            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs()
+            {
+                ChangeType = ProjectChangedEventArgs.ProjectChangedType.Closing
+            });
+
+            Project = null;
         }
     }
 }
