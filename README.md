@@ -1,4 +1,5 @@
 # DiztinGUIsh
+[![Build status](https://ci.appveyor.com/api/projects/status/kempt97c11k5sor2?svg=true)](https://ci.appveyor.com/project/binary1230/diztinguish)
 
 A Super NES ROM Disassembler.
 
