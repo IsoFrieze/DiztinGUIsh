@@ -14,7 +14,7 @@ build:
   verbosity: minimal
 
 after_build:
-- ps: create-final-zip.ps1
+- create-final-zip.bat
   
 artifacts:
 - path: diztinguish.zip
