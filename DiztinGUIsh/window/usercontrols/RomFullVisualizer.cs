@@ -13,6 +13,8 @@ namespace DiztinGUIsh.window.usercontrols
     {
         private Project project;
         public Data Data => project?.Data;
+
+        private ControlCollection FormControls => flowLayoutPanel1.Controls;
         public Project Project
         {
             get => project;
@@ -27,10 +29,11 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void DeleteControls()
         {
-            foreach (var rbv in BankControls.Where(rbv => Controls.Contains(rbv)))
+            foreach (var rbv in BankControls.Where(rbv => FormControls.Contains(rbv)))
             {
-                Controls.Remove(rbv);
+                FormControls.Remove(rbv);
             }
+            BankControls.Clear();
         }
 
         public RomFullVisualizer()

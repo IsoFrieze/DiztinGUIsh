@@ -9,23 +9,29 @@ namespace DiztinGUIsh.window.usercontrols
 {
     public partial class RomImage : UserControl
     {
-        public RomVisual RomVisual { get; } = new RomVisual();
-
+        public RomVisual RomVisual { get; protected set; } = new RomVisual();
         public Project Project
         {
             get => RomVisual.Project;
-            set => RomVisual.Project = value;
+            set
+            {
+                RomVisual = new RomVisual
+                {
+                    Project = value
+                };
+                
+                // if there's a reason to track ROM byte changes, hook in here
+                // romVisual.MarkedDirty += RomVisual_MarkedDirty;
+            }
         }
 
         public RomImage()
         {
             InitializeComponent();
         }
+
         private void RomImage_Load(object sender, System.EventArgs e)
         {
-            // if there's a reason to track ROM byte changes, hook in here
-            // romVisual.MarkedDirty += RomVisual_MarkedDirty;
-
             UpdateDimensions();
         }
 

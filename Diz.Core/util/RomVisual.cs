@@ -22,12 +22,20 @@ namespace Diz.Core.util
             set
             {
                 if (ReferenceEquals(project, value)) return;
-                project = value;
-                if (project?.Data == null) return;
-                project.Data.RomBytes.PropertyChanged += RomBytes_PropertyChanged;
-                project.Data.RomBytes.CollectionChanged += RomBytes_CollectionChanged;
-                // InvalidateImage();
+                SwitchProject(value);
             }
+        }
+
+        private void SwitchProject(Project value)
+        {
+            bitmap = null;
+
+            project = value;
+            if (project?.Data == null) 
+                return;
+
+            project.Data.RomBytes.PropertyChanged += RomBytes_PropertyChanged;
+            project.Data.RomBytes.CollectionChanged += RomBytes_CollectionChanged;
         }
 
         public bool IsDirty
