@@ -1,24 +1,11 @@
-# DiztinGUIsh-FORK1
-
-Note from fork author binary1230:
-This is a fork of DiztinGUIsh https://github.com/Dotsarecool/DiztinGUIsh which adds some bells and whistles like:
-- UX improvements (progress bars, easier GoTo search, open last project automatically, etc)
-- Attach comments to labels themselves for documentation
-- Integration and extension of functionality from @Gocha's fork: https://github.com/gocha/DiztinGUIsh for support for BSNESplus trace logs and usage maps. HIGHLY RECOMMEND if you're doing any serious disassembly work, it's super-useful.
-- Various other small fixes/improvements
-
-Works fine with stock asar though, there's a bugfix you may want:
-- https://github.com/binary1230/asar/tree/fix_relative_addressing/src/asar
-
-See discussion about the future of this fork here:
-- https://github.com/Dotsarecool/DiztinGUIsh/issues/16
-- I hope to include all of the changes from this fork back upstream, but, maintaining this fork for the moment.
-
-# DiztinGUIsh original documentation follows
+# DiztinGUIsh
 
 A Super NES ROM Disassembler.
 
 "Distinguish" but with a 'z' because it's rad. It's also a GUI application so might as well highlight that fact.
+
+NOTE: Works fine with stock asar though, there's a bugfix you may want:
+- https://github.com/binary1230/asar/tree/fix_relative_addressing/src/asar
 
 ## Doesn't this already exist?
 
