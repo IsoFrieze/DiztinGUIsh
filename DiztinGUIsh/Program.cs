@@ -31,7 +31,7 @@ namespace DiztinGUIsh
             var window = new MainWindow();
 
             if (openFile != "")
-                window.OpenProject("");
+                window.ProjectController.OpenProject("");
 
             Application.Run(window);
         }

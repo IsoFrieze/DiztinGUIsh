@@ -79,7 +79,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             for (int i = 0; i < size; i++) project.Data.SetXFlag(i, data[pointer + 3 * size + i] != 0);
             for (int i = 0; i < size; i++) project.Data.SetMFlag(i, data[pointer + 4 * size + i] != 0);
             for (int i = 0; i < size; i++) project.Data.SetFlag(i, (Data.FlagType)data[pointer + 5 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetArchitechture(i, (Data.Architecture)data[pointer + 6 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetArchitecture(i, (Data.Architecture)data[pointer + 6 * size + i]);
             for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (Data.InOutPoint)data[pointer + 7 * size + i]);
             pointer += 8 * size;
 

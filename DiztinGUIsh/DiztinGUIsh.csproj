@@ -227,6 +227,23 @@
     <Compile Include="window\AliasList.Designer.cs">
       <DependentUpon>AliasList.cs</DependentUpon>
     </Compile>
+    <Compile Include="window\DizDocument.cs" />
+    <Compile Include="window\MainWindow.Actions.cs" />
+    <Compile Include="window\MainWindow.Importers.cs" />
+    <Compile Include="window\MainWindow.MainTable.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="window\MainWindow.Properties.cs" />
+    <Compile Include="window\MainWindow.ReadOnlyHelpers.cs" />
+    <Compile Include="window\MainWindow.SimpleUI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="window\MainWindow.Prompts.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="window\MainWindow.StateUpdate.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="window\usercontrols\BankLegend.cs">
       <SubType>UserControl</SubType>
     </Compile>

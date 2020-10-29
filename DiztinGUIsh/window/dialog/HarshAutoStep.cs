@@ -9,51 +9,42 @@ namespace DiztinGUIsh
 {
     public partial class HarshAutoStep : Form
     {
-        private int start, end, count;
-
+        public int Start { get; private set; }
+        public int End { get; private set; }
+        public int Count { get; private set; }
+        
         private readonly Data data;
+        private bool updatingText;
 
         public HarshAutoStep(int offset, Data data)
         {
-            Debug.Assert(this.data!=null);
+            Debug.Assert(data != null);
             this.data = data;
 
             InitializeComponent();
 
-            start = offset;
-            var rest = data.GetRomSize() - start;
-            count = rest < 0x100 ? rest : 0x100;
-            end = start + count;
+            Start = offset;
+            var rest = data.GetRomSize() - Start;
+            Count = rest < 0x100 ? rest : 0x100;
+            End = Start + Count;
 
             UpdateText(null);
         }
 
-        public int GetOffset()
-        {
-            return start;
-        }
-
-        public int GetCount()
-        {
-            return count;
-        }
-
-        private bool updatingText;
-
         private void UpdateText(TextBox selected)
         {
-            Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-            int digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
+            var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
+            var digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
 
-            if (start < 0) start = 0;
-            if (end >= data.GetRomSize()) end = data.GetRomSize() - 1;
-            count = end - start;
-            if (count < 0) count = 0;
+            if (Start < 0) Start = 0;
+            if (End >= data.GetRomSize()) End = data.GetRomSize() - 1;
+            Count = End - Start;
+            if (Count < 0) Count = 0;
 
             updatingText = true;
-            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioROM.Checked ? data.ConvertPCtoSnes(start) : start, noBase, digits);
-            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? data.ConvertPCtoSnes(end) : end, noBase, digits);
-            if (selected != textCount) textCount.Text = Util.NumberToBaseString(count, noBase, 0);
+            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioROM.Checked ? data.ConvertPCtoSnes(Start) : Start, noBase, digits);
+            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? data.ConvertPCtoSnes(End) : End, noBase, digits);
+            if (selected != textCount) textCount.Text = Util.NumberToBaseString(Count, noBase, 0);
             updatingText = false;
         }
 
@@ -69,68 +60,59 @@ namespace DiztinGUIsh
 
         private void textCount_TextChanged(object sender, EventArgs e)
         {
-            if (!updatingText)
+            OnTextChanged(textCount, value =>
             {
-                updatingText = true;
-                var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-
-                if (int.TryParse(textCount.Text, style, null, out var result))
-                {
-                    count = result;
-                    end = start + count;
-                }
-
-                UpdateText(textCount);
-            }
+                Count = value;
+                End = Start + Count;
+            });
         }
 
         private void textEnd_TextChanged(object sender, EventArgs e)
         {
-            if (updatingText) 
-                return;
-
-            updatingText = true;
-            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-
-            if (int.TryParse(textEnd.Text, style, null, out var result))
+            OnTextChanged(textEnd, value =>
             {
-                if (radioROM.Checked) 
-                    result = data.ConvertSnesToPc(result);
+                if (radioROM.Checked)
+                    value = data.ConvertSnesToPc(value);
 
-                end = result;
-                count = end - start;
-            }
-
-            UpdateText(textEnd);
+                End = value;
+                Count = End - Start;
+            });
         }
 
         private void textStart_TextChanged(object sender, EventArgs e)
         {
-            if (updatingText) 
+            OnTextChanged(textStart, value =>
+            {
+                if (radioROM.Checked)
+                    value = data.ConvertSnesToPc(value);
+
+                Start = value;
+                Count = End - Start;
+            });
+        }
+
+        private void OnTextChanged(TextBox textBox, Action<int> OnResult)
+        {
+            if (updatingText)
                 return;
 
             updatingText = true;
             var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
-            if (int.TryParse(textStart.Text, style, null, out var result))
-            {
-                if (radioROM.Checked) 
-                    result = data.ConvertSnesToPc(result);
-                start = result;
-                count = end - start;
-            }
+            if (int.TryParse(textBox.Text, style, null, out var result))
+                OnResult(result);
 
-            UpdateText(textStart);
+            UpdateText(textBox);
         }
 
         private void go_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.OK;
+            DialogResult = DialogResult.OK;
         }
 
         private void cancel_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
     }
 }

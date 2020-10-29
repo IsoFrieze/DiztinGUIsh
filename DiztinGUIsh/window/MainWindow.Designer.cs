@@ -124,6 +124,8 @@
             this.moveWithStepToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openLastProjectAutomaticallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.labelListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importCaptureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importTraceLogBinary = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewHelpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.githubToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -139,8 +141,7 @@
             this.openUsageMapFile = new System.Windows.Forms.OpenFileDialog();
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
-            this.importCaptureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importTraceLogBinary = new System.Windows.Forms.ToolStripMenuItem();
+            this.closeProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -374,6 +375,7 @@
             this.newProjectToolStripMenuItem,
             this.openProjectToolStripMenuItem,
             this.toolStripOpenLast,
+            this.closeProjectToolStripMenuItem,
             this.saveProjectToolStripMenuItem,
             this.saveProjectAsToolStripMenuItem,
             this.toolStripSeparator1,
@@ -471,7 +473,7 @@
             this.importTraceLogText.Name = "importTraceLogText";
             this.importTraceLogText.Size = new System.Drawing.Size(218, 22);
             this.importTraceLogText.Text = "Import BSNES Trace Log...";
-            this.importTraceLogText.Click += new System.EventHandler(this.toolStripMenuItem3_Click);
+            this.importTraceLogText.Click += new System.EventHandler(this.importBsnesTracelogText_Click);
             // 
             // exportLogToolStripMenuItem
             // 
@@ -927,6 +929,22 @@
             this.labelListToolStripMenuItem.Text = "Label List";
             this.labelListToolStripMenuItem.Click += new System.EventHandler(this.labelListToolStripMenuItem_Click);
             // 
+            // importCaptureToolStripMenuItem
+            // 
+            this.importCaptureToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.importTraceLogBinary});
+            this.importCaptureToolStripMenuItem.Name = "importCaptureToolStripMenuItem";
+            this.importCaptureToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.importCaptureToolStripMenuItem.Text = "Live Capture";
+            // 
+            // importTraceLogBinary
+            // 
+            this.importTraceLogBinary.Enabled = false;
+            this.importTraceLogBinary.Name = "importTraceLogBinary";
+            this.importTraceLogBinary.Size = new System.Drawing.Size(207, 22);
+            this.importTraceLogBinary.Text = "BSNESPlus Trace Logging";
+            this.importTraceLogBinary.Click += new System.EventHandler(this.importTraceLogBinary_Click);
+            // 
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1027,21 +1045,12 @@
             // 
             this.openCDLDialog.Filter = "BizHawk Code Data Logger Files|*.cdl|All Files|*.*";
             // 
-            // importCaptureToolStripMenuItem
+            // closeProjectToolStripMenuItem
             // 
-            this.importCaptureToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.importTraceLogBinary});
-            this.importCaptureToolStripMenuItem.Name = "importCaptureToolStripMenuItem";
-            this.importCaptureToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
-            this.importCaptureToolStripMenuItem.Text = "Live Capture";
-            // 
-            // importTraceLogBinary
-            // 
-            this.importTraceLogBinary.Enabled = false;
-            this.importTraceLogBinary.Name = "importTraceLogBinary";
-            this.importTraceLogBinary.Size = new System.Drawing.Size(207, 22);
-            this.importTraceLogBinary.Text = "BSNESPlus Trace Logging";
-            this.importTraceLogBinary.Click += new System.EventHandler(this.importTraceLogBinary_Click);
+            this.closeProjectToolStripMenuItem.Name = "closeProjectToolStripMenuItem";
+            this.closeProjectToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
+            this.closeProjectToolStripMenuItem.Text = "Close Project";
+            this.closeProjectToolStripMenuItem.Click += new System.EventHandler(this.closeProjectToolStripMenuItem_Click);
             // 
             // MainWindow
             // 
@@ -1172,6 +1181,7 @@
         private System.Windows.Forms.ToolStripMenuItem importTraceLogText;
         private System.Windows.Forms.ToolStripMenuItem importCaptureToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importTraceLogBinary;
+        private System.Windows.Forms.ToolStripMenuItem closeProjectToolStripMenuItem;
     }
 }
 

@@ -91,7 +91,7 @@ namespace Diz.Core.import
                     type = Data.FlagType.Data8Bit;
                 else if ((cdlFlag & BizHawkCdlImporter.Flag.DmaData) != 0)
                     type = Data.FlagType.Data8Bit;
-                data.Mark(offset, type, 1);
+                data.MarkTypeFlag(offset, type, 1);
 
                 if (type != Data.FlagType.Opcode && type != Data.FlagType.Operand) 
                     continue;
