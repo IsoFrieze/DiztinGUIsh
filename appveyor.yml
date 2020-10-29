@@ -4,12 +4,12 @@ before_build:
 - nuget restore
 
 after_build:
-  - ps: create-final-zip.ps1
+- ps: create-final-zip.ps1
 
 build:
   project: DiztinGUIsh.sln
   verbosity: minimal
   
 artifacts:
-  - path: diztinguish.zip
-    name: DiztinGUIsh
+- path: diztinguish.zip
+  name: DiztinGUIsh
