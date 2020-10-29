@@ -1,15 +1,31 @@
 image: Visual Studio 2019
 
+configuration: Release
+
+cache:
+- packages -> **\packages.config  # preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
+- '%LocalAppData%\NuGet\v3-cache' # NuGet v3
+
 before_build:
 - nuget restore
-
-after_build:
-- ps: create-final-zip.ps1
 
 build:
   project: DiztinGUIsh.sln
   verbosity: minimal
+
+after_build:
+- ps: create-final-zip.ps1
   
 artifacts:
 - path: diztinguish.zip
   name: DiztinGUIsh
+
+# Deploy to GitHub Releases
+deploy:
+- provider: GitHub
+  artifact: diztinguish.zip           # upload all NuGet packages to release assets
+  draft: false
+  prerelease: true
+  on:
+    branch: master                # release from master branch only
+    APPVEYOR_REPO_TAG: true       # deploy on tag push only
