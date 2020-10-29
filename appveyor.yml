@@ -17,7 +17,7 @@ after_build:
 - create-final-zip.bat
   
 artifacts:
-- path: diztinguish.zip
+- path: DiztinGUIsh\bin\Release\
   name: DiztinGUIsh
 
 # Deploy to GitHub Releases
