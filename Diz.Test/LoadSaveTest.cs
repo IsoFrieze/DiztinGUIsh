@@ -59,7 +59,7 @@ namespace Diz.Test
             var s = Stopwatch.StartNew();
             s.Start();
             
-            var openFile = "D:\\projects\\cthack\\src\\rom\\Chrono Trigger - CTHACKv3 - master copy.xml.dizraw";
+            var openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST.dizraw";
             var project = OpenProject(openFile);
 
             s.Stop();
@@ -71,7 +71,7 @@ namespace Diz.Test
         [Fact(Skip = "Performance Test")]
         private void SaveFilePerformanceTest()
         {
-            var openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST";
+            var openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST.dizraw";
             var project = OpenProject(openFile);
             
             var s = Stopwatch.StartNew();
