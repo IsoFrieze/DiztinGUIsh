@@ -1,4 +1,4 @@
-# DiztinGUIsh original documentation follows
+# DiztinGUIsh
 
 A Super NES ROM Disassembler.
 
