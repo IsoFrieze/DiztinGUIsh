@@ -24,7 +24,7 @@ deploy:
 - provider: GitHub
   auth_token:
     secure: H/F8/J5vKZm7RssnY3ZR4i0mk/3mxQ+6RqNF1lYCtrhMQgMSiBbzO5MaVAZD0dXt
-  artifact: diztinguish.zip
+  artifact: DiztinGUIsh\bin\DiztinGUIsh.zip
   draft: false
   prerelease: true
   on:
