@@ -20,12 +20,13 @@ artifacts:
 - path: DiztinGUIsh\bin\Release\
   name: DiztinGUIsh
 
-# Deploy to GitHub Releases
 deploy:
 - provider: GitHub
-  artifact: diztinguish.zip           # upload all NuGet packages to release assets
+  auth_token:
+    secure: H/F8/J5vKZm7RssnY3ZR4i0mk/3mxQ+6RqNF1lYCtrhMQgMSiBbzO5MaVAZD0dXt
+  artifact: diztinguish.zip
   draft: false
   prerelease: true
   on:
-    branch: master                # release from master branch only
+    branch: master
     APPVEYOR_REPO_TAG: true       # deploy on tag push only
