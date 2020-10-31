@@ -27,7 +27,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>1</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion> <!-- todo:replace with a GitInfo (Nuget package) property to give us the real version# -->
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -216,13 +216,21 @@
       <DependentUpon>AliasList.cs</DependentUpon>
     </Compile>
     <Compile Include="window\DizDocument.cs" />
-    <Compile Include="window\MainWindow.Actions.cs" />
-    <Compile Include="window\MainWindow.Importers.cs" />
+    <Compile Include="window\MainWindow.Actions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="window\MainWindow.Importers.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="window\MainWindow.MainTable.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="window\MainWindow.Properties.cs" />
-    <Compile Include="window\MainWindow.ReadOnlyHelpers.cs" />
+    <Compile Include="window\MainWindow.Properties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="window\MainWindow.ReadOnlyHelpers.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="window\MainWindow.SimpleUI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -353,7 +361,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="DiztinGUIsh_TemporaryKey.pfx" />
+    <None Include="build\FinalizeBuildDirectory.targets" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -394,7 +402,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="dist" />
+    <Folder Include="dist\" />
     <Folder Include="Properties\DataSources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -405,4 +413,5 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\GitInfo.2.1.2\build\GitInfo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\GitInfo.2.1.2\build\GitInfo.targets'))" />
   </Target>
+  <Import Project="build\FinalizeBuildDirectory.targets"/>
 </Project>
