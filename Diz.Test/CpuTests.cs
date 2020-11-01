@@ -77,7 +77,7 @@ namespace Diz.Test
             Assert.Equal(0x7E2116, data.GetIntermediateAddressOrPointer(0));
         }
 
-        [Fact]
+        [Fact(Skip = "Relies on external tool that isn't yet setup")]
         public static void RunTestRom()
         {
             // C# ROM -> Assembly Text 
