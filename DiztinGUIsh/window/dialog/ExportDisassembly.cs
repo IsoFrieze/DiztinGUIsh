@@ -32,7 +32,7 @@ namespace DiztinGUIsh
             this.project = project;
             settings = project.LogWriterSettings; // copy
 
-            if (settings.Validate() != "")
+            if (settings.Validate() != null)
                 settings.SetDefaults();
 
             InitializeComponent();
