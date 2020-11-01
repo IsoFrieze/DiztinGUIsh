@@ -27,7 +27,8 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>1</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion> <!-- todo:replace with a GitInfo (Nuget package) property to give us the real version# -->
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <!-- todo:replace with a GitInfo (Nuget package) property to give us the real version# -->
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -240,34 +241,34 @@
     <Compile Include="window\MainWindow.StateUpdate.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="window\usercontrols\BankLegend.cs">
+    <Compile Include="window\usercontrols\visualizer\legend\BankLegend.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="window\usercontrols\BankLegend.Designer.cs">
+    <Compile Include="window\usercontrols\visualizer\legend\BankLegend.Designer.cs">
       <DependentUpon>BankLegend.cs</DependentUpon>
     </Compile>
-    <Compile Include="window\usercontrols\BankLegendItem.cs">
+    <Compile Include="window\usercontrols\visualizer\legend\BankLegendItem.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="window\usercontrols\BankLegendItem.Designer.cs">
+    <Compile Include="window\usercontrols\visualizer\legend\BankLegendItem.Designer.cs">
       <DependentUpon>BankLegendItem.cs</DependentUpon>
     </Compile>
-    <Compile Include="window\usercontrols\RomBankVisualizer.cs">
+    <Compile Include="window\usercontrols\visualizer\graphics\RomBankVisualizer.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="window\usercontrols\RomBankVisualizer.Designer.cs">
+    <Compile Include="window\usercontrols\visualizer\graphics\RomBankVisualizer.Designer.cs">
       <DependentUpon>RomBankVisualizer.cs</DependentUpon>
     </Compile>
-    <Compile Include="window\usercontrols\RomFullVisualizer.cs">
+    <Compile Include="window\usercontrols\visualizer\graphics\RomFullVisualizer.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="window\usercontrols\RomFullVisualizer.Designer.cs">
+    <Compile Include="window\usercontrols\visualizer\graphics\RomFullVisualizer.Designer.cs">
       <DependentUpon>RomFullVisualizer.cs</DependentUpon>
     </Compile>
-    <Compile Include="window\usercontrols\RomImage.cs">
+    <Compile Include="window\usercontrols\visualizer\graphics\RomImage.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="window\usercontrols\RomImage.Designer.cs">
+    <Compile Include="window\usercontrols\visualizer\graphics\RomImage.Designer.cs">
       <DependentUpon>RomImage.cs</DependentUpon>
     </Compile>
     <Compile Include="window\VisualizerForm.cs">
@@ -323,19 +324,19 @@
     <EmbeddedResource Include="window\dialog\InOutPointChecker.resx">
       <DependentUpon>InOutPointChecker.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="window\usercontrols\BankLegend.resx">
+    <EmbeddedResource Include="window\usercontrols\visualizer\legend\BankLegend.resx">
       <DependentUpon>BankLegend.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="window\usercontrols\BankLegendItem.resx">
+    <EmbeddedResource Include="window\usercontrols\visualizer\legend\BankLegendItem.resx">
       <DependentUpon>BankLegendItem.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="window\usercontrols\RomBankVisualizer.resx">
+    <EmbeddedResource Include="window\usercontrols\visualizer\graphics\RomBankVisualizer.resx">
       <DependentUpon>RomBankVisualizer.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="window\usercontrols\RomFullVisualizer.resx">
+    <EmbeddedResource Include="window\usercontrols\visualizer\graphics\RomFullVisualizer.resx">
       <DependentUpon>RomFullVisualizer.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="window\usercontrols\RomImage.resx">
+    <EmbeddedResource Include="window\usercontrols\visualizer\graphics\RomImage.resx">
       <DependentUpon>RomImage.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="window\VisualizerForm.resx">
@@ -413,5 +414,5 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\GitInfo.2.1.2\build\GitInfo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\GitInfo.2.1.2\build\GitInfo.targets'))" />
   </Target>
-  <Import Project="build\FinalizeBuildDirectory.targets"/>
+  <Import Project="build\FinalizeBuildDirectory.targets" />
 </Project>
