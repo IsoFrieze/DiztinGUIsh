@@ -142,7 +142,14 @@ namespace Diz.Core.model
             }
         }
 
-        public string GetComment(int i) => Comments.TryGetValue(i, out var val) ? val : "";
+        public string GetComment(int i)
+        {
+            if (Comments.TryGetValue(i, out var val))
+                return val;
+
+            return GetLabelComment(i) ?? "";
+        }
+
         public void AddComment(int i, string v, bool overwrite)
         {
             if (v == null)
