@@ -10,9 +10,9 @@ namespace Diz.Core.model
         // other objects can subscribe to modification notifications
         private RomMapMode romMapMode;
         private RomSpeed romSpeed = RomSpeed.Unknown;
-        private ObservableDictionary<int, string> comments = new ObservableDictionary<int, string>();
-        private ObservableDictionary<int, Label> labels = new ObservableDictionary<int, Label>();
-        private RomBytes romBytes = new RomBytes();
+        private ObservableDictionary<int, string> comments;
+        private ObservableDictionary<int, Label> labels;
+        private RomBytes romBytes;
 
         // Note: order of these public properties matters for the load/save process. Keep 'RomBytes' LAST
         // TODO: should be a way in the XML serializer to control the order, remove this comment

@@ -28,7 +28,7 @@ namespace Diz.Core.export
 
 
         // DONT use directly [except to setup the caching]
-        protected static Dictionary<string, Tuple<MethodInfo, int>> parametersCache;
+        private static Dictionary<string, Tuple<MethodInfo, int>> _parametersCache;
 
         // SAFE to use directly.
         protected static Dictionary<string, Tuple<MethodInfo, int>> Parameters
@@ -36,16 +36,16 @@ namespace Diz.Core.export
             get
             {
                 CacheAssemblerAttributeInfo();
-                return parametersCache;
+                return _parametersCache;
             }
         }
 
         protected static void CacheAssemblerAttributeInfo()
         {
-            if (parametersCache != null)
+            if (_parametersCache != null)
                 return;
 
-            parametersCache = new Dictionary<string, Tuple<MethodInfo, int>>();
+            _parametersCache = new Dictionary<string, Tuple<MethodInfo, int>>();
 
             var methodsWithAttributes = typeof(LogCreator)
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
@@ -70,10 +70,10 @@ namespace Diz.Core.export
 
                 Debug.Assert(method.ReturnType == typeof(string));
 
-                parametersCache.Add(token, (new Tuple<MethodInfo, int>(method, length)));
+                _parametersCache.Add(token, (new Tuple<MethodInfo, int>(method, length)));
             }
 
-            Debug.Assert(parametersCache.Count != 0);
+            Debug.Assert(_parametersCache.Count != 0);
         }
 
         protected string GetParameter(int offset, string parameter, int length)
@@ -166,8 +166,7 @@ namespace Diz.Core.export
                     return false;
 
                 // not valid if parameter isn't an integer
-                int oof;
-                if (indexOfColon >= 0 && !int.TryParse(tokens[i].Substring(indexOfColon + 1), out oof)) 
+                if (indexOfColon >= 0 && !int.TryParse(tokens[i].Substring(indexOfColon + 1), out _)) 
                     return false;
             }
 

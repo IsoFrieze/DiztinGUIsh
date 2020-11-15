@@ -145,7 +145,7 @@ namespace Diz.Core.arch
             AddressMode mode = GetAddressMode(offset);
             string format = GetInstructionFormatString(offset);
             string mnemonic = GetMnemonic(offset);
-            string op1 = "", op2 = "";
+            string op1, op2 = "";
             if (mode == AddressMode.BlockMove)
             {
                 op1 = Util.NumberToBaseString(data.GetRomByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);

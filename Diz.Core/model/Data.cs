@@ -6,6 +6,7 @@ using System.Text;
 using Diz.Core.arch;
 using Diz.Core.util;
 using DiztinGUIsh;
+using IX.Observable;
 
 namespace Diz.Core.model
 {
@@ -16,6 +17,9 @@ namespace Diz.Core.model
 
         public Data()
         {
+            comments = new ObservableDictionary<int, string>();
+            labels = new ObservableDictionary<int, Label>();
+            romBytes = new RomBytes();
             cpu65C816 = new Cpu65C816(this);
         }
 

@@ -11,11 +11,11 @@ namespace Diz.Core.model
     {
         private ObservableCollection<RomByte> bytes;
 
-        // TODO: might be able to do something more generic now that other refactorings are completed.
-        //
+        // TODO: might be able to do something more generic for RomBytes now that other refactorings are completed.
         // This class needs to do these things that are special:
         // 1) Be handled specially by our custom XML serializer (compresses to save disk space)
         // 2) Handle Equals() by comparing each element in the list (SequenceEqual)
+        // 3) Emit notifypropertychanged if any members change
         private ObservableCollection<RomByte> Bytes
         {
             get => bytes;
