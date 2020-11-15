@@ -5,9 +5,8 @@ namespace Diz.Core.import
 {
     public class BsnesUsageMapImporter
     {
-        // TODO: move BsnesPlusUsage stuff to its own class outside of Data
         [Flags]
-        public enum BsnesPlusUsage : byte
+        private enum BsnesPlusUsage : byte
         {
             UsageRead = 0x80,
             UsageWrite = 0x40,
@@ -15,61 +14,72 @@ namespace Diz.Core.import
             UsageOpcode = 0x10,
             UsageFlagM = 0x02,
             UsageFlagX = 0x01,
-        };
+        }
+        
+        private int prevFlags;
+        private byte[] usageMap;
+        private Data data;
 
-        // move out of here to extension method or just external method
-        public int ImportUsageMap(byte[] usageMap, Data data)
+        public static int ImportUsageMap(byte[] usageMap, Data data)
         {
-            int size = data.GetRomSize();
-            int modified = 0;
-            int prevFlags = 0;
+            return new BsnesUsageMapImporter { usageMap = usageMap, data = data }.Run();
+        }
+        
+        private int Run()
+        {
+            prevFlags = 0;
 
-            for (int map = 0; map <= 0xFFFFFF; map++)
+            var modified = 0;
+            for (var snesOffset = 0; snesOffset <= 0xFFFFFF; snesOffset++)
             {
-                var i = data.ConvertSnesToPc(map);
-
-                if (i == -1 || i >= size)
-                {
-                    // branch predictor may optimize this
-                    continue;
-                }
-
-                var flags = (BsnesPlusUsage) usageMap[map];
-
-                if (flags == 0)
-                {
-                    // no information available
-                    continue;
-                }
-
-                if (data.GetFlag(i) != Data.FlagType.Unreached)
-                {
-                    // skip if there is something already set..
-                    continue;
-                }
-
-                // opcode: 0x30, operand: 0x20
-                if (flags.HasFlag(BsnesPlusUsage.UsageExec))
-                {
-                    data.SetFlag(i, Data.FlagType.Operand);
-
-                    if (flags.HasFlag(BsnesPlusUsage.UsageOpcode))
-                    {
-                        prevFlags = ((int) flags & 3) << 4;
-                        data.SetFlag(i, Data.FlagType.Opcode);
-                    }
-
-                    data.SetMxFlags(i, prevFlags);
+                if (ProcessUsageMapAddress(snesOffset))
                     modified++;
-                }
-                else if (flags.HasFlag(BsnesPlusUsage.UsageRead))
-                {
-                    data.SetFlag(i, Data.FlagType.Data8Bit);
-                    modified++;
-                }
             }
 
             return modified;
+        }
+
+        // return true if we modified this address
+        private bool ProcessUsageMapAddress(int snesOffset)
+        {
+            var pc = data.ConvertSnesToPc(snesOffset);
+
+            // branch predictor may optimize this
+            if (pc == -1 || pc >= data.GetRomSize())
+                return false;
+
+            var flags = (BsnesPlusUsage)usageMap[snesOffset];
+
+            // no information available
+            if (flags == 0)
+                return false;
+
+            // skip if there is something already set..
+            if (data.GetFlag(pc) != Data.FlagType.Unreached)
+                return false;
+
+            // opcode: 0x30, operand: 0x20
+            if (flags.HasFlag(BsnesPlusUsage.UsageExec))
+            {
+                data.SetFlag(pc, Data.FlagType.Operand);
+
+                if (flags.HasFlag(BsnesPlusUsage.UsageOpcode))
+                {
+                    prevFlags = ((int) flags & 3) << 4;
+                    data.SetFlag(pc, Data.FlagType.Opcode);
+                }
+
+                data.SetMxFlags(pc, prevFlags);
+                return true;
+            }
+            
+            if (flags.HasFlag(BsnesPlusUsage.UsageRead))
+            {
+                data.SetFlag(pc, Data.FlagType.Data8Bit);
+                return true;
+            }
+
+            return false;
         }
     }
 }

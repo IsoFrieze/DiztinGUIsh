@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -216,10 +217,8 @@ namespace DiztinGUIsh.controller
 
         public long ImportBsnesUsageMap(string fileName)
         {
-            var importer = new BsnesUsageMapImporter();
-
-            var linesModified = importer.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data);
-
+            var linesModified = BsnesUsageMapImporter.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data);
+            
             if (linesModified > 0)
                 MarkChanged();
 
@@ -248,7 +247,7 @@ namespace DiztinGUIsh.controller
             return importer.CurrentStats.NumRomBytesModified;
         }
 
-        public long ImportBsnesTraceLogsBinary(string[] filenames)
+        public long ImportBsnesTraceLogsBinary(IEnumerable<string> filenames)
         {
             var importer = new BsnesTraceLogImporter(Project.Data);
 
