@@ -17,48 +17,6 @@ namespace Diz.Core.serialization.xml_serializer
             public Data.FlagType F;
         };
 
-        // totally dumb but saves time vs slow Byte.Parse(x, isHex)
-        // idea credit: Daniel-Lemire
-        public static readonly int[] HexAsciiToDigit = {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,
-            9,  -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1};
-
-        public static byte ByteParseHex1(char hexChar)
-        {
-            var result = HexAsciiToDigit[hexChar];
-            if (result == -1)
-                throw new InvalidDataException("Invalid hex digit");
-
-            return (byte)result;
-        }
-
-        public static byte ByteParseHex2(char hexChar1, char hexChar2)
-        {
-            var result = ByteParseHex1(hexChar1) * 0x10 + ByteParseHex1(hexChar2);
-            return (byte)result;
-        }
-
-        public static int ByteParseHex4(char hexChar1, char hexChar2, char hexChar3, char hexChar4)
-        {
-            return
-                ByteParseHex1(hexChar1) * 0x1000 +
-                ByteParseHex1(hexChar2) * 0x100 +
-                ByteParseHex1(hexChar3) * 0x10 +
-                ByteParseHex1(hexChar4);
-        }
-
         private static readonly List<FlagEncodeEntry> FlagEncodeTable = new List<FlagEncodeEntry> {
             new FlagEncodeEntry() {F = Data.FlagType.Unreached, C = 'U'},
 
@@ -93,9 +51,9 @@ namespace Diz.Core.serialization.xml_serializer
 
             var flagTxt = input[0];
             var otherFlags1 = Fake64Encoding.DecodeHackyBase64(input[1]);
-            newByte.DataBank = ByteParseHex2(input[2], input[3]);
-            newByte.DirectPage = ByteParseHex4(input[4], input[5], input[6], input[7]);
-            newByte.Arch = (Data.Architecture)(ByteParseHex1(input[8]) & 0x3);
+            newByte.DataBank = ByteUtil.ByteParseHex2(input[2], input[3]);
+            newByte.DirectPage = (int)ByteUtil.ByteParseHex4(input[4], input[5], input[6], input[7]);
+            newByte.Arch = (Data.Architecture)(ByteUtil.ByteParseHex1(input[8]) & 0x3);
 
             #if EXTRA_DEBUG_CHECKS
             Debug.Assert(Fake64Encoding.EncodeHackyBase64(otherFlags1) == o1_str);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 
 namespace Diz.Core.util
 {
@@ -121,6 +122,80 @@ namespace Diz.Core.util
             for (int i = 0; i < s.Length; i++) array[i] = (byte)s[i];
             array[s.Length] = 0;
             return array;
+        }
+        
+        
+        // there's builtin C# code that parses Hex digits from a string, BUT, it's super-slow:
+        // slow --> Byte.Parse(x, isHex) 
+        // 
+        // this is less flexible but way faster, crucial for fast sections of our code. 
+        // idea credit: Daniel-Lemire
+        public static readonly int[] HexAsciiToDigit = {
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,
+            9,  -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1};
+
+        // 4bit value
+        public static byte ByteParseHex1(char hexChar)
+        {
+            var result = HexAsciiToDigit[hexChar];
+            if (result == -1)
+                throw new InvalidDataException("Invalid hex digit");
+
+            return (byte)result;
+        }
+
+        // 8bit value
+        public static byte ByteParseHex2(char hexChar1, char hexChar2)
+        {
+            return (byte)(ByteParseHex1(hexChar1) * 0x10 + ByteParseHex1(hexChar2));
+        }
+
+        // 16bit value
+        public static uint ByteParseHex4(char hexChar1, char hexChar2, char hexChar3, char hexChar4)
+        {
+            return
+                ByteParseHex1(hexChar1) * 0x1000u +
+                ByteParseHex1(hexChar2) * 0x100u +
+                ByteParseHex1(hexChar3) * 0x10u +
+                ByteParseHex1(hexChar4);
+        }
+
+        // note: likely isn't quite as fast, use one of the other ByteParseHex1/2/3/4() functions directly
+        // if you have to care about performance.
+        //
+        // this function is a faster but more specific version of: Convert.ToInt32(line.Substring(startIndex, length), 16);
+        public static uint ByteParseHex(string str, int strStartIndex, int numHexDigits)
+        {
+            if (numHexDigits <= 0 || numHexDigits > 8)
+                throw new ArgumentException("numHexDigits out of range");
+
+            var offset = numHexDigits - 1;
+            var multiplier = 1u;
+            var result = 0u;
+            
+            for (var i = 0; i < numHexDigits; ++i)
+            {
+                if (numHexDigits >= i + 1)
+                {
+                    result += ByteParseHex1(str[strStartIndex + offset]) * multiplier;
+                    offset--;
+                }
+                multiplier *= 0x10;
+            }
+
+            return result;
         }
     }
 }
