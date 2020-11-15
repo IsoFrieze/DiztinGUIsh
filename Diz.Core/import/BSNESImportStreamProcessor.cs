@@ -37,7 +37,7 @@ namespace Diz.Core.import
             return freeObjects.TryPop(out var item) ? item : new T();
         }
 
-        public void Return(T item)
+        public void Return(ref T item)
         {
             if (item == null)
                 return;
@@ -45,6 +45,8 @@ namespace Diz.Core.import
             Debug.Assert(!item.isFree);
             item.isFree = true;
             DeAlloc(item);
+
+            item = null;
         }
 
         private void DeAlloc(T item)
@@ -128,7 +130,7 @@ namespace Diz.Core.import
             }
             catch (EndOfStreamException)
             {
-                FreeCompressedWorkItem(item);
+                FreeCompressedWorkItem(ref item);
                 return null;
             }
 
@@ -162,7 +164,7 @@ namespace Diz.Core.import
             }
             catch (EndOfStreamException)
             {
-                FreeCompressedWorkItem(item);
+                FreeCompressedWorkItem(ref item);
                 return null;
             }
 
@@ -207,7 +209,7 @@ namespace Diz.Core.import
             return poolWorkItems == null ? new WorkItem() : poolWorkItems.Get();
         }
 
-        public void FreeCompressedWorkItem(CompressedWorkItem compressedItem)
+        public void FreeCompressedWorkItem(ref CompressedWorkItem compressedItem)
         {
             // don't kill the big buffers. main point of this pool is to hopefully re-use them later.
 
@@ -226,10 +228,10 @@ namespace Diz.Core.import
                 compressedItem.listHeads.Clear();
             }
 
-            poolCompressedWorkItems?.Return(compressedItem);
+            poolCompressedWorkItems?.Return(ref compressedItem);
         }
 
-        public void FreeWorkItem(WorkItem workItem)
+        public void FreeWorkItem(ref WorkItem workItem)
         {
             if (workItem == null)
                 return;
@@ -238,7 +240,7 @@ namespace Diz.Core.import
 
             workItem.next = null;
 
-            poolWorkItems?.Return(workItem);
+            poolWorkItems?.Return(ref workItem);
         }
 
         private WorkItem AllocateWorkItem(byte workItemLen)

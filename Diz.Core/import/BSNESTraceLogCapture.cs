@@ -168,7 +168,7 @@ namespace Diz.Core.import
             PartitionWorkItemQueue(compressedItem);
             var subTasks = DispatchWorkersForCompressedWorkItem(compressedItem);
             var statsBytesCompleted = compressedItem.CompressedSize;
-            streamProcessor.FreeCompressedWorkItem(compressedItem);
+            streamProcessor.FreeCompressedWorkItem(ref compressedItem);
             await Task.WhenAll(subTasks);
 
             Stats_MarkCompleted(statsBytesCompleted);
@@ -307,7 +307,8 @@ namespace Diz.Core.import
             while (current != null) { 
                 ProcessWorkItem(current);
                 var next = current.next;
-                streamProcessor.FreeWorkItem(current);
+                streamProcessor.FreeWorkItem(ref current);
+                
                 current = next;
             }
             

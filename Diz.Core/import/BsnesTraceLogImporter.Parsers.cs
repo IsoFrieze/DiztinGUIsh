@@ -15,12 +15,12 @@ namespace Diz.Core.import
             return modData;
         }
 
-        public void FreeModificationData(ModificationData modData)
+        private void FreeModificationData(ref ModificationData modData)
         {
             if (modData == null)
                 return;
 
-            modificationDataPool.Return(modData);
+            modificationDataPool.Return(ref modData);
         }
         
         public void ImportTraceLogLine(string line)
@@ -30,7 +30,7 @@ namespace Diz.Core.import
                 return;
 
             UpdatePCAddress(modData);
-            SetOpcodeAndOperandsFromTraceData(modData);
+            SetOpcodeAndOperandsFromTraceData(modData); // note: frees modData, don't use after
         }
         
         // this function will be called from multiple threads concurrently and MUST REMAIN thread-safe.
@@ -41,7 +41,7 @@ namespace Diz.Core.import
             ParseBinary(bytes, abridgedFormat, out var opcodeLen, modData);
             
             UpdatePCAddress(modData);
-            SetOpcodeAndOperandsFromTraceData(modData, opcodeLen);
+            SetOpcodeAndOperandsFromTraceData(modData, opcodeLen);  // note: frees modData, don't use after
         }
 
         public static bool ParseTextLine(string line, ModificationData modData)

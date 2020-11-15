@@ -48,6 +48,8 @@ namespace Diz.Core.import
                 modData.SnesAddress = GetNextSNESAddress(modData.SnesAddress);
                 currentOffset++;
             }
+            
+            FreeModificationData(ref modData); // sets to Null after called
 
             currentStats.NumRomBytesAnalyzed += numBytesAnalyzed;
         }

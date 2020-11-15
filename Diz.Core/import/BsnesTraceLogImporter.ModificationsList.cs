@@ -86,8 +86,6 @@ namespace Diz.Core.import
             ApplyModificationIfNeeded(modData);
 
             UpdateStats(modData);
-            
-            FreeModificationData(modData);
         }
 
         private void ApplyModificationIfNeeded(ModificationData modData)
