@@ -71,7 +71,7 @@ namespace Diz.Test
 
         public class ImportTraceLogStreamTestHarness
         {
-            const string datafile = "D:\\projects\\cthack\\src\\diztinguish\\Diz.Test\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
+            const string datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
             readonly Data Data = new EmptyRom();
             private readonly BsnesTraceLogDebugBenchmarkFileCapture capturing;
             private readonly Stopwatch stopWatch = new Stopwatch();
@@ -81,7 +81,10 @@ namespace Diz.Test
             {
                 this.output = output;
 
-                capturing = new BsnesTraceLogDebugBenchmarkFileCapture(datafile, 1)
+                var cwd = Directory.GetCurrentDirectory();
+                var fullPath = Path.Combine(cwd, datafile);
+
+                capturing = new BsnesTraceLogDebugBenchmarkFileCapture(fullPath, 1)
                 {
                     OnStart = () => { stopWatch.Reset(); stopWatch.Start(); },
                     OnStop = () =>
