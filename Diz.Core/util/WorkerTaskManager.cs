@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Diz.Core.util
 {
-    public class WorkerTaskManager
+    public class WorkerTaskManager : IWorkerTaskManager
     {
         private readonly List<Task> tasks = new List<Task>();
         private readonly object taskLock = new object();
@@ -13,6 +14,7 @@ namespace Diz.Core.util
         private readonly ManualResetEvent notFinishing = new ManualResetEvent(false);
         private volatile bool finished = false;
         private Timer timer;
+        private object timerLock = new object();
 
         public WorkerTaskManager()
         {
@@ -27,36 +29,53 @@ namespace Diz.Core.util
 
         public void Update()
         {
-            if (finished)
+            lock (timerLock)
             {
-                timer.Change(-1, -1);
-                timer.Dispose();
-                timer = null;
-            }
+                if (timer == null)
+                    return;
 
-            lock (tasks)
-                tasks.RemoveAll(IsCompleted);
+                if (finished)
+                {
+                    timer.Change(-1, -1);
+                    timer.Dispose();
+                    timer = null;
+                }
+
+                lock (taskLock)
+                {
+                    Debug.Assert(!tasks.Contains(null));
+                    tasks.RemoveAll(IsCompleted);
+                    Debug.Assert(!tasks.Contains(null));
+                }
+            }
         }
 
+        public Task Run(Action action, CancellationToken cancelToken)
+        {
+            return StartTask(new Task(action, cancelToken));
+        }
+        
         public Task Run(Action action)
         {
-            var task = new Task(action);
+            return StartTask(new Task(action));
+        }
+
+        private Task StartTask(Task task)
+        {
+            Debug.Assert(task != null);
 
             lock (taskLock)
+            {
                 tasks.Add(task);
-            
+                Debug.Assert(!tasks.Contains(null));
+            }
+
             task.Start();
 
             return task;
         }
 
-        private static bool IsCompleted(Task task) => task.IsCompleted;
-
-        // task-oriented version of below
-        /*public Task RunTask_WaitForAllTasksToComplete()
-        {
-            return Task.Run(WaitForAllTasksToComplete);
-        }*/
+        public bool IsCompleted(Task task) => task.IsCompleted;
 
         // blocking method
         public void WaitForAllTasksToComplete()
@@ -72,7 +91,9 @@ namespace Diz.Core.util
                     if (tasks.Count == 0)
                         break;
 
+                    Debug.Assert(!tasks.Contains(null));
                     tasksCopy = new List<Task>(tasks);
+                    Debug.Assert(!tasksCopy.Contains(null));
                 }
 
                 // anything in our original list, let it run to completion
@@ -81,5 +102,34 @@ namespace Diz.Core.util
 
             finished = true;
         }
+    }
+
+    // reference implementation that runs synchronously. mostly for benchmarking/etc.
+    public class WorkerTaskManagerSynchronous : IWorkerTaskManager
+    {
+        public Task Run(Action action, CancellationToken cancelToken)
+        {
+            var syncTask = new Task(action);
+            syncTask.RunSynchronously();
+            return syncTask;
+        }
+
+        public Task Run(Action action)
+        {
+            return Run(action, new CancellationToken());
+        }
+        
+        public void WaitForAllTasksToComplete() { }
+        public void StartFinishing() { }
+    }
+
+    public interface IWorkerTaskManager
+    {
+        void WaitForAllTasksToComplete();
+        
+        Task Run(Action action, CancellationToken cancelToken);
+        Task Run(Action action);
+
+        void StartFinishing();
     }
 }
