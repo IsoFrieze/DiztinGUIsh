@@ -58,7 +58,7 @@
             this.pictureGreenSpinner = new System.Windows.Forms.PictureBox();
             this.button1 = new System.Windows.Forms.Button();
             this.cartesianChart1 = new LiveCharts.WinForms.CartesianChart();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureGreenSpinner)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize) (this.pictureGreenSpinner)).BeginInit();
             this.SuspendLayout();
             // 
             // btnStart
@@ -108,7 +108,7 @@
             // lblTotalProcessed
             // 
             this.lblTotalProcessed.AutoSize = true;
-            this.lblTotalProcessed.Location = new System.Drawing.Point(428, 174);
+            this.lblTotalProcessed.Location = new System.Drawing.Point(382, 198);
             this.lblTotalProcessed.Name = "lblTotalProcessed";
             this.lblTotalProcessed.Size = new System.Drawing.Size(13, 13);
             this.lblTotalProcessed.TabIndex = 6;
@@ -117,7 +117,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(303, 174);
+            this.label4.Location = new System.Drawing.Point(257, 198);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(117, 13);
             this.label4.TabIndex = 5;
@@ -144,7 +144,7 @@
             // lblNumberModified
             // 
             this.lblNumberModified.AutoSize = true;
-            this.lblNumberModified.Location = new System.Drawing.Point(428, 199);
+            this.lblNumberModified.Location = new System.Drawing.Point(382, 223);
             this.lblNumberModified.Name = "lblNumberModified";
             this.lblNumberModified.Size = new System.Drawing.Size(13, 13);
             this.lblNumberModified.TabIndex = 10;
@@ -153,7 +153,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(303, 199);
+            this.label3.Location = new System.Drawing.Point(257, 223);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(114, 13);
             this.label3.TabIndex = 9;
@@ -162,7 +162,7 @@
             // lblModifiedXFlags
             // 
             this.lblModifiedXFlags.AutoSize = true;
-            this.lblModifiedXFlags.Location = new System.Drawing.Point(146, 126);
+            this.lblModifiedXFlags.Location = new System.Drawing.Point(149, 118);
             this.lblModifiedXFlags.Name = "lblModifiedXFlags";
             this.lblModifiedXFlags.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedXFlags.TabIndex = 12;
@@ -171,7 +171,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 126);
+            this.label6.Location = new System.Drawing.Point(15, 118);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(42, 13);
             this.label6.TabIndex = 11;
@@ -180,7 +180,7 @@
             // lblModifiedMFlags
             // 
             this.lblModifiedMFlags.AutoSize = true;
-            this.lblModifiedMFlags.Location = new System.Drawing.Point(146, 152);
+            this.lblModifiedMFlags.Location = new System.Drawing.Point(149, 144);
             this.lblModifiedMFlags.Name = "lblModifiedMFlags";
             this.lblModifiedMFlags.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedMFlags.TabIndex = 14;
@@ -189,7 +189,7 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(12, 152);
+            this.label8.Location = new System.Drawing.Point(15, 144);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(44, 13);
             this.label8.TabIndex = 13;
@@ -198,7 +198,7 @@
             // lblModifiedDPs
             // 
             this.lblModifiedDPs.AutoSize = true;
-            this.lblModifiedDPs.Location = new System.Drawing.Point(146, 176);
+            this.lblModifiedDPs.Location = new System.Drawing.Point(149, 168);
             this.lblModifiedDPs.Name = "lblModifiedDPs";
             this.lblModifiedDPs.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedDPs.TabIndex = 16;
@@ -207,7 +207,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(12, 176);
+            this.label10.Location = new System.Drawing.Point(15, 168);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(63, 13);
             this.label10.TabIndex = 15;
@@ -216,7 +216,7 @@
             // lblModifiedDBs
             // 
             this.lblModifiedDBs.AutoSize = true;
-            this.lblModifiedDBs.Location = new System.Drawing.Point(146, 201);
+            this.lblModifiedDBs.Location = new System.Drawing.Point(149, 193);
             this.lblModifiedDBs.Name = "lblModifiedDBs";
             this.lblModifiedDBs.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedDBs.TabIndex = 18;
@@ -225,7 +225,7 @@
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(12, 201);
+            this.label12.Location = new System.Drawing.Point(15, 193);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(58, 13);
             this.label12.TabIndex = 17;
@@ -234,7 +234,7 @@
             // lblModifiedFlags
             // 
             this.lblModifiedFlags.AutoSize = true;
-            this.lblModifiedFlags.Location = new System.Drawing.Point(146, 102);
+            this.lblModifiedFlags.Location = new System.Drawing.Point(149, 94);
             this.lblModifiedFlags.Name = "lblModifiedFlags";
             this.lblModifiedFlags.Size = new System.Drawing.Size(13, 13);
             this.lblModifiedFlags.TabIndex = 20;
@@ -243,7 +243,7 @@
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(12, 102);
+            this.label14.Location = new System.Drawing.Point(15, 94);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(127, 13);
             this.label14.TabIndex = 19;
@@ -252,8 +252,8 @@
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label15.Location = new System.Drawing.Point(9, 81);
+            this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.label15.Location = new System.Drawing.Point(12, 73);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(194, 13);
             this.label15.TabIndex = 21;
@@ -262,7 +262,7 @@
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.label16.Location = new System.Drawing.Point(12, 7);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(116, 13);
@@ -272,8 +272,8 @@
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(300, 152);
+            this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.label17.Location = new System.Drawing.Point(254, 176);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(57, 13);
             this.label17.TabIndex = 23;
@@ -281,10 +281,10 @@
             // 
             // lblResultStatus
             // 
-            this.lblResultStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblResultStatus.Location = new System.Drawing.Point(310, 102);
+            this.lblResultStatus.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblResultStatus.Location = new System.Drawing.Point(254, 86);
             this.lblResultStatus.Name = "lblResultStatus";
-            this.lblResultStatus.Size = new System.Drawing.Size(236, 37);
+            this.lblResultStatus.Size = new System.Drawing.Size(291, 90);
             this.lblResultStatus.TabIndex = 26;
             this.lblResultStatus.Text = "--jhgasdjhfgasjhdgfhjasdfgasdf kfhfjhf";
             this.lblResultStatus.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -292,8 +292,8 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(306, 81);
+            this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.label7.Location = new System.Drawing.Point(254, 73);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(43, 13);
             this.label7.TabIndex = 25;
@@ -301,7 +301,6 @@
             // 
             // pictureGreenSpinner
             // 
-            this.pictureGreenSpinner.Image = global::DiztinGUIsh.Properties.Resources._1603231497loading_green;
             this.pictureGreenSpinner.Location = new System.Drawing.Point(303, 12);
             this.pictureGreenSpinner.Name = "pictureGreenSpinner";
             this.pictureGreenSpinner.Size = new System.Drawing.Size(46, 37);
@@ -322,13 +321,13 @@
             // 
             // cartesianChart1
             // 
-            this.cartesianChart1.Location = new System.Drawing.Point(12, 233);
+            this.cartesianChart1.Location = new System.Drawing.Point(12, 255);
             this.cartesianChart1.Name = "cartesianChart1";
-            this.cartesianChart1.Size = new System.Drawing.Size(533, 292);
+            this.cartesianChart1.Size = new System.Drawing.Size(533, 270);
             this.cartesianChart1.TabIndex = 29;
             this.cartesianChart1.Text = "cartesianChart1";
             // 
-            // BSNESTraceLogBinaryMonitorForm
+            // BsnesTraceLogBinaryMonitorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -366,10 +365,9 @@
             this.Text = "BSNES Live Tracelog Capture";
             this.Load += new System.EventHandler(this.BSNESTraceLogBinaryMonitorForm_Load);
             this.Shown += new System.EventHandler(this.BSNESTraceLogBinaryMonitorForm_Shown);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureGreenSpinner)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.pictureGreenSpinner)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion

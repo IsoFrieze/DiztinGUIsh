@@ -13,25 +13,24 @@ namespace DiztinGUIsh.window.dialog
     {
         private bool initializedChart;
         private readonly ChartValues<long> chartValuesBytesModified = new ChartValues<long>();
-        //private long chartValueBytesModified_previous = 0;
+        private long chartValueBytesModified_previous = 0;
 
-        //private const int refreshGraphEveryNDataPoints = 100;
-        //private int dataPointsIn = -1;
+        private const int refreshGraphEveryNDataPoints = 100;
+        private int dataPointsIn = -1;
 
         private void AppendToChart((BsnesTraceLogImporter.Stats stats, int bytesInQueue) currentStats)
         {
             InitChart();
 
-            // TODO: re-enable, it's maybe a little slow.
-            /*if (dataPointsIn == -1 || ++dataPointsIn >= refreshGraphEveryNDataPoints)
+            if (dataPointsIn == -1 || ++dataPointsIn >= refreshGraphEveryNDataPoints)
                 dataPointsIn = 0;
 
             if (dataPointsIn != 0)
                 return;
 
-            var diffBytes = currentStats.stats.numRomBytesModified - chartValueBytesModified_previous;
-            chartValueBytesModified_previous = currentStats.stats.numRomBytesModified;
-            chartValuesBytesModified.Add(diffBytes);*/
+            var diffBytes = currentStats.stats.NumRomBytesModified - chartValueBytesModified_previous;
+            chartValueBytesModified_previous = currentStats.stats.NumRomBytesModified;
+            chartValuesBytesModified.Add(diffBytes);
         }
 
         private void InitChart()
