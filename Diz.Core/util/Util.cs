@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using Diz.Core.model;
 
@@ -98,19 +99,35 @@ namespace Diz.Core.util
         public static byte[] ReadNext(Stream stream, int count, out int bytesRead)
         {
             var buffer = new byte[count];
-            bytesRead = 0;
+            bytesRead = ReadNext(stream, buffer, count);
+            return buffer;
+        }
+
+        public static int ReadNext(Stream stream, byte[] buffer, int count)
+        {
+            // not in love with this.
+            return ReadNext(stream, buffer, count, stream is NetworkStream);
+        }
+
+        public static int ReadNext(Stream stream, byte[] buffer, int count, bool continueOnZeroBytesRead=false)
+        {
             var offset = 0;
 
-            while (count > 0 && (bytesRead = stream.Read(buffer, offset, count)) > 0)
+            while (count > 0)
             {
+                var bytesRead = stream.Read(buffer, offset, count);
+                
                 count -= bytesRead;
                 offset += bytesRead;
+
+                if (bytesRead == 0 && !continueOnZeroBytesRead)
+                    break;
             }
 
             if (count > 0)
                 throw new EndOfStreamException();
 
-            return buffer;
+            return offset;
         }
 
         public static string GetEnumDescription(Enum value)
