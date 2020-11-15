@@ -109,6 +109,9 @@
     <Reference Include="LiveCharts.Wpf, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
       <HintPath>..\packages\LiveCharts.Wpf.0.9.7\lib\net45\LiveCharts.Wpf.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.ConcurrencyVisualizer.Markers">
+      <HintPath>c:\program files (x86)\microsoft visual studio\2019\community\common7\ide\extensions\jcn3iwfw.vp2\SDK\Managed\4.0\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />

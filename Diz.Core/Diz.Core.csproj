@@ -73,6 +73,13 @@
       <HintPath>..\packages\LightInject.6.4.0\lib\net46\LightInject.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.ConcurrencyVisualizer.Markers">
+      <HintPath>c:\program files (x86)\microsoft visual studio\2019\community\common7\ide\extensions\jcn3iwfw.vp2\SDK\Managed\4.0\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.ObjectPool, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+      <HintPath>..\packages\Microsoft.Extensions.ObjectPool.5.0.0\lib\net461\Microsoft.Extensions.ObjectPool.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="NReco.LambdaParser, Version=1.0.11.0, Culture=neutral, PublicKeyToken=50b5ad72a1d364c6, processorArchitecture=MSIL">
       <HintPath>..\packages\NReco.LambdaParser.1.0.12\lib\net45\NReco.LambdaParser.dll</HintPath>
     </Reference>
@@ -125,7 +132,12 @@
     <Compile Include="export\LogWriterSettings.cs" />
     <Compile Include="import\BSNESImportStreamProcessor.cs" />
     <Compile Include="import\BSNESTraceLogCapture.cs" />
+    <Compile Include="import\BsnesTraceLogImporter.Caching.cs" />
     <Compile Include="import\BSNESTraceLogImporter.cs" />
+    <Compile Include="import\BsnesTraceLogImporter.ModificationsList.cs" />
+    <Compile Include="import\BsnesTraceLogImporter.Parsers.cs" />
+    <Compile Include="import\BsnesTraceLogImporter.Stats.cs" />
+    <Compile Include="import\BsnesTraceLogImporter.Util.cs" />
     <Compile Include="model\Data.Constants.cs" />
     <Compile Include="model\Data.Properties.cs" />
     <Compile Include="serialization\xml_serializer\RepeaterCompression.cs" />
