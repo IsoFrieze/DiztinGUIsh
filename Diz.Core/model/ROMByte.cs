@@ -1,8 +1,11 @@
-﻿using DiztinGUIsh;
+﻿using System.Threading;
+using DiztinGUIsh;
 
 namespace Diz.Core.model
 {
-    public class RomByte : DizDataModel
+    // represents metadata associated with each byte of the ROM
+    // RomByteData is just the data itself with as little associated fluff as possible 
+    public class RomByteData : DizDataModel
     {
         // never modify directly. only go through the public fields
         private byte rom;
@@ -109,5 +112,13 @@ namespace Diz.Core.model
             }
         }
         #endregion
+    }
+
+    // wrap RomByteData with extra helper stuff like locking
+    public class RomByte : RomByteData
+    {
+        // note: our thread safety isn't comprehensive in this project yet.
+        // be careful with this if you're doing anything clever, especially writing.
+        public ReaderWriterLockSlim Lock { get; protected set; } = new ReaderWriterLockSlim();
     }
 }
