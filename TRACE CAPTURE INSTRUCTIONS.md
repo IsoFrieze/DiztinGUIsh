@@ -8,13 +8,18 @@ To use this to do live tracelog capture from BSNES-plus:
 # Run
 1. Open BSNES, Tools -> Debugger, check the 'Trace' box. 
 2. BSNES will start listening on port 27015 and appear to freeze (this is normal, though, crappy) until Diztinguish connects.
-2. In Diztinguish, import your ROM file first, save the project.
+2. In Diztinguish, either open an existing project or import the same ROM file, and save your project before continuing.
 3. Click Tools -> Live Capture -> BSNESPlus Trace Logging
 4. In the dialog that pops up, click connect and BSNES will unfreeze
 
 BSNES will send data over socket connection to Diz, and you can save all that. Pretty fun.  Diz will mark M and A flags, and whether bytes are opcodes or instructions.
 
+Note that the connecting/disconnecting process with BSNES is kind of janky right now, you may have to kill BSNES after you are done capturing, or to get it to listen 
+on the socket properly again.
+
 # Extra
+
+This has only been tested on localhost, I don't recommend you run it on a real ethernet network, it's not tuned for that, MTU might be crazy (would be kinda fun to see if it works)
 
 Tip: If things are running too slow, in BSNESplus click the 'trace mask' button, which will filter areas that were already visited.
 
