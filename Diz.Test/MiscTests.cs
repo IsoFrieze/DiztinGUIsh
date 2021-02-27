@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
-using IX.StandardExtensions;
 using Xunit;
 
 namespace Diz.Test

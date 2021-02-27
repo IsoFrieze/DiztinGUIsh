@@ -120,7 +120,7 @@ namespace Diz.Test.Utils
             Assert.True(result.ErrorCount == 0);
         }
 
-        private static void AssertAssemblyOutputEqual(LogCreator.OutputResult result, List<LogWriterHelper.ParsedOutput> expectedOut, List<LogWriterHelper.ParsedOutput> actualOut)
+        private static void AssertAssemblyOutputEqual(LogCreator.OutputResult result, List<ParsedOutput> expectedOut, List<ParsedOutput> actualOut)
         {
             Assert.Equal(expectedOut.Count, actualOut.Count);
 

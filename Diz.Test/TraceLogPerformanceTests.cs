@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
-using BenchmarkDotNet.Analysers;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Loggers;
-using BenchmarkDotNet.Running;
 using Diz.Core.import;
 using Diz.Core.model;
-using Diz.Core.util;
 using Diz.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;

@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Linq;
+using System.Xml;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
 using ExtendedXmlSerializer;
@@ -33,8 +34,8 @@ namespace Diz.Test
             protected bool Equals(TestRoot other)
             {
                 return
-                    System.Linq.Enumerable.SequenceEqual(ODW, other.ODW) &&
-                    System.Linq.Enumerable.SequenceEqual(ODW2, other.ODW2);
+                    Enumerable.SequenceEqual(ODW, other.ODW) &&
+                    Enumerable.SequenceEqual(ODW2, other.ODW2);
             }
 
             public override bool Equals(object obj)
