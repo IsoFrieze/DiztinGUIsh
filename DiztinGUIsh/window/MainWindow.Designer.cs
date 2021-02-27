@@ -382,6 +382,7 @@
             // stepOverToolStripMenuItem
             // 
             this.stepOverToolStripMenuItem.Name = "stepOverToolStripMenuItem";
+            this.stepOverToolStripMenuItem.ShortcutKeyDisplayString = "S";
             this.stepOverToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.stepOverToolStripMenuItem.Text = "&Step";
             this.stepOverToolStripMenuItem.Click += new System.EventHandler(this.stepOverToolStripMenuItem_Click);
@@ -389,6 +390,7 @@
             // stepInToolStripMenuItem
             // 
             this.stepInToolStripMenuItem.Name = "stepInToolStripMenuItem";
+            this.stepInToolStripMenuItem.ShortcutKeyDisplayString = "I";
             this.stepInToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.stepInToolStripMenuItem.Text = "Step &In";
             this.stepInToolStripMenuItem.Click += new System.EventHandler(this.stepInToolStripMenuItem_Click);
@@ -401,6 +403,7 @@
             // autoStepSafeToolStripMenuItem
             // 
             this.autoStepSafeToolStripMenuItem.Name = "autoStepSafeToolStripMenuItem";
+            this.autoStepSafeToolStripMenuItem.ShortcutKeyDisplayString = "A";
             this.autoStepSafeToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.autoStepSafeToolStripMenuItem.Text = "&Auto Step (Safe)";
             this.autoStepSafeToolStripMenuItem.Click += new System.EventHandler(this.autoStepSafeToolStripMenuItem_Click);
@@ -429,6 +432,7 @@
             // gotoIntermediateAddressToolStripMenuItem
             // 
             this.gotoIntermediateAddressToolStripMenuItem.Name = "gotoIntermediateAddressToolStripMenuItem";
+            this.gotoIntermediateAddressToolStripMenuItem.ShortcutKeyDisplayString = "T";
             this.gotoIntermediateAddressToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.gotoIntermediateAddressToolStripMenuItem.Text = "Goto In&termediate Address";
             this.gotoIntermediateAddressToolStripMenuItem.Click += new System.EventHandler(this.gotoIntermediateAddressToolStripMenuItem_Click);
@@ -436,6 +440,7 @@
             // gotoFirstUnreachedToolStripMenuItem
             // 
             this.gotoFirstUnreachedToolStripMenuItem.Name = "gotoFirstUnreachedToolStripMenuItem";
+            this.gotoFirstUnreachedToolStripMenuItem.ShortcutKeyDisplayString = "U";
             this.gotoFirstUnreachedToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.gotoFirstUnreachedToolStripMenuItem.Text = "Goto First &Unreached";
             this.gotoFirstUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoFirstUnreachedToolStripMenuItem_Click);
@@ -443,6 +448,7 @@
             // gotoNearUnreachedToolStripMenuItem
             // 
             this.gotoNearUnreachedToolStripMenuItem.Name = "gotoNearUnreachedToolStripMenuItem";
+            this.gotoNearUnreachedToolStripMenuItem.ShortcutKeyDisplayString = "H";
             this.gotoNearUnreachedToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.gotoNearUnreachedToolStripMenuItem.Text = "Goto Previous Unreac&hed";
             this.gotoNearUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNearUnreachedToolStripMenuItem_Click);
@@ -450,6 +456,7 @@
             // gotoNextUnreachedToolStripMenuItem
             // 
             this.gotoNextUnreachedToolStripMenuItem.Name = "gotoNextUnreachedToolStripMenuItem";
+            this.gotoNextUnreachedToolStripMenuItem.ShortcutKeyDisplayString = "N";
             this.gotoNextUnreachedToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.gotoNextUnreachedToolStripMenuItem.Text = "Goto &Next Unreached";
             this.gotoNextUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNextUnreachedToolStripMenuItem_Click);
@@ -595,6 +602,7 @@
             // markOneToolStripMenuItem
             // 
             this.markOneToolStripMenuItem.Name = "markOneToolStripMenuItem";
+            this.markOneToolStripMenuItem.ShortcutKeyDisplayString = "K";
             this.markOneToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.markOneToolStripMenuItem.Text = "Mar&k One";
             this.markOneToolStripMenuItem.Click += new System.EventHandler(this.markOneToolStripMenuItem_Click);
@@ -615,6 +623,7 @@
             // addLabelToolStripMenuItem
             // 
             this.addLabelToolStripMenuItem.Name = "addLabelToolStripMenuItem";
+            this.addLabelToolStripMenuItem.ShortcutKeyDisplayString = "L";
             this.addLabelToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.addLabelToolStripMenuItem.Text = "Add &Label";
             this.addLabelToolStripMenuItem.Click += new System.EventHandler(this.addLabelToolStripMenuItem_Click);
@@ -654,6 +663,7 @@
             // addCommentToolStripMenuItem
             // 
             this.addCommentToolStripMenuItem.Name = "addCommentToolStripMenuItem";
+            this.addCommentToolStripMenuItem.ShortcutKeyDisplayString = "C";
             this.addCommentToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
             this.addCommentToolStripMenuItem.Text = "Add &Comment";
             this.addCommentToolStripMenuItem.Click += new System.EventHandler(this.addCommentToolStripMenuItem_Click);
