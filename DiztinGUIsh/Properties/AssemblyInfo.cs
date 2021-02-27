@@ -1,29 +1,6 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-// General Information about an assembly is controlled through the following
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyTitle("DiztinGUIsh")]
-[assembly: AssemblyDescription("A Super NES ROM disassembler.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Written by Alex \"Dotsarecool\" Losego, Dominic \"binary1230\" Cerquetti")]
-[assembly: AssemblyProduct("DiztinGUIsh")]
-[assembly: AssemblyCopyright("Copyright © 2020")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-
-[assembly: AssemblyVersion(
-    ThisAssembly.Git.SemVer.Major + "." + 
-    ThisAssembly.Git.SemVer.Minor + "." + 
-    ThisAssembly.Git.SemVer.Patch)]
-[assembly: AssemblyInformationalVersion(
-    ThisAssembly.Git.SemVer.Major + "." +
-    ThisAssembly.Git.SemVer.Minor + "." +
-    ThisAssembly.Git.SemVer.Patch + "-" +
-    ThisAssembly.Git.Branch + "+" +
-    ThisAssembly.Git.Commit)]
-
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
 // COM, set the ComVisible attribute to true on that type.

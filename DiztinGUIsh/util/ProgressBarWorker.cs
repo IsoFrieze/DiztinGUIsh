@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using DiztinGUIsh.window.dialog;
 
@@ -48,7 +49,10 @@ namespace DiztinGUIsh
             backgroundThread = new Thread(Thread_Main);
 
             // honestly, not sure about this. works around some Invoke() stuff
-            backgroundThread.SetApartmentState(ApartmentState.STA); 
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                backgroundThread.SetApartmentState(ApartmentState.STA);
+            }
         }
 
         // blocking function

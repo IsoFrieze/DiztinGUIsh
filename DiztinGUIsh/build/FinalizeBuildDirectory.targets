@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
 <!-- 
+DiztinGUIsh
+
 The point of this file is, for release builds, to re-arrange the file structure of bin/Release/ to be ready for 
 end-user distribution. That mostly means moving the big mess of DLLs into a lib/ file, and copying around some docs
 and support files.
@@ -13,6 +15,7 @@ https://docs.microsoft.com/en-us/visualstudio/msbuild/how-to-extend-the-visual-s
 -->
 
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<!-- new <Project Sdk="Microsoft.NET.Sdk"> -->
     <PropertyGroup>
         <FinalReleaseLibDir>$(OutDir)lib\</FinalReleaseLibDir>
     </PropertyGroup>

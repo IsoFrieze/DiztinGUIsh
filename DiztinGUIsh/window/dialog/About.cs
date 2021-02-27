@@ -25,12 +25,12 @@ namespace DiztinGUIsh
             {
                 var attributes = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyTitleAttribute), false);
                 if (attributes.Length <= 0)
-                    return System.IO.Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().CodeBase);
+                    return System.IO.Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location);
                 
                 var titleAttribute = (AssemblyTitleAttribute)attributes[0];
                 return titleAttribute.Title != "" 
                     ? titleAttribute.Title 
-                    : System.IO.Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().CodeBase);
+                    : System.IO.Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location);
             }
         }
 

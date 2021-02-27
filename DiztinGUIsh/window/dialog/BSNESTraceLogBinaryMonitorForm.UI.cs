@@ -1,58 +1,12 @@
 ﻿using System;
 using System.Windows.Forms;
-using System.Windows.Media;
 using ByteSizeLib;
-using Diz.Core.import;
-using LiveCharts;
-using LiveCharts.Wpf;
 using Color = System.Drawing.Color;
 
 namespace DiztinGUIsh.window.dialog
 {
     public partial class BsnesTraceLogBinaryMonitorForm
     {
-        private bool initializedChart;
-        private readonly ChartValues<long> chartValuesBytesModified = new ChartValues<long>();
-        private long chartValueBytesModified_previous = 0;
-
-        private const int refreshGraphEveryNDataPoints = 100;
-        private int dataPointsIn = -1;
-
-        private void AppendToChart((BsnesTraceLogImporter.Stats stats, int bytesInQueue) currentStats)
-        {
-            InitChart();
-
-            if (dataPointsIn == -1 || ++dataPointsIn >= refreshGraphEveryNDataPoints)
-                dataPointsIn = 0;
-
-            if (dataPointsIn != 0)
-                return;
-
-            var diffBytes = currentStats.stats.NumRomBytesModified - chartValueBytesModified_previous;
-            chartValueBytesModified_previous = currentStats.stats.NumRomBytesModified;
-            chartValuesBytesModified.Add(diffBytes);
-        }
-
-        private void InitChart()
-        {
-            if (initializedChart)
-                return;
-
-            cartesianChart1.Series = new SeriesCollection
-            {
-                new LineSeries
-                {
-                    Title = "Instructions Modified",
-                    Values = chartValuesBytesModified,
-                    PointGeometry = Geometry.Empty,
-                },
-            };
-
-            cartesianChart1.DisableAnimations = true;
-
-            initializedChart = true;
-        }
-
         private void UpdateUi()
         {
             var running = capturing?.Running ?? false;
@@ -85,8 +39,6 @@ namespace DiztinGUIsh.window.dialog
 
             var currentStats = capturing.GetStats();
             var (stats, totalQueueBytes) = currentStats;
-
-            AppendToChart(currentStats);
 
             var qItemCount = capturing.BlocksToProcess.ToString();
             var qByteCount = ByteSize.FromBytes(totalQueueBytes).ToString("0.0");
