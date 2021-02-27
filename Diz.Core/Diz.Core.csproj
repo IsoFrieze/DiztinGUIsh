@@ -32,42 +32,23 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ExtendedXmlSerializer, Version=3.4.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ExtendedXmlSerializer.3.4.1\lib\net452\ExtendedXmlSerializer.dll</HintPath>
+    <Reference Include="ExtendedXmlSerializer, Version=3.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExtendedXmlSerializer.3.6.0\lib\net452\ExtendedXmlSerializer.dll</HintPath>
     </Reference>
     <Reference Include="FastBitmapLib, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FastBitmapLib.2.0.0\lib\net452\FastBitmapLib.dll</HintPath>
     </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=1.3.0.8, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpZipLib.1.3.0\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=1.3.1.9, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.1.3.1\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
-    <Reference Include="IX.Abstractions, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Abstractions.0.5.3\lib\net472\IX.Abstractions.dll</HintPath>
+    <Reference Include="IX.Observable, Version=0.7.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
+      <HintPath>..\packages\IX.Observable.0.7.3\lib\net472\IX.Observable.dll</HintPath>
     </Reference>
-    <Reference Include="IX.Abstractions.Collections, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Abstractions.Collections.0.5.3\lib\net472\IX.Abstractions.Collections.dll</HintPath>
+    <Reference Include="IX.StandardExtensions, Version=0.7.4.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
+      <HintPath>..\packages\IX.StandardExtensions.0.7.4\lib\net472\IX.StandardExtensions.dll</HintPath>
     </Reference>
-    <Reference Include="IX.Abstractions.Threading, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Abstractions.Threading.0.5.3\lib\net472\IX.Abstractions.Threading.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.Observable, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Observable.0.5.3\lib\net472\IX.Observable.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.StandardExtensions, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.StandardExtensions.0.5.3\lib\net472\IX.StandardExtensions.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.StandardExtensions.ComponentModel, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.StandardExtensions.ComponentModel.0.5.3\lib\net472\IX.StandardExtensions.ComponentModel.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.StandardExtensions.Threading, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.StandardExtensions.Threading.0.5.3\lib\net472\IX.StandardExtensions.Threading.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.Undoable, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Undoable.0.5.3\lib\net472\IX.Undoable.dll</HintPath>
-    </Reference>
-    <Reference Include="JetBrains.Annotations, Version=2020.1.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
-      <HintPath>..\packages\JetBrains.Annotations.2020.1.0\lib\net20\JetBrains.Annotations.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="JetBrains.Annotations, Version=2020.3.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <HintPath>..\packages\JetBrains.Annotations.2020.3.0\lib\net20\JetBrains.Annotations.dll</HintPath>
     </Reference>
     <Reference Include="LightInject, Version=6.4.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\LightInject.6.4.0\lib\net46\LightInject.dll</HintPath>
@@ -76,9 +57,8 @@
     <Reference Include="Microsoft.ConcurrencyVisualizer.Markers">
       <HintPath>c:\program files (x86)\microsoft visual studio\2019\community\common7\ide\extensions\jcn3iwfw.vp2\SDK\Managed\4.0\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Extensions.ObjectPool, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
-      <HintPath>..\packages\Microsoft.Extensions.ObjectPool.5.0.0\lib\net461\Microsoft.Extensions.ObjectPool.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Microsoft.Extensions.ObjectPool, Version=5.0.3.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.ObjectPool.5.0.3\lib\net461\Microsoft.Extensions.ObjectPool.dll</HintPath>
     </Reference>
     <Reference Include="NReco.LambdaParser, Version=1.0.11.0, Culture=neutral, PublicKeyToken=50b5ad72a1d364c6, processorArchitecture=MSIL">
       <HintPath>..\packages\NReco.LambdaParser.1.0.12\lib\net45\NReco.LambdaParser.dll</HintPath>
@@ -90,14 +70,14 @@
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
     </Reference>
-    <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll</HintPath>
+    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.5.0.0\lib\net461\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Interactive, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Interactive.4.1.1\lib\net45\System.Interactive.dll</HintPath>
+    <Reference Include="System.Interactive, Version=5.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Interactive.5.0.0\lib\net45\System.Interactive.dll</HintPath>
     </Reference>
     <Reference Include="System.IO" />
     <Reference Include="System.Linq.Expressions" />
@@ -109,8 +89,8 @@
       <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.5.0.0\lib\net45\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Threading.Tasks" />
