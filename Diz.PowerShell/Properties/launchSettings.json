@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "DizPowerShell": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+      "commandLineArgs": "-NoProfile -NoExit -Command \"cd ../../../.. && Diz.PowerShell/runner/debug-startup.ps1\""
+    }
+  }
+}
