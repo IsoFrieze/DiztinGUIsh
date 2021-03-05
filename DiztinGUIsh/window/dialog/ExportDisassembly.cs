@@ -56,7 +56,7 @@ namespace DiztinGUIsh
             this.Close();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void disassembleButton_Click(object sender, EventArgs e)
         {
             if (!PromptForPath())
                 return;
@@ -103,10 +103,10 @@ namespace DiztinGUIsh
             {
                 settings.Format = textFormat.Text.ToLower();
                 RegenerateSampleOutput();
-                button2.Enabled = true;
+                disassembleButton.Enabled = true;
             } else {
                 textSample.Text = "Invalid format!";
-                button2.Enabled = false;
+                disassembleButton.Enabled = false;
             }
         }
 
