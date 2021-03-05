@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog
 {
