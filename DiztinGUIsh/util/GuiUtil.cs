@@ -3,10 +3,23 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using Diz.Core.util;
 
-namespace DiztinGUIsh.window
+namespace DiztinGUIsh.util
 {
     public static class GuiUtil
     {
+        public static void OpenExternalProcess(string argsToLaunch)
+        {
+            try
+            {
+                Util.OpenExternalProcess(argsToLaunch);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show($"Can't launch '{argsToLaunch}', ignoring.", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
         public static void InvokeIfRequired(this ISynchronizeInvoke obj, MethodInvoker action)
         {
             if (obj.InvokeRequired)

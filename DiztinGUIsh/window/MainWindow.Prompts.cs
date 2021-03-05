@@ -1,7 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Windows.Forms;
 using Diz.Core.export;
+using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
@@ -51,23 +51,6 @@ namespace DiztinGUIsh.window
 
             openProjectFile.InitialDirectory = Project?.ProjectFileName;
             return openProjectFile.ShowDialog() == DialogResult.OK;
-        }
-
-        private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "/help.html");
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Can't find the help file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void githubToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start("https://github.com/Dotsarecool/DiztinGUIsh");
         }
 
         private string PromptOpenBizhawkCDLFile()
@@ -168,5 +151,10 @@ namespace DiztinGUIsh.window
         {
             MessageBox.Show(warningMsg, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
+        private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e) =>
+            GuiUtil.OpenExternalProcess("help.html");
+
+        private void githubToolStripMenuItem_Click(object sender, EventArgs e) =>
+            GuiUtil.OpenExternalProcess("https://github.com/Dotsarecool/DiztinGUIsh");
     }
 }
