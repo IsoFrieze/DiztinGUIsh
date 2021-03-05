@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using Diz.Core.util;
 
 namespace Diz.Core.export
 {
@@ -18,7 +20,13 @@ namespace Diz.Core.export
         public bool WasInitialized;
         public int RomSizeOverride; // specify an override for the # of bytes to assemble. default is the entire ROM
 
-        public string FileOrFolderOutPath;
+        private string fileOrFolderOutPath;
+        public string FileOrFolderOutPath
+        {
+            get => fileOrFolderOutPath;
+            set => fileOrFolderOutPath = Util.TryGetRelativePath(value, Environment.CurrentDirectory);
+        }
+
         public bool OutputToString;
         public string ErrorFilename;
 

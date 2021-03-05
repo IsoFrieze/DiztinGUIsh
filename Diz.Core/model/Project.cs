@@ -11,22 +11,24 @@ namespace Diz.Core.model
         // They will require a get AND set.
         // Order is important.
 
-        // not saved in XML
+        // NOT saved in XML
         public string ProjectFileName
         {
             get => projectFileName;
             set => SetField(ref projectFileName, value);
         }
 
-        // not saved in XML
+        
         public string AttachedRomFilename
         {
             get => attachedRomFilename;
-            set => SetField(ref attachedRomFilename, value);
+            set => SetField(ref attachedRomFilename, 
+                Util.TryGetRelativePath(value, Environment.CurrentDirectory));
         }
 
-        // would be cool to make this more automatic. probably hook into SetField()
-        // for a lot of it.
+        // NOT saved in XML
+        // (would be cool to make this more automatic. probably hook into SetField()
+        // for a lot of it)
         public bool UnsavedChanges
         {
             get => unsavedChanges;
@@ -64,7 +66,8 @@ namespace Diz.Core.model
         }
 
         // purely visual. what offset is currently being looked at in the main grid.
-        // we store it here because we want to save it out with the project file
+        //
+        // TODO: user-specific so can't store in the main project. save it elsewhere.
         private int currentViewOffset;
         public int CurrentViewOffset
         {
