@@ -107,10 +107,10 @@ namespace DiztinGUIsh.window.dialog
 
         private void UpdateText(TextBox selected)
         {
-            Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-            int digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
-            int size = data.GetRomSize();
-            int maxValue = property.SelectedIndex == 1 ? 0x100 : 0x10000;
+            var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
+            var digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
+            var size = data.GetRomSize();
+            var maxValue = property.SelectedIndex == 1 ? 0x100 : 0x10000;
 
             if (Start < 0) Start = 0;
             if (End >= size) End = size - 1;
