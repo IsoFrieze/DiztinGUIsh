@@ -38,20 +38,22 @@
             this.flowLayoutPanel1.BackColor = System.Drawing.SystemColors.Control;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.flowLayoutPanel1.MinimumSize = new System.Drawing.Size(100, 100);
+            this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.flowLayoutPanel1.MinimumSize = new System.Drawing.Size(117, 115);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(100, 100);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(117, 115);
             this.flowLayoutPanel1.TabIndex = 0;
             // 
             // RomFullVisualizer
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.Controls.Add(this.flowLayoutPanel1);
-            this.MinimumSize = new System.Drawing.Size(100, 100);
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.MinimumSize = new System.Drawing.Size(117, 115);
             this.Name = "RomFullVisualizer";
-            this.Size = new System.Drawing.Size(103, 103);
+            this.Size = new System.Drawing.Size(121, 119);
             this.ResumeLayout(false);
             this.PerformLayout();
 
