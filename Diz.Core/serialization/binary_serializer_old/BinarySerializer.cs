@@ -29,7 +29,7 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             var everything = new byte[HeaderSize + data.Length];
             everything[0] = versionToSave;
-            ByteUtil.StringToByteArray(Watermark).CopyTo(everything, 1);
+            ByteUtil.StringToNullTermByteArray(Watermark).CopyTo(everything, 1);
             data.CopyTo(everything, HeaderSize);
 
             return data;
@@ -157,7 +157,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             }
 
             // save current Rom full path - "c:\whatever\someRom.sfc"
-            var romLocation = ByteUtil.StringToByteArray(project.AttachedRomFilename);
+            var romLocation = ByteUtil.StringToNullTermByteArray(project.AttachedRomFilename);
 
             var data = new byte[romSettings.Length + romLocation.Length + 8 * size + label.Count + comment.Count];
             romSettings.CopyTo(data, 0);
