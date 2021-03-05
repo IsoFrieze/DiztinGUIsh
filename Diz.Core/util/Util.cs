@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
@@ -13,6 +14,32 @@ namespace Diz.Core.util
 {
     public static class Util
     {
+        // https://stackoverflow.com/questions/703281/getting-path-relative-to-the-current-working-directory/703290#703290
+        public static string GetRelativePath(string fileSpec, string folder)
+        {
+            var pathUri = new Uri(fileSpec);
+            // Folders must end in a slash
+            if (!folder.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                folder += Path.DirectorySeparatorChar;
+            }
+            var folderUri = new Uri(folder);
+            return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
+        }
+
+        // if folder is null, use current directory path
+        public static string TryGetRelativePath(string fileSpec, string folder = null)
+        {
+            try
+            {
+                return GetRelativePath(fileSpec, folder ?? Environment.CurrentDirectory);
+            }
+            catch (Exception)
+            {
+                return fileSpec;
+            }
+        }
+
         public enum NumberBase
         {
             Decimal = 3, Hexadecimal = 2, Binary = 8
@@ -40,6 +67,29 @@ namespace Diz.Core.util
                     return (showPrefix ? "%" : "") + b;
             }
             return "";
+        }
+        public static int ParseHexOrBase10String(string data)
+        {
+            var hex = false;
+            var hexDigitStartIndex = 0;
+
+            if (data.Length > 1)
+            {
+                hex = data[0] == '$';
+                hexDigitStartIndex = 1;
+            }
+            else if (data.Length > 2)
+            {
+                hexDigitStartIndex = 2;
+                hex =
+                    (data[0] == '0' && data[1] == 'x') ||
+                    (data[0] == '#' && data[1] == '$');
+            }
+
+            if (hex)
+                return (int)ByteUtil.ByteParseHex(data, hexDigitStartIndex, data.Length - hexDigitStartIndex);
+
+            return int.Parse(data);
         }
 
         public static IEnumerable<string> ReadLines(string path)
@@ -197,6 +247,12 @@ namespace Diz.Core.util
             CachedRomFlagColors[romFlag] = color;
 
             return color;
+        }
+
+        public static void OpenExternalProcess(string args)
+        {
+            var info = new ProcessStartInfo(args) { UseShellExecute = true };
+            Process.Start(info);
         }
     }
 }
