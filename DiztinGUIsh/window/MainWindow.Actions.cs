@@ -58,7 +58,7 @@ namespace DiztinGUIsh.window
             
             ProjectController.MarkChanged();
             SelectOffset(Project.Data.Step(offset, false, false, offset - 1));
-            UpdateUI_Tmp3();
+            RefreshPercentAndWindowTitle();
         }
 
         private void StepIn(int offset)
@@ -68,7 +68,7 @@ namespace DiztinGUIsh.window
             
             ProjectController.MarkChanged();
             SelectOffset(Project.Data.Step(offset, true, false, offset - 1));
-            UpdateUI_Tmp3();
+            RefreshPercentAndWindowTitle();
         }
 
         private void AutoStepSafe(int offset)
@@ -81,7 +81,7 @@ namespace DiztinGUIsh.window
             if (moveWithStep) 
                 SelectOffset(destination);
             
-            UpdateUI_Tmp3();
+            RefreshPercentAndWindowTitle();
         }
 
         private void AutoStepHarsh(int offset)
@@ -98,20 +98,19 @@ namespace DiztinGUIsh.window
             if (moveWithStep) 
                 SelectOffset(destination);
 
-            UpdateUI_Tmp3();
+            RefreshPercentAndWindowTitle();
         }
 
         private void Mark(int offset)
         {
             if (!RomDataPresent()) 
                 return;
-            
-            ProjectController.MarkChanged();
-            var newOffset = Project.Data.MarkTypeFlag(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag));
-            
+
+            var newOffset = ProjectController.MarkTypeFlag(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag));
+
             SelectOffset(newOffset);
             
-            UpdateUI_Tmp3();
+            RefreshPercentAndWindowTitle();
         }
 
         private void MarkMany(int offset, int column)
@@ -123,28 +122,12 @@ namespace DiztinGUIsh.window
             if (mark == null)
                 return;
 
-            MarkMany(mark.Property, mark.Start, mark.Value, mark.Count);
-
-            UpdateSomeUI2();
-        }
-
-        private void MarkMany(int markProperty, int markStart, object markValue, int markCount)
-        {
-            var destination = markProperty switch
-            {
-                0 => Project.Data.MarkTypeFlag(markStart, (Data.FlagType) markValue, markCount),
-                1 => Project.Data.MarkDataBank(markStart, (int) markValue, markCount),
-                2 => Project.Data.MarkDirectPage(markStart, (int) markValue, markCount),
-                3 => Project.Data.MarkMFlag(markStart, (bool) markValue, markCount),
-                4 => Project.Data.MarkXFlag(markStart, (bool) markValue, markCount),
-                5 => Project.Data.MarkArchitecture(markStart, (Data.Architecture) markValue, markCount),
-                _ => 0
-            };
-
-            ProjectController.MarkChanged();
+            var destination = ProjectController.MarkMany(mark.Property, mark.Start, mark.Value, mark.Count);
 
             if (moveWithStep)
                 SelectOffset(destination);
+
+            RefreshTablePercentAndWindowTitle();
         }
 
         private void GoToIntermediateAddress(int offset)

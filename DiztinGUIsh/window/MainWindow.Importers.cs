@@ -16,7 +16,7 @@ namespace DiztinGUIsh.window
             var filename = PromptOpenBizhawkCDLFile();
             if (filename != null && filename == "") return;
             ImportBizHawkCdl(filename);
-            UpdateSomeUI2();
+            RefreshTablePercentAndWindowTitle();
         }
 
         private void ImportBizHawkCdl(string filename)

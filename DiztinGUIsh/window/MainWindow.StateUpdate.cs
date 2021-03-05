@@ -25,7 +25,8 @@ namespace DiztinGUIsh.window
             table.Width = this.Width - 33;
             vScrollBar1.Height = this.Height - 85;
             vScrollBar1.Left = this.Width - 33;
-            if (WindowState == FormWindowState.Maximized) UpdateDataGridView();
+            if (WindowState == FormWindowState.Maximized) 
+                UpdateDataGridView();
         }
 
         public void UpdateWindowTitle()
@@ -51,8 +52,9 @@ namespace DiztinGUIsh.window
         private void RefreshUi()
         {
             importCDLToolStripMenuItem.Enabled = true;
-            UpdateWindowTitle();
             UpdateDataGridView();
+
+            UpdateWindowTitle();
             UpdatePercent();
             table.Invalidate();
             EnableSubWindows();
@@ -73,10 +75,10 @@ namespace DiztinGUIsh.window
                 return;
 
             int totalUnreached = 0, size = Project.Data.GetRomSize();
-            for (int i = 0; i < size; i++)
+            for (var i = 0; i < size; i++)
                 if (Project.Data.GetFlag(i) == Data.FlagType.Unreached)
                     totalUnreached++;
-            int reached = size - totalUnreached;
+            var reached = size - totalUnreached;
             percentComplete.Text = $"{reached * 100.0 / size:N3}% ({reached:D}/{size:D})";
         }
 
@@ -129,16 +131,16 @@ namespace DiztinGUIsh.window
             exportLogToolStripMenuItem.Enabled = true;
         }
 
-        private void UpdateSomeUI2()
+        private void RefreshTablePercentAndWindowTitle()
         {
-            // refactor this somewhere else
-            UpdateUI_Tmp3();
+            // refactor this somewhere else, use property change notifications if possible
+            RefreshPercentAndWindowTitle();
             InvalidateTable();
         }
 
-        private void UpdateUI_Tmp3()
+        private void RefreshPercentAndWindowTitle()
         {
-            // refactor this somewhere else
+            // refactor this somewhere else, use property change notifications if possible
             UpdatePercent();
             UpdateWindowTitle();
         }

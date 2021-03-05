@@ -8,6 +8,7 @@ using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
 using Diz.Core.serialization;
+using Diz.Core.util;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
 
@@ -84,7 +85,7 @@ namespace DiztinGUIsh.controller
                     {
                         RomPromptFn = AskToSelectNewRomFilename
                     }.Open(filename);
-                    
+
                     project = project1;
                     warningMsg = warning;
                 }
@@ -159,7 +160,7 @@ namespace DiztinGUIsh.controller
             var importSettings = importController.PromptUserForRomSettings(romFilename);
             if (importSettings == null)
                 return false;
-            
+
             CloseProject();
 
             // actually do the import
@@ -218,7 +219,7 @@ namespace DiztinGUIsh.controller
         public long ImportBsnesUsageMap(string fileName)
         {
             var linesModified = BsnesUsageMapImporter.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data);
-            
+
             if (linesModified > 0)
                 MarkChanged();
 
@@ -236,10 +237,7 @@ namespace DiztinGUIsh.controller
             // caution: trace logs can be gigantic, even a few seconds can be > 1GB
             // inside here, performance becomes critical.
             LargeFilesReader.ReadFilesLines(fileNames,
-                (line) =>
-                {
-                    importer.ImportTraceLogLine(line);
-                });
+                (line) => { importer.ImportTraceLogLine(line); });
 
             if (importer.CurrentStats.NumRomBytesModified > 0)
                 MarkChanged();
@@ -278,6 +276,33 @@ namespace DiztinGUIsh.controller
             });
 
             Project = null;
+        }
+
+        public int MarkMany(int markProperty, int markStart, object markValue, int markCount)
+        {
+            var destination = markProperty switch
+            {
+                0 => Project.Data.MarkTypeFlag(markStart, (Data.FlagType) markValue, markCount),
+                1 => Project.Data.MarkDataBank(markStart, (int) markValue, markCount),
+                2 => Project.Data.MarkDirectPage(markStart, (int) markValue, markCount),
+                3 => Project.Data.MarkMFlag(markStart, (bool) markValue, markCount),
+                4 => Project.Data.MarkXFlag(markStart, (bool) markValue, markCount),
+                5 => Project.Data.MarkArchitecture(markStart, (Data.Architecture) markValue, markCount),
+                _ => 0
+            };
+
+            MarkChanged();
+
+            return destination;
+        }
+
+        public int MarkTypeFlag(int offset, Data.FlagType markFlag, int getByteLengthForFlag)
+        {
+            var newOffset = Project.Data.MarkTypeFlag(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag));
+
+            MarkChanged();
+
+            return newOffset;
         }
     }
 }
