@@ -116,10 +116,10 @@ namespace Diz.Core.util
                 (data[offset + 1] << 8);
         }
 
-        public static byte[] StringToByteArray(string s)
+        public static byte[] StringToNullTermByteArray(string s)
         {
-            byte[] array = new byte[s.Length + 1];
-            for (int i = 0; i < s.Length; i++) array[i] = (byte)s[i];
+            var array = new byte[s.Length + 1];
+            for (var i = 0; i < s.Length; i++) array[i] = (byte)s[i];
             array[s.Length] = 0;
             return array;
         }
