@@ -12,7 +12,6 @@ namespace Diz.Core.serialization
     {
         public Func<string, string> RomPromptFn { get; set; }
         
-        // TODO: move romPromptFn to be a field instead of a param passed around.
         protected override byte[] ReadFromOriginalRom(Project project)
         {
             string firstRomFileWeTried;
@@ -26,8 +25,18 @@ namespace Diz.Core.serialization
                 if (error == null)
                     break;
 
+                // we failed to open a valid ROM, so (if we can)
+                // ask the user to select one via RomPromptFn.
+                
+                // if there's no way to prompt the user,
+                // then we can't continue.
+                if (RomPromptFn == null)
+                    return null;
+
                 nextFileToTry = RomPromptFn(error);
-                if (nextFileToTry == null)
+
+                // they gave up... so bail.
+                if (string.IsNullOrEmpty(nextFileToTry))
                     return null;
             } while (true);
 
