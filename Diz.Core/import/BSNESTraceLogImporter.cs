@@ -86,10 +86,10 @@ namespace Diz.Core.import
             //
             // Calling code should ideally not let us get to here, and instead supply us with a valid instructionByteLen
 
-            return GetFlag(pc) == Data.FlagType.Operand;
+            return GetFlag(pc) == FlagType.Operand;
         }
 
-        private Data.FlagType GetFlag(int pc)
+        private FlagType GetFlag(int pc)
         {
             data.RomBytes[pc].Lock.EnterReadLock();
             try

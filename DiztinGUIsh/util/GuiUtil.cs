@@ -80,5 +80,20 @@ namespace DiztinGUIsh.util
             cb.DisplayMember = "Value";
             cb.ValueMember = "Key";
         }
+        
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
+        
+        // call before you start any forms
+        public static void SetupDPIStuff()
+        {
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                SetProcessDPIAware();
+            }
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+        }
     }
 }

@@ -10,6 +10,7 @@ using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using DiztinGUIsh.util;
+using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
 
 // Model-View-Controller architecture.
@@ -29,20 +30,24 @@ using DiztinGUIsh.window.dialog;
 //
 // example:
 //   ProjectView -> A form that displays an opened project to the user
-//   ProjectController -> When the form needs to change any state, it talks to ProjectController
+//   MainFormController -> When the form needs to change any state, it talks to MainFormController
 //                        i.e. when user clicks "Open Project", it sends the filename to us for handling
 //   Project -> The actual data, the model. It knows nothing about GUI, just is the low-level business logic
 
 namespace DiztinGUIsh.controller
 {
-    public class ProjectController
+    public class MainFormController
     {
         public IProjectView ProjectView { get; set; }
-        public Project Project { get; private set; }
+        public Project Project { get; set; }
+        
+        public bool MoveWithStep { get; set; } = true;
 
         public delegate void ProjectChangedEvent(object sender, ProjectChangedEventArgs e);
 
         public event ProjectChangedEvent ProjectChanged;
+
+        public FlagType CurrentMarkFlag = FlagType.Data8Bit;
 
         public class ProjectChangedEventArgs
         {
@@ -186,6 +191,9 @@ namespace DiztinGUIsh.controller
 
         private void WriteAssemblyOutput(LogWriterSettings settings, bool showProgressBarUpdates = false)
         {
+            if (!RomDataPresent())
+                return;
+            
             var lc = new LogCreator()
             {
                 Settings = settings,
@@ -211,13 +219,11 @@ namespace DiztinGUIsh.controller
             Project.UnsavedChanges = true;
         }
 
-        public void SelectOffset(int offset, int column = -1)
-        {
-            ProjectView.SelectOffset(offset, column);
-        }
-
         public long ImportBsnesUsageMap(string fileName)
         {
+            if (!RomDataPresent())
+                return 0L;
+            
             var linesModified = BsnesUsageMapImporter.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data);
 
             if (linesModified > 0)
@@ -228,6 +234,9 @@ namespace DiztinGUIsh.controller
 
         public long ImportBsnesTraceLogs(string[] fileNames)
         {
+            if (!RomDataPresent())
+                return 0L;
+            
             var importer = new BsnesTraceLogImporter(Project.Data);
 
             // TODO: differentiate between binary-formatted and text-formatted files
@@ -247,6 +256,9 @@ namespace DiztinGUIsh.controller
 
         public long ImportBsnesTraceLogsBinary(IEnumerable<string> filenames)
         {
+            if (!RomDataPresent())
+                return 0L;
+            
             var importer = new BsnesTraceLogImporter(Project.Data);
 
             foreach (var file in filenames)
@@ -280,14 +292,17 @@ namespace DiztinGUIsh.controller
 
         public int MarkMany(int markProperty, int markStart, object markValue, int markCount)
         {
+            if (!RomDataPresent())
+                return 0;
+            
             var destination = markProperty switch
             {
-                0 => Project.Data.MarkTypeFlag(markStart, (Data.FlagType) markValue, markCount),
+                0 => Project.Data.MarkTypeFlag(markStart, (FlagType) markValue, markCount),
                 1 => Project.Data.MarkDataBank(markStart, (int) markValue, markCount),
                 2 => Project.Data.MarkDirectPage(markStart, (int) markValue, markCount),
                 3 => Project.Data.MarkMFlag(markStart, (bool) markValue, markCount),
                 4 => Project.Data.MarkXFlag(markStart, (bool) markValue, markCount),
-                5 => Project.Data.MarkArchitecture(markStart, (Data.Architecture) markValue, markCount),
+                5 => Project.Data.MarkArchitecture(markStart, (Architecture) markValue, markCount),
                 _ => 0
             };
 
@@ -296,13 +311,215 @@ namespace DiztinGUIsh.controller
             return destination;
         }
 
-        public int MarkTypeFlag(int offset, Data.FlagType markFlag, int getByteLengthForFlag)
+        public void Show()
         {
-            var newOffset = Project.Data.MarkTypeFlag(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag));
+            ProjectView?.Show();
+        }
+
+        private bool RomDataPresent() => Project?.Data?.GetRomSize() > 0;
+
+        public void Step(int offset)
+        {
+            if (!RomDataPresent()) 
+                return;
+            
+            MarkChanged();
+            var destinationOffset = Project.Data.Step(offset, false, false, offset - 1);
+            ProjectView.SelectOffset(destinationOffset);
+            // RefreshPercentAndWindowTitle();
+        }
+
+        public void StepIn(int offset)
+        {
+            if (!RomDataPresent()) 
+                return;
+            
+            MarkChanged();
+            var destinationOffset = Project.Data.Step(offset, true, false, offset - 1);
+            ProjectView.SelectOffset(destinationOffset);
+            // RefreshPercentAndWindowTitle();
+        }
+
+        public void AutoStepSafe(int offset)
+        {
+            if (!RomDataPresent()) 
+                return;
+            
+            MarkChanged();
+            var destinationOffset = Project.Data.AutoStep(offset, false, 0);
+            if (MoveWithStep) 
+                ProjectView.SelectOffset(destinationOffset);
+            
+            // RefreshPercentAndWindowTitle();
+        }
+
+        public void AutoStepHarsh(int offset)
+        {
+            if (!RomDataPresent()) 
+                return;
+            
+            if (!ProjectView.PromptHarshAutoStep(offset, out var newOffset, out var count))
+                return;
 
             MarkChanged();
+            var destination = Project.Data.AutoStep(newOffset, true, count);
+            
+            if (MoveWithStep) 
+                ProjectView.SelectOffset(destination);
 
-            return newOffset;
+            // RefreshPercentAndWindowTitle();
+        }
+
+        public void Mark(int offset)
+        {
+            if (!RomDataPresent())
+                return;
+            
+            MarkChanged();
+            var newOffset = Project.Data.MarkTypeFlag(offset, CurrentMarkFlag, RomUtil.GetByteLengthForFlag(CurrentMarkFlag));
+            
+            ProjectView.SelectOffset(newOffset);
+            
+            // UpdateUI_Tmp3();
+        }
+        
+        private int FindIntermediateAddress(int offset)
+        {
+            if (!RomDataPresent())
+                return -1;
+
+            var ia = Project.Data.GetIntermediateAddressOrPointer(offset);
+            if (ia < 0)
+                return -1;
+
+            return Project.Data.ConvertSnesToPc(ia);
+        }
+
+        private bool FindUnreached(int offset, bool end, bool direction, out int unreached)
+        {
+            unreached = -1;
+            if (!RomDataPresent())
+                return false;
+            
+            var size = Project.Data.GetRomSize();
+            unreached = end ? (direction ? 0 : size - 1) : offset;
+
+            if (direction)
+            {
+                if (!end)
+                    while (unreached < size - 1 && IsUnreached(unreached))
+                        unreached++;
+                
+                while (unreached < size - 1 && IsReached(unreached)) 
+                    unreached++;
+            }
+            else
+            {
+                if (unreached > 0) 
+                    unreached--;
+                
+                while (unreached > 0 && IsReached(unreached)) 
+                    unreached--;
+            }
+
+            while (unreached > 0 && IsUnreached(unreached - 1)) 
+                unreached--;
+
+            return IsUnreached(unreached);
+        }
+
+        private bool IsReached(int offset)
+        {
+            return Project.Data.GetFlag(offset) != FlagType.Unreached;
+        }
+
+        private bool IsUnreached(int offset)
+        {
+            return Project.Data.GetFlag(offset) == FlagType.Unreached;
+        }
+
+        public void ToggleMoveWithStep()
+        {
+            MoveWithStep = !MoveWithStep;
+        }
+        
+        public void MarkMany(int offset, int column)
+        {
+            if (!RomDataPresent()) 
+                return;
+            
+            var mark = ProjectView.PromptMarkMany(offset, column);
+            if (mark == null)
+                return;
+
+            var destination = MarkMany(mark.Property, mark.Start, mark.Value, mark.Count);
+
+            if (MoveWithStep)
+                ProjectView.SelectOffset(destination);
+
+            // RefreshTablePercentAndWindowTitle();
+        }
+
+        public void GoToIntermediateAddress(int offset)
+        {
+            if (!RomDataPresent())
+                return;
+            
+            var snesOffset = FindIntermediateAddress(offset);
+            if (snesOffset == -1)
+                return;
+            
+            ProjectView.SelectOffset(snesOffset);
+        }
+        
+        private bool IsOffsetInRange(int offset)
+        {
+            if (!RomDataPresent())
+                return false;
+            
+            return offset >= 0 && offset < Project.Data.GetRomSize();
+        }
+
+        public void GoTo(int offset)
+        {
+            if (IsOffsetInRange(offset))
+                ProjectView.SelectOffset(offset);
+            else
+                ProjectView.ShowOffsetOutOfRangeMsg();
+        }
+
+        public void GoToUnreached(bool end, bool direction)
+        {
+            if (!FindUnreached(ProjectView.SelectedOffset, end, direction, out var unreached))
+                return;
+
+            ProjectView.SelectOffset(unreached);
+            // SelectOffset(unreached, 1);
+        }
+
+        public void SetMFlag(int offset, bool b)
+        {
+            Project.Data.SetMFlag(offset, b);
+        }
+
+        public void SetXFlag(int offset, bool b)
+        {
+            Project.Data.SetXFlag(offset ,b);
+        }
+
+        public void AddLabel(int convertPCtoSnes, Label label, bool b)
+        {
+            Project.Data.AddLabel(convertPCtoSnes, label, b);
+        }
+
+        public void SelectOffset(int offset)
+        {
+            ProjectView.SelectOffset(offset);
+        }
+
+        public void AddComment(int i, string s, bool overwrite)
+        {
+            Project.Data.AddComment(i, s, overwrite);
         }
     }
 }

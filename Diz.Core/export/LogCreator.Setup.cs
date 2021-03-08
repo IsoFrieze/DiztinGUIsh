@@ -138,8 +138,8 @@ namespace Diz.Core.export
 
             var flag = Data.GetFlag(pcoffset);
             var usefulToCreateLabelFrom =
-                flag == Data.FlagType.Opcode || flag == Data.FlagType.Pointer16Bit ||
-                flag == Data.FlagType.Pointer24Bit || flag == Data.FlagType.Pointer32Bit;
+                flag == FlagType.Opcode || flag == FlagType.Pointer16Bit ||
+                flag == FlagType.Pointer24Bit || flag == FlagType.Pointer32Bit;
 
             if (!usefulToCreateLabelFrom)
                 return -1;

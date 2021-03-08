@@ -17,8 +17,8 @@ namespace DiztinGUIsh.window
     public partial class AliasList : Form
     {
         private readonly MainWindow parentWindow;
-        private ProjectController ProjectController => parentWindow?.ProjectController;
-        private Data Data => ProjectController?.Project?.Data;
+        private MainFormController MainFormController => parentWindow?.MainFormController;
+        private Data Data => MainFormController?.Project?.Data;
 
         public bool Locked;
         private int currentlyEditing = -1;
@@ -50,7 +50,7 @@ namespace DiztinGUIsh.window
             var offset = Data.ConvertSnesToPc(val);
             if (offset >= 0)
             {
-                ProjectController.SelectOffset(offset);
+                MainFormController.SelectOffset(offset);
             }
         }
 

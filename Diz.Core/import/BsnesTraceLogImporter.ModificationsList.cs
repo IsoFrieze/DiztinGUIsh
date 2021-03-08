@@ -17,7 +17,7 @@ namespace Diz.Core.import
             // imported data from trace log
             public int SnesAddress;
             public int Pc;
-            public Data.FlagType FlagType;
+            public FlagType FlagType;
             public int DataBank;
             public int DirectPage;
             public bool XFlagSet;

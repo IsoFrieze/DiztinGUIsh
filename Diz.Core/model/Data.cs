@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using Diz.Core.arch;
@@ -10,7 +12,112 @@ using IX.Observable;
 
 namespace Diz.Core.model
 {
-    public partial class Data : DizDataModel
+    
+        [System.AttributeUsage(System.AttributeTargets.All)]
+        public class ColorDescriptionAttribute : System.Attribute
+        {
+            public KnownColor Color { get; }
+
+            public ColorDescriptionAttribute(KnownColor c)
+            {
+                Color = c;
+            }
+        }
+
+        public enum FlagType : byte
+        {
+            [ColorDescription(KnownColor.Black)] Unreached = 0x00,
+
+            [ColorDescription(KnownColor.Yellow)] Opcode = 0x10,
+
+            [ColorDescription(KnownColor.YellowGreen)]
+            Operand = 0x11,
+
+            [ColorDescription(KnownColor.NavajoWhite)] [Description("Data (8-bit)")]
+            Data8Bit = 0x20,
+
+            [ColorDescription(KnownColor.LightPink)]
+            Graphics = 0x21,
+
+            [ColorDescription(KnownColor.PowderBlue)]
+            Music = 0x22,
+
+            [ColorDescription(KnownColor.DarkSlateGray)]
+            Empty = 0x23,
+
+            [ColorDescription(KnownColor.NavajoWhite)] [Description("Data (16-bit)")]
+            Data16Bit = 0x30,
+
+            [ColorDescription(KnownColor.Orchid)] [Description("Pointer (16-bit)")]
+            Pointer16Bit = 0x31,
+
+            [ColorDescription(KnownColor.NavajoWhite)] [Description("Data (24-bit)")]
+            Data24Bit = 0x40,
+
+            [ColorDescription(KnownColor.Orchid)] [Description("Pointer (24-bit)")]
+            Pointer24Bit = 0x41,
+
+            [ColorDescription(KnownColor.NavajoWhite)] [Description("Data (32-bit)")]
+            Data32Bit = 0x50,
+
+            [ColorDescription(KnownColor.Orchid)] [Description("Pointer (32-bit)")]
+            Pointer32Bit = 0x51,
+
+            [ColorDescription(KnownColor.Aquamarine)]
+            Text = 0x60
+        }
+
+        public enum Architecture : byte
+        {
+            [Description("65C816")] Cpu65C816 = 0x00,
+            [Description("SPC700")] Apuspc700 = 0x01,
+            [Description("SuperFX")] GpuSuperFx = 0x02
+        }
+
+        [Flags]
+        public enum InOutPoint : byte
+        {
+            InPoint = 0x01,
+            OutPoint = 0x02,
+            EndPoint = 0x04,
+            ReadPoint = 0x08
+        }
+        
+        
+    public interface ISnesInstructionReader
+    {
+        bool GetMFlag(int offset);
+        bool GetXFlag(int offset);
+        int GetRomSize();
+        public string GetLabelName(int offset);
+        int ConvertPCtoSnes(int offset);
+        int ConvertSnesToPc(int address);
+        int GetRomByte(int offset);
+        InOutPoint GetInOutPoint(int offset);
+        int GetInstructionLength(int offset);
+        string GetInstruction(int offset);
+        int GetIntermediateAddressOrPointer(int offset);
+        FlagType GetFlag(int offset);
+        int GetDataBank(int offset);
+        int GetDirectPage(int offset);
+        string GetComment(int i);
+    } 
+    
+    public interface ISnesCpuMarker
+    {
+        int Step(int offset, bool branch, bool force, int prevOffset);
+        void SetMFlag(int offset, bool b);
+        void SetXFlag(int offset, bool b);
+    }
+
+    public interface ISnesData : ISnesInstructionReader, ISnesCpuMarker
+    {
+        
+    }
+    
+    // this really needs to be called SnesData or something similar.
+    // should be refactored to deal with multiple types of data from multiple systems, arch's, etc.
+    public partial class Data : DizDataModel, ISnesData
     {
         // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something that operates on Data
         private readonly Cpu65C816 cpu65C816;
@@ -92,6 +199,7 @@ namespace Diz.Core.model
         public bool GetXFlag(int i) => RomBytes[i].XFlag;
         public void SetXFlag(int i, bool x) => RomBytes[i].XFlag = x;
         public bool GetMFlag(int i) => RomBytes[i].MFlag;
+
         public void SetMFlag(int i, bool m) => RomBytes[i].MFlag = m;
         public int GetMxFlags(int i)
         {

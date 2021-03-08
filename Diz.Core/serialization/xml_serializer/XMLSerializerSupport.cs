@@ -72,7 +72,7 @@ namespace Diz.Core.serialization.xml_serializer
                 .Type<Project>()
                 .Member(x => x.UnsavedChanges).Ignore()
                 .Member(x => x.ProjectFileName).Ignore()
-                .Member(x => x.CurrentViewOffset).Ignore()
+                // .Member(x => x.CurrentViewOffset).Ignore()
 
                 .Type<RomBytes>()
                 .Register().Serializer().Using(RomBytesSerializer.Default)

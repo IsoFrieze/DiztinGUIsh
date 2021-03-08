@@ -218,7 +218,7 @@ namespace Diz.Core.util
         {
             return GetEnumAttribute(
                 value,
-                (Data.ColorDescriptionAttribute d) => d?.Color
+                (ColorDescriptionAttribute d) => d?.Color
             ) ?? KnownColor.Black;
         }
 
@@ -235,10 +235,10 @@ namespace Diz.Core.util
         }
 
         // sadly, this entire conversion is a bit slow so, cache it as we look it up
-        private static readonly Dictionary<Data.FlagType, Color> CachedRomFlagColors =
-            new Dictionary<Data.FlagType, Color>();
+        private static readonly Dictionary<FlagType, Color> CachedRomFlagColors =
+            new Dictionary<FlagType, Color>();
 
-        public static Color GetColorFromFlag(Data.FlagType romFlag)
+        public static Color GetColorFromFlag(FlagType romFlag)
         {
             if (CachedRomFlagColors.TryGetValue(romFlag, out var color))
                 return color;
@@ -254,5 +254,9 @@ namespace Diz.Core.util
             var info = new ProcessStartInfo(args) { UseShellExecute = true };
             Process.Start(info);
         }
+
+        // returns a value >= min, and < max (so, pass in your array's length here)
+        public static int ClampIndex(int i, int size) => ClampIndex(i, 0, size);
+        public static int ClampIndex(int i, int min, int max) => i >= max ? max - 1 : i < min ? 0 : i;
     }
 }

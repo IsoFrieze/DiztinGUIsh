@@ -68,12 +68,13 @@ namespace Diz.Core.model
         // purely visual. what offset is currently being looked at in the main grid.
         //
         // TODO: user-specific so can't store in the main project. save it elsewhere.
-        private int currentViewOffset;
+        // TODO: this is really a per-view setting so shouldn't be in Project. there can be multiple.
+        /*private int currentViewOffset;
         public int CurrentViewOffset
         {
             get => currentViewOffset;
             set => SetField(ref currentViewOffset, value);
-        }
+        }*/
 
         // needs to come last for serialization. this is the heart of the app, the actual
         // data from the ROM and metadata we add/create.

@@ -27,7 +27,7 @@ namespace DiztinGUIsh.window
 
         private void VisualizerForm_Load(object sender, System.EventArgs e)
         {
-            mainWindow.ProjectController.ProjectChanged += ProjectController_ProjectChanged;
+            mainWindow.MainFormController.ProjectChanged += ProjectController_ProjectChanged;
 
             // hack to make room for the scrollbar
             // I wish docking dealt with this, or maybe I set it up wrong...
@@ -36,7 +36,7 @@ namespace DiztinGUIsh.window
             romFullVisualizer1.Project = mainWindow.Project;
         }
 
-        private void ProjectController_ProjectChanged(object sender, controller.ProjectController.ProjectChangedEventArgs e)
+        private void ProjectController_ProjectChanged(object sender, controller.MainFormController.ProjectChangedEventArgs e)
         {
             this.Project = e.Project;
         }

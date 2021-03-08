@@ -147,5 +147,15 @@ namespace DiztinGUIsh
         {
             settings.IncludeUnusedLabels = chkIncludeUnusedLabels.Checked;
         }
+
+        public static void ShowExportResults(LogCreator.OutputResult result)
+        {
+            if (result.ErrorCount > 0)
+                MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else
+                MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK,
+                    MessageBoxIcon.Asterisk);
+        }
     }
 }

@@ -17,8 +17,8 @@ namespace Diz.Core.arch
             var prevDataBank = data.GetDataBank(offset);
             bool prevX = data.GetXFlag(offset), prevM = data.GetMFlag(offset);
 
-            while (prevOffset >= 0 && data.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
-            if (prevOffset >= 0 && data.GetFlag(prevOffset) == Data.FlagType.Opcode)
+            while (prevOffset >= 0 && data.GetFlag(prevOffset) == FlagType.Operand) prevOffset--;
+            if (prevOffset >= 0 && data.GetFlag(prevOffset) == FlagType.Opcode)
             {
                 prevDirectPage = data.GetDirectPage(prevOffset);
                 prevDataBank = data.GetDataBank(prevOffset);
@@ -33,7 +33,7 @@ namespace Diz.Core.arch
             }
 
             // set first byte first, so the instruction length is correct
-            data.SetFlag(offset, Data.FlagType.Opcode);
+            data.SetFlag(offset, FlagType.Opcode);
             data.SetDataBank(offset, prevDataBank);
             data.SetDirectPage(offset, prevDirectPage);
             data.SetXFlag(offset, prevX);
@@ -54,7 +54,7 @@ namespace Diz.Core.arch
             // in most situations.
             for (var i = 1; i < length; i++)
             {
-                data.SetFlag(offset + i, Data.FlagType.Operand);
+                data.SetFlag(offset + i, FlagType.Operand);
                 data.SetDataBank(offset + i, prevDataBank);
                 data.SetDirectPage(offset + i, prevDirectPage);
                 data.SetXFlag(offset + i, prevX);
@@ -225,13 +225,13 @@ namespace Diz.Core.arch
                 ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
                 (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
                 (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
-            ) data.SetInOutPoint(iaOffsetPc, Data.InOutPoint.ReadPoint);
+            ) data.SetInOutPoint(iaOffsetPc, InOutPoint.ReadPoint);
 
             // set end point on offset
             if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
                 || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
                 || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC // BRL STP JML
-            ) data.SetInOutPoint(offset, Data.InOutPoint.EndPoint);
+            ) data.SetInOutPoint(offset, InOutPoint.EndPoint);
 
             // set out point on offset
             // set in point on EA
@@ -241,8 +241,8 @@ namespace Diz.Core.arch
                 || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0  // BCC BCS BNE BEQ
                 || opcode == 0x20 || opcode == 0x22)) // JSR JSL
             {
-                data.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
-                data.SetInOutPoint(iaOffsetPc, Data.InOutPoint.InPoint);
+                data.SetInOutPoint(offset, InOutPoint.OutPoint);
+                data.SetInOutPoint(iaOffsetPc, InOutPoint.InPoint);
             }
         }
 

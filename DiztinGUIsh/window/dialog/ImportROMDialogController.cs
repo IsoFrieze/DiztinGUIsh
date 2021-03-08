@@ -87,9 +87,9 @@ namespace DiztinGUIsh.window.dialog
             RomUtil.GenerateVectorLabels(
                 VectorTableEntriesEnabled, RomSettingsOffset, ImportSettings.RomBytes, ImportSettings.RomMapMode);
 
-        public Dictionary<int, Data.FlagType> GenerateHeaderFlags()
+        public Dictionary<int, FlagType> GenerateHeaderFlags()
         {
-            var flags = new Dictionary<int, Data.FlagType>();
+            var flags = new Dictionary<int, FlagType>();
 
             if (ShouldCheckHeader)
                 RomUtil.GenerateHeaderFlags(RomSettingsOffset, flags, ImportSettings.RomBytes);
