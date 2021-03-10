@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -7,15 +8,35 @@ using System.Linq;
 
 namespace Diz.Core.model
 {
-    public class RomBytes : IEnumerable<RomByte>, INotifyCollectionChanged, INotifyPropertyChanged
+    // TODO: might be able to do something more generic for RomBytes now that other refactorings are completed.
+    // This class needs to do these things that are special:
+    // 1) Be handled specially by our custom XML serializer (compresses to save disk space)
+    // 2) Handle Equals() by comparing each element in the list (SequenceEqual)
+    // 3) Emit notifypropertychanged if any members change
+    // 4) Participate as a databinding source for winforms controls (usually via an intermediate object)
+    public class RomBytes : IList<RomByte>, IList, INotifyCollectionChanged, INotifyPropertyChanged
     {
-        private ObservableCollection<RomByte> bytes;
+        private sealed class BytesEqualityComparer : IEqualityComparer<RomBytes>
+        {
+            public bool Equals(RomBytes x, RomBytes y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (ReferenceEquals(x, null)) return false;
+                if (ReferenceEquals(y, null)) return false;
+                if (x.GetType() != y.GetType()) return false;
+                return Equals(x.bytes, y.bytes);
+            }
 
-        // TODO: might be able to do something more generic for RomBytes now that other refactorings are completed.
-        // This class needs to do these things that are special:
-        // 1) Be handled specially by our custom XML serializer (compresses to save disk space)
-        // 2) Handle Equals() by comparing each element in the list (SequenceEqual)
-        // 3) Emit notifypropertychanged if any members change
+            public int GetHashCode(RomBytes obj)
+            {
+                return (obj.bytes != null ? obj.bytes.GetHashCode() : 0);
+            }
+        }
+
+        public static IEqualityComparer<RomBytes> BytesComparer { get; } = new BytesEqualityComparer();
+
+        private ObservableCollection<RomByte> bytes;
+        
         private ObservableCollection<RomByte> Bytes
         {
             get => bytes;
@@ -31,10 +52,37 @@ namespace Diz.Core.model
             }
         }
 
+        public int IndexOf(RomByte item)
+        {
+            return bytes.IndexOf(item);
+        }
+
+        public void Insert(int index, RomByte item)
+        {
+            bytes.Insert(index, item);
+        }
+
+        public void Remove(object? value)
+        {
+            ((IList) bytes).Remove(value);
+        }
+
+        public void RemoveAt(int index)
+        {
+            bytes.RemoveAt(index);
+        }
+
+        public bool IsFixedSize => ((IList) bytes).IsFixedSize;
+
         public RomByte this[int i]
         {
             get => Bytes[i];
             set => Bytes[i] = value;
+        }
+
+        public ArraySegment<RomByte> GetArraySegment(int offset, int count)
+        {
+            return new(bytes.ToArray(), offset, count);
         }
 
         public RomBytes()
@@ -51,7 +99,28 @@ namespace Diz.Core.model
             }
         }
 
+        public bool Remove(RomByte item)
+        {
+            return bytes.Remove(item);
+        }
+
+        public void CopyTo(Array array, int index)
+        {
+            ((ICollection) bytes).CopyTo(array, index);
+        }
+
         public int Count => Bytes.Count;
+        public bool IsSynchronized => ((ICollection) bytes).IsSynchronized;
+
+        public object SyncRoot => ((ICollection) bytes).SyncRoot;
+
+        public bool IsReadOnly => false; // probably ok?
+        object? IList.this[int index]
+        {
+            get => ((IList) bytes)[index];
+            set => ((IList) bytes)[index] = value;
+        }
+
         public bool SendNotificationChangedEvents { get; set; } = true;
 
         public void Add(RomByte romByte)
@@ -65,9 +134,40 @@ namespace Diz.Core.model
             for (var i = 0; i < size; ++i)
                 Add(new RomByte());
         }
+
+        public int Add(object? value)
+        {
+            return ((IList) bytes).Add(value);
+        }
+
         public void Clear()
         {
             Bytes.Clear();
+        }
+
+        public bool Contains(object? value)
+        {
+            return ((IList) bytes).Contains(value);
+        }
+
+        public int IndexOf(object? value)
+        {
+            return ((IList) bytes).IndexOf(value);
+        }
+
+        public void Insert(int index, object? value)
+        {
+            ((IList) bytes).Insert(index, value);
+        }
+
+        public bool Contains(RomByte item)
+        {
+            return bytes.Contains(item);
+        }
+
+        public void CopyTo(RomByte[] array, int arrayIndex)
+        {
+            bytes.CopyTo(array, arrayIndex);
         }
 
         #region Equality
