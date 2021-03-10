@@ -7,9 +7,17 @@ using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.controller
 {
+    public interface IProjectOpener : ILongRunningTaskHandler
+    {
+        public void OnProjectOpenSuccess(string filename, Project project);
+        public void OnProjectOpenWarning(string warnings);
+        public void OnProjectOpenFail(string fatalError);
+        public string AskToSelectNewRomFilename(string error);
+    }
+    
     public class ProjectOpenerGuiController
     {
-        public App.IProjectOpenerGui Gui { get; init; }
+        public IProjectOpener Gui { get; init; }
 
         public Project OpenProject(string filename)
         {
@@ -40,7 +48,7 @@ namespace DiztinGUIsh.controller
                     errorMsg = ex.Message;
                 }
             }, $"Opening {Path.GetFileName(filename)}...");
-
+            
             if (project == null)
             {
                 Gui.OnProjectOpenFail(errorMsg);
@@ -50,6 +58,7 @@ namespace DiztinGUIsh.controller
             if (warningMsg != "")
                 Gui.OnProjectOpenWarning(warningMsg);
             
+            Gui.OnProjectOpenSuccess(filename, project);
             return project;
         }
 

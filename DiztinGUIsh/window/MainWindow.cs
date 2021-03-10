@@ -142,9 +142,6 @@ namespace DiztinGUIsh.window
             }
         }
 
-        IProjectView.LongRunningTaskHandler IProjectView.TaskHandler =>
-            ProgressBarJob.RunAndWaitForCompletion;
-        
         // sub windows
         public AliasList AliasList;
         private VisualizerForm visualForm;
@@ -810,6 +807,9 @@ namespace DiztinGUIsh.window
 
         private void githubToolStripMenuItem_Click(object sender, EventArgs e) =>
             GuiUtil.OpenExternalProcess("https://github.com/Dotsarecool/DiztinGUIsh");
+        
+        public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
+            ProgressBarJob.RunAndWaitForCompletion;
         
         #endregion
     }

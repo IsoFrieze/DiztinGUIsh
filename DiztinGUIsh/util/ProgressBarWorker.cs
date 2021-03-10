@@ -5,7 +5,7 @@ using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh
 {
-    // TODO: use https://www.wpf-tutorial.com/misc/multi-threading-with-the-backgroundworker/ backgroundworker
+    // TODO: replace this with Task and async/await. don't use threads directly.
     public abstract class ProgressBarWorker
     {
         private ProgressDialog dialog;

@@ -5,15 +5,19 @@ using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.controller
 {
-    public interface IProjectView
+    public interface ILongRunningTaskHandler
+    {
+        public delegate void LongRunningTaskHandler(Action task, string description = null);
+        LongRunningTaskHandler TaskHandler { get; }
+    }
+    
+    public interface IProjectView : ILongRunningTaskHandler
     {
         Project Project { get; set; }
         void OnProjectOpenFail(string errorMsg);
         void OnProjectSaved();
         void OnExportFinished(LogCreator.OutputResult result);
 
-        public delegate void LongRunningTaskHandler(Action task, string description = null);
-        LongRunningTaskHandler TaskHandler { get; }
         int SelectedOffset { get; }
         void SelectOffset(int offset);
         string AskToSelectNewRomFilename(string promptSubject, string promptText);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
@@ -12,6 +11,7 @@ using Diz.Core.util;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
+using DiztinGUIsh.window2;
 
 // Model-View-Controller architecture.
 // goal: while this class's purpose is to be the middleman between dumb GUI elements and 
@@ -36,7 +36,7 @@ using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.controller
 {
-    public class MainFormController
+    public class MainFormController : IProjectOpener
     {
         public IProjectView ProjectView { get; set; }
         public Project Project { get; set; }
@@ -76,50 +76,12 @@ namespace DiztinGUIsh.controller
                 task();
         }
 
-        public bool OpenProject(string filename)
+        public void OpenProject(string filename)
         {
-            Project project = null;
-            var errorMsg = "";
-            var warningMsg = "";
-
-            DoLongRunningTask(delegate
-            {
-                try
-                {
-                    var (project1, warning) = new ProjectFileManager()
-                    {
-                        RomPromptFn = AskToSelectNewRomFilename
-                    }.Open(filename);
-
-                    project = project1;
-                    warningMsg = warning;
-                }
-                catch (AggregateException ex)
-                {
-                    project = null;
-                    errorMsg = ex.InnerExceptions.Select(e => e.Message).Aggregate((line, val) => line += val + "\n");
-                }
-                catch (Exception ex)
-                {
-                    project = null;
-                    errorMsg = ex.Message;
-                }
-            }, $"Opening {Path.GetFileName(filename)}...");
-
-            if (project == null)
-            {
-                ProjectView.OnProjectOpenFail(errorMsg);
-                return false;
-            }
-
-            if (warningMsg != "")
-                ProjectView.OnProjectOpenWarning(warningMsg);
-
-            OnProjectOpenSuccess(filename, project);
-            return true;
+            new ProjectOpenerGuiController { Gui = this }.OpenProject(filename);
         }
-
-        private void OnProjectOpenSuccess(string filename, Project project)
+        
+        public void OnProjectOpenSuccess(string filename, Project project)
         {
             ProjectView.Project = Project = project;
             Project.PropertyChanged += Project_PropertyChanged;
@@ -131,6 +93,13 @@ namespace DiztinGUIsh.controller
                 Project = project,
             });
         }
+
+        public void OnProjectOpenWarning(string warnings) => ProjectView.OnProjectOpenWarning(warnings);
+
+        public void OnProjectOpenFail(string fatalError) => ProjectView.OnProjectOpenFail(fatalError);
+
+        public string AskToSelectNewRomFilename(string error) => 
+            ProjectView.AskToSelectNewRomFilename("Error", $"{error} Link a new ROM now?");
 
         private void Project_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -177,11 +146,6 @@ namespace DiztinGUIsh.controller
         {
             var project = BaseProjectFileManager.ImportRomAndCreateNewProject(importSettings);
             OnProjectOpenSuccess(project.ProjectFileName, project);
-        }
-
-        private string AskToSelectNewRomFilename(string error)
-        {
-            return ProjectView.AskToSelectNewRomFilename("Error", $"{error} Link a new ROM now?");
         }
 
         public void WriteAssemblyOutput()
@@ -521,5 +485,7 @@ namespace DiztinGUIsh.controller
         {
             Project.Data.AddComment(i, s, overwrite);
         }
+
+        public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler { get; }
     }
 }
