@@ -10,8 +10,7 @@ namespace DiztinGUIsh.window2
     public class App
     {
         public FormsController FormsController { get; }= new ();
-        public ProjectsController ProjectsController { get; }= new ();
-        public SubViewsController SubViewsController { get; }= new ();
+        public ProjectsController ProjectsController { get; } = new();
 
         public void OpenFileWithNewView(string filename)
         {
@@ -23,11 +22,7 @@ namespace DiztinGUIsh.window2
             var startingOffset = 0xFFC0;
             var count = 0x15;
             
-            /*var dataSubset = SubViewsController.CreateNewDataView(project.Data, startingOffset, count);
-
-            var f = new DataGridEditorTest();
-            f.Show();
-            f.LoadData(dataSubset);*/
+            // TODO: add real form here
         }
     }
 
@@ -36,22 +31,23 @@ namespace DiztinGUIsh.window2
         public List<Form> Forms { get; }
 
         /*
-var window = new MainWindow
-{
-    MainFormController = new MainFormController
-    {
-        Project = Project
-    }
-};
-window.MainFormController.ProjectView = window;
-controller = window.MainFormController;
+        var window = new MainWindow
+        {
+            MainFormController = new MainFormController
+            {
+                Project = Project
+            }
+        };
+        window.MainFormController.ProjectView = window;
+        controller = window.MainFormController;
 
-window.Closed += WindowOnClosed;
+        window.Closed += WindowOnClosed;
 
-if (filename != "")
-    controller.OpenProject("");
+        if (filename != "")
+            controller.OpenProject("");
 
-controller.Show();*/
+        controller.Show();
+        */
     }
 
     public class ProjectsController
@@ -69,25 +65,6 @@ controller.Show();*/
 
             Projects.Add(filename, project);
             return project;
-        }
-    }
-
-    public class SubViewsController
-    {
-        public ArraySegment<RomByte> CreateNewDataView(Data data, int startingOffset, int count)
-        {
-            // TODO: cache it
-            
-            // dont need this anymore.
-            /*var romDataView = new RomDataView
-            {
-                SourceData = data.RomBytes,
-                SourceCount = count,
-                SourceStart = startingOffset,
-                SourceCurrentIndex = startingOffset,
-            };*/
-
-            return data.RomBytes.GetArraySegment(startingOffset, count);
         }
     }
 }

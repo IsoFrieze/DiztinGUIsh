@@ -52,5 +52,10 @@ namespace DiztinGUIsh.window2
         {
             
         }
+
+        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
+        }
     }
 }

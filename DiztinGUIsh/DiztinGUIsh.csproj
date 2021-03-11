@@ -260,8 +260,11 @@
     <Compile Update="window2\HexEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="window2\DataGridEditorTest.cs">
+    <Compile Update="window2\DataGridEditorForm.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="window2\DataGridEditorControl.cs">
+      <SubType>UserControl</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
