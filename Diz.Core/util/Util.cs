@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using Diz.Core.model;
 
@@ -193,12 +194,31 @@ namespace Diz.Core.util
                 ) ?? value.ToString();
         }
 
-        public static TResult GetEnumAttribute<TAttribute, TResult>(Enum value, Func<TAttribute, TResult> getValueFn) where TAttribute : Attribute
+        public static TResult GetEnumAttribute<TAttribute, TResult>(object value, Func<TAttribute, TResult> getValueFn) where TAttribute : Attribute
         {
-            var type = value.GetType();
-            var memberInfo = type.GetField(value.ToString());
-            var descAttr = ((TAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(TAttribute)));
-            return getValueFn(descAttr);
+            return GetFieldAttribute(getValueFn, value.GetType(), value.ToString());
+        }
+
+        public static TResult GetFieldAttribute<TAttribute, TResult>(Func<TAttribute, TResult> getValueFn, Type type, string memberName)
+            where TAttribute : Attribute
+        {
+            var memberInfo = type.GetField(memberName);
+            if (memberInfo == null)
+                return default;
+            
+            var attr = (TAttribute) Attribute.GetCustomAttribute(memberInfo, typeof(TAttribute));
+            return getValueFn(attr);
+        }
+        
+        public static TResult GetPropertyAttribute<TAttribute, TResult>(Func<TAttribute, TResult> getValueFn, Type type, string propertyName)
+            where TAttribute : Attribute
+        {
+            var property = type.GetProperty(propertyName);
+            if (property == null)
+                return default;
+            
+            var attr = (TAttribute) Attribute.GetCustomAttribute(property, typeof(TAttribute));
+            return getValueFn(attr);
         }
 
         // take a enum type that has [Description] attributes,

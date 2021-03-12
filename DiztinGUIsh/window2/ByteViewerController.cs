@@ -1,7 +1,5 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using Diz.Core.model;
-using Equin.ApplicationFramework;
 
 namespace DiztinGUIsh.window2
 {
