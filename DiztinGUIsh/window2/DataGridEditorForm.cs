@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Windows.Forms;
+using Diz.Core.util;
 
 namespace DiztinGUIsh.window2
 {
@@ -7,6 +8,8 @@ namespace DiztinGUIsh.window2
     {
         private IBytesViewerController FormController;
         private BytesViewerController DataGridController = new();
+        
+        public Util.NumberBase DataGridNumberBase { get; set; } = Util.NumberBase.Hexadecimal;
         
         public DataGridEditorForm(IBytesViewerController formController)
         {

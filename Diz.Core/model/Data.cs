@@ -77,6 +77,7 @@ namespace Diz.Core.model
         [Flags]
         public enum InOutPoint : byte
         {
+            None = 0x00,
             InPoint = 0x01,
             OutPoint = 0x02,
             EndPoint = 0x04,
@@ -279,6 +280,13 @@ namespace Diz.Core.model
             return RomUtil.ConvertPCtoSnes(offset, RomMapMode, RomSpeed);
         }
         public int GetRomByte(int i) => RomBytes[i].Rom;
+        
+        // NOTE: technically not always correct. banks wrap around so, theoretically we should check what operation
+        // we're doing and wrap to the beginning of the bank. for now.... just glossing over it, bigger fish to fry.
+        // "past me" apologizes to 'future you' for this if you got hung up here.
+        //
+        // returns null if out of bounds
+        public byte? GetNextRomByte(int offset) => offset+1 >= 0 && offset+1 < RomBytes.Count ? RomBytes[offset+1].Rom : null;
         public int GetRomWord(int offset)
         {
             if (offset + 1 < GetRomSize())

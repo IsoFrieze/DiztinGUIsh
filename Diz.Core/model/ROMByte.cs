@@ -15,7 +15,7 @@ namespace Diz.Core.model
         private bool mFlag;
         private FlagType typeFlag = FlagType.Unreached;
         private Architecture arch = Architecture.Cpu65C816;
-        private InOutPoint point = 0;
+        private InOutPoint point = InOutPoint.None;
 
         // holds the original byte from the source ROM
         public byte Rom

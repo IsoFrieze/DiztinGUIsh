@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using Diz.Core.model;
 using DiztinGUIsh.Properties;
-using DiztinGUIsh.window;
+// using DiztinGUIsh.window;
 
 namespace DiztinGUIsh.window2
 {

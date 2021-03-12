@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using Diz.Core.model;
 using DiztinGUIsh.controller;
-using DiztinGUIsh.window;
+// using DiztinGUIsh.window;
 
 namespace DiztinGUIsh
 {
@@ -12,13 +12,13 @@ namespace DiztinGUIsh
         private Project Project;
 
         // private List<MainFormController> _controllers;
-        private MainFormController controller; // for now, just one. in the future, we can have multiple
+        // private MainFormController controller; // for now, just one. in the future, we can have multiple
         
         public event EventHandler Closed;
 
         public ProjectSession(string filename)
         {
-            var window = new MainWindow
+            /*var window = new MainWindow
             {
                 MainFormController = new MainFormController
                 {
@@ -33,7 +33,7 @@ namespace DiztinGUIsh
             if (filename != "")
                 controller.OpenProject("");
 
-            controller.Show();
+            controller.Show();*/
         }
 
         private void WindowOnClosed(object? sender, EventArgs e)

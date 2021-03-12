@@ -11,8 +11,8 @@ namespace DiztinGUIsh.window
     {
         // -----------------------------------------------------------------
         // these eventually should go into the designer. for now we fake this.
-        public DataGridView Table { get; init; }
-        public VScrollBar vScrollBar1; // TEMP
+        // public DataGridView Table { get; init; }
+        // public VScrollBar vScrollBar1; // TEMP
         // -----------------------------------------------------------------
         public Util.NumberBase DisplayBase { get; set; } = Util.NumberBase.Hexadecimal;
 
@@ -27,28 +27,28 @@ namespace DiztinGUIsh.window
         
         public int RowsToShow { get; set; }
 
-        public int SelectedOffset => Table.CurrentCell.RowIndex + ViewOffset;
+        // public int SelectedOffset => Table.CurrentCell.RowIndex + ViewOffset;
 
         public IMemoryTableController Controller { get; set; }
 
-        public void InvalidateTable() => Table.Invalidate();
+        
 
         public void Init()
         {
-            Table.CellValueNeeded += table_CellValueNeeded;
-            Table.CellValuePushed += table_CellValuePushed;
-            Table.CellPainting += table_CellPainting;
+            // Table.CellValueNeeded += table_CellValueNeeded;
+            // Table.CellValuePushed += table_CellValuePushed;
+            // // COPIED Table.CellPainting += table_CellPainting;
 
             RowsToShow = (Table.Height - Table.ColumnHeadersHeight) / Table.RowTemplate.Height;
 
-            // https://stackoverflow.com/a/1506066
+            /#1#/ https://stackoverflow.com/a/1506066
             typeof(DataGridView).InvokeMember(
                 "DoubleBuffered",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance |
                 System.Reflection.BindingFlags.SetProperty,
                 null,
                 Table,
-                new object[] {true});
+                new object[] {true});#1#
         }
         
         public void table_MouseWheel(object sender, MouseEventArgs e)
@@ -91,51 +91,6 @@ namespace DiztinGUIsh.window
 
         private ISnesInstructionReader Data { get; set; } // todo hook up
 
-        // TODO: hook up to real handler, right now this is called manually.
-        public void table_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (IsDataValid()) 
-                return;
-
-            var offset = GetSelectedOffset();
-
-            switch (e.KeyCode)
-            {
-                // nav
-                case Keys.Home: case Keys.End:
-                case Keys.PageUp: case Keys.PageDown:
-                case Keys.Up: case Keys.Down:
-                    AdjustSelectedOffsetByKeyCode(e.KeyCode, offset);
-                    break;
-                case Keys.Left: case Keys.Right:
-                    AdjustSelectedColumnByKeyCode(e.KeyCode);
-                    break;
-                
-                // keyboard shortcuts to edit certain fields
-                case Keys.L:
-                    Table.CurrentCell = Table.Rows[Table.CurrentCell.RowIndex].Cells[0];
-                    Table.BeginEdit(true);
-                    break;
-                case Keys.B:
-                    Table.CurrentCell = Table.Rows[Table.CurrentCell.RowIndex].Cells[8];
-                    Table.BeginEdit(true);
-                    break;
-                case Keys.D:
-                    Table.CurrentCell = Table.Rows[Table.CurrentCell.RowIndex].Cells[9];
-                    Table.BeginEdit(true);
-                    break;
-                case Keys.C:
-                    Table.CurrentCell = Table.Rows[Table.CurrentCell.RowIndex].Cells[12];
-                    Table.BeginEdit(true);
-                    break;
-                
-                default:
-                    Controller.KeyDown(sender, e);
-                    break;
-            }
-
-            e.Handled = true;
-            InvalidateTable();
         }
 
         private void AdjustSelectedColumnByKeyCode(Keys keyCode)
@@ -147,12 +102,6 @@ namespace DiztinGUIsh.window
             SelectColumnClamped(adjustBy);
         }
         
-        private int SelectedColumnIndex => Table.CurrentCell.ColumnIndex;
-
-        private void SelectColumnClamped(int offset)
-        {
-            SelectColumn(Util.ClampIndex(SelectedColumnIndex + offset, Table.ColumnCount));
-        }
 
         enum ColumnType
         {
@@ -201,7 +150,7 @@ namespace DiztinGUIsh.window
             /* order of operations:
             1) set ViewOffset
             2) call UpdateDataGridView() if needed
-            3) set table.CurrentCell */
+            3) set table.CurrentCell #1#
             
             // TODO: this could be combined with ScrollTo() which is doing something really similar.
             if (outOfBoundsBefore)
@@ -245,7 +194,7 @@ namespace DiztinGUIsh.window
             // UpdateImporterEnabledStatus();
         }
 
-        private bool IsDataValid() => Data == null || Data.GetRomSize() <= 0;
+        
 
         public void ScrollTo(int selOffset)
         {
@@ -403,110 +352,6 @@ namespace DiztinGUIsh.window
         {
             SelectColumn(ColumnType.Label);
             Table.BeginEdit(true);
-        }
-
-        private void table_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
-        {
-            int row = e.RowIndex + ViewOffset;
-            if (row < 0 || row >= Data.GetRomSize()) return;
-            PaintCell(row, e.CellStyle, e.ColumnIndex, Table.CurrentCell.RowIndex + ViewOffset);
-        }
-        
-        public void PaintCell(int offset, DataGridViewCellStyle style, int column, int selOffset)
-        {
-            // editable cells show up green
-            if (column == 0 || column == 8 || column == 9 || column == 12) style.SelectionBackColor = Color.Chartreuse;
-
-            switch (Data.GetFlag(offset))
-            {
-                case Diz.Core.model.FlagType.Unreached:
-                    style.BackColor = Color.LightGray;
-                    style.ForeColor = Color.DarkSlateGray;
-                    break;
-                case FlagType.Opcode:
-                    int opcode = Data.GetRomByte(offset);
-                    switch (column)
-                    {
-                        case 4: // <*>
-                            InOutPoint point = Data.GetInOutPoint(offset);
-                            int r = 255, g = 255, b = 255;
-                            if ((point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) g -= 50;
-                            if ((point & (InOutPoint.InPoint)) != 0) r -= 50;
-                            if ((point & (InOutPoint.ReadPoint)) != 0) b -= 50;
-                            style.BackColor = Color.FromArgb(r, g, b);
-                            break;
-                        case 5: // Instruction
-                            if (opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 // RTI WAI STP SED
-                                || opcode == 0xFB || opcode == 0x00 || opcode == 0x02 ||
-                                opcode == 0x42 // XCE BRK COP WDM
-                            ) style.BackColor = Color.Yellow;
-                            break;
-                        case 8: // Data Bank
-                            if (opcode == 0xAB || opcode == 0x44 || opcode == 0x54) // PLB MVP MVN
-                                style.BackColor = Color.OrangeRed;
-                            else if (opcode == 0x8B) // PHB
-                                style.BackColor = Color.Yellow;
-                            break;
-                        case 9: // Direct Page
-                            if (opcode == 0x2B || opcode == 0x5B) // PLD TCD
-                                style.BackColor = Color.OrangeRed;
-                            if (opcode == 0x0B || opcode == 0x7B) // PHD TDC
-                                style.BackColor = Color.Yellow;
-                            break;
-                        case 10: // M Flag
-                        case 11: // X Flag
-                            int mask = column == 10 ? 0x20 : 0x10;
-                            if (opcode == 0x28 || ((opcode == 0xC2 || opcode == 0xE2) // PLP SEP REP
-                                                   && (Data.GetRomByte(offset + 1) & mask) != 0)
-                            ) // relevant bit set
-                                style.BackColor = Color.OrangeRed;
-                            if (opcode == 0x08) // PHP
-                                style.BackColor = Color.Yellow;
-                            break;
-                    }
-
-                    break;
-                case FlagType.Operand:
-                    style.ForeColor = Color.LightGray;
-                    break;
-                case FlagType.Graphics:
-                    style.BackColor = Color.LightPink;
-                    break;
-                case FlagType.Music:
-                    style.BackColor = Color.PowderBlue;
-                    break;
-                case FlagType.Data8Bit:
-                case FlagType.Data16Bit:
-                case FlagType.Data24Bit:
-                case FlagType.Data32Bit:
-                    style.BackColor = Color.NavajoWhite;
-                    break;
-                case FlagType.Pointer16Bit:
-                case FlagType.Pointer24Bit:
-                case FlagType.Pointer32Bit:
-                    style.BackColor = Color.Orchid;
-                    break;
-                case FlagType.Text:
-                    style.BackColor = Color.Aquamarine;
-                    break;
-                case FlagType.Empty:
-                    style.BackColor = Color.DarkSlateGray;
-                    style.ForeColor = Color.LightGray;
-                    break;
-            }
-
-            if (selOffset >= 0 && selOffset < Data.GetRomSize())
-            {
-                if (column == 1
-                    //&& (Data.GetFlag(selOffset) == FlagType.Opcode || Data.GetFlag(selOffset) == FlagType.Unreached)
-                    && Data.ConvertSnesToPc(Data.GetIntermediateAddressOrPointer(selOffset)) == offset
-                ) style.BackColor = Color.DeepPink;
-
-                if (column == 6
-                    //&& (Data.GetFlag(offset) == FlagType.Opcode || Data.GetFlag(offset) == FlagType.Unreached)
-                    && Data.ConvertSnesToPc(Data.GetIntermediateAddressOrPointer(offset)) == selOffset
-                ) style.BackColor = Color.DeepPink;
-            }
         }
     }
 }

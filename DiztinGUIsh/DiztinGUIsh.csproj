@@ -266,6 +266,12 @@
     <Compile Update="window2\DataGridEditorControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Remove="window\**" />
+    <EmbeddedResource Remove="window\**" />
+    <None Remove="window\**" />
+    <Compile Remove="window-old\**" />
+    <EmbeddedResource Remove="window-old\**" />
+    <None Remove="window-old\**" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dist\" />
