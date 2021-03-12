@@ -5,7 +5,7 @@ using Diz.Core.model;
 
 namespace DiztinGUIsh.window2
 {
-    
+    /*
     // TODO: probably should use the service provider pattern for this or something better
     // than just hardcoding it.  still, it's not too bad for a first pass.
     public class CellConditionalFormatterCollection
@@ -38,7 +38,7 @@ namespace DiztinGUIsh.window2
             formatCollection.Register("Offset", new CellConditionalFormatter());
         }
     }
-
+    */
 
 
     public static class CellFormatterUtils
@@ -130,7 +130,7 @@ namespace DiztinGUIsh.window2
 
 
     // TODO: eventually, store these as attributes on the RomByte class 
-    public class CellConditionalFormatter
+    /*public class CellConditionalFormatter
     {
         public string DataPropertyName; // matches something in RomByData.{name of the property you want}
         // i.e. for RomByteData.TypeFlag, specify "TypeFlag" here
@@ -144,5 +144,5 @@ namespace DiztinGUIsh.window2
 
             throw new NotImplementedException();
         }
-    }
+    }*/
 }

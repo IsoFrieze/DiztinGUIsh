@@ -13,8 +13,8 @@ using IX.Observable;
 namespace Diz.Core.model
 {
     
-        [System.AttributeUsage(System.AttributeTargets.All)]
-        public class ColorDescriptionAttribute : System.Attribute
+        [AttributeUsage(AttributeTargets.All)]
+        public class ColorDescriptionAttribute : Attribute
         {
             public KnownColor Color { get; }
 
@@ -86,7 +86,9 @@ namespace Diz.Core.model
         
         
     public interface ISnesInstructionReader
-    {
+    {// future
+        
+        
         bool GetMFlag(int offset);
         bool GetXFlag(int offset);
         int GetRomSize();
@@ -106,6 +108,7 @@ namespace Diz.Core.model
     
     public interface ISnesCpuMarker
     {
+        // future
         int Step(int offset, bool branch, bool force, int prevOffset);
         void SetMFlag(int offset, bool b);
         void SetXFlag(int offset, bool b);
@@ -113,7 +116,7 @@ namespace Diz.Core.model
 
     public interface ISnesData : ISnesInstructionReader, ISnesCpuMarker
     {
-        
+        // future
     }
     
     // this really needs to be called SnesData or something similar.
@@ -673,6 +676,14 @@ namespace Diz.Core.model
         public IEnumerable<byte> GetFileBytes()
         {
             return RomBytes.Select(b => b.Rom);
+        }
+
+        public bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch)
+        {
+            var intermediateAddressOrPointer = GetIntermediateAddressOrPointer(intermediateAddress);
+            var destinationOfIa = ConvertSnesToPc(intermediateAddressOrPointer);
+
+            return destinationOfIa == addressToMatch;
         }
     }
 }

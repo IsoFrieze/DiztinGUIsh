@@ -8,11 +8,11 @@ namespace DiztinGUIsh.window2
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public class BytesViewerController : IBytesViewerController
     {
-        private BindingListView<RomByteData> bindingList;
-        public Data Data { get; protected set; }
+        // private BindingListView<RomByteData> bindingList;
+        public Data Data { get; set; }
         
         // option 2: set bindingList from an existing. we'll inherit all filters/etc automatically
-        public BindingListView<RomByteData> BindingList
+        /*public BindingListView<RomByteData> BindingList
         {
             get => bindingList;
             set
@@ -20,10 +20,10 @@ namespace DiztinGUIsh.window2
                 bindingList = value;
                 Data = bindingList?.DataSource as Data;
             }
-        }
+        }*/
 
         // option 1: create new binding unique to us by making a new bindingList that is looking at the source data 
-        public void CreateDataBindingTo(Data data)
+        /*public void CreateDataBindingTo(Data data)
         {
             CreateBindingListFrom(data);
             UpdateFilters();
@@ -43,6 +43,6 @@ namespace DiztinGUIsh.window2
         private static bool IsRomByteOpcode(RomByteData romByte)
         {
             return romByte.TypeFlag == FlagType.Opcode;
-        }
+        }*/
     }
 }

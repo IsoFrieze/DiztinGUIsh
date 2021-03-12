@@ -1,50 +1,67 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Globalization;
+using System.Linq;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
+using DiztinGUIsh.util;
 using Equin.ApplicationFramework;
+using UserControl = System.Windows.Forms.UserControl;
 
 namespace DiztinGUIsh.window2
-{ 
-    public class RomByteDatagridRow
+{
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    public class RomByteDataGridRow
     {
-        private readonly int ia;
-
-        public RomByteDatagridRow(RomByte rb, Data d, IBytesViewer parentView)
+        [DisplayName("Label")]
+        [Editable(true)]
+        public string Label
         {
-            RomByte = rb;
-            Data = d;
-            ParentView = parentView;
+            get => Data.GetLabelName(Data.ConvertPCtoSnes(RomByte.Offset));
+            
+            // todo (validate for valid label characters)
+            // (note: validation implemented in Furious's branch, integrate here)
+            set => Data.AddLabel(
+                Data.ConvertPCtoSnes(RomByte.Offset), 
+                new Diz.Core.model.Label{Name = value}, 
+                true);
         }
-        
-        [Browsable(false)] public RomByteData RomByte { get; }
-        [Browsable(false)] public Data Data { get; }
-        [Browsable(false)] public IBytesViewer ParentView { get; }
-        
 
-        public Util.NumberBase NumberBase => ParentView.DataGridNumberBase;
-
-        public string Label => Data.GetLabelName(Data.ConvertPCtoSnes(RomByte.Offset));
-        
+        [DisplayName("PC")]
+        [ReadOnlyAttribute(true)]
         public string Offset => Util.NumberToBaseString(Data.ConvertPCtoSnes(RomByte.Offset), Util.NumberBase.Hexadecimal,6);
 
         // show the byte two different ways: ascii and numeric
+        [DisplayName("@")]
+        [ReadOnlyAttribute(true)]
         public char AsciiCharRep => (char) RomByte.Rom;
+        
+        [DisplayName("#")]
+        [ReadOnlyAttribute(true)]
         public string NumericRep => Util.NumberToBaseString(RomByte.Rom, this.NumberBase);
         
+        [DisplayName("<*>")]
+        [ReadOnlyAttribute(true)]
         public string InOut => RomUtil.PointToString(RomByte.Point);
 
+        [DisplayName("Instruction")]
+        [ReadOnlyAttribute(true)]
         public string Instruction
         {
             get
             {
+                // NOTE: this does not handle instructions whose opcodes cross banks correctly.
+                // if we hit this situation, just return empty for the grid, it's likely real instruction won't do this?
                 var len = Data.GetInstructionLength(RomByte.Offset);
-                return len <= Data.GetRomSize() ? Data.GetInstruction(RomByte.Offset) : "";
+                return RomByte.Offset + len <= Data.GetRomSize() ? Data.GetInstruction(RomByte.Offset) : "";
             }
         }
 
+        [DisplayName("IA")]
+        [ReadOnlyAttribute(true)]
         public string IA
         {
             get
@@ -54,20 +71,77 @@ namespace DiztinGUIsh.window2
             }
         }
 
+        [DisplayName("Flag")]
+        [ReadOnlyAttribute(true)]
         public string Flag => Util.GetEnumDescription(Data.GetFlag(RomByte.Offset));
-        public string B => Util.NumberToBaseString(Data.GetDataBank(RomByte.Offset), Util.NumberBase.Hexadecimal, 2);
-        public string D => Util.NumberToBaseString(Data.GetDirectPage(RomByte.Offset), Util.NumberBase.Hexadecimal, 4);
-        public string M => RomUtil.BoolToSize(Data.GetMFlag(RomByte.Offset));
-        public string X => RomUtil.BoolToSize(Data.GetXFlag(RomByte.Offset));
-        public string Comment => Data.GetComment(Data.ConvertPCtoSnes(RomByte.Offset));
+        
+        [DisplayName("B")]
+        [Editable(true)]
+        public string DataBank
+        {
+            get => Util.NumberToBaseString(Data.GetDataBank(RomByte.Offset), Util.NumberBase.Hexadecimal, 2);
+            set
+            {
+                if (int.TryParse(value, NumberStyles.HexNumber, null, out var parsed))
+                    Data.SetDataBank(RomByte.Offset, parsed);
+            }
+        }
+
+        [DisplayName("D")]
+        [Editable(true)]
+        public string DirectPage
+        {
+            get => Util.NumberToBaseString(Data.GetDirectPage(RomByte.Offset), Util.NumberBase.Hexadecimal, 4);
+            set
+            {
+                if (int.TryParse(value, NumberStyles.HexNumber, null, out var parsed))
+                    Data.SetDirectPage(RomByte.Offset, parsed);
+            }
+        }
+
+        [DisplayName("M")]
+        [Editable(true)]
+        public string MFlag
+        {
+            get => RomUtil.BoolToSize(Data.GetMFlag(RomByte.Offset));
+            set => Data.SetMFlag(RomByte.Offset, value == "8" || value == "M");
+        }
+
+        [DisplayName("X")]
+        [Editable(true)]
+        public string XFlag
+        {
+            get => RomUtil.BoolToSize(Data.GetXFlag(RomByte.Offset));
+            set => Data.SetXFlag(RomByte.Offset, value == "8" || value == "X");
+        }
+
+        [DisplayName("Comment")]
+        [Editable(true)]
+        public string Comment
+        {
+            get => Data.GetComment(Data.ConvertPCtoSnes(RomByte.Offset));
+            set => Data.AddComment(Data.ConvertPCtoSnes(RomByte.Offset), value, true);
+        }
+
+        public RomByteDataGridRow(RomByteData rb, Data d, IBytesGridViewer parentView)
+        {
+            RomByte = rb;
+            Data = d;
+            ParentView = parentView;
+        }
+        [Browsable(false)] public RomByteData RomByte { get; }
+        [Browsable(false)] public Data Data { get; }
+        [Browsable(false)] public IBytesGridViewer ParentView { get; }
+        [Browsable(false)] private Util.NumberBase NumberBase => ParentView.DataGridNumberBase;
     }
     
-    public partial class DataGridEditorControl : UserControl, IBytesViewer
+    public partial class DataGridEditorControl : UserControl, IBytesGridViewer
     {
         #region Init
 
         private IBytesViewerController controller;
-        public Util.NumberBase DataGridNumberBase { get; } // TODO
+        public Data Data => Controller.Data;
+        public Util.NumberBase DataGridNumberBase { get; set; } = Util.NumberBase.Hexadecimal;
 
         public IBytesViewerController Controller
         {
@@ -75,8 +149,18 @@ namespace DiztinGUIsh.window2
             set
             {
                 controller = value;
-                dataGridView1.DataSource = controller.BindingList;
+                DataBind();
             }
+        }
+
+        private void DataBind()
+        {
+            var bindingList = new BindingListView<RomByteDataGridRow>(
+                Data.RomBytes.Select(romByte => 
+                    new RomByteDataGridRow(romByte, Data, this)
+                ).ToList());
+            
+            dataGridView1.DataSource = bindingList;
         }
 
         public DataGridEditorControl()
@@ -88,22 +172,23 @@ namespace DiztinGUIsh.window2
             dataGridView1.BorderStyle = BorderStyle.Fixed3D;
             dataGridView1.EditMode = DataGridViewEditMode.EditOnEnter;
             
-            // probably?
+            // probably? probably need to do more if we enable this
             dataGridView1.VirtualMode = true;
 
             dataGridView1.CellPainting += table_CellPainting;
-            // TODO Table.CellValueNeeded += table_CellValueNeeded;
-            // TODO Table.CellValuePushed += table_CellValuePushed;
-
-            HackDoubleBufferedEnable();
             
-            CellConditionalFormatterCollection.RegisterAllRomByteFormattersHelper();
+            // TODO Table.CellValueNeeded += table_CellValueNeeded; // may not need anymore?
+            // TODO Table.CellValuePushed += table_CellValuePushed; // may not need anymore?
+
+            // CellConditionalFormatterCollection.RegisterAllRomByteFormattersHelper();
+            
+            GuiUtil.EnableDoubleBuffering(typeof(DataGridView), dataGridView1);
         }
 
-        public CellConditionalFormatterCollection CellConditionalFormatterCollection = new(); 
+        // private readonly CellConditionalFormatterCollection CellConditionalFormatterCollection = new(); 
         
         // remove this eventually, shortcut for now.
-        public DataGridView Table => dataGridView1;
+        private DataGridView Table => dataGridView1;
         
         public Util.NumberBase DisplayBase { get; set; } = Util.NumberBase.Hexadecimal;
 
@@ -113,17 +198,9 @@ namespace DiztinGUIsh.window2
 
         private void HackDoubleBufferedEnable()
         {
-            // https://stackoverflow.com/a/1506066
-            typeof(DataGridView).InvokeMember(
-                "DoubleBuffered",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance |
-                System.Reflection.BindingFlags.SetProperty,
-                null,
-                dataGridView1,
-                new object[] {true});
+            GuiUtil.EnableDoubleBuffering(typeof(DataGridView), dataGridView1);
         }
 
-        
         private int SelectedColumnIndex => Table.CurrentCell.ColumnIndex;
 
         private void SelectColumnClamped(int offset)
@@ -134,9 +211,7 @@ namespace DiztinGUIsh.window2
         
         #region KeyboardHandler
 
-        public Data Data => Controller.Data;
-        
-        private bool IsDataValid() => Data == null || Data.GetRomSize() <= 0;
+        private bool IsDataValid() => Data != null && Data.GetRomSize() > 0;
         
         /*public void table_KeyDown(object sender, KeyEventArgs e)
         {
@@ -192,13 +267,14 @@ namespace DiztinGUIsh.window2
 
         #region Painting
 
-        public RomByteData GetRomByteAtRow(int row) => 
-            (Table.Rows[row].DataBoundItem as ObjectView<RomByteData>)?.Object;
-        public RomByteData SelectedRomByte => 
+        private RomByteDataGridRow GetRomByteAtRow(int row) => 
+            (Table.Rows[row].DataBoundItem as ObjectView<RomByteDataGridRow>)?.Object;
+
+        public RomByteDataGridRow SelectedRomByteRow => 
             Table.CurrentRow == null 
                 ? null : GetRomByteAtRow(Table.CurrentRow.Index);
 
-        public int ViewOffset => SelectedRomByte?.Offset ?? -1;
+        public int ViewOffset => SelectedRomByteRow?.RomByte?.Offset ?? -1;
 
         private int SelectedRow => Table.CurrentCell.RowIndex;
         private int SelectedCol => Table.CurrentCell.ColumnIndex;
@@ -216,7 +292,8 @@ namespace DiztinGUIsh.window2
 
         private void table_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            if (!IsDataValid() || e.RowIndex == -1 || e.ColumnIndex == -1)
+            var valid = IsDataValid() && e.RowIndex != -1 && e.ColumnIndex != -1; 
+            if (!valid)
                 return;
             
             // int row = e.RowIndex + ViewOffset;
@@ -225,30 +302,28 @@ namespace DiztinGUIsh.window2
             var romByteAtRow = GetRomByteAtRow(e.RowIndex);
             var colHeaderDataProperty = GetColumnHeaderDataProperty(e);
             
-            if (romByteAtRow == null || string.IsNullOrEmpty(colHeaderDataProperty))
+            if (romByteAtRow?.RomByte == null || string.IsNullOrEmpty(colHeaderDataProperty))
                 return;
             
-            PaintCell(e.RowIndex, e.ColumnIndex, romByteAtRow, colHeaderDataProperty, e.CellStyle);
+            SetStyleForCell(romByteAtRow, colHeaderDataProperty, e.CellStyle);
         }
 
         /// <summary>
-        /// Format an arbitrary cell in the grid. it may or may not be the currently selected cell 
+        /// Format an arbitrary cell in the grid. it may or may not be the currently selected cell.
         /// </summary>
-        /// <param name="row">row of cell to format</param>
-        /// <param name="col">column of cell to format</param>
         /// <param name="rowRomByte">the RomByte associated with this row</param>
         /// <param name="colPropName">the name of the data property associated with this column (not the column header, this is the internal name)</param>
         /// <param name="style">Out param, modify this to set the style</param>
-        private void PaintCell(int row, int col, RomByteData rowRomByte, string colPropName, DataGridViewCellStyle style)
+        private static void SetStyleForCell(RomByteDataGridRow rowRomByte, string colPropName, DataGridViewCellStyle style)
         {
-            var formatter = CellConditionalFormatterCollection.Get(colPropName);
+            // var formatter = CellConditionalFormatterCollection.Get(colPropName);//old?
 
             // editable cells that are selected show up in what I call "fancy green"
-            if (formatter.IsEditable)
+            if (colPropName == "Comment" || colPropName == "Label" || colPropName == "B" || colPropName == "D") 
                 style.SelectionBackColor = Color.Chartreuse;
 
             // all cells in a row get this treatment
-            switch (rowRomByte.TypeFlag)
+            switch (rowRomByte.RomByte.TypeFlag)
             {
                 case FlagType.Unreached:
                     style.BackColor = Color.LightGray;
@@ -288,50 +363,47 @@ namespace DiztinGUIsh.window2
                     break;
             }
             
-            if (SelectedRomByte != null)
-            {
-                var matchingIa = colPropName switch
-                {
-                    "PC" => IsMatchingIntermediateAddress(SelectedRomByte.Offset, rowRomByte.Offset),
-                    "IA" => IsMatchingIntermediateAddress(rowRomByte.Offset, SelectedRomByte.Offset),
-                    _ => false
-                };
-
-                if (matchingIa)
-                    style.BackColor = Color.DeepPink;
-            }
+            SetStyleForIndirectAddress(rowRomByte, colPropName, ref style);
         }
 
-        private Color? GetColorWhenRowMarkedAsOpcode(RomByteData rowRomByte, string colPropName)
+        private static void SetStyleForIndirectAddress(RomByteDataGridRow rowRomByte, string colPropName, ref DataGridViewCellStyle style)
         {
+            var selectedRomByteRow = rowRomByte.ParentView.SelectedRomByteRow;
+            if (selectedRomByteRow == null) 
+                return;
+            
+            var matchingIa = colPropName switch
+            {
+                "PC" => rowRomByte.Data.IsMatchingIntermediateAddress(selectedRomByteRow.RomByte.Offset, rowRomByte.RomByte.Offset),
+                "IA" => rowRomByte.Data.IsMatchingIntermediateAddress(rowRomByte.RomByte.Offset, selectedRomByteRow.RomByte.Offset),
+                _ => false
+            };
+
+            if (matchingIa)
+                style.BackColor = Color.DeepPink;
+        }
+
+        private static Color? GetColorWhenRowMarkedAsOpcode(RomByteDataGridRow romByteRow, string colPropName)
+        {
+            var romByte = romByteRow.RomByte;
+            
             // weird edge case for M/X flags off end of ROM, just make it zero as as default if we hit this.
             // it's just coloring.
-            var nextByte = Data.GetNextRomByte(rowRomByte.Offset) ?? 0;
+            var nextByte = romByteRow.Data.GetNextRomByte(romByte.Offset) ?? 0;
             
+            // TODO: eventually, don't match strings here.
+            // instead, look for the appropriate attribute attached to romByteRow and let that 
+            // attribute hook in here.
             return colPropName switch
             {
-                "<*>" => 
-                    CellFormatterUtils.GetBackColorInOut(rowRomByte),
-                "Instruction" =>
-                    CellFormatterUtils.GetInstructionBackgroundColor(rowRomByte),
-                "B" =>
-                    CellFormatterUtils.GetDataBankColor(rowRomByte),
-                "D" =>
-                    CellFormatterUtils.GetDirectPageColor(rowRomByte),
-                "M" =>
-                    CellFormatterUtils.GetMFlagColor(rowRomByte, nextByte),
-                "X" =>
-                    CellFormatterUtils.GetXFlagColor(rowRomByte, nextByte),
+                "<*>" => CellFormatterUtils.GetBackColorInOut(romByte),
+                "Instruction" => CellFormatterUtils.GetInstructionBackgroundColor(romByte),
+                "B" => CellFormatterUtils.GetDataBankColor(romByte),
+                "D" => CellFormatterUtils.GetDirectPageColor(romByte),
+                "M" => CellFormatterUtils.GetMFlagColor(romByte, nextByte),
+                "X" => CellFormatterUtils.GetXFlagColor(romByte, nextByte),
                 _ => null
             };
-        }
-
-        private bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch)
-        {
-            var intermediateAddressOrPointer = Data.GetIntermediateAddressOrPointer(intermediateAddress);
-            var destinationOfIa = Data.ConvertSnesToPc(intermediateAddressOrPointer);
-
-            return destinationOfIa == addressToMatch;
         }
 
         #endregion

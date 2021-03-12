@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using Diz.Core;
+using Diz.Core.model;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window2;
 
@@ -28,20 +29,25 @@ namespace DiztinGUIsh
             /*var startForm = new StartForm();
             startForm.Show();
             Application.Run(startForm);*/
+
+            var data = SampleRomData.SampleData;
             
-            var form = StartNewFormInstance();
+            var form = StartNewFormInstance(data);
             
-            // start a second copy of the form (NOT the right way to do this but hey it works for now)
-            StartNewFormInstance();
+            // start a second copy of the form (NOT the right way to do this but fine for this demo.
+            StartNewFormInstance(data);
 
             Application.Run(form);
         }
 
-        private static DataGridEditorForm StartNewFormInstance()
+        private static DataGridEditorForm StartNewFormInstance(Data data)
         {
-            var bytesViewerController = new BytesViewerController();
-            bytesViewerController.CreateDataBindingTo(SampleRomData.SampleData);
-            var form = new DataGridEditorForm(bytesViewerController);
+            var bytesEditorForm = new BytesViewerController
+            {
+                Data = data
+            };
+            // bytesViewerController.CreateDataBindingTo(data);
+            var form = new DataGridEditorForm(bytesEditorForm);
             form.Show();
             
             return form;

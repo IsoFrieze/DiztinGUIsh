@@ -7,17 +7,16 @@ namespace DiztinGUIsh.window2
     public partial class DataGridEditorForm : Form, IBytesViewer
     {
         private IBytesViewerController FormController;
-        private BytesViewerController DataGridController = new();
-        
-        public Util.NumberBase DataGridNumberBase { get; set; } = Util.NumberBase.Hexadecimal;
-        
+        private readonly BytesViewerController DataGridController;
+
         public DataGridEditorForm(IBytesViewerController formController)
         {
             InitializeComponent();
-            Debug.Assert(formController?.BindingList != null);
             FormController = formController;
-            
-            DataGridController.BindingList = FormController.BindingList;
+            DataGridController = new BytesViewerController()
+            {
+                Data = formController.Data
+            };
             dataGridEditorControl1.Controller = DataGridController;
         }
 
