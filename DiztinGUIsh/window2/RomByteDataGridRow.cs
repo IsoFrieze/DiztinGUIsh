@@ -5,13 +5,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
 using JetBrains.Annotations;
+using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window2
 {
-    [AttributeUsage(AttributeTargets.Property)]
+    /*[AttributeUsage(AttributeTargets.Property)]
     public class CellStyleFormatter : Attribute
     {
         public Func<Color?> BackgroundColorFormatter { get; }
@@ -20,7 +22,7 @@ namespace DiztinGUIsh.window2
         {
             BackgroundColorFormatter = bgColorFormatter;
         }
-    }
+    }*/
     
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public class RomByteDataGridRow : INotifyPropertyChanged
@@ -214,7 +216,62 @@ namespace DiztinGUIsh.window2
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         
-        public Color? GetBackgroundColorForMarkedAsOpcode(string colPropName)
+        /// <summary>
+        /// Format an arbitrary cell in the grid. it may or may not be the currently selected cell.
+        /// </summary>
+        /// <param name="rowRomByte">the RomByte associated with this row</param>
+        /// <param name="colPropName">the name of the data property associated with this column (not the column header, this is the internal name)</param>
+        /// <param name="style">Out param, modify this to set the style</param>
+        public void SetStyleForCell(string colPropName, DataGridViewCellStyle style)
+        {
+            if (IsColumnEditable(colPropName))
+                style.SelectionBackColor = Color.Chartreuse;
+
+            // all cells in a row get this treatment
+            switch (RomByte.TypeFlag)
+            {
+                case FlagType.Unreached:
+                    style.BackColor = Color.LightGray;
+                    style.ForeColor = Color.DarkSlateGray;
+                    break;
+                case FlagType.Opcode:
+                    var color = GetBackgroundColorForMarkedAsOpcode(colPropName);
+                    if (color != null)
+                        style.BackColor = color.Value;
+                    break;
+                case FlagType.Operand:
+                    style.ForeColor = Color.LightGray;
+                    break;
+                case FlagType.Graphics:
+                    style.BackColor = Color.LightPink;
+                    break;
+                case FlagType.Music:
+                    style.BackColor = Color.PowderBlue;
+                    break;
+                case FlagType.Data8Bit:
+                case FlagType.Data16Bit:
+                case FlagType.Data24Bit:
+                case FlagType.Data32Bit:
+                    style.BackColor = Color.NavajoWhite;
+                    break;
+                case FlagType.Pointer16Bit:
+                case FlagType.Pointer24Bit:
+                case FlagType.Pointer32Bit:
+                    style.BackColor = Color.Orchid;
+                    break;
+                case FlagType.Text:
+                    style.BackColor = Color.Aquamarine;
+                    break;
+                case FlagType.Empty:
+                    style.BackColor = Color.DarkSlateGray;
+                    style.ForeColor = Color.LightGray;
+                    break;
+            }
+
+            SetStyleForIndirectAddress(colPropName, style);
+        }
+        
+        private Color? GetBackgroundColorForMarkedAsOpcode(string colPropName)
         {
             // TODO: eventually, don't match strings here.
             // instead, look for the appropriate attribute attached to romByteRow and let that 
@@ -305,5 +362,37 @@ namespace DiztinGUIsh.window2
                     return null;
             }
         }
+
+        private static bool IsColumnEditable(string propertyName)
+        {
+            return CheckRowAttribute((EditableAttribute a) => a?.AllowEdit ?? false, propertyName);
+        }
+
+        private static TResult CheckRowAttribute<TAttribute, TResult>(
+            Func<TAttribute, TResult> getValueFn, string memberName)
+            where TAttribute : Attribute
+        {
+            return Util.GetPropertyAttribute(getValueFn, typeof(RomByteDataGridRow), memberName);
+        }
+
+        private void SetStyleForIndirectAddress(string colPropName, DataGridViewCellStyle style)
+        {
+            var selectedRomByteRow = ParentView.SelectedRomByteRow;
+            if (selectedRomByteRow == null)
+                return;
+
+            var matchingIa = colPropName switch
+            {
+                "PC" => Data.IsMatchingIntermediateAddress(selectedRomByteRow.RomByte.Offset,
+                    RomByte.Offset),
+                "IA" => Data.IsMatchingIntermediateAddress(RomByte.Offset,
+                    selectedRomByteRow.RomByte.Offset),
+                _ => false
+            };
+
+            if (matchingIa)
+                style.BackColor = Color.DeepPink;
+        }
+
     }
 }

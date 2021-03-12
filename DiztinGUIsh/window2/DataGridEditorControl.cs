@@ -148,7 +148,6 @@ namespace DiztinGUIsh.window2
 
         // Corresponds to the name of properties in RomByteData,
         // NOT what you see on the screen as the column heading text
-
         private string GetColumnHeaderDataProperty(DataGridViewCellPaintingEventArgs e) =>
             GetColumnHeaderDataProperty(e?.ColumnIndex ?? -1);
 
@@ -170,97 +169,8 @@ namespace DiztinGUIsh.window2
             if (romByteAtRow?.RomByte == null || string.IsNullOrEmpty(colHeaderDataProperty))
                 return;
 
-            SetStyleForCell(romByteAtRow, colHeaderDataProperty, e.CellStyle);
+            romByteAtRow.SetStyleForCell(colHeaderDataProperty, e.CellStyle);
         }
-
-        /// <summary>
-        /// Format an arbitrary cell in the grid. it may or may not be the currently selected cell.
-        /// </summary>
-        /// <param name="rowRomByte">the RomByte associated with this row</param>
-        /// <param name="colPropName">the name of the data property associated with this column (not the column header, this is the internal name)</param>
-        /// <param name="style">Out param, modify this to set the style</param>
-        private static void SetStyleForCell(RomByteDataGridRow rowRomByte, string colPropName,
-            DataGridViewCellStyle style)
-        {
-            if (IsColumnEditable(colPropName))
-                style.SelectionBackColor = Color.Chartreuse;
-
-            // all cells in a row get this treatment
-            switch (rowRomByte.RomByte.TypeFlag)
-            {
-                case FlagType.Unreached:
-                    style.BackColor = Color.LightGray;
-                    style.ForeColor = Color.DarkSlateGray;
-                    break;
-                case FlagType.Opcode:
-                    var color = rowRomByte.GetBackgroundColorForMarkedAsOpcode(colPropName);
-                    if (color != null)
-                        style.BackColor = color.Value;
-                    break;
-                case FlagType.Operand:
-                    style.ForeColor = Color.LightGray;
-                    break;
-                case FlagType.Graphics:
-                    style.BackColor = Color.LightPink;
-                    break;
-                case FlagType.Music:
-                    style.BackColor = Color.PowderBlue;
-                    break;
-                case FlagType.Data8Bit:
-                case FlagType.Data16Bit:
-                case FlagType.Data24Bit:
-                case FlagType.Data32Bit:
-                    style.BackColor = Color.NavajoWhite;
-                    break;
-                case FlagType.Pointer16Bit:
-                case FlagType.Pointer24Bit:
-                case FlagType.Pointer32Bit:
-                    style.BackColor = Color.Orchid;
-                    break;
-                case FlagType.Text:
-                    style.BackColor = Color.Aquamarine;
-                    break;
-                case FlagType.Empty:
-                    style.BackColor = Color.DarkSlateGray;
-                    style.ForeColor = Color.LightGray;
-                    break;
-            }
-
-            SetStyleForIndirectAddress(rowRomByte, colPropName, style);
-        }
-
-        private static bool IsColumnEditable(string propertyName)
-        {
-            return CheckRowAttribute((EditableAttribute a) => a?.AllowEdit ?? false, propertyName);
-        }
-
-        private static TResult CheckRowAttribute<TAttribute, TResult>(
-            Func<TAttribute, TResult> getValueFn, string memberName)
-            where TAttribute : Attribute
-        {
-            return Util.GetPropertyAttribute(getValueFn, typeof(RomByteDataGridRow), memberName);
-        }
-
-        private static void SetStyleForIndirectAddress(RomByteDataGridRow rowRomByte, string colPropName,
-            DataGridViewCellStyle style)
-        {
-            var selectedRomByteRow = rowRomByte.ParentView.SelectedRomByteRow;
-            if (selectedRomByteRow == null)
-                return;
-
-            var matchingIa = colPropName switch
-            {
-                "PC" => rowRomByte.Data.IsMatchingIntermediateAddress(selectedRomByteRow.RomByte.Offset,
-                    rowRomByte.RomByte.Offset),
-                "IA" => rowRomByte.Data.IsMatchingIntermediateAddress(rowRomByte.RomByte.Offset,
-                    selectedRomByteRow.RomByte.Offset),
-                _ => false
-            };
-
-            if (matchingIa)
-                style.BackColor = Color.DeepPink;
-        }
-
 
         #endregion
     }
