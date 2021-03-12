@@ -162,6 +162,13 @@ namespace DiztinGUIsh.window2
                 OnPropertyChanged();
             }
         }
+        
+        [Browsable(false)] public RomByteData RomByte { get; }
+        [Browsable(false)] public Data Data { get; }
+        [Browsable(false)] public IBytesGridViewer ParentView { get; }
+        [Browsable(false)] private Util.NumberBase NumberBase => ParentView.DataGridNumberBase;
+
+        [Browsable(false)] public event PropertyChangedEventHandler? PropertyChanged;
 
         public RomByteDataGridRow(RomByteData rb, Data d, IBytesGridViewer parentView)
         {
@@ -203,17 +210,22 @@ namespace DiztinGUIsh.window2
             }
         }
 
-        [Browsable(false)] public RomByteData RomByte { get; }
-        [Browsable(false)] public Data Data { get; }
-        [Browsable(false)] public IBytesGridViewer ParentView { get; }
-        [Browsable(false)] private Util.NumberBase NumberBase => ParentView.DataGridNumberBase;
-
-        [Browsable(false)] public event PropertyChangedEventHandler? PropertyChanged;
-
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private static bool IsColumnEditable(string propertyName)
+        {
+            return CheckRowAttribute((EditableAttribute a) => a?.AllowEdit ?? false, propertyName);
+        }
+
+        private static TResult CheckRowAttribute<TAttribute, TResult>(
+            Func<TAttribute, TResult> getValueFn, string memberName)
+            where TAttribute : Attribute
+        {
+            return Util.GetPropertyAttribute(getValueFn, typeof(RomByteDataGridRow), memberName);
         }
         
         /// <summary>
@@ -361,18 +373,6 @@ namespace DiztinGUIsh.window2
                 default:
                     return null;
             }
-        }
-
-        private static bool IsColumnEditable(string propertyName)
-        {
-            return CheckRowAttribute((EditableAttribute a) => a?.AllowEdit ?? false, propertyName);
-        }
-
-        private static TResult CheckRowAttribute<TAttribute, TResult>(
-            Func<TAttribute, TResult> getValueFn, string memberName)
-            where TAttribute : Attribute
-        {
-            return Util.GetPropertyAttribute(getValueFn, typeof(RomByteDataGridRow), memberName);
         }
 
         private void SetStyleForIndirectAddress(string colPropName, DataGridViewCellStyle style)
