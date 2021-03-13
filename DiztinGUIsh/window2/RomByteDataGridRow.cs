@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
@@ -23,7 +24,7 @@ namespace DiztinGUIsh.window2
             BackgroundColorFormatter = bgColorFormatter;
         }
     }*/
-    
+
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public class RomByteDataGridRow : INotifyPropertyChanged
     {
@@ -42,7 +43,7 @@ namespace DiztinGUIsh.window2
                     Data.ConvertPCtoSnes(RomByte.Offset),
                     new Label {Name = value},
                     true);
-                
+
                 OnPropertyChanged();
             }
         }
@@ -94,7 +95,7 @@ namespace DiztinGUIsh.window2
 
         [DisplayName("Flag")]
         [ReadOnly(true)]
-        public string TypeFlag => 
+        public string TypeFlag =>
             Util.GetEnumDescription(Data.GetFlag(RomByte.Offset));
 
         [DisplayName("B")]
@@ -162,7 +163,7 @@ namespace DiztinGUIsh.window2
                 OnPropertyChanged();
             }
         }
-        
+
         [Browsable(false)] public RomByteData RomByte { get; }
         [Browsable(false)] public Data Data { get; }
         [Browsable(false)] public IBytesGridViewer ParentView { get; }
@@ -227,7 +228,7 @@ namespace DiztinGUIsh.window2
         {
             return Util.GetPropertyAttribute(getValueFn, typeof(RomByteDataGridRow), memberName);
         }
-        
+
         /// <summary>
         /// Format an arbitrary cell in the grid. it may or may not be the currently selected cell.
         /// </summary>
@@ -282,7 +283,7 @@ namespace DiztinGUIsh.window2
 
             SetStyleForIndirectAddress(colPropName, style);
         }
-        
+
         private Color? GetBackgroundColorForMarkedAsOpcode(string colPropName)
         {
             // TODO: eventually, don't match strings here.
@@ -383,16 +384,181 @@ namespace DiztinGUIsh.window2
 
             var matchingIa = colPropName switch
             {
-                "PC" => Data.IsMatchingIntermediateAddress(selectedRomByteRow.RomByte.Offset,
-                    RomByte.Offset),
-                "IA" => Data.IsMatchingIntermediateAddress(RomByte.Offset,
-                    selectedRomByteRow.RomByte.Offset),
+                nameof(Offset) => 
+                    Data.IsMatchingIntermediateAddress(selectedRomByteRow.RomByte.Offset, RomByte.Offset),
+                nameof(IA) => 
+                    Data.IsMatchingIntermediateAddress(RomByte.Offset, selectedRomByteRow.RomByte.Offset),
                 _ => false
             };
 
             if (matchingIa)
                 style.BackColor = Color.DeepPink;
         }
+    }
+    
+    public static class RomByteDataGridRowFormatting {
+        public static readonly Font FontData = new Font("Consolas", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+        static readonly Font FontHuman = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
 
+        private static Dictionary<string, Action<DataGridViewTextBoxColumn>> cellProperties = new()
+        {
+            {
+                nameof(RomByteDataGridRow.Label), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleRight, Font = FontHuman,
+                    };
+                    col.MaxInputLength = 60;
+                    col.MinimumWidth = 6;
+                    col.Width = 200;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.Offset), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleLeft, Font = FontData,
+                    };
+                    col.MaxInputLength = 6;
+                    col.MinimumWidth = 6;
+                    col.Width = 58;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.AsciiCharRep), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleRight, Font = FontData,
+                    };
+                    col.MaxInputLength = 1;
+                    col.MinimumWidth = 6;
+                    col.Width = 26;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.NumericRep), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleRight, Font = FontData,
+                    };
+                    col.MaxInputLength = 3;
+                    col.MinimumWidth = 6;
+                    col.Width = 26;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.Point), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleCenter, Font = FontData,
+                    };
+                    col.MaxInputLength = 3;
+                    col.MinimumWidth = 6;
+                    col.Width = 34;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.Instruction), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleLeft, Font = FontData,
+                    };
+                    col.MaxInputLength = 64;
+                    col.MinimumWidth = 6;
+                    col.Width = 125;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.IA), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleLeft, Font = FontData,
+                    };
+                    col.MaxInputLength = 6;
+                    col.MinimumWidth = 6;
+                    col.Width = 58;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.TypeFlag), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleLeft, Font = FontData,
+                    };
+                    col.MinimumWidth = 6;
+                    col.Width = 86;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.DataBank), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleRight, Font = FontData,
+                    };
+                    col.MaxInputLength = 2;
+                    col.MinimumWidth = 6;
+                    col.Width = 26;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.DirectPage), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleLeft, Font = FontData,
+                    };
+                    col.MaxInputLength = 4;
+                    col.MinimumWidth = 6;
+                    col.Width = 42;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.MFlag), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleCenter, Font = FontData,
+                    };
+                    col.MaxInputLength = 2;
+                    col.MinimumWidth = 6;
+                    col.Width = 26;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.XFlag), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleCenter, Font = FontData,
+                    };
+                    col.MaxInputLength = 2;
+                    col.MinimumWidth = 6;
+                    col.Width = 26;
+                }
+            },
+            {
+                nameof(RomByteDataGridRow.Comment), col =>
+                {
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleLeft, Font = FontHuman,
+                        // WrapMode = DataGridViewTriState.False, // TODO: consider this?
+                    };
+                    col.MinimumWidth = 6;
+                    col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                }
+            },
+        };
+
+        public static void ApplyFormatting(DataGridViewTextBoxColumn col) => cellProperties[col.DataPropertyName](col);
     }
 }

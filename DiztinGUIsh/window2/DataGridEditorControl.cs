@@ -1,10 +1,14 @@
-﻿using System.Linq;
+﻿using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.util;
 using Equin.ApplicationFramework;
 using UserControl = System.Windows.Forms.UserControl;
+
+// eventually, see if we can get this class to not directly contain references to "RomByteDataGridRow"
+// so that it can be generically used to format whatever data we want to throw at it
 
 namespace DiztinGUIsh.window2
 {
@@ -28,32 +32,81 @@ namespace DiztinGUIsh.window2
 
         private void DataBind()
         {
-            var bindingList = new BindingListView<RomByteDataGridRow>(
-                Data.RomBytes.Select(romByte =>
-                    new RomByteDataGridRow(romByte, Data, this)
-                ).ToList());
+            SuspendLayout();
+            BindToNewData();
+            ResumeLayout();
+            OnDataBindingChanged();
+        }
 
-            dataGridView1.DataSource = bindingList;
+        private void BindToNewData() => dataGridView1.DataSource = CreateNewBindingList();
+
+        private BindingListView<RomByteDataGridRow> CreateNewBindingList()
+        {
+            return new(Data.RomBytes.Select(romByte =>
+                new RomByteDataGridRow(romByte, Data, this)
+            ).ToList());
         }
 
         public DataGridEditorControl()
         {
             InitializeComponent();
+            ExtraDesignInit();
+            GuiUtil.EnableDoubleBuffering(typeof(DataGridView), Table);
+        }
+        
+        private void ExtraDesignInit()
+        {
+            // stuff that should probably be in the designer, but we're migrating some old code
 
-            dataGridView1.AutoGenerateColumns = true;
-            dataGridView1.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders;
-            dataGridView1.BorderStyle = BorderStyle.Fixed3D;
-            dataGridView1.EditMode = DataGridViewEditMode.EditOnEnter;
+            Table.AutoGenerateColumns = true;
+            Table.AllowUserToAddRows = false;
+            Table.AllowUserToDeleteRows = false;
+            Table.AllowUserToResizeRows = false;
 
-            // probably? probably need to do more if we enable this
-            dataGridView1.VirtualMode = true;
+            Table.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders;
+            Table.EditMode = DataGridViewEditMode.EditOnEnter;
 
-            dataGridView1.CellPainting += table_CellPainting;
+            Table.BorderStyle = BorderStyle.None;
+            Table.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            Table.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            Table.Margin = new Padding(0);
+            Table.MultiSelect = false;
+            Table.RowHeadersVisible = false;
+            Table.RowTemplate.Height = 15;
+            Table.ShowCellToolTips = false;
+            Table.ShowEditingIcon = false;
+            Table.TabStop = false;
 
+            // questionable stuff, evaluate if we need it anymore
+            // Table.Location = new System.Drawing.Point(0, 24);
+            // Table.Size = new System.Drawing.Size(913, 492);
+            // Table.TabIndex = 1;
+            // Table.ScrollBars = ScrollBars.None; // we will likely keep this ON now.
+            Table.ShowCellErrors = false; // we want this later, I think.
+            Table.ShowRowErrors = false; // we want this later, I think.
+
+            var defaultCellStyle = new DataGridViewCellStyle
+            {
+                Alignment = DataGridViewContentAlignment.MiddleLeft,
+                BackColor = SystemColors.Window,
+                Font = RomByteDataGridRowFormatting.FontData,
+                ForeColor = SystemColors.ControlText,
+                SelectionBackColor = Color.CornflowerBlue,
+                SelectionForeColor = SystemColors.HighlightText,
+                WrapMode = DataGridViewTriState.False
+            };
+            Table.DefaultCellStyle = defaultCellStyle;
+
+            // this is fine but doesn't do anything if we don't override the two events below?
+            Table.VirtualMode = true;
             // TODO Table.CellValueNeeded += table_CellValueNeeded; // may not need anymore?
             // TODO Table.CellValuePushed += table_CellValuePushed; // may not need anymore?
 
-            GuiUtil.EnableDoubleBuffering(typeof(DataGridView), dataGridView1);
+            //this.Table.KeyDown += new System.Windows.Forms.KeyEventHandler(this.table_KeyDown);
+            //this.Table.MouseDown += new System.Windows.Forms.MouseEventHandler(this.table_MouseDown);
+            //this.Table.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.table_MouseWheel);
+
+            Table.CellPainting += table_CellPainting;
         }
 
         // remove this eventually, shortcut for now.
@@ -170,5 +223,15 @@ namespace DiztinGUIsh.window2
         }
 
         #endregion
+
+        private void OnDataBindingChanged() => ApplyColumnFormatting();
+
+        private void ApplyColumnFormatting()
+        {
+            foreach (DataGridViewTextBoxColumn col in Table.Columns)
+            {
+                RomByteDataGridRowFormatting.ApplyFormatting(col);
+            }
+        }
     }
 }
