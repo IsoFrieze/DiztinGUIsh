@@ -12,15 +12,17 @@ using UserControl = System.Windows.Forms.UserControl;
 
 namespace DiztinGUIsh.window2
 {
-    public partial class DataGridEditorControl : UserControl, IBytesGridViewer
+    public partial class DataGridEditorControl : UserControl, IBytesGridViewer<RomByteDataGridRow>
     {
         #region Init
-
-        private IBytesViewerController controller;
-        public Data Data => Controller.Data;
+        
+        public Data Data => Controller?.Data;
         public Util.NumberBase DataGridNumberBase { get; set; } = Util.NumberBase.Hexadecimal;
 
-        public IBytesViewerController Controller
+        
+        private IController controller;
+
+        public IController Controller
         {
             get => controller;
             set
@@ -33,18 +35,27 @@ namespace DiztinGUIsh.window2
         private void DataBind()
         {
             SuspendLayout();
-            BindToNewData();
-            ResumeLayout();
+
+            var dataGridView1BindingSource = new BindingSource
+            {
+                DataSource = DataSource
+            };
+            dataGridView1.DataSource = dataGridView1BindingSource;
+            
             OnDataBindingChanged();
+            ResumeLayout();
         }
+        
+        private BindingListView<RomByteDataGridRow> dataSource;
 
-        private void BindToNewData() => dataGridView1.DataSource = CreateNewBindingList();
-
-        private BindingListView<RomByteDataGridRow> CreateNewBindingList()
+        public BindingListView<RomByteDataGridRow> DataSource
         {
-            return new(Data.RomBytes.Select(romByte =>
-                new RomByteDataGridRow(romByte, Data, this)
-            ).ToList());
+            get => dataSource;
+            set
+            {
+                dataSource = value;
+                DataBind();
+            }
         }
 
         public DataGridEditorControl()

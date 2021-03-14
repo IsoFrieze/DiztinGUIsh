@@ -31,6 +31,7 @@ namespace DiztinGUIsh.window2
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -39,6 +40,7 @@ namespace DiztinGUIsh.window2
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.dataGridEditorControl1 = new DiztinGUIsh.window2.DataGridEditorControl();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.flowLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -119,11 +121,21 @@ namespace DiztinGUIsh.window2
             // 
             // dataGridEditorControl1
             // 
+            this.dataGridEditorControl1.Controller = null;
+            this.dataGridEditorControl1.DataGridNumberBase = Diz.Core.util.Util.NumberBase.Hexadecimal;
+            this.dataGridEditorControl1.DataSource = null;
+            this.dataGridEditorControl1.DisplayBase = Diz.Core.util.Util.NumberBase.Hexadecimal;
             this.dataGridEditorControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridEditorControl1.Location = new System.Drawing.Point(207, 3);
             this.dataGridEditorControl1.Name = "dataGridEditorControl1";
             this.dataGridEditorControl1.Size = new System.Drawing.Size(1130, 505);
             this.dataGridEditorControl1.TabIndex = 1;
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 500;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // DataGridEditorForm
             // 
@@ -152,5 +164,6 @@ namespace DiztinGUIsh.window2
         private System.Windows.Forms.CheckBox chkFilter2;
         private System.Windows.Forms.CheckBox chkFilter1;
         private DataGridEditorControl dataGridEditorControl1;
+        private System.Windows.Forms.Timer timer1;
     }
 }

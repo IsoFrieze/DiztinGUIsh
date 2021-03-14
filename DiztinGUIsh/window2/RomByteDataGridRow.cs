@@ -166,12 +166,12 @@ namespace DiztinGUIsh.window2
 
         [Browsable(false)] public RomByteData RomByte { get; }
         [Browsable(false)] public Data Data { get; }
-        [Browsable(false)] public IBytesGridViewer ParentView { get; }
+        [Browsable(false)] public IBytesGridViewer<RomByteDataGridRow> ParentView { get; }
         [Browsable(false)] private Util.NumberBase NumberBase => ParentView.DataGridNumberBase;
 
         [Browsable(false)] public event PropertyChangedEventHandler? PropertyChanged;
 
-        public RomByteDataGridRow(RomByteData rb, Data d, IBytesGridViewer parentView)
+        public RomByteDataGridRow(RomByteData rb, Data d, IBytesGridViewer<RomByteDataGridRow> parentView)
         {
             RomByte = rb;
             Data = d;
@@ -396,6 +396,17 @@ namespace DiztinGUIsh.window2
         }
     }
     
+    // TODO: consider moving all of this into some per-property attribute would be something like?
+    // [CustomConfig(col =>
+    // {
+    //     col.DefaultCellStyle = new DataGridViewCellStyle
+    //     {
+    //         Alignment = DataGridViewContentAlignment.MiddleRight, Font = FontHuman,
+    //     };
+    //     col.MaxInputLength = 60;
+    //     col.MinimumWidth = 6;
+    //     col.Width = 200;
+    // })]
     public static class RomByteDataGridRowFormatting {
         public static readonly Font FontData = new Font("Consolas", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
         static readonly Font FontHuman = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);

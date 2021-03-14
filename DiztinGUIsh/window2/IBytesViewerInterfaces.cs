@@ -4,23 +4,32 @@ using Equin.ApplicationFramework;
 
 namespace DiztinGUIsh.window2
 {
-    public interface IBytesGridViewer : IBytesViewer
+    public interface IViewer
+    {
+        public IController Controller { get; set; }
+    }
+    
+    public interface IBytesGridViewer<TByteItem> : IViewer
     {
         // get the number base that will be used to display certain items in the grid
         public Util.NumberBase DataGridNumberBase { get; }
-        RomByteDataGridRow SelectedRomByteRow { get; }
+        TByteItem SelectedRomByteRow { get; }
+        public BindingListView<TByteItem> DataSource { get; set; }
     }
 
-    public interface IBytesViewer
+    public interface IBytesFormViewer : IViewer
     {
-        
+
+    }
+
+    public interface IController
+    {
+        IViewer View { get; }
+        Data Data { get; }
     }
     
-    public interface IBytesViewerController
+    public interface IBytesGridViewerController<TByteItem> : IController
     {
-        // public BindingListView<RomByteData> BindingList { get; }
-        Data Data { get; }
-
-        // public void CreateDataBindingTo(Data data);
+        IBytesGridViewer<TByteItem> ViewGrid { get; set; }
     }
 }

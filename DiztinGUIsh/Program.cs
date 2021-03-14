@@ -15,42 +15,42 @@ namespace DiztinGUIsh
             var openFile = "";
             if (args.Length > 0)
                 openFile = args[0];
-            
+
             RunNormally(openFile);
         }
 
         private static void RunNormally(string openFile = "")
         {
             GuiUtil.SetupDPIStuff();
-            
+
             // Application.Run(new DizApplication(openFile));
-            
+
             // this is the one eventually we want
             /*var startForm = new StartForm();
             startForm.Show();
             Application.Run(startForm);*/
 
             var data = SampleRomData.SampleData;
-            
+
             var form = StartNewFormInstance(data);
-            
-            // start a second copy of the form (NOT the right way to do this but fine for this demo.
-            StartNewFormInstance(data);
+            form.Show();
+
+            // start a second copy of the form (NOT the right way to do this but fine for this demo)
+            StartNewFormInstance(data).Show();
 
             Application.Run(form);
         }
 
         private static DataGridEditorForm StartNewFormInstance(Data data)
         {
-            var bytesEditorForm = new BytesViewerController
+            var byteViewerController = new RomByteGridFormController
             {
-                Data = data
+                Data = data,
             };
-            // bytesViewerController.CreateDataBindingTo(data);
-            var form = new DataGridEditorForm(bytesEditorForm);
-            form.Show();
+            var dataGridEditorForm = new DataGridEditorForm(byteViewerController);
+            byteViewerController.View = dataGridEditorForm;
             
-            return form;
+            return dataGridEditorForm;
         }
     }
 }

@@ -1,16 +1,26 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
+using Diz.Core.util;
 
 namespace DiztinGUIsh.window2
 {
-    public partial class DataGridEditorForm : Form, IBytesViewer
+    public partial class DataGridEditorForm : Form, IBytesFormViewer
     {
-        private IBytesViewerController FormController;
-        private readonly BytesViewerController DataGridController;
+        // the class controlling US
+        public IController Controller { get; set; }
 
-        public DataGridEditorForm(IBytesViewerController formController)
+
+        // a class we create that controls just the data grid usercontrol we host
+        private IBytesGridViewerController<RomByteDataGridRow> DataGridController;
+        public DataGridEditorForm(IController formController)
         {
+            Controller = formController;
             InitializeComponent();
-            
+            Init();
+        }
+
+        private void Init()
+        {
             // 
             // MainWindow itself, old designer stuff migrated. keep or kill
             // 
@@ -18,18 +28,37 @@ namespace DiztinGUIsh.window2
             // this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             // this.ClientSize = new System.Drawing.Size(930, 538);
             // this.MinimumSize = new System.Drawing.Size(780, 196);
-            
-            FormController = formController;
-            DataGridController = new BytesViewerController()
+
+            DataGridController = new RomByteGridController
             {
-                Data = formController.Data
+                ViewGrid = dataGridEditorControl1,
+                Data = Controller.Data,
             };
+
             dataGridEditorControl1.Controller = DataGridController;
+            
+            
         }
 
         private void DG_Load(object sender, System.EventArgs e)
         {
-            
+            // test junk
+            if (g_timerGoing)
+            {
+                timer1.Enabled = false;
+            }
+
+            g_timerGoing = true;
+        }
+
+        private static bool g_timerGoing;
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            // test junk
+            if (Controller?.Data != null)
+                Controller.Data.RomBytes[0].DirectPage = Util.ClampIndex(
+                    Controller.Data.RomBytes[0].DirectPage + 1, 0xFFFF);
         }
     }
 }
