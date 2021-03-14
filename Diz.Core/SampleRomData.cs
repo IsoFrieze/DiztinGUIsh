@@ -185,12 +185,12 @@ namespace Diz.Core
                 new RomByte {Rom = 0x34, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
                 new RomByte {Rom = 0x6D, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             },
-            Comments = new ObservableDictionary<int, string>()
+            Comments = new ObservableDictionary<int, Comment>()
             {
-                {0x808000 + 0x03, "this sets FastROM"},
-                {0x808000 + 0x0F, "direct page = $2100"},
-                {0x808000 + 0x21, "clear APU regs"},
-                {0x808000 + 0x44, "this routine copies Test_Data to $7E0100"}
+                {0x808000 + 0x03, new Comment {Text = "this sets FastROM"}},
+                {0x808000 + 0x0F, new Comment {Text = "direct page = $2100"}},
+                {0x808000 + 0x21, new Comment {Text = "clear APU regs"}},
+                {0x808000 + 0x44, new Comment {Text = "this routine copies Test_Data to $7E0100"}}
             },
             Labels = new ObservableDictionary<int, Label>()
             {

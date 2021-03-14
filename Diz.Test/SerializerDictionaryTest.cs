@@ -21,11 +21,11 @@ namespace Diz.Test
 
         public class TestRoot
         {
-            public ObservableDictionary<int, string> ODW { get; set; } = new ObservableDictionary<int, string>() {
-                {1, "Z test1"},
-                {2, "Z test3"},
+            public ObservableDictionary<int, Comment> ODW { get; } = new() {
+                {1, new Comment{Text="Z test1"}},
+                {2, new Comment{Text="Z test3"}},
             };
-            public ObservableDictionary<int, Label> ODW2 { get; set; } = new ObservableDictionary<int, Label>() {
+            public ObservableDictionary<int, Label> ODW2 { get; } = new() {
                 {100, new Label {Comment = "c1", Name = "location1"}},
                 {200, new Label {Comment = "c2", Name = "location2"}},
             };
@@ -85,7 +85,7 @@ namespace Diz.Test
             Assert.Equal(testRootElementGood, restoredRoot);
         }
 
-        private readonly TestRoot testRootElementGood = new TestRoot();
+        private readonly TestRoot testRootElementGood = new();
 
         string xmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerDictionaryTest-TestRoot xmlns:ns1=\"clr-namespace:IX.Observable;assembly=IX.Observable\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:ns2=\"clr-namespace:Diz.Core.model;assembly=Diz.Core\"><ODW AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"1\" Value=\"Z test1\" /><sys:Item Key=\"2\" Value=\"Z test3\" /></ODW><ODW2 AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"100\"><Value Name=\"location1\" Comment=\"c1\" /></sys:Item><sys:Item Key=\"200\"><Value Name=\"location2\" Comment=\"c2\" /></sys:Item></ODW2></SerializerDictionaryTest-TestRoot>";
     }

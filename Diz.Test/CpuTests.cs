@@ -27,9 +27,9 @@ namespace Diz.Test
                 new RomByte {Rom = 0x16, TypeFlag = FlagType.Operand},
                 new RomByte {Rom = 0x21, TypeFlag = FlagType.Operand},
             },
-            Comments = new ObservableDictionary<int, string>()
+            Comments = new ObservableDictionary<int, Comment>()
             {
-                {0xC00001, "unused"},
+                {0xC00001, new Comment {Text="unused"}},
             },
             Labels = new ObservableDictionary<int, Label>()
             {

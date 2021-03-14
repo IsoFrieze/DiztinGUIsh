@@ -1,4 +1,6 @@
-﻿namespace Diz.Core.model
+﻿using DiztinGUIsh;
+
+namespace Diz.Core.model
 {
     // represent a label at a particular address
     // NOTE: you can have labels at addresses in:
@@ -12,10 +14,23 @@
     // - comment: "this address is only used in RAM during battle sequences"
     //            ^^^^---- will not show up in the main table, just the editor
 
-    public class Label
+    public class Label : DizDataModel
     {
-        public string Name = "";        // name of the label
-        public string Comment = "";     // user-generated text, comment only
+        private string comment = "";
+        private string name = "";
+
+        public string Name
+        {
+            get => name;
+            set => SetField(ref name, value);
+        }
+
+        public string Comment
+        {
+            get => comment;
+            set => SetField(ref comment, value);
+        }
+
         public void CleanUp()
         {
             Comment ??= "";
@@ -41,6 +56,46 @@
             unchecked
             {
                 return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Comment != null ? Comment.GetHashCode() : 0);
+            }
+        }
+
+        #endregion
+    }
+    
+    public class Comment : DizDataModel
+    {
+        private string text = "";
+
+        public string Text
+        {
+            get => text;
+            set => SetField(ref text, value);
+        }
+
+        public void CleanUp()
+        {
+            Text ??= "";
+        }
+
+        #region Equality
+
+        protected bool Equals(Label other)
+        {
+            return Text == other.Comment;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Label)obj);
+        }
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return Text != null ? Text.GetHashCode() : 0;
             }
         }
 

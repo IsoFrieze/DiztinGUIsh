@@ -38,7 +38,7 @@ namespace Diz.Core.serialization.binary_serializer_old
         public override (Project project, string warning) Load(byte[] data)
         {
             if (!IsBinaryFileFormat(data))
-                throw new InvalidDataException($"This is not a binary serialized project file!");
+                throw new InvalidDataException("This is not a binary serialized project file!");
 
             byte version = data[0];
             ValidateProjectFileVersion(version);
@@ -130,10 +130,8 @@ namespace Diz.Core.serialization.binary_serializer_old
             var romChecksum = project.Data.GetRomCheckSumsFromRomBytes();
             BitConverter.GetBytes(romChecksum).CopyTo(romSettings, 27);
 
-            // TODO put selected offset in save file
-
             // save all labels ad comments
-            List<byte> label = new List<byte>(), comment = new List<byte>();
+            List<byte> label = new(), comment = new();
             var allLabels = project.Data.Labels;
             var allComments = project.Data.Comments;
 
@@ -150,10 +148,10 @@ namespace Diz.Core.serialization.binary_serializer_old
             }
 
             ByteUtil.IntegerIntoByteList(allComments.Count, comment);
-            foreach (KeyValuePair<int, string> pair in allComments)
+            foreach (KeyValuePair<int, Comment> pair in allComments)
             {
                 ByteUtil.IntegerIntoByteList(pair.Key, comment);
-                SaveStringToBytes(pair.Value, comment);
+                SaveStringToBytes(pair.Value.Text, comment);
             }
 
             // save current Rom full path - "c:\whatever\someRom.sfc"
@@ -185,7 +183,7 @@ namespace Diz.Core.serialization.binary_serializer_old
                 var op = readOps[whichOp];
                 for (var i = 0; i < size; i++)
                 {
-                    data[baseidx + i] = (byte)op(i);
+                    data[baseidx + i] = op(i);
                 }
             }
 
@@ -227,7 +225,7 @@ namespace Diz.Core.serialization.binary_serializer_old
         {
             const int stringsPerEntry = 1;
             pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter, 
-                (int offset, string[] strings) =>
+                (offset, strings) =>
             {
                 Debug.Assert(strings.Length == 1);
                 project.Data.AddComment(offset, strings[0], true);
@@ -238,7 +236,7 @@ namespace Diz.Core.serialization.binary_serializer_old
         {
             var stringsPerEntry = readAliasComments ? 2 : 1;
             pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter,
-                (int offset, string[] strings) =>
+                (offset, strings) =>
                 {
                     Debug.Assert(strings.Length == stringsPerEntry);
                     var label = new Label

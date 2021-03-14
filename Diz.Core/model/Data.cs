@@ -128,7 +128,7 @@ namespace Diz.Core.model
 
         public Data()
         {
-            comments = new ObservableDictionary<int, string>();
+            comments = new ObservableDictionary<int, Comment>();
             labels = new ObservableDictionary<int, Label>();
             romBytes = new RomBytes();
             cpu65C816 = new Cpu65C816(this);
@@ -261,7 +261,7 @@ namespace Diz.Core.model
         public string GetComment(int i)
         {
             if (Comments.TryGetValue(i, out var val))
-                return val;
+                return val.Text;
 
             return GetLabelComment(i) ?? "";
         }
@@ -274,7 +274,7 @@ namespace Diz.Core.model
             } else
             {
                 if (Comments.ContainsKey(i) && overwrite) Comments.Remove(i);
-                if (!Comments.ContainsKey(i)) Comments.Add(i, v);
+                if (!Comments.ContainsKey(i)) Comments.Add(i, new Comment() {Text = v});
             }
         }
 

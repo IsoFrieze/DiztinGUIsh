@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Diz.Core.util;
+using DiztinGUIsh;
 using IX.Observable;
 
 namespace Diz.Core.model
@@ -10,7 +11,7 @@ namespace Diz.Core.model
         // other objects can subscribe to modification notifications
         private RomMapMode romMapMode;
         private RomSpeed romSpeed = RomSpeed.Unknown;
-        private ObservableDictionary<int, string> comments;
+        private ObservableDictionary<int, Comment> comments;
         private ObservableDictionary<int, Label> labels;
         private RomBytes romBytes;
 
@@ -30,7 +31,7 @@ namespace Diz.Core.model
         }
 
         // next 2 dictionaries store in SNES address format (since memory labels can't be represented as a PC address)
-        public ObservableDictionary<int, string> Comments
+        public ObservableDictionary<int, Comment> Comments
         {
             get => comments;
             set => SetField(ref comments, value);
@@ -39,7 +40,11 @@ namespace Diz.Core.model
         public ObservableDictionary<int, Label> Labels
         {
             get => labels;
-            set => SetField(ref labels, value);
+            set
+            {
+                // TODO: need to notify property changed here
+                SetField(ref labels, value);
+            }
         }
 
         // RomBytes stored as PC file offset addresses (since ROM will always be mapped to disk)
@@ -48,7 +53,6 @@ namespace Diz.Core.model
             get => romBytes;
             set => SetField(ref romBytes, value);
         }
-
 
         #region Equality
         protected bool Equals(Data other)
