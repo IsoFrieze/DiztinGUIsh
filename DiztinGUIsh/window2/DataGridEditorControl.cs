@@ -189,6 +189,24 @@ namespace DiztinGUIsh.window2
             e.Handled = true;
             InvalidateTable();
         }*/
+        
+        private static int GetOffsetDeltaFromKeycode(Keys keyCode)
+        {
+            const int ONE = 1;
+            const int SMALL = 16;
+            const int LARGE = 256;
+            
+            var sign = keyCode is not Keys.Home and not Keys.PageUp and not Keys.Up ? 1 : -1;
+            var magnitude = 0;
+            switch (keyCode)
+            {
+                case Keys.Up: case Keys.Down: magnitude = ONE; break;
+                case Keys.PageUp: case Keys.PageDown: magnitude = SMALL; break;
+                case Keys.Home: case Keys.End: magnitude = LARGE; break;
+            };
+
+            return sign * magnitude;
+        }
 
         #endregion
 

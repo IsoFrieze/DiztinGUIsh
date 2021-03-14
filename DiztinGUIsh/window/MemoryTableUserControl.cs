@@ -35,22 +35,10 @@ namespace DiztinGUIsh.window
 
         public void Init()
         {
-            // Table.CellValueNeeded += table_CellValueNeeded;
-            // Table.CellValuePushed += table_CellValuePushed;
-            // // COPIED Table.CellPainting += table_CellPainting;
-
-            RowsToShow = (Table.Height - Table.ColumnHeadersHeight) / Table.RowTemplate.Height;
-
-            /#1#/ https://stackoverflow.com/a/1506066
-            typeof(DataGridView).InvokeMember(
-                "DoubleBuffered",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance |
-                System.Reflection.BindingFlags.SetProperty,
-                null,
-                Table,
-                new object[] {true});#1#
+            // dont need? RowsToShow = (Table.Height - Table.ColumnHeadersHeight) / Table.RowTemplate.Height;
         }
         
+        /*
         public void table_MouseWheel(object sender, MouseEventArgs e)
         {
             ScrollTableBy(e.Delta);
@@ -77,8 +65,9 @@ namespace DiztinGUIsh.window
             Table.CurrentCell = Table.Rows[selRow - ViewOffset].Cells[selCol];
             
             InvalidateTable();
-        }
+        }*/
         
+        /*
         public void SetCurrentCellTo(int i)
         {
             Table.CurrentCell = Table.Rows[i].Cells[Table.CurrentCell.ColumnIndex];
@@ -124,7 +113,7 @@ namespace DiztinGUIsh.window
         public void SelectRowOffset(int offset)
         {
             SelectRowOffset(offset, SelectedColumnIndex);
-        }
+        }*/
         
         // TODO: this should be part of some kind of DataView class that handles
         // dealing with the underlying transform of the full dataset => small window of data we're looking at. 
@@ -132,7 +121,7 @@ namespace DiztinGUIsh.window
         // dataOffset is a ROM offset. it doesn't know about our window or view or anything like that.
         // this function needs to get our view/table/window to jump to show that address.
         // the table itself doesn't scroll. instead, we delete all the contents and re-create it.
-        public void SelectRowOffset(int dataOffset, int col)
+        /*public void SelectRowOffset(int dataOffset, int col)
         {
             var outOfBoundsBefore = dataOffset < ViewOffset;
             var viewOffset = ViewOffset + RowsToShow;
@@ -150,7 +139,7 @@ namespace DiztinGUIsh.window
             /* order of operations:
             1) set ViewOffset
             2) call UpdateDataGridView() if needed
-            3) set table.CurrentCell #1#
+            3) set table.CurrentCell #2#
             
             // TODO: this could be combined with ScrollTo() which is doing something really similar.
             if (outOfBoundsBefore)
@@ -163,10 +152,10 @@ namespace DiztinGUIsh.window
 
             // TODO: basically doing what SetCurrentCellTo() is doing, refactor.
             Table.CurrentCell = Table.Rows[viewRow].Cells[col];
-        }
+        }*/
 
 
-        public void UpdateDataGridView()
+        /*public void UpdateDataGridView()
         {
             if (IsDataValid())
                 return;
@@ -185,17 +174,20 @@ namespace DiztinGUIsh.window
             Table.RowCount = RowsToShow;
 
             OnGridViewChanged();
-        }
+        }*/
 
+        /*
         private void OnGridViewChanged()
         {
             // TODO: call this stuff back in the main form via event:
             // importerMenuItemsEnabled = true;
             // UpdateImporterEnabledStatus();
         }
+        */
 
         
 
+        /*
         public void ScrollTo(int selOffset)
         {
             if (Table.CurrentCell == null)
@@ -220,34 +212,16 @@ namespace DiztinGUIsh.window
             SetCurrentCellTo(newRow);
 
             InvalidateTable();
-        }
+        }*/
+        //
+        // private int ClampOffsetToDataBounds(int offset) => Util.ClampIndex(offset, Data.GetRomSize());
+        //
+        // private int CalcNewOffsetFromKeyCode(Keys keyCode, int offset)
+        // {
+        //     return ClampOffsetToDataBounds(GetOffsetDeltaFromKeycode(keyCode) + offset);
+        // }
 
-        private int ClampOffsetToDataBounds(int offset) => Util.ClampIndex(offset, Data.GetRomSize());
-
-        private int CalcNewOffsetFromKeyCode(Keys keyCode, int offset)
-        {
-            return ClampOffsetToDataBounds(GetOffsetDeltaFromKeycode(keyCode) + offset);
-        }
-
-        private static int GetOffsetDeltaFromKeycode(Keys keyCode)
-        {
-            const int ONE = 1;
-            const int SMALL = 16;
-            const int LARGE = 256;
-            
-            var sign = keyCode is not Keys.Home and not Keys.PageUp and not Keys.Up ? 1 : -1;
-            var magnitude = 0;
-            switch (keyCode)
-            {
-                case Keys.Up: case Keys.Down: magnitude = ONE; break;
-                case Keys.PageUp: case Keys.PageDown: magnitude = SMALL; break;
-                case Keys.Home: case Keys.End: magnitude = LARGE; break;
-            };
-
-            return sign * magnitude;
-        }
-        
-        
+        /*// should be no longer needed since replaced by RowByteDataGridRow
         private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
             var row = e.RowIndex + ViewOffset;
@@ -340,7 +314,7 @@ namespace DiztinGUIsh.window
             }
 
             Table.InvalidateRow(e.RowIndex);
-        }
+        }*//*
 
         public void BeginEditingComment()
         {
@@ -352,6 +326,6 @@ namespace DiztinGUIsh.window
         {
             SelectColumn(ColumnType.Label);
             Table.BeginEdit(true);
-        }
+        }*/
     }
 }
