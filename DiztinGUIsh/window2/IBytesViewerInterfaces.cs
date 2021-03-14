@@ -1,4 +1,5 @@
-﻿using Diz.Core.model;
+﻿using System;
+using Diz.Core.model;
 using Diz.Core.util;
 using Equin.ApplicationFramework;
 
@@ -6,7 +7,12 @@ namespace DiztinGUIsh.window2
 {
     public interface IViewer
     {
-        public IController Controller { get; set; }
+
+    }
+
+    public interface IFormViewer : IViewer
+    {
+        public event EventHandler Closed;
     }
     
     public interface IBytesGridViewer<TByteItem> : IViewer
@@ -17,18 +23,31 @@ namespace DiztinGUIsh.window2
         public BindingListView<TByteItem> DataSource { get; set; }
     }
 
-    public interface IBytesFormViewer : IViewer
+    public interface IBytesFormViewer : IFormViewer
     {
 
     }
+    
+    
+    
+    // --------------------------------
+    
+    
+    
 
     public interface IController
     {
         IViewer View { get; }
+
+        public event EventHandler Closed;
+    }
+
+    public interface IDataController : IController
+    {
         Data Data { get; }
     }
     
-    public interface IBytesGridViewerController<TByteItem> : IController
+    public interface IBytesGridViewerDataController<TByteItem> : IDataController
     {
         IBytesGridViewer<TByteItem> ViewGrid { get; set; }
     }

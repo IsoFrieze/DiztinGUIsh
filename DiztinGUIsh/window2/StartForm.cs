@@ -1,23 +1,35 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
-using Diz.Core.model;
 using DiztinGUIsh.Properties;
-// using DiztinGUIsh.window;
 
 namespace DiztinGUIsh.window2
 {
-    public partial class StartForm : Form
+    public class StartFormDataBindingController : DataBindingController
     {
-        public App App = new();
+        public DizApplication DizApplication { get; init; }
 
+        public void OpenFileWithNewView(string filename)
+        {
+            DizApplication.OpenProjectFileWithNewView(filename);
+        }
+
+        protected override void DataBind()
+        {
+            
+        }
+    }
+    
+    public partial class StartForm : Form, IViewer
+    {
+        public StartFormDataBindingController DataBindingController { get; set; }
+        
         public StartForm()
         {
             InitializeComponent();
             
             // HACK. open last file.
-            if (!string.IsNullOrEmpty(Settings.Default.LastOpenedFile))
-                App.OpenFileWithNewView(Settings.Default.LastOpenedFile);
+            //if (!string.IsNullOrEmpty(Settings.Default.LastOpenedFile))
+            //    DataBindingController.OpenFileWithNewView(Settings.Default.LastOpenedFile);
         }
 
         public string PromptForOpenFile()
@@ -35,7 +47,7 @@ namespace DiztinGUIsh.window2
             if (string.IsNullOrEmpty(filename))
                 return;
 
-            App.OpenFileWithNewView(filename);
+            DataBindingController.OpenFileWithNewView(filename);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)

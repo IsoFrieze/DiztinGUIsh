@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Diz.Core.model;
@@ -16,18 +17,18 @@ namespace DiztinGUIsh.window2
     {
         #region Init
         
-        public Data Data => Controller?.Data;
+        public Data Data => DataController?.Data;
         public Util.NumberBase DataGridNumberBase { get; set; } = Util.NumberBase.Hexadecimal;
 
         
-        private IController controller;
+        private IDataController dataController;
 
-        public IController Controller
+        public IDataController DataController
         {
-            get => controller;
+            get => dataController;
             set
             {
-                controller = value;
+                dataController = value;
                 DataBind();
             }
         }
@@ -64,7 +65,7 @@ namespace DiztinGUIsh.window2
             ExtraDesignInit();
             GuiUtil.EnableDoubleBuffering(typeof(DataGridView), Table);
         }
-        
+
         private void ExtraDesignInit()
         {
             // stuff that should probably be in the designer, but we're migrating some old code

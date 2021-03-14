@@ -121,7 +121,7 @@ namespace DiztinGUIsh.window2
             // 
             // dataGridEditorControl1
             // 
-            this.dataGridEditorControl1.Controller = null;
+            this.dataGridEditorControl1.DataController = null;
             this.dataGridEditorControl1.DataGridNumberBase = Diz.Core.util.Util.NumberBase.Hexadecimal;
             this.dataGridEditorControl1.DataSource = null;
             this.dataGridEditorControl1.DisplayBase = Diz.Core.util.Util.NumberBase.Hexadecimal;

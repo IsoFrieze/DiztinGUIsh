@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Diz.Core.model;
 using Equin.ApplicationFramework;
@@ -11,13 +10,19 @@ using Equin.ApplicationFramework;
 
 namespace DiztinGUIsh.window2
 {
-    public class RomByteGridController : RomByteGridFormController
+    public class RomByteDataBindingGridController : RomByteDataBindingController
     {
-        // temp. hack. making RomByteGridController be an alias of RomByteGridFormController til
-        // we think of a better way to do this. it's fine for the moment
+
     }
 
-    public class RomByteGridFormController : ByteViewerGridController<RomByteDataGridRow>
+    public class RomByteDataBindingGridFormController : RomByteDataBindingController
+    {
+        public Project Project { get; init; }
+    }
+    
+    // -----------------------------
+
+    public class RomByteDataBindingController : ByteViewerDataBindingGridController<RomByteDataGridRow>
     {
         protected override IEnumerable<RomByteDataGridRow> GetByteItems()
         {
@@ -26,7 +31,9 @@ namespace DiztinGUIsh.window2
         }
     }
     
-    public abstract class ByteViewerGridController<TByteItem> : BaseController, IBytesGridViewerController<TByteItem>
+    // -----------------------------
+    
+    public abstract class ByteViewerDataBindingGridController<TByteItem> : DataBindingController, IBytesGridViewerDataController<TByteItem>
     {
         public IBytesGridViewer<TByteItem> ViewGrid
         {
@@ -52,22 +59,23 @@ namespace DiztinGUIsh.window2
 
         protected abstract IEnumerable<TByteItem> GetByteItems();
 
-        /*private void UpdateFilters()
-{
-    bindingList.Filter = new PredicateItemFilter<RomByteData>(IsRomByteOpcode);
-}
-
-private static bool IsRomByteOpcode(RomByteData romByte)
-{
-    return romByte.TypeFlag == FlagType.Opcode;
-}*/
+        // private void UpdateFilters()
+        // {
+        //     bindingList.Filter = new PredicateItemFilter<RomByteData>(IsRomByteOpcode);
+        // }
+        //
+        // private static bool IsRomByteOpcode(RomByteData romByte)
+        // {
+        //     return romByte.TypeFlag == FlagType.Opcode;
+        // }
     }
     
-    public abstract class BaseController : IController
+    
+    public abstract class DataBindingController : DataController
     {
         private IViewer view;
 
-        public IViewer View
+        public override IViewer View
         {
             get => view;
             set
@@ -78,10 +86,10 @@ private static bool IsRomByteOpcode(RomByteData romByte)
         }
         
         private Data data;
-        public Data Data
+        public override Data Data
         {
             get => data;
-            set
+            set 
             {
                 data = value;
                 DataBind();
@@ -89,5 +97,33 @@ private static bool IsRomByteOpcode(RomByteData romByte)
         }
         
         protected abstract void DataBind();
+    }
+    
+    public abstract class DataController : IDataController
+    {
+        private IViewer view;
+        
+        public virtual Data Data { get; set; }
+        public event EventHandler Closed;
+
+        public virtual IViewer View
+        {
+            get => view;
+            set
+            {
+                if (view is IFormViewer formViewerBefore)
+                    formViewerBefore.Closed -= OnClosed;
+                
+                view = value;
+                
+                if (view is IFormViewer formViewerAfter)
+                    formViewerAfter.Closed += OnClosed;
+            }
+        }
+
+        private void OnClosed(object? sender, EventArgs e)
+        {
+            Closed?.Invoke(sender, e);
+        }
     }
 }

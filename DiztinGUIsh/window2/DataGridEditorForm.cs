@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using Diz.Core.model;
 using Diz.Core.util;
 
 namespace DiztinGUIsh.window2
@@ -7,19 +8,25 @@ namespace DiztinGUIsh.window2
     public partial class DataGridEditorForm : Form, IBytesFormViewer
     {
         // the class controlling US
-        public IController Controller { get; set; }
+        public IDataController DataController { get; set; }
 
 
         // a class we create that controls just the data grid usercontrol we host
-        private IBytesGridViewerController<RomByteDataGridRow> DataGridController;
-        public DataGridEditorForm(IController formController)
+        private IBytesGridViewerDataController<RomByteDataGridRow> dataGridDataController;
+
+        public DataGridEditorForm()
         {
-            Controller = formController;
             InitializeComponent();
+            
+            Shown += OnShown;
+        }
+
+        private void OnShown(object? sender, EventArgs e)
+        {
             Init();
         }
 
-        private void Init()
+        public void Init()
         {
             // 
             // MainWindow itself, old designer stuff migrated. keep or kill
@@ -29,15 +36,13 @@ namespace DiztinGUIsh.window2
             // this.ClientSize = new System.Drawing.Size(930, 538);
             // this.MinimumSize = new System.Drawing.Size(780, 196);
 
-            DataGridController = new RomByteGridController
+            dataGridDataController = new RomByteDataBindingGridController
             {
                 ViewGrid = dataGridEditorControl1,
-                Data = Controller.Data,
+                Data = DataController.Data,
             };
 
-            dataGridEditorControl1.Controller = DataGridController;
-            
-            
+            dataGridEditorControl1.DataController = dataGridDataController;
         }
 
         private void DG_Load(object sender, System.EventArgs e)
@@ -56,9 +61,9 @@ namespace DiztinGUIsh.window2
         private void timer1_Tick(object sender, EventArgs e)
         {
             // test junk
-            if (Controller?.Data != null)
-                Controller.Data.RomBytes[0].DirectPage = Util.ClampIndex(
-                    Controller.Data.RomBytes[0].DirectPage + 1, 0xFFFF);
+            if (DataController?.Data != null)
+                DataController.Data.RomBytes[0].DirectPage = Util.ClampIndex(
+                    DataController.Data.RomBytes[0].DirectPage + 1, 0xFFFF);
         }
     }
 }

@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Reflection;
-using System.Xml;
-using System.Xml.Linq;
-using Diz.Core.model;
-using Diz.Core.util;
+﻿using Diz.Core.model;
+using Diz.Core.serialization.xml_serializer.xml_migrations;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
-using ExtendedXmlSerializer.ContentModel.Conversion;
-using ExtendedXmlSerializer.ExtensionModel.Xml;
 
 namespace Diz.Core.serialization.xml_serializer
 {
+
     /*public sealed class HexIntConverter : IConverter<int>
     {
         public static HexIntConverter Default { get; } = new();
@@ -68,7 +61,7 @@ namespace Diz.Core.serialization.xml_serializer
             //
             // TODO: would be cool if these were stored as attributes on the classes themselves
             return new ConfigurationContainer()
-                
+
                 .Type<Project>()
                 .Member(x => x.UnsavedChanges).Ignore()
                 .Member(x => x.ProjectFileName).Ignore()
@@ -76,11 +69,13 @@ namespace Diz.Core.serialization.xml_serializer
 
                 .Type<RomBytes>()
                 .Register().Serializer().Using(RomBytesSerializer.Default)
-                
-                .Type<Data>()// .Register().Converter(HexIntConverter.Default)
+
+                .Type<Data>() // .Register().Converter(HexIntConverter.Default)
                 // .Member(x => x.Comments.Keys).Register().Converter().)
                 .Member(x=>x.Comments)
                 // .CustomSerializer(new HexKVPSerializer())// cant get it working!!!
+                // .AddMigration(new DizProjectMigrations())
+                
                 .UseOptimizedNamespaces()
                 .UseAutoFormatting()
 
