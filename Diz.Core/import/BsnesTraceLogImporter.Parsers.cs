@@ -44,7 +44,9 @@ namespace Diz.Core.import
             SetOpcodeAndOperandsFromTraceData(modData, opcodeLen);  // note: frees modData, don't use after
         }
 
-        public static bool ParseTextLine(string line, ModificationData modData)
+        private CachedTraceLineTextIndex TextImportFormatCached { get; } = new CachedTraceLineTextIndex();
+
+        public bool ParseTextLine(string line, ModificationData modData)
         {
             // caution: very performance-sensitive function, please take care when making modifications
             // string.IndexOf() is super-slow too.
@@ -52,18 +54,28 @@ namespace Diz.Core.import
             // 028cde rep #$30               A:0004 X:0000 Y:0004 S:1fdd D:0000 DB:02 nvmxdiZC V:133 H: 654 F:36
             if (line.Length < 80)
                 return false;
+            
+            // performance: we could just parse the whitespace, but, 
+            // tracelogs have a huge amount of lines. so we parse the first line,
+            // then save the offsets for all other lines in the same file.
+            if (TextImportFormatCached.LastLineLength != line.Length)
+                TextImportFormatCached.RecomputeCachedIndicesBasedOn(line);
 
             // TODO: add error treatment / validation here.
 
             modData.SnesAddress = (int)ByteUtil.ByteParseHex(line, 0, 6);
-            modData.DirectPage = (int)ByteUtil.ByteParseHex(line, CachedIdx.D, 4);
-            modData.DataBank = (int)ByteUtil.ByteParseHex(line, CachedIdx.Db, 2);
+            modData.DirectPage = (int)ByteUtil.ByteParseHex(line, TextImportFormatCached.D, 4);
+            modData.DataBank = (int)ByteUtil.ByteParseHex(line, TextImportFormatCached.Db, 2);
+            
+            // 'X' (if emulation mode) or 'B' (if native mode) = unchecked in bsnesplus debugger UI = (8bit)
+            // 'x' or '.' = checked (16bit)
+            modData.XFlagSet = line[TextImportFormatCached.FX] == 'X' || line[TextImportFormatCached.FX] == 'B';
 
-            // 'X' = unchecked in bsnesplus debugger UI = (8bit), 'x' or '.' = checked (16bit)
-            modData.XFlagSet = line[CachedIdx.FX] == 'X';
-
-            // 'M' = unchecked in bsnesplus debugger UI = (8bit), 'm' or '.' = checked (16bit)
-            modData.MFlagSet = line[CachedIdx.FM] == 'M';
+            // 'M' (if emulation mode) or '1' (if native mode) = unchecked in bsnesplus debugger UI = (8bit)
+            // 'm' or '.' = checked (16bit)
+            modData.MFlagSet = line[TextImportFormatCached.FM] == 'M' || line[TextImportFormatCached.FM] == '1';
+            
+            // TODO: we could capture native vs emulation mode here and mark that.
 
             return true;
         }
