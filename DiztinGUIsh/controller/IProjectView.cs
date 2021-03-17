@@ -15,7 +15,7 @@ namespace DiztinGUIsh.controller
     
     public interface IProjectView : ILongRunningTaskHandler
     {
-        Project Project { get; set; }
+        Project Project { get; }
         void OnProjectOpenFail(string errorMsg);
         void OnProjectSaved();
         void OnExportFinished(LogCreator.OutputResult result);

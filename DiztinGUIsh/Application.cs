@@ -18,7 +18,8 @@ namespace DiztinGUIsh
             if (project == null)
                 return;
 
-            ShowNewProjectEditorForm(project);
+            var controller = ShowNewProjectEditorForm();
+            controller.SetProject(filename, project);
         }
         
         public DizApplication(string openFile = "")
@@ -66,18 +67,19 @@ namespace DiztinGUIsh
             OnCreated(controller, form);
         }
 
-        private void ShowNewProjectEditorForm(Project project)
+        private MainFormController ShowNewProjectEditorForm()
         {
             // var form = new DataGridEditorFormTemp();
             var form = new DataGridEditorForm();
             var controller = new MainFormController
             {
                 ProjectView = form,
-                Project = project
             };
             form.MainFormController = controller;
 
             OnCreated(controller, form);
+
+            return controller;
         }
 
         private void OnCreated(DataController controller, Control form)

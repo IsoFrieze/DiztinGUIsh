@@ -12,20 +12,34 @@ using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.window
 {
-    public partial class DataGridEditorForm : Form, IFormViewer, IProjectView
+    public partial class DataGridEditorForm : Form, IBytesFormViewer, IProjectView
     {
+        // a class we create that controls just the data grid usercontrol we host
+        private RomByteDataBindingGridController dataGridDataController;
+        
         #region Main
         public DataGridEditorForm()
         {
-            /*used to be: MainFormController = new MainFormController {
-                ProjectView = this,
-            };*/
-
             InitializeComponent();
         }
-        
+
         private void Init()
         {
+            // 
+            // DataGridEditorForm itself, old designer stuff migrated. keep or kill
+            // 
+            // this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            // this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            // this.ClientSize = new System.Drawing.Size(930, 538);
+            // this.MinimumSize = new System.Drawing.Size(780, 196);
+
+            dataGridDataController = new RomByteDataBindingGridController
+            {
+                ViewGrid = dataGridEditorControl1,
+                Data = MainFormController.Data,
+            };
+            dataGridEditorControl1.DataController = dataGridDataController;
+            
             AliasList = new AliasList(this);
 
             UpdatePanels();
@@ -46,7 +60,6 @@ namespace DiztinGUIsh.window
 
         private void ProjectController_ProjectChanged(object sender, MainFormController.ProjectChangedEventArgs e)
         {
-            /*TODO
             switch (e.ChangeType)
             {
                 case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Saved:
@@ -62,7 +75,7 @@ namespace DiztinGUIsh.window
                     OnProjectClosing();
                     break;
             }
-            */
+            
             RebindProject();
         }
 
@@ -73,11 +86,8 @@ namespace DiztinGUIsh.window
 
         public void OnProjectOpened(string filename)
         {
-            if (visualForm != null)
-                visualForm.Project = Project;
-
-            // TODO: do this with aliaslist too.
-
+            RebindProject();
+            
             UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
             RefreshUi();
 
@@ -121,12 +131,12 @@ namespace DiztinGUIsh.window
 
         #region Properties
 
-        public DizDocument Document { get; } = new();
+        public DizDocument Document => MainFormController.Document;
 
         public Project Project
         {
             get => Document.Project;
-            set => Document.Project = value;
+            // set => Document.Project = value;
         }
 
         // not sure if this will be the final place this lives. OK for now. -Dom
@@ -422,7 +432,13 @@ namespace DiztinGUIsh.window
         #region State updates
         private void RebindProject()
         {
+            // TODO: replace all this with OnNotifyPropertyChanged stuff eventually
+
+            // TODO dataGridDataController.Data = Project.Data;
+            dataGridDataController.Data = Project.Data;
+            
             AliasList?.RebindProject();
+            
             if (visualForm != null) 
                 visualForm.Project = Project;
         }

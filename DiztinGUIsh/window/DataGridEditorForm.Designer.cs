@@ -110,10 +110,13 @@
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.openProjectFile = new System.Windows.Forms.OpenFileDialog();
             this.saveProjectFile = new System.Windows.Forms.SaveFileDialog();
-            
             this.openUsageMapFile = new System.Windows.Forms.OpenFileDialog();
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
+            this.dataGridEditorControl1 = new DiztinGUIsh.window2.DataGridEditorControl();
+            this.menuStrip1.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
+            this.SuspendLayout();
             // 
             // menuStrip1
             // 
@@ -803,11 +806,24 @@
             // 
             this.openCDLDialog.Filter = "BizHawk Code Data Logger Files|*.cdl|All Files|*.*";
             // 
+            // dataGridEditorControl1
+            // 
+            this.dataGridEditorControl1.DataController = null;
+            this.dataGridEditorControl1.DataGridNumberBase = Diz.Core.util.Util.NumberBase.Hexadecimal;
+            this.dataGridEditorControl1.DataSource = null;
+            this.dataGridEditorControl1.DisplayBase = Diz.Core.util.Util.NumberBase.Hexadecimal;
+            this.dataGridEditorControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridEditorControl1.Location = new System.Drawing.Point(0, 24);
+            this.dataGridEditorControl1.Name = "dataGridEditorControl1";
+            this.dataGridEditorControl1.Size = new System.Drawing.Size(930, 492);
+            this.dataGridEditorControl1.TabIndex = 4;
+            // 
             // DataGridEditorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(930, 538);
+            this.Controls.Add(this.dataGridEditorControl1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -820,6 +836,13 @@
             this.Load += new System.EventHandler(this.MainWindow_Load);
             this.ResizeEnd += new System.EventHandler(this.MainWindow_ResizeEnd);
             this.SizeChanged += new System.EventHandler(this.MainWindow_SizeChanged);
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         #endregion
@@ -908,6 +931,7 @@
         private System.Windows.Forms.ToolStripMenuItem importCaptureToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importTraceLogBinary;
         private System.Windows.Forms.ToolStripMenuItem closeProjectToolStripMenuItem;
+        private window2.DataGridEditorControl dataGridEditorControl1;
     }
 }
 

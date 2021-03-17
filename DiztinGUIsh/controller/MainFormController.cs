@@ -9,6 +9,7 @@ using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using DiztinGUIsh.util;
+using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
 using DiztinGUIsh.window2;
 
@@ -38,8 +39,10 @@ namespace DiztinGUIsh.controller
     public class MainFormController : RomByteDataBindingController, IProjectOpener, IController
     {
         public IProjectView ProjectView { get; set; }
-        public Project Project { get; set; }
+        public DizDocument Document { get; } = new();
         
+        public Project Project => Document.Project;
+
         public bool MoveWithStep { get; set; } = true;
 
         public delegate void ProjectChangedEvent(object sender, ProjectChangedEventArgs e);
@@ -82,7 +85,12 @@ namespace DiztinGUIsh.controller
         
         public void OnProjectOpenSuccess(string filename, Project project)
         {
-            ProjectView.Project = Project = project;
+            SetProject(filename, project);
+        }
+
+        public void SetProject(string filename, Project project)
+        {
+            Document.Project = project;
             Project.PropertyChanged += Project_PropertyChanged;
 
             ProjectChanged?.Invoke(this, new ProjectChangedEventArgs()
@@ -250,7 +258,7 @@ namespace DiztinGUIsh.controller
                 ChangeType = ProjectChangedEventArgs.ProjectChangedType.Closing
             });
 
-            Project = null;
+            Document.Project = null;
         }
 
         public int MarkMany(int markProperty, int markStart, object markValue, int markCount)
