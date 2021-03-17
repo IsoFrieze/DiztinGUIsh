@@ -16,13 +16,13 @@ namespace DiztinGUIsh.window.dialog
     // eventually, if we want to do that we need to retrofit the rest of the app to take advantage of that.
     public partial class BsnesTraceLogBinaryMonitorForm : Form
     {
-        private readonly MainWindow mainWindow;
+        private readonly DataGridEditorForm dataGridEditorForm;
         private BsnesTraceLogCapture capturing;
         private string lastError;
 
-        public BsnesTraceLogBinaryMonitorForm(MainWindow window)
+        public BsnesTraceLogBinaryMonitorForm(DataGridEditorForm window)
         {
-            mainWindow = window;
+            dataGridEditorForm = window;
             InitializeComponent();
         }
 
@@ -41,7 +41,7 @@ namespace DiztinGUIsh.window.dialog
         {
             // TODO: error handling is busted here.
             await Task.Run(() => {
-                capturing.Run(mainWindow.Project.Data);
+                capturing.Run(dataGridEditorForm.Project.Data);
             }).ContinueWith(task => {
                 this.InvokeIfRequired(() => CapturingFinished(task.Exception));
             });

@@ -5,7 +5,7 @@ using Diz.Core.util;
 
 namespace DiztinGUIsh.window2
 {
-    public partial class DataGridEditorForm : Form, IBytesFormViewer
+    public partial class DataGridEditorFormTemp : Form, IBytesFormViewer
     {
         // the class controlling US
         public IDataController DataController { get; set; }
@@ -14,7 +14,7 @@ namespace DiztinGUIsh.window2
         // a class we create that controls just the data grid usercontrol we host
         private IBytesGridViewerDataController<RomByteDataGridRow> dataGridDataController;
 
-        public DataGridEditorForm()
+        public DataGridEditorFormTemp()
         {
             InitializeComponent();
             
@@ -29,7 +29,7 @@ namespace DiztinGUIsh.window2
         public void Init()
         {
             // 
-            // MainWindow itself, old designer stuff migrated. keep or kill
+            // DataGridEditorForm itself, old designer stuff migrated. keep or kill
             // 
             // this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             // this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;

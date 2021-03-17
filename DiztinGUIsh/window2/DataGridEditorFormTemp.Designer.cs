@@ -2,7 +2,7 @@
 
 namespace DiztinGUIsh.window2
 {
-    partial class DataGridEditorForm
+    partial class DataGridEditorFormTemp
     {
         /// <summary>
         /// Required designer variable.
@@ -144,7 +144,7 @@ namespace DiztinGUIsh.window2
             this.ClientSize = new System.Drawing.Size(1405, 584);
             this.Controls.Add(this.flowLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.Name = "DataGridEditorForm";
+            this.Name = "DataGridEditorFormTemp";
             this.Text = "DGEditor";
             this.Load += new System.EventHandler(this.DG_Load);
             this.flowLayoutPanel1.ResumeLayout(false);

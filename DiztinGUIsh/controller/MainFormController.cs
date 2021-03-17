@@ -1,4 +1,4 @@
-﻿/*using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,7 +9,6 @@ using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using DiztinGUIsh.util;
-using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
 using DiztinGUIsh.window2;
 
@@ -36,7 +35,7 @@ using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.controller
 {
-    public class MainFormController : IProjectOpener
+    public class MainFormController : RomByteDataBindingController, IProjectOpener, IController
     {
         public IProjectView ProjectView { get; set; }
         public Project Project { get; set; }
@@ -487,5 +486,8 @@ namespace DiztinGUIsh.controller
         }
 
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler { get; }
+        
+        public IViewer View { get; }
+        public event EventHandler Closed;
     }
-}*/
+}

@@ -6,24 +6,7 @@ using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window
 {
-    // defines a window into a larger dataset
-    // ViewOffset and VIewCount are the boundaries of the window into that data
-    // SelectedRomOffset is a ROM address inside that range
-    public interface IDataViewWithSelection
-    {
-        // The ROM offset that is "selected" WITHIN the window 
-        public int SelectedOffset { get; set; }
-        
-        // ROM offset that corresponds to the first record
-        // (i.e. if we're scrolled 1000 bytes into the ROM, then row 0 of our table is address 0x1000 in the ROM) 
-        // if rowsToShow is Ten, then row[0] ROM address is 1000, and row[max-1] ROM address is 1010
-        public int StartingOffset { get; set; }
-
-        // Number of records past StartingOffset
-        public int Count { get; set; }
-    }
-    
-    public interface IMemoryTableController : IDataViewWithSelection
+    /*public interface IMemoryTableController : IDataViewWithSelection
     {
         void KeyDown(object sender, KeyEventArgs e);
         
@@ -33,9 +16,9 @@ namespace DiztinGUIsh.window
         void SetMFlag(int romOffset, bool value);
         void SetXFlag(int romOffset, bool value);
         void AddComment(int i, string v, bool overwrite);
-    }
+    }*/
     
-    public class MemoryTableController : IMemoryTableController
+    /*public class MemoryTableController : IMemoryTableController
     {
         public Data Data { get; init; }
         public MemoryTableUserControl TableControl { get; init; }
@@ -46,7 +29,7 @@ namespace DiztinGUIsh.window
         
         public void Invalidate()
         {
-            TableControl.InvalidateTable();
+            // TableControl.InvalidateTable();
         }
 
         public void Init()
@@ -60,8 +43,8 @@ namespace DiztinGUIsh.window
             // return TableControl.GetSelectedOffset();
         }
 
-        public void InvalidateTable() => TableControl.InvalidateTable();
-        public void UpdateDataGridView() => TableControl.UpdateDataGridView();
+        /*public void InvalidateTable() => TableControl.InvalidateTable();
+        public void UpdateDataGridView() => TableControl.UpdateDataGridView();#1#
         private bool RomDataPresent() => Data?.GetRomSize() > 0;
 
         private void RefreshPercentAndWindowTitle()
@@ -160,7 +143,7 @@ namespace DiztinGUIsh.window
             if (!RomDataPresent())
                 return;
             
-            TableControl.BeginEditingLabel();
+            // TableControl.BeginEditingLabel();
         }
         
         public void BeginEditingComment()
@@ -168,9 +151,10 @@ namespace DiztinGUIsh.window
             if (!RomDataPresent())
                 return;
             
-            TableControl.BeginEditingComment();
+            // TableControl.BeginEditingComment();
         }
     }
+    */
     
     // location inside a ROM (i.e. offset into the file)
     /*public class Location

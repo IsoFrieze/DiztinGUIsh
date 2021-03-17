@@ -16,14 +16,14 @@ namespace DiztinGUIsh.window
 {
     public partial class AliasList : Form
     {
-        private readonly MainWindow parentWindow;
+        private readonly DataGridEditorForm parentWindow;
         private MainFormController MainFormController => parentWindow?.MainFormController;
         private Data Data => MainFormController?.Project?.Data;
 
         public bool Locked;
         private int currentlyEditing = -1;
         
-        public AliasList(MainWindow main)
+        public AliasList(DataGridEditorForm main)
         {
             parentWindow = main;
             InitializeComponent();
@@ -90,11 +90,12 @@ namespace DiztinGUIsh.window
                     errLine = i + 1;
 
                     SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
-                    SplitOnFirstComma(remainder, out label.Name, out label.Comment);
-
+                    SplitOnFirstComma(remainder, out var labelName, out var labelComment);
+                    
+                    label.Name = labelName.Trim();
+                    label.Comment = labelComment;
                     label.CleanUp();
-
-                    label.Name = label.Name.Trim();
+                    
                     if (!validLabelChars.Match(label.Name).Success)
                         throw new InvalidDataException("invalid label name: " + label.Name);
 
@@ -108,9 +109,9 @@ namespace DiztinGUIsh.window
                 ClearAndInvalidateDataGrid();
 
                 // this will call AddRow() to add items back to the UI datagrid.
-                foreach (var pair in newValues)
+                foreach (var (key, value) in newValues)
                 {
-                    Data.AddLabel(pair.Key, pair.Value, true);
+                    Data.AddLabel(key, value, true);
                 }
             }
             catch (Exception ex)

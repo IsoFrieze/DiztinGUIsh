@@ -48,6 +48,8 @@ namespace Diz.Core.serialization.xml_serializer
 
         private RomByte[] DecodeAllBytes(List<string> allLines)
         {
+            // TODO: probably should use parallel LINQ here instead?
+            
             if (numTasksToUse == 1)
                 return DecodeRomBytes(allLines, 0, allLines.Count);
 
@@ -77,6 +79,7 @@ namespace Diz.Core.serialization.xml_serializer
             return Task<RomByte[]>.Run(() => DecodeRomBytes(allLines, nextIndex, workListCount));
         }
 
+        // NOTE: runs in its own thread, a few times in parallel
         private static RomByte[] DecodeRomBytes(IReadOnlyList<string> allLines, int startIndex, int count)
         {
             // perf: allocate all at once, don't use List.Add() one at a time

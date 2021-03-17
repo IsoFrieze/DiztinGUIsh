@@ -1,6 +1,8 @@
 ﻿using System;
 using Diz.Core.export;
 using Diz.Core.model;
+using DiztinGUIsh.window.dialog;
+
 // using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.controller
@@ -10,7 +12,7 @@ namespace DiztinGUIsh.controller
         public delegate void LongRunningTaskHandler(Action task, string description = null);
         LongRunningTaskHandler TaskHandler { get; }
     }
-    /*
+    
     public interface IProjectView : ILongRunningTaskHandler
     {
         Project Project { get; set; }
@@ -28,5 +30,5 @@ namespace DiztinGUIsh.controller
         bool PromptHarshAutoStep(int offset, out int newOffset, out int count);
         MarkManyDialog PromptMarkMany(int offset, int column);
         void ShowOffsetOutOfRangeMsg();
-    }*/
+    }
 }

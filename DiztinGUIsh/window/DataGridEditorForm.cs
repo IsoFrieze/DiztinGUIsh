@@ -8,13 +8,14 @@ using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
+using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.window
 {
-    public partial class MainWindow : Form, IProjectView
+    public partial class DataGridEditorForm : Form, IFormViewer, IProjectView
     {
         #region Main
-        public MainWindow()
+        public DataGridEditorForm()
         {
             /*used to be: MainFormController = new MainFormController {
                 ProjectView = this,
@@ -25,8 +26,6 @@ namespace DiztinGUIsh.window
         
         private void Init()
         {
-            InitMainTable();
-
             AliasList = new AliasList(this);
 
             UpdatePanels();
@@ -47,6 +46,7 @@ namespace DiztinGUIsh.window
 
         private void ProjectController_ProjectChanged(object sender, MainFormController.ProjectChangedEventArgs e)
         {
+            /*TODO
             switch (e.ChangeType)
             {
                 case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Saved:
@@ -62,7 +62,7 @@ namespace DiztinGUIsh.window
                     OnProjectClosing();
                     break;
             }
-
+            */
             RebindProject();
         }
 
@@ -133,10 +133,10 @@ namespace DiztinGUIsh.window
         public MainFormController MainFormController
         {
             get => _mainFormController;
-            init
+            set
             {
                 _mainFormController = value;
-                _mainFormController.ProjectView = this;
+                // _mainFormController.ProjectView = this;
                 Document.PropertyChanged += Document_PropertyChanged;
                 MainFormController.ProjectChanged += ProjectController_ProjectChanged;
             }
@@ -163,10 +163,16 @@ namespace DiztinGUIsh.window
 
         private bool importerMenuItemsEnabled;
         
-        private readonly MainFormController _mainFormController;
+        private MainFormController _mainFormController;
+        
+        public void InvalidateTable()
+        {
+            // tableController.Invalidate();
+        }
 
         #endregion
         
+        /*
         #region Table_stuff
         private MemoryTableUserControl tableControl;
         private MemoryTableController tableController;
@@ -184,8 +190,6 @@ namespace DiztinGUIsh.window
                 TableControl = tableControl,
             };
         }
-
-        public void InvalidateTable() => tableController.Invalidate();
         
         private void vScrollBar1_ValueChanged(object sender, EventArgs e)
         {
@@ -231,7 +235,7 @@ namespace DiztinGUIsh.window
         {
             tableController.BeginAddingLabel();
         }
-        #endregion
+        #endregion*/
         
         #region Actions
         private void OpenLastProject()
@@ -329,7 +333,6 @@ namespace DiztinGUIsh.window
         private void ToggleMoveWithStep()
         {
             _mainFormController.ToggleMoveWithStep();
-            moveWithStepToolStripMenuItem.Checked = tableController.MoveWithStep;
         }
 
         private void ToggleOpenLastProjectEnabled()
@@ -349,7 +352,7 @@ namespace DiztinGUIsh.window
 
         public IImportRomDialogView GetImportView() => new ImportRomDialog();
 
-        void IProjectView.ShowOffsetOutOfRangeMsg() => ShowOffsetOutOfRangeMsg();
+        // void IProjectView.ShowOffsetOutOfRangeMsg() => ShowOffsetOutOfRangeMsg();
 
         private void ImportBizhawkCDL()
         {
@@ -426,12 +429,12 @@ namespace DiztinGUIsh.window
 
         private void UpdatePanels()
         {
-            table.Height = Height - 85;
+            /*table.Height = Height - 85;
             table.Width = Width - 33;
             vScrollBar1.Height = Height - 85;
             vScrollBar1.Left = Width - 33;
             if (WindowState == FormWindowState.Maximized) 
-                tableController.UpdateDataGridView();
+                tableController.UpdateDataGridView();*/
         }
 
         public void UpdateWindowTitle()
@@ -457,17 +460,17 @@ namespace DiztinGUIsh.window
         private void RefreshUi()
         {
             importCDLToolStripMenuItem.Enabled = true;
-            tableController.UpdateDataGridView();
+            // tableController.UpdateDataGridView();
 
             UpdateWindowTitle();
             UpdatePercent();
-            table.Invalidate();
+            // table.Invalidate();
             EnableSubWindows();
         }
 
         private void UpdateBase(Util.NumberBase noBase)
         {
-            tableControl.DisplayBase = noBase; // TODO: move this out of mainwindow, into table class.
+            // tableControl.DisplayBase = noBase; // TODO: move this out of mainwindow, into table class.
             
             decimalToolStripMenuItem.Checked = noBase == Util.NumberBase.Decimal;
             hexadecimalToolStripMenuItem.Checked = noBase == Util.NumberBase.Hexadecimal;
@@ -535,7 +538,11 @@ namespace DiztinGUIsh.window
             e.Cancel = !PromptContinueEvenIfUnsavedChanges();
 
         private void MainWindow_SizeChanged(object sender, EventArgs e) => UpdatePanels();
-        private void MainWindow_ResizeEnd(object sender, EventArgs e) => tableController.UpdateDataGridView();
+        private void MainWindow_ResizeEnd(object sender, EventArgs e)
+        {
+            // tableController.UpdateDataGridView();
+        }
+
         private void MainWindow_Load(object sender, EventArgs e) => Init();
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e) => CreateNewProject();
         private void openProjectToolStripMenuItem_Click(object sender, EventArgs e) => OpenProject();
@@ -557,7 +564,11 @@ namespace DiztinGUIsh.window
             UpdateBase(Util.NumberBase.Binary);
         
         private void importTraceLogBinary_Click(object sender, EventArgs e) => ImportBsnesBinaryTraceLog();
-        private void addLabelToolStripMenuItem_Click(object sender, EventArgs e) => BeginAddingLabel();
+        private void addLabelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // BeginAddingLabel();
+        }
+
         private void visualMapToolStripMenuItem_Click(object sender, EventArgs e) => ShowVisualizerForm();
         
         #endregion
@@ -566,8 +577,8 @@ namespace DiztinGUIsh.window
 
         public int SelectedOffset
         {
-            get => tableController.SelectedOffset;
-            set => tableController.SelectedOffset = value;
+            get => throw new NotImplementedException(); //tableController.SelectedOffset);
+            set => throw new NotImplementedException(); // tableController.SelectedOffset = value;
         }
         
         private void stepOverToolStripMenuItem_Click(object sender, EventArgs e) 
@@ -598,7 +609,10 @@ namespace DiztinGUIsh.window
         private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedOffset, 10);
 
         private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedOffset, 11);
-        private void addCommentToolStripMenuItem_Click(object sender, EventArgs e) => BeginEditingComment();
+        private void addCommentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // BeginEditingComment();
+        }
 
         private void unreachedToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Unreached);
@@ -668,8 +682,11 @@ namespace DiztinGUIsh.window
 
         private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e) => RescanForInOut();
         private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => ImportBSNESUsageMap();
-        private void table_MouseWheel(object sender, MouseEventArgs e) => tableControl.table_MouseWheel(sender, e);
-        
+        private void table_MouseWheel(object sender, MouseEventArgs e)
+        {
+            // tableControl.table_MouseWheel(sender, e);
+        }
+
         #endregion
         
         #region Prompts
@@ -740,12 +757,14 @@ namespace DiztinGUIsh.window
             if (!RomDataPresent())
                 return -1;
 
-            var go = new GotoDialog(tableControl.ViewOffset + table.CurrentCell.RowIndex, Project.Data);
+            throw new NotImplementedException();
+
+            /*var go = new GotoDialog(tableControl.ViewOffset + table.CurrentCell.RowIndex, Project.Data);
             var result = go.ShowDialog();
             if (result != DialogResult.OK)
                 return -1;
             
-            return go.GetPcOffset();
+            return go.GetPcOffset();*/
         }
 
         private static void ShowError(string errorMsg, string caption = "Error")
@@ -770,6 +789,11 @@ namespace DiztinGUIsh.window
         {
             var mark = new MarkManyDialog(offset, column, Project.Data);
             return mark.ShowDialog() == DialogResult.OK ? mark : null;
+        }
+
+        void IProjectView.ShowOffsetOutOfRangeMsg()
+        {
+            ShowOffsetOutOfRangeMsg();
         }
 
         private bool PromptForMisalignmentCheck()

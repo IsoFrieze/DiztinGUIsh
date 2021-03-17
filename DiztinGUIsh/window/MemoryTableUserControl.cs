@@ -7,7 +7,7 @@ using DiztinGUIsh.controller;
 
 namespace DiztinGUIsh.window
 {
-    public class MemoryTableUserControl
+    /*public class MemoryTableUserControl
     {
         // -----------------------------------------------------------------
         // these eventually should go into the designer. for now we fake this.
@@ -29,7 +29,7 @@ namespace DiztinGUIsh.window
 
         // public int SelectedOffset => Table.CurrentCell.RowIndex + ViewOffset;
 
-        public IMemoryTableController Controller { get; set; }
+        // public IMemoryTableController Controller { get; set; }
 
         
 
@@ -65,7 +65,7 @@ namespace DiztinGUIsh.window
             Table.CurrentCell = Table.Rows[selRow - ViewOffset].Cells[selCol];
             
             InvalidateTable();
-        }*/
+        }#1#
         
         /*
         public void SetCurrentCellTo(int i)
@@ -113,7 +113,7 @@ namespace DiztinGUIsh.window
         public void SelectRowOffset(int offset)
         {
             SelectRowOffset(offset, SelectedColumnIndex);
-        }*/
+        }#1#
         
         // TODO: this should be part of some kind of DataView class that handles
         // dealing with the underlying transform of the full dataset => small window of data we're looking at. 
@@ -139,7 +139,7 @@ namespace DiztinGUIsh.window
             /* order of operations:
             1) set ViewOffset
             2) call UpdateDataGridView() if needed
-            3) set table.CurrentCell #2#
+            3) set table.CurrentCell #3#
             
             // TODO: this could be combined with ScrollTo() which is doing something really similar.
             if (outOfBoundsBefore)
@@ -152,7 +152,7 @@ namespace DiztinGUIsh.window
 
             // TODO: basically doing what SetCurrentCellTo() is doing, refactor.
             Table.CurrentCell = Table.Rows[viewRow].Cells[col];
-        }*/
+        }#1#
 
 
         /*public void UpdateDataGridView()
@@ -174,7 +174,7 @@ namespace DiztinGUIsh.window
             Table.RowCount = RowsToShow;
 
             OnGridViewChanged();
-        }*/
+        }#1#
 
         /*
         private void OnGridViewChanged()
@@ -183,7 +183,7 @@ namespace DiztinGUIsh.window
             // importerMenuItemsEnabled = true;
             // UpdateImporterEnabledStatus();
         }
-        */
+        #1#
 
         
 
@@ -212,7 +212,7 @@ namespace DiztinGUIsh.window
             SetCurrentCellTo(newRow);
 
             InvalidateTable();
-        }*/
+        }#1#
         //
         // private int ClampOffsetToDataBounds(int offset) => Util.ClampIndex(offset, Data.GetRomSize());
         //
@@ -221,7 +221,7 @@ namespace DiztinGUIsh.window
         //     return ClampOffsetToDataBounds(GetOffsetDeltaFromKeycode(keyCode) + offset);
         // }
 
-        /*// should be no longer needed since replaced by RowByteDataGridRow
+        /#1#/ should be no longer needed since replaced by RowByteDataGridRow
         private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
             var row = e.RowIndex + ViewOffset;
@@ -314,7 +314,7 @@ namespace DiztinGUIsh.window
             }
 
             Table.InvalidateRow(e.RowIndex);
-        }*//*
+        }#1#/*
 
         public void BeginEditingComment()
         {
@@ -326,6 +326,6 @@ namespace DiztinGUIsh.window
         {
             SelectColumn(ColumnType.Label);
             Table.BeginEdit(true);
-        }*/
-    }
+        }#1#
+    }*/
 }
