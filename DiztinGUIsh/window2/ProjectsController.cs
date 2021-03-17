@@ -8,7 +8,7 @@ namespace DiztinGUIsh.window2
 {
     public class ProjectsController
     {
-        private Dictionary<string, Project> Projects { get; } = new();
+        public Dictionary<string, Project> Projects { get; } = new();
         
         // ReSharper disable once MemberCanBeProtected.Global
         public const string SampleProjectName = "sampleproject111111112"; // temp hack.

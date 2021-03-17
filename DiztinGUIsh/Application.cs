@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
 using Diz.Core.model;
 using DiztinGUIsh.controller;
@@ -91,6 +93,22 @@ namespace DiztinGUIsh
         private void OnApplicationExit(object sender, EventArgs e)
         {
             // cleanup
+        }
+
+        public void OpenNewViewOfLastLoadedProject()
+        {
+            // hack. for now, only make this work with the first item.
+            // in the future, implement this with an "currently opened projects" selection dialog 
+            Debug.Assert(ProjectsController.Projects.Values.Count == 1);
+            var openProject = ProjectsController.Projects.Values.Select(project => project).FirstOrDefault();
+            if (openProject == null)
+            {
+                MessageBox.Show("Err: No open projects, or more than one. Need exactly one.");
+                return;
+            }
+            
+            var controller = ShowNewProjectEditorForm();
+            controller.SetProject("", openProject);
         }
     }
 }

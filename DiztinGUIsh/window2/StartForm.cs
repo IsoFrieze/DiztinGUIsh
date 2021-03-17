@@ -17,6 +17,11 @@ namespace DiztinGUIsh.window2
         {
             
         }
+
+        public void OpenNewViewOfLastLoadedProject()
+        {
+            DizApplication.OpenNewViewOfLastLoadedProject();
+        }
     }
     
     public partial class StartForm : Form, IViewer
@@ -57,7 +62,7 @@ namespace DiztinGUIsh.window2
 
         private void newViewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            
+            DataBindingController.OpenNewViewOfLastLoadedProject();
         }
 
         private void newViewBankC0ToolStripMenuItem_Click(object sender, EventArgs e)
