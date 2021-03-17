@@ -848,7 +848,17 @@ namespace DiztinGUIsh.window
         
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
             ProgressBarJob.RunAndWaitForCompletion;
-        
+
         #endregion
+
+        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
+        }
+
+        private void viewOpcodesOnly_click(object sender, EventArgs e)
+        {
+            dataGridDataController.FilterShowOpcodesOnly = !dataGridDataController.FilterShowOpcodesOnly;
+        }
     }
 }

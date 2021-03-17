@@ -29,6 +29,37 @@ namespace DiztinGUIsh.window2
             return Data.RomBytes.Select(romByte =>
                 new RomByteDataGridRow(romByte, Data, ViewGrid));
         }
+
+        #region Filters
+
+        private bool filterShowOpcodesOnly;
+        public bool FilterShowOpcodesOnly
+        {
+            get => filterShowOpcodesOnly;
+            set
+            {
+                filterShowOpcodesOnly = value;
+                UpdateFilters();
+            }
+        }
+
+        private void UpdateFilters()
+        {
+            if (ViewGrid?.DataSource == null)
+                return;
+            
+            ViewGrid.DataSource.RemoveFilter();
+            
+            if (FilterShowOpcodesOnly)
+                ViewGrid.DataSource.Filter = new PredicateItemFilter<RomByteDataGridRow>(IsRomByteOpcode);
+        }
+        
+        private static bool IsRomByteOpcode(RomByteDataGridRow romByteRow)
+        {
+            return romByteRow.RomByte.TypeFlag == FlagType.Opcode;
+        }
+        
+        #endregion
     }
     
     // -----------------------------
@@ -58,16 +89,6 @@ namespace DiztinGUIsh.window2
         }
 
         protected abstract IEnumerable<TByteItem> GetByteItems();
-
-        // private void UpdateFilters()
-        // {
-        //     bindingList.Filter = new PredicateItemFilter<RomByteData>(IsRomByteOpcode);
-        // }
-        //
-        // private static bool IsRomByteOpcode(RomByteData romByte)
-        // {
-        //     return romByte.TypeFlag == FlagType.Opcode;
-        // }
     }
     
     

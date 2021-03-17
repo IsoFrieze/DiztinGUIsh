@@ -86,7 +86,7 @@
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.fixMisalignedInstructionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rescanForInOutPointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.visualMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphicsWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.constantsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -114,6 +114,8 @@
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
             this.dataGridEditorControl1 = new DiztinGUIsh.window2.DataGridEditorControl();
+            this.viewToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.showOpcodesOnly = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -124,13 +126,15 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
-            this.viewToolStripMenuItem,
+            this.viewToolStripMenuItem2,
+            this.toolsToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(930, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
+            this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.menuStrip1_ItemClicked);
             // 
             // fileToolStripMenuItem
             // 
@@ -600,18 +604,18 @@
             this.rescanForInOutPointsToolStripMenuItem.Text = "Rescan for In/Out Points...";
             this.rescanForInOutPointsToolStripMenuItem.Click += new System.EventHandler(this.rescanForInOutPointsToolStripMenuItem_Click);
             // 
-            // viewToolStripMenuItem
+            // toolsToolStripMenuItem
             // 
-            this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.visualMapToolStripMenuItem,
             this.graphicsWindowToolStripMenuItem,
             this.constantsToolStripMenuItem,
             this.optionsToolStripMenuItem,
             this.labelListToolStripMenuItem,
             this.importCaptureToolStripMenuItem});
-            this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            this.viewToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
-            this.viewToolStripMenuItem.Text = "&Tools";
+            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
+            this.toolsToolStripMenuItem.Text = "&Tools";
             // 
             // visualMapToolStripMenuItem
             // 
@@ -818,6 +822,21 @@
             this.dataGridEditorControl1.Size = new System.Drawing.Size(930, 492);
             this.dataGridEditorControl1.TabIndex = 4;
             // 
+            // viewToolStripMenuItem2
+            // 
+            this.viewToolStripMenuItem2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.showOpcodesOnly});
+            this.viewToolStripMenuItem2.Name = "viewToolStripMenuItem2";
+            this.viewToolStripMenuItem2.Size = new System.Drawing.Size(44, 20);
+            this.viewToolStripMenuItem2.Text = "&View";
+            // 
+            // showOpcodesOnly
+            // 
+            this.showOpcodesOnly.Name = "showOpcodesOnly";
+            this.showOpcodesOnly.Size = new System.Drawing.Size(196, 22);
+            this.showOpcodesOnly.Text = "Show Instructions Only";
+            this.showOpcodesOnly.Click += new System.EventHandler(this.viewOpcodesOnly_click);
+            // 
             // DataGridEditorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -875,7 +894,7 @@
         private System.Windows.Forms.ToolStripMenuItem setDirectPageToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem setDataBankToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleAccumulatorSizeMToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem visualMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem graphicsWindowToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem constantsToolStripMenuItem;
@@ -932,6 +951,8 @@
         private System.Windows.Forms.ToolStripMenuItem importTraceLogBinary;
         private System.Windows.Forms.ToolStripMenuItem closeProjectToolStripMenuItem;
         private window2.DataGridEditorControl dataGridEditorControl1;
+        private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem showOpcodesOnly;
     }
 }
 
