@@ -86,8 +86,6 @@ namespace DiztinGUIsh.window
 
         public void OnProjectOpened(string filename)
         {
-            RebindProject();
-            
             UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
             RefreshUi();
 
