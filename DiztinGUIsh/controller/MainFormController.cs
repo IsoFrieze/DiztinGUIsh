@@ -36,8 +36,12 @@ using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.controller
 {
-    public class MainFormController : RomByteDataBindingController, IProjectOpener
+    public class MainFormController : RomByteDataBindingController, IMainFormController
     {
+        private FlagType currentMarkFlag = FlagType.Data8Bit;
+        public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler { get; }
+        public int SelectedSnesOffset { get; set; }
+        public event IProjectController.ProjectChangedEvent ProjectChanged;
         public IProjectView ProjectView { get; set; }
         
         public DizDocument Document { get; } = new();
@@ -45,26 +49,13 @@ namespace DiztinGUIsh.controller
 
         public bool MoveWithStep { get; set; } = true;
 
-        public delegate void ProjectChangedEvent(object sender, ProjectChangedEventArgs e);
-
-        public event ProjectChangedEvent ProjectChanged;
-
-        public FlagType CurrentMarkFlag = FlagType.Data8Bit;
-
-        public class ProjectChangedEventArgs
+        public FlagType CurrentMarkFlag
         {
-            public enum ProjectChangedType
+            get => currentMarkFlag;
+            set
             {
-                Invalid,
-                Saved,
-                Opened,
-                Imported,
-                Closing
+                currentMarkFlag = value;
             }
-
-            public ProjectChangedType ChangeType;
-            public Project Project;
-            public string Filename;
         }
 
         // there's probably better ways to handle this.
@@ -94,9 +85,9 @@ namespace DiztinGUIsh.controller
             Document.Project = project;
             Project.PropertyChanged += Project_PropertyChanged;
 
-            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs()
+            ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs
             {
-                ChangeType = ProjectChangedEventArgs.ProjectChangedType.Opened,
+                ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Opened,
                 Filename = filename,
                 Project = project,
             });
@@ -127,9 +118,9 @@ namespace DiztinGUIsh.controller
         {
             BizHawkCdlImporter.Import(filename, Project.Data);
 
-            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs()
+            ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs()
             {
-                ChangeType = ProjectChangedEventArgs.ProjectChangedType.Imported,
+                ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported,
                 Filename = filename,
                 Project = Project,
             });
@@ -256,9 +247,9 @@ namespace DiztinGUIsh.controller
             if (Project == null)
                 return;
 
-            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs()
+            ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs()
             {
-                ChangeType = ProjectChangedEventArgs.ProjectChangedType.Closing
+                ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Closing
             });
 
             Document.Project = null;
@@ -399,17 +390,12 @@ namespace DiztinGUIsh.controller
             return Project.Data.GetFlag(offset) == FlagType.Unreached;
         }
 
-        public void ToggleMoveWithStep()
-        {
-            MoveWithStep = !MoveWithStep;
-        }
-        
-        public void MarkMany(int offset, int column)
+        public void MarkMany(int offset, int whichIndex)
         {
             if (!RomDataPresent()) 
                 return;
             
-            var mark = ProjectView.PromptMarkMany(offset, column);
+            var mark = ProjectView.PromptMarkMany(offset, whichIndex);
             if (mark == null)
                 return;
 
@@ -474,8 +460,5 @@ namespace DiztinGUIsh.controller
         {
             Project.Data.AddComment(i, s, overwrite);
         }
-
-        public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler { get; }
-        public int SelectedSnesOffset { get; set; }
     }
 }

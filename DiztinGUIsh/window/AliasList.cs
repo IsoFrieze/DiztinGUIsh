@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
+using DiztinGUIsh.window2;
 using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window
@@ -17,10 +18,10 @@ namespace DiztinGUIsh.window
     public partial class AliasList : Form
     {
         private readonly DataGridEditorForm parentWindow;
-        private MainFormController MainFormController => parentWindow?.MainFormController;
-        private Data Data => MainFormController?.Project?.Data;
+        private IMainFormController MainFormController => parentWindow?.MainFormController;
+        private Data Data => MainFormController?.Document?.Project?.Data;
 
-        public bool Locked;
+        private bool Locked;
         private int currentlyEditing = -1;
         
         public AliasList(DataGridEditorForm main)

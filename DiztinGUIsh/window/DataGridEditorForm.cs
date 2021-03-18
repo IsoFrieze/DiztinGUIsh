@@ -23,7 +23,7 @@ namespace DiztinGUIsh.window
         }
 
         // not sure if this will be the final place this lives. OK for now. -Dom
-        public MainFormController MainFormController
+        public IMainFormController MainFormController
         {
             get => mainFormController;
             set
@@ -66,21 +66,21 @@ namespace DiztinGUIsh.window
                 OpenLastProject();
         }
 
-        private void ProjectController_ProjectChanged(object sender, MainFormController.ProjectChangedEventArgs e)
+        private void ProjectController_ProjectChanged(object sender, IProjectController.ProjectChangedEventArgs e)
         {
             switch (e.ChangeType)
             {
-                case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Saved:
+                case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Saved:
                     UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
                     break;
-                case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Opened:
+                case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Opened:
                     UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
                     Document.LastProjectFilename = e.Filename; // do this last.
                     break;
-                case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Imported:
+                case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported:
                     OnImportedProjectSuccess();
                     break;
-                case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Closing:
+                case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Closing:
                     UpdateSaveOptionStates(saveEnabled: false, saveAsEnabled: false, closeEnabled: false);
                     break;
             }
@@ -159,7 +159,7 @@ namespace DiztinGUIsh.window
 
         private bool importerMenuItemsEnabled;
         
-        private MainFormController mainFormController;
+        private IMainFormController mainFormController;
 
         #region Actions
         private void OpenLastProject()
@@ -246,12 +246,6 @@ namespace DiztinGUIsh.window
         private void ShowCommentList()
         {
             AliasList.Show();
-        }
-
-        private void SetMarkerLabel(FlagType flagType)
-        {
-            MainFormController.CurrentMarkFlag = flagType;
-            UpdateMarkerLabel();
         }
 
         private void ToggleOpenLastProjectEnabled()
@@ -431,22 +425,22 @@ namespace DiztinGUIsh.window
         
         #region Simple Event Handlers Part 2
 
-        public int SelectedOffset
+        public int SelectedSnesOffset
         {
             get => MainFormController.SelectedSnesOffset;
             set => MainFormController.SelectedSnesOffset = value;
         }
         
         private void stepOverToolStripMenuItem_Click(object sender, EventArgs e) 
-            => MainFormController.Step(SelectedOffset);
+            => MainFormController.Step(SelectedSnesOffset);
 
-        private void stepInToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.StepIn(SelectedOffset);
-        private void autoStepSafeToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.AutoStepSafe(SelectedOffset);
-        private void autoStepHarshToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.AutoStepHarsh(SelectedOffset);
+        private void stepInToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.StepIn(SelectedSnesOffset);
+        private void autoStepSafeToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.AutoStepSafe(SelectedSnesOffset);
+        private void autoStepHarshToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.AutoStepHarsh(SelectedSnesOffset);
         private void gotoToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.GoTo(PromptForGotoOffset());
 
         private void gotoIntermediateAddressToolStripMenuItem_Click(object sender, EventArgs e) =>
-            MainFormController.GoToIntermediateAddress(SelectedOffset);
+            MainFormController.GoToIntermediateAddress(SelectedSnesOffset);
 
         private void gotoFirstUnreachedToolStripMenuItem_Click(object sender, EventArgs e) => 
             MainFormController.GoToUnreached(true, true);
@@ -457,27 +451,34 @@ namespace DiztinGUIsh.window
         private void gotoNextUnreachedToolStripMenuItem_Click(object sender, EventArgs e) => 
             MainFormController.GoToUnreached(false, true);
         
-        private void markOneToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.Mark(SelectedOffset);
-        private void markManyToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedOffset, 7);
-        private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedOffset, 8);
-        private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedOffset, 9);
+        private void markOneToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.Mark(SelectedSnesOffset);
+        private void markManyToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 7);
+        private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 8);
+        private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 9);
 
-        private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedOffset, 10);
+        private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 10);
 
-        private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedOffset, 11);
+        private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 11);
         private void addCommentToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // BeginEditingComment();
+        }
+        
+        private void SetMarkerLabel(FlagType flag)
+        {
+            MainFormController.CurrentMarkFlag = flag;
+            UpdateMarkerLabel(); // TODO: get this from an event fire
         }
 
         private void unreachedToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Unreached);
 
-        private void opcodeToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Opcode);
+        private void opcodeToolStripMenuItem_Click(object sender, EventArgs e) => 
+            SetMarkerLabel(FlagType.Opcode);
 
         private void operandToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Operand);
-
+        
         private void bitDataToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Data8Bit);
 
@@ -505,13 +506,16 @@ namespace DiztinGUIsh.window
         private void dWordPointerToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Pointer32Bit);
 
-        private void textToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Text);
+        private void textToolStripMenuItem_Click(object sender, EventArgs e) 
+            => SetMarkerLabel(FlagType.Text);
 
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e) =>
             FixMisalignedInstructions();
 
-        private void moveWithStepToolStripMenuItem_Click(object sender, EventArgs e) => mainFormController.ToggleMoveWithStep();
-        private void labelListToolStripMenuItem_Click(object sender, EventArgs e) => ShowCommentList();
+        private void moveWithStepToolStripMenuItem_Click(object sender, EventArgs e) => 
+            mainFormController.MoveWithStep = !mainFormController.MoveWithStep;
+        private void labelListToolStripMenuItem_Click(object sender, EventArgs e) => 
+            ShowCommentList();
 
         private void openLastProjectAutomaticallyToolStripMenuItem_Click(object sender, EventArgs e) =>
             ToggleOpenLastProjectEnabled();
@@ -521,9 +525,11 @@ namespace DiztinGUIsh.window
             // TODO
         }
 
-        private void importCDLToolStripMenuItem_Click_1(object sender, EventArgs e) => ImportBizhawkCDL();
+        private void importCDLToolStripMenuItem_Click_1(object sender, EventArgs e) => 
+            ImportBizhawkCDL();
 
-        private void importBsnesTracelogText_Click(object sender, EventArgs e) => ImportBsnesTraceLogText();
+        private void importBsnesTracelogText_Click(object sender, EventArgs e) => 
+            ImportBsnesTraceLogText();
 
         private void graphicsWindowToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -531,13 +537,14 @@ namespace DiztinGUIsh.window
             // graphics view window
         }
 
-        private void toolStripOpenLast_Click(object sender, EventArgs e)
-        {
+        private void toolStripOpenLast_Click(object sender, EventArgs e) => 
             OpenLastProject();
-        }
 
-        private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e) => RescanForInOut();
-        private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => ImportBSNESUsageMap();
+        private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e) => 
+            RescanForInOut();
+        
+        private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => 
+            ImportBSNESUsageMap();
 
         #endregion
         
@@ -609,14 +616,12 @@ namespace DiztinGUIsh.window
             if (!RomDataPresent())
                 return -1;
 
-            throw new NotImplementedException();
-
-            /*var go = new GotoDialog(tableControl.ViewOffset + table.CurrentCell.RowIndex, Project.Data);
+            var go = new GotoDialog(SelectedSnesOffset, Project.Data);
             var result = go.ShowDialog();
             if (result != DialogResult.OK)
                 return -1;
             
-            return go.GetPcOffset();*/
+            return go.GetPcOffset();
         }
 
         private static void ShowError(string errorMsg, string caption = "Error")
@@ -637,9 +642,9 @@ namespace DiztinGUIsh.window
             return true;
         }
 
-        public MarkManyDialog PromptMarkMany(int offset, int column)
+        public MarkManyDialog PromptMarkMany(int offset, int whichIndex)
         {
-            var mark = new MarkManyDialog(offset, column, Project.Data);
+            var mark = new MarkManyDialog(offset, whichIndex, Project.Data);
             return mark.ShowDialog() == DialogResult.OK ? mark : null;
         }
 

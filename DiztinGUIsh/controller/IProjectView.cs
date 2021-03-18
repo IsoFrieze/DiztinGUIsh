@@ -20,7 +20,7 @@ namespace DiztinGUIsh.controller
         IImportRomDialogView GetImportView();
 
         bool PromptHarshAutoStep(int offset, out int newOffset, out int count);
-        MarkManyDialog PromptMarkMany(int offset, int column);
+        MarkManyDialog PromptMarkMany(int offset, int whichIndex);
         void ShowOffsetOutOfRangeMsg();
     }
 }
