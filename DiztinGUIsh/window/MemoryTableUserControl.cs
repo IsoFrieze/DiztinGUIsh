@@ -27,7 +27,7 @@ namespace DiztinGUIsh.window
         
         public int RowsToShow { get; set; }
 
-        // public int SelectedOffset => Table.CurrentCell.RowIndex + ViewOffset;
+        // public int SelectedSnesOffset => Table.CurrentCell.RowIndex + ViewOffset;
 
         // public IMemoryTableController Controller { get; set; }
 

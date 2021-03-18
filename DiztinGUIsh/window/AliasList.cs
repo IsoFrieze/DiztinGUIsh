@@ -50,7 +50,7 @@ namespace DiztinGUIsh.window
             var offset = Data.ConvertSnesToPc(val);
             if (offset >= 0)
             {
-                MainFormController.SelectOffset(offset);
+                MainFormController.SelectedSnesOffset = offset;
             }
         }
 
@@ -149,7 +149,6 @@ namespace DiztinGUIsh.window
             Locked = true;
             Data.AddLabel(val, null, true);
             Locked = false;
-            parentWindow.InvalidateTable(); // TODO: move to mainwindow, use notifychanged in mainwindow for this
         }
 
         private void dataGridView1_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
@@ -222,7 +221,6 @@ namespace DiztinGUIsh.window
             Locked = false;
 
             currentlyEditing = -1;
-            parentWindow.InvalidateTable();  // TODO: move to mainwindow, use notifychanged in mainwindow for this
         }
 
         public void AddRow(int address, Label alias)

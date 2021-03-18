@@ -39,7 +39,7 @@ namespace DiztinGUIsh.window
 
         public int GetSelectedOffset()
         {
-            return SelectedOffset;
+            return SelectedSnesOffset;
             // return TableControl.GetSelectedOffset();
         }
 
@@ -55,7 +55,7 @@ namespace DiztinGUIsh.window
 
         public void SelectOffset(int destination)
         {
-            SelectedOffset = destination;
+            SelectedSnesOffset = destination;
         }
 
         public void KeyDown(object sender, KeyEventArgs e)
@@ -128,7 +128,7 @@ namespace DiztinGUIsh.window
             Data?.AddComment(i, v, overwrite);
         }
 
-        public int SelectedOffset { get; set; }
+        public int SelectedSnesOffset { get; set; }
         public int StartingOffset { get; set; }
         
         // Data offset of the selected row. this is a ROM OFFSET (data), not row offset (view)

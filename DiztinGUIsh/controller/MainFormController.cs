@@ -36,11 +36,11 @@ using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.controller
 {
-    public class MainFormController : RomByteDataBindingController, IProjectOpener, IController
+    public class MainFormController : RomByteDataBindingController, IProjectOpener
     {
         public IProjectView ProjectView { get; set; }
-        public DizDocument Document { get; } = new();
         
+        public DizDocument Document { get; } = new();
         public Project Project => Document.Project;
 
         public bool MoveWithStep { get; set; } = true;
@@ -80,7 +80,8 @@ namespace DiztinGUIsh.controller
 
         public void OpenProject(string filename)
         {
-            new ProjectOpenerGuiController { Gui = this }.OpenProject(filename);
+            new ProjectOpenerGuiController { Gui = this }
+                .OpenProject(filename);
         }
         
         public void OnProjectOpenSuccess(string filename, Project project)
@@ -101,9 +102,11 @@ namespace DiztinGUIsh.controller
             });
         }
 
-        public void OnProjectOpenWarning(string warnings) => ProjectView.OnProjectOpenWarning(warnings);
+        public void OnProjectOpenWarning(string warnings) => 
+            ProjectView.OnProjectOpenWarning(warnings);
 
-        public void OnProjectOpenFail(string fatalError) => ProjectView.OnProjectOpenFail(fatalError);
+        public void OnProjectOpenFail(string fatalError) => 
+            ProjectView.OnProjectOpenFail(fatalError);
 
         public string AskToSelectNewRomFilename(string error) => 
             ProjectView.AskToSelectNewRomFilename("Error", $"{error} Link a new ROM now?");
@@ -118,7 +121,6 @@ namespace DiztinGUIsh.controller
         {
             DoLongRunningTask(delegate { new ProjectFileManager().Save(Project, filename); },
                 $"Saving {Path.GetFileName(filename)}...");
-            ProjectView.OnProjectSaved();
         }
 
         public void ImportBizHawkCdl(string filename)
@@ -157,10 +159,10 @@ namespace DiztinGUIsh.controller
 
         public void WriteAssemblyOutput()
         {
-            WriteAssemblyOutput(Project.LogWriterSettings, true);
+            WriteAssemblyOutput(Project.LogWriterSettings);
         }
 
-        private void WriteAssemblyOutput(LogWriterSettings settings, bool showProgressBarUpdates = false)
+        private void WriteAssemblyOutput(LogWriterSettings settings)
         {
             if (!RomDataPresent())
                 return;
@@ -184,9 +186,10 @@ namespace DiztinGUIsh.controller
             Project.LogWriterSettings = selectedSettings;
         }
 
-        public void MarkChanged()
+        public void MarkProjectAsUnsaved()
         {
-            // eventually set this via INotifyPropertyChanged or similar.
+            // eventually set this via INotifyPropertyChanged or similar, instead of having to do it
+            // manually
             Project.UnsavedChanges = true;
         }
 
@@ -198,7 +201,7 @@ namespace DiztinGUIsh.controller
             var linesModified = BsnesUsageMapImporter.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data);
 
             if (linesModified > 0)
-                MarkChanged();
+                MarkProjectAsUnsaved();
 
             return linesModified;
         }
@@ -220,7 +223,7 @@ namespace DiztinGUIsh.controller
                 (line) => { importer.ImportTraceLogLine(line); });
 
             if (importer.CurrentStats.NumRomBytesModified > 0)
-                MarkChanged();
+                MarkProjectAsUnsaved();
 
             return importer.CurrentStats.NumRomBytesModified;
         }
@@ -277,14 +280,9 @@ namespace DiztinGUIsh.controller
                 _ => 0
             };
 
-            MarkChanged();
+            MarkProjectAsUnsaved();
 
             return destination;
-        }
-
-        public void Show()
-        {
-            ProjectView?.Show();
         }
 
         private bool RomDataPresent() => Project?.Data?.GetRomSize() > 0;
@@ -294,10 +292,9 @@ namespace DiztinGUIsh.controller
             if (!RomDataPresent()) 
                 return;
             
-            MarkChanged();
+            MarkProjectAsUnsaved();
             var destinationOffset = Project.Data.Step(offset, false, false, offset - 1);
-            ProjectView.SelectOffset(destinationOffset);
-            // RefreshPercentAndWindowTitle();
+            SelectedSnesOffset = destinationOffset;
         }
 
         public void StepIn(int offset)
@@ -305,10 +302,9 @@ namespace DiztinGUIsh.controller
             if (!RomDataPresent()) 
                 return;
             
-            MarkChanged();
+            MarkProjectAsUnsaved();
             var destinationOffset = Project.Data.Step(offset, true, false, offset - 1);
-            ProjectView.SelectOffset(destinationOffset);
-            // RefreshPercentAndWindowTitle();
+            SelectedSnesOffset = destinationOffset;
         }
 
         public void AutoStepSafe(int offset)
@@ -316,12 +312,10 @@ namespace DiztinGUIsh.controller
             if (!RomDataPresent()) 
                 return;
             
-            MarkChanged();
+            MarkProjectAsUnsaved();
             var destinationOffset = Project.Data.AutoStep(offset, false, 0);
             if (MoveWithStep) 
-                ProjectView.SelectOffset(destinationOffset);
-            
-            // RefreshPercentAndWindowTitle();
+                SelectedSnesOffset = destinationOffset;
         }
 
         public void AutoStepHarsh(int offset)
@@ -332,13 +326,11 @@ namespace DiztinGUIsh.controller
             if (!ProjectView.PromptHarshAutoStep(offset, out var newOffset, out var count))
                 return;
 
-            MarkChanged();
+            MarkProjectAsUnsaved();
             var destination = Project.Data.AutoStep(newOffset, true, count);
             
             if (MoveWithStep) 
-                ProjectView.SelectOffset(destination);
-
-            // RefreshPercentAndWindowTitle();
+                SelectedSnesOffset = destination;
         }
 
         public void Mark(int offset)
@@ -346,12 +338,10 @@ namespace DiztinGUIsh.controller
             if (!RomDataPresent())
                 return;
             
-            MarkChanged();
+            MarkProjectAsUnsaved();
             var newOffset = Project.Data.MarkTypeFlag(offset, CurrentMarkFlag, RomUtil.GetByteLengthForFlag(CurrentMarkFlag));
             
-            ProjectView.SelectOffset(newOffset);
-            
-            // UpdateUI_Tmp3();
+            SelectedSnesOffset = newOffset;
         }
         
         private int FindIntermediateAddress(int offset)
@@ -426,9 +416,7 @@ namespace DiztinGUIsh.controller
             var destination = MarkMany(mark.Property, mark.Start, mark.Value, mark.Count);
 
             if (MoveWithStep)
-                ProjectView.SelectOffset(destination);
-
-            // RefreshTablePercentAndWindowTitle();
+                SelectedSnesOffset = destination;
         }
 
         public void GoToIntermediateAddress(int offset)
@@ -440,7 +428,7 @@ namespace DiztinGUIsh.controller
             if (snesOffset == -1)
                 return;
             
-            ProjectView.SelectOffset(snesOffset);
+            SelectedSnesOffset = snesOffset;
         }
         
         private bool IsOffsetInRange(int offset)
@@ -454,18 +442,17 @@ namespace DiztinGUIsh.controller
         public void GoTo(int offset)
         {
             if (IsOffsetInRange(offset))
-                ProjectView.SelectOffset(offset);
+                SelectedSnesOffset = offset;
             else
                 ProjectView.ShowOffsetOutOfRangeMsg();
         }
 
         public void GoToUnreached(bool end, bool direction)
         {
-            if (!FindUnreached(ProjectView.SelectedOffset, end, direction, out var unreached))
+            if (!FindUnreached(SelectedSnesOffset, end, direction, out var unreached))
                 return;
 
-            ProjectView.SelectOffset(unreached);
-            // SelectOffset(unreached, 1);
+            SelectedSnesOffset = unreached;
         }
 
         public void SetMFlag(int offset, bool b)
@@ -483,19 +470,12 @@ namespace DiztinGUIsh.controller
             Project.Data.AddLabel(convertPCtoSnes, label, b);
         }
 
-        public void SelectOffset(int offset)
-        {
-            ProjectView.SelectOffset(offset);
-        }
-
         public void AddComment(int i, string s, bool overwrite)
         {
             Project.Data.AddComment(i, s, overwrite);
         }
 
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler { get; }
-        
-        public IViewer View { get; }
-        public event EventHandler Closed;
+        public int SelectedSnesOffset { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using Diz.Core.export;
@@ -14,10 +15,35 @@ namespace DiztinGUIsh.window
 {
     public partial class DataGridEditorForm : Form, IBytesFormViewer, IProjectView
     {
-        // a class we create that controls just the data grid usercontrol we host
-        private RomByteDataBindingGridController dataGridDataController;
+        public DizDocument Document => MainFormController.Document;
+
+        public Project Project
+        {
+            get => Document.Project;
+        }
+
+        // not sure if this will be the final place this lives. OK for now. -Dom
+        public MainFormController MainFormController
+        {
+            get => mainFormController;
+            set
+            {
+                mainFormController = value;
+                Document.PropertyChanged += Document_PropertyChanged;
+                if (Project != null)
+                {
+                    Project.PropertyChanged += Project_PropertyChanged;
+                    if (Project.Data != null) 
+                        Project.Data.PropertyChanged += DataOnPropertyChanged;
+                }
+
+                mainFormController.ProjectChanged += ProjectController_ProjectChanged;
+            }
+        }
         
-        #region Main
+        // a class we create that controls just the data grid usercontrol we host
+        public RomByteDataBindingGridController DataGridDataController { get; protected set; }
+        
         public DataGridEditorForm()
         {
             InitializeComponent();
@@ -25,37 +51,19 @@ namespace DiztinGUIsh.window
 
         private void Init()
         {
-            // 
-            // DataGridEditorForm itself, old designer stuff migrated. keep or kill
-            // 
-            // this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            // this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            // this.ClientSize = new System.Drawing.Size(930, 538);
-            // this.MinimumSize = new System.Drawing.Size(780, 196);
-
-            dataGridDataController = new RomByteDataBindingGridController
+            DataGridDataController = new RomByteDataBindingGridController
             {
                 ViewGrid = dataGridEditorControl1,
                 Data = MainFormController.Data,
             };
-            dataGridEditorControl1.DataController = dataGridDataController;
+            dataGridEditorControl1.DataController = DataGridDataController;
             
             AliasList = new AliasList(this);
-
-            UpdatePanels();
+            
             UpdateUiFromSettings();
 
             if (Settings.Default.OpenLastFileAutomatically)
                 OpenLastProject();
-        }
-
-
-        private void Document_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(DizDocument.LastProjectFilename))
-            {
-                UpdateUiFromSettings();
-            }
         }
 
         private void ProjectController_ProjectChanged(object sender, MainFormController.ProjectChangedEventArgs e)
@@ -63,45 +71,27 @@ namespace DiztinGUIsh.window
             switch (e.ChangeType)
             {
                 case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Saved:
-                    OnProjectSaved();
+                    UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
                     break;
                 case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Opened:
-                    OnProjectOpened(e.Filename);
+                    UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
+                    Document.LastProjectFilename = e.Filename; // do this last.
                     break;
                 case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Imported:
                     OnImportedProjectSuccess();
                     break;
                 case MainFormController.ProjectChangedEventArgs.ProjectChangedType.Closing:
-                    OnProjectClosing();
+                    UpdateSaveOptionStates(saveEnabled: false, saveAsEnabled: false, closeEnabled: false);
                     break;
             }
             
             RebindProject();
         }
 
-        private void OnProjectClosing()
-        {
-            UpdateSaveOptionStates(saveEnabled: false, saveAsEnabled: false, closeEnabled: false);
-        }
-
-        public void OnProjectOpened(string filename)
-        {
-            UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
-            RefreshUi();
-
-            Document.LastProjectFilename = filename; // do this last.
-        }
-
         public void OnProjectOpenFail(string errorMsg)
         {
             Document.LastProjectFilename = "";
             ShowError(errorMsg, "Error opening project");
-        }
-
-        public void OnProjectSaved()
-        {
-            UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
-            UpdateWindowTitle();
         }
 
         public void OnExportFinished(LogCreator.OutputResult result)
@@ -116,7 +106,7 @@ namespace DiztinGUIsh.window
             // probably make our Project property be fully readonly/const/whatever [ReadOnly] attribute
 
             var selectedSettings = ExportDisassembly.ConfirmSettingsAndAskToStart(Project);
-            if (!selectedSettings.HasValue)
+            if (selectedSettings == null)
                 return null;
 
             var settings = selectedSettings.Value;
@@ -125,28 +115,41 @@ namespace DiztinGUIsh.window
 
             return settings;
         }
-        #endregion
 
-        #region Properties
-
-        public DizDocument Document => MainFormController.Document;
-
-        public Project Project
+        private void Document_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            get => Document.Project;
-            // set => Document.Project = value;
+            if (e.PropertyName == nameof(DizDocument.LastProjectFilename))
+            {
+                UpdateUiFromSettings();
+            }
+        }
+        
+        
+        private void Project_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Project.UnsavedChanges) || 
+                e.PropertyName == nameof(Project.ProjectFileName)) {
+                Text =
+                    (Project.UnsavedChanges ? "*" : "") +
+                    (Project.ProjectFileName ?? "New Project") +
+                    " - DiztinGUIsh";
+            }
         }
 
-        // not sure if this will be the final place this lives. OK for now. -Dom
-        public MainFormController MainFormController
+        private void DataOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            get => _mainFormController;
-            set
+            if (e.PropertyName == nameof(RomByte.TypeFlag))
             {
-                _mainFormController = value;
-                // _mainFormController.ProjectView = this;
-                Document.PropertyChanged += Document_PropertyChanged;
-                MainFormController.ProjectChanged += ProjectController_ProjectChanged;
+                percentComplete.Text = "";
+                if (Project?.Data == null || Project.Data.GetRomSize() <= 0) 
+                    return;
+                    
+                int totalUnreached1 = 0, size1 = Project.Data.GetRomSize();
+                for (var i1 = 0; i1 < size1; i1++)
+                    if (Project.Data.GetFlag(i1) == FlagType.Unreached)
+                        totalUnreached1++;
+                var reached1 = size1 - totalUnreached1;
+                percentComplete.Text = $"{reached1 * 100.0 / size1:N3}% ({reached1:D}/{size1:D})";
             }
         }
 
@@ -154,97 +157,10 @@ namespace DiztinGUIsh.window
         public AliasList AliasList;
         private VisualizerForm visualForm;
 
-        // TODO: add a handler so we get notified when CurrentViewOffset changes.
-        // then, we split most of our functions up into
-        // 1. things that change ViewOffset
-        // 2. things that react to ViewOffset changes.
-        //
-        // This will allow more flexibility and synchronizing different views (i.e. main table, graphics, layout, etc)
-        // and this lets us save this value with the project file itself.
-
-        // Data offset of the "view" i.e. the top of the table
-        /*private int ViewOffset
-        {
-            get => Project?.CurrentViewOffset ?? 0;
-            set => Project.CurrentViewOffset = value;
-        }*/
-
         private bool importerMenuItemsEnabled;
         
-        private MainFormController _mainFormController;
-        
-        public void InvalidateTable()
-        {
-            // tableController.Invalidate();
-        }
+        private MainFormController mainFormController;
 
-        #endregion
-        
-        /*
-        #region Table_stuff
-        private MemoryTableUserControl tableControl;
-        private MemoryTableController tableController;
-
-        private void InitTableControl()
-        {
-            tableControl = new MemoryTableUserControl
-            {
-                Table = table, 
-                Controller = tableController, 
-                vScrollBar1 = vScrollBar1, // hack for now.
-            };
-            tableController = new MemoryTableController
-            {
-                TableControl = tableControl,
-            };
-        }
-        
-        private void vScrollBar1_ValueChanged(object sender, EventArgs e)
-        {
-            tableControl.ScrollTo(vScrollBar1.Value);
-        }
-
-        // private void SetCurrentCellTo(int i)
-        // {
-        //     tableController.SetCurrentCellTo(i);
-        // }
-        //
-        // private int GetSelectedOffset()
-        // {
-        //     return tableController.GetSelectedOffset();
-        // }
-
-        private void table_MouseDown(object sender, MouseEventArgs e)
-        {
-            tableController.InvalidateTable();
-        }
-
-        private void table_KeyDown(object sender, KeyEventArgs e)
-        {
-            // HACK. eventually, the KeyDown() msg will come from the control itself so,
-            // forward the handler there manually for now. eventually, this call will go away from MainForm.
-
-            tableController.TableControl.table_KeyDown(sender, e);
-        }
-        
-        // -------------
-
-        private void InitMainTable()
-        {
-            InitTableControl();
-        }
-
-        private void BeginEditingComment()
-        {
-            tableController.BeginEditingComment();
-        }
-
-        private void BeginAddingLabel()
-        {
-            tableController.BeginAddingLabel();
-        }
-        #endregion*/
-        
         #region Actions
         private void OpenLastProject()
         {
@@ -256,8 +172,10 @@ namespace DiztinGUIsh.window
             // this will be reset later
             var projectToOpen = Document.LastProjectFilename;
             Document.LastProjectFilename = "";
-
+            
+            #if ALLOW_OPEN_LAST_PROJECT
             MainFormController.OpenProject(projectToOpen);
+            #endif
         }
 
         private void OpenProject()
@@ -294,13 +212,12 @@ namespace DiztinGUIsh.window
         {
             if (!PromptForMisalignmentCheck())
                 return;
-
+            
             var count = Project.Data.FixMisalignedFlags();
 
             if (count > 0)
-                MainFormController.MarkChanged();
-            InvalidateTable();
-            
+                MainFormController.MarkProjectAsUnsaved();
+
             ShowInfo($"Modified {count} flags!", "Done!");
         }
 
@@ -310,9 +227,8 @@ namespace DiztinGUIsh.window
                 return;
 
             Project.Data.RescanInOutPoints();
-            MainFormController.MarkChanged();
+            MainFormController.MarkProjectAsUnsaved();
             
-            InvalidateTable();
             ShowInfo("Scan complete!", "Done!");
         }
 
@@ -334,17 +250,13 @@ namespace DiztinGUIsh.window
 
         private void SetMarkerLabel(FlagType flagType)
         {
-            _mainFormController.CurrentMarkFlag = flagType;
+            MainFormController.CurrentMarkFlag = flagType;
             UpdateMarkerLabel();
-        }
-
-        private void ToggleMoveWithStep()
-        {
-            _mainFormController.ToggleMoveWithStep();
         }
 
         private void ToggleOpenLastProjectEnabled()
         {
+            // TODO: Should "Settings" live here?
             Settings.Default.OpenLastFileAutomatically = openLastProjectAutomaticallyToolStripMenuItem.Checked;
             Settings.Default.Save();
             UpdateUiFromSettings();
@@ -355,19 +267,16 @@ namespace DiztinGUIsh.window
 
         public void SelectOffset(int offset)
         {
-            MainFormController.SelectOffset(offset);
+            MainFormController.SelectedSnesOffset = offset;
         }
 
         public IImportRomDialogView GetImportView() => new ImportRomDialog();
-
-        // void IProjectView.ShowOffsetOutOfRangeMsg() => ShowOffsetOutOfRangeMsg();
 
         private void ImportBizhawkCDL()
         {
             var filename = PromptOpenBizhawkCDLFile();
             if (filename != null && filename == "") return;
             ImportBizHawkCdl(filename);
-            RefreshTablePercentAndWindowTitle();
         }
 
         private void ImportBizHawkCdl(string filename)
@@ -386,6 +295,7 @@ namespace DiztinGUIsh.window
         {
             if (!PromptForImportBSNESTraceLogFile()) return;
             var (numModifiedFlags, numFiles) = ImportBSNESTraceLogs();
+            
             ReportNumberFlagsModified(numModifiedFlags, numFiles);
         }
 
@@ -408,55 +318,36 @@ namespace DiztinGUIsh.window
         private void ImportBsnesBinaryTraceLog()
         {
             new BsnesTraceLogBinaryMonitorForm(this).ShowDialog();
-            RefreshUi();
+            importCDLToolStripMenuItem.Enabled = true;
+            labelListToolStripMenuItem.Enabled = true;
         }
 
         private void OnImportedProjectSuccess()
         {
             UpdateSaveOptionStates(saveEnabled: false, saveAsEnabled: true, closeEnabled: true);
-            RefreshUi();
+            importCDLToolStripMenuItem.Enabled = true;
+            labelListToolStripMenuItem.Enabled = true;
         }
         #endregion
         
         #region ReadOnlyHelpers
-       
-
+        
         private bool RomDataPresent()
         {
             return Project?.Data?.GetRomSize() > 0;
         }
         #endregion
         
-        #region State updates
         private void RebindProject()
         {
             // TODO: replace all this with OnNotifyPropertyChanged stuff eventually
-
-            // TODO dataGridDataController.Data = Project.Data;
-            dataGridDataController.Data = Project.Data;
+            
+            DataGridDataController.Data = Project.Data;
             
             AliasList?.RebindProject();
             
             if (visualForm != null) 
                 visualForm.Project = Project;
-        }
-
-        private void UpdatePanels()
-        {
-            /*table.Height = Height - 85;
-            table.Width = Width - 33;
-            vScrollBar1.Height = Height - 85;
-            vScrollBar1.Left = Width - 33;
-            if (WindowState == FormWindowState.Maximized) 
-                tableController.UpdateDataGridView();*/
-        }
-
-        public void UpdateWindowTitle()
-        {
-            Text =
-                (Project.UnsavedChanges ? "*" : "") +
-                (Project.ProjectFileName ?? "New Project") +
-                " - DiztinGUIsh";
         }
 
         private void UpdateUiFromSettings()
@@ -471,17 +362,6 @@ namespace DiztinGUIsh.window
             openLastProjectAutomaticallyToolStripMenuItem.Checked = Settings.Default.OpenLastFileAutomatically;
         }
 
-        private void RefreshUi()
-        {
-            importCDLToolStripMenuItem.Enabled = true;
-            // tableController.UpdateDataGridView();
-
-            UpdateWindowTitle();
-            UpdatePercent();
-            // table.Invalidate();
-            EnableSubWindows();
-        }
-
         private void UpdateBase(Util.NumberBase noBase)
         {
             // tableControl.DisplayBase = noBase; // TODO: move this out of mainwindow, into table class.
@@ -489,25 +369,11 @@ namespace DiztinGUIsh.window
             decimalToolStripMenuItem.Checked = noBase == Util.NumberBase.Decimal;
             hexadecimalToolStripMenuItem.Checked = noBase == Util.NumberBase.Hexadecimal;
             binaryToolStripMenuItem.Checked = noBase == Util.NumberBase.Binary;
-            InvalidateTable();
-        }
-
-        public void UpdatePercent()
-        {
-            if (Project?.Data == null || Project.Data.GetRomSize() <= 0)
-                return;
-
-            int totalUnreached = 0, size = Project.Data.GetRomSize();
-            for (var i = 0; i < size; i++)
-                if (Project.Data.GetFlag(i) == FlagType.Unreached)
-                    totalUnreached++;
-            var reached = size - totalUnreached;
-            percentComplete.Text = $"{reached * 100.0 / size:N3}% ({reached:D}/{size:D})";
         }
 
         public void UpdateMarkerLabel()
         {
-            currentMarker.Text = $"Marker: {_mainFormController.CurrentMarkFlag.ToString()}";
+            currentMarker.Text = $"Marker: {mainFormController.CurrentMarkFlag.ToString()}";
         }
 
         private void UpdateImporterEnabledStatus()
@@ -518,44 +384,20 @@ namespace DiztinGUIsh.window
             importTraceLogText.Enabled = importerMenuItemsEnabled;
         }
 
-        private void EnableSubWindows()
-        {
-            labelListToolStripMenuItem.Enabled = true;
-        }
-
         public void UpdateSaveOptionStates(bool saveEnabled, bool saveAsEnabled, bool closeEnabled)
         {
             saveProjectToolStripMenuItem.Enabled = saveEnabled;
             saveProjectAsToolStripMenuItem.Enabled = saveAsEnabled;
             closeProjectToolStripMenuItem.Enabled = closeEnabled;
 
-            exportLogToolStripMenuItem.Enabled = true;
+            exportLogToolStripMenuItem.Enabled = RomDataPresent();
+            importCDLToolStripMenuItem.Enabled = RomDataPresent();
+            labelListToolStripMenuItem.Enabled = RomDataPresent();
         }
-
-        private void RefreshTablePercentAndWindowTitle()
-        {
-            // refactor this somewhere else, use property change notifications if possible
-            RefreshPercentAndWindowTitle();
-            InvalidateTable();
-        }
-
-        private void RefreshPercentAndWindowTitle()
-        {
-            // refactor this somewhere else, use property change notifications if possible
-            UpdatePercent();
-            UpdateWindowTitle();
-        }
-        #endregion
 
         #region Simple Event Handlers
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) =>
             e.Cancel = !PromptContinueEvenIfUnsavedChanges();
-
-        private void MainWindow_SizeChanged(object sender, EventArgs e) => UpdatePanels();
-        private void MainWindow_ResizeEnd(object sender, EventArgs e)
-        {
-            // tableController.UpdateDataGridView();
-        }
 
         private void MainWindow_Load(object sender, EventArgs e) => Init();
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e) => CreateNewProject();
@@ -591,8 +433,8 @@ namespace DiztinGUIsh.window
 
         public int SelectedOffset
         {
-            get => throw new NotImplementedException(); //tableController.SelectedOffset);
-            set => throw new NotImplementedException(); // tableController.SelectedOffset = value;
+            get => MainFormController.SelectedSnesOffset;
+            set => MainFormController.SelectedSnesOffset = value;
         }
         
         private void stepOverToolStripMenuItem_Click(object sender, EventArgs e) 
@@ -668,7 +510,7 @@ namespace DiztinGUIsh.window
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e) =>
             FixMisalignedInstructions();
 
-        private void moveWithStepToolStripMenuItem_Click(object sender, EventArgs e) => _mainFormController.ToggleMoveWithStep();
+        private void moveWithStepToolStripMenuItem_Click(object sender, EventArgs e) => mainFormController.ToggleMoveWithStep();
         private void labelListToolStripMenuItem_Click(object sender, EventArgs e) => ShowCommentList();
 
         private void openLastProjectAutomaticallyToolStripMenuItem_Click(object sender, EventArgs e) =>
@@ -696,10 +538,6 @@ namespace DiztinGUIsh.window
 
         private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e) => RescanForInOut();
         private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => ImportBSNESUsageMap();
-        private void table_MouseWheel(object sender, MouseEventArgs e)
-        {
-            // tableControl.table_MouseWheel(sender, e);
-        }
 
         #endregion
         
@@ -805,10 +643,7 @@ namespace DiztinGUIsh.window
             return mark.ShowDialog() == DialogResult.OK ? mark : null;
         }
 
-        void IProjectView.ShowOffsetOutOfRangeMsg()
-        {
-            ShowOffsetOutOfRangeMsg();
-        }
+        void IProjectView.ShowOffsetOutOfRangeMsg() => ShowOffsetOutOfRangeMsg();
 
         private bool PromptForMisalignmentCheck()
         {
@@ -851,14 +686,9 @@ namespace DiztinGUIsh.window
 
         #endregion
 
-        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-
-        }
-
         private void viewOpcodesOnly_click(object sender, EventArgs e)
         {
-            dataGridDataController.FilterShowOpcodesOnly = !dataGridDataController.FilterShowOpcodesOnly;
+            DataGridDataController.FilterShowOpcodesOnly = !DataGridDataController.FilterShowOpcodesOnly;
         }
     }
 }

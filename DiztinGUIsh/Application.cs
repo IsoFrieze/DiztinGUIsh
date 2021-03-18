@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
-using Diz.Core.model;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window2;
@@ -51,20 +50,6 @@ namespace DiztinGUIsh
                 DizApplication = this
             };
             form.DataBindingController = controller;
-
-            OnCreated(controller, form);
-        }
-
-        private void ShowNewTempProjectEditorForm(Project project)
-        {
-            var form = new DataGridEditorFormTemp();
-            var controller = new RomByteDataBindingGridFormController
-            {
-                View = form,
-                Project = project,
-                Data = project.Data,
-            };
-            form.DataController = controller;
 
             OnCreated(controller, form);
         }
