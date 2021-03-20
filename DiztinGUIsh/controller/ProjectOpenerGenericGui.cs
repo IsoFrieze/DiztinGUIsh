@@ -1,10 +1,11 @@
 ﻿using System.Windows.Forms;
 using Diz.Core.model;
 using DiztinGUIsh.util;
+using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.controller
 {
-    public class ProjectOpenerGenericView : IProjectOpener
+    public class ProjectOpenerHandlerGenericHandler : IProjectOpenerHandler
     {
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
             ProgressBarJob.RunAndWaitForCompletion;
@@ -33,6 +34,6 @@ namespace DiztinGUIsh.controller
         }
 
         public static Project OpenProjectWithGui(string filename) => 
-            new ProjectOpenerGuiController { Gui = new ProjectOpenerGenericView() }.OpenProject(filename);
+            new ProjectOpenerGuiController { Handler = new ProjectOpenerHandlerGenericHandler() }.OpenProject(filename);
     }
 }

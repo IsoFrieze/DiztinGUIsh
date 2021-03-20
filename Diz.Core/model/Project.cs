@@ -1,28 +1,30 @@
 ﻿using System;
+using System.ComponentModel;
 using Diz.Core.export;
 using Diz.Core.util;
 using DiztinGUIsh;
 
 namespace Diz.Core.model
 {
-    public class Project : DizDataModel
+    public class Project : INotifyPropertyChanged
     {
         // Any public properties will be automatically serialized to XML unless noted.
         // They will require a get AND set.
         // Order is important.
 
-        // NOT saved in XML
+        // NOT saved in XML, just a cache of the last filename this project was saved as.
+        // (This field may require some rework for GUI multi-project support)
         public string ProjectFileName
         {
             get => projectFileName;
-            set => SetField(ref projectFileName, value);
+            set => this.SetField(PropertyChanged, ref projectFileName, value);
         }
 
         
         public string AttachedRomFilename
         {
             get => attachedRomFilename;
-            set => SetField(ref attachedRomFilename, 
+            set => this.SetField(PropertyChanged, ref attachedRomFilename, 
                 Util.TryGetRelativePath(value, Environment.CurrentDirectory));
         }
 
@@ -32,7 +34,7 @@ namespace Diz.Core.model
         public bool UnsavedChanges
         {
             get => unsavedChanges;
-            set => SetField(ref unsavedChanges, value);
+            set => this.SetField(PropertyChanged, ref unsavedChanges, value);
         }
 
         // safety checks:
@@ -50,19 +52,19 @@ namespace Diz.Core.model
         public string InternalRomGameName
         {
             get => internalRomGameName;
-            set => SetField(ref internalRomGameName, value);
+            set => this.SetField(PropertyChanged, ref internalRomGameName, value);
         }
 
         public int InternalCheckSum
         {
             get => internalCheckSum;
-            set => SetField(ref internalCheckSum, value);
+            set => this.SetField(PropertyChanged, ref internalCheckSum, value);
         }
 
         public LogWriterSettings LogWriterSettings
         {
             get => logWriterSettings;
-            set => SetField(ref logWriterSettings, value);
+            set => this.SetField(PropertyChanged, ref logWriterSettings, value);
         }
 
         // purely visual. what offset is currently being looked at in the main grid.
@@ -73,7 +75,7 @@ namespace Diz.Core.model
         public int CurrentViewOffset
         {
             get => currentViewOffset;
-            set => SetField(ref currentViewOffset, value);
+            set => this.SetField(PropertyChanged, ref currentViewOffset, value);
         }*/
 
         // needs to come last for serialization. this is the heart of the app, the actual
@@ -81,8 +83,10 @@ namespace Diz.Core.model
         public Data Data
         {
             get => data;
-            set => SetField(ref data, value);
+            set => this.SetField(PropertyChanged, ref data, value);
         }
+        
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public Project()
         {

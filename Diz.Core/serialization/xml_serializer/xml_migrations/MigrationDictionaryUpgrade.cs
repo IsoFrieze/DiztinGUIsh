@@ -14,7 +14,7 @@ namespace Diz.Core.serialization.xml_serializer.xml_migrations
             if (typeElement == null)
                 return;*/
 
-            int x = 3;
+            // int x = 3;
             // Add new node
             // node.Add(new XElement("Name", typeElement.Value));
             // Remove old node

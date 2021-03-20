@@ -10,17 +10,21 @@ using Equin.ApplicationFramework;
 
 namespace DiztinGUIsh.window2
 {
+    // TODO: after refactoring, this class hierarchy is shaking out to be a little weird.
+    // when the dust settles, think about restructuring and simplifying all this
+    
     public class RomByteDataBindingGridController : RomByteDataBindingController
     {
+        public void BeginEditingLabel()
+        {
+            ViewGrid.BeginEditingSelectionLabel();
+        }
 
+        public void BeginEditingComment()
+        {
+            ViewGrid.BeginEditingSelectionComment();
+        }
     }
-
-    public class RomByteDataBindingGridFormController : RomByteDataBindingController
-    {
-        public Project Project { get; init; }
-    }
-    
-    // -----------------------------
 
     public class RomByteDataBindingController : ByteViewerDataBindingGridController<RomByteDataGridRow>
     {
@@ -85,7 +89,7 @@ namespace DiztinGUIsh.window2
             if (ViewGrid == null || Data == null)
                 return null;
 
-            return GetByteItems().ToList(); 
+            return GetByteItems().ToList();
         }
 
         protected abstract IEnumerable<TByteItem> GetByteItems();
@@ -142,7 +146,7 @@ namespace DiztinGUIsh.window2
             }
         }
 
-        private void OnClosed(object? sender, EventArgs e)
+        private void OnClosed(object sender, EventArgs e)
         {
             Closed?.Invoke(sender, e);
         }

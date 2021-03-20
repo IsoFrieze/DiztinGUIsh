@@ -7,17 +7,9 @@ using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.controller
 {
-    public interface IProjectOpener : ILongRunningTaskHandler
-    {
-        public void OnProjectOpenSuccess(string filename, Project project);
-        public void OnProjectOpenWarning(string warnings);
-        public void OnProjectOpenFail(string fatalError);
-        public string AskToSelectNewRomFilename(string error);
-    }
-    
     public class ProjectOpenerGuiController
     {
-        public IProjectOpener Gui { get; init; }
+        public IProjectOpenerHandler Handler { get; init; }
 
         public Project OpenProject(string filename)
         {
@@ -31,7 +23,7 @@ namespace DiztinGUIsh.controller
                 {
                     var (project1, warning) = new ProjectFileManager()
                     {
-                        RomPromptFn = Gui.AskToSelectNewRomFilename
+                        RomPromptFn = Handler.AskToSelectNewRomFilename
                     }.Open(filename);
 
                     project = project1;
@@ -51,21 +43,21 @@ namespace DiztinGUIsh.controller
             
             if (project == null)
             {
-                Gui.OnProjectOpenFail(errorMsg);
+                Handler.OnProjectOpenFail(errorMsg);
                 return null;
             }
 
             if (warningMsg != "")
-                Gui.OnProjectOpenWarning(warningMsg);
+                Handler.OnProjectOpenWarning(warningMsg);
             
-            Gui.OnProjectOpenSuccess(filename, project);
+            Handler.OnProjectOpenSuccess(filename, project);
             return project;
         }
 
         private void DoLongRunningTask(Action task, string description)
         {
-            if (Gui.TaskHandler != null)
-                Gui.TaskHandler(task, description);
+            if (Handler.TaskHandler != null)
+                Handler.TaskHandler(task, description);
             else
                 task();
         }

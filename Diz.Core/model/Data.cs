@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using Diz.Core.arch;
 using Diz.Core.util;
-using DiztinGUIsh;
 using IX.Observable;
 
 namespace Diz.Core.model
@@ -121,7 +120,7 @@ namespace Diz.Core.model
     
     // this really needs to be called SnesData or something similar.
     // should be refactored to deal with multiple types of data from multiple systems, arch's, etc.
-    public partial class Data : DizDataModel, ISnesData
+    public partial class Data : INotifyPropertyChanged, ISnesData
     {
         // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something that operates on Data
         private readonly Cpu65C816 cpu65C816;
@@ -685,5 +684,7 @@ namespace Diz.Core.model
 
             return destinationOfIa == addressToMatch;
         }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

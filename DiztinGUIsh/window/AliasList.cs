@@ -19,7 +19,7 @@ namespace DiztinGUIsh.window
     {
         private readonly DataGridEditorForm parentWindow;
         private IMainFormController MainFormController => parentWindow?.MainFormController;
-        private Data Data => MainFormController?.Document?.Project?.Data;
+        private Data Data => MainFormController?.Project?.Data;
 
         private bool Locked;
         private int currentlyEditing = -1;

@@ -13,14 +13,18 @@ using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.window
 {
-    public partial class DataGridEditorForm : Form, IBytesFormViewer, IProjectView
+    public interface IDataGridEditorForm : IFormViewer, IProjectView
     {
-        public DizDocument Document => MainFormController.Document;
-
-        public Project Project
-        {
-            get => Document.Project;
-        }
+        
+    }
+    
+    public partial class DataGridEditorForm : Form, IDataGridEditorForm
+    {
+        // sub windows
+        private AliasList AliasList;
+        private VisualizerForm visualForm;
+        private IMainFormController mainFormController;
+        public Project Project { get; set; }
 
         // not sure if this will be the final place this lives. OK for now. -Dom
         public IMainFormController MainFormController
@@ -29,7 +33,6 @@ namespace DiztinGUIsh.window
             set
             {
                 mainFormController = value;
-                Document.PropertyChanged += Document_PropertyChanged;
                 if (Project != null)
                 {
                     Project.PropertyChanged += Project_PropertyChanged;
@@ -42,7 +45,7 @@ namespace DiztinGUIsh.window
         }
         
         // a class we create that controls just the data grid usercontrol we host
-        public RomByteDataBindingGridController DataGridDataController { get; protected set; }
+        private RomByteDataBindingGridController DataGridDataController { get; set; }
         
         public DataGridEditorForm()
         {
@@ -58,6 +61,8 @@ namespace DiztinGUIsh.window
             };
             dataGridEditorControl1.DataController = DataGridDataController;
             
+            dataGridEditorControl1.SelectedOffsetChanged += DataGridEditorControl1OnSelectedOffsetChanged;
+
             AliasList = new AliasList(this);
             
             UpdateUiFromSettings();
@@ -66,8 +71,16 @@ namespace DiztinGUIsh.window
                 OpenLastProject();
         }
 
+        private void DataGridEditorControl1OnSelectedOffsetChanged(object sender, IBytesGridViewer<RomByteDataGridRow>.SelectedOffsetChangedEventArgs e)
+        {
+            // called when the user clicks a different cell in the child data grid
+            MainFormController.OnUserChangedSelection(e.Row);
+        }
+
         private void ProjectController_ProjectChanged(object sender, IProjectController.ProjectChangedEventArgs e)
         {
+            Project = e.Project;
+            
             switch (e.ChangeType)
             {
                 case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Saved:
@@ -75,7 +88,7 @@ namespace DiztinGUIsh.window
                     break;
                 case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Opened:
                     UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
-                    Document.LastProjectFilename = e.Filename; // do this last.
+                    ProjectsController.LastOpenedProjectFilename = e.Filename; // do this last.
                     break;
                 case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported:
                     OnImportedProjectSuccess();
@@ -90,7 +103,7 @@ namespace DiztinGUIsh.window
 
         public void OnProjectOpenFail(string errorMsg)
         {
-            Document.LastProjectFilename = "";
+            ProjectsController.LastOpenedProjectFilename = "";
             ShowError(errorMsg, "Error opening project");
         }
 
@@ -116,16 +129,7 @@ namespace DiztinGUIsh.window
             return settings;
         }
 
-        private void Document_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(DizDocument.LastProjectFilename))
-            {
-                UpdateUiFromSettings();
-            }
-        }
-        
-        
-        private void Project_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void Project_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(Project.UnsavedChanges) || 
                 e.PropertyName == nameof(Project.ProjectFileName)) {
@@ -136,7 +140,7 @@ namespace DiztinGUIsh.window
             }
         }
 
-        private void DataOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void DataOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(RomByte.TypeFlag))
             {
@@ -153,25 +157,17 @@ namespace DiztinGUIsh.window
             }
         }
 
-        // sub windows
-        public AliasList AliasList;
-        private VisualizerForm visualForm;
-
-        private bool importerMenuItemsEnabled;
-        
-        private IMainFormController mainFormController;
-
         #region Actions
         private void OpenLastProject()
         {
-            if (Document.LastProjectFilename == "")
+            if (ProjectsController.LastOpenedProjectFilename == "")
                 return;
 
             // safeguard: if we crash opening this project,
             // then next time we load make sure we don't try it again.
             // this will be reset later
-            var projectToOpen = Document.LastProjectFilename;
-            Document.LastProjectFilename = "";
+            var projectToOpen = ProjectsController.LastOpenedProjectFilename;
+            ProjectsController.LastOpenedProjectFilename = "";
             
             #if ALLOW_OPEN_LAST_PROJECT
             MainFormController.OpenProject(projectToOpen);
@@ -287,7 +283,7 @@ namespace DiztinGUIsh.window
 
         private void ImportBsnesTraceLogText()
         {
-            if (!PromptForImportBSNESTraceLogFile()) return;
+            if (!PromptForImportBsnesTraceLogFile()) return;
             var (numModifiedFlags, numFiles) = ImportBSNESTraceLogs();
             
             ReportNumberFlagsModified(numModifiedFlags, numFiles);
@@ -336,7 +332,8 @@ namespace DiztinGUIsh.window
         {
             // TODO: replace all this with OnNotifyPropertyChanged stuff eventually
             
-            DataGridDataController.Data = Project.Data;
+            if (DataGridDataController != null)
+                DataGridDataController.Data = Project?.Data;
             
             AliasList?.RebindProject();
             
@@ -370,13 +367,13 @@ namespace DiztinGUIsh.window
             currentMarker.Text = $"Marker: {mainFormController.CurrentMarkFlag.ToString()}";
         }
 
-        private void UpdateImporterEnabledStatus()
+        /*private void UpdateImporterEnabledStatus()
         {
             importUsageMapToolStripMenuItem.Enabled = importerMenuItemsEnabled;
             importCDLToolStripMenuItem.Enabled = importerMenuItemsEnabled;
             importTraceLogBinary.Enabled = importerMenuItemsEnabled;
             importTraceLogText.Enabled = importerMenuItemsEnabled;
-        }
+        }*/
 
         public void UpdateSaveOptionStates(bool saveEnabled, bool saveAsEnabled, bool closeEnabled)
         {
@@ -451,17 +448,23 @@ namespace DiztinGUIsh.window
         private void gotoNextUnreachedToolStripMenuItem_Click(object sender, EventArgs e) => 
             MainFormController.GoToUnreached(false, true);
         
-        private void markOneToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.Mark(SelectedSnesOffset);
-        private void markManyToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 7);
-        private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 8);
-        private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 9);
-
-        private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 10);
-
-        private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.MarkMany(SelectedSnesOffset, 11);
+        private void markOneToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MainFormController.Mark(SelectedSnesOffset);
+        
+        private void markManyToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MainFormController.MarkMany(SelectedSnesOffset, 7);
+        private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MainFormController.MarkMany(SelectedSnesOffset, 8);
+        private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MainFormController.MarkMany(SelectedSnesOffset, 9);
+        private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MainFormController.MarkMany(SelectedSnesOffset, 10);
+        private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MainFormController.MarkMany(SelectedSnesOffset, 11);
+        
         private void addCommentToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // BeginEditingComment();
+            // BeginEditingSelectionComment();
         }
         
         private void SetMarkerLabel(FlagType flag)
@@ -472,48 +475,39 @@ namespace DiztinGUIsh.window
 
         private void unreachedToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Unreached);
-
         private void opcodeToolStripMenuItem_Click(object sender, EventArgs e) => 
             SetMarkerLabel(FlagType.Opcode);
-
         private void operandToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Operand);
-        
         private void bitDataToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Data8Bit);
-
         private void graphicsToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Graphics);
-
-        private void musicToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Music);
-        private void emptyToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Empty);
-
+        private void musicToolStripMenuItem_Click(object sender, EventArgs e) => 
+            SetMarkerLabel(FlagType.Music);
+        private void emptyToolStripMenuItem_Click(object sender, EventArgs e) => 
+            SetMarkerLabel(FlagType.Empty);
         private void bitDataToolStripMenuItem1_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Data16Bit);
-
         private void wordPointerToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Pointer16Bit);
-
         private void bitDataToolStripMenuItem2_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Data24Bit);
-
         private void longPointerToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Pointer24Bit);
-
         private void bitDataToolStripMenuItem3_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Data32Bit);
-
         private void dWordPointerToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Pointer32Bit);
-
         private void textToolStripMenuItem_Click(object sender, EventArgs e) 
             => SetMarkerLabel(FlagType.Text);
-
+        
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e) =>
             FixMisalignedInstructions();
 
         private void moveWithStepToolStripMenuItem_Click(object sender, EventArgs e) => 
             mainFormController.MoveWithStep = !mainFormController.MoveWithStep;
+        
         private void labelListToolStripMenuItem_Click(object sender, EventArgs e) => 
             ShowCommentList();
 
@@ -527,9 +521,10 @@ namespace DiztinGUIsh.window
 
         private void importCDLToolStripMenuItem_Click_1(object sender, EventArgs e) => 
             ImportBizhawkCDL();
-
         private void importBsnesTracelogText_Click(object sender, EventArgs e) => 
             ImportBsnesTraceLogText();
+        private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => 
+            ImportBSNESUsageMap();
 
         private void graphicsWindowToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -542,9 +537,6 @@ namespace DiztinGUIsh.window
 
         private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e) => 
             RescanForInOut();
-        
-        private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => 
-            ImportBSNESUsageMap();
 
         #endregion
         
@@ -600,7 +592,7 @@ namespace DiztinGUIsh.window
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private bool PromptForImportBSNESTraceLogFile()
+        private bool PromptForImportBsnesTraceLogFile()
         {
             openTraceLogDialog.Multiselect = true;
             return openTraceLogDialog.ShowDialog() == DialogResult.OK;
@@ -624,10 +616,8 @@ namespace DiztinGUIsh.window
             return go.GetPcOffset();
         }
 
-        private static void ShowError(string errorMsg, string caption = "Error")
-        {
+        private static void ShowError(string errorMsg, string caption = "Error") => 
             MessageBox.Show(errorMsg, caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
 
         public bool PromptHarshAutoStep(int offset, out int newOffset, out int count)
         {
@@ -689,11 +679,65 @@ namespace DiztinGUIsh.window
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
             ProgressBarJob.RunAndWaitForCompletion;
 
+        private void viewOpcodesOnly_click(object sender, EventArgs e) => 
+            DataGridDataController.FilterShowOpcodesOnly = !DataGridDataController.FilterShowOpcodesOnly;
+
         #endregion
 
-        private void viewOpcodesOnly_click(object sender, EventArgs e)
+        public void BeginAddingLabel()
         {
-            DataGridDataController.FilterShowOpcodesOnly = !DataGridDataController.FilterShowOpcodesOnly;
+            if (!RomDataPresent())
+                return;
+            
+            DataGridDataController.BeginEditingLabel();
+        }
+            
+        public void BeginEditingComment()
+        {
+            if (!RomDataPresent())
+                return;
+                
+            DataGridDataController.BeginEditingComment();
+        }
+
+        private void DataGridEditorForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            var offset = SelectedSnesOffset;
+                
+            switch (e.KeyCode)
+            {
+                // actions
+                case Keys.S:
+                    MainFormController.Step(offset);
+                    break;
+                case Keys.I:
+                    MainFormController.StepIn(offset);
+                    break;
+                case Keys.A:
+                    MainFormController.AutoStepSafe(offset);
+                    break;
+                case Keys.T:
+                    MainFormController.GoToIntermediateAddress(offset);
+                    break;
+                case Keys.U:
+                    MainFormController.GoToUnreached(true, true);
+                    break;
+                case Keys.H:
+                    MainFormController.GoToUnreached(false, false);
+                    break;
+                case Keys.N:
+                    MainFormController.GoToUnreached(false, true);
+                    break;
+                case Keys.K:
+                    MainFormController.Mark(offset);
+                    break;
+                case Keys.M:
+                    MainFormController.SetMFlag(offset, !Project.Data.GetMFlag(offset));
+                    break;
+                case Keys.X:
+                    MainFormController.SetXFlag(offset, !Project.Data.GetXFlag(offset));
+                    break;
+            }
         }
     }
 }

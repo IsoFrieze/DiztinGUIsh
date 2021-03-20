@@ -86,6 +86,8 @@
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.fixMisalignedInstructionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rescanForInOutPointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.showOpcodesOnly = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.visualMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphicsWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -114,8 +116,6 @@
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
             this.dataGridEditorControl1 = new DiztinGUIsh.window2.DataGridEditorControl();
-            this.viewToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.showOpcodesOnly = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -603,6 +603,21 @@
             this.rescanForInOutPointsToolStripMenuItem.Text = "Rescan for In/Out Points...";
             this.rescanForInOutPointsToolStripMenuItem.Click += new System.EventHandler(this.rescanForInOutPointsToolStripMenuItem_Click);
             // 
+            // viewToolStripMenuItem2
+            // 
+            this.viewToolStripMenuItem2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.showOpcodesOnly});
+            this.viewToolStripMenuItem2.Name = "viewToolStripMenuItem2";
+            this.viewToolStripMenuItem2.Size = new System.Drawing.Size(44, 20);
+            this.viewToolStripMenuItem2.Text = "&View";
+            // 
+            // showOpcodesOnly
+            // 
+            this.showOpcodesOnly.Name = "showOpcodesOnly";
+            this.showOpcodesOnly.Size = new System.Drawing.Size(196, 22);
+            this.showOpcodesOnly.Text = "Show Instructions Only";
+            this.showOpcodesOnly.Click += new System.EventHandler(this.viewOpcodesOnly_click);
+            // 
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -812,7 +827,7 @@
             // dataGridEditorControl1
             // 
             this.dataGridEditorControl1.DataController = null;
-            this.dataGridEditorControl1.DataGridNumberBase = Diz.Core.util.Util.NumberBase.Hexadecimal;
+            this.dataGridEditorControl1.NumberBaseToShow = Diz.Core.util.Util.NumberBase.Hexadecimal;
             this.dataGridEditorControl1.DataSource = null;
             this.dataGridEditorControl1.DisplayBase = Diz.Core.util.Util.NumberBase.Hexadecimal;
             this.dataGridEditorControl1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -820,21 +835,6 @@
             this.dataGridEditorControl1.Name = "dataGridEditorControl1";
             this.dataGridEditorControl1.Size = new System.Drawing.Size(930, 492);
             this.dataGridEditorControl1.TabIndex = 4;
-            // 
-            // viewToolStripMenuItem2
-            // 
-            this.viewToolStripMenuItem2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.showOpcodesOnly});
-            this.viewToolStripMenuItem2.Name = "viewToolStripMenuItem2";
-            this.viewToolStripMenuItem2.Size = new System.Drawing.Size(44, 20);
-            this.viewToolStripMenuItem2.Text = "&View";
-            // 
-            // showOpcodesOnly
-            // 
-            this.showOpcodesOnly.Name = "showOpcodesOnly";
-            this.showOpcodesOnly.Size = new System.Drawing.Size(196, 22);
-            this.showOpcodesOnly.Text = "Show Instructions Only";
-            this.showOpcodesOnly.Click += new System.EventHandler(this.viewOpcodesOnly_click);
             // 
             // DataGridEditorForm
             // 
@@ -852,6 +852,7 @@
             this.Text = "DiztinGUIsh";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.Load += new System.EventHandler(this.MainWindow_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DataGridEditorForm_KeyDown);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);

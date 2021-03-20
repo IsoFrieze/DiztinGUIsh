@@ -1,32 +1,42 @@
 ﻿using System;
 using System.Windows.Forms;
-using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window2
 {
-    public class StartFormDataBindingController : DataBindingController
+    public class StartFormController : IFormController
     {
-        public DizApplication DizApplication { get; init; }
+        private IFormViewer view;
 
+        public IFormViewer FormView
+        {
+            get => view;
+            set
+            {
+                view = value;
+                view.Closed += ViewOnClosed;
+            }
+        }
+        
+        IViewer IController.View => FormView;
+
+        private void ViewOnClosed(object? sender, EventArgs e) => Closed?.Invoke(sender, e);
+
+        public event EventHandler Closed;
+        
         public void OpenFileWithNewView(string filename)
         {
-            DizApplication.OpenProjectFileWithNewView(filename);
-        }
-
-        protected override void DataBind()
-        {
-            
+            DizApplication.App.OpenProjectFileWithNewView(filename);
         }
 
         public void OpenNewViewOfLastLoadedProject()
         {
-            DizApplication.OpenNewViewOfLastLoadedProject();
+            DizApplication.App.OpenNewViewOfLastLoadedProject();
         }
     }
     
-    public partial class StartForm : Form, IViewer
+    public partial class StartForm : Form, IFormViewer
     {
-        public StartFormDataBindingController DataBindingController { get; set; }
+        public StartFormController Controller { get; set; }
         
         public StartForm()
         {
@@ -34,7 +44,7 @@ namespace DiztinGUIsh.window2
             
             // HACK. open last file.
             //if (!string.IsNullOrEmpty(Settings.Default.LastOpenedFile))
-            //    DataBindingController.OpenFileWithNewView(Settings.Default.LastOpenedFile);
+            //    Controller.OpenFileWithNewView(Settings.Default.LastOpenedFile);
         }
 
         public string PromptForOpenFile()
@@ -52,27 +62,12 @@ namespace DiztinGUIsh.window2
             if (string.IsNullOrEmpty(filename))
                 return;
 
-            DataBindingController.OpenFileWithNewView(filename);
-        }
-
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            
+            Controller.OpenFileWithNewView(filename);
         }
 
         private void newViewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DataBindingController.OpenNewViewOfLastLoadedProject();
-        }
-
-        private void newViewBankC0ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-
+            Controller.OpenNewViewOfLastLoadedProject();
         }
     }
 }

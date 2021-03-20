@@ -53,7 +53,6 @@ namespace DiztinGUIsh.window2
             this.menuStrip1.Size = new System.Drawing.Size(278, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
-            this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.menuStrip1_ItemClicked);
             // 
             // fileToolStripMenuItem
             // 
@@ -76,7 +75,6 @@ namespace DiztinGUIsh.window2
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(143, 22);
             this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // viewToolStripMenuItem
             // 
@@ -99,7 +97,6 @@ namespace DiztinGUIsh.window2
             this.newViewBankC0ToolStripMenuItem.Name = "newViewBankC0ToolStripMenuItem";
             this.newViewBankC0ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.newViewBankC0ToolStripMenuItem.Text = "New View (Bank C0)";
-            this.newViewBankC0ToolStripMenuItem.Click += new System.EventHandler(this.newViewBankC0ToolStripMenuItem_Click);
             // 
             // label1
             // 

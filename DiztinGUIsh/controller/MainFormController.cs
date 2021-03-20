@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Forms;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
@@ -12,6 +13,7 @@ using DiztinGUIsh.util;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
 using DiztinGUIsh.window2;
+using Label = Diz.Core.model.Label;
 
 // Model-View-Controller architecture.
 // goal: while this class's purpose is to be the middleman between dumb GUI elements and 
@@ -39,13 +41,26 @@ namespace DiztinGUIsh.controller
     public class MainFormController : RomByteDataBindingController, IMainFormController
     {
         private FlagType currentMarkFlag = FlagType.Data8Bit;
+        private int selectedSnesOffset;
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler { get; }
-        public int SelectedSnesOffset { get; set; }
+
+        public int SelectedSnesOffset
+        {
+            get => selectedSnesOffset;
+            set
+            {
+                selectedSnesOffset = value;
+                
+                // TODO: event propagation/etc
+            }
+        }
+
         public event IProjectController.ProjectChangedEvent ProjectChanged;
-        public IProjectView ProjectView { get; set; }
         
-        public DizDocument Document { get; } = new();
-        public Project Project => Document.Project;
+        public IDataGridEditorForm DataGridEditorForm { get; set; }
+        public IProjectView ProjectView => DataGridEditorForm;
+        public IFormViewer FormView => DataGridEditorForm;
+        public Project Project { get; set; }
 
         public bool MoveWithStep { get; set; } = true;
 
@@ -71,7 +86,7 @@ namespace DiztinGUIsh.controller
 
         public void OpenProject(string filename)
         {
-            new ProjectOpenerGuiController { Gui = this }
+            new ProjectOpenerGuiController { Handler = this }
                 .OpenProject(filename);
         }
         
@@ -82,9 +97,9 @@ namespace DiztinGUIsh.controller
 
         public void SetProject(string filename, Project project)
         {
-            Document.Project = project;
+            Project = project;
             Project.PropertyChanged += Project_PropertyChanged;
-
+            
             ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs
             {
                 ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Opened,
@@ -252,7 +267,7 @@ namespace DiztinGUIsh.controller
                 ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Closing
             });
 
-            Document.Project = null;
+            Project = null;
         }
 
         public int MarkMany(int markProperty, int markStart, object markValue, int markCount)
@@ -416,7 +431,13 @@ namespace DiztinGUIsh.controller
             
             SelectedSnesOffset = snesOffset;
         }
-        
+
+        public void OnUserChangedSelection(RomByteDataGridRow newSelection)
+        {
+            // when user clicks on a new row in the child data grid editor, this fires
+            SelectedSnesOffset = newSelection.RomByte.Offset;
+        }
+
         private bool IsOffsetInRange(int offset)
         {
             if (!RomDataPresent())
@@ -440,25 +461,35 @@ namespace DiztinGUIsh.controller
 
             SelectedSnesOffset = unreached;
         }
-
-        public void SetMFlag(int offset, bool b)
+    
+        public void SetDataBank(int romOffset, int result)
         {
-            Project.Data.SetMFlag(offset, b);
+            Data?.SetDataBank(romOffset, result);
         }
-
-        public void SetXFlag(int offset, bool b)
+    
+        public void SetDirectPage(int romOffset, int result)
         {
-            Project.Data.SetXFlag(offset ,b);
+            Data?.SetDirectPage(romOffset, result);
         }
-
-        public void AddLabel(int convertPCtoSnes, Label label, bool b)
+    
+        public void SetMFlag(int romOffset, bool value)
         {
-            Project.Data.AddLabel(convertPCtoSnes, label, b);
+            Data?.SetMFlag(romOffset, value);
         }
-
-        public void AddComment(int i, string s, bool overwrite)
+    
+        public void SetXFlag(int romOffset, bool value)
         {
-            Project.Data.AddComment(i, s, overwrite);
+            Data?.SetXFlag(romOffset, value);
+        }
+        
+        public void AddLabel(int offset, Label label, bool overwrite)
+        {
+            Data?.AddLabel(offset, label, overwrite);
+        }
+    
+        public void AddComment(int i, string v, bool overwrite)
+        {
+            Data?.AddComment(i, v, overwrite);
         }
     }
 }

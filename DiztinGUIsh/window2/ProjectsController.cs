@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using Diz.Core;
 using Diz.Core.model;
 using DiztinGUIsh.controller;
+using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window2
 {
     public class ProjectsController
     {
         public Dictionary<string, Project> Projects { get; } = new();
-        
-        // ReSharper disable once MemberCanBeProtected.Global
-        public const string SampleProjectName = "sampleproject111111112"; // temp hack.
 
         public Project OpenProject(string filename)
         {
@@ -27,14 +25,27 @@ namespace DiztinGUIsh.window2
         }
 
         protected virtual Project ReadProject(string filename) => 
-            ProjectOpenerGenericView.OpenProjectWithGui(filename);
+            ProjectOpenerHandlerGenericHandler.OpenProjectWithGui(filename);
+        
+        // TODO: make this a list of last N projects opened
+        // This property is intended to persist beyond application restart, so you can 
+        // open the last filename you were working on.
+        public static string LastOpenedProjectFilename
+        {
+            get => Settings.Default.LastOpenedFile;
+            set
+            {
+                Settings.Default.LastOpenedFile = value;
+                Settings.Default.Save();
+            }
+        }
     }
 
     public class GlobalViewControllers
     {
-        public List<IController> Controllers { get; } = new();
+        public List<IFormController> Controllers { get; } = new();
 
-        public void RegisterNewController(DataController controller)
+        public void RegisterNewController(IFormController controller)
         {
             Controllers.Add(controller);
             controller.Closed += OnControllerClosed;
@@ -42,7 +53,7 @@ namespace DiztinGUIsh.window2
 
         private void OnControllerClosed(object sender, EventArgs e)
         {
-            Controllers.Remove(sender as DataController);
+            Controllers.Remove(sender as IFormController);
             if (Controllers.Count == 0)
                 AllFormsClosed?.Invoke(this, new EventArgs());
         }
@@ -51,6 +62,9 @@ namespace DiztinGUIsh.window2
     
     public class SampleRomHackProjectsController : ProjectsController
     {
+        // ReSharper disable once MemberCanBeProtected.Global
+        public const string SampleProjectName = "sampleproject111111112"; // temp hack.
+        
         protected override Project ReadProject(string filename)
         {
             if (filename != SampleProjectName) 

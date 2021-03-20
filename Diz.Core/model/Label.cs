@@ -1,4 +1,7 @@
-﻿using DiztinGUIsh;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using DiztinGUIsh;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
@@ -14,7 +17,7 @@ namespace Diz.Core.model
     // - comment: "this address is only used in RAM during battle sequences"
     //            ^^^^---- will not show up in the main table, just the editor
 
-    public class Label : DizDataModel
+    public class Label : INotifyPropertyChanged
     {
         private string comment = "";
         private string name = "";
@@ -22,14 +25,16 @@ namespace Diz.Core.model
         public string Name
         {
             get => name;
-            set => SetField(ref name, value);
+            set => this.SetField(PropertyChanged, ref name, value);
         }
 
         public string Comment
         {
             get => comment;
-            set => SetField(ref comment, value);
+            set => this.SetField(PropertyChanged, ref comment, value);
         }
+        
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public void CleanUp()
         {
@@ -62,15 +67,17 @@ namespace Diz.Core.model
         #endregion
     }
     
-    public class Comment : DizDataModel
+    public class Comment : INotifyPropertyChanged
     {
         private string text = "";
 
         public string Text
         {
             get => text;
-            set => SetField(ref text, value);
+            set => this.SetField(PropertyChanged, ref text, value);
         }
+        
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public void CleanUp()
         {

@@ -7,11 +7,53 @@ using JetBrains.Annotations;
 
 namespace DiztinGUIsh
 {
-    public class DizDataModel : PropertyNotifyChanged
+    /*public class INotifyPropertyChanged : PropertyNotifyChanged
     {
 
+    }*/
+
+    /*TO DELETE
+     public class TestNotifyChanged : INotifyPropertyChanged
+    {
+        private string name;
+        public string Name
+        {
+            get => name;
+            set => this.SetField(PropertyChanged, ref name, value);
+        }
+        
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }*/
+    
+    public static class INotifyPropertyChangedExtensions
+    {
+        public static void Notify(
+            this INotifyPropertyChanged sender,
+            PropertyChangedEventHandler handler,
+            [CallerMemberName] string propertyName = "")
+        {
+            handler?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
+        }
+        
+        public static bool SetField<T>(this INotifyPropertyChanged sender, PropertyChangedEventHandler handler, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
+        {
+            if (compareRefOnly)
+            {
+                if (ReferenceEquals(field, value))
+                    return false;
+            } 
+            else if (EqualityComparer<T>.Default.Equals(field, value))
+            {
+                return false;
+            }
+            field = value;
+            
+            handler?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
+            return true;
+        }
     }
-    public class PropertyNotifyChanged : INotifyPropertyChanged
+
+    /*public class PropertyNotifyChanged : INotifyPropertyChanged
     {
         // this stuff lets other parts of code subscribe to events that get fired anytime
         // properties of our class change.
@@ -41,8 +83,7 @@ namespace DiztinGUIsh
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-    }
-
+    }*/
 
     /// <summary>
     ///     This class adds the ability to refresh the list when any property of
@@ -106,7 +147,7 @@ namespace DiztinGUIsh
         
     }*/
 
-    public class Watcher<TK, TV> : INotifyPropertyChanged, INotifyCollectionChanged where TV : INotifyPropertyChanged
+    /*public class Watcher<TK, TV> : INotifyPropertyChanged, INotifyCollectionChanged where TV : INotifyPropertyChanged
     {
         public ObservableDictionary<TK, TV> Dict { get; init; }
 
@@ -139,5 +180,5 @@ namespace DiztinGUIsh
             if (SendNotificationChangedEvents)
                 PropertyChanged?.Invoke(sender, e);
         }
-    }
+    }*/
 }

@@ -8,13 +8,34 @@ using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh
 {
-    public class DizApplication : ApplicationContext
+    public class DizApplicationContext : ApplicationContext
+    {
+        public class DizApplicationArgs
+        {
+            public string FileToOpen { get; set; }
+        }
+        
+        public DizApplicationContext(DizApplicationArgs Args)
+        {
+            DizApplication.App.Run(Args);
+        }
+    }
+    
+    public class DizApplication
     {
         private GlobalViewControllers GlobalViewControllers { get; } = new ();
         private ProjectsController ProjectsController { get; } = new SampleRomHackProjectsController();
         
+        private static DizApplication appInstance;
+
+        public static DizApplication App => 
+            appInstance ??= new DizApplication();
+
         public void OpenProjectFileWithNewView(string filename)
         {
+            if (string.IsNullOrEmpty(filename))
+                return;
+            
             var project = ProjectsController.OpenProject(filename);
             if (project == null)
                 return;
@@ -22,45 +43,36 @@ namespace DiztinGUIsh
             var controller = ShowNewProjectEditorForm();
             controller.SetProject(filename, project);
         }
-        
-        public DizApplication(string openFile = "")
+
+        public void Run(DizApplicationContext.DizApplicationArgs Args)
         {
-            // Handle the ApplicationExit event to know when the application is exiting.
             Application.ApplicationExit += OnApplicationExit;
             GlobalViewControllers.AllFormsClosed += (o, args) => Application.Exit();
-            
+
             // kick us off with the home screen
             ShowNewStartForm();
-            
-            // temp hack
-            openFile = "sampleproject111111112";
 
-            if (!string.IsNullOrEmpty(openFile))
-            {
-                OpenProjectFileWithNewView(openFile);
-            }
+            OpenProjectFileWithNewView(Args.FileToOpen);
         }
 
         private void ShowNewStartForm()
         {
             var form = new StartForm();
-            var controller = new StartFormDataBindingController
+            var controller = new StartFormController
             {
-                View = form,
-                DizApplication = this
+                FormView = form,
             };
-            form.DataBindingController = controller;
+            form.Controller = controller;
 
             OnCreated(controller, form);
         }
 
         private MainFormController ShowNewProjectEditorForm()
         {
-            // var form = new DataGridEditorFormTemp();
             var form = new DataGridEditorForm();
             var controller = new MainFormController
             {
-                ProjectView = form,
+                DataGridEditorForm = form,
             };
             form.MainFormController = controller;
 
@@ -69,15 +81,10 @@ namespace DiztinGUIsh
             return controller;
         }
 
-        private void OnCreated(DataController controller, Control form)
+        private void OnCreated(IFormController controller, Control form)
         {
             GlobalViewControllers.RegisterNewController(controller);
             form.Show();
-        }
-
-        private void OnApplicationExit(object sender, EventArgs e)
-        {
-            // cleanup
         }
 
         public void OpenNewViewOfLastLoadedProject()
@@ -94,6 +101,11 @@ namespace DiztinGUIsh
             
             var controller = ShowNewProjectEditorForm();
             controller.SetProject("", openProject);
+        }
+
+        private void OnApplicationExit(object sender, EventArgs e)
+        {
+            // cleanup
         }
     }
 }

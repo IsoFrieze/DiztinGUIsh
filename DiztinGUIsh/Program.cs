@@ -1,26 +1,30 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using DiztinGUIsh.util;
+using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh
 {
     internal static class Program
     {
         [STAThread]
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            var openFile = "";
+            // TODO: temp hack, removeme
+            args = args.Append(SampleRomHackProjectsController.SampleProjectName).ToArray();
+            // END HACK
+
+            var Args = new DizApplicationContext.DizApplicationArgs();
+
             if (args.Length > 0)
-                openFile = args[0];
+                Args.FileToOpen = args[0];
 
-            RunNormally(openFile);
-        }
-
-        private static void RunNormally(string openFile = "")
-        {
+            // call before setting up any forms/GUI elements
             GuiUtil.SetupDPIStuff();
 
-            Application.Run(new DizApplication(openFile));
+            Application.Run(new DizApplicationContext(Args));
         }
     }
 }

@@ -1,48 +1,23 @@
 ﻿using System;
 using Diz.Core.export;
 using Diz.Core.model;
-using Diz.Core.util;
 using DiztinGUIsh.controller;
-using DiztinGUIsh.window;
-using Equin.ApplicationFramework;
 
 namespace DiztinGUIsh.window2
 {
-    public interface IViewer
-    {
-
-    }
-
-    public interface IFormViewer : IViewer
-    {
-        public event EventHandler Closed;
-    }
-    
-    public interface IBytesGridViewer<TByteItem> : IViewer
-    {
-        // get the number base that will be used to display certain items in the grid
-        public Util.NumberBase DataGridNumberBase { get; }
-        TByteItem SelectedRomByteRow { get; }
-        public BindingListView<TByteItem> DataSource { get; set; }
-    }
-
-    public interface IBytesFormViewer : IFormViewer
-    {
-        
-    }
-    
-    
-    
-    // --------------------------------
-    
-    
-    
-
     public interface IController
     {
         IViewer View { get; }
+    }
 
+    public interface ICloseHandler
+    {
         public event EventHandler Closed;
+    }
+
+    public interface IFormController : IController, ICloseHandler
+    {
+        IFormViewer FormView { get; }
     }
 
     public interface IDataController : IController
@@ -57,6 +32,8 @@ namespace DiztinGUIsh.window2
     
     public interface IProjectController
     {
+        public Project Project  { get; }
+        
         public class ProjectChangedEventArgs
         {
             public enum ProjectChangedType
@@ -77,13 +54,21 @@ namespace DiztinGUIsh.window2
 
         event ProjectChangedEvent ProjectChanged;
         
+        void SaveProject(string filename);
+        
         void OpenProject(string fileName);
 
         void MarkProjectAsUnsaved();
         
         bool ImportRomAndCreateNewProject(string romFilename);
-
-        void SaveProject(string filename);
+    }
+    
+    public interface IProjectOpenerHandler : ILongRunningTaskHandler
+    {
+        public void OnProjectOpenSuccess(string filename, Project project);
+        public void OnProjectOpenWarning(string warnings);
+        public void OnProjectOpenFail(string fatalError);
+        public string AskToSelectNewRomFilename(string error);
     }
 
     public interface I65816CpuOperations
@@ -94,6 +79,14 @@ namespace DiztinGUIsh.window2
         void AutoStepSafe(int offset);
         void Mark(int offset);
         public void MarkMany(int offset, int whichIndex);
+        
+        void SetDataBank(int romOffset, int result);
+        void SetDirectPage(int romOffset, int result);
+        void SetMFlag(int romOffset, bool value);
+        void SetXFlag(int romOffset, bool value);
+        
+        void AddLabel(int offset, Label label, bool overwrite);
+        void AddComment(int offset, string comment, bool overwrite);
     }
 
     public interface IExportDisassembly
@@ -116,12 +109,24 @@ namespace DiztinGUIsh.window2
         void GoTo(int offset);
         void GoToUnreached(bool end, bool direction);
         void GoToIntermediateAddress(int offset);
+        void OnUserChangedSelection(RomByteDataGridRow newSelection);
     }
-    
-    public interface IMainFormController : IBytesGridViewerDataController<RomByteDataGridRow>, IProjectController, I65816CpuOperations, IExportDisassembly, IProjectOpener, ITraceLogImporters, IProjectNavigation
-    {
-        public DizDocument Document  { get; }
 
+    public interface IMainFormController : 
+        
+        IFormController,
+        
+        // TODO: shouldn't have the word 'Grid' in here for Main Form controller. refactor
+        // either naming or functionality.
+        IBytesGridViewerDataController<RomByteDataGridRow>,
+        
+        IProjectController,
+        I65816CpuOperations, 
+        IExportDisassembly, 
+        IProjectOpenerHandler, 
+        ITraceLogImporters, 
+        IProjectNavigation 
+    {
         public FlagType CurrentMarkFlag { get; set; }
         
         public bool MoveWithStep { get; set; }

@@ -167,9 +167,9 @@ namespace DiztinGUIsh.window2
         [Browsable(false)] public RomByteData RomByte { get; }
         [Browsable(false)] public Data Data { get; }
         [Browsable(false)] public IBytesGridViewer<RomByteDataGridRow> ParentView { get; }
-        [Browsable(false)] private Util.NumberBase NumberBase => ParentView.DataGridNumberBase;
+        [Browsable(false)] private Util.NumberBase NumberBase => ParentView.NumberBaseToShow;
 
-        [Browsable(false)] public event PropertyChangedEventHandler? PropertyChanged;
+        [Browsable(false)] public event PropertyChangedEventHandler PropertyChanged;
 
         public RomByteDataGridRow(RomByteData rb, Data d, IBytesGridViewer<RomByteDataGridRow> parentView)
         {
@@ -181,7 +181,7 @@ namespace DiztinGUIsh.window2
                 rb.PropertyChanged += OnRomBytePropertyChanged;
         }
 
-        private void OnRomBytePropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void OnRomBytePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             void OnInstructionRelatedChanged()
             {
