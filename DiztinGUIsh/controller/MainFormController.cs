@@ -38,11 +38,12 @@ using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.controller
 {
-    public class MainFormController : RomByteDataBindingController, IMainFormController
+    public class MainFormController : IMainFormController
     {
         private FlagType currentMarkFlag = FlagType.Data8Bit;
         private int selectedSnesOffset;
-        public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler { get; }
+        private IDataGridEditorForm dataGridEditorForm;
+        public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler => ProgressBarJob.RunAndWaitForCompletion;
 
         public int SelectedSnesOffset
         {
@@ -55,11 +56,35 @@ namespace DiztinGUIsh.controller
             }
         }
 
+        public Data Data => Project?.Data;
+
         public event IProjectController.ProjectChangedEvent ProjectChanged;
-        
-        public IDataGridEditorForm DataGridEditorForm { get; set; }
+
+        public IDataGridEditorForm DataGridEditorForm
+        {
+            get => dataGridEditorForm;
+            set
+            {
+                if (dataGridEditorForm != null)
+                    dataGridEditorForm.Closed -= OnClosed;
+                
+                dataGridEditorForm = value;
+
+                if (dataGridEditorForm != null)
+                    dataGridEditorForm.Closed += OnClosed;
+            }
+        }
+
+        private void OnClosed(object? sender, EventArgs e)
+        {
+            Closed?.Invoke(this, e);
+        }
+
         public IProjectView ProjectView => DataGridEditorForm;
         public IFormViewer FormView => DataGridEditorForm;
+        public IViewer View => DataGridEditorForm;
+        public event EventHandler Closed;
+
         public Project Project { get; set; }
 
         public bool MoveWithStep { get; set; } = true;

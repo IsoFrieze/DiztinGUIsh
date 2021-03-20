@@ -148,7 +148,7 @@ namespace DiztinGUIsh.window2
 
         private void OnClosed(object sender, EventArgs e)
         {
-            Closed?.Invoke(sender, e);
+            Closed?.Invoke(this, e);
         }
     }
 }

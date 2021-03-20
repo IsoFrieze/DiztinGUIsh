@@ -113,7 +113,7 @@ namespace DiztinGUIsh.window2
         #region RowColumnAccess
         
         private RomByteDataGridRow GetRomByteAtRow(int row) =>
-            (Table.Rows[row].DataBoundItem as ObjectView<RomByteDataGridRow>)?.Object;
+            Table.Rows[row].DataBoundItem as RomByteDataGridRow;
 
         public RomByteDataGridRow SelectedRomByteRow =>
             Table.CurrentRow == null

@@ -118,7 +118,7 @@ namespace DiztinGUIsh.window2
         
         // TODO: shouldn't have the word 'Grid' in here for Main Form controller. refactor
         // either naming or functionality.
-        IBytesGridViewerDataController<RomByteDataGridRow>,
+        // IBytesGridViewerDataController<RomByteDataGridRow>,
         
         IProjectController,
         I65816CpuOperations, 

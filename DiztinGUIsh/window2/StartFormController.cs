@@ -22,7 +22,7 @@ namespace DiztinGUIsh.window2
 
         IViewer IController.View => FormView;
 
-        private void ViewOnClosed(object? sender, EventArgs e) => Closed?.Invoke(sender, e);
+        private void ViewOnClosed(object? sender, EventArgs e) => Closed?.Invoke(this, e);
 
         public event EventHandler Closed;
 

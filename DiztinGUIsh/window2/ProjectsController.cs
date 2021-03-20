@@ -53,7 +53,7 @@ namespace DiztinGUIsh.window2
 
         private void OnControllerClosed(object sender, EventArgs e)
         {
-            Controllers.Remove(sender as IFormController);
+            Controllers.RemoveAll(c => ReferenceEquals(c, sender));
             if (Controllers.Count == 0)
                 AllFormsClosed?.Invoke(this, new EventArgs());
         }

@@ -57,7 +57,7 @@ namespace DiztinGUIsh.window
             DataGridDataController = new RomByteDataBindingGridController
             {
                 ViewGrid = dataGridEditorControl1,
-                Data = MainFormController.Data,
+                Data = MainFormController.Project?.Data,
             };
             dataGridEditorControl1.DataController = DataGridDataController;
             
