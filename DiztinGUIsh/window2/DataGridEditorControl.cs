@@ -75,14 +75,13 @@ namespace DiztinGUIsh.window2
             // TODO Table.CellValuePushed += table_CellValuePushed; // may not need anymore?
             
             // Table.MouseDown += table_MouseDown;
-            Table.MouseWheel += table_MouseWheel;
+            // Table.MouseWheel += table_MouseWheel; // don't really need.
 
             Table.CellPainting += table_CellPainting;
             Table.CurrentCellChanged += TableOnCurrentCellChanged;
         }
 
-        private void table_MouseWheel(object? sender, MouseEventArgs e) => 
-            AdjustSelectedOffsetByDelta(e.Delta / 0x18);
+        // private void table_MouseWheel(object? sender, MouseEventArgs e) => AdjustSelectedOffsetByDelta(e.Delta / 0x18);
 
         #endregion
 
