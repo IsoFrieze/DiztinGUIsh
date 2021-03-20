@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Diz.Core.util;
 using Equin.ApplicationFramework;
 
@@ -19,7 +20,7 @@ namespace DiztinGUIsh.window2
         // get the number base that will be used to display certain items in the grid
         public Util.NumberBase NumberBaseToShow { get; }
         TByteItem SelectedRomByteRow { get; }
-        public BindingListView<TByteItem> DataSource { get; set; }
+        public List<TByteItem> DataSource { get; set; }
         
         void BeginEditingSelectionComment();
         void BeginEditingSelectionLabel();

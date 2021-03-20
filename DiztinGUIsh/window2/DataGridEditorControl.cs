@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using Diz.Core.model;
@@ -31,8 +32,8 @@ namespace DiztinGUIsh.window2
             }
         }
         
-        private BindingListView<RomByteDataGridRow> dataSource;
-        public BindingListView<RomByteDataGridRow> DataSource
+        private List<RomByteDataGridRow> dataSource;
+        public List<RomByteDataGridRow> DataSource
         {
             get => dataSource;
             set

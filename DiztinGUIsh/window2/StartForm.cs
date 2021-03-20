@@ -1,39 +1,10 @@
 ﻿using System;
 using System.Windows.Forms;
+using Diz.Core.util;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window2
 {
-    public class StartFormController : IFormController
-    {
-        private IFormViewer view;
-
-        public IFormViewer FormView
-        {
-            get => view;
-            set
-            {
-                view = value;
-                view.Closed += ViewOnClosed;
-            }
-        }
-        
-        IViewer IController.View => FormView;
-
-        private void ViewOnClosed(object? sender, EventArgs e) => Closed?.Invoke(sender, e);
-
-        public event EventHandler Closed;
-        
-        public void OpenFileWithNewView(string filename)
-        {
-            DizApplication.App.OpenProjectFileWithNewView(filename);
-        }
-
-        public void OpenNewViewOfLastLoadedProject()
-        {
-            DizApplication.App.OpenNewViewOfLastLoadedProject();
-        }
-    }
-    
     public partial class StartForm : Form, IFormViewer
     {
         public StartFormController Controller { get; set; }
@@ -41,10 +12,15 @@ namespace DiztinGUIsh.window2
         public StartForm()
         {
             InitializeComponent();
-            
+
             // HACK. open last file.
             //if (!string.IsNullOrEmpty(Settings.Default.LastOpenedFile))
             //    Controller.OpenFileWithNewView(Settings.Default.LastOpenedFile);
+
+            // TODO
+            /*var projectsBs = new BindingSource(ProjectsController.)
+            GuiUtil.BindListControl(comboBox1, DizApplication.App.ProjectsController, nameof(ProjectsController.Projects), bs));
+            GuiUtil.BindListControlToEnum<RomMapMode>(comboBox1, );*/
         }
 
         public string PromptForOpenFile()
@@ -68,6 +44,21 @@ namespace DiztinGUIsh.window2
         private void newViewToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Controller.OpenNewViewOfLastLoadedProject();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void btnCloseSelectedProject_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void StartForm_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

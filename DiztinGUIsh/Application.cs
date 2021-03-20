@@ -23,8 +23,8 @@ namespace DiztinGUIsh
     
     public class DizApplication
     {
-        private GlobalViewControllers GlobalViewControllers { get; } = new ();
-        private ProjectsController ProjectsController { get; } = new SampleRomHackProjectsController();
+        public GlobalViewControllers GlobalViewControllers { get; } = new ();
+        public ProjectsController ProjectsController { get; } = new SampleRomHackProjectsController();
         
         private static DizApplication appInstance;
 

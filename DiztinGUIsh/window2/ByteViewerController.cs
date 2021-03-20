@@ -49,13 +49,13 @@ namespace DiztinGUIsh.window2
 
         private void UpdateFilters()
         {
-            if (ViewGrid?.DataSource == null)
+            /*if (ViewGrid?.DataSource == null)
                 return;
             
             ViewGrid.DataSource.RemoveFilter();
             
             if (FilterShowOpcodesOnly)
-                ViewGrid.DataSource.Filter = new PredicateItemFilter<RomByteDataGridRow>(IsRomByteOpcode);
+                ViewGrid.DataSource.Filter = new PredicateItemFilter<RomByteDataGridRow>(IsRomByteOpcode);*/
         }
         
         private static bool IsRomByteOpcode(RomByteDataGridRow romByteRow)
@@ -81,7 +81,7 @@ namespace DiztinGUIsh.window2
             if (ViewGrid == null || Data == null)
                 return;
             
-            ViewGrid.DataSource = new BindingListView<TByteItem>(GetDataSourceForBind());
+            ViewGrid.DataSource = GetDataSourceForBind();
         }
         
         private List<TByteItem> GetDataSourceForBind()

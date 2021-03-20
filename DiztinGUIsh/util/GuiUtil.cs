@@ -53,8 +53,7 @@ namespace DiztinGUIsh.util
         /// Shortcut for doing these actions manually.
         /// </summary>
         /// 
-        public static void BindListControlToEnum<TEnum>(ComboBox cb, object boundObject, string propertyName)
-            where TEnum : Enum
+        public static void BindListControlToEnum<TEnum>(ComboBox cb, object boundObject, string propertyName) where TEnum : Enum
         {
             // I feel like there's gotta be a better way to do all this. But, I can live with this for now.
             //
@@ -65,11 +64,10 @@ namespace DiztinGUIsh.util
             var enumValuesAndDescriptionsKvp = Util.GetEnumDescriptions<TEnum>();
             var bs = new BindingSource(enumValuesAndDescriptionsKvp, null);
 
-            BindListControlToEnum(cb, boundObject, propertyName, bs);
+            BindListControl(cb, boundObject, propertyName, bs);
         }
 
-        private static void BindListControlToEnum(ComboBox cb, object boundObject, string propertyName,
-            BindingSource bs)
+        public static void BindListControl(ComboBox cb, object boundObject, string propertyName, BindingSource bs)
         {
             cb.DataBindings.Add(new Binding(
                 "SelectedValue", boundObject,
