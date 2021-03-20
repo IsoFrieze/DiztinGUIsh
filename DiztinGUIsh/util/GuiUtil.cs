@@ -96,7 +96,7 @@ namespace DiztinGUIsh.util
             Application.SetCompatibleTextRenderingDefault(false);
         }
         
-        public static void EnableDoubleBuffering(Type type, DataGridView obj)
+        public static void EnableDoubleBuffering(Type type, Control obj)
         {
             // https://stackoverflow.com/a/1506066
             type.InvokeMember(

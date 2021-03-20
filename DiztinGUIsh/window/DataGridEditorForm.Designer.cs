@@ -829,7 +829,6 @@
             this.dataGridEditorControl1.DataController = null;
             this.dataGridEditorControl1.NumberBaseToShow = Diz.Core.util.Util.NumberBase.Hexadecimal;
             this.dataGridEditorControl1.DataSource = null;
-            this.dataGridEditorControl1.DisplayBase = Diz.Core.util.Util.NumberBase.Hexadecimal;
             this.dataGridEditorControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridEditorControl1.Location = new System.Drawing.Point(0, 24);
             this.dataGridEditorControl1.Name = "dataGridEditorControl1";

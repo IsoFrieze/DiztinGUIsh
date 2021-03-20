@@ -31,38 +31,53 @@ namespace DiztinGUIsh.window2
         /// </summary>
         private void InitializeComponent()
         {
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.Table = new System.Windows.Forms.DataGridView();
+            ((System.ComponentModel.ISupportInitialize)(this.Table)).BeginInit();
             this.SuspendLayout();
             // 
-            // dataGridView1
+            // Table
             // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.AllowUserToOrderColumns = true;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.dataGridView1.MinimumSize = new System.Drawing.Size(20, 20);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(1130, 223);
-            this.dataGridView1.TabIndex = 2;
+            this.Table.AllowUserToAddRows = false;
+            this.Table.AllowUserToDeleteRows = false;
+            this.Table.AllowUserToResizeRows = false;
+            this.Table.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.ColumnHeader;
+            this.Table.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.Table.CausesValidation = false;
+            this.Table.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            this.Table.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.Table.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.Table.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
+            this.Table.Location = new System.Drawing.Point(0, 0);
+            this.Table.Margin = new System.Windows.Forms.Padding(0);
+            this.Table.MinimumSize = new System.Drawing.Size(20, 20);
+            this.Table.MultiSelect = false;
+            this.Table.Name = "Table";
+            this.Table.RowHeadersVisible = false;
+            this.Table.RowTemplate.Height = 15;
+            this.Table.ShowCellErrors = false;
+            this.Table.ShowCellToolTips = false;
+            this.Table.ShowEditingIcon = false;
+            this.Table.ShowRowErrors = false;
+            this.Table.Size = new System.Drawing.Size(1130, 223);
+            this.Table.TabIndex = 1;
+            this.Table.TabStop = false;
+            this.Table.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Table_KeyDown);
             // 
             // DataGridEditorControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.dataGridView1);
+            this.Controls.Add(this.Table);
             this.Name = "DataGridEditorControl";
             this.Size = new System.Drawing.Size(1130, 223);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.Load += new System.EventHandler(this.DataGridEditorControl_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.Table)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView Table;
     }
 }
