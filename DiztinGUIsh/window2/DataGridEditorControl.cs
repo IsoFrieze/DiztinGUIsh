@@ -111,14 +111,22 @@ namespace DiztinGUIsh.window2
             {
                 // perf: don't let any kind of resizing happen during loading, slow.
                 Table.AutoGenerateColumns = false;
-                Table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.EnableResizing;
+                Table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
                 Table.RowHeadersVisible = false;
                 Table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-
+                Table.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+                Table.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+                Table.AllowUserToResizeColumns = false;
+                Table.AllowUserToResizeRows = false;
+                Table.RowTemplate.Resizable = DataGridViewTriState.False;
+                Table.Visible = false;
+                
+                // THIS actually works, but, re-enabling it later is slow, so, rough
+                // Table.RowTemplate.Visible = false;
+                
                 GuiUtil.SendMessage(Table.Handle, GuiUtil.WM_SETREDRAW, false, 0);
                 SuspendLayout();
                 Table.SuspendLayout();
-                Table.Visible = false;
             }
 
             void Performance_EnableDataGridUpdating()
@@ -134,29 +142,49 @@ namespace DiztinGUIsh.window2
 
             Performance_DisableDataGridUpdating();
 
+            ClearTableData();
+            RecreateFromNewData();
+            // SetAllRowsVisibile();
+
+            Performance_EnableDataGridUpdating();
+        }
+
+        private void RecreateFromNewData()
+        {
+            if (DataController == null || dataSource == null) 
+                return;
+            
+            // databinding approach. awesome, but it's too slow for us.
+            // var dataGridView1BindingSource = new BindingSource
+            // {
+            //     DataSource = DataSource
+            // };
+            // Table.DataSource = dataGridView1BindingSource;
+
+            RecreateColumns();
+
+            // perf: this is slow because it creates objects for each row in the table.
+            // if we need further speedups, we should manage the rowcount to a small number
+            // and do the paging ourselves.
+            Table.RowCount = Data?.GetRomSize() ?? 0;
+        }
+
+        private void ClearTableData()
+        {
             // reset data
             cachedRows.Clear();
             Table.RowCount = 0;
             Table.Rows.Clear();
+        }
 
-            if (DataController != null && dataSource != null)
+        private void SetAllRowsVisibile()
+        {
+            // perf: re-enable row visibiltiy. we do this at the end to
+            // prevent each row from updating as they're added.
+            for (var i = 0; i < Table.Rows.Count; ++i)
             {
-                // databinding approach. awesome, but it's too slow for us.
-                // var dataGridView1BindingSource = new BindingSource
-                // {
-                //     DataSource = DataSource
-                // };
-                // Table.DataSource = dataGridView1BindingSource;
-
-                RecreateColumns();
-
-                // perf: this is slow because it creates objects for each row in the table.
-                // if we need further speedups, we should manage the rowcount to a small number
-                // and do the paging ourselves.
-                Table.RowCount = Data?.GetRomSize() ?? 0;
+                Table.Rows[i].Visible = true;
             }
-
-            Performance_EnableDataGridUpdating();
         }
 
         public void ForceTableRedraw() => Table.Invalidate();
@@ -310,7 +338,7 @@ namespace DiztinGUIsh.window2
                 var newCol = new DataGridViewTextBoxColumn()
                 {
                     DataPropertyName = property.Name,
-                    Resizable = DataGridViewTriState.True,
+                    Resizable = DataGridViewTriState.False,
                     HeaderText = RomByteDataGridRow.GetColumnDisplayName(property.Name),
                     ReadOnly = RomByteDataGridRow.GetColumnIsReadOnly(property.Name),
 
