@@ -27,19 +27,24 @@ namespace Diz.Core.util
             var folderUri = new Uri(folder);
             return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
         }
-
-        // if folder is null, use current directory path
+        
         public static string TryGetRelativePath(string fileSpec, string folder = null)
         {
+            if (string.IsNullOrEmpty(folder))
+                return fileSpec;
+            
             try
             {
-                return GetRelativePath(fileSpec, folder ?? Environment.CurrentDirectory);
+                return GetRelativePath(fileSpec, folder);
             }
             catch (Exception)
             {
                 return fileSpec;
             }
         }
+        
+        public static string GetDirNameOrEmpty(string path) => 
+            string.IsNullOrEmpty(path) ? "" : Path.GetDirectoryName(path);
 
         public enum NumberBase
         {
