@@ -65,14 +65,16 @@ namespace Diz.Core.serialization.xml_serializer
                 .Type<Project>()
                 .Member(x => x.UnsavedChanges).Ignore()
                 .Member(x => x.ProjectFileName).Ignore()
-                // .Member(x => x.CurrentViewOffset).Ignore()
 
                 .Type<RomBytes>()
                 .Register().Serializer().Using(RomBytesSerializer.Default)
 
-                .Type<Data>() // .Register().Converter(HexIntConverter.Default)
-                // .Member(x => x.Comments.Keys).Register().Converter().)
+                .Type<Data>()
                 .Member(x=>x.Comments)
+                
+                // TODO: trying to get a converter up and running. not working yet....
+                // .Register().Converter(HexIntConverter.Default)
+                // .Member(x => x.Comments.Keys).Register().Converter().)
                 // .CustomSerializer(new HexKVPSerializer())// cant get it working!!!
                 // .AddMigration(new DizProjectMigrations())
                 
