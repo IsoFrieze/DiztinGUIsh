@@ -1,40 +1,12 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using IX.Observable;
-using JetBrains.Annotations;
 
-namespace DiztinGUIsh
+namespace Diz.Core.model
 {
-    /*public class INotifyPropertyChanged : PropertyNotifyChanged
+    public static class NotifyPropertyChangedExtensions
     {
-
-    }*/
-
-    /*TO DELETE
-     public class TestNotifyChanged : INotifyPropertyChanged
-    {
-        private string name;
-        public string Name
-        {
-            get => name;
-            set => this.SetField(PropertyChanged, ref name, value);
-        }
-        
-        public event PropertyChangedEventHandler? PropertyChanged;
-    }*/
-    
-    public static class INotifyPropertyChangedExtensions
-    {
-        public static void Notify(
-            this INotifyPropertyChanged sender,
-            PropertyChangedEventHandler handler,
-            [CallerMemberName] string propertyName = "")
-        {
-            handler?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
-        }
-        
+        // returns true if we set property to a new value
         public static bool SetField<T>(this INotifyPropertyChanged sender, PropertyChangedEventHandler handler, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
             if (compareRefOnly)
@@ -52,38 +24,6 @@ namespace DiztinGUIsh
             return true;
         }
     }
-
-    /*public class PropertyNotifyChanged : INotifyPropertyChanged
-    {
-        // this stuff lets other parts of code subscribe to events that get fired anytime
-        // properties of our class change.
-        //
-        // Just hook up SetField() to the 'set' param of any property you would like to 
-        // expose to outside classes.
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected bool SetField<T>(ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
-        {
-            if (compareRefOnly)
-            {
-                if (ReferenceEquals(field, value))
-                    return false;
-            } 
-            else if (EqualityComparer<T>.Default.Equals(field, value))
-            {
-                return false;
-            }
-
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }*/
 
     /// <summary>
     ///     This class adds the ability to refresh the list when any property of
