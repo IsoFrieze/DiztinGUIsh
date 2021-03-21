@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using Diz.Core.export;
 using Diz.Core.util;
-using DiztinGUIsh;
 
 namespace Diz.Core.model
 {
@@ -17,16 +17,40 @@ namespace Diz.Core.model
         public string ProjectFileName
         {
             get => projectFileName;
-            set => this.SetField(PropertyChanged, ref projectFileName, value);
+            set
+            {
+                string GetFullBasePathToRomFile()
+                {
+                    if (ProjectDirectory != "")
+                        return ProjectDirectory;
+                    
+                    return value != "" ? Util.GetDirNameOrEmpty(value) : "";
+                }
+                
+                var absolutePathToRomFile = Path.Combine(GetFullBasePathToRomFile(), Path.GetFileName(AttachedRomFilename) ?? "");
+                
+                if (!this.SetField(PropertyChanged, ref projectFileName, value))
+                    return;
+
+                // this will take the absolute path to the ROM file and convert it to a relative path
+                // relative to the Project's dir.
+                AttachedRomFilename = absolutePathToRomFile;
+            }
         }
 
+        public string ProjectDirectory =>
+            Util.GetDirNameOrEmpty(projectFileName);
         
+        // RELATIVE PATH from ProjectDirectory to the original ROM file (.smc/.sfc/etc)
         public string AttachedRomFilename
         {
             get => attachedRomFilename;
             set => this.SetField(PropertyChanged, ref attachedRomFilename, 
-                Util.TryGetRelativePath(value, Environment.CurrentDirectory));
+                Util.TryGetRelativePath(value, ProjectDirectory));
         }
+
+        public string AttachedRomFileFullPath =>
+            Path.Combine(ProjectDirectory, AttachedRomFilename);
 
         // NOT saved in XML
         // (would be cool to make this more automatic. probably hook into SetField()
