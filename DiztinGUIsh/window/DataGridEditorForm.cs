@@ -560,7 +560,7 @@ namespace DiztinGUIsh.window
 
         private void PromptForFilenameToSave()
         {
-            saveProjectFile.InitialDirectory = Project.AttachedRomFilename;
+            saveProjectFile.InitialDirectory = Project?.ProjectFileName ?? "";
             if (saveProjectFile.ShowDialog() == DialogResult.OK && saveProjectFile.FileName != "")
             {
                 MainFormController.SaveProject(saveProjectFile.FileName);
