@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Diz.Core.util;
 
@@ -97,6 +98,11 @@ namespace DiztinGUIsh.util
         public static void EnableDoubleBuffering(Type type, Control obj)
         {
             // https://stackoverflow.com/a/1506066
+            
+            // Double buffering can make DGV slow in remote desktop, skip here.
+            if (SystemInformation.TerminalServerSession)
+                return;
+
             type.InvokeMember(
                 "DoubleBuffered",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance |
@@ -105,6 +111,9 @@ namespace DiztinGUIsh.util
                 obj,
                 new object[] {true});
         }
-
+        
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, Int32 wMsg, bool wParam, Int32 lParam);
+        public const int WM_SETREDRAW = 11;
     }
 }
