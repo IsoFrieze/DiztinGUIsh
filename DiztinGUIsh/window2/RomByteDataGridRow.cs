@@ -177,8 +177,9 @@ namespace DiztinGUIsh.window2
             Data = d;
             ParentView = parentView;
 
-            if (rb != null)
-                rb.PropertyChanged += OnRomBytePropertyChanged;
+            // temp
+            /*if (rb != null)
+                rb.PropertyChanged += OnRomBytePropertyChanged;*/
         }
 
         private void OnRomBytePropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -217,12 +218,27 @@ namespace DiztinGUIsh.window2
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private static bool IsColumnEditable(string propertyName)
+        public static bool IsColumnEditable(string propertyName)
         {
-            return CheckRowAttribute((EditableAttribute a) => a?.AllowEdit ?? false, propertyName);
+            return TestAttribute((EditableAttribute attr) => attr?.AllowEdit ?? false, propertyName);
         }
 
-        private static TResult CheckRowAttribute<TAttribute, TResult>(
+        public static string GetColumnDisplayName(string propertyName)
+        {
+            return TestAttribute((DisplayNameAttribute attr) => attr?.DisplayName, propertyName);
+        }
+        
+        public static bool GetColumnIsReadOnly(string propertyName)
+        {
+            return TestAttribute((ReadOnlyAttribute attr) => attr?.IsReadOnly ?? false, propertyName);
+        }
+        
+        public static bool IsPropertyBrowsable(string propertyName)
+        {
+            return TestAttribute((BrowsableAttribute attr) => attr?.Browsable ?? true, propertyName);
+        }
+
+        private static TResult TestAttribute<TAttribute, TResult>(
             Func<TAttribute, TResult> getValueFn, string memberName)
             where TAttribute : Attribute
         {
