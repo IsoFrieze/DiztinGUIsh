@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using Diz.Core.util;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window2;
 
@@ -12,9 +12,11 @@ namespace DiztinGUIsh
         [STAThread]
         public static void Main(string[] args)
         {
-            // TODO: temp hack, removeme
-            args = args.Append(SampleRomHackProjectsController.SampleProjectName).ToArray();
-            // END HACK
+            // TEMP: Enable this
+            ProfilerDotTrace.Enabled = true;
+            // args = args.Append(SampleRomHackProjectsController.SampleProjectName).ToArray();
+            args = args.Append(@"D:\projects\cthack\src\rom\Chrono Trigger US.dizraw").ToArray();
+            // END TEMP
 
             var Args = new DizApplicationContext.DizApplicationArgs();
 
