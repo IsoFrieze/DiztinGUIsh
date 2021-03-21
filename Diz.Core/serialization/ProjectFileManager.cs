@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define PROFILING
+
+using System;
 using System.Diagnostics;
 using System.IO;
 using Diz.Core.model;
@@ -15,7 +17,7 @@ namespace Diz.Core.serialization
         protected override byte[] ReadFromOriginalRom(Project project)
         {
             string firstRomFileWeTried;
-            var nextFileToTry = firstRomFileWeTried = project.AttachedRomFilename;
+            var nextFileToTry = firstRomFileWeTried = project.AttachedRomFileFullPath;
             byte[] rom;
 
             // try to open a ROM that matches us, if not, ask the user until they give up
@@ -53,6 +55,9 @@ namespace Diz.Core.serialization
     {
         public (Project project, string warning) Open(string filename)
         {
+#if PROFILING
+            using var profilerSnapshot = new ProfilerDotTrace.CaptureSnapshot();
+#endif
             Trace.WriteLine("Opening Project START");
 
             var data = File.ReadAllBytes(filename);

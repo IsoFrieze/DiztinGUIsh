@@ -91,8 +91,8 @@ namespace DiztinGUIsh
 
             if (string.IsNullOrEmpty(fileOrFolderPath))
                 return false;
-
-            settings.FileOrFolderOutPath = fileOrFolderPath;
+            
+            settings.SetFileOrFolderOutputPathRelativeToDir(fileOrFolderPath, project.ProjectDirectory);
 
             return true;
         }

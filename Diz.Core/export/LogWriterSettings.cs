@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Diz.Core.model;
 using Diz.Core.util;
 
 namespace Diz.Core.export
@@ -24,7 +25,12 @@ namespace Diz.Core.export
         public string FileOrFolderOutPath
         {
             get => fileOrFolderOutPath;
-            set => fileOrFolderOutPath = Util.TryGetRelativePath(value, Environment.CurrentDirectory);
+            set => fileOrFolderOutPath = value;
+        }
+        
+        public void SetFileOrFolderOutputPathRelativeToDir(string fileOrFolderPath, string projectProjectDirectory)
+        {
+            FileOrFolderOutPath = Util.TryGetRelativePath(fileOrFolderPath, projectProjectDirectory);
         }
 
         public bool OutputToString;
