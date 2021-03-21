@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using Diz.Core.util;
-using DiztinGUIsh;
 using IX.Observable;
 
 namespace Diz.Core.model

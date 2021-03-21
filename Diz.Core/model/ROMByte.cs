@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Threading;
-using DiztinGUIsh;
 
 namespace Diz.Core.model
 {

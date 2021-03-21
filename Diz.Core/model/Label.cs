@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using DiztinGUIsh;
 using JetBrains.Annotations;
 
 namespace Diz.Core.model
