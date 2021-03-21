@@ -25,7 +25,7 @@ namespace DiztinGUIsh.window2
         }
 
         protected virtual Project ReadProject(string filename) => 
-            ProjectOpenerHandlerGenericHandler.OpenProjectWithGui(filename);
+            ProjectOpenerHandlerGenericHandler.OpenProjectWithGui(filename, showMessageBoxOnSuccess: false);
         
         // TODO: make this a list of last N projects opened
         // This property is intended to persist beyond application restart, so you can 

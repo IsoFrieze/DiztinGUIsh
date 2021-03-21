@@ -7,12 +7,15 @@ namespace DiztinGUIsh.controller
 {
     public class ProjectOpenerHandlerGenericHandler : IProjectOpenerHandler
     {
+        public bool MessageboxShowOnProjectOpenSuccess { get; init; }= true;
+        
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
             ProgressBarJob.RunAndWaitForCompletion;
 
         public void OnProjectOpenSuccess(string filename, Project project)
         {
-            MessageBox.Show("project file opened!");
+            if (MessageboxShowOnProjectOpenSuccess)
+                MessageBox.Show("project file opened!");
         }
 
         public void OnProjectOpenWarning(string warnings)
@@ -33,7 +36,13 @@ namespace DiztinGUIsh.controller
             );
         }
 
-        public static Project OpenProjectWithGui(string filename) => 
-            new ProjectOpenerGuiController { Handler = new ProjectOpenerHandlerGenericHandler() }.OpenProject(filename);
+        public static Project OpenProjectWithGui(string filename, bool showMessageBoxOnSuccess = true) => 
+            new ProjectOpenerGuiController
+            {
+                Handler = new ProjectOpenerHandlerGenericHandler
+                {
+                    MessageboxShowOnProjectOpenSuccess = showMessageBoxOnSuccess
+                }
+            }.OpenProject(filename);
     }
 }
