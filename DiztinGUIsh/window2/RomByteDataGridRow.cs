@@ -424,10 +424,10 @@ namespace DiztinGUIsh.window2
     //     col.Width = 200;
     // })]
     public static class RomByteDataGridRowFormatting {
-        public static readonly Font FontData = new Font("Consolas", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-        static readonly Font FontHuman = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+        public static readonly Font FontData = new("Consolas", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+        public static readonly Font FontHuman = new("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
 
-        private static Dictionary<string, Action<DataGridViewTextBoxColumn>> cellProperties = new()
+        private static readonly Dictionary<string, Action<DataGridViewTextBoxColumn>> CellProperties = new()
         {
             {
                 nameof(RomByteDataGridRow.Label), col =>
@@ -581,11 +581,11 @@ namespace DiztinGUIsh.window2
                         // WrapMode = DataGridViewTriState.False, // TODO: consider this?
                     };
                     col.MinimumWidth = 6;
-                    col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    // col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; // ULTRA EXPENSIVE, never use.
                 }
             },
         };
 
-        public static void ApplyFormatting(DataGridViewTextBoxColumn col) => cellProperties[col.DataPropertyName](col);
+        public static void ApplyFormatting(DataGridViewTextBoxColumn col) => CellProperties[col.DataPropertyName](col);
     }
 }

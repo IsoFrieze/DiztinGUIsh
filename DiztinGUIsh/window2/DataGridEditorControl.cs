@@ -120,8 +120,12 @@ namespace DiztinGUIsh.window2
                 Table.AllowUserToResizeRows = false;
                 Table.RowTemplate.Resizable = DataGridViewTriState.False;
                 Table.Visible = false;
-                
-                // THIS actually works, but, re-enabling it later is slow, so, rough
+                Table.ColumnHeadersVisible = false;
+
+                Table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+                Table.RowHeadersVisible = false;
+
+                // THIS actually works, but, re-enabling it later is slow, so..., rough
                 // Table.RowTemplate.Visible = false;
                 
                 GuiUtil.SendMessage(Table.Handle, GuiUtil.WM_SETREDRAW, false, 0);
@@ -131,13 +135,16 @@ namespace DiztinGUIsh.window2
 
             void Performance_EnableDataGridUpdating()
             {
+                //Table.AllowUserToResizeColumns = true;
+                //Table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
+                Table.Visible = true;
+                Table.RowHeadersVisible = true;
+                
+                GuiUtil.SendMessage(Table.Handle, GuiUtil.WM_SETREDRAW, true, 0);
                 Table.ResumeLayout();
                 ResumeLayout();
-                Table.AllowUserToResizeColumns = true;
-                Table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
-                GuiUtil.SendMessage(Table.Handle, GuiUtil.WM_SETREDRAW, true, 0);
+                
                 Table.Refresh();
-                Table.Visible = true;
             }
 
             Performance_DisableDataGridUpdating();
@@ -147,6 +154,14 @@ namespace DiztinGUIsh.window2
             // SetAllRowsVisibile();
 
             Performance_EnableDataGridUpdating();
+        }
+        
+        private void ClearTableData()
+        {
+            // reset data
+            cachedRows.Clear();
+            Table.RowCount = 0;
+            Table.Rows.Clear();
         }
 
         private void RecreateFromNewData()
@@ -162,29 +177,16 @@ namespace DiztinGUIsh.window2
             // Table.DataSource = dataGridView1BindingSource;
 
             RecreateColumns();
-
+            
             // perf: this is slow because it creates objects for each row in the table.
             // if we need further speedups, we should manage the rowcount to a small number
             // and do the paging ourselves.
-            Table.RowCount = Data?.GetRomSize() ?? 0;
-        }
-
-        private void ClearTableData()
-        {
-            // reset data
-            cachedRows.Clear();
-            Table.RowCount = 0;
-            Table.Rows.Clear();
-        }
-
-        private void SetAllRowsVisibile()
-        {
-            // perf: re-enable row visibiltiy. we do this at the end to
-            // prevent each row from updating as they're added.
-            for (var i = 0; i < Table.Rows.Count; ++i)
-            {
-                Table.Rows[i].Visible = true;
-            }
+            var trueSize = Data?.GetRomSize() ?? 0;
+            
+            // obviously this works great
+            // var fakeSize = 15; // hack.
+            // Table.RowCount = fakeSize;
+            Table.RowCount = trueSize;
         }
 
         public void ForceTableRedraw() => Table.Invalidate();
@@ -330,6 +332,7 @@ namespace DiztinGUIsh.window2
         private void RecreateColumns()
         {
             Table.Columns.Clear();
+
             foreach (var property in typeof(RomByteDataGridRow).GetProperties())
             {
                 if (!RomByteDataGridRow.IsPropertyBrowsable(property.Name))
@@ -352,6 +355,8 @@ namespace DiztinGUIsh.window2
 
             foreach (DataGridViewTextBoxColumn col in Table.Columns)
             {
+                // temp disable, see if it helps perf.
+                // if so, check the Width and other properties in here.
                 RomByteDataGridRowFormatting.ApplyFormatting(col);
             }
         }
