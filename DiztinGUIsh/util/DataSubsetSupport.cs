@@ -19,35 +19,6 @@ namespace DiztinGUIsh.util
         {
             public RomByteDataGridRow row;
             public int ageScore; // 0 = newer, higher = older
-            public int cachedLargeIndex;
-
-            public int GetDistanceScore(DataSubset dataSubset)
-            {
-                return GetDistanceScore(dataSubset.StartingRowLargeIndex, dataSubset.RowCount);
-            }
-
-            public int GetDistanceScore(int viewLargeStartIndex, int viewCount)
-            {
-                var distanceFromStart = Math.Abs(cachedLargeIndex - viewLargeStartIndex);
-                var distanceFromEnd = Math.Abs(cachedLargeIndex - viewLargeStartIndex + viewCount);
-
-                return Math.Min(distanceFromStart, distanceFromEnd);
-            }
-
-            public bool IsOlderThan(Entry value) => ageScore > value.ageScore;
-
-            public bool IsDistanceGreaterThan(DataSubset dataSubset, int otherDistanceScore)
-            {
-                return IsDistanceGreaterThan(dataSubset.StartingRowLargeIndex, dataSubset.RowCount, otherDistanceScore);
-            }
-
-            public bool IsDistanceGreaterThan(int viewLargeStartIndex, int viewCount, int otherDistanceScore)
-            {
-                var myDistanceScore =
-                    GetDistanceScore(viewLargeStartIndex, viewCount);
-
-                return myDistanceScore > otherDistanceScore;
-            }
         }
 
         // map large data index offset to a row
@@ -62,17 +33,16 @@ namespace DiztinGUIsh.util
         // tune as needed. if user can see about 20 rows at a time, we'll keep around 10x that in memory.
         // if cached rows are in memory, it'll make small scrolling (like bouncing around near the same
         // couple of rows) already cached
-        public int TargetCachedMultiplier { get; init; } = 10;
+        //
+        // this can be jacked WAY up with little effect except using more memory.
+        // hike it if you need more perf.
+        public int TargetCachedMultiplier { get; init; } = 15;
         
-        public int TargetCachedRows
-        {
-            get => targetCachedRows;
-            protected set => targetCachedRows = value;
-        }
+        public int TargetCachedRows { get; protected set; }
 
         // we'll allow going a certain percentage over the target before cleaning up.
         // that way we're only cleaning up in chunks and not in individual rows.
-        public int FuzzThreshold => (int) (TargetCachedRows * 0.1f);
+        public int FuzzThreshold => (int)(TargetCachedRows / (float)TargetCachedMultiplier);
 
         public override void OnBigWindowChangeStart(DataSubset subset)
         {
@@ -90,7 +60,7 @@ namespace DiztinGUIsh.util
         public override RomByteDataGridRow GetOrCreateRow(int largeOffset, DataSubset subset)
         {
             var entry = GetOrCreateRowEntry(largeOffset, subset);
-            entry.ageScore = 0; // any new rows always aged at zero
+            entry.ageScore = 0; // any recent rows will always be aged at zero
             return entry.row;
         }
 
@@ -105,7 +75,6 @@ namespace DiztinGUIsh.util
             entry = new Entry()
             {
                 row = new RomByteDataGridRow(dataRomByte, subset.Data, View),
-                cachedLargeIndex = largeIndex,
             };
 
             cachedRows[largeIndex] = entry;
@@ -113,12 +82,11 @@ namespace DiztinGUIsh.util
         }
 
         private readonly List<Entry> tmpEntriesForDeletion = new();
-        private int targetCachedRows;
 
         // this is a hint that big changes just finished up (like recreating the rows due to a scroll),
         // so it's likely a good time to kick irrelevant rows out of the cache.
         //
-        // we could do a bunch of clever stuff, I'm just going to a really simple distance check
+        // we could do a bunch of clever stuff, I'm just going to a really simple age check
         // and kick out the oldest rows (rows that haven't been in any view for a while)
         // which are furthest away from the current window
         public override void OnBigWindowChangeFinished(DataSubset subset)
@@ -129,52 +97,16 @@ namespace DiztinGUIsh.util
             // it's OK to go over so that we're not constantly dumping cache with every small change.
             if (cachedRows.Count <= TargetCachedRows + FuzzThreshold)
                 return;
-
-            MarkOldestAndFarthestItemsForDeletion();
-            DeleteAnyMarkedItems();
             
-            void MarkOldestAndFarthestItemsForDeletion()
+            // we're over our target, so start dropping the oldest least useful stuff from the cache
+            var oldestDeletionCandidates = (from kvp in cachedRows
+                where kvp.Value.ageScore != 0
+                orderby kvp.Value.ageScore descending
+                select kvp).Take(FuzzThreshold).ToList();
+
+            foreach (var entry in oldestDeletionCandidates)
             {
-                var targetDeletionCount = FuzzThreshold;
-
-                // time to clear out rows til we're under target
-                var oldestDeletionCandidates = from kvp in cachedRows
-                    where kvp.Value.ageScore != 0
-                    orderby kvp.Value.ageScore
-                    select kvp;
-
-                foreach (var (_, value) in oldestDeletionCandidates)
-                {
-                    var myDistanceScore =
-                        value.GetDistanceScore(subset);
-                    
-                    if (tmpEntriesForDeletion.Count <= targetDeletionCount)
-                    {
-                        tmpEntriesForDeletion.Add(value);
-                        continue;
-                    }
-                    
-                    for (var iDelete = 0; iDelete < tmpEntriesForDeletion.Count; iDelete++)
-                    {
-                        var theyAreOlder = tmpEntriesForDeletion[iDelete].IsOlderThan(value);
-                        var theyAreFurther = tmpEntriesForDeletion[iDelete].IsDistanceGreaterThan(subset, myDistanceScore);
-
-                        // could do something fancier here, but, this is probably fine
-                        var weAreBetter = theyAreFurther || theyAreOlder; 
-                        if (weAreBetter)
-                            continue;
-
-                        tmpEntriesForDeletion[iDelete] = value;
-                    }
-                }
-            }
-            
-            void DeleteAnyMarkedItems()
-            {
-                foreach (var itemToDelete in tmpEntriesForDeletion) 
-                    cachedRows.Remove(itemToDelete.cachedLargeIndex);
-
-                tmpEntriesForDeletion.Clear();
+                cachedRows.Remove(entry.Key);
             }
         }
     }
