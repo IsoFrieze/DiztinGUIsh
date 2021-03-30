@@ -26,12 +26,12 @@ namespace DiztinGUIsh.window2
         }
     }
 
-    public class RomByteDataBindingController : ByteViewerDataBindingGridController<RomByteDataGridRow>
+    public class RomByteDataBindingController : ByteViewerDataBindingGridController<RomByteData>
     {
-        protected override IEnumerable<RomByteDataGridRow> GetByteItems()
+        protected override IEnumerable<RomByteData> GetByteItems()
         {
-            return Data.RomBytes.Select(romByte =>
-                new RomByteDataGridRow(romByte, Data, ViewGrid));
+            // probably delete this now.
+            return Data.RomBytes;  //.Select(romByte => new RomByteDataGridRow(romByte, Data, ViewGrid));
         }
 
         #region Filters

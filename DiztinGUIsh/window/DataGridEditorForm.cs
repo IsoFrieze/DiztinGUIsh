@@ -71,7 +71,7 @@ namespace DiztinGUIsh.window
                 OpenLastProject();
         }
 
-        private void DataGridEditorControl1OnSelectedOffsetChanged(object sender, IBytesGridViewer<RomByteDataGridRow>.SelectedOffsetChangedEventArgs e)
+        private void DataGridEditorControl1OnSelectedOffsetChanged(object sender, IBytesGridViewer<RomByteData>.SelectedOffsetChangedEventArgs e)
         {
             // called when the user clicks a different cell in the child data grid
             MainFormController.OnUserChangedSelection(e.Row);

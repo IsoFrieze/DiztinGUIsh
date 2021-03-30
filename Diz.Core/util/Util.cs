@@ -10,6 +10,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using Diz.Core.model;
+using IX.StandardExtensions;
 
 namespace Diz.Core.util
 {
@@ -280,8 +281,21 @@ namespace Diz.Core.util
             Process.Start(info);
         }
 
-        // returns a value >= min, and < max (so, pass in your array's length here)
-        public static int ClampIndex(int i, int size) => ClampIndex(i, 0, size);
-        public static int ClampIndex(int i, int min, int max) => i >= max ? max - 1 : i < min ? 0 : i;
+        // clamp index so index >= 0 and index < size
+        // for arrays
+        public static int ClampIndex(int index, int size) => ClampIndex(index, 0, size - 1);
+        
+        // clamp index so index >= minIndex and index <= maxIndex
+        public static int ClampIndex(int index, int minIndex, int maxIndex)
+        {
+            if (minIndex < 0 || minIndex > maxIndex)
+                throw new ArgumentNotInRangeException("ClampIndex params not in range");
+            
+            return index > maxIndex
+                ? maxIndex
+                : index < minIndex
+                    ? 0
+                    : index;
+        }
     }
 }

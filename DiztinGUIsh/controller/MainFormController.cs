@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
@@ -457,10 +456,10 @@ namespace DiztinGUIsh.controller
             SelectedSnesOffset = snesOffset;
         }
 
-        public void OnUserChangedSelection(RomByteDataGridRow newSelection)
+        public void OnUserChangedSelection(RomByteData newSelection)
         {
             // when user clicks on a new row in the child data grid editor, this fires
-            SelectedSnesOffset = newSelection.RomByte.Offset;
+            SelectedSnesOffset = newSelection.Offset;
         }
 
         private bool IsOffsetInRange(int offset)

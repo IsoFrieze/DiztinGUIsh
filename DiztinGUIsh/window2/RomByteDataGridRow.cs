@@ -166,12 +166,12 @@ namespace DiztinGUIsh.window2
 
         [Browsable(false)] public RomByteData RomByte { get; }
         [Browsable(false)] public Data Data { get; }
-        [Browsable(false)] public IBytesGridViewer<RomByteDataGridRow> ParentView { get; }
+        [Browsable(false)] public IBytesGridViewer<RomByteData> ParentView { get; }
         [Browsable(false)] private Util.NumberBase NumberBase => ParentView.NumberBaseToShow;
 
         [Browsable(false)] public event PropertyChangedEventHandler PropertyChanged;
 
-        public RomByteDataGridRow(RomByteData rb, Data d, IBytesGridViewer<RomByteDataGridRow> parentView)
+        public RomByteDataGridRow(RomByteData rb, Data d, IBytesGridViewer<RomByteData> parentView)
         {
             RomByte = rb;
             Data = d;
@@ -401,9 +401,9 @@ namespace DiztinGUIsh.window2
             var matchingIa = colPropName switch
             {
                 nameof(Offset) => 
-                    Data.IsMatchingIntermediateAddress(selectedRomByteRow.RomByte.Offset, RomByte.Offset),
+                    Data.IsMatchingIntermediateAddress(selectedRomByteRow.Offset, RomByte.Offset),
                 nameof(IA) => 
-                    Data.IsMatchingIntermediateAddress(RomByte.Offset, selectedRomByteRow.RomByte.Offset),
+                    Data.IsMatchingIntermediateAddress(RomByte.Offset, selectedRomByteRow.Offset),
                 _ => false
             };
 
