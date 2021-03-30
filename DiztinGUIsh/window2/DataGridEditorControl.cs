@@ -207,10 +207,7 @@ namespace DiztinGUIsh.window2
 
         #region RowColumnAccess
 
-        public RomByteData SelectedRomByteRow =>
-            Table.CurrentRow == null
-                ? null
-                : GetValueAtRowIndex(Table.CurrentRow.Index)?.RomByte;
+        public RomByteData SelectedRomByte => DataController?.Rows?.SelectedRow?.RomByte;
 
         private RomByteDataGridRow GetValueAtRowIndex(int row)
         {
@@ -247,8 +244,8 @@ namespace DiztinGUIsh.window2
         private int GetRowIndexFromLargeIndex(int largeIndex) => 
             DataController?.Rows?.GetRowIndexFromLargeOffset(largeIndex) ?? -1;
 
-        private int SelectedRow => Table.CurrentCell.RowIndex;
-        private int SelectedCol => Table.CurrentCell.ColumnIndex;
+        private int SelectedTableRow => Table.CurrentCell.RowIndex;
+        private int SelectedTableCol => Table.CurrentCell.ColumnIndex;
 
         // Corresponds to the name of properties in RomByteData,
         // NOT what you see on the screen as the column heading text
@@ -262,16 +259,16 @@ namespace DiztinGUIsh.window2
             colIndex >= 0 && colIndex < Table.Columns.Count ? Table.Columns[colIndex] : null;
 
         private void SelectColumn(int columnIndex) =>
-            SelectCell(SelectedRow, columnIndex);
+            SelectCell(SelectedTableRow, columnIndex);
 
         private void SelectColumn(string columnName) =>
-            SelectCell(SelectedRow, columnName);
+            SelectCell(SelectedTableRow, columnName);
 
         private void SelectColumnClamped(int adjustBy) =>
-            SelectColumn(Util.ClampIndex(SelectedCol + adjustBy, Table.ColumnCount));
+            SelectColumn(Util.ClampIndex(SelectedTableCol + adjustBy, Table.ColumnCount));
 
         public void SelectRow(int rowIndex) =>
-            SelectCell(rowIndex, SelectedCol);
+            SelectCell(rowIndex, SelectedTableCol);
 
         private void SelectCell(int row, int col) => 
             SelectCell(Table.Rows[row].Cells[col]);
@@ -285,7 +282,7 @@ namespace DiztinGUIsh.window2
             try
             {
                 // important so we don't accidentally recurse during updates
-                if (cellToSelect.RowIndex == SelectedRow)
+                if (cellToSelect.RowIndex == SelectedTableRow)
                     return;
                 
                 // note: complex. dispatches lots of other events on set
@@ -410,7 +407,7 @@ namespace DiztinGUIsh.window2
 
         private void TableOnCurrentCellChanged(object sender, EventArgs e)
         {
-            var selectedRomByteRow = SelectedRomByteRow;
+            var selectedRomByteRow = SelectedRomByte;
             if (selectedRomByteRow == null)
                 return;
 
@@ -418,7 +415,7 @@ namespace DiztinGUIsh.window2
                 new IBytesGridViewer<RomByteData>.SelectedOffsetChangedEventArgs
                 {
                     Row = selectedRomByteRow,
-                    RowIndex = SelectedRow,
+                    RowIndex = SelectedTableRow,
                 });
         }
 

@@ -394,7 +394,7 @@ namespace DiztinGUIsh.window2
 
         private void SetStyleForIndirectAddress(string colPropName, DataGridViewCellStyle style)
         {
-            var selectedRomByteRow = ParentView.SelectedRomByteRow;
+            var selectedRomByteRow = ParentView.SelectedRomByte;
             if (selectedRomByteRow == null)
                 return;
 
