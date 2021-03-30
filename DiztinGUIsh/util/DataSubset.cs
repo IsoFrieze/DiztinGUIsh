@@ -66,6 +66,9 @@ namespace DiztinGUIsh.util
                 }
             };
         }
+
+        public void SelectRow(int rowIndex) => 
+            SelectedLargeIndex = GetLargeOffsetFromRowOffset(rowIndex);
     }
 
     public class DataSubset
@@ -169,10 +172,7 @@ namespace DiztinGUIsh.util
             CreateOutputRows();
         }
 
-        public void Invalidate()
-        {
-            cachedOutputRows.Clear();
-        }
+        public void Invalidate() => cachedOutputRows.Clear();
 
         protected RomByteDataGridRow GetOrCreateRow(int largeOffset) =>
             RowLoader.GetOrCreateRow(largeOffset, this);
@@ -199,14 +199,9 @@ namespace DiztinGUIsh.util
                 ? -1
                 : rowOffset + startingRowIndex;
 
-        public bool TryGetValue(int row, out RomByteDataGridRow rowObject)
-        {
-            rowObject = null;
-            if (!IsRowOffsetValid(row))
-                return false;
-
-            rowObject = GetOrCreateRowAtRow(row);
-            return true;
-        }
+        public RomByteDataGridRow TryGetRow(int row) => 
+            !IsRowOffsetValid(row) 
+                ? null 
+                : GetOrCreateRowAtRow(row);
     }
 }
