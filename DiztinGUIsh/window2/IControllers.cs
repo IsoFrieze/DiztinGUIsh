@@ -2,6 +2,7 @@
 using Diz.Core.export;
 using Diz.Core.model;
 using DiztinGUIsh.controller;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window2
 {
@@ -27,7 +28,8 @@ namespace DiztinGUIsh.window2
     
     public interface IBytesGridViewerDataController<TByteItem> : IDataController
     {
-        IBytesGridViewer<TByteItem> ViewGrid { get; set; }
+        IBytesGridViewer<TByteItem> ViewGrid { get; set; } 
+        DataSubsetWithSelection Rows { get; }
     }
     
     public interface IProjectController

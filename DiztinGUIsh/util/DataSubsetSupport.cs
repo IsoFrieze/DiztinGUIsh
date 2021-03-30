@@ -23,7 +23,7 @@ namespace DiztinGUIsh.util
 
             public int GetDistanceScore(DataSubset dataSubset)
             {
-                return GetDistanceScore(dataSubset.StartingRowIndex, dataSubset.RowCount);
+                return GetDistanceScore(dataSubset.StartingRowLargeIndex, dataSubset.RowCount);
             }
 
             public int GetDistanceScore(int viewLargeStartIndex, int viewCount)
@@ -38,7 +38,7 @@ namespace DiztinGUIsh.util
 
             public bool IsDistanceGreaterThan(DataSubset dataSubset, int otherDistanceScore)
             {
-                return IsDistanceGreaterThan(dataSubset.StartingRowIndex, dataSubset.RowCount, otherDistanceScore);
+                return IsDistanceGreaterThan(dataSubset.StartingRowLargeIndex, dataSubset.RowCount, otherDistanceScore);
             }
 
             public bool IsDistanceGreaterThan(int viewLargeStartIndex, int viewCount, int otherDistanceScore)

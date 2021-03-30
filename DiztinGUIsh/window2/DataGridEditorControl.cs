@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using Diz.Core.model;
@@ -11,30 +13,37 @@ using UserControl = System.Windows.Forms.UserControl;
 
 // eventually, see if we can get this class to not directly contain references to "RomByteDataGridRow"
 // so that it can be generically used to format whatever data we want to throw at it
+//
+// Keep ".Data" out of here if we can.  this class shouldn't know anything about Roms or data or whatever.
 
 namespace DiztinGUIsh.window2
 {
     public partial class DataGridEditorControl : UserControl, IBytesGridViewer<RomByteData>
     {
         #region Properties
-
-        public Data Data => DataController?.Data;
+        
         public Util.NumberBase NumberBaseToShow { get; set; } = Util.NumberBase.Hexadecimal;
 
-        private IDataController dataController;
+        private IBytesGridViewerDataController<RomByteData> dataController;
 
-        public IDataController DataController
+        public IBytesGridViewerDataController<RomByteData> DataController
         {
             get => dataController;
             set
             {
+                if (DataController?.Rows != null)
+                    DataController.Rows.PropertyChanged -= ControllerRowsOnPropertyChanged;
+                
                 dataController = value;
+                
+                if (DataController?.Rows != null)
+                    DataController.Rows.PropertyChanged += ControllerRowsOnPropertyChanged;
+                
                 RecreateTableAndData();
             }
         }
 
         private List<RomByteData> dataSource;
-
         public List<RomByteData> DataSource
         {
             get => dataSource;
@@ -59,7 +68,7 @@ namespace DiztinGUIsh.window2
         {
             // stuff that should probably be in the designer, but we're migrating some old code
 
-            // note: enabling is REALLY EXPENSIVE
+            // note: enabling is REALLY EXPENSIVE if we have lots of rows.
             Table.AutoGenerateColumns = false;
 
             var defaultCellStyle = new DataGridViewCellStyle
@@ -93,7 +102,7 @@ namespace DiztinGUIsh.window2
 
         #region DataBinding
 
-        private bool IsDataValid() => Data?.GetRomSize() > 0 && dataSource?.Count > 0;
+        private bool IsDataValid() => dataSource?.Count > 0;
 
         private void RecreateTableAndData()
         {
@@ -107,23 +116,23 @@ namespace DiztinGUIsh.window2
             // making any major changes.
             // https://10tec.com/articles/why-datagridview-slow.aspx
 
-            void Performance_DisableDataGridUpdating()
+            /*void Performance_DisableDataGridUpdating()
             {
                 // perf: don't let any kind of resizing happen during loading, slow.
-                /*Table.AutoGenerateColumns = false;
-                Table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-                Table.RowHeadersVisible = false;
-                Table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-                Table.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
-                Table.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-                Table.AllowUserToResizeColumns = false;
-                Table.AllowUserToResizeRows = false;
-                Table.RowTemplate.Resizable = DataGridViewTriState.False;
-                Table.Visible = false;
-                Table.ColumnHeadersVisible = false;
-
-                Table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-                Table.RowHeadersVisible = false;*/
+                // Table.AutoGenerateColumns = false;
+                // Table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+                // Table.RowHeadersVisible = false;
+                // Table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+                // Table.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+                // Table.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+                // Table.AllowUserToResizeColumns = false;
+                // Table.AllowUserToResizeRows = false;
+                // Table.RowTemplate.Resizable = DataGridViewTriState.False;
+                // Table.Visible = false;
+                // Table.ColumnHeadersVisible = false;
+                //
+                // Table.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+                // Table.RowHeadersVisible = false;
 
                 Table.Visible = false;
                 GuiUtil.SendMessage(Table.Handle, GuiUtil.WM_SETREDRAW, false, 0);
@@ -143,47 +152,54 @@ namespace DiztinGUIsh.window2
                 ResumeLayout();
                 
                 Table.Refresh();
+            }*/
+
+            // Performance_DisableDataGridUpdating(); // may not care anymore.
+
+            Table.RowCount = 0;
+
+            if (DataController != null && dataSource != null)
+            {
+                RecreateColumns();
+                RecreateRows();
             }
 
-            Performance_DisableDataGridUpdating();
-
-            ClearTableData();
-            RecreateFromNewData();
-
-            Performance_EnableDataGridUpdating();
-        }
-        
-        private void ClearTableData()
-        {
-            cachedRows = null;
-            Table.RowCount = 0;
+            // Performance_EnableDataGridUpdating();  // may not care anymore.
         }
 
-        private void RecreateFromNewData()
+        private void RecreateRows()
         {
-            if (DataController == null || dataSource == null) 
-                return;
+            Table.RowCount = DataController?.Rows?.RowCount ?? 0;
+        }
 
-            // databinding approach. awesome, but it's too slow for us.
-            /*var dataGridView1BindingSource = new BindingSource
-            {
-                DataSource = DataSource
-            };
-            Table.DataSource = dataGridView1BindingSource;*/
-
-            RecreateColumns();
-
-            cachedRows = DataSubsetWithSelection.Create(Data, dataSource, this);
-            cachedRows.Data = Data;
-            cachedRows.RomBytes = dataSource;
-            cachedRows.SetViewTo(0, NumRowsToDisplay);
-            cachedRows.SelectedLargeIndex = 0;
+        private void ControllerRowsOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            bool rowsChanged = false; 
             
-            Table.RowCount = cachedRows.RowCount;
+            switch (e.PropertyName)
+            {
+                case nameof(DataSubsetWithSelection.SelectedLargeIndex):
+                    SelectRow(DataController.Rows.SelectedRowIndex);
+                    break;
+                
+                case nameof(DataSubsetWithSelection.StartingRowLargeIndex):
+                    rowsChanged = true;
+                    break;
+
+                case nameof(DataSubsetWithSelection.RowCount): 
+                    rowsChanged = true;
+                    break;
+            }
+
+            if (rowsChanged)
+            {
+                RecreateTableAndData();
+            }
         }
         
         // TODO: don't hardcode table size. calculate from width/height.
-        public const int NumRowsToDisplay = 20;
+        // this is the source of this data, and it gets passed upwards
+        public int TargetNumberOfRowsToShow { get; } = 20;
 
         public void ForceTableRedraw() => Table.Invalidate();
 
@@ -194,32 +210,42 @@ namespace DiztinGUIsh.window2
         public RomByteData SelectedRomByteRow =>
             Table.CurrentRow == null
                 ? null
-                : GetRowValue(Table.CurrentRow.Index)?.RomByte;
+                : GetValueAtRowIndex(Table.CurrentRow.Index)?.RomByte;
 
-        private RomByteDataGridRow GetRowValue(int row) => 
-            cachedRows?.TryGetRow(row);
+        private RomByteDataGridRow GetValueAtRowIndex(int row)
+        {
+            var outputRows = DataController?.Rows?.OutputRows;
+            if (outputRows == null || outputRows.Count == 0 || row < 0 || row >= outputRows.Count)
+                throw new IndexOutOfRangeException("GetRowValue() row out of range, or no cached outputrows ready");
 
-        public int SelectedRowRomOffset => SelectedRomByteRow?.Offset ?? -1;
+            return outputRows[row];
+        }
 
-        private void SelectRowBySnesOffset(int newSnesOffsetToSelect)
+        // this should go somewhere else, outside this grid class.
+        //
+        // THIS IS DIFFERENT THAN A "LARGE INDEX"
+        // "rom offset" is an index into .Data
+        // "large offset" is an index into .dataSource
+        // public int SelectedRowRomOffset => SelectedRomByteRow?.Offset ?? -1;
+        /*private void SelectRowBySnesOffset(int newSnesOffsetToSelect)
         {
             // right now, rows in table are 1:1 with RomBytes.
             // in the future, we might cache a window, and this function will need to be modified to deal with that.
 
             var romOffset = Data.ConvertSnesToPc(newSnesOffsetToSelect);
             SelectRowByRomOffset(romOffset);
-        }
+        }*/
 
-        private void SelectRowByRomOffset(int romOffset)
+        private void SelectRowByLargeIndex(int largeIndex)
         {
-            if (romOffset < 0 || romOffset >= Data.GetRomSize())
-                return;
+            if (!IsLargeIndexValid(largeIndex))
+                throw new Exception("LargeIndex out of range");
 
-            SelectRow(GetRowOffsetFromLargeOffset(romOffset));
+            DataController.Rows.SelectedLargeIndex = largeIndex;
         }
-
-        private int GetRowOffsetFromLargeOffset(int romOffset) => 
-            cachedRows?.GetRowOffsetFromLargeOffset(romOffset) ?? -1;
+        
+        private int GetRowIndexFromLargeIndex(int largeIndex) => 
+            DataController?.Rows?.GetRowIndexFromLargeOffset(largeIndex) ?? -1;
 
         private int SelectedRow => Table.CurrentCell.RowIndex;
         private int SelectedCol => Table.CurrentCell.ColumnIndex;
@@ -244,11 +270,12 @@ namespace DiztinGUIsh.window2
         private void SelectColumnClamped(int adjustBy) =>
             SelectColumn(Util.ClampIndex(SelectedCol + adjustBy, Table.ColumnCount));
 
-        private void SelectRow(int rowIndex) =>
+        public void SelectRow(int rowIndex) =>
             SelectCell(rowIndex, SelectedCol);
 
         private void SelectCell(int row, int col) => 
             SelectCell(Table.Rows[row].Cells[col]);
+        
         private void SelectCell(int row, string columnName) => 
             SelectCell(Table.Rows[row].Cells[columnName]);
 
@@ -257,9 +284,13 @@ namespace DiztinGUIsh.window2
             DizUIGridTrace.Log.SelectCell_Start();
             try
             {
-                cachedRows.SelectRow(cellToSelect.RowIndex);
-                Table.CurrentCell = cellToSelect;
+                // important so we don't accidentally recurse during updates
+                if (cellToSelect.RowIndex == SelectedRow)
+                    return;
                 
+                // note: complex. dispatches lots of other events on set
+                Table.CurrentCell = cellToSelect;
+
                 ForceTableRedraw();
             }
             finally
@@ -312,7 +343,7 @@ namespace DiztinGUIsh.window2
                 if (!valid)
                     return;
 
-                var romByteAtRow = GetRowValue(e.RowIndex);
+                var romByteAtRow = GetValueAtRowIndex(e.RowIndex);
                 var colHeaderDataProperty = GetColumnHeaderDataProperty(e);
 
                 if (romByteAtRow?.RomByte == null || string.IsNullOrEmpty(colHeaderDataProperty))
@@ -384,7 +415,11 @@ namespace DiztinGUIsh.window2
                 return;
 
             SelectedOffsetChanged?.Invoke(this,
-                new IBytesGridViewer<RomByteData>.SelectedOffsetChangedEventArgs {Row = selectedRomByteRow});
+                new IBytesGridViewer<RomByteData>.SelectedOffsetChangedEventArgs
+                {
+                    Row = selectedRomByteRow,
+                    RowIndex = SelectedRow,
+                });
         }
 
         private void BeginEditingSelectedRowProperty(string propertyName)
@@ -393,29 +428,31 @@ namespace DiztinGUIsh.window2
             Table.BeginEdit(true);
         }
 
-        public void AdjustSelectedOffsetByDelta(int delta)
+        public void AdjustSelectedLargeIndexByDelta(int delta)
         {
-            var newRomOffset = CalcNewRomOffsetAdjustByDelta(delta);
-            SelectRowByRomOffset(newRomOffset);
+            var newLargeIndex = CalcNewLargeIndexAdjustByDelta(delta);
+            SelectRowByLargeIndex(newLargeIndex);
         }
 
         private void AdjustSelectedOffsetByKeyCode(Keys keyCode)
         {
-            var newRomOffset = CalcNewRomOffsetFromKeyCode(keyCode);
-            SelectRowByRomOffset(newRomOffset);
+            var newLargeIndex = CalcNewLargeIndexFromKeyCode(keyCode);
+            SelectRowByLargeIndex(newLargeIndex);
         }
 
-        private int CalcNewRomOffsetFromKeyCode(Keys keyCode)
+        private int CalcNewLargeIndexFromKeyCode(Keys keyCode)
         {
             var delta = GetOffsetDeltaFromKeycode(keyCode);
-            return CalcNewRomOffsetAdjustByDelta(delta);
+            return CalcNewLargeIndexAdjustByDelta(delta);
         }
 
-        private int CalcNewRomOffsetAdjustByDelta(int delta) =>
-            ClampRomOffsetToDataBounds(SelectedRowRomOffset + delta);
+        public int SelectedLargeIndex => DataController.Rows.SelectedLargeIndex; 
 
-        private int ClampRomOffsetToDataBounds(int offset) =>
-            Util.ClampIndex(offset, Data.GetRomSize());
+        private int CalcNewLargeIndexAdjustByDelta(int delta) =>
+            ClampLargeIndexToDataBounds(SelectedLargeIndex + delta);
+
+        private int ClampLargeIndexToDataBounds(int largeIndex) =>
+            Util.ClampIndex(largeIndex, dataSource.Count);
 
         #endregion
 
@@ -463,22 +500,19 @@ namespace DiztinGUIsh.window2
             ForceTableRedraw();
         }
 
-        // stores just the current Rom bytes in view (subset of larger data source)
-        private DataSubsetWithSelection cachedRows;
-
-        private int GetRomAddressAtRow(int largeIndex) => 
-            cachedRows?.GetRowOffsetFromLargeOffset(largeIndex) ?? -1;
+        private bool IsLargeIndexValid(int largeIndex) => 
+            dataSource != null && largeIndex >= 0 && largeIndex < dataSource.Count;
 
         private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
             DizUIGridTrace.Log.CellValueNeeded_Start();
             try
             {
-                var romOffset = GetRomAddressAtRow(e.RowIndex);
-                if (Data == null || romOffset >= Data.GetRomSize())
+                var obj = CalculateCellValueForRowIndex(e.RowIndex, e.ColumnIndex);
+                if (obj == null)
                     return;
-
-                e.Value = CalculateCellValueFor(romOffset, e.ColumnIndex);
+                
+                e.Value = obj;
             }
             finally
             {
@@ -486,12 +520,25 @@ namespace DiztinGUIsh.window2
             }
         }
 
-        private object CalculateCellValueFor(int romOffset, int colIndex)
+        private object CalculateCellValueForLargeIndex(int largeIndex, int colIndex)
         {
-            var rowOffset = GetRowOffsetFromLargeOffset(romOffset);
-            var romByteDataGridRow = GetRowValue(rowOffset);
+            var rowIndex = GetRowIndexFromLargeIndex(largeIndex);
+            return rowIndex == -1 
+                ? null 
+                : CalculateCellValueForRowIndex(rowIndex, colIndex);
+        }
+
+        private object CalculateCellValueForRowIndex(int rowIndex, int colIndex)
+        {
+            if (!IsValidRowIndex(rowIndex))
+                throw new ArgumentOutOfRangeException(nameof(rowIndex));
+
+            var romByteDataGridRow = GetValueAtRowIndex(rowIndex);
             return GetPropertyAtColumn(romByteDataGridRow, colIndex);
         }
+
+        private bool IsValidRowIndex(int rowIndex) => 
+            rowIndex >= 0 && rowIndex < DataController?.Rows?.RowCount;
 
         private object GetPropertyAtColumn(RomByteDataGridRow romByteGridRow, int colIndex)
         {
@@ -508,7 +555,7 @@ namespace DiztinGUIsh.window2
 
         private void table_CellValuePushed(object sender, DataGridViewCellValueEventArgs e)
         {
-            var romByteDataGridRow = GetRowValue(e.RowIndex);
+            var romByteDataGridRow = GetValueAtRowIndex(e.RowIndex);
             if (romByteDataGridRow == null)
                 return;
 
