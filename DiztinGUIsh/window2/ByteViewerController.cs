@@ -7,12 +7,10 @@ using Diz.Core.model;
 using DiztinGUIsh.util;
 using JetBrains.Annotations;
 
-// things to think about when the dust settles:
-// 1) get rid of BindingListView? [which just has the nice filters and that's about it] and stick with BindingSource?
-// 2) TODO: need to catch notifychanged from labels and comments or else updates won't propagate
-
-// TODO: after refactoring, this class hierarchy is shaking out to be a little weird.
-// when the dust settles, think about restructuring and simplifying all this
+// this class and structure is a mess because it was just enough refactoring to 
+// get a lot of this logic out of the implementation classes.  it needs further iteration and simplification
+//
+// 1) TODO: need to catch notifychanged from labels and comments or else updates won't propagate
 
 namespace DiztinGUIsh.window2
 {
@@ -29,7 +27,8 @@ namespace DiztinGUIsh.window2
         }
     }
 
-    public class RomByteDataBindingController : ByteViewerDataBindingGridController<RomByteData>
+    public class RomByteDataBindingController : 
+        ByteViewerDataBindingGridController<RomByteDataGridRow, RomByteData>
     {
         protected override IEnumerable<RomByteData> GetByteItems()
         {
@@ -72,27 +71,28 @@ namespace DiztinGUIsh.window2
     
     // -----------------------------
     
-    public abstract class ByteViewerDataBindingGridController<TByteItem> : 
+    public abstract class ByteViewerDataBindingGridController<TRow, TItem> : 
         DataBindingController, 
-        IBytesGridViewerDataController<TByteItem>,
+        IBytesGridViewerDataController<TRow, TItem>,
         INotifyPropertyChangedExt
     
-        // hack for now.
-        // TODO: remove this constraint by refactoring DataSubSet to be generic
-        where TByteItem : RomByteData, new()
+        // TODO: eventually, we should try and get rid of "RomByteData" here to make this more generic.
+        where TItem : RomByteData
+        
+        where TRow : class, IGridRow<TItem>
     {
-        private DataSubsetWithSelection rows;
+        private DataSubsetWithSelection<TRow, TItem> dataSubset;
 
         // stores just the current Rom bytes in view (subset of larger data source)
-        public DataSubsetWithSelection Rows
+        public DataSubsetWithSelection<TRow, TItem> DataSubset
         {
-            get => rows;
-            private set => this.SetField(ref rows, value);
+            get => dataSubset;
+            private set => this.SetField(ref dataSubset, value);
         }
 
-        public IBytesGridViewer<TByteItem> ViewGrid
+        public IBytesGridViewer<TItem> ViewGrid
         {
-            get => View as IBytesGridViewer<TByteItem>;
+            get => View as IBytesGridViewer<TItem>;
             set
             {
                 // this is getting a bit messy, rethink it.
@@ -108,12 +108,12 @@ namespace DiztinGUIsh.window2
             }
         }
 
-        private void ViewGridOnSelectedOffsetChanged(object sender, IBytesGridViewer<TByteItem>.SelectedOffsetChangedEventArgs e)
+        private void ViewGridOnSelectedOffsetChanged(object sender, IBytesGridViewer<TItem>.SelectedOffsetChangedEventArgs e)
         {
             if (e.RowIndex == -1)
                 return;
             
-            Rows?.SelectRow(e.RowIndex);
+            DataSubset?.SelectRow(e.RowIndex);
         }
 
         protected override void DataBind()
@@ -121,36 +121,43 @@ namespace DiztinGUIsh.window2
             if (ViewGrid == null || Data == null)
                 return;
             
-            if (Rows != null)
-                Rows.PropertyChanged -= RowsOnPropertyChanged;
+            if (DataSubset != null)
+                DataSubset.PropertyChanged -= RowsOnPropertyChanged;
 
-            var dataBindSource = GetDataSourceForBind(); 
-            
-            Rows = DataSubsetWithSelection.Create(Data, dataBindSource as List<RomByteData>, ViewGrid as IBytesGridViewer<RomByteData>);
+            var dataBindSource = GetDataSourceForBind();
 
-            Rows.PropertyChanged += RowsOnPropertyChanged;
+            DataSubset = new()
+            {
+                Items = dataBindSource,
+                RowLoader = new DataSubsetLookaheadCacheRomByteDataGridLoader<TRow, TItem>
+                {
+                    View = ViewGrid,
+                    Data = Data,
+                }
+            };
+
+            DataSubset.PropertyChanged += RowsOnPropertyChanged;
             
-            Rows.Data = Data;
-            Rows.RomBytes = dataBindSource as List<RomByteData>;
+            DataSubset.Items = dataBindSource;
             
-            Rows.StartingRowLargeIndex = 0;
+            DataSubset.StartingRowLargeIndex = 0;
             MatchCachedRowsToView();
             
-            Rows.SelectedLargeIndex = 0;
+            DataSubset.SelectedLargeIndex = 0;
             
             ViewGrid.DataSource = dataBindSource;
         }
 
         public void MatchCachedRowsToView()
         {
-            Rows.RowCount = ViewGrid.TargetNumberOfRowsToShow;
+            DataSubset.RowCount = ViewGrid.TargetNumberOfRowsToShow;
         }
 
         private void RowsOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(sender, e);
             
-            if (e.PropertyName == nameof(DataSubsetWithSelection.SelectedLargeIndex))
+            if (e.PropertyName == nameof(DataSubsetWithSelection<TRow, TItem>.SelectedLargeIndex))
             {
                 OnSelectedRowChanged();
             }
@@ -161,7 +168,7 @@ namespace DiztinGUIsh.window2
             // NOP, currently. views are handling this themselves.
         }
 
-        private List<TByteItem> GetDataSourceForBind()
+        private List<TItem> GetDataSourceForBind()
         {
             if (ViewGrid == null || Data == null)
                 return null;
@@ -175,7 +182,7 @@ namespace DiztinGUIsh.window2
         // or just the bytes marked as Instructions, etc)
         //
         // GetByteItems() is a SUBSET of the entire available Rom. 
-        // Rows will show an additional smaller subset of GetByteItems()
+        // DataSubset will show an additional smaller subset of GetByteItems()
         //
         // example:
         
@@ -183,11 +190,11 @@ namespace DiztinGUIsh.window2
         // - first subset of the above list: GetByteItems()
         //   i.e. can return stuff like a filtered and sorted list of any bytes in the Rom
         //   like, just the bytes marked as graphics or something.
-        // - subset of GetByteItems() i.e. Rows in a table displaying part of GetByteItems()
+        // - subset of GetByteItems() i.e. DataSubset in a table displaying part of GetByteItems()
         //   i.e. this is what is actually showing up on the screen
         //
         // It's a little indirect, but it's extremely flexible.
-        protected abstract IEnumerable<TByteItem> GetByteItems();
+        protected abstract IEnumerable<TItem> GetByteItems();
         
         public event PropertyChangedEventHandler? PropertyChanged;
  

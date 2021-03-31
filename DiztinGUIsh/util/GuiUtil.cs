@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Diz.Core.model;
 using Diz.Core.util;
+using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.util
 {
@@ -54,7 +57,8 @@ namespace DiztinGUIsh.util
         /// Shortcut for doing these actions manually.
         /// </summary>
         /// 
-        public static void BindListControlToEnum<TEnum>(ComboBox cb, object boundObject, string propertyName) where TEnum : Enum
+        public static void BindListControlToEnum<TEnum>(ComboBox cb, object boundObject, string propertyName)
+            where TEnum : Enum
         {
             // I feel like there's gotta be a better way to do all this. But, I can live with this for now.
             //
@@ -79,10 +83,10 @@ namespace DiztinGUIsh.util
             cb.DisplayMember = "Value";
             cb.ValueMember = "Key";
         }
-        
+
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern bool SetProcessDPIAware();
-        
+
         // call before you start any forms
         public static void SetupDPIStuff()
         {
@@ -94,11 +98,11 @@ namespace DiztinGUIsh.util
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
         }
-        
+
         public static void EnableDoubleBuffering(Type type, Control obj)
         {
             // https://stackoverflow.com/a/1506066
-            
+
             // Double buffering can make DGV slow in remote desktop, skip here.
             if (SystemInformation.TerminalServerSession)
                 return;
@@ -111,9 +115,10 @@ namespace DiztinGUIsh.util
                 obj,
                 new object[] {true});
         }
-        
+
         [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, Int32 wMsg, bool wParam, Int32 lParam);
+
         public const int WM_SETREDRAW = 11;
     }
 }

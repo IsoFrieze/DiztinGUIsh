@@ -14,6 +14,13 @@ using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window2
 {
+    public interface IGridRow<TItem>
+    {
+        IBytesGridViewer<TItem> ParentView { get; init; }
+        Data Data { get; init; }
+        RomByteData RomByte { get; init; }
+    }
+    
     /*[AttributeUsage(AttributeTargets.Property)]
     public class CellStyleFormatter : Attribute
     {
@@ -26,7 +33,7 @@ namespace DiztinGUIsh.window2
     }*/
 
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    public class RomByteDataGridRow : INotifyPropertyChanged
+    public class RomByteDataGridRow : INotifyPropertyChanged, IGridRow<RomByteData>
     {
         [DisplayName("Label")]
         [Editable(true)]
@@ -163,23 +170,26 @@ namespace DiztinGUIsh.window2
                 OnPropertyChanged();
             }
         }
+        
+        private readonly RomByteData romByte;
 
-        [Browsable(false)] public RomByteData RomByte { get; }
-        [Browsable(false)] public Data Data { get; }
-        [Browsable(false)] public IBytesGridViewer<RomByteData> ParentView { get; }
+        [Browsable(false)]
+        public RomByteData RomByte
+        {
+            get => romByte;
+            init
+            {
+                this.SetField(PropertyChanged, ref romByte, value);
+                if (RomByte != null)
+                    RomByte.PropertyChanged += OnRomBytePropertyChanged;
+            }
+        }
+
+        [Browsable(false)] public Data Data { get; init; }
+        [Browsable(false)] public IBytesGridViewer<RomByteData> ParentView { get; init; }
         [Browsable(false)] private Util.NumberBase NumberBase => ParentView.NumberBaseToShow;
 
         [Browsable(false)] public event PropertyChangedEventHandler PropertyChanged;
-
-        public RomByteDataGridRow(RomByteData rb, Data d, IBytesGridViewer<RomByteData> parentView)
-        {
-            RomByte = rb;
-            Data = d;
-            ParentView = parentView;
-            
-            if (rb != null)
-                rb.PropertyChanged += OnRomBytePropertyChanged;
-        }
 
         private void OnRomBytePropertyChanged(object sender, PropertyChangedEventArgs e)
         {

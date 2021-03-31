@@ -43,6 +43,7 @@ namespace DiztinGUIsh.window2
             this.vScrollBar1.Name = "vScrollBar1";
             this.vScrollBar1.Size = new System.Drawing.Size(17, 354);
             this.vScrollBar1.TabIndex = 8;
+            this.vScrollBar1.Scroll += new System.Windows.Forms.ScrollEventHandler(this.vScrollBar1_Scroll);
             // 
             // Table
             // 

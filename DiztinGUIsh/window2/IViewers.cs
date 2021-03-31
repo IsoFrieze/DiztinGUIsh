@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Diz.Core.util;
-using Equin.ApplicationFramework;
 
 namespace DiztinGUIsh.window2
 {

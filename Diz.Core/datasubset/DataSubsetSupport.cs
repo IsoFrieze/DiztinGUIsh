@@ -1,23 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Diz.Core.model;
-using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.util
 {
-    public abstract class DataSubsetLookaheadCacheLoaderBase
-    {
-        public abstract RomByteDataGridRow GetOrCreateRow(int largeOffset, DataSubset subset);
-        public abstract void OnBigWindowChangeFinished(DataSubset subset);
-        public abstract void OnBigWindowChangeStart(DataSubset subset);
-    }
-
-    public class DataSubsetLookaheadCacheLoader : DataSubsetLookaheadCacheLoaderBase
+    public abstract class DataSubsetLookaheadCacheLoader<TRow, TItem> : DataSubsetLookaheadCacheLoaderBase<TRow, TItem>
     {
         public class Entry
         {
-            public RomByteDataGridRow row;
+            public TRow row;
             public int ageScore; // 0 = newer, higher = older
         }
 
@@ -27,8 +18,6 @@ namespace DiztinGUIsh.util
         // this dictionary ALWAYS includes all of the currently displayed rows,
         // but also, can include more cached rows that we can kick out as needed to save memory.
         private readonly Dictionary<int, Entry> cachedRows = new();
-
-        public IBytesGridViewer<RomByteData> View { get; init; }
 
         // tune as needed. if user can see about 20 rows at a time, we'll keep around 10x that in memory.
         // if cached rows are in memory, it'll make small scrolling (like bouncing around near the same
@@ -44,7 +33,7 @@ namespace DiztinGUIsh.util
         // that way we're only cleaning up in chunks and not in individual rows.
         public int FuzzThreshold => (int)(TargetCachedRows / (float)TargetCachedMultiplier);
 
-        public override void OnBigWindowChangeStart(DataSubset subset)
+        public override void OnBigWindowChangeStart(DataSubset<TRow, TItem> subset)
         {
             TargetCachedRows = subset.RowCount * TargetCachedMultiplier;
             
@@ -57,29 +46,31 @@ namespace DiztinGUIsh.util
                 entry.Value.ageScore++;
         }
 
-        public override RomByteDataGridRow GetOrCreateRow(int largeOffset, DataSubset subset)
+        public override TRow GetOrCreateRow(int largeOffset, DataSubset<TRow, TItem> subset)
         {
             var entry = GetOrCreateRowEntry(largeOffset, subset);
             entry.ageScore = 0; // any recent rows will always be aged at zero
             return entry.row;
         }
 
-        private Entry GetOrCreateRowEntry(int largeIndex, DataSubset subset)
+        private Entry GetOrCreateRowEntry(int largeIndex, DataSubset<TRow, TItem> subset)
         {
             if (cachedRows.TryGetValue(largeIndex, out var entry))
                 return entry;
 
-            var dataRomByte = subset.RomBytes[largeIndex];
+            var dataRomByte = subset.Items[largeIndex];
 
             // assume this creation is expensive, we're optimizing to minimize # initializations here
             entry = new Entry()
             {
-                row = new RomByteDataGridRow(dataRomByte, subset.Data, View),
+                row = CreateNewRow(subset, largeIndex),
             };
 
             cachedRows[largeIndex] = entry;
             return entry;
         }
+
+        protected abstract TRow CreateNewRow(DataSubset<TRow, TItem> subset, int largeIndex); 
 
         private readonly List<Entry> tmpEntriesForDeletion = new();
 
@@ -89,7 +80,7 @@ namespace DiztinGUIsh.util
         // we could do a bunch of clever stuff, I'm just going to a really simple age check
         // and kick out the oldest rows (rows that haven't been in any view for a while)
         // which are furthest away from the current window
-        public override void OnBigWindowChangeFinished(DataSubset subset)
+        public override void OnBigWindowChangeFinished(DataSubset<TRow, TItem> subset)
         {
             tmpEntriesForDeletion.Clear();
 

@@ -27,10 +27,10 @@ namespace DiztinGUIsh.window2
         Data Data { get; }
     }
     
-    public interface IBytesGridViewerDataController<TByteItem> : IDataController, INotifyPropertyChanged
+    public interface IBytesGridViewerDataController<TRow, TItem> : IDataController, INotifyPropertyChanged
     {
-        IBytesGridViewer<TByteItem> ViewGrid { get; set; } 
-        DataSubsetWithSelection Rows { get; }
+        IBytesGridViewer<TItem> ViewGrid { get; set; } 
+        DataSubsetWithSelection<TRow, TItem> DataSubset { get; }
         void MatchCachedRowsToView();
     }
     

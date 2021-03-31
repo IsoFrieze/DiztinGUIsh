@@ -23,9 +23,9 @@ namespace DiztinGUIsh.window2
 
         public Util.NumberBase NumberBaseToShow { get; set; } = Util.NumberBase.Hexadecimal;
 
-        private IBytesGridViewerDataController<RomByteData> dataController;
+        private IBytesGridViewerDataController<RomByteDataGridRow, RomByteData> dataController;
 
-        public IBytesGridViewerDataController<RomByteData> DataController
+        public IBytesGridViewerDataController<RomByteDataGridRow, RomByteData> DataController
         {
             get => dataController;
             set
@@ -48,20 +48,37 @@ namespace DiztinGUIsh.window2
 
             switch (e.PropertyName)
             {
-                case nameof(DataSubsetWithSelection.SelectedLargeIndex):
-                    if (DataController.Rows.SelectedRowIndex != -1)
-                        SelectRow(DataController.Rows.SelectedRowIndex);
+                case nameof(DataSubsetWithSelection<object, object>.SelectedLargeIndex):
+                    if (DataController.DataSubset.SelectedRowIndex != -1)
+                        SelectRow(DataController.DataSubset.SelectedRowIndex);
                     break;
 
-                case nameof(DataSubsetWithSelection.StartingRowLargeIndex):
-                case nameof(DataSubsetWithSelection.RowCount):
-                case nameof(ByteViewerDataBindingGridController<RomByteData>.Rows):
+                case nameof(DataSubsetWithSelection<object, object>.StartingRowLargeIndex):
+                case nameof(DataSubsetWithSelection<object, object>.RowCount):
+                case nameof(ByteViewerDataBindingGridController<RomByteDataGridRow, RomByteData>.DataSubset):
                     rowsChanged = true;
                     break;
             }
 
             if (rowsChanged)
+            {
                 ForceTableRedraw();
+            }
+        }
+
+        private void UpdateVerticalScrollbar()
+        {
+            if (dataSource == null || DataController?.DataSubset == null)
+            {
+                vScrollBar1.Enabled = false;
+                vScrollBar1.Maximum = 1;
+                vScrollBar1.Value = 0;
+                return;
+            }
+            
+            vScrollBar1.Enabled = true;
+            vScrollBar1.Maximum = DataController.DataSubset.LargestPossibleStartingLargeIndex;
+            vScrollBar1.Value = DataController.DataSubset.StartingRowLargeIndex;
         }
 
         private List<RomByteData> dataSource;
@@ -150,23 +167,27 @@ namespace DiztinGUIsh.window2
         private void RecreateRows()
         {
             // causes more rows to be asked for in cellValueNeeded fn
-            Table.RowCount = DataController?.Rows?.RowCount ?? 0;
+            Table.RowCount = DataController?.DataSubset?.RowCount ?? 0;
         }
         
         public int TargetNumberOfRowsToShow => 
             (Table.Height - Table.ColumnHeadersHeight) / Table.RowTemplate.Height;
 
-        public void ForceTableRedraw() => Table.Invalidate();
+        public void ForceTableRedraw()
+        {
+            Table.Invalidate();
+            UpdateVerticalScrollbar();
+        }
 
         #endregion
 
         #region RowColumnAccess
 
-        public RomByteData SelectedRomByte => DataController?.Rows?.SelectedRow?.RomByte;
+        public RomByteData SelectedRomByte => DataController?.DataSubset?.SelectedRow?.RomByte;
 
         private RomByteDataGridRow GetValueAtRowIndex(int row)
         {
-            var outputRows = DataController?.Rows?.OutputRows;
+            var outputRows = DataController?.DataSubset?.OutputRows;
             if (outputRows == null || outputRows.Count == 0 || row < 0 || row >= outputRows.Count)
                 throw new IndexOutOfRangeException("GetRowValue() row out of range, or no cached outputrows ready");
 
@@ -193,11 +214,11 @@ namespace DiztinGUIsh.window2
             if (!IsLargeIndexValid(largeIndex))
                 throw new Exception("LargeIndex out of range");
 
-            DataController.Rows.SelectedLargeIndex = largeIndex;
+            DataController.DataSubset.SelectedLargeIndex = largeIndex;
         }
 
         private int GetRowIndexFromLargeIndex(int largeIndex) =>
-            DataController?.Rows?.GetRowIndexFromLargeOffset(largeIndex) ?? -1;
+            DataController?.DataSubset?.GetRowIndexFromLargeOffset(largeIndex) ?? -1;
 
         private int SelectedTableRow => Table.CurrentCell?.RowIndex ?? -1;
         private int SelectedTableCol => Table.CurrentCell?.ColumnIndex ?? -1;
@@ -247,6 +268,8 @@ namespace DiztinGUIsh.window2
 
                 // note: complex. dispatches lots of other events on set
                 Table.CurrentCell = cellToSelect;
+                
+                UpdateVerticalScrollbar();
 
                 ForceTableRedraw();
             }
@@ -403,7 +426,7 @@ namespace DiztinGUIsh.window2
             return CalcNewLargeIndexAdjustByDelta(delta);
         }
 
-        public int SelectedLargeIndex => DataController.Rows.SelectedLargeIndex;
+        public int SelectedLargeIndex => DataController.DataSubset.SelectedLargeIndex;
 
         private int CalcNewLargeIndexAdjustByDelta(int delta) =>
             ClampLargeIndexToDataBounds(SelectedLargeIndex + delta);
@@ -498,7 +521,7 @@ namespace DiztinGUIsh.window2
         }
 
         private bool IsValidRowIndex(int rowIndex) =>
-            rowIndex >= 0 && rowIndex < DataController?.Rows?.RowCount;
+            rowIndex >= 0 && rowIndex < DataController?.DataSubset?.RowCount;
 
         private object GetPropertyAtColumn(RomByteDataGridRow romByteGridRow, int colIndex)
         {
@@ -531,6 +554,15 @@ namespace DiztinGUIsh.window2
         {
             Table.RowCount = TargetNumberOfRowsToShow;
             DataController?.MatchCachedRowsToView();
+            ForceTableRedraw();
+        }
+
+        private void vScrollBar1_Scroll(object sender, ScrollEventArgs e)
+        {
+            if (Table.CurrentCell == null)
+                return;
+
+            SelectRowByLargeIndex(vScrollBar1.Value);
             ForceTableRedraw();
         }
     }
