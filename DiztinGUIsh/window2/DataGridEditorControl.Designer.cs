@@ -70,6 +70,7 @@ namespace DiztinGUIsh.window2
             this.Table.Size = new System.Drawing.Size(1113, 354);
             this.Table.TabIndex = 9;
             this.Table.TabStop = false;
+            this.Table.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Table_KeyDown);
             // 
             // DataGridEditorControl
             // 

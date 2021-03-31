@@ -131,7 +131,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(930, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(943, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -776,7 +776,7 @@
             this.statusStrip1.Location = new System.Drawing.Point(0, 516);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 15, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(930, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(943, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -827,19 +827,19 @@
             // dataGridEditorControl1
             // 
             this.dataGridEditorControl1.DataController = null;
-            this.dataGridEditorControl1.NumberBaseToShow = Diz.Core.util.Util.NumberBase.Hexadecimal;
             this.dataGridEditorControl1.DataSource = null;
             this.dataGridEditorControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridEditorControl1.Location = new System.Drawing.Point(0, 24);
             this.dataGridEditorControl1.Name = "dataGridEditorControl1";
-            this.dataGridEditorControl1.Size = new System.Drawing.Size(930, 492);
+            this.dataGridEditorControl1.NumberBaseToShow = Diz.Core.util.Util.NumberBase.Hexadecimal;
+            this.dataGridEditorControl1.Size = new System.Drawing.Size(943, 492);
             this.dataGridEditorControl1.TabIndex = 4;
             // 
             // DataGridEditorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(930, 538);
+            this.ClientSize = new System.Drawing.Size(943, 538);
             this.Controls.Add(this.dataGridEditorControl1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
