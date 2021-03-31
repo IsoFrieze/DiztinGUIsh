@@ -31,6 +31,7 @@ namespace DiztinGUIsh.window2
     {
         IBytesGridViewer<TByteItem> ViewGrid { get; set; } 
         DataSubsetWithSelection Rows { get; }
+        void MatchCachedRowsToView();
     }
     
     public interface IProjectController

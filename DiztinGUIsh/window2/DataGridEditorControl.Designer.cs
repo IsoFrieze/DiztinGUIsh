@@ -31,9 +31,18 @@ namespace DiztinGUIsh.window2
         /// </summary>
         private void InitializeComponent()
         {
+            this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
             this.Table = new System.Windows.Forms.DataGridView();
             ((System.ComponentModel.ISupportInitialize)(this.Table)).BeginInit();
             this.SuspendLayout();
+            // 
+            // vScrollBar1
+            // 
+            this.vScrollBar1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.vScrollBar1.Location = new System.Drawing.Point(1113, 0);
+            this.vScrollBar1.Name = "vScrollBar1";
+            this.vScrollBar1.Size = new System.Drawing.Size(17, 354);
+            this.vScrollBar1.TabIndex = 8;
             // 
             // Table
             // 
@@ -58,19 +67,20 @@ namespace DiztinGUIsh.window2
             this.Table.ShowCellToolTips = false;
             this.Table.ShowEditingIcon = false;
             this.Table.ShowRowErrors = false;
-            this.Table.Size = new System.Drawing.Size(1130, 223);
-            this.Table.TabIndex = 1;
+            this.Table.Size = new System.Drawing.Size(1113, 354);
+            this.Table.TabIndex = 9;
             this.Table.TabStop = false;
-            this.Table.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Table_KeyDown);
             // 
             // DataGridEditorControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.Table);
+            this.Controls.Add(this.vScrollBar1);
             this.Name = "DataGridEditorControl";
-            this.Size = new System.Drawing.Size(1130, 223);
+            this.Size = new System.Drawing.Size(1130, 354);
             this.Load += new System.EventHandler(this.DataGridEditorControl_Load);
+            this.SizeChanged += new System.EventHandler(this.DataGridEditorControl_SizeChanged);
             ((System.ComponentModel.ISupportInitialize)(this.Table)).EndInit();
             this.ResumeLayout(false);
 
@@ -78,6 +88,7 @@ namespace DiztinGUIsh.window2
 
         #endregion
 
+        private System.Windows.Forms.VScrollBar vScrollBar1;
         private System.Windows.Forms.DataGridView Table;
     }
 }

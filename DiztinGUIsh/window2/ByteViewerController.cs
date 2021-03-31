@@ -110,6 +110,9 @@ namespace DiztinGUIsh.window2
 
         private void ViewGridOnSelectedOffsetChanged(object sender, IBytesGridViewer<TByteItem>.SelectedOffsetChangedEventArgs e)
         {
+            if (e.RowIndex == -1)
+                return;
+            
             Rows?.SelectRow(e.RowIndex);
         }
 
@@ -129,11 +132,18 @@ namespace DiztinGUIsh.window2
             
             Rows.Data = Data;
             Rows.RomBytes = dataBindSource as List<RomByteData>;
+            
             Rows.StartingRowLargeIndex = 0;
-            Rows.RowCount = ViewGrid.TargetNumberOfRowsToShow;
+            MatchCachedRowsToView();
+            
             Rows.SelectedLargeIndex = 0;
             
             ViewGrid.DataSource = dataBindSource;
+        }
+
+        public void MatchCachedRowsToView()
+        {
+            Rows.RowCount = ViewGrid.TargetNumberOfRowsToShow;
         }
 
         private void RowsOnPropertyChanged(object sender, PropertyChangedEventArgs e)

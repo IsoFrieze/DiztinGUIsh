@@ -200,8 +200,8 @@ namespace DiztinGUIsh.window2
         private int GetRowIndexFromLargeIndex(int largeIndex) =>
             DataController?.Rows?.GetRowIndexFromLargeOffset(largeIndex) ?? -1;
 
-        private int SelectedTableRow => Table.CurrentCell.RowIndex;
-        private int SelectedTableCol => Table.CurrentCell.ColumnIndex;
+        private int SelectedTableRow => Table.CurrentCell?.RowIndex ?? -1;
+        private int SelectedTableCol => Table.CurrentCell?.ColumnIndex ?? -1;
 
         // Corresponds to the name of properties in RomByteData,
         // NOT what you see on the screen as the column heading text
@@ -297,7 +297,7 @@ namespace DiztinGUIsh.window2
             DizUIGridTrace.Log.CellPainting_Start();
             try
             {
-                var valid = IsDataValid() && e.RowIndex != -1 && e.ColumnIndex != -1;
+                var valid = IsDataValid() && IsValidRowIndex(e.RowIndex) && e.ColumnIndex != -1;
                 if (!valid)
                     return;
 
@@ -466,6 +466,9 @@ namespace DiztinGUIsh.window2
             DizUIGridTrace.Log.CellValueNeeded_Start();
             try
             {
+                if (!IsValidRowIndex(e.RowIndex))
+                    return;
+                
                 var obj = CalculateCellValueForRowIndex(e.RowIndex, e.ColumnIndex);
                 if (obj == null)
                     return;
@@ -524,5 +527,12 @@ namespace DiztinGUIsh.window2
 
         private void DataGridEditorControl_Load(object? sender, EventArgs e) =>
             GuiUtil.EnableDoubleBuffering(typeof(DataGridView), Table);
+
+        private void DataGridEditorControl_SizeChanged(object sender, EventArgs e)
+        {
+            Table.RowCount = TargetNumberOfRowsToShow;
+            DataController?.MatchCachedRowsToView();
+            ForceTableRedraw();
+        }
     }
 }
