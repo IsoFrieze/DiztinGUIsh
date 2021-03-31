@@ -2,19 +2,20 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Diz.Core.model;
 using DiztinGUIsh.util;
-using Equin.ApplicationFramework;
+using JetBrains.Annotations;
 
 // things to think about when the dust settles:
 // 1) get rid of BindingListView? [which just has the nice filters and that's about it] and stick with BindingSource?
-// 2) TODO: need to catch notifychanged from labels and comments or else updates won't propagate 
+// 2) TODO: need to catch notifychanged from labels and comments or else updates won't propagate
+
+// TODO: after refactoring, this class hierarchy is shaking out to be a little weird.
+// when the dust settles, think about restructuring and simplifying all this
 
 namespace DiztinGUIsh.window2
 {
-    // TODO: after refactoring, this class hierarchy is shaking out to be a little weird.
-    // when the dust settles, think about restructuring and simplifying all this
-    
     public class RomByteDataBindingGridController : RomByteDataBindingController
     {
         public void BeginEditingLabel()
@@ -32,8 +33,9 @@ namespace DiztinGUIsh.window2
     {
         protected override IEnumerable<RomByteData> GetByteItems()
         {
-            // probably delete this now.
-            return Data.RomBytes;  //.Select(romByte => new RomByteDataGridRow(romByte, Data, ViewGrid));
+            // right now, return everything 1:1.
+            // in the future, this would be the place to make a filtered or subset of this list.
+            return Data.RomBytes;
         }
 
         #region Filters
@@ -72,32 +74,41 @@ namespace DiztinGUIsh.window2
     
     public abstract class ByteViewerDataBindingGridController<TByteItem> : 
         DataBindingController, 
-        IBytesGridViewerDataController<TByteItem>
+        IBytesGridViewerDataController<TByteItem>,
+        INotifyPropertyChangedExt
     
         // hack for now.
         // TODO: remove this constraint by refactoring DataSubSet to be generic
         where TByteItem : RomByteData, new()
     {
+        private DataSubsetWithSelection rows;
+
         // stores just the current Rom bytes in view (subset of larger data source)
-        public DataSubsetWithSelection Rows { get; set; }
-        
+        public DataSubsetWithSelection Rows
+        {
+            get => rows;
+            private set => this.SetField(ref rows, value);
+        }
+
         public IBytesGridViewer<TByteItem> ViewGrid
         {
             get => View as IBytesGridViewer<TByteItem>;
             set
             {
+                // this is getting a bit messy, rethink it.
+                
                 if (ViewGrid != null)
                     ViewGrid.SelectedOffsetChanged -= ViewGridOnSelectedOffsetChanged;
-                
-                View = value;
+
+                this.SetField(ref view, value);
+                View = view;
                 
                 if (ViewGrid != null)
                     ViewGrid.SelectedOffsetChanged += ViewGridOnSelectedOffsetChanged;
             }
         }
 
-        private void ViewGridOnSelectedOffsetChanged(object sender, 
-            IBytesGridViewer<TByteItem>.SelectedOffsetChangedEventArgs e)
+        private void ViewGridOnSelectedOffsetChanged(object sender, IBytesGridViewer<TByteItem>.SelectedOffsetChangedEventArgs e)
         {
             Rows?.SelectRow(e.RowIndex);
         }
@@ -127,6 +138,8 @@ namespace DiztinGUIsh.window2
 
         private void RowsOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            PropertyChanged?.Invoke(sender, e);
+            
             if (e.PropertyName == nameof(DataSubsetWithSelection.SelectedLargeIndex))
             {
                 OnSelectedRowChanged();
@@ -165,12 +178,20 @@ namespace DiztinGUIsh.window2
         //
         // It's a little indirect, but it's extremely flexible.
         protected abstract IEnumerable<TByteItem> GetByteItems();
+        
+        public event PropertyChangedEventHandler? PropertyChanged;
+ 
+        [NotifyPropertyChangedInvocator]
+        public void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
     
     
     public abstract class DataBindingController : DataController
     {
-        private IViewer view;
+        protected IViewer view;
 
         public override IViewer View
         {

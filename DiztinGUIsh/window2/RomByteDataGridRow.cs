@@ -176,10 +176,9 @@ namespace DiztinGUIsh.window2
             RomByte = rb;
             Data = d;
             ParentView = parentView;
-
-            // temp
-            /*if (rb != null)
-                rb.PropertyChanged += OnRomBytePropertyChanged;*/
+            
+            if (rb != null)
+                rb.PropertyChanged += OnRomBytePropertyChanged;
         }
 
         private void OnRomBytePropertyChanged(object sender, PropertyChangedEventArgs e)

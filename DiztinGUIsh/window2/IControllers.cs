@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Diz.Core.export;
 using Diz.Core.model;
 using DiztinGUIsh.controller;
@@ -26,7 +27,7 @@ namespace DiztinGUIsh.window2
         Data Data { get; }
     }
     
-    public interface IBytesGridViewerDataController<TByteItem> : IDataController
+    public interface IBytesGridViewerDataController<TByteItem> : IDataController, INotifyPropertyChanged
     {
         IBytesGridViewer<TByteItem> ViewGrid { get; set; } 
         DataSubsetWithSelection Rows { get; }

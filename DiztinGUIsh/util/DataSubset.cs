@@ -76,9 +76,15 @@ namespace DiztinGUIsh.util
                 if (!IsValidLargeOffset(value))
                     throw new ArgumentException("Invalid large value");
 
-                this.SetField(ref selectedLargeIndex, GetClampedIndexIfNeeded(value));
+                var clampedValue = GetClampedIndexIfNeeded(value);
                 
-                EnsureViewContainsSelectionIfNeeded();
+                if (!NotifyPropertyChangedExtensions.FieldCompare(selectedLargeIndex, clampedValue)) 
+                    return;
+            
+                selectedLargeIndex = clampedValue;
+                EnsureViewContainsLargeIndex(selectedLargeIndex);
+            
+                OnPropertyChanged();
             }
         }
 
