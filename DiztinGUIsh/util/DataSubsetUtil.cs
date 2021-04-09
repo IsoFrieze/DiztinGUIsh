@@ -6,7 +6,7 @@ namespace DiztinGUIsh.util
 {
     public class DataSubsetLookaheadCacheRomByteDataGridLoader<TRow, TItem> : 
         DataSubsetLookaheadCacheLoader<TRow, TItem>
-        where TItem : RomByteData
+        where TItem : ByteOffsetData
         where TRow : class, IGridRow<TItem>
     {
         public IBytesGridViewer<TItem> View { get; init; }
@@ -16,9 +16,9 @@ namespace DiztinGUIsh.util
         {
             return new RomByteDataGridRow
             {
-                RomByte = subset.Items[largeIndex],
+                ByteOffset = subset.Items[largeIndex],
                 Data = Data,
-                ParentView = View as IBytesGridViewer<RomByteData>,
+                ParentView = View as IBytesGridViewer<ByteOffsetData>,
             } as TRow;
         }
     }

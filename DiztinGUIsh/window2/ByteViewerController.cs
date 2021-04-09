@@ -28,13 +28,13 @@ namespace DiztinGUIsh.window2
     }
 
     public class RomByteDataBindingController : 
-        ByteViewerDataBindingGridController<RomByteDataGridRow, RomByteData>
+        ByteViewerDataBindingGridController<RomByteDataGridRow, ByteOffsetData>
     {
-        protected override IEnumerable<RomByteData> GetByteItems()
+        protected override IEnumerable<ByteOffsetData> GetByteItems()
         {
             // right now, return everything 1:1.
             // in the future, this would be the place to make a filtered or subset of this list.
-            return Data.RomBytes;
+            return Data.RomByteSource.Bytes;
         }
 
         #region Filters
@@ -63,7 +63,7 @@ namespace DiztinGUIsh.window2
         
         private static bool IsRomByteOpcode(RomByteDataGridRow romByteRow)
         {
-            return romByteRow.RomByte.TypeFlag == FlagType.Opcode;
+            return romByteRow.ByteOffset.TypeFlag == FlagType.Opcode;
         }
         
         #endregion
@@ -76,8 +76,8 @@ namespace DiztinGUIsh.window2
         IBytesGridViewerDataController<TRow, TItem>,
         INotifyPropertyChangedExt
     
-        // TODO: eventually, we should try and get rid of "RomByteData" here to make this more generic.
-        where TItem : RomByteData
+        // TODO: eventually, we should try and get rid of "ByteOffsetData" here to make this more generic.
+        where TItem : ByteOffsetData
         
         where TRow : class, IGridRow<TItem>
     {
@@ -196,7 +196,7 @@ namespace DiztinGUIsh.window2
         // It's a little indirect, but it's extremely flexible.
         protected abstract IEnumerable<TItem> GetByteItems();
         
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
  
         [NotifyPropertyChangedInvocator]
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)

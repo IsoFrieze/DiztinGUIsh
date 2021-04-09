@@ -131,7 +131,7 @@ namespace DiztinGUIsh.window2
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
-        private Be.Windows.Forms.HexBox hexBox1;
+        // private Be.Windows.Forms.HexBox hexBox1;
         private System.Windows.Forms.Label label2;
     }
 }

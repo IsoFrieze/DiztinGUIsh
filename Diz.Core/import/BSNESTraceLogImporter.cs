@@ -23,7 +23,7 @@ namespace Diz.Core.import
             InitObjectPool();
         }
 
-        // Mark collected trace data for a RomByte (which should be an opcode) AND any of the operands that follow us.
+        // Mark collected trace data for a ByteOffset (which should be an opcode) AND any of the operands that follow us.
         private void SetOpcodeAndOperandsFromTraceData(ModificationData modData, int instructionByteLen = -1) 
         {
             // extremely performance-intensive function. be really careful when adding stuff

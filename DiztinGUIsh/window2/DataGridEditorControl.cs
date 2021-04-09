@@ -17,15 +17,15 @@ using UserControl = System.Windows.Forms.UserControl;
 
 namespace DiztinGUIsh.window2
 {
-    public partial class DataGridEditorControl : UserControl, IBytesGridViewer<RomByteData>
+    public partial class DataGridEditorControl : UserControl, IBytesGridViewer<ByteOffsetData>
     {
         #region Properties
 
         public Util.NumberBase NumberBaseToShow { get; set; } = Util.NumberBase.Hexadecimal;
 
-        private IBytesGridViewerDataController<RomByteDataGridRow, RomByteData> dataController;
+        private IBytesGridViewerDataController<RomByteDataGridRow, ByteOffsetData> dataController;
 
-        public IBytesGridViewerDataController<RomByteDataGridRow, RomByteData> DataController
+        public IBytesGridViewerDataController<RomByteDataGridRow, ByteOffsetData> DataController
         {
             get => dataController;
             set
@@ -42,7 +42,7 @@ namespace DiztinGUIsh.window2
             }
         }
 
-        private void ControllerPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void ControllerPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var rowsChanged = false;
 
@@ -55,9 +55,18 @@ namespace DiztinGUIsh.window2
 
                 case nameof(DataSubsetWithSelection<object, object>.StartingRowLargeIndex):
                 case nameof(DataSubsetWithSelection<object, object>.RowCount):
-                case nameof(ByteViewerDataBindingGridController<RomByteDataGridRow, RomByteData>.DataSubset):
+                case nameof(ByteViewerDataBindingGridController<RomByteDataGridRow, ByteOffsetData>.DataSubset):
                     rowsChanged = true;
                     break;
+            }
+            
+            // NOTE: all per-Row notifications come through here as well. if we want to catch any individual cell
+            // updates, it should be doable.
+            if (sender?.GetType() == typeof(RomByteDataGridRow))
+            {
+                // we could get fancier and more precise here, if needed.
+                // but, this is probably good enough. tune this later if performance is too slow or it gets ugly.
+                rowsChanged = true;
             }
 
             if (rowsChanged)
@@ -81,9 +90,9 @@ namespace DiztinGUIsh.window2
             vScrollBar1.Value = DataController.DataSubset.StartingRowLargeIndex;
         }
 
-        private List<RomByteData> dataSource;
+        private List<ByteOffsetData> dataSource;
 
-        public List<RomByteData> DataSource
+        public List<ByteOffsetData> DataSource
         {
             get => dataSource;
             set
@@ -137,7 +146,7 @@ namespace DiztinGUIsh.window2
             Table.CurrentCellChanged += TableOnCurrentCellChanged;
         }
 
-        private void table_MouseWheel(object? sender, MouseEventArgs e) =>
+        private void table_MouseWheel(object sender, MouseEventArgs e) =>
             AdjustSelectedLargeIndexByDelta(e.Delta / -120);
 
         #endregion
@@ -183,7 +192,7 @@ namespace DiztinGUIsh.window2
 
         #region RowColumnAccess
 
-        public RomByteData SelectedRomByte => DataController?.DataSubset?.SelectedRow?.RomByte;
+        public ByteOffsetData SelectedByteOffset => DataController?.DataSubset?.SelectedRow?.ByteOffset;
 
         private RomByteDataGridRow GetValueAtRowIndex(int row)
         {
@@ -223,7 +232,7 @@ namespace DiztinGUIsh.window2
         private int SelectedTableRow => Table.CurrentCell?.RowIndex ?? -1;
         private int SelectedTableCol => Table.CurrentCell?.ColumnIndex ?? -1;
 
-        // Corresponds to the name of properties in RomByteData,
+        // Corresponds to the name of properties in ByteOffsetData,
         // NOT what you see on the screen as the column heading text
         private string GetColumnHeaderDataProperty(DataGridViewCellPaintingEventArgs e) =>
             GetColumnHeaderDataProperty(e?.ColumnIndex ?? -1);
@@ -326,7 +335,7 @@ namespace DiztinGUIsh.window2
                 var romByteAtRow = GetValueAtRowIndex(e.RowIndex);
                 var colHeaderDataProperty = GetColumnHeaderDataProperty(e);
 
-                if (romByteAtRow?.RomByte == null || string.IsNullOrEmpty(colHeaderDataProperty))
+                if (romByteAtRow?.ByteOffset == null || string.IsNullOrEmpty(colHeaderDataProperty))
                     return;
 
                 romByteAtRow.SetStyleForCell(colHeaderDataProperty, e.CellStyle);
@@ -377,7 +386,7 @@ namespace DiztinGUIsh.window2
         public void BeginEditingSelectionLabel() =>
             BeginEditingSelectedRowProperty(nameof(RomByteDataGridRow.Label));
 
-        public event IBytesGridViewer<RomByteData>.SelectedOffsetChange SelectedOffsetChanged;
+        public event IBytesGridViewer<ByteOffsetData>.SelectedOffsetChange SelectedOffsetChanged;
 
         private void AdjustSelectedColumnByKeyCode(Keys keyCode)
         {
@@ -390,12 +399,12 @@ namespace DiztinGUIsh.window2
 
         private void TableOnCurrentCellChanged(object sender, EventArgs e)
         {
-            var selectedRomByteRow = SelectedRomByte;
+            var selectedRomByteRow = SelectedByteOffset;
             if (selectedRomByteRow == null)
                 return;
 
             SelectedOffsetChanged?.Invoke(this,
-                new IBytesGridViewer<RomByteData>.SelectedOffsetChangedEventArgs
+                new IBytesGridViewer<ByteOffsetData>.SelectedOffsetChangedEventArgs
                 {
                     Row = selectedRomByteRow,
                     RowIndex = SelectedTableRow,
@@ -547,7 +556,7 @@ namespace DiztinGUIsh.window2
             Table.InvalidateRow(e.RowIndex);
         }
 
-        private void DataGridEditorControl_Load(object? sender, EventArgs e) =>
+        private void DataGridEditorControl_Load(object sender, EventArgs e) =>
             GuiUtil.EnableDoubleBuffering(typeof(DataGridView), Table);
 
         private void DataGridEditorControl_SizeChanged(object sender, EventArgs e)

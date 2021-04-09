@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.serialization;
@@ -27,7 +28,7 @@ namespace Diz.Test
             var (deserializedProject, warning) = serializer.Load(outputBytes);
             
             // final step, the loading process doesn't save the actual SMC file bytes, so we do it ourselves here
-            deserializedProject.Data.CopyRomDataIn(romFileBytes);
+            deserializedProject.Data.PopulateFrom((IReadOnlyCollection<byte>) romFileBytes);
 
             // now we can do a full compare between the original project, and the project which has been cycled through
             // serialization and deserialization

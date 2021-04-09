@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using Diz.Core.arch;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
@@ -74,7 +75,7 @@ namespace DiztinGUIsh.controller
             }
         }
 
-        private void OnClosed(object? sender, EventArgs e)
+        private void OnClosed(object sender, EventArgs e)
         {
             Closed?.Invoke(this, e);
         }
@@ -323,8 +324,7 @@ namespace DiztinGUIsh.controller
                 return;
             
             MarkProjectAsUnsaved();
-            var destinationOffset = Project.Data.Step(offset, false, false, offset - 1);
-            SelectedSnesOffset = destinationOffset;
+            SelectedSnesOffset = Step(offset, false);
         }
 
         public void StepIn(int offset)
@@ -333,8 +333,12 @@ namespace DiztinGUIsh.controller
                 return;
             
             MarkProjectAsUnsaved();
-            var destinationOffset = Project.Data.Step(offset, true, false, offset - 1);
-            SelectedSnesOffset = destinationOffset;
+            SelectedSnesOffset = Step(offset, true);
+        }
+
+        private int Step(int offset, bool branch)
+        {
+            return Project.Data.Step(offset, branch, false, offset - 1);
         }
 
         public void AutoStepSafe(int offset)
@@ -343,7 +347,9 @@ namespace DiztinGUIsh.controller
                 return;
             
             MarkProjectAsUnsaved();
-            var destinationOffset = Project.Data.AutoStep(offset, false, 0);
+
+            var destinationOffset = DoAutoStep(offset, false, 0);
+
             if (MoveWithStep) 
                 SelectedSnesOffset = destinationOffset;
         }
@@ -357,10 +363,16 @@ namespace DiztinGUIsh.controller
                 return;
 
             MarkProjectAsUnsaved();
-            var destination = Project.Data.AutoStep(newOffset, true, count);
+            
+            var destinationOffset = DoAutoStep(newOffset, true, count);
             
             if (MoveWithStep) 
-                SelectedSnesOffset = destination;
+                SelectedSnesOffset = destinationOffset;
+        }
+
+        private int DoAutoStep(int newOffset, bool harsh, int count)
+        {
+            return Project.Data.AutoStep(newOffset, harsh, count);
         }
 
         public void Mark(int offset)
@@ -456,10 +468,10 @@ namespace DiztinGUIsh.controller
             SelectedSnesOffset = snesOffset;
         }
 
-        public void OnUserChangedSelection(RomByteData newSelection)
+        public void OnUserChangedSelection(ByteOffsetData newSelection)
         {
             // when user clicks on a new row in the child data grid editor, this fires
-            SelectedSnesOffset = newSelection.Offset;
+            SelectedSnesOffset = newSelection.ContainerOffset;
         }
 
         private bool IsOffsetInRange(int offset)

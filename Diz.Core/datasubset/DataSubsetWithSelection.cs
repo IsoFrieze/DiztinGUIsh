@@ -73,7 +73,7 @@ namespace DiztinGUIsh.util
 
                 var clampedValue = GetClampedIndexIfNeeded(value);
                 
-                if (!NotifyPropertyChangedExtensions.FieldCompare(selectedLargeIndex, clampedValue)) 
+                if (!NotifyPropertyChangedExtensions.FieldIsEqual(selectedLargeIndex, clampedValue)) 
                     return;
             
                 selectedLargeIndex = clampedValue;

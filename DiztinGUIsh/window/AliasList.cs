@@ -95,8 +95,7 @@ namespace DiztinGUIsh.window
                     
                     label.Name = labelName.Trim();
                     label.Comment = labelComment;
-                    label.CleanUp();
-                    
+
                     if (!validLabelChars.Match(label.Name).Success)
                         throw new InvalidDataException("invalid label name: " + label.Name);
 
@@ -132,15 +131,28 @@ namespace DiztinGUIsh.window
             try
             {
                 using var sw = new StreamWriter(saveFileDialog1.FileName);
-                foreach (var pair in Data.Labels)
-                {
-                    sw.WriteLine(
-                        $"{Util.NumberToBaseString(pair.Key, Util.NumberBase.Hexadecimal, 6)},{pair.Value.Name},{pair.Value.Comment}");
-                }
+                WriteLabelsToCsv(sw);
             } catch (Exception)
             {
                 MessageBox.Show("An error occurred while saving the file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void WriteLabelsToCsv(TextWriter sw)
+        {
+            foreach (var pair in Data.Labels)
+            {
+                int snesOffset = pair.Key;
+                Label label = pair.Value;
+
+                OutputCsvLine(sw, snesOffset, label);
+            }
+        }
+
+        private static void OutputCsvLine(TextWriter sw, int labelSnesAddress, Label label)
+        {
+            var outputLine = $"{Util.ToHexString6(labelSnesAddress)},{label.Name},{label.Comment}";
+            sw.WriteLine(outputLine);
         }
 
         private void dataGridView1_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
@@ -148,7 +160,7 @@ namespace DiztinGUIsh.window
             if (!int.TryParse((string) dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null,
                 out var val)) return;
             Locked = true;
-            Data.AddLabel(val, null, true);
+            Data.RemoveLabel(val);
             Locked = false;
         }
 
@@ -165,49 +177,58 @@ namespace DiztinGUIsh.window
 
         private void dataGridView1_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
         {
-            if (dataGridView1.Rows[e.RowIndex].IsNewRow) return;
-            var val = -1;
-            int.TryParse((string)dataGridView1.Rows[e.RowIndex].Cells[0].Value, NumberStyles.HexNumber, null, out var oldAddress);
-
-            var labelLabel = new Label
+            if (dataGridView1.Rows[e.RowIndex].IsNewRow)
+                return;
+            
+            var existingAddressStr = (string)dataGridView1.Rows[e.RowIndex].Cells[0].Value;
+            var existingName = (string)dataGridView1.Rows[e.RowIndex].Cells[1].Value;
+            var existingComment = (string)dataGridView1.Rows[e.RowIndex].Cells[2].Value;
+            int.TryParse(existingAddressStr, NumberStyles.HexNumber, null, out var existingAddress);
+            
+            var newLabel = new Label
             {
-                Name = (string) dataGridView1.Rows[e.RowIndex].Cells[1].Value,
-                Comment = (string)dataGridView1.Rows[e.RowIndex].Cells[2].Value,
+                Name = existingName,
+                Comment = existingComment
             };
 
             toolStripStatusLabel1.Text = "";
+            var newAddress = -1;
 
             switch (e.ColumnIndex)
             {
-                case 0:
+                case 0: // label's address
                     {
-                        if (!int.TryParse(e.FormattedValue.ToString(), NumberStyles.HexNumber, null, out val))
+                        if (!int.TryParse(e.FormattedValue.ToString(), NumberStyles.HexNumber, null, out newAddress))
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "Must enter a valid hex address.";
-                        } else if (oldAddress == -1 && Data.Labels.ContainsKey(val))
+                            break;
+                        }
+                        
+                        if (existingAddress == -1 && Data.GetLabel(newAddress) != null)
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "This address already has a label.";
+                            break;
+                        }
 
-                            Console.WriteLine(Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal));
-                        } else if (dataGridView1.EditingControl != null)
+                        if (dataGridView1.EditingControl != null)
                         {
-                            dataGridView1.EditingControl.Text = Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal, 6);
+                            dataGridView1.EditingControl.Text = Util.ToHexString6(newAddress);
                         }
                         break;
                     }
-                case 1:
+                case 1: // label name
                     {
-                        val = oldAddress;
-                        labelLabel.Name = e.FormattedValue.ToString();
+                        newAddress = existingAddress;
+                        newLabel.Name = e.FormattedValue.ToString();
                         // todo (validate for valid label characters)
                         break;
                     }
-                case 2:
+                case 2: // label comment
                     {
-                        val = oldAddress;
-                        labelLabel.Comment = e.FormattedValue.ToString();
+                        newAddress = existingAddress;
+                        newLabel.Comment = e.FormattedValue.ToString();
                         // todo (validate for valid comment characters, if any)
                         break;
                     }
@@ -216,8 +237,10 @@ namespace DiztinGUIsh.window
             Locked = true;
             if (currentlyEditing >= 0)
             {
-                if (val >= 0) Data.AddLabel(oldAddress, null, true);
-                Data.AddLabel(val, labelLabel, true);
+                if (newAddress >= 0) 
+                    Data.RemoveLabel(existingAddress);
+                
+                Data.AddLabel(newAddress, newLabel, true);
             }
             Locked = false;
 
@@ -234,7 +257,7 @@ namespace DiztinGUIsh.window
 
         private void RawAdd(int address, Label alias)
         {
-            dataGridView1.Rows.Add(Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6), alias.Name, alias.Comment);
+            dataGridView1.Rows.Add(Util.ToHexString6(address), alias.Name, alias.Comment);
         }
 
         public void RemoveRow(int address)
@@ -245,7 +268,7 @@ namespace DiztinGUIsh.window
             for (var index = 0; index < dataGridView1.Rows.Count; index++)
             {
                 if ((string) dataGridView1.Rows[index].Cells[0].Value !=
-                    Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 6)) continue;
+                    Util.ToHexString6(address)) continue;
 
                 dataGridView1.Rows.RemoveAt(index);
                 dataGridView1.Invalidate();
@@ -288,8 +311,8 @@ namespace DiztinGUIsh.window
 
             // todo: eventually use databinding/datasource, probably.
             // Todo: modify observabledictionary wrapper to avoid having to do the .Dict call here.
-            Data.Labels.PropertyChanged += Labels_PropertyChanged;
-            Data.Labels.CollectionChanged += Labels_CollectionChanged;
+            // tmp disabled // Data.Labels.PropertyChanged += Labels_PropertyChanged;
+            // tmp disabled // Data.Labels.CollectionChanged += Labels_CollectionChanged;
         }
 
         private void RepopulateFromData()

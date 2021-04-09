@@ -18,17 +18,14 @@
     <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows">
       <Version>0.12.1</Version>
     </PackageReference>
-    <PackageReference Include="Castle.Core">
-      <Version>4.4.1</Version>
-    </PackageReference>
     <PackageReference Include="CommandLineParser">
       <Version>2.8.0</Version>
     </PackageReference>
     <PackageReference Include="ExtendedXmlSerializer">
-      <Version>3.6.0</Version>
+      <Version>3.7.0</Version>
     </PackageReference>
     <PackageReference Include="Iced">
-      <Version>1.10.0</Version>
+      <Version>1.11.0</Version>
     </PackageReference>
     <PackageReference Include="IX.Observable">
       <Version>0.7.3</Version>
@@ -37,7 +34,7 @@
       <Version>0.7.4</Version>
     </PackageReference>
     <PackageReference Include="JetBrains.Annotations">
-      <Version>2020.3.0</Version>
+      <Version>2021.1.0</Version>
     </PackageReference>
     <PackageReference Include="LightInject">
       <Version>6.4.0</Version>
@@ -51,16 +48,16 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.Common">
-      <Version>3.8.0</Version>
+      <Version>3.9.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
-      <Version>3.8.0</Version>
+      <Version>3.9.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Diagnostics.NETCore.Client">
-      <Version>0.2.160202</Version>
+      <Version>0.2.217401</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Diagnostics.Runtime">
-      <Version>2.0.161401</Version>
+      <Version>2.0.217201</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent">
       <Version>2.0.66</Version>
@@ -68,11 +65,11 @@
     <PackageReference Include="Microsoft.DotNet.PlatformAbstractions">
       <Version>3.1.6</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk">
+      <Version>16.9.4</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.Win32.Registry">
       <Version>5.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="Moq">
-      <Version>4.16.1</Version>
     </PackageReference>
     <PackageReference Include="NReco.LambdaParser">
       <Version>1.0.12</Version>

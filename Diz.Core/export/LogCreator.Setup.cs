@@ -98,8 +98,6 @@ namespace Diz.Core.export
             if (ExtraLabels.ContainsKey(i))
                 return;
 
-            v.CleanUp();
-
             ExtraLabels.Add(i, v);
         }
 
@@ -125,7 +123,7 @@ namespace Diz.Core.export
             if (snes == -1) 
                 return;
 
-            var labelName = Data.GetDefaultLabel(snes);
+            var labelName = GetDefaultLabel(snes);
             AddExtraLabel(snes, new Label() {
                 Name = labelName,
             });

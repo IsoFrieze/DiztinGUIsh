@@ -1,126 +1,185 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace Diz.Core.model
 {
-    // represents metadata associated with each byte of the ROM
-    // RomByteData is just the data itself with as little associated fluff as possible 
-    public class RomByteData : INotifyPropertyChanged
+    // JUST holds the data. no traversal.
+    public class ByteOffsetData
     {
-        // never modify directly. only go through the public fields
-        private byte rom;
-        private byte dataBank;
-        private int directPage;
-        private bool xFlag;
-        private bool mFlag;
-        private FlagType typeFlag = FlagType.Unreached;
-        private Architecture arch = Architecture.Cpu65C816;
-        private InOutPoint point = InOutPoint.None;
+        // if null, it means caller either needs to dig one level deeper in parent container to find it, or, there is no data
+        public byte? Byte { get; set; }
+
+        public List<Annotation> Annotations { get; set; }
+
+        public ByteSource Container { get; init; }
+
+        public int ContainerOffset { get; init; } = -1;
+
+
+        // temporary stuff. remove all this eventually.
+
+        // this is just helper sutff as this stuff gets migrated into Data/Annotations classes
+
+        // -------------------------------------------------------------------------
         
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        // holds the original byte from the source ROM
-        public byte Rom
-        {
-            get => rom;
-            set => this.SetField(PropertyChanged, ref rom, value);
-        } // never serialize this, read from ROM on load. (for copyright reasons)
-
-        // everything else is metadata that describes the source byte above
+        private OpcodeAnnotation GetOneOpcodeAnnotation() => GetOneAnnotation<OpcodeAnnotation>();
+        private OpcodeAnnotation GetOrCreateOpcodeAnnotation() => GetOrCreateAnnotation<OpcodeAnnotation>();
+        
         public byte DataBank
         {
-            get => dataBank;
-            set => this.SetField(PropertyChanged, ref dataBank, value);
+            get => GetOneOpcodeAnnotation()?.DataBank ?? default;
+            set => GetOrCreateOpcodeAnnotation().DataBank = value;
         }
 
         public int DirectPage
         {
-            get => directPage;
-            set => this.SetField(PropertyChanged, ref directPage, value);
+            get => GetOneOpcodeAnnotation()?.DirectPage ?? default;
+            set => GetOrCreateOpcodeAnnotation().DirectPage = value;
         }
 
         public bool XFlag
         {
-            get => xFlag;
-            set => this.SetField(PropertyChanged, ref xFlag, value);
+            get => GetOneOpcodeAnnotation()?.XFlag ?? default;
+            set => GetOrCreateOpcodeAnnotation().XFlag = value;
         }
 
         public bool MFlag
         {
-            get => mFlag;
-            set => this.SetField(PropertyChanged, ref mFlag, value);
-        }
-
-        public FlagType TypeFlag
-        {
-            get => typeFlag;
-            set => this.SetField(PropertyChanged, ref typeFlag, value);
+            get => GetOneOpcodeAnnotation()?.MFlag ?? default;
+            set => GetOrCreateOpcodeAnnotation().MFlag = value;
         }
 
         public Architecture Arch
         {
-            get => arch;
-            set => this.SetField(PropertyChanged, ref arch, value);
+            get => GetOneOpcodeAnnotation()?.Arch ?? default;
+            set => GetOrCreateOpcodeAnnotation().Arch = value;
+        }
+
+        public FlagType TypeFlag
+        {
+            get => GetOneAnnotation<MarkAnnotation>()?.TypeFlag ?? default;
+            set => GetOrCreateAnnotation<MarkAnnotation>().TypeFlag = value;
         }
 
         public InOutPoint Point
         {
-            get => point;
-            set => this.SetField(PropertyChanged, ref point, value);
+            get => GetOneAnnotation<BranchAnnotation>()?.Point ?? default;
+            set => GetOrCreateAnnotation<BranchAnnotation>().Point = value;
         }
 
-        // don't serialize. cached copy of our offset in parent collection
-        public int Offset { get; private set; } = -1;
-
-        public void SetCachedOffset(int offset)
+        // -------------------------------------------------------------------------
+        // end temporary stuff
+        protected bool Equals(ByteOffsetData other)
         {
-            // not in love with this or that we're caching it. would be cool if we didn't
-            // need Offset, or could just derive this (quickly) from the base list.
-            Offset = offset;
+            return Byte == other.Byte && AnnotationsEqual(other.Annotations) && Equals(Container, other.Container) && ContainerOffset == other.ContainerOffset;
         }
 
-
-        #region Equality
-        protected bool Equals(RomByte other)
+        protected bool AnnotationsEqual(List<Annotation> otherAnnotations)
         {
-            return Rom == other.Rom && EqualsButNoRomByte(other);
-        }
-
-        public bool EqualsButNoRomByte(RomByte other)
-        {
-            return DataBank == other.DataBank && DirectPage == other.DirectPage && XFlag == other.XFlag && MFlag == other.MFlag && TypeFlag == other.TypeFlag && Arch == other.Arch && Point == other.Point;
+            return Annotations.OrderBy(x => x.GetType().ToString()).ThenBy(x => x)
+                .SequenceEqual(
+               otherAnnotations.OrderBy(x => x.GetType().ToString()).ThenBy(x => x));
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((RomByte)obj);
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ByteOffsetData) obj);
         }
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = Rom.GetHashCode();
-                hashCode = (hashCode * 397) ^ DataBank.GetHashCode();
-                hashCode = (hashCode * 397) ^ DirectPage;
-                hashCode = (hashCode * 397) ^ XFlag.GetHashCode();
-                hashCode = (hashCode * 397) ^ MFlag.GetHashCode();
-                hashCode = (hashCode * 397) ^ (int)TypeFlag;
-                hashCode = (hashCode * 397) ^ (int)Arch;
-                hashCode = (hashCode * 397) ^ (int)Point;
-                return hashCode;
-            }
+            return HashCode.Combine(Byte, Annotations, Container, ContainerOffset);
         }
-        #endregion
-    }
+        
+        // helpers:
+        public T GetOneAnnotation<T>() where T : Annotation
+        {
+            if (Annotations == null)
+                return null;
+            
+            T ret = null;
+            foreach (var annotation in Annotations)
+            {
+                if (annotation.GetType() != typeof(T))
+                    continue;
 
-    // wrap RomByteData with extra helper stuff like locking
-    public class RomByte : RomByteData
-    {
+                if (ret != null)
+                    throw new InvalidDataException("Found multiple annotations when we required to find exactly 0 or 1");
+
+                ret = (T)annotation;
+            }
+
+            return ret;
+        }
+        
+        public T GetOrCreateAnnotation<T>() where T : Annotation, new()
+        {
+            var existing = GetOneAnnotation<T>();
+            if (existing != null)
+                return existing;
+
+            var newItem = new T();
+            if (Annotations == null)
+                Annotations = new List<Annotation>();
+            
+            Annotations.Add(newItem);
+            return newItem;
+        }
+
         // note: our thread safety isn't comprehensive in this project yet.
         // be careful with this if you're doing anything clever, especially writing.
-        public ReaderWriterLockSlim Lock { get; protected set; } = new ReaderWriterLockSlim();
+        //
+        // TODO: instead of doing this, see if ConcurrentBag or similar classes would work.
+        public ReaderWriterLockSlim Lock => _lock ??= new ReaderWriterLockSlim();
+        private ReaderWriterLockSlim _lock;
+    }
+
+    // represent a node of a per-byte graph through the mappings of various ByteSources
+    public class ByteOffsetDataNode
+    {
+        public ByteOffsetData Data { get; set; }
+        public List<ByteOffsetDataNode> Children { get; set; }
+
+        // Simplified graph traversal utility.
+        //
+        // after graph traversal has happened, collapse the graph (of which this node is the root node) into
+        // one ByteOffsetData object.
+        //
+        // Annotations will be combined together into one list.
+        // If there are multiple 'byte' at different children, then we'll pick the most recent one.
+        //
+        // If you need anything more advanced than this, parse it yourself.
+        public ByteOffsetData ResolveToOne(ByteOffsetData dataBeingConstructed = null)
+        {
+            dataBeingConstructed ??= new ByteOffsetData
+            {
+                ContainerOffset = Data.ContainerOffset,
+                Container = Data.Container,
+                Annotations = new List<Annotation>()
+            };
+
+            // traverse any child nodes first.
+            foreach (var childNode in Children)
+            {
+                childNode.ResolveToOne(dataBeingConstructed);
+            }
+            
+            // add in our own changes AFTER children populated.
+            
+            // annotations are concatenated together
+            dataBeingConstructed.Annotations.AddRange(Data.Annotations);
+            
+            // only change the byte if we're non-null and overriding something underneath
+            if (Data.Byte != null)
+                dataBeingConstructed.Byte = Data.Byte;
+
+            return dataBeingConstructed;
+        }
     }
 }

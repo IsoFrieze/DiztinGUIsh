@@ -18,7 +18,7 @@ namespace DiztinGUIsh.window2
     {
         IBytesGridViewer<TItem> ParentView { get; init; }
         Data Data { get; init; }
-        RomByteData RomByte { get; init; }
+        ByteOffsetData ByteOffset { get; init; }
     }
     
     /*[AttributeUsage(AttributeTargets.Property)]
@@ -33,48 +33,42 @@ namespace DiztinGUIsh.window2
     }*/
 
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    public class RomByteDataGridRow : INotifyPropertyChanged, IGridRow<RomByteData>
+    public class RomByteDataGridRow : INotifyPropertyChanged, IGridRow<ByteOffsetData>
     {
         [DisplayName("Label")]
         [Editable(true)]
         // [CellStyleFormatter(GetBackColorInOut)]
         public string Label
         {
-            get => Data.GetLabelName(Data.ConvertPCtoSnes(RomByte.Offset));
+            get => Data.GetLabelName(Data.ConvertPCtoSnes(ByteOffset.ContainerOffset));
 
             // todo (validate for valid label characters)
             // (note: validation implemented in Furious's branch, integrate here)
-            set
-            {
-                Data.AddLabel(
-                    Data.ConvertPCtoSnes(RomByte.Offset),
+            set => Data.AddLabel(
+                    Data.ConvertPCtoSnes(ByteOffset.ContainerOffset),
                     new Label {Name = value},
                     true);
-
-                OnPropertyChanged();
-            }
         }
 
         [DisplayName("PC")]
         [ReadOnly(true)]
-        public string Offset =>
-            Util.NumberToBaseString(Data.ConvertPCtoSnes(RomByte.Offset), Util.NumberBase.Hexadecimal, 6);
+        public string Offset => Util.ToHexString6(Data.ConvertPCtoSnes(ByteOffset.ContainerOffset));
 
         // show the byte two different ways: ascii and numeric
         [DisplayName("@")]
         [ReadOnly(true)]
         public char AsciiCharRep =>
-            (char) RomByte.Rom;
+            (char) ByteOffset.Byte;
 
         [DisplayName("#")]
         [ReadOnly(true)]
         public string NumericRep =>
-            Util.NumberToBaseString(RomByte.Rom, NumberBase);
+            Util.NumberToBaseString(ByteOffset.ContainerOffset, NumberBase);
 
         [DisplayName("<*>")]
         [ReadOnly(true)]
         public string Point =>
-            RomUtil.PointToString(RomByte.Point);
+            RomUtil.PointToString(ByteOffset.Point);
 
         [DisplayName("Instruction")]
         [ReadOnly(true)]
@@ -84,8 +78,8 @@ namespace DiztinGUIsh.window2
             {
                 // NOTE: this does not handle instructions whose opcodes cross banks correctly.
                 // if we hit this situation, just return empty for the grid, it's likely real instruction won't do this?
-                var len = Data.GetInstructionLength(RomByte.Offset);
-                return RomByte.Offset + len <= Data.GetRomSize() ? Data.GetInstruction(RomByte.Offset) : "";
+                var len = Data.GetInstructionLength(ByteOffset.ContainerOffset);
+                return ByteOffset.ContainerOffset + len <= Data.GetRomSize() ? Data.GetInstruction(ByteOffset.ContainerOffset) : "";
             }
         }
 
@@ -95,28 +89,28 @@ namespace DiztinGUIsh.window2
         {
             get
             {
-                var ia = Data.GetIntermediateAddressOrPointer(RomByte.Offset);
-                return ia >= 0 ? Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6) : "";
+                var ia = Data.GetIntermediateAddressOrPointer(ByteOffset.ContainerOffset);
+                return ia >= 0 ? Util.ToHexString6(ia) : "";
             }
         }
 
         [DisplayName("Flag")]
         [ReadOnly(true)]
         public string TypeFlag =>
-            Util.GetEnumDescription(Data.GetFlag(RomByte.Offset));
+            Util.GetEnumDescription(Data.GetFlag(ByteOffset.ContainerOffset));
 
         [DisplayName("B")]
         [Editable(true)]
         public string DataBank
         {
-            get => Util.NumberToBaseString(Data.GetDataBank(RomByte.Offset), Util.NumberBase.Hexadecimal, 2);
+            get => Util.NumberToBaseString(Data.GetDataBank(ByteOffset.ContainerOffset), Util.NumberBase.Hexadecimal, 2);
             set
             {
                 if (!int.TryParse(value, NumberStyles.HexNumber, null, out var parsed))
                     return;
 
-                Data.SetDataBank(RomByte.Offset, parsed);
-                OnPropertyChanged();
+                Data.SetDataBank(ByteOffset.ContainerOffset, parsed);
+                //OnPropertyChanged();
             }
         }
 
@@ -124,14 +118,14 @@ namespace DiztinGUIsh.window2
         [Editable(true)]
         public string DirectPage
         {
-            get => Util.NumberToBaseString(Data.GetDirectPage(RomByte.Offset), Util.NumberBase.Hexadecimal, 4);
+            get => Util.NumberToBaseString(Data.GetDirectPage(ByteOffset.ContainerOffset), Util.NumberBase.Hexadecimal, 4);
             set
             {
                 if (!int.TryParse(value, NumberStyles.HexNumber, null, out var parsed))
                     return;
 
-                Data.SetDirectPage(RomByte.Offset, parsed);
-                OnPropertyChanged();
+                Data.SetDirectPage(ByteOffset.ContainerOffset, parsed);
+                //OnPropertyChanged();
             }
         }
 
@@ -139,11 +133,11 @@ namespace DiztinGUIsh.window2
         [Editable(true)]
         public string MFlag
         {
-            get => RomUtil.BoolToSize(Data.GetMFlag(RomByte.Offset));
+            get => RomUtil.BoolToSize(Data.GetMFlag(ByteOffset.ContainerOffset));
             set
             {
-                Data.SetMFlag(RomByte.Offset, value == "8" || value == "M");
-                OnPropertyChanged();
+                Data.SetMFlag(ByteOffset.ContainerOffset, value == "8" || value == "M");
+                //OnPropertyChanged();
             }
         }
 
@@ -151,11 +145,11 @@ namespace DiztinGUIsh.window2
         [Editable(true)]
         public string XFlag
         {
-            get => RomUtil.BoolToSize(Data.GetXFlag(RomByte.Offset));
+            get => RomUtil.BoolToSize(Data.GetXFlag(ByteOffset.ContainerOffset));
             set
             {
-                Data.SetXFlag(RomByte.Offset, value == "8" || value == "X");
-                OnPropertyChanged();
+                Data.SetXFlag(ByteOffset.ContainerOffset, value == "8" || value == "X");
+                // OnPropertyChanged();
             }
         }
 
@@ -163,30 +157,30 @@ namespace DiztinGUIsh.window2
         [Editable(true)]
         public string Comment
         {
-            get => Data.GetComment(Data.ConvertPCtoSnes(RomByte.Offset));
+            get => Data.GetCommentText(Data.ConvertPCtoSnes(ByteOffset.ContainerOffset));
             set
             {
-                Data.AddComment(Data.ConvertPCtoSnes(RomByte.Offset), value, true);
-                OnPropertyChanged();
+                Data.AddComment(Data.ConvertPCtoSnes(ByteOffset.ContainerOffset), value, true);
+                // OnPropertyChanged();
             }
         }
         
-        private readonly RomByteData romByte;
+        private readonly ByteOffsetData byteOffset;
 
         [Browsable(false)]
-        public RomByteData RomByte
+        public ByteOffsetData ByteOffset
         {
-            get => romByte;
+            get => byteOffset;
             init
             {
-                this.SetField(PropertyChanged, ref romByte, value);
-                if (RomByte != null)
-                    RomByte.PropertyChanged += OnRomBytePropertyChanged;
+                this.SetField(PropertyChanged, ref byteOffset, value);
+                // tmp disable // if (ByteOffset != null)
+                // ByteOffset.PropertyChanged += OnRomBytePropertyChanged;
             }
         }
 
         [Browsable(false)] public Data Data { get; init; }
-        [Browsable(false)] public IBytesGridViewer<RomByteData> ParentView { get; init; }
+        [Browsable(false)] public IBytesGridViewer<ByteOffsetData> ParentView { get; init; }
         [Browsable(false)] private Util.NumberBase NumberBase => ParentView.NumberBaseToShow;
 
         [Browsable(false)] public event PropertyChangedEventHandler PropertyChanged;
@@ -199,23 +193,23 @@ namespace DiztinGUIsh.window2
                 OnPropertyChanged(nameof(IA));
             }
 
-            // NOTE: if any properties under RomByte change, make sure the names update here
+            // NOTE: if any properties under ByteOffset change, make sure the names update here
             switch (e.PropertyName)
             {
-                case nameof(RomByteData.Rom):
+                case nameof(ByteOffsetData.Byte):
                     OnPropertyChanged(nameof(AsciiCharRep));
                     OnPropertyChanged(nameof(NumericRep));
                     OnInstructionRelatedChanged();
                     break;
-                case nameof(RomByteData.Arch):
+                case nameof(ByteOffsetData.Arch):
                     OnInstructionRelatedChanged();
                     break;
-                case nameof(RomByteData.DataBank):
-                case nameof(RomByteData.DirectPage):
-                case nameof(RomByteData.XFlag):
-                case nameof(RomByteData.MFlag):
-                case nameof(RomByteData.TypeFlag):
-                case nameof(RomByteData.Point):
+                case nameof(ByteOffsetData.DataBank):
+                case nameof(ByteOffsetData.DirectPage):
+                case nameof(ByteOffsetData.XFlag):
+                case nameof(ByteOffsetData.MFlag):
+                case nameof(ByteOffsetData.TypeFlag):
+                case nameof(ByteOffsetData.Point):
                     OnPropertyChanged(e.PropertyName);
                     break;
             }
@@ -257,7 +251,7 @@ namespace DiztinGUIsh.window2
         /// <summary>
         /// Format an arbitrary cell in the grid. it may or may not be the currently selected cell.
         /// </summary>
-        /// <param name="rowRomByte">the RomByte associated with this row</param>
+        /// <param name="rowRomByte">the ByteOffset associated with this row</param>
         /// <param name="colPropName">the name of the data property associated with this column (not the column header, this is the internal name)</param>
         /// <param name="style">Out param, modify this to set the style</param>
         public void SetStyleForCell(string colPropName, DataGridViewCellStyle style)
@@ -266,7 +260,7 @@ namespace DiztinGUIsh.window2
                 style.SelectionBackColor = Color.Chartreuse;
 
             // all cells in a row get this treatment
-            switch (RomByte.TypeFlag)
+            switch (ByteOffset.TypeFlag)
             {
                 case FlagType.Unreached:
                     style.BackColor = Color.LightGray;
@@ -329,15 +323,15 @@ namespace DiztinGUIsh.window2
         private Color? GetBackColorInOut()
         {
             int r = 255, g = 255, b = 255;
-            if ((RomByte.Point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) g -= 50;
-            if ((RomByte.Point & InOutPoint.InPoint) != 0) r -= 50;
-            if ((RomByte.Point & InOutPoint.ReadPoint) != 0) b -= 50;
+            if ((ByteOffset.Point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) g -= 50;
+            if ((ByteOffset.Point & InOutPoint.InPoint) != 0) r -= 50;
+            if ((ByteOffset.Point & InOutPoint.ReadPoint) != 0) b -= 50;
             return Color.FromArgb(r, g, b);
         }
 
         private Color? GetInstructionBackgroundColor()
         {
-            var opcode = RomByte.Rom;
+            var opcode = ByteOffset.Byte;
             var isWeirdInstruction =
                     opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 || // RTI WAI STP SED
                     opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42 // XCE BRK COP WDM
@@ -347,7 +341,7 @@ namespace DiztinGUIsh.window2
 
         private Color? GetDataBankColor()
         {
-            switch (RomByte.Rom)
+            switch (ByteOffset.Byte)
             {
                 // PLB MVP MVN
                 case 0xAB:
@@ -364,7 +358,7 @@ namespace DiztinGUIsh.window2
 
         private Color? GetDirectPageColor()
         {
-            switch (RomByte.Rom)
+            switch (ByteOffset.Byte)
             {
                 // PLD TCD
                 case 0x2B:
@@ -386,8 +380,8 @@ namespace DiztinGUIsh.window2
 
         private Color? GetMXFlagColor(int nextByteMask)
         {
-            var nextByte = Data.GetNextRomByte(RomByte.Offset) ?? 0;
-            switch (RomByte.Rom)
+            var nextByte = Data.GetNextRomByte(ByteOffset.ContainerOffset) ?? 0;
+            switch (ByteOffset.Byte)
             {
                 // PLP
                 // SEP REP, *iff* relevant bit is set on next byte
@@ -403,16 +397,16 @@ namespace DiztinGUIsh.window2
 
         private void SetStyleForIndirectAddress(string colPropName, DataGridViewCellStyle style)
         {
-            var selectedRomByteRow = ParentView.SelectedRomByte;
+            var selectedRomByteRow = ParentView.SelectedByteOffset;
             if (selectedRomByteRow == null)
                 return;
 
             var matchingIa = colPropName switch
             {
                 nameof(Offset) => 
-                    Data.IsMatchingIntermediateAddress(selectedRomByteRow.Offset, RomByte.Offset),
+                    Data.IsMatchingIntermediateAddress(selectedRomByteRow.ContainerOffset, ByteOffset.ContainerOffset),
                 nameof(IA) => 
-                    Data.IsMatchingIntermediateAddress(RomByte.Offset, selectedRomByteRow.Offset),
+                    Data.IsMatchingIntermediateAddress(ByteOffset.ContainerOffset, selectedRomByteRow.ContainerOffset),
                 _ => false
             };
 

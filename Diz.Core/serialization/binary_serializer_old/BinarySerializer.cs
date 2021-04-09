@@ -6,6 +6,12 @@ using System.Linq;
 using Diz.Core.model;
 using Diz.Core.util;
 
+// IMPORTANT NOTE:
+// This serializer is compact, but it's deprecated in favor of the XML serializer, which is way easier
+// to make changes to and deal with backwards compatibility.
+//
+// This is only here for loading older files saved in this format, it shouldn't be used for anything new going forward.
+
 namespace Diz.Core.serialization.binary_serializer_old
 {
     internal class BinarySerializer : ProjectSerializer
@@ -72,7 +78,9 @@ namespace Diz.Core.serialization.binary_serializer_old
                 project.AttachedRomFilename += (char)data[pointer++];
             pointer++;
 
-            project.Data.RomBytes.Create(size);
+            // create empty ROM data
+            for (var b = 0; b < size; ++b) 
+                project.Data.RomBytes.Add(new ByteOffsetData());
 
             for (int i = 0; i < size; i++) project.Data.SetDataBank(i, data[pointer + i]);
             for (int i = 0; i < size; i++) project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
@@ -110,8 +118,19 @@ namespace Diz.Core.serialization.binary_serializer_old
             bytes.Add(0);
         }
 
+        private void VoidTheWarranty()
+        {
+            // comment this out only if you are an expert and know what you're doing. Binary serialization is deprecated.
+            //
+            // How did you even get here, dawg? #yolo
+            throw new NotSupportedException("Binary serializer saving is OLD, please use the XML serializer instead.");
+        }
+
         private byte[] SaveVersion(Project project, int version)
         {
+            VoidTheWarranty();
+            /*
+            
             ValidateSaveVersion(version);
 
             int size = project.Data.GetRomSize();
@@ -198,7 +217,8 @@ namespace Diz.Core.serialization.binary_serializer_old
             comment.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size + label.Count);
             // ???
 
-            return data;
+            return data;*/ // tmp
+            return null;
         }
 
         private static void ValidateSaveVersion(int version) {
@@ -244,7 +264,6 @@ namespace Diz.Core.serialization.binary_serializer_old
                         Name = strings[0],
                         Comment = strings.ElementAtOrDefault(1)
                     };
-                    label.CleanUp();
                     project.Data.AddLabel(offset, label, true);
                 });
         }

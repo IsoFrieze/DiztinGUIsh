@@ -91,17 +91,6 @@ namespace Diz.Core.model
             set => this.SetField(PropertyChanged, ref logWriterSettings, value);
         }
 
-        // purely visual. what offset is currently being looked at in the main grid.
-        //
-        // TODO: user-specific so can't store in the main project. save it elsewhere.
-        // TODO: this is really a per-view setting so shouldn't be in Project. there can be multiple.
-        /*private int currentViewOffset;
-        public int CurrentViewOffset
-        {
-            get => currentViewOffset;
-            set => this.SetField(PropertyChanged, ref currentViewOffset, value);
-        }*/
-
         // needs to come last for serialization. this is the heart of the app, the actual
         // data from the ROM and metadata we add/create.
         public Data Data
@@ -110,7 +99,7 @@ namespace Diz.Core.model
             set => this.SetField(PropertyChanged, ref data, value);
         }
         
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public Project()
         {

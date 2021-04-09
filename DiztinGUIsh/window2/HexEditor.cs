@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Windows.Forms;
-using Be.Windows.Forms;
+// using Be.Windows.Forms;
 using Diz.Core.model;
 
 namespace DiztinGUIsh.window2
@@ -19,8 +19,8 @@ namespace DiztinGUIsh.window2
         {
             InitializeComponent();
 
-            hexBox1.StringViewVisible = true;
-            hexBox1.ReadOnly = true;
+            //hexBox1.StringViewVisible = true;
+            //hexBox1.ReadOnly = true;
         }
 
         private void HexEditor_Load(object sender, System.EventArgs e)

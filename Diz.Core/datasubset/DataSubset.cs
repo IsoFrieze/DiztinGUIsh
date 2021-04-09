@@ -139,12 +139,44 @@ namespace DiztinGUIsh.util
             RowLoader.OnBigWindowChangeStart(this);
             for (var i = StartingRowLargeIndex; i < StartingRowLargeIndex + RowCount; ++i)
             {
-                outputRows.Add(GetOrCreateRow(i));
+                var newRow = GetOrCreateRow(i);
+                outputRows.Add(newRow);
             }
+            SetNotifyChangedForAllRows(register: true);
             RowLoader.OnBigWindowChangeFinished(this);
         }
 
-        private void DropRowCache() => outputRows = null;
+        private void DropRowCache()
+        {
+            if (outputRows == null)
+                return;
+
+            SetNotifyChangedForAllRows(register: false);
+
+            outputRows = null;
+        }
+
+        private void SetNotifyChangedForAllRows(bool register)
+        {
+            foreach (var row in outputRows)
+            {
+                if (!(row is INotifyPropertyChanged iNotify))
+                    continue;
+
+                if (register)
+                    iNotify.PropertyChanged += OnRowPropertyChanged;
+                else
+                    iNotify.PropertyChanged -= OnRowPropertyChanged;
+            }
+        }
+
+        private void OnRowPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // underlying data in one of the visible rows just changed, so pass that along so
+            // listeners can get a notification that they should refresh the data.
+            
+            PropertyChanged?.Invoke(sender, e);
+        }
 
         // key thing: we cache outputRows as long as the view doesn't change.
         // RowLoader will cache both the visible rows and potentially lots more of the most
@@ -180,7 +212,7 @@ namespace DiztinGUIsh.util
                 ? -1
                 : rowOffset + startingRowLargeIndex;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)

@@ -1,6 +1,7 @@
 ﻿#define PROFILING
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Diz.Core.model;
@@ -87,14 +88,14 @@ namespace Diz.Core.serialization
 
             var data = project.Data;
 
-            Debug.Assert(data.Labels != null && data.Comments != null);
+            // TODO: (don't need?) Debug.Assert(data.Labels != null && data.Comments != null);
             Debug.Assert(data.RomBytes != null && data.RomBytes.Count > 0);
 
             var rom = ReadFromOriginalRom(project);
             if (rom == null)
                 return false;
 
-            data.CopyRomDataIn(rom);
+            data.PopulateFrom(rom);
             return true;
         }
 
@@ -151,7 +152,7 @@ namespace Diz.Core.serialization
 
             project.Data.RomMapMode = importSettings.RomMapMode;
             project.Data.RomSpeed = importSettings.RomSpeed;
-            project.Data.CreateRomBytesFromRom(importSettings.RomBytes);
+            project.Data.PopulateFrom(importSettings.RomBytes);
 
             foreach (var pair in importSettings.InitialLabels)
                 project.Data.AddLabel(pair.Key, pair.Value, true);

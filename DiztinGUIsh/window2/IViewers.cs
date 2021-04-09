@@ -18,7 +18,7 @@ namespace DiztinGUIsh.window2
     {
         // get the number base that will be used to display certain items in the grid
         public Util.NumberBase NumberBaseToShow { get; }
-        TByteItem SelectedRomByte { get; }
+        TByteItem SelectedByteOffset { get; }
         public List<TByteItem> DataSource { get; set; }
         int TargetNumberOfRowsToShow { get; }
 

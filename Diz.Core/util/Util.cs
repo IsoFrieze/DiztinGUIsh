@@ -75,6 +75,12 @@ namespace Diz.Core.util
             }
             return "";
         }
+        
+        public static string ToHexString6(int i)
+        {
+            return NumberToBaseString(i, NumberBase.Hexadecimal, 6);
+        }
+        
         public static int ParseHexOrBase10String(string data)
         {
             var hex = false;
@@ -89,8 +95,8 @@ namespace Diz.Core.util
             {
                 hexDigitStartIndex = 2;
                 hex =
-                    (data[0] == '0' && data[1] == 'x') ||
-                    (data[0] == '#' && data[1] == '$');
+                    data[0] == '0' && data[1] == 'x' ||
+                    data[0] == '#' && data[1] == '$';
             }
 
             if (hex)

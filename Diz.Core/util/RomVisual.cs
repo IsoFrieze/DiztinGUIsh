@@ -34,8 +34,9 @@ namespace Diz.Core.util
             if (project?.Data == null) 
                 return;
 
-            project.Data.RomBytes.PropertyChanged += RomBytes_PropertyChanged;
-            project.Data.RomBytes.CollectionChanged += RomBytes_CollectionChanged;
+            // TODO
+            //project.Data.RomBytes += RomBytes_PropertyChanged;
+            //project.Data.RomBytes.CollectionChanged += RomBytes_CollectionChanged;
         }
 
         public bool IsDirty
@@ -112,7 +113,7 @@ namespace Diz.Core.util
         private Project project;
 
         private readonly object dirtyLock = new object();
-        private readonly Dictionary<int, RomByte> dirtyRomBytes = new Dictionary<int, RomByte>();
+        private readonly Dictionary<int, ByteOffsetData> dirtyRomBytes = new Dictionary<int, ByteOffsetData>();
 
         private void RomBytes_CollectionChanged(object sender,
             System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -127,13 +128,13 @@ namespace Diz.Core.util
 
         private void RomBytes_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (!(sender is RomByte romByte))
+            if (!(sender is ByteOffsetData romByte))
                 return;
 
-            if (e.PropertyName != "TypeFlag")
+            if (e.PropertyName != nameof(MarkAnnotation.TypeFlag))
                 return;
 
-            if (!OffsetInRange(romByte.Offset))
+            if (!OffsetInRange(romByte.ContainerOffset))
                 return;
 
             MarkDirty(romByte);
@@ -204,23 +205,23 @@ namespace Diz.Core.util
         // returns the RomBytes we should use to update our image
         // this can either be ALL RomBytes, or, a small set of dirty RomBytes that were changed
         // since our last redraw.
-        private IEnumerable<RomByte> ConsumeRomDirtyBytes(out bool usedDirtyList)
+        private IEnumerable<ByteOffsetData> ConsumeRomDirtyBytes(out bool usedDirtyList)
         {
             usedDirtyList = false;
 
             if (AllDirty)
                 return Data.RomBytes
                     .Where(rb => 
-                        rb.Offset >= RomStartingOffset && rb.Offset <= RomMaxOffsetAllowed
+                        rb.ContainerOffset >= RomStartingOffset && rb.ContainerOffset <= RomMaxOffsetAllowed
                     )
                     .ToList();
 
             usedDirtyList = true;
-            IEnumerable<RomByte> romBytes;
+            IEnumerable<ByteOffsetData> romBytes;
             lock (dirtyLock)
             {
                 // make a copy so we can release the lock.
-                romBytes = new List<RomByte>(dirtyRomBytes.Values.Select(kvp => kvp));
+                romBytes = new List<ByteOffsetData>(dirtyRomBytes.Values.Select(kvp => kvp));
                 dirtyRomBytes.Clear();
             }
 
@@ -234,11 +235,11 @@ namespace Diz.Core.util
             return (x, y);
         }
 
-        private void SetPixel(RomByte romByte, FastBitmap fastBitmap)
+        private void SetPixel(ByteOffsetData byteOffset, FastBitmap fastBitmap)
         {
-            var pixelIndex = ConvertRomOffsetToPixelIndex(romByte.Offset);
+            var pixelIndex = ConvertRomOffsetToPixelIndex(byteOffset.ContainerOffset);
             var (x, y) = ConvertPixelIndexToXy(pixelIndex);
-            var color = Util.GetColorFromFlag(romByte.TypeFlag);
+            var color = Util.GetColorFromFlag(byteOffset.GetOneAnnotation<MarkAnnotation>().TypeFlag);
             fastBitmap.SetPixel(x, y, color);
         }
 
@@ -252,14 +253,14 @@ namespace Diz.Core.util
             ImageDataUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        protected virtual void MarkDirty(RomByte romByte)
+        protected virtual void MarkDirty(ByteOffsetData byteOffset)
         {
             lock (dirtyLock)
             {
-                if (!dirtyRomBytes.ContainsKey(romByte.Offset))
-                    dirtyRomBytes.Add(romByte.Offset, romByte);
+                if (!dirtyRomBytes.ContainsKey(byteOffset.ContainerOffset))
+                    dirtyRomBytes.Add(byteOffset.ContainerOffset, byteOffset);
                 else
-                    dirtyRomBytes[romByte.Offset] = romByte;
+                    dirtyRomBytes[byteOffset.ContainerOffset] = byteOffset;
             }
 
             MarkedDirty?.Invoke(this, EventArgs.Empty);

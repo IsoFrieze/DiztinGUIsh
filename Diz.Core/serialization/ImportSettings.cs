@@ -42,6 +42,6 @@ namespace Diz.Core.serialization
             set => this.SetField(PropertyChanged, ref romFilename, value);
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

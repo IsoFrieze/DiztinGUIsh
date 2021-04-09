@@ -36,8 +36,9 @@ namespace DiztinGUIsh.window
                 if (Project != null)
                 {
                     Project.PropertyChanged += Project_PropertyChanged;
-                    if (Project.Data != null) 
-                        Project.Data.PropertyChanged += DataOnPropertyChanged;
+                    // TODO
+                    //if (Project.Data != null) 
+                    //    Project.Data.PropertyChanged += DataOnPropertyChanged;
                 }
 
                 mainFormController.ProjectChanged += ProjectController_ProjectChanged;
@@ -71,7 +72,7 @@ namespace DiztinGUIsh.window
                 OpenLastProject();
         }
 
-        private void DataGridEditorControl1OnSelectedOffsetChanged(object sender, IBytesGridViewer<RomByteData>.SelectedOffsetChangedEventArgs e)
+        private void DataGridEditorControl1OnSelectedOffsetChanged(object sender, IBytesGridViewer<ByteOffsetData>.SelectedOffsetChangedEventArgs e)
         {
             // called when the user clicks a different cell in the child data grid
             MainFormController.OnUserChangedSelection(e.Row);
@@ -142,7 +143,7 @@ namespace DiztinGUIsh.window
 
         private void DataOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(RomByte.TypeFlag))
+            if (e.PropertyName == nameof(ByteOffsetData.TypeFlag))
             {
                 percentComplete.Text = "";
                 if (Project?.Data == null || Project.Data.GetRomSize() <= 0) 

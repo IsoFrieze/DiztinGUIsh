@@ -16,7 +16,7 @@ namespace Diz.Core.model
         // returns true if we set property to a new value
         public static bool SetField<T>(this INotifyPropertyChanged sender, PropertyChangedEventHandler handler, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
-            if (!FieldCompare(field, value, compareRefOnly)) 
+            if (!FieldIsEqual(field, value, compareRefOnly)) 
                 return false;
             
             field = value;
@@ -28,7 +28,7 @@ namespace Diz.Core.model
         // returns true if we set property to a new value
         public static bool SetField<T>(this INotifyPropertyChangedExt sender, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
-            if (!FieldCompare(field, value, compareRefOnly)) 
+            if (!FieldIsEqual(field, value, compareRefOnly)) 
                 return false;
             
             field = value;
@@ -37,7 +37,7 @@ namespace Diz.Core.model
             return true;
         }
 
-        public static bool FieldCompare<T>(T field, T value, bool compareRefOnly = false)
+        public static bool FieldIsEqual<T>(T field, T value, bool compareRefOnly = false)
         {
             if (compareRefOnly)
             {

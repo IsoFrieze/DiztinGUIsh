@@ -1,4 +1,5 @@
-﻿using Diz.Core.model;
+﻿using System.Collections.Generic;
+using Diz.Core.model;
 using Diz.Core.util;
 using IX.Observable;
 
@@ -23,9 +24,11 @@ namespace Diz.Core
                 // To accomplish this, we'll pad the size of the sample ROM data to 32k, but,
                 // we'll tell the assembly exporter to limit to the first couple hundred bytes by
                 // only assembling bytes up to BaseSampleData.SizeOverride.
-                BaseSampleData.OriginalRomSizeBeforePadding = BaseSampleData.RomBytes.Count;
+                
+                // TEMP HACK
+                /*BaseSampleData.OriginalRomSizeBeforePadding = BaseSampleData.RomBytes.Count;
                 while (BaseSampleData.RomBytes.Count < 0x8000)
-                    BaseSampleData.RomBytes.Add(new RomByte());
+                    BaseSampleData.RomBytes.Add(new ByteOffset());*/
 
                 _finalSampleData = BaseSampleData;
                 return BaseSampleData;
@@ -36,12 +39,29 @@ namespace Diz.Core
 
         private static SampleRomData _finalSampleData;
 
-        private static readonly SampleRomData BaseSampleData = new()
+        private static readonly SampleRomData BaseSampleData = null; // TEMP HACK 
+            /*new()
         {
             // random sample code I made up; hopefully it shows a little bit of
             // everything so you can see how the settings will effect the output
             RomMapMode = RomMapMode.LoRom,
             RomSpeed = RomSpeed.FastRom,
+            SnesAddressSpace = new SnesAddressSpaceByteSource
+            {
+                ChildSources = new List<ByteSourceMapping>
+                {
+                    new()
+                    {
+                        ByteSource = new ByteSource(),
+                        RegionMapping = new RegionMappingSnesRom
+                        {
+                            RomSpeed = RomSpeed,
+                            RomMapMode = RomMapMode,
+                        }
+                    }
+                }
+            },
+            RomByteSource = SnesAddressSpace.ChildSources[0].ByteSource, 
             RomBytes = new RomBytes {
                 new() {Rom = 0x78, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, Point = InOutPoint.InPoint},
                 new() {Rom = 0xA9, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true},
@@ -201,6 +221,6 @@ namespace Diz.Core
                 {0x808000 + 0x44, new Label {Name = "First_Routine"}},
                 {0x808000 + 0x5B, new Label {Name = "Test_Data", Comment = "Pretty cool huh?"}}
             },
-        };
+        };*/
     }
 }

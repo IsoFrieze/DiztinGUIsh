@@ -43,11 +43,11 @@ namespace Diz.Core.serialization.xml_serializer
         private const int LineMaxLen = 9;
 
         // note: performance-intensive function. be really careful when adding stuff here.
-        public RomByte DecodeRomByte(string line)
+        public ByteOffsetData DecodeRomByte(string line)
         {
             var input = PrepLine(line);
 
-            var newByte = new RomByte();
+            var newByte = new ByteOffsetData();
 
             var flagTxt = input[0];
             var otherFlags1 = Fake64Encoding.DecodeHackyBase64(input[1]);
@@ -100,7 +100,7 @@ namespace Diz.Core.serialization.xml_serializer
             return cachedPadSb;
         }
 
-        public string EncodeByte(RomByte instance)
+        public string EncodeByte(ByteOffsetData instance)
         {
             // use a custom formatter here to save space. there are a LOT of ROMBytes.
             // despite that we're still going for:

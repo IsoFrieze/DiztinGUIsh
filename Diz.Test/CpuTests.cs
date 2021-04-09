@@ -9,34 +9,51 @@ namespace Diz.Test
 {
     public static class CpuTests
     {
-        private static Data GetSampleData() => new Data
+        private static Data GetSampleData()
         {
-            RomMapMode = RomMapMode.HiRom,
-            RomSpeed = RomSpeed.FastRom,
-            RomBytes = new RomBytes
+            var data = new Data
             {
-                // starts at PC=0, which is SNES=0xC00000
-                // STA.W SNES_VMADDL
-                // OR (equivalent)
-                // STA.W $2116
-                new RomByte
+                RomMapMode = RomMapMode.HiRom,
+                RomSpeed = RomSpeed.FastRom,
+                RomByteSource = new RomBytes(new List<ByteOffsetData>
                 {
-                    Rom = 0x8D, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, DataBank = 0x00,
-                    DirectPage = 0,
-                },
-                new RomByte {Rom = 0x16, TypeFlag = FlagType.Operand},
-                new RomByte {Rom = 0x21, TypeFlag = FlagType.Operand},
-            },
-            Comments = new ObservableDictionary<int, Comment>()
-            {
-                {0xC00001, new Comment {Text="unused"}},
-            },
-            Labels = new ObservableDictionary<int, Label>()
-            {
-                {0x002116, new Label {Name = "SNES_VMADDL", Comment = "SNES hardware register example."}},
-            },
-        };
-        
+                    // starts at PC=0, which is SNES=0xC00000
+                    // STA.W SNES_VMADDL
+                    // OR (equivalent)
+                    // STA.W $2116
+                    new()
+                    {
+                        Byte = 0x8D, Annotations = new List<Annotation>
+                        {
+                            new OpcodeAnnotation { MFlag = true, XFlag = true, DataBank = 0x00, DirectPage = 0 }, 
+                            new MarkAnnotation { TypeFlag = FlagType.Opcode }
+                        }
+                        
+                    },
+                    new() {
+                        Byte = 0x16, Annotations = new List<Annotation>
+                        {
+                            new MarkAnnotation { TypeFlag = FlagType.Operand },
+                            new Comment {Text="unused"} // 0xC00001
+                        }
+                    },
+                    new() {
+                        Byte = 0x21, Annotations = new List<Annotation>
+                        {
+                            new MarkAnnotation { TypeFlag = FlagType.Operand }
+                        }
+                    },
+                }),
+                
+                // TODO: remove this, integrate back up top somewhere. need to do it on SNES address space tho.
+                /*Labels = new ObservableDictionary<int, Label>
+                {
+                    {0x002116, new Label {Name = "SNES_VMADDL", Comment = "SNES hardware register example."}},
+                },*/
+            };
+            return data;
+        }
+
         public static IReadOnlyList<byte> AssemblyRom => AsarRunner.AssembleToRom(@"
             hirom
 
@@ -82,14 +99,14 @@ namespace Diz.Test
         {
             // C# ROM -> Assembly Text 
             var exportAssembly = LogWriterHelper.ExportAssembly(GetSampleData()).OutputStr;
-            
+
             // Assembly Text -> Asar -> SFC file
             var bytes = AsarRunner.AssembleToRom(exportAssembly);
-            
+
             Assert.Equal(0x8D, bytes[0]);
             Assert.Equal(0x16, bytes[1]);
             Assert.Equal(0x21, bytes[2]);
             Assert.Equal(3, bytes.Count);
-        } 
+        }
     }
 }

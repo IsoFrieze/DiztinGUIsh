@@ -34,8 +34,8 @@ namespace Diz.Test
             protected bool Equals(TestRoot other)
             {
                 return
-                    Enumerable.SequenceEqual(ODW, other.ODW) &&
-                    Enumerable.SequenceEqual(ODW2, other.ODW2);
+                    ODW.SequenceEqual(other.ODW) &&
+                    ODW2.SequenceEqual(other.ODW2);
             }
 
             public override bool Equals(object obj)
@@ -68,7 +68,7 @@ namespace Diz.Test
             var serializer = GetSerializer().Create();
 
             var xmlStr = serializer.Serialize(
-                new XmlWriterSettings() {},
+                new XmlWriterSettings(),
                 testRootElementGood);
 
             testOutputHelper.WriteLine(xmlStr);
@@ -87,6 +87,6 @@ namespace Diz.Test
 
         private readonly TestRoot testRootElementGood = new();
 
-        string xmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerDictionaryTest-TestRoot xmlns:ns1=\"clr-namespace:IX.Observable;assembly=IX.Observable\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:ns2=\"clr-namespace:Diz.Core.model;assembly=Diz.Core\"><ODW AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"1\" Value=\"Z test1\" /><sys:Item Key=\"2\" Value=\"Z test3\" /></ODW><ODW2 AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"100\"><Value Name=\"location1\" Comment=\"c1\" /></sys:Item><sys:Item Key=\"200\"><Value Name=\"location2\" Comment=\"c2\" /></sys:Item></ODW2></SerializerDictionaryTest-TestRoot>";
+        string xmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerDictionaryTest-TestRoot xmlns:ns1=\"clr-namespace:IX.Observable;assembly=IX.Observable\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:ns2=\"clr-namespace:Diz.Core.model;assembly=Diz.Core\"><ODW AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"1\"><Value Text=\"Z test1\" /></sys:Item><sys:Item Key=\"2\"><Value Text=\"Z test3\" /></sys:Item></ODW><ODW2 AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"100\"><Value Name=\"location1\" Comment=\"c1\" /></sys:Item><sys:Item Key=\"200\"><Value Name=\"location2\" Comment=\"c2\" /></sys:Item></ODW2></SerializerDictionaryTest-TestRoot>";
     }
 }

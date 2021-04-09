@@ -12,7 +12,7 @@ namespace Diz.Test.Utils
 
             // note: slow.
             while (RomBytes.Count < 0xFFFF * 64)
-                RomBytes.Add(new RomByte());
+                RomBytes.Add(new ByteOffsetData());
         }
     }
 }

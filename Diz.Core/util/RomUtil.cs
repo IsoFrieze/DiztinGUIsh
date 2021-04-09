@@ -431,15 +431,18 @@ namespace Diz.Core.util
         public static LogCreator.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
         {
             var sampleRomData = SampleRomData.SampleData;
+
             sampleSettings.Structure = LogCreator.FormatStructure.SingleFile;
             sampleSettings.FileOrFolderOutPath = "";
             sampleSettings.OutputToString = true;
             sampleSettings.RomSizeOverride = sampleRomData.OriginalRomSizeBeforePadding;
+            
             var lc = new LogCreator()
             {
                 Settings = sampleSettings,
                 Data = sampleRomData,
             };
+            
             return lc.CreateLog();
         }
     }

@@ -1,7 +1,12 @@
-﻿using Diz.Core.model;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer.xml_migrations;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
+using ExtendedXmlSerializer.ContentModel.Format;
+using ExtendedXmlSerializer.ExtensionModel.Instances;
 
 namespace Diz.Core.serialization.xml_serializer
 {
@@ -50,6 +55,44 @@ namespace Diz.Core.serialization.xml_serializer
             return new KeyValuePair<int, string>(intValue, strValue);
         }
     }*/
+    
+    sealed class Monitor : ISerializationMonitor<string>
+    {
+        // readonly List<string> _store;
+
+        // public Monitor(List<string> store) => _store = store;
+
+        public void OnSerializing(IFormatWriter writer, string instance)
+        {
+            Trace.WriteLine(instance);
+        }
+
+        public void OnSerialized(IFormatWriter writer, string instance)
+        {
+            Trace.WriteLine(instance);
+            // _store.Add(instance);
+        }
+
+        public void OnDeserializing(IFormatReader reader, Type instanceType)
+        {
+            Trace.WriteLine(instanceType.ToString());
+        }
+
+        public void OnActivating(IFormatReader reader, Type instanceType)
+        {
+            Trace.WriteLine(instanceType.ToString());
+        }
+
+        public void OnActivated(string instance)
+        {
+            Trace.WriteLine(instance);
+        }
+
+        public void OnDeserialized(IFormatReader reader, string instance)
+        {
+            Trace.WriteLine(instance);
+        }
+    }
 
     public static class XmlSerializerSupport
     {
@@ -63,6 +106,7 @@ namespace Diz.Core.serialization.xml_serializer
             return new ConfigurationContainer()
 
                 .Type<Project>()
+                // .WithMonitor(new Monitor())
                 .Member(x => x.UnsavedChanges).Ignore()
                 .Member(x => x.ProjectFileName).Ignore()
 
@@ -70,8 +114,12 @@ namespace Diz.Core.serialization.xml_serializer
                 .Register().Serializer().Using(RomBytesSerializer.Default)
 
                 .Type<Data>()
-                .Member(x=>x.Comments)
-                
+                // tmp. eventually, we do need to serialize this stuff.
+                .Member(x => x.SnesAddressSpace).Ignore()
+                .Member(x => x.RomByteSource).Ignore()
+                .Member(x => x.RomBytes).Ignore()
+
+                // .Member(x=>x.Comments)
                 // TODO: trying to get a converter up and running. not working yet....
                 // .Register().Converter(HexIntConverter.Default)
                 // .Member(x => x.Comments.Keys).Register().Converter().)
