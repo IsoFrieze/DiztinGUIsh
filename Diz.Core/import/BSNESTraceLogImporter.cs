@@ -91,14 +91,14 @@ namespace Diz.Core.import
 
         private FlagType GetFlag(int pc)
         {
-            data.RomBytes[pc].Lock.EnterReadLock();
+            data.RomByteSource?.Bytes[pc].Lock.EnterReadLock();
             try
             {
                 return data.GetFlag(pc);
             }
             finally
             {
-                data.RomBytes[pc].Lock.ExitReadLock();       
+                data.RomByteSource?.Bytes[pc].Lock.ExitReadLock();       
             }
         }
 

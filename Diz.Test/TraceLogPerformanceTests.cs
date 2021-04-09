@@ -5,6 +5,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Loggers;
 using Diz.Core.import;
 using Diz.Core.model;
+using Diz.Core.util;
 using Diz.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;
@@ -66,9 +67,10 @@ namespace Diz.Test
         public class ImportTraceLogStreamTestHarness
         {
             const string datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
-            readonly Data Data = new EmptyRom();
+            Data Data => new Data().InitializeEmptyRomMapping(0xFFFF * 64, RomMapMode.LoRom, RomSpeed.FastRom);
+
             private readonly BsnesTraceLogDebugBenchmarkFileCapture capturing;
-            private readonly Stopwatch stopWatch = new Stopwatch();
+            private readonly Stopwatch stopWatch = new();
             private readonly ITestOutputHelper output;
 
             public ImportTraceLogStreamTestHarness(ITestOutputHelper output)

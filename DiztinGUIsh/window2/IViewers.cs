@@ -38,4 +38,11 @@ namespace DiztinGUIsh.window2
 
         public event SelectedOffsetChange SelectedOffsetChanged;
     }
+    
+    public interface ILabelEditorView
+    {
+        string PromptForCsvFilename();
+        void RepopulateFromData();
+        void ShowLineItemError(string exMessage, int errLine);
+    }
 }

@@ -206,6 +206,12 @@ namespace Diz.Core.model
         }
         #endregion
     }
+
+    public interface IReadOnlyLabel
+    {
+        string Name { get; }
+        string Comment { get; }
+    }
     
     // represent a label at a particular SNES address
     //
@@ -214,7 +220,7 @@ namespace Diz.Core.model
     // - address: 0x7E0020 (if HiRom, 0x7EXXXX means it's a RAM address)
     // - label:   "character_3_hp"
     // - comment: "this address is only used in RAM during battle sequences"
-    public class Label : Annotation, IComparable<Label>, IComparable
+    public class Label : Annotation, IReadOnlyLabel, IComparable<Label>, IComparable
     {
     
         private string comment = "";

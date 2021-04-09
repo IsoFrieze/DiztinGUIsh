@@ -1,38 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Diz.Core.util;
 
-namespace Diz.Core.model
+namespace Diz.Core.model.byteSources
 {
     public class ByteSource
     {
         public string Name { get; set; }
-        
-        public List<ByteOffsetData> Bytes { get; protected init; } = new();
+
+        protected List<ByteOffsetData> bytes = new();
+
+        public IReadOnlyList<ByteOffsetData> Bytes => bytes;
 
         public List<ByteSourceMapping> ChildSources { get; init; } = new();
-        
-        public ByteSource(IReadOnlyCollection<byte> actualRomBytes)
-        {
-            Bytes = new List<ByteOffsetData>(actualRomBytes.Count);
-
-            var i = 0;
-            foreach (var fileByte in actualRomBytes)
-            {
-                Bytes.Add(new ByteOffsetData
-                    {
-                        Byte = fileByte,
-                        Container = this,
-                        ContainerOffset = i
-                    }
-                );
-
-                ++i;
-            }
-        }
 
         public ByteSource()
         {
-            // int x = 3;
+            
+        }
+
+        public void AddByte(ByteOffsetData byteOffset)
+        {
+            bytes.Add(byteOffset);
+            byteOffset.ContainerOffset = Bytes.Count - 1; // IMPORTANT
+            byteOffset.Container = this;
+        }
+        
+        public ByteSource(IReadOnlyCollection<ByteOffsetData> inBytes)
+        {
+            bytes = new List<ByteOffsetData>(inBytes.Count);
+            
+            var i = 0;
+            foreach (var b in inBytes)
+            {
+                AddByte(b);
+                ++i;
+            }
+        }
+        
+        public ByteSource(IReadOnlyCollection<byte> inBytes)
+        {
+            bytes = new List<ByteOffsetData>(inBytes.Count);
+
+            var i = 0;
+            foreach (var b in inBytes)
+            {
+                AddByte(new ByteOffsetData {
+                    Byte = b,
+                    Container = this,
+                    ContainerOffset = i
+                });
+
+                ++i;
+            }
         }
 
         // return a directed graph with all possible values for this offset including all child regions.
@@ -79,12 +100,20 @@ namespace Diz.Core.model
         // is appropriate for the calling code.
         public ByteOffsetData CompileAllChildDataAt(int index)
         {
+            if (!IsValidIndex(index))
+                return null;
+            
             var node = TraverseChildren(index);
             var finalData = node.ResolveToOne();
 
             return finalData;
         }
-        
+
+        private bool IsValidIndex(int index)
+        {
+            return index >= 0 && index < bytes?.Count;
+        }
+
         public void RemoveAllAnnotations(Predicate<Annotation> match)
         {
             // recurse through us and all children, remove annotations matching filter
@@ -94,6 +123,9 @@ namespace Diz.Core.model
 
         public void RemoveAllAnnotationsAt(int index, Predicate<Annotation> match)
         {
+            if (!IsValidIndex(index))
+                return;
+            
             Bytes[index].Annotations?.RemoveAll(match);
             
             foreach (var childNodes in ChildSources)
@@ -130,44 +162,37 @@ namespace Diz.Core.model
                 yield return new KeyValuePair<int, T>(snesAddress, annotation);
             }   
         }
-    }
-    
-    // temp hack, "RomBytes" class needs to go away, this is just to make some refactoring easier.
-    [Obsolete("RomBytes class is legacy, replace usages with ByteSource")]
-    public class RomBytes : ByteSource
-    {
-        // deprecated constructor, remove it, or move it into ByteSource
-        public RomBytes(IReadOnlyCollection<ByteOffsetData> romBytes) : base()
+
+        public static ByteSource CreateEmpty(int size)
         {
-            Bytes = new List<ByteOffsetData>(romBytes.Count);
-            for (var i = 0; i < romBytes.Count; ++i)
+            var emptyOffsetData = new List<ByteOffsetData>(size);
+            for (var i = 0; i < size; ++i)
             {
-                Bytes.Add(new ByteOffsetData
-                {
-                    ContainerOffset = i,
-                });
+                emptyOffsetData.Add(new ByteOffsetData());
             }
+
+            var newByteSource = new ByteSource(emptyOffsetData);
+            return newByteSource;
         }
     }
-
+    
     public class SnesAddressSpaceByteSource : ByteSource
     {
         public SnesAddressSpaceByteSource() : base()
         {
-            // create all addressible bytes for the SNES address space.
+            Debug.Assert(bytes.Count == 0);
+            
+            // create all addressable bytes for the SNES address space.
             // by default all .byte are null and there's no annotations here.
             const int snesAddressSpaceSizeInBytes = 0xFFFFFF;
             
             // note: potentially.... uses a lot of memory, yea.
-            // we probably want to use a dictionary or something sparse for this class specifically
+            // we probably want to switch to a dictionary or something sparse for this class specifically
             // or, create these bytes on-demand only when needed since most will be empty.
-            Bytes = new List<ByteOffsetData>(snesAddressSpaceSizeInBytes);
+            bytes = new List<ByteOffsetData>(snesAddressSpaceSizeInBytes);
             for (var i = 0; i < snesAddressSpaceSizeInBytes; ++i)
             {
-                Bytes.Add(new ByteOffsetData
-                {
-                    ContainerOffset = i,
-                });
+                AddByte(new ByteOffsetData());
             }
         }
     }

@@ -1,6 +1,6 @@
 ﻿using Diz.Core.util;
 
-namespace Diz.Core.model
+namespace Diz.Core.model.byteSources
 {
     public class ByteSourceMapping
     {
@@ -29,16 +29,22 @@ namespace Diz.Core.model
     {
         public RomMapMode RomMapMode { get; init; }
         public RomSpeed RomSpeed { get; init; }
+        
         public override int ConvertSourceToDestination(int source, ByteSource byteSource)
         {
-            return RomUtil.ConvertPCtoSnes(source, RomMapMode, RomSpeed);
+            // given a SNES address, convert to a ROM offset
+            var romOffset = RomUtil.ConvertSnesToPc(source, RomMapMode, byteSource.Bytes.Count);
+            return romOffset;
         }
 
         public override int ConvertDestinationToSource(int destination, ByteSource byteSource)
         {
+            // given a Rom offset, convert to an address in SNES address space
+            
             // TODO: eventually, make this map the entire SNES address space and not just the ROM area.
             // underlying stuff in RomUtil will need an update to do that.
-            return RomUtil.ConvertSnesToPc(destination, RomMapMode, byteSource.Bytes.Count);
+            var snesAddress = RomUtil.ConvertPCtoSnes(destination, RomMapMode, RomSpeed);
+            return snesAddress;
         }
     }
 }

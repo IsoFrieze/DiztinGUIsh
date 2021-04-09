@@ -19,10 +19,10 @@ namespace Diz.Core.arch
 
             return arch switch
             {
-                Architecture.Cpu65C816 => cpu65C816 ?? new Cpu65C816(),
-                Architecture.Apuspc700 => cpuSpc700 ?? new CpuSpc700(),
-                Architecture.GpuSuperFx => cpuSuperFx ?? new CpuSuperFx(),
-                _ => cpuDefault ?? new Cpu()
+                Architecture.Cpu65C816 => cpu65C816 ??= new Cpu65C816(),
+                Architecture.Apuspc700 => cpuSpc700 ??= new CpuSpc700(),
+                Architecture.GpuSuperFx => cpuSuperFx ??= new CpuSuperFx(),
+                _ => cpuDefault ??= new Cpu()
             };
         }
     }
@@ -413,7 +413,7 @@ namespace Diz.Core.arch
             if (address < 0) 
                 return "";
 
-            var label = data.GetLabelName(address);
+            var label = data.LabelProvider.GetLabelName(address);
             if (label != "") 
                 return label;
 

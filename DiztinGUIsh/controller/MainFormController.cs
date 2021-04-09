@@ -7,6 +7,7 @@ using Diz.Core.arch;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using DiztinGUIsh.util;
@@ -517,15 +518,23 @@ namespace DiztinGUIsh.controller
         {
             Data?.SetXFlag(romOffset, value);
         }
-        
-        public void AddLabel(int offset, Label label, bool overwrite)
+
+        public void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll)
         {
-            Data?.AddLabel(offset, label, overwrite);
-        }
-    
-        public void AddComment(int i, string v, bool overwrite)
-        {
-            Data?.AddComment(i, v, overwrite);
+            var importFilename = labelEditor.PromptForCsvFilename();
+            if (string.IsNullOrEmpty(importFilename))
+                return;
+
+            var errLine = 0;
+            try
+            {
+                Data.LabelProvider.ImportLabelsFromCsv(importFilename, replaceAll, ref errLine);
+                labelEditor.RepopulateFromData();
+            }
+            catch (Exception ex)
+            {
+                labelEditor.ShowLineItemError(ex.Message, errLine);
+            }
         }
     }
 }

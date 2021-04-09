@@ -89,7 +89,7 @@ namespace Diz.Core.serialization
             var data = project.Data;
 
             // TODO: (don't need?) Debug.Assert(data.Labels != null && data.Comments != null);
-            Debug.Assert(data.RomBytes != null && data.RomBytes.Count > 0);
+            Debug.Assert(data.RomByteSource?.Bytes != null && data.RomByteSource?.Bytes.Count > 0);
 
             var rom = ReadFromOriginalRom(project);
             if (rom == null)
@@ -149,13 +149,11 @@ namespace Diz.Core.serialization
                 ProjectFileName = null,
                 Data = new Data()
             };
-
-            project.Data.RomMapMode = importSettings.RomMapMode;
-            project.Data.RomSpeed = importSettings.RomSpeed;
-            project.Data.PopulateFrom(importSettings.RomBytes);
+            
+            project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
 
             foreach (var pair in importSettings.InitialLabels)
-                project.Data.AddLabel(pair.Key, pair.Value, true);
+                project.Data.LabelProvider.AddLabel(pair.Key, pair.Value, true);
 
             foreach (var pair in importSettings.InitialHeaderFlags)
                 project.Data.SetFlag(pair.Key, pair.Value);

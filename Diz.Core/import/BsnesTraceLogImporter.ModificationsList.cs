@@ -1,4 +1,5 @@
 ﻿using Diz.Core.model;
+using Diz.Core.model.byteSources;
 
 namespace Diz.Core.import
 {
@@ -90,7 +91,7 @@ namespace Diz.Core.import
 
         private void ApplyModificationIfNeeded(ModificationData modData)
         {
-            var romByte = data.RomBytes[modData.Pc];
+            var romByte = data.RomByteSource?.Bytes[modData.Pc];
             modData.ApplyModificationIfNeeded(romByte);
         }
 

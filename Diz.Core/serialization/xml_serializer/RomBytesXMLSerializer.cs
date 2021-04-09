@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using ExtendedXmlSerializer.ContentModel;
 using ExtendedXmlSerializer.ContentModel.Format;
 
@@ -27,7 +28,7 @@ using ExtendedXmlSerializer.ContentModel.Format;
 // It's not.. super-pretty code, but it compresses well.
 namespace Diz.Core.serialization.xml_serializer
 {
-    sealed class RomBytesSerializer : ISerializer<RomBytes>
+    sealed class RomBytesSerializer : ISerializer<ByteSource>
     {
         // let the outer XML class do the heavy lifting on versioning.
         // but, let's add one here just because this specific class is complex.
@@ -39,7 +40,7 @@ namespace Diz.Core.serialization.xml_serializer
         private const bool CompressUsingTable1 = true;
         public int numTasksToUse = 5; // seems like the sweet spot
 
-        public RomBytes Get(IFormatReader parameter)
+        public ByteSource Get(IFormatReader parameter)
         {
             var allLines = ReadMainDataRaw(parameter.Content());
             var romBytes = DecodeAllBytes(allLines);
@@ -105,7 +106,7 @@ namespace Diz.Core.serialization.xml_serializer
             return romBytes;
         }
 
-        private static RomBytes FinishRead(IReadOnlyCollection<ByteOffsetData> romBytes) => new(romBytes);
+        private static ByteSource FinishRead(IReadOnlyCollection<ByteOffsetData> romBytes) => new(romBytes);
 
         private static List<string> ReadMainDataRaw(string allLines)
         {
@@ -165,7 +166,7 @@ namespace Diz.Core.serialization.xml_serializer
             }
         }
 
-        public void Write(IFormatWriter writer, RomBytes instance)
+        public void Write(IFormatWriter writer, ByteSource instance)
         {
             var options = new List<string>
             {

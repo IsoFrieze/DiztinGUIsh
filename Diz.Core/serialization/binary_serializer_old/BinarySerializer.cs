@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
 
 // IMPORTANT NOTE:
@@ -60,8 +61,8 @@ namespace Diz.Core.serialization.binary_serializer_old
                 converter = project.Data.ConvertPCtoSnes;
 
             // read mode, speed, size
-            project.Data.RomMapMode = (RomMapMode)data[HeaderSize];
-            project.Data.RomSpeed = (RomSpeed)data[HeaderSize + 1];
+            var mode = (RomMapMode)data[HeaderSize];
+            var speed = (RomSpeed)data[HeaderSize + 1];
             var size = ByteUtil.ByteArrayToInt32(data, HeaderSize + 2);
 
             // read internal title
@@ -77,10 +78,8 @@ namespace Diz.Core.serialization.binary_serializer_old
             while (data[pointer] != 0)
                 project.AttachedRomFilename += (char)data[pointer++];
             pointer++;
-
-            // create empty ROM data
-            for (var b = 0; b < size; ++b) 
-                project.Data.RomBytes.Add(new ByteOffsetData());
+            
+            project.Data.InitializeEmptyRomMapping(size, mode, speed);
 
             for (int i = 0; i < size; i++) project.Data.SetDataBank(i, data[pointer + i]);
             for (int i = 0; i < size; i++) project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
@@ -264,7 +263,7 @@ namespace Diz.Core.serialization.binary_serializer_old
                         Name = strings[0],
                         Comment = strings.ElementAtOrDefault(1)
                     };
-                    project.Data.AddLabel(offset, label, true);
+                    project.Data.LabelProvider.AddLabel(offset, label, true);
                 });
         }
     }

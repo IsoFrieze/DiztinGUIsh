@@ -4,18 +4,15 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
 using DiztinGUIsh.window2;
 using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window
 {
-    public partial class AliasList : Form
+    public partial class AliasList : Form, ILabelEditorView
     {
         private readonly DataGridEditorForm parentWindow;
         private IMainFormController MainFormController => parentWindow?.MainFormController;
@@ -34,7 +31,7 @@ namespace DiztinGUIsh.window
         {
             if (e.CloseReason != CloseReason.UserClosing) return;
             e.Cancel = true;
-            this.Hide();
+            Hide();
         }
 
         private void AliasList_Resize(object sender, EventArgs e)
@@ -55,72 +52,12 @@ namespace DiztinGUIsh.window
             }
         }
 
-        private static void SplitOnFirstComma(string instr, out string firstPart, out string remainder)
-        {
-            if (!instr.Contains(","))
-            {
-                firstPart = instr;
-                remainder = "";
-                return;
-            }
-
-            firstPart = instr.Substring(0, instr.IndexOf(','));
-            remainder = instr.Substring(instr.IndexOf(',') + 1);
-        }
-
-        private void ImportLabelsFromCsv(bool replaceAll)
+        public string PromptForCsvFilename()
         {
             var result = openFileDialog1.ShowDialog();
-            if (result != DialogResult.OK || openFileDialog1.FileName == "")
-                return;
-
-            var errLine = 0;
-            try
-            {
-                var newValues = new Dictionary<int, Label>();
-                var lines = Util.ReadLines(openFileDialog1.FileName).ToArray();
-
-                var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
-
-                // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
-                // section.
-                for (var i = 0; i < lines.Length; i++)
-                {
-                    var label = new Label();
-
-                    errLine = i + 1;
-
-                    SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
-                    SplitOnFirstComma(remainder, out var labelName, out var labelComment);
-                    
-                    label.Name = labelName.Trim();
-                    label.Comment = labelComment;
-
-                    if (!validLabelChars.Match(label.Name).Success)
-                        throw new InvalidDataException("invalid label name: " + label.Name);
-
-                    newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), label);
-                }
-
-                // everything read OK, modify the existing list now. point of no return
-                if (replaceAll)
-                    Data.DeleteAllLabels();
-
-                ClearAndInvalidateDataGrid();
-
-                // this will call AddRow() to add items back to the UI datagrid.
-                foreach (var (key, value) in newValues)
-                {
-                    Data.AddLabel(key, value, true);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    "An error occurred while parsing the file.\n" + ex.Message +
-                    (errLine > 0 ? $" (Check line {errLine}.)" : ""),
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            return result != DialogResult.OK || openFileDialog1.FileName == "" 
+                ? "" 
+                : openFileDialog1.FileName;
         }
 
         private void export_Click(object sender, EventArgs e)
@@ -140,11 +77,8 @@ namespace DiztinGUIsh.window
 
         private void WriteLabelsToCsv(TextWriter sw)
         {
-            foreach (var pair in Data.Labels)
+            foreach (var (snesOffset, label) in Data.LabelProvider.Labels)
             {
-                int snesOffset = pair.Key;
-                Label label = pair.Value;
-
                 OutputCsvLine(sw, snesOffset, label);
             }
         }
@@ -160,7 +94,7 @@ namespace DiztinGUIsh.window
             if (!int.TryParse((string) dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null,
                 out var val)) return;
             Locked = true;
-            Data.RemoveLabel(val);
+            Data.LabelProvider.RemoveLabel(val);
             Locked = false;
         }
 
@@ -180,10 +114,10 @@ namespace DiztinGUIsh.window
             if (dataGridView1.Rows[e.RowIndex].IsNewRow)
                 return;
             
-            var existingAddressStr = (string)dataGridView1.Rows[e.RowIndex].Cells[0].Value;
+            var existingSnesAddressStr = (string)dataGridView1.Rows[e.RowIndex].Cells[0].Value;
             var existingName = (string)dataGridView1.Rows[e.RowIndex].Cells[1].Value;
             var existingComment = (string)dataGridView1.Rows[e.RowIndex].Cells[2].Value;
-            int.TryParse(existingAddressStr, NumberStyles.HexNumber, null, out var existingAddress);
+            int.TryParse(existingSnesAddressStr, NumberStyles.HexNumber, null, out var existingSnesAddress);
             
             var newLabel = new Label
             {
@@ -192,20 +126,20 @@ namespace DiztinGUIsh.window
             };
 
             toolStripStatusLabel1.Text = "";
-            var newAddress = -1;
+            var newSnesAddress = -1;
 
             switch (e.ColumnIndex)
             {
                 case 0: // label's address
                     {
-                        if (!int.TryParse(e.FormattedValue.ToString(), NumberStyles.HexNumber, null, out newAddress))
+                        if (!int.TryParse(e.FormattedValue.ToString(), NumberStyles.HexNumber, null, out newSnesAddress))
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "Must enter a valid hex address.";
                             break;
                         }
                         
-                        if (existingAddress == -1 && Data.GetLabel(newAddress) != null)
+                        if (existingSnesAddress == -1 && Data.LabelProvider.GetLabel(newSnesAddress) != null)
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "This address already has a label.";
@@ -214,20 +148,20 @@ namespace DiztinGUIsh.window
 
                         if (dataGridView1.EditingControl != null)
                         {
-                            dataGridView1.EditingControl.Text = Util.ToHexString6(newAddress);
+                            dataGridView1.EditingControl.Text = Util.ToHexString6(newSnesAddress);
                         }
                         break;
                     }
                 case 1: // label name
                     {
-                        newAddress = existingAddress;
+                        newSnesAddress = existingSnesAddress;
                         newLabel.Name = e.FormattedValue.ToString();
                         // todo (validate for valid label characters)
                         break;
                     }
                 case 2: // label comment
                     {
-                        newAddress = existingAddress;
+                        newSnesAddress = existingSnesAddress;
                         newLabel.Comment = e.FormattedValue.ToString();
                         // todo (validate for valid comment characters, if any)
                         break;
@@ -237,10 +171,10 @@ namespace DiztinGUIsh.window
             Locked = true;
             if (currentlyEditing >= 0)
             {
-                if (newAddress >= 0) 
-                    Data.RemoveLabel(existingAddress);
+                if (newSnesAddress >= 0) 
+                    Data.LabelProvider.RemoveLabel(existingSnesAddress);
                 
-                Data.AddLabel(newAddress, newLabel, true);
+                Data.LabelProvider.AddLabel(newSnesAddress, newLabel, true);
             }
             Locked = false;
 
@@ -284,25 +218,32 @@ namespace DiztinGUIsh.window
 
         private void importAppend_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Info: Items in CSV will:\n" +
-                            "1) CSV items will be added if their address doesn't already exist in this list\n" +
-                            "2) CSV items will replace anything with the same address as items in the list\n" +
-                            "3) any unmatched addresses in the list will be left alone\n" +
-                            "\n" +
-                            "Continue?\n", "Warning", MessageBoxButtons.OKCancel) != DialogResult.OK)
+            const string msg = "Info: Items in CSV will:\n" +
+                               "1) CSV items will be added if their address doesn't already exist in this list\n" +
+                               "2) CSV items will replace anything with the same address as items in the list\n" +
+                               "3) any unmatched addresses in the list will be left alone\n" +
+                               "\n" +
+                               "Continue?\n";
+            
+            if (!PromptWarning(msg))
                 return;
 
-            ImportLabelsFromCsv(false);
+            MainFormController.ImportLabelsCsv(this, false);
         }
 
         private void btnImportReplace_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Info: All list items will be deleted and replaced with the CSV file.\n" +
-                                "\n" +
-                                "Continue?\n", "Warning", MessageBoxButtons.OKCancel) != DialogResult.OK)
+            if (!PromptWarning("Info: All list items will be deleted and replaced with the CSV file.\n" +
+                              "\n" +
+                              "Continue?\n"))
                 return;
 
-            ImportLabelsFromCsv(true);
+            MainFormController.ImportLabelsCsv(this, true);
+        }
+        
+        public static bool PromptWarning(string msg)
+        {
+            return MessageBox.Show(msg, "Warning", MessageBoxButtons.OKCancel) == DialogResult.OK;
         }
 
         public void RebindProject()
@@ -315,7 +256,7 @@ namespace DiztinGUIsh.window
             // tmp disabled // Data.Labels.CollectionChanged += Labels_CollectionChanged;
         }
 
-        private void RepopulateFromData()
+        public void RepopulateFromData()
         {
             ClearAndInvalidateDataGrid();
 
@@ -323,12 +264,23 @@ namespace DiztinGUIsh.window
                 return;
 
             // TODO: replace with winforms databinding eventually
-            foreach (var item in Data.Labels)
+            foreach (var item in Data.LabelProvider.Labels)
             {
                 RawAdd(item.Key, item.Value);
             }
+            
             dataGridView1.Invalidate();
         }
+
+        public void ShowLineItemError(string msg, int errLine)
+        {
+            MessageBox.Show(
+                "An error occurred while parsing the file.\n" + msg +
+                (errLine > 0 ? $" (Check line {errLine}.)" : ""),
+                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        // TODO: get this back online again
 
         private void Labels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -348,6 +300,8 @@ namespace DiztinGUIsh.window
                 }
             }
         }
+
+        // TODO: get this back online again
 
         private void Labels_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {

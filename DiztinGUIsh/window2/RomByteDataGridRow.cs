@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using JetBrains.Annotations;
 using Label = Diz.Core.model.Label;
@@ -40,11 +41,11 @@ namespace DiztinGUIsh.window2
         // [CellStyleFormatter(GetBackColorInOut)]
         public string Label
         {
-            get => Data.GetLabelName(Data.ConvertPCtoSnes(ByteOffset.ContainerOffset));
+            get => Data.LabelProvider.GetLabelName(Data.ConvertPCtoSnes(ByteOffset.ContainerOffset));
 
             // todo (validate for valid label characters)
             // (note: validation implemented in Furious's branch, integrate here)
-            set => Data.AddLabel(
+            set => Data.LabelProvider.AddLabel(
                     Data.ConvertPCtoSnes(ByteOffset.ContainerOffset),
                     new Label {Name = value},
                     true);

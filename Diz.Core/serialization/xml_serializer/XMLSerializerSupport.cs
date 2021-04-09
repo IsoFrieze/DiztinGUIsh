@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using Diz.Core.serialization.xml_serializer.xml_migrations;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
@@ -56,6 +57,7 @@ namespace Diz.Core.serialization.xml_serializer
         }
     }*/
     
+    /*
     sealed class Monitor : ISerializationMonitor<string>
     {
         // readonly List<string> _store;
@@ -92,7 +94,7 @@ namespace Diz.Core.serialization.xml_serializer
         {
             Trace.WriteLine(instance);
         }
-    }
+    }*/
 
     public static class XmlSerializerSupport
     {
@@ -110,14 +112,14 @@ namespace Diz.Core.serialization.xml_serializer
                 .Member(x => x.UnsavedChanges).Ignore()
                 .Member(x => x.ProjectFileName).Ignore()
 
-                .Type<RomBytes>()
+                .Type<ByteSource>()
                 .Register().Serializer().Using(RomBytesSerializer.Default)
 
                 .Type<Data>()
                 // tmp. eventually, we do need to serialize this stuff.
                 .Member(x => x.SnesAddressSpace).Ignore()
                 .Member(x => x.RomByteSource).Ignore()
-                .Member(x => x.RomBytes).Ignore()
+                // .Member(x => x.RomBytes).Ignore()
 
                 // .Member(x=>x.Comments)
                 // TODO: trying to get a converter up and running. not working yet....

@@ -6,33 +6,19 @@ using JetBrains.Annotations;
 
 namespace Diz.Core.export
 {
-    public interface ILogCreatorDataSource : IReadOnlySnesRom, ITemporaryLabelProvider
+    public interface ILogCreatorDataSource : IReadOnlySnesRom
     {
-
+        ITemporaryLabelProvider TemporaryLabelProvider { get; }
     }
-
+    
     public interface ITemporaryLabelProvider
     {
         // add a temporary label which will be cleared out when we are finished the export
-        public void AddTemporaryLabel(Label label);
+        // this should not add a label if a real label already exists.
+        public void AddTemporaryLabel(int address, Label label);
         public void ClearTemporaryLabels();
     }
 
-    public class TemporaryLabelProvider : ITemporaryLabelProvider
-    {
-        public Dictionary<int, Label> ExtraLabels { get; } = new();
-
-        public void AddTemporaryLabel(Label label)
-        {
-            
-        }
-
-        public void ClearTemporaryLabels()
-        {
-            
-        }
-    }
-    
     public partial class LogCreator
     {
         public enum FormatUnlabeled
@@ -53,9 +39,10 @@ namespace Diz.Core.export
 
         protected LogCreatorOutput Output;
         protected List<Tuple<string, int>> ParseList;
-        protected List<int> LabelsWeVisited;
         protected int BankSize;
-        // protected IEnumerable<KeyValuePair<int, Label>> BackupOfOriginalLabelsBeforeModifying;
+        
+        public Dictionary<int, Label> ExtraLabels { get; } = new(); // snes addresses
+        protected List<int> LabelsWeVisited; // snes addresses
 
         public virtual OutputResult CreateLog()
         {
@@ -102,7 +89,7 @@ namespace Diz.Core.export
         protected virtual void Cleanup()
         {
             // restore original labels. SUPER IMPORTANT THIS HAPPENS WHen WE'RE DONE
-            Data.ClearTemporaryLabels();
+            Data.TemporaryLabelProvider.ClearTemporaryLabels();
         }
 
 
@@ -129,18 +116,13 @@ namespace Diz.Core.export
 
         protected void WriteGeneratedLabelsIntoUnderlyingData()
         {
-            // WARNING: THIS MODIFIES THE UNDERLYING DATA TO ADD MORE LABELS
-            // *** if not properly cleaned up, the original project file's label list can get trashed. ***
-            // always call this FN with a try/finally that cleans up after.
-
-
             // write the new generated labels in, don't let them overwrite any real labels
             // i.e. if the user defined a label like "PlayerSwimmingSprites", and our auto-generated
             // labels also contain a label at the same address, then ignore our auto-generated label,
             // only use the explicit user-created label.
-            foreach (var label in ExtraLabels)
+            foreach (var (snesAddress, label) in ExtraLabels)
             {
-                Data.AddTemporaryLabel(label.Key, label.Value, false);
+                Data.TemporaryLabelProvider.AddTemporaryLabel(snesAddress, label);
             }
         }
 
@@ -224,6 +206,8 @@ namespace Diz.Core.export
             }
         }
 
+        // address is a "PC address" i.e. offset into the ROM.
+        // not a SNES address.
         protected void WriteAddress(ref int pointer, ref int currentBank)
         {
             SwitchBanksIfNeeded(pointer, ref currentBank);
@@ -254,7 +238,11 @@ namespace Diz.Core.export
         private bool IsLocationAnEndPoint(int pointer) => IsLocationPoint(pointer, InOutPoint.EndPoint);
         private bool IsLocationAReadPoint(int pointer) => IsLocationPoint(pointer, InOutPoint.ReadPoint);
         
-        private bool AnyLabelsPresent(int pointer) => Data.GetLabel(pointer)?.Name.Length > 0;
+        private bool AnyLabelsPresent(int pointer)
+        {
+            var snesAddress = Data.ConvertPCtoSnes(pointer);
+            return Data.LabelProvider.GetLabel(snesAddress)?.Name.Length > 0;
+        }
 
         private void SwitchBanksIfNeeded(int pointer, ref int currentBank)
         {
@@ -285,37 +273,42 @@ namespace Diz.Core.export
 
         protected void WriteLabels(int pointer)
         {
+            // TODO check for PC to snes stuff
             var unvisitedLabels = GetUnvisitedLabels();
-            WriteAnyUnivisitedLabels(pointer, unvisitedLabels);
+            WriteAnyUnvisitedLabels(pointer, unvisitedLabels);
             PrintAllLabelsIfRequested(pointer, unvisitedLabels);
         }
 
-        private Dictionary<int, Label> GetUnvisitedLabels()
+        private Dictionary<int, IReadOnlyLabel> GetUnvisitedLabels()
         {
-            var unvisitedLabels = new Dictionary<int, Label>();
+            var unvisitedLabels = new Dictionary<int, IReadOnlyLabel>();  // snes addresses
 
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
-            foreach (var pair in Data.Labels)
+            foreach (var (snesAddress, label) in Data.LabelProvider.Labels)
             {
-                if (LabelsWeVisited.Contains(pair.Key))
+                if (LabelsWeVisited.Contains(snesAddress))
                     continue;
 
                 // this label was not defined elsewhere in our disassembly, so we need to include it in labels.asm
-                unvisitedLabels.Add(pair.Key, pair.Value);
+                unvisitedLabels.Add(snesAddress, label);
             }
 
             return unvisitedLabels;
         }
 
-        private void WriteAnyUnivisitedLabels(int pointer, Dictionary<int, Label> unvisitedLabels)
+        private void WriteAnyUnvisitedLabels(int pointer, Dictionary<int, IReadOnlyLabel> unvisitedLabels)
         {
             SwitchOutputStream(pointer, "labels");
 
             foreach (var pair in unvisitedLabels)
-                Output.WriteLine(GenerateLine(pair.Key, "labelassign"));
+            {
+                var snesAddress = pair.Key;
+                var pcOffset = Data.ConvertSnesToPc(snesAddress);
+                Output.WriteLine(GenerateLine(pcOffset, "labelassign"));
+            }
         }
 
-        private void PrintAllLabelsIfRequested(int pointer, Dictionary<int, Label> unvisitedLabels)
+        private void PrintAllLabelsIfRequested(int pointer, IReadOnlyDictionary<int, IReadOnlyLabel> unvisitedLabels)
         {
             // part 2: optional: if requested, print all labels regardless of use.
             // Useful for debugging, documentation, or reverse engineering workflow.
@@ -325,11 +318,13 @@ namespace Diz.Core.export
                 return;
 
             SwitchOutputStream(pointer, "all-labels.txt"); // TODO: csv in the future. escape commas
-            foreach (var pair in Data.Labels)
+            foreach (var (snesAddress, _) in Data.LabelProvider.Labels)
             {
                 // not the best place to add formatting, TODO: cleanup
-                var category = unvisitedLabels.ContainsKey(pair.Key) ? "UNUSED" : "USED";
-                Output.WriteLine($";!^!-{category}-! " + GenerateLine(pair.Key, "labelassign"));
+                var category = unvisitedLabels.ContainsKey(snesAddress) ? "UNUSED" : "USED";
+                var labelPcAddress = Data.ConvertPCtoSnes(pointer);
+                // TODO: double check this is the right snes/pc conversion
+                Output.WriteLine($";!^!-{category}-! " + GenerateLine(labelPcAddress, "labelassign"));
             }
         }
 
@@ -441,7 +436,7 @@ namespace Diz.Core.export
                 min < max &&
                 offset + min < size &&
                 Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
-                Data.GetLabelName(Data.ConvertPCtoSnes(offset + min)) == "" &&
+                Data.LabelProvider.GetLabelName(Data.ConvertPCtoSnes(offset + min)) == "" &&
                 (offset + min) / BankSize == myBank
             ) min += step;
             return min;
@@ -498,8 +493,13 @@ namespace Diz.Core.export
                     break;
             }
 
-            var pc = Data.ConvertSnesToPc(ia);
-            if (pc >= 0 && Data.GetLabelName(ia) != "") param = Data.GetLabelName(ia);
+            if (Data.ConvertSnesToPc(ia) >= 0)
+            {
+                var labelName = Data.LabelProvider.GetLabelName(ia);
+                if (labelName != "") 
+                    param = labelName;
+            }
+            
             return string.Format(format, param);
         }
 
@@ -550,7 +550,7 @@ namespace Diz.Core.export
             // TODO: eventually, support multiple labels tagging the same address, it may not always be just one.
             
             var snesOffset = Data.ConvertPCtoSnes(offset); 
-            var label = Data.GetLabelName(snesOffset);
+            var label = Data.LabelProvider.GetLabelName(snesOffset);
             if (label == null)
                 return "";
             
@@ -749,9 +749,10 @@ namespace Diz.Core.export
         [AssemblerHandler(Token = "%labelassign", Length = 1)]
         protected string GetLabelAssign(int offset, int length)
         {
-            var labelName = Data.GetLabelName(offset);
+            var snesAddress = Data.ConvertPCtoSnes(offset);
+            var labelName = Data.LabelProvider.GetLabelName(snesAddress);
             var offsetStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true);
-            var labelComment = Data.GetLabelComment(offset);
+            var labelComment = Data.LabelProvider.GetLabelComment(snesAddress);
 
             if (string.IsNullOrEmpty(labelName))
                 return "";

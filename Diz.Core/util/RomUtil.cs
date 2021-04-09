@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using Diz.Core.export;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 
 namespace Diz.Core.util
 {
@@ -444,6 +445,25 @@ namespace Diz.Core.util
             };
             
             return lc.CreateLog();
+        }
+        
+        public static ByteSourceMapping CreateRomMappingFromRomByteSource(ByteSource romByteSource, RomMapMode romMapMode, RomSpeed romSpeed)
+        {
+            return new()
+            {
+                ByteSource = romByteSource,
+                RegionMapping = new RegionMappingSnesRom
+                {
+                    RomSpeed = romSpeed,
+                    RomMapMode = romMapMode,
+                }
+            };
+        }
+
+        public static ByteSourceMapping CreateMappingFromRomRawBytes(
+            IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
+        {
+            return CreateRomMappingFromRomByteSource(new ByteSource(actualRomBytes), romMapMode, romSpeed);
         }
     }
 }

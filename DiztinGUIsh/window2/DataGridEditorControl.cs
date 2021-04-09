@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using DiztinGUIsh.util;
 using UserControl = System.Windows.Forms.UserControl;

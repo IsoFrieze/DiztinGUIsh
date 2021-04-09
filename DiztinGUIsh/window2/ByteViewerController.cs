@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using DiztinGUIsh.util;
 using JetBrains.Annotations;
 

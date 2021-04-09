@@ -9,24 +9,33 @@ namespace DiztinGUIsh
 {
     internal static class Program
     {
+        public static DizApplicationContext.DizApplicationArgs ParseArgs(string[] args)
+        {
+            var parsedArgs = new DizApplicationContext.DizApplicationArgs();
+            
+            if (args.Length > 0)
+                parsedArgs.FileToOpen = args[0];
+
+            return parsedArgs;
+        }
+        
         [STAThread]
         public static void Main(string[] args)
         {
-            // TEMP: Enable this
-            ProfilerDotTrace.Enabled = true;
+            // example stuff you can do:
+            // ProfilerDotTrace.Enabled = true;
+            //
             // args = args.Append(SampleRomHackProjectsController.SampleProjectName).ToArray();
-            args = args.Append(@"D:\projects\cthack\src\rom\Chrono Trigger US.dizraw").ToArray();
+            // or
+            // args = args.Append(@"some-test-file.dizraw").ToArray();
             // END TEMP
 
-            var Args = new DizApplicationContext.DizApplicationArgs();
-
-            if (args.Length > 0)
-                Args.FileToOpen = args[0];
+            var parsedArgs = ParseArgs(args);
 
             // call before setting up any forms/GUI elements
             GuiUtil.SetupDPIStuff();
 
-            Application.Run(new DizApplicationContext(Args));
+            Application.Run(new DizApplicationContext(parsedArgs));
         }
     }
 }

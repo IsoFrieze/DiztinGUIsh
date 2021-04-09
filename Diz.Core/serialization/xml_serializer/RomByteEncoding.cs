@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
 
 namespace Diz.Core.serialization.xml_serializer

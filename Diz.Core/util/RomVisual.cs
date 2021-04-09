@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using FastBitmapLib;
 
 namespace Diz.Core.util
@@ -66,7 +67,7 @@ namespace Diz.Core.util
             get => romStartingOffset;
             set
             {
-                if (value < 0 || value >= project.Data.RomBytes.Count)
+                if (value < 0 || value >= project.Data.RomByteSource?.Bytes.Count)
                     throw new ArgumentOutOfRangeException();
 
                 romStartingOffset = value;
@@ -78,14 +79,14 @@ namespace Diz.Core.util
             get => lengthOverride;
             set
             {
-                if (value != -1 && (value == 0 || RomStartingOffset + value > project.Data.RomBytes.Count))
+                if (value != -1 && (value == 0 || RomStartingOffset + value > project.Data.RomByteSource?.Bytes.Count))
                     throw new ArgumentOutOfRangeException();
 
                 lengthOverride = value;
             }
         }
 
-        public int PixelCount => lengthOverride != -1 ? lengthOverride : project.Data.RomBytes.Count;
+        public int PixelCount => lengthOverride != -1 ? lengthOverride : project.Data.RomByteSource?.Bytes.Count ?? 0;
 
         private int RomMaxOffsetAllowed => RomStartingOffset + PixelCount - 1;
 
@@ -210,7 +211,7 @@ namespace Diz.Core.util
             usedDirtyList = false;
 
             if (AllDirty)
-                return Data.RomBytes
+                return Data.RomByteSource?.Bytes
                     .Where(rb => 
                         rb.ContainerOffset >= RomStartingOffset && rb.ContainerOffset <= RomMaxOffsetAllowed
                     )

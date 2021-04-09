@@ -1,25 +1,25 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Specialized;
-using Diz.Core.export;
 using Diz.Core.util;
 
 namespace Diz.Core.model
 {
-    public interface ILabelProvider
+    public interface IReadOnlyLabelProvider
     {
-        public IEnumerable<KeyValuePair<int, Label>> Labels { get; }
+        public IEnumerable<KeyValuePair<int, IReadOnlyLabel>> Labels { get; }
 
-        Label GetLabel(int offset);
-        string GetLabelName(int offset);
-        string GetLabelComment(int offset);
+        Label GetLabel(int snesAddress);
+        string GetLabelName(int snesAddress);
+        string GetLabelComment(int snesAddress);
     }
-    
-    public interface IReadOnlySnesRom : ILabelProvider
+
+    public interface IReadOnlySnesRom
     {
         RomMapMode RomMapMode { get; }
         RomSpeed RomSpeed { get; }
 
         public T GetOneAnnotationAtPc<T>(int pcOffset) where T : Annotation, new();
+        
+        public IReadOnlyLabelProvider LabelProvider { get; }
 
         Comment GetComment(int offset);
         string GetCommentText(int offset);
@@ -46,51 +46,4 @@ namespace Diz.Core.model
         int GetIntermediateAddressOrPointer(int offset);
         int GetIntermediateAddress(int offset, bool resolve = false);
     }
-    
-    public interface ISnesCpuMarker
-    {
-        // future
-        int Step(int offset, bool branch, bool force, int prevOffset);
-        void SetMFlag(int offset, bool b);
-        void SetXFlag(int offset, bool b);
-    }
-    
-    // TODO: add this.
-    /*public interface ISnesInstructionWriter
-    {
-        void Set_WhateverXYZ(int offset); // stuff that's in data
-    }*/
-
-    // public interface IReadOnlySnesData : IReadOnlySnesRom, ISnesCpuMarker
-    // {
-    //     // future
-    // }
-    
-    // -------------------
-    
-    
-    /*public interface IByte : INotifyPropertyChangedExt
-    {
-        public byte Value { get; }
-        
-        // offset into parent container
-        public IByteList Container { get; }
-        public int Offset { get; }
-    }
-    
-    public interface IAnnotation : INotifyPropertyChangedExt
-    {
-        
-    }
-
-    public interface IByteList : IList<IByte>, INotifyCollectionChanged
-    {
-        
-    }
-
-    public interface IByteSource : INotifyPropertyChangedExt
-    {
-        public IList<IList<IAnnotation>> Annotations { get; }
-        public IByteList Bytes { get; }
-    }*/
 }

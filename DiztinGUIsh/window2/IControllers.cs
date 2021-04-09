@@ -2,8 +2,14 @@
 using System.ComponentModel;
 using Diz.Core.export;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.util;
+using DiztinGUIsh.window;
+
+// NOTE: lots of these interfaces were created temporarily for major refactoring.
+// when that process is finished, we should probably take a pass here to simplify anything
+// that ended up being unnecessary or over-complicated
 
 namespace DiztinGUIsh.window2
 {
@@ -88,9 +94,6 @@ namespace DiztinGUIsh.window2
         void SetDirectPage(int romOffset, int result);
         void SetMFlag(int romOffset, bool value);
         void SetXFlag(int romOffset, bool value);
-        
-        void AddLabel(int offset, Label label, bool overwrite);
-        void AddComment(int offset, string comment, bool overwrite);
     }
 
     public interface IExportDisassembly
@@ -116,6 +119,11 @@ namespace DiztinGUIsh.window2
         void OnUserChangedSelection(ByteOffsetData newSelection);
     }
 
+    public interface ILabelController
+    {
+        void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
+    }
+
     public interface IMainFormController : 
         
         IFormController,
@@ -129,7 +137,8 @@ namespace DiztinGUIsh.window2
         IExportDisassembly, 
         IProjectOpenerHandler, 
         ITraceLogImporters, 
-        IProjectNavigation 
+        IProjectNavigation,
+        ILabelController
     {
         public FlagType CurrentMarkFlag { get; set; }
         

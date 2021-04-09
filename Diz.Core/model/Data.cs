@@ -2,12 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Diz.Core.arch;
 using Diz.Core.export;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
+using ExtendedXmlSerializer;
 using IX.Observable;
 
 namespace Diz.Core.model
@@ -19,42 +23,44 @@ namespace Diz.Core.model
     // Data is the bridge between the old and new.
     public class Data : ILogCreatorDataSource, ICpuOperableByteSource
     {
-        public IEnumerable<KeyValuePair<int, Label>> Labels => SnesAddressSpace.GetAnnotationEnumerator<Label>();
-
         // TODO: gotta carefully think about the serialization here. we need to not output bytes from the ROM itself.
         // everything else is fine.
-        public SnesAddressSpaceByteSource SnesAddressSpace { get; set; }
-        public ByteSource RomByteSource { get; set; }
+        
+        // the parent of all our data, the SNES address space
+        public SnesAddressSpaceByteSource SnesAddressSpace { get; private set; }
+        
+        // cached access to stuff that livers in SnesAddressSpace. convenience only.
+        public ByteSource RomByteSource => RomMapping?.ByteSource;
+        public ByteSourceMapping RomMapping { get; protected set; }
         
         // private bool SendNotificationChangedEvents { get; set; } = true;
-
-        public RomMapMode RomMapMode { get; set; }
-        public RomSpeed RomSpeed { get; set; }
         
-        [Obsolete("Use RomByteSource instead")]
-        public List<ByteOffsetData> RomBytes => RomByteSource?.Bytes;
+        public RomMapMode RomMapMode => ((RegionMappingSnesRom) RomMapping?.RegionMapping)?.RomMapMode ?? default;
+        public RomSpeed RomSpeed => ((RegionMappingSnesRom) RomMapping?.RegionMapping)?.RomSpeed ?? default;
 
-        private static ByteSourceMapping CreateMappingFromRomRawBytes(
-            IReadOnlyCollection<byte> actualRomBytes, RomSpeed romSpeed, RomMapMode romMapMode
-            ) => new()
-            {
-                ByteSource = new ByteSource(actualRomBytes),
-                RegionMapping = new RegionMappingSnesRom
-                {
-                    RomSpeed = romSpeed,
-                    RomMapMode = romMapMode,
-                }
-            };
+        #region Initialization Helpers
 
-        public void PopulateFrom(IReadOnlyCollection<byte> actualRomBytes) => PopulateFrom(
-                CreateMappingFromRomRawBytes(actualRomBytes, RomSpeed, RomMapMode) );
+        public void PopulateFrom(IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
+        {
+            var mapping = RomUtil.CreateMappingFromRomRawBytes(actualRomBytes, romMapMode, romSpeed);
+            PopulateFrom(mapping);
+        }
+
+        public void PopulateFromRom(ByteSource romByteSource, RomMapMode romMapMode, RomSpeed romSpeed)
+        {
+            var mapping = RomUtil.CreateRomMappingFromRomByteSource(romByteSource, romMapMode, romSpeed);
+            PopulateFrom(mapping);
+        }
 
         public void PopulateFrom(ByteSourceMapping romByteSourceMapping)
         {
             // var previousNotificationState = SendNotificationChangedEvents;
             // SendNotificationChangedEvents = false;
-            
-            RomByteSource = romByteSourceMapping.ByteSource;
+
+            // setup a common SNES mapping, just the ROM and nothing else.
+            // this is very configurable, for now, this class is sticking with the simple setup.
+            // you can get as elaborate as you want, with RAM, patches, overrides, etc.
+            RomMapping = romByteSourceMapping;
             SnesAddressSpace = new SnesAddressSpaceByteSource
             {
                 ChildSources = new List<ByteSourceMapping>
@@ -65,6 +71,34 @@ namespace Diz.Core.model
             
             //SendNotificationChangedEvents = previousNotificationState;
         }
+
+        // precondition, everything else has already been setup but adding in the actual bytes,
+        // and is ready for actual rom byte data now
+        public void PopulateFrom(IReadOnlyCollection<byte> actualRomBytes)
+        {
+            // this method is basically a shortcut which only works under some very specific constraints
+            Debug.Assert(SnesAddressSpace != null);
+            Debug.Assert(SnesAddressSpace.ChildSources.Count == 1);
+            Debug.Assert(SnesAddressSpace.ChildSources[0].RegionMapping.GetType() == typeof(RegionMappingSnesRom));
+            Debug.Assert(ReferenceEquals(RomMapping, SnesAddressSpace.ChildSources[0]));
+            Debug.Assert(RomMapping != null);
+            Debug.Assert(RomMapping.ByteSource != null);
+            Debug.Assert(actualRomBytes.Count == RomByteSource.Bytes.Count);
+
+            var i = 0;
+            foreach (var b in actualRomBytes)
+            {
+                RomByteSource.Bytes[i].Byte = b;
+                ++i;
+            }
+        }
+        public Data InitializeEmptyRomMapping(int size, RomMapMode mode, RomSpeed speed)
+        {
+            PopulateFromRom(ByteSource.CreateEmpty(size), mode, speed);
+            return this;
+        }
+        
+        #endregion
 
         // TODO: something is messed up or just happens to work with the conversion of SNES->PC addresses here
         // fix conversion of snes->pc
@@ -100,6 +134,21 @@ namespace Diz.Core.model
             var snesAddress = ConvertPCtoSnes(pcOffset);
             return SnesAddressSpace.GetOneAnnotation<T>(snesAddress);
         }
+
+        public Data()
+        {
+            LabelProvider = new LabelProvider(this);
+        }
+
+        public Data(ByteSource romByteSource, RomMapMode romMapMode, RomSpeed romSpeed) : this()
+        {
+            PopulateFromRom(romByteSource, romMapMode, romSpeed);
+        }
+
+        public LabelProvider LabelProvider { get; }
+
+        IReadOnlyLabelProvider IReadOnlySnesRom.LabelProvider => LabelProvider;
+        ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => LabelProvider;
 
         public T GetOrCreateAnnotationAtPc<T>(int pcOffset) where T : Annotation, new()
         {
@@ -156,44 +205,9 @@ namespace Diz.Core.model
             opcodeAnnotation.MFlag = (mx & 0x20) != 0;
             opcodeAnnotation.XFlag = (mx & 0x10) != 0;
         }
-        public string GetLabelName(int i)
-        {
-            var label = GetOneAnnotationAtPc<Label>(i);
-            return label?.Name ?? "";
-        }
         
-        public string GetLabelComment(int i)
-        {
-            var label = GetOneAnnotationAtPc<Label>(i);
-            return label?.Comment ?? "";
-        }
-
-        private static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
         private static bool IsComment(Annotation annotation) => annotation.GetType() == typeof(Comment);
-
-        public void DeleteAllLabels()
-        {
-            SnesAddressSpace.RemoveAllAnnotations(IsLabel);
-        }
-
-        public void RemoveLabel(int snesAddress)
-        {
-            SnesAddressSpace.RemoveAllAnnotationsAt(snesAddress, IsLabel);
-        }
-
-        public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite)
-        {
-            Debug.Assert(labelToAdd != null);
-            
-            if (overwrite)
-                RemoveLabel(snesAddress);
-
-            var existing = SnesAddressSpace.GetOneAnnotation<Label>(snesAddress);
-            
-            if (existing == null)
-                SnesAddressSpace.AddAnnotation(snesAddress, labelToAdd);
-        }
-
+        
         public string GetCommentText(int i)
         {
             // option 1: use the comment text first
@@ -202,14 +216,13 @@ namespace Diz.Core.model
                 return comment.Text;
 
             // if that doesn't exist, try see if our label itself has a comment attached, display that.
-            return GetLabelComment(i) ?? "";
+            return LabelProvider.GetLabelComment(ConvertPCtoSnes(i)) ?? "";
         }
-
-        public Label GetLabel(int i) => GetOneAnnotationAtPc<Label>(i);
+        
         public Comment GetComment(int i) => GetOneAnnotationAtPc<Comment>(i);
 
         // setting text to null will remove the comment instead of adding anything
-        public void AddComment(int snesAddress, string commentTextToAdd, bool overwrite)
+        public void AddComment(int snesAddress, string commentTextToAdd, bool overwrite = false)
         {
             if (commentTextToAdd == null || overwrite)
             {
@@ -226,13 +239,10 @@ namespace Diz.Core.model
         }
 
         // get the value of the byte at ROM index i
+        // FIXME: why are we returning int and not byte?
         public int GetRomByte(int pcOffset)
         {
-            // TODO: we should put ALL stuff in terms of SNES address space. don't convert anymore.
-            var snesOffset = ConvertSnesToPc(pcOffset);
-
-            // TODO: why are we returning int and not byte?
-            
+            var snesOffset = ConvertPCtoSnes(pcOffset);
             var dataAtOffset = GetRawDataAtSnesOffset(snesOffset);
             
             if (dataAtOffset?.Byte == null)
@@ -485,19 +495,209 @@ namespace Diz.Core.model
             }
         }
         #endregion
-        
-        
-        public void AddTemporaryLabel(Label label)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ClearTemporaryLabels()
-        {
-            throw new NotImplementedException();
-        }
 
         public int AutoStep(int offset, bool harsh, int count) => 
             CpuAt(offset).AutoStep(this, offset, harsh, count);
     }
+
+    // this system could probably use a redesign.
+    // the entire point of this class is to route all read/writes for Label class
+    // through one point.  then, we can augment the real labels (user-created)
+    // with temporary labels (like temporarily generated during the output assembly code generation).
+    //
+    // when there's no need for assembly labels anymore, we can dump them.
+    //
+    // I think once things are further along, it should be possible to just use a new ByteSource that's overlaid
+    // on top of SnesAddressSpace and add labels to just THAT.
+    public class LabelProvider : IReadOnlyLabelProvider, ITemporaryLabelProvider
+    {
+        public LabelProvider(Data data)
+        {
+            this.data = data;
+            NormalProvider = new NormalLabelProvider(data);
+            TemporaryProvider = new TemporaryLabelProvider(data);
+        }
+        
+        public Data Data => data;
+        private NormalLabelProvider NormalProvider { get; }
+        private TemporaryLabelProvider TemporaryProvider { get; }
+        
+        private Data data;
+        
+        
+        // returns both real and temporary labels
+        IEnumerable<KeyValuePair<int, IReadOnlyLabel>> IReadOnlyLabelProvider.Labels => 
+            Labels.Select(l => new KeyValuePair<int, IReadOnlyLabel>(l.Key, l.Value));
+
+        public void AddTemporaryLabel(int snesAddress, Label label)
+        {
+            // originally was AddLabel(address, label, false);
+            
+            if (NormalProvider.GetLabel(snesAddress) == null)
+                TemporaryProvider.AddLabel(snesAddress, label);
+        }
+
+        public void ClearTemporaryLabels()
+        {
+            TemporaryProvider.ClearTemporaryLabels();
+        }
+
+        // probably a very expensive method, use sparingly
+        // returns both real and temporary labels
+        //
+        // this method is unordered
+        public IEnumerable<KeyValuePair<int, Label>> Labels => 
+            NormalProvider.Labels.Concat(TemporaryProvider.Labels);
+
+        public Label GetLabel(int snesAddress)
+        {
+            var normalExisting = NormalProvider.GetLabel(snesAddress);
+            return normalExisting ?? TemporaryProvider.GetLabel(snesAddress);
+        }
+
+        public string GetLabelName(int snesAddress)
+        {
+            var label = GetLabel(snesAddress);
+            return label?.Name ?? "";
+        }
+        
+        public string GetLabelComment(int snesAddress)
+        {
+            var label = GetLabel(snesAddress);
+            return label?.Comment ?? "";
+        }
+
+        public void DeleteAllLabels()
+        {
+            NormalProvider.DeleteAllLabels();
+            TemporaryProvider.ClearTemporaryLabels();
+        }
+
+        public void RemoveLabel(int snesAddress)
+        {
+            // we should only operate on real (not temporary) labels here
+            
+            NormalProvider.RemoveLabel(snesAddress);
+        }
+
+        public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite = false)
+        {
+            // we should only operate on real (not temporary) labels here. use AddTemporaryLabel() for temp stuff.
+            
+            NormalProvider.AddLabel(snesAddress, labelToAdd, overwrite);
+        }
+        
+        public void ImportLabelsFromCsv(string importFilename, bool replaceAll, ref int errLine)
+        {
+            var labelsFromCsv = ReadLabelsFromCsv(importFilename, ref errLine);
+            
+            if (replaceAll)
+                DeleteAllLabels();
+            
+            foreach (var (key, value) in labelsFromCsv)
+            {
+                AddLabel(key, value, true);
+            }
+        }
+        
+        private static Dictionary<int, Label> ReadLabelsFromCsv(string importFilename, ref int errLine)
+        {
+            var newValues = new Dictionary<int, Label>();
+            var lines = Util.ReadLines(importFilename).ToArray();
+
+            var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
+
+            // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
+            // section. replace with something better
+            for (var i = 0; i < lines.Length; i++)
+            {
+                var label = new Label();
+
+                errLine = i + 1;
+
+                Util.SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
+                Util.SplitOnFirstComma(remainder, out var labelName, out var labelComment);
+
+                label.Name = labelName.Trim();
+                label.Comment = labelComment;
+
+                if (!validLabelChars.Match(label.Name).Success)
+                    throw new InvalidDataException("invalid label name: " + label.Name);
+
+                newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), label);
+            }
+
+            errLine = -1;
+            return newValues;
+        }
+    }
+
+    public class NormalLabelProvider
+    {
+        private Data Data { get; }
+        
+        public NormalLabelProvider(Data data)
+        {
+            Data = data;
+        }
+
+        public IEnumerable<KeyValuePair<int, Label>> Labels => Data.SnesAddressSpace.GetAnnotationEnumerator<Label>();
+
+        private static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
+        
+        public void DeleteAllLabels()
+        {
+            Data.SnesAddressSpace.RemoveAllAnnotations(IsLabel);
+        }
+
+        public void RemoveLabel(int snesAddress)
+        {
+            Data.SnesAddressSpace.RemoveAllAnnotationsAt(snesAddress, IsLabel);
+        }
+        
+        public Label GetLabel(int snesAddress) => Data.SnesAddressSpace.GetOneAnnotation<Label>(snesAddress);
+
+        public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite)
+        {
+            Debug.Assert(labelToAdd != null);
+            
+            if (overwrite)
+                RemoveLabel(snesAddress);
+
+            var existing = Data.SnesAddressSpace.GetOneAnnotation<Label>(snesAddress);
+            
+            if (existing == null)
+                Data.SnesAddressSpace.AddAnnotation(snesAddress, labelToAdd);
+        }
+    } 
+    
+    public class TemporaryLabelProvider
+    {
+        private Data Data { get; }
+        
+        public TemporaryLabelProvider(Data data)
+        {
+            Data = data;
+        }
+        
+        private Dictionary<int, Label> TempLabels { get; } = new();  // NEVER serialize
+        
+        public IEnumerable<KeyValuePair<int, Label>> Labels => TempLabels;
+        
+        public void AddLabel(int snesAddress, Label label)
+        {
+            if (TempLabels.ContainsKey(snesAddress))
+                return;
+            
+            TempLabels.Add(snesAddress, label);
+        }
+
+        public void ClearTemporaryLabels()
+        {
+            TempLabels.Clear();
+        }
+        
+        public Label GetLabel(int snesAddress) => TempLabels.TryGetValue(snesAddress, out var label) ? label : null;
+    }
+
 }

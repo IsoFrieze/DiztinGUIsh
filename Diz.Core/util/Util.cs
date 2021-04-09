@@ -303,5 +303,18 @@ namespace Diz.Core.util
                     ? 0
                     : index;
         }
+
+        public static void SplitOnFirstComma(string instr, out string firstPart, out string remainder)
+        {
+            if (!instr.Contains(","))
+            {
+                firstPart = instr;
+                remainder = "";
+                return;
+            }
+
+            firstPart = instr.Substring(0, instr.IndexOf(','));
+            remainder = instr.Substring(instr.IndexOf(',') + 1);
+        }
     }
 }

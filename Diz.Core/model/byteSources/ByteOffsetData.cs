@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-namespace Diz.Core.model
+namespace Diz.Core.model.byteSources
 {
     // JUST holds the data. no traversal.
     public class ByteOffsetData
@@ -12,17 +12,20 @@ namespace Diz.Core.model
         // if null, it means caller either needs to dig one level deeper in parent container to find it, or, there is no data
         public byte? Byte { get; set; }
 
-        public List<Annotation> Annotations { get; set; }
+        private List<Annotation> annotations;
+        public List<Annotation> Annotations
+        {
+            // optimization: create on first use only, since we may have lots of empty lists
+            get => annotations ??= new List<Annotation>();
+            set => annotations = value;
+        }
 
-        public ByteSource Container { get; init; }
+        public ByteSource Container { get; internal set; }
+        public int ContainerOffset  { get; internal set; }
 
-        public int ContainerOffset { get; init; } = -1;
-
-
-        // temporary stuff. remove all this eventually.
-
-        // this is just helper sutff as this stuff gets migrated into Data/Annotations classes
-
+        // --------------------------------------------------------------------------------
+        // temporary annotation access stuff. remove all this eventually after further refactoring is complete.
+        // this is just helper stuff as this stuff gets migrated into Data/Annotations classes
         // -------------------------------------------------------------------------
         
         private OpcodeAnnotation GetOneOpcodeAnnotation() => GetOneAnnotation<OpcodeAnnotation>();
@@ -125,8 +128,6 @@ namespace Diz.Core.model
                 return existing;
 
             var newItem = new T();
-            if (Annotations == null)
-                Annotations = new List<Annotation>();
             
             Annotations.Add(newItem);
             return newItem;
@@ -138,48 +139,5 @@ namespace Diz.Core.model
         // TODO: instead of doing this, see if ConcurrentBag or similar classes would work.
         public ReaderWriterLockSlim Lock => _lock ??= new ReaderWriterLockSlim();
         private ReaderWriterLockSlim _lock;
-    }
-
-    // represent a node of a per-byte graph through the mappings of various ByteSources
-    public class ByteOffsetDataNode
-    {
-        public ByteOffsetData Data { get; set; }
-        public List<ByteOffsetDataNode> Children { get; set; }
-
-        // Simplified graph traversal utility.
-        //
-        // after graph traversal has happened, collapse the graph (of which this node is the root node) into
-        // one ByteOffsetData object.
-        //
-        // Annotations will be combined together into one list.
-        // If there are multiple 'byte' at different children, then we'll pick the most recent one.
-        //
-        // If you need anything more advanced than this, parse it yourself.
-        public ByteOffsetData ResolveToOne(ByteOffsetData dataBeingConstructed = null)
-        {
-            dataBeingConstructed ??= new ByteOffsetData
-            {
-                ContainerOffset = Data.ContainerOffset,
-                Container = Data.Container,
-                Annotations = new List<Annotation>()
-            };
-
-            // traverse any child nodes first.
-            foreach (var childNode in Children)
-            {
-                childNode.ResolveToOne(dataBeingConstructed);
-            }
-            
-            // add in our own changes AFTER children populated.
-            
-            // annotations are concatenated together
-            dataBeingConstructed.Annotations.AddRange(Data.Annotations);
-            
-            // only change the byte if we're non-null and overriding something underneath
-            if (Data.Byte != null)
-                dataBeingConstructed.Byte = Data.Byte;
-
-            return dataBeingConstructed;
-        }
     }
 }

@@ -49,7 +49,7 @@ namespace Diz.Test
             var (project, warning) = projectFileManager.Open(openFile);
 
             Assert.Equal("", warning);
-            Assert.True(project.Data.RomBytes.Count >= 0x1000 * 64);
+            Assert.True(project.Data.RomByteSource?.Bytes.Count >= 0x1000 * 64);
             
             return project;
         }
@@ -65,7 +65,7 @@ namespace Diz.Test
 
             s.Stop();
 
-            output.WriteLine($"runtime: {s.ElapsedMilliseconds:N0}, #bytes={project.Data.RomBytes.Count}");
+            output.WriteLine($"runtime: {s.ElapsedMilliseconds:N0}, #bytes={project.Data.RomByteSource?.Bytes.Count}");
         }
 
 
