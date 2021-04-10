@@ -80,5 +80,14 @@ namespace Diz.Test
         {
             LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(InputRom));
         }
+
+        [Fact]
+        public void TestLeftAlign()
+        {
+            Assert.Equal("xyz  ", Util.LeftAlign(5, "xyz"));
+            Assert.Equal("xyz", Util.LeftAlign(3, "xyz"));
+            Assert.Equal("{0,-22}",Util.GetLeftAlignFormatStr(22));
+            Assert.Equal("{0,22}",Util.GetLeftAlignFormatStr(-22));
+        }
     }
 }

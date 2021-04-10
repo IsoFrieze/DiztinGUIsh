@@ -1,24 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.CompilerServices;
 using Diz.Core.model;
 using Diz.Core.util;
 using JetBrains.Annotations;
 
 namespace Diz.Core.export
 {
-    public interface ILogCreatorDataSource : IReadOnlySnesRom
-    {
-        ITemporaryLabelProvider TemporaryLabelProvider { get; }
-    }
-    
-    public interface ITemporaryLabelProvider
-    {
-        // add a temporary label which will be cleared out when we are finished the export
-        // this should not add a label if a real label already exists.
-        public void AddTemporaryLabel(int address, Label label);
-        public void ClearTemporaryLabels();
-    }
-
     public partial class LogCreator
     {
         public enum FormatUnlabeled
@@ -33,16 +23,26 @@ namespace Diz.Core.export
             SingleFile = 0,
             OneBankPerFile = 1
         }
+        
+        protected internal class AssemblerHandler : Attribute
+        {
+            public string Token;
+            public int Length;
+        }
+
+        public class OutputResult
+        {
+            public bool Success;
+            public int ErrorCount = -1;
+            public LogCreator LogCreator;
+            public string OutputStr = ""; // only set if outputString=true
+        }
 
         public LogWriterSettings Settings { get; init; }
         public ILogCreatorDataSource Data { get; init; }
 
-        protected LogCreatorOutput Output;
-        protected List<Tuple<string, int>> ParseList;
-        protected int BankSize;
-        
-        public Dictionary<int, Label> ExtraLabels { get; } = new(); // snes addresses
-        protected List<int> LabelsWeVisited; // snes addresses
+        private LogCreatorOutput Output;
+        private List<int> LabelsWeVisited; // snes addresses
 
         public virtual OutputResult CreateLog()
         {
@@ -63,35 +63,48 @@ namespace Diz.Core.export
             return result;
         }
 
+        private LogCreatorTempLabelGenerator LogCreatorTempLabelGenerator { get; set; }
+        private LogCreatorLineFormatter LogCreatorLineFormatter { get; set; }
+
+        private Dictionary<string, AssemblyPartialLineGenerator> Generators { get; set; }
+
         protected virtual void Init()
         {
+            Debug.Assert(Settings.RomSizeOverride == -1 || Settings.RomSizeOverride <= Data.GetRomSize());
+            
             InitOutput();
-            SetupParseList();
 
-            BankSize = RomUtil.GetBankSize(Data.RomMapMode);
-            ErrorCount = 0;
+            Generators = CreateAssemblyGenerators();
+            LogCreatorLineFormatter = new LogCreatorLineFormatter(Settings.Format, Generators);
+            errorCount = 0;
             LabelsWeVisited = new List<int>();
 
-            GenerateAdditionalExtraLabels();
-            WriteGeneratedLabelsIntoUnderlyingData(); // MODIFIES DATA. MAKE SURE TO UNDO THIS.
+            // MODIFIES UNDERLYING DATA. MAKE SURE TO UNDO THIS.
+            GenerateTemporaryLabelsIfNeeded();
+        }
+
+        private void GenerateTemporaryLabelsIfNeeded()
+        {
+            if (Settings.Unlabeled == FormatUnlabeled.ShowNone) 
+                return;
+            
+            LogCreatorTempLabelGenerator = new LogCreatorTempLabelGenerator {
+                LogCreator = this, GenerateAllUnlabeled = Settings.Unlabeled == FormatUnlabeled.ShowAll,
+            };
+            
+            LogCreatorTempLabelGenerator.GenerateTemporaryLabels();
         }
 
         private void InitOutput()
         {
-            if (Settings.OutputToString)
-                Output = new LogCreatorStringOutput();
-            else
-                Output = new LogCreatorStreamOutput();
-
+            Output = Settings.OutputToString ? new LogCreatorStringOutput() : Output = new LogCreatorStreamOutput();
             Output.Init(this);
         }
 
         protected virtual void Cleanup()
         {
-            // restore original labels. SUPER IMPORTANT THIS HAPPENS WHen WE'RE DONE
-            Data.TemporaryLabelProvider.ClearTemporaryLabels();
+            LogCreatorTempLabelGenerator?.ClearTemporaryLabels();
         }
-
 
         private void CloseOutput(OutputResult result)
         {
@@ -103,7 +116,7 @@ namespace Diz.Core.export
         {
             var result = new OutputResult()
             {
-                ErrorCount = ErrorCount,
+                ErrorCount = errorCount,
                 Success = true,
                 LogCreator = this
             };
@@ -114,16 +127,37 @@ namespace Diz.Core.export
             return result;
         }
 
-        protected void WriteGeneratedLabelsIntoUnderlyingData()
+        private int errorCount;
+
+        private void ReportError(int offset, string msg)
         {
-            // write the new generated labels in, don't let them overwrite any real labels
-            // i.e. if the user defined a label like "PlayerSwimmingSprites", and our auto-generated
-            // labels also contain a label at the same address, then ignore our auto-generated label,
-            // only use the explicit user-created label.
-            foreach (var (snesAddress, label) in ExtraLabels)
+            ++errorCount;
+            var offsetMsg = offset >= 0 ? $" Offset 0x{offset:X}" : "";
+            Output.WriteErrorLine($"({errorCount}){offsetMsg}: {msg}");
+        }
+
+        private DataErrorChecking dataErrorChecking;
+        private DataErrorChecking DataErrorChecking
+        {
+            get
             {
-                Data.TemporaryLabelProvider.AddTemporaryLabel(snesAddress, label);
+                if (dataErrorChecking == null)
+                {
+                    dataErrorChecking = new DataErrorChecking
+                    {
+                        Data = Data,
+                    };
+                    dataErrorChecking.ErrorNotifier += (_, errorInfo) => 
+                        ReportError(errorInfo.Offset, errorInfo.Msg);
+                }
+
+                return dataErrorChecking;
             }
+        }
+
+        private void CheckForErrorsAt(int offset)
+        {
+            DataErrorChecking.CheckForErrorsAt(offset);
         }
 
         public int GetRomSize()
@@ -152,17 +186,11 @@ namespace Diz.Core.export
             return pointer;
         }
 
-        protected void WriteSpecial(string special)
-        {
-            const int doesntMatter = 0;
-            var line = GenerateLine(doesntMatter, special);
-            Output.WriteLine(line);
-        }
-
         protected void WriteMainIncludes(int size)
         {
-            WriteSpecial("map");
-            WriteSpecial("empty");
+            const int ignored = 0; 
+            Output.WriteLine(GenerateLine(ignored, "map"));
+            Output.WriteLine(GenerateLine(ignored, "empty"));
             WriteMainBankIncludes(size);
         }
 
@@ -171,39 +199,10 @@ namespace Diz.Core.export
             if (Settings.Structure != FormatStructure.OneBankPerFile)
                 return;
 
-            for (var i = 0; i < size; i += BankSize)
+            for (var i = 0; i < size; i += Data.GetBankSize())
                 Output.WriteLine(GenerateLine(i, "incsrc"));
 
             Output.WriteLine(GenerateLine(-1, "incsrc"));
-        }
-
-        protected void SetupParseList()
-        {
-            var split = Settings.Format.Split('%');
-            ParseList = new List<Tuple<string, int>>();
-            for (var i = 0; i < split.Length; i++)
-            {
-                if (i % 2 == 0) ParseList.Add(Tuple.Create(split[i], int.MaxValue));
-                else
-                {
-                    var colon = split[i].IndexOf(':');
-
-                    Tuple<string, int> tuple;
-
-                    if (colon < 0)
-                    {
-                        var s1 = split[i];
-                        var s2 = Parameters[s1].Item2;
-                        tuple = Tuple.Create(s1, s2);
-                    }
-                    else
-                    {
-                        tuple = Tuple.Create(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1)));
-                    }
-
-                    ParseList.Add(tuple);
-                }
-            }
         }
 
         // address is a "PC address" i.e. offset into the ROM.
@@ -224,14 +223,18 @@ namespace Diz.Core.export
 
         private void WriteBlankLineIfEndPoint(int pointer)
         {
-            if (IsLocationAnEndPoint(pointer))
-                Output.WriteLine(GenerateLine(pointer, "empty"));
+            if (!IsLocationAnEndPoint(pointer)) 
+                return;
+            
+            const int ignored = 0; Output.WriteLine(GenerateLine(ignored, "empty"));
         }
 
         private void WriteBlankLineIfStartingNewParagraph(int pointer)
         {
-            if (IsLocationAReadPoint(pointer) || AnyLabelsPresent(pointer))
-                Output.WriteLine(GenerateLine(pointer, "empty"));
+            if (!IsLocationAReadPoint(pointer) && !AnyLabelsPresent(pointer)) 
+                return;
+            
+            const int ignored = 0; Output.WriteLine(GenerateLine(ignored, "empty"));
         }
 
         private bool IsLocationPoint(int pointer, InOutPoint mustHaveFlag) => (Data.GetInOutPoint(pointer) & mustHaveFlag) != 0;
@@ -256,7 +259,7 @@ namespace Diz.Core.export
             OpenNewBank(pointer, thisBank);
             currentBank = thisBank;
 
-            if (snesAddress % BankSize == 0) 
+            if (snesAddress % Data.GetBankSize() == 0) 
                 return;
 
             ReportError(pointer, "An instruction crossed a bank boundary.");
@@ -266,9 +269,10 @@ namespace Diz.Core.export
         {
             Output.SwitchToBank(thisBank);
 
-            Output.WriteLine(GenerateLine(pointer, "empty"));
+            const int ignored = 0; 
+            Output.WriteLine(GenerateLine(ignored, "empty"));
             Output.WriteLine(GenerateLine(pointer, "org"));
-            Output.WriteLine(GenerateLine(pointer, "empty"));
+            Output.WriteLine(GenerateLine(ignored, "empty"));
         }
 
         protected void WriteLabels(int pointer)
@@ -307,7 +311,7 @@ namespace Diz.Core.export
                 Output.WriteLine(GenerateLine(pcOffset, "labelassign"));
             }
         }
-
+        
         private void PrintAllLabelsIfRequested(int pointer, IReadOnlyDictionary<int, IReadOnlyLabel> unvisitedLabels)
         {
             // part 2: optional: if requested, print all labels regardless of use.
@@ -316,8 +320,9 @@ namespace Diz.Core.export
 
             if (!Settings.IncludeUnusedLabels) 
                 return;
-
+            
             SwitchOutputStream(pointer, "all-labels.txt"); // TODO: csv in the future. escape commas
+            
             foreach (var (snesAddress, _) in Data.LabelProvider.Labels)
             {
                 // not the best place to add formatting, TODO: cleanup
@@ -333,62 +338,51 @@ namespace Diz.Core.export
             Output.SwitchToStream(streamName);
 
             // write an extra blank line if we would normally switch files here
-            if (Settings.Structure == FormatStructure.SingleFile)
-                Output.WriteLine(GenerateLine(pointer, "empty"));
+            if (Settings.Structure != FormatStructure.SingleFile) 
+                return;
+
+            const int ignored = 0; 
+            Output.WriteLine(GenerateLine(ignored, "empty"));
         }
 
         // --------------------------
         #region WriteOperations
 
-        protected string GenerateLine(int offset, string special)
+        private string GenerateLine(int offset, string specialStr)
         {
-            var isSpecial = special != null;
             var line = "";
 
-            foreach (var t in ParseList)
+            foreach (var (parameter, length) in LogCreatorLineFormatter.ParsedLineFormat)
             {
-                if (t.Item2 == int.MaxValue) // string literal
-                {
-                    line += t.Item1;
-                }
-                else if (isSpecial) // special parameter (replaces code & everything else = empty)
-                {
-                    var v1 = (t.Item1 == "code" ? special : "empty");
-                    line += GetParameter(offset, $"%{v1}", t.Item2);
-                }
-                else // normal parameter
-                {
-                    line += GetParameter(offset, t.Item1, t.Item2);
-                }
+                line += GenerateLinePartial(offset, parameter, length, specialStr);
             }
 
-            if (!isSpecial)
-                CheckForErrorsAtLine(offset);
+            if (specialStr == null)
+                CheckForErrorsAt(offset);
             
             return line;
         }
 
-        private void CheckForErrorsAtLine(int offset)
+        private string GenerateLinePartial(int offset, string parameter, int length, string specialModifierStr)
         {
-            // throw out some errors if stuff looks fishy
-            ErrorIfOperand(offset);
-            ErrorIfAdjacentOperandsSeemWrong(offset);
-            ErrorIfBranchToNonInstruction(offset);
+            // string literal version
+            if (length == int.MaxValue)
+                return parameter;
+
+            // special case (replaces code & everything else = empty)
+            if (specialModifierStr != null) 
+                parameter = $"%{(parameter != "code" ? "empty" : specialModifierStr)}";
+
+            if (!Generators.TryGetValue(parameter, out var generator))
+                throw new InvalidOperationException($"Can't find generator for {parameter}");
+
+            return generator.Emit(offset, length);
         }
 
-        private FlagType GetFlagButSwapOpcodeForOperand(int offset)
-        {
-            var flag = Data.GetFlag(offset);
-            if (flag == FlagType.Opcode)
-                return FlagType.Operand;
-
-            return flag;
-        }
-
-        protected int GetLineByteLength(int offset)
+        internal int GetLineByteLength(int offset)
         {
             int max = 1, step = 1;
-            var size = Data.GetRomSize();
+            var size = GetRomSize();
 
             switch (Data.GetFlag(offset))
             {
@@ -431,13 +425,16 @@ namespace Diz.Core.export
                     break;
             }
 
-            int min = step, myBank = offset / BankSize;
+            var bankSize = Data.GetBankSize();
+            var myBank = offset / bankSize;
+            
+            var min = step; 
             while (
                 min < max &&
                 offset + min < size &&
                 Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
                 Data.LabelProvider.GetLabelName(Data.ConvertPCtoSnes(offset + min)) == "" &&
-                (offset + min) / BankSize == myBank
+                (offset + min) / bankSize == myBank
             ) min += step;
             return min;
         }
@@ -510,264 +507,459 @@ namespace Diz.Core.export
             return text + "\"";
         }
 
-        public string GetDefaultLabel(int snes)
+        public abstract class AssemblyPartialLineGenerator
         {
-            var pcoffset = Data.ConvertSnesToPc(snes);
-            var prefix = RomUtil.TypeToLabel(Data.GetFlag(pcoffset));
-            var labelAddress = Util.ToHexString6(snes);
-            return $"{prefix}_{labelAddress}";
-        }
-
-        // just a %
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "", Length = 1)]
-        protected string GetPercent(int offset, int length)
-        {
-            return "%";
-        }
-
-        // all spaces
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "%empty", Length = 1)]
-        protected string GetEmpty(int offset, int length)
-        {
-            return string.Format("{0," + length + "}", "");
-        }
-
-        // trim to length
-        // negative length = right justified
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "label", Length = -22)]
-        protected string GetLabel(int offset, int length)
-        {
-            // what we're given: a PC offset in ROM.
-            // what we need to find: any labels (SNES addresses) that refer to it.
-            //
-            // i.e. given that we are at PC offset = 0,
-            // we find valid SNES offsets mirrored of 0xC08000 and 0x808000 which both refer to the same place
-            // 
-            // TODO: we need to deal with that mirroring here
-            // TODO: eventually, support multiple labels tagging the same address, it may not always be just one.
+            public LogCreator LogCreator { get; protected internal set; }
+            public ILogCreatorDataSource Data => LogCreator.Data;
             
-            var snesOffset = Data.ConvertPCtoSnes(offset); 
-            var label = Data.LabelProvider.GetLabelName(snesOffset);
-            if (label == null)
-                return "";
+            public string Token { get; protected set; } = "";
+            public int DefaultLength { get; protected set; }
             
-            LabelsWeVisited.Add(snesOffset);
+            public bool RequiresToken { get; protected set; } = true;
+            public bool UsesOffset { get; protected set; } = true;
 
-            var noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
-
-            return LeftAlign(length, label + (noColon ? "" : ":"));
-        }
-
-        // trim to length
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "code", Length = 37)]
-        protected string GetCode(int offset, int length)
-        {
-            var bytes = GetLineByteLength(offset);
-            string code = "";
-
-            switch (Data.GetFlag(offset))
+            public string Emit(int? offset, int length)
             {
-                case FlagType.Opcode:
-                    code = Data.GetInstruction(offset);
-                    break;
-                case FlagType.Unreached:
-                case FlagType.Operand:
-                case FlagType.Data8Bit:
-                case FlagType.Graphics:
-                case FlagType.Music:
-                case FlagType.Empty:
-                    code = GetFormattedBytes(offset, 1, bytes);
-                    break;
-                case FlagType.Data16Bit:
-                    code = GetFormattedBytes(offset, 2, bytes);
-                    break;
-                case FlagType.Data24Bit:
-                    code = GetFormattedBytes(offset, 3, bytes);
-                    break;
-                case FlagType.Data32Bit:
-                    code = GetFormattedBytes(offset, 4, bytes);
-                    break;
-                case FlagType.Pointer16Bit:
-                    code = GetPointer(offset, 2);
-                    break;
-                case FlagType.Pointer24Bit:
-                    code = GetPointer(offset, 3);
-                    break;
-                case FlagType.Pointer32Bit:
-                    code = GetPointer(offset, 4);
-                    break;
-                case FlagType.Text:
-                    code = GetFormattedText(offset, bytes);
-                    break;
+                var finalLength = length;
+                Prep(offset, ref finalLength);
+
+                if (UsesOffset)
+                {
+                    Debug.Assert(offset != null);
+                    return Generate(offset.Value, finalLength);
+                }
+
+                return Generate(finalLength);
             }
 
-            return LeftAlign(length, code);
-        }
-
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "%org", Length = 37)]
-        protected string GetOrg(int offset, int length)
-        {
-            string org = "ORG " + Util.NumberToBaseString(Data.ConvertPCtoSnes(offset), Util.NumberBase.Hexadecimal, 6, true);
-            return LeftAlign(length, org);
-        }
-
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "%map", Length = 37)]
-        protected string GetMap(int offset, int length)
-        {
-            string s = "";
-            switch (Data.RomMapMode)
+            protected virtual string Generate(int length)
             {
-                case RomMapMode.LoRom: s = "lorom"; break;
-                case RomMapMode.HiRom: s = "hirom"; break;
-                case RomMapMode.Sa1Rom: s = "sa1rom"; break; // todo
-                case RomMapMode.ExSa1Rom: s = "exsa1rom"; break; // todo
-                case RomMapMode.SuperFx: s = "sfxrom"; break; // todo
-                case RomMapMode.ExHiRom: s = "exhirom"; break;
-                case RomMapMode.ExLoRom: s = "exlorom"; break;
+                throw new InvalidDataException("Invalid Generate() call: Can't call without an offset.");
             }
-            return LeftAlign(length, s);
-        }
-
-        // 0+ = bank_xx.asm, -1 = labels.asm
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "%incsrc", Length = 1)]
-        protected string GetIncSrc(int offset, int length)
-        {
-            string s = "incsrc \"labels.asm\"";
-            if (offset >= 0)
+            
+            protected virtual string Generate(int offset, int length)
             {
-                int bank = Data.ConvertPCtoSnes(offset) >> 16;
-                s = string.Format("incsrc \"bank_{0}.asm\"", Util.NumberToBaseString(bank, Util.NumberBase.Hexadecimal, 2));
+                // NOTE: if you get here (without an override in a derived class)
+                // it means the client code should have instead been calling the other Generate(length) overload
+                // directly. for now, we'll gracefully handle it, but client code should try and be better about it
+                // eventually.
+                
+                return Generate(length);
+                // throw new InvalidDataException("Invalid Generate() call: Can't call with offset.");
             }
-            return LeftAlign(length, s);
+            
+            // call Prep() before doing anything in each Emit()
+            // if length is non-zero, use that as our length, if not we use the default length
+            protected virtual void Prep(int? offset, ref int length)
+            {
+                if (length == 0 && DefaultLength == 0)
+                    throw new InvalidDataException("Assembly output component needed a length but received none.");
+                
+                // set the length
+                length = length != 0 ? length : DefaultLength;
+                
+                if (RequiresToken && string.IsNullOrEmpty(Token))
+                    throw new InvalidDataException("Assembly output component needed a token but received none.");
+
+                // we should throw exceptions both ways, for now though we'll let it slide if we were passed in
+                // an offset and we don't need it.
+                var hasOffset = offset != null;
+                if (UsesOffset && UsesOffset != hasOffset)
+                    throw new InvalidDataException(UsesOffset 
+                        ? "Assembly output component needed an offset but received none."
+                        : "Assembly output component doesn't use an offset but we were provided one anyway.");
+            }
         }
 
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "%bankcross", Length = 1)]
-        protected string GetBankCross(int offset, int length)
+        public class AssemblyGeneratePercent : AssemblyPartialLineGenerator
         {
-            string s = "check bankcross off";
-            return LeftAlign(length, s);
+            public AssemblyGeneratePercent()
+            {
+                Token = "";
+                DefaultLength = 1;
+                RequiresToken = false;
+                UsesOffset = false;
+            }
+            protected override string Generate(int length)
+            {
+                return "%";  // just a literal %
+            }
         }
 
-        // length forced to 6
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "ia", Length = 6)]
-        protected string GetIntermediateAddress(int offset, int length)
+        public class AssemblyGenerateEmpty : AssemblyPartialLineGenerator
         {
-            int ia = Data.GetIntermediateAddressOrPointer(offset);
-            return ia >= 0 ? Util.ToHexString6(ia) : "      ";
+            public AssemblyGenerateEmpty()
+            {
+                Token = "%empty";
+                DefaultLength = 1;
+                UsesOffset = false;
+            }
+            protected override string Generate(int length)
+            {
+                return string.Format($"{{0,{length}}}", "");
+            }
         }
 
-        // length forced to 6
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "pc", Length = 6)]
-        protected string GetProgramCounter(int offset, int length)
+        public class AssemblyGenerateLabel : AssemblyPartialLineGenerator
         {
-            return Util.ToHexString6(Data.ConvertPCtoSnes(offset));
+            public AssemblyGenerateLabel()
+            {
+                Token = "label";
+                DefaultLength = -22;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                // what we're given: a PC offset in ROM.
+                // what we need to find: any labels (SNES addresses) that refer to it.
+                //
+                // i.e. given that we are at PC offset = 0,
+                // we find valid SNES offsets mirrored of 0xC08000 and 0x808000 which both refer to the same place
+                // 
+                // TODO: we need to deal with that mirroring here
+                // TODO: eventually, support multiple labels tagging the same address, it may not always be just one.
+            
+                var snesOffset = Data.ConvertPCtoSnes(offset); 
+                var label = Data.LabelProvider.GetLabelName(snesOffset);
+                if (label == null)
+                    return "";
+            
+                LogCreator.LabelsWeVisited.Add(snesOffset);
+
+                var noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
+
+                var str = $"{label}{(noColon ? "" : ":")}";
+                return Util.LeftAlign(length, str);
+            }
         }
 
-        // trim to length
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "offset", Length = -6)]
-        protected string GetOffset(int offset, int length)
+        public class AssemblyGenerateCode : AssemblyPartialLineGenerator
         {
-            return LeftAlign(length, Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0));
+            public AssemblyGenerateCode()
+            {
+                Token = "code";
+                DefaultLength = 37;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                var bytes = LogCreator.GetLineByteLength(offset);
+                var code = "";
+
+                switch (Data.GetFlag(offset))
+                {
+                    case FlagType.Opcode:
+                        code = Data.GetInstruction(offset);
+                        break;
+                    case FlagType.Unreached:
+                    case FlagType.Operand:
+                    case FlagType.Data8Bit:
+                    case FlagType.Graphics:
+                    case FlagType.Music:
+                    case FlagType.Empty:
+                        code = LogCreator.GetFormattedBytes(offset, 1, bytes);
+                        break;
+                    case FlagType.Data16Bit:
+                        code = LogCreator.GetFormattedBytes(offset, 2, bytes);
+                        break;
+                    case FlagType.Data24Bit:
+                        code = LogCreator.GetFormattedBytes(offset, 3, bytes);
+                        break;
+                    case FlagType.Data32Bit:
+                        code = LogCreator.GetFormattedBytes(offset, 4, bytes);
+                        break;
+                    case FlagType.Pointer16Bit:
+                        code = LogCreator.GetPointer(offset, 2);
+                        break;
+                    case FlagType.Pointer24Bit:
+                        code = LogCreator.GetPointer(offset, 3);
+                        break;
+                    case FlagType.Pointer32Bit:
+                        code = LogCreator.GetPointer(offset, 4);
+                        break;
+                    case FlagType.Text:
+                        code = LogCreator.GetFormattedText(offset, bytes);
+                        break;
+                }
+
+                return Util.LeftAlign(length, code);
+            }
+        }
+
+        public class AssemblyGenerateOrg : AssemblyPartialLineGenerator
+        {
+            public AssemblyGenerateOrg()
+            {
+                Token = "%org";
+                DefaultLength = 37;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                var org =
+                    $"ORG {Util.NumberToBaseString(Data.ConvertPCtoSnes(offset), Util.NumberBase.Hexadecimal, 6, true)}";
+                return Util.LeftAlign(length, org);
+            }
+        }
+
+        public class AssemblyGenerateMap : AssemblyPartialLineGenerator
+        {
+            public AssemblyGenerateMap()
+            {
+                Token = "%map";
+                DefaultLength = 37;
+                UsesOffset = false;
+            }
+            protected override string Generate(int length)
+            {
+                var romMapType = Data.RomMapMode switch
+                {
+                    RomMapMode.LoRom => "lorom",
+                    RomMapMode.HiRom => "hirom",
+                    RomMapMode.Sa1Rom => "sa1rom",
+                    RomMapMode.ExSa1Rom => "exsa1rom",
+                    RomMapMode.SuperFx => "sfxrom",
+                    RomMapMode.ExHiRom => "exhirom",
+                    RomMapMode.ExLoRom => "exlorom",
+                    _ => ""
+                };
+                return Util.LeftAlign(length, romMapType);
+            }
         }
         
-        private static string LeftAlign(int length, string str) => string.Format($"{{0,-{length}}}", str);
-
-        // length forced to 8
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "bytes", Length = 8)]
-        protected string GetRawBytes(int offset, int length)
+        // 0+ = bank_xx.asm, -1 = labels.asm
+        public class AssemblyGenerateIncSrc : AssemblyPartialLineGenerator
         {
-            string bytes = "";
-            if (Data.GetFlag(offset) == FlagType.Opcode)
+            public AssemblyGenerateIncSrc()
             {
-                for (var i = 0; i < Data.GetInstructionLength(offset); i++)
-                {
-                    bytes += Util.NumberToBaseString(Data.GetRomByte(offset + i), Util.NumberBase.Hexadecimal);
-                }
+                Token = "%incsrc";
+                DefaultLength = 1;
             }
-            return $"{bytes,-8}";
+            protected override string Generate(int offset, int length)
+            {
+                var s = "incsrc \"labels.asm\"";
+                if (offset >= 0)
+                {
+                    var bank = Data.ConvertPCtoSnes(offset) >> 16;
+                    s = $"incsrc \"bank_{Util.NumberToBaseString(bank, Util.NumberBase.Hexadecimal, 2)}.asm\"";
+                }
+                return Util.LeftAlign(length, s);
+            }
         }
-
-        // trim to length
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "comment", Length = 1)]
-        protected string GetComment(int offset, int length)
+        
+        public class AssemblyGenerateBankCross : AssemblyPartialLineGenerator
         {
-            var snesOffset = Data.ConvertPCtoSnes(offset);
-            return LeftAlign(length, Data.GetCommentText(snesOffset));
+            public AssemblyGenerateBankCross()
+            {
+                Token = "%bankcross";
+                DefaultLength = 1;
+            }
+            protected override string Generate(int length)
+            {
+                return Util.LeftAlign(length, "check bankcross off");
+            }
         }
-
-        // length forced to 2
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "b", Length = 2)]
-        protected string GetDataBank(int offset, int length)
+        
+        public class AssemblyGenerateIndirectAddress : AssemblyPartialLineGenerator
         {
-            return Util.NumberToBaseString(Data.GetDataBank(offset), Util.NumberBase.Hexadecimal, 2);
+            public AssemblyGenerateIndirectAddress()
+            {
+                Token = "ia";
+                DefaultLength = 6;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                var ia = Data.GetIntermediateAddressOrPointer(offset);
+                return ia >= 0 ? Util.ToHexString6(ia) : "      ";
+            }
         }
-
-        // length forced to 4
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "d", Length = 4)]
-        protected string GetDirectPage(int offset, int length)
+        
+        public class AssemblyGenerateProgramCounter : AssemblyPartialLineGenerator
         {
-            return Util.NumberToBaseString(Data.GetDirectPage(offset), Util.NumberBase.Hexadecimal, 4);
+            public AssemblyGenerateProgramCounter()
+            {
+                Token = "pc";
+                DefaultLength = 6;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                return Util.ToHexString6(Data.ConvertPCtoSnes(offset));
+            }
         }
-
-        // if length == 1, M/m, else 08/16
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "m", Length = 1)]
-        protected string GetMFlag(int offset, int length)
+        
+        public class AssemblyGenerateOffset : AssemblyPartialLineGenerator
         {
-            var m = Data.GetMFlag(offset);
-            if (length == 1) return m ? "M" : "m";
-            else return m ? "08" : "16";
+            public AssemblyGenerateOffset()
+            {
+                Token = "offset";
+                DefaultLength = -6; // trim to length
+            }
+            protected override string Generate(int offset, int length)
+            {
+                var hexStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0);
+                return Util.LeftAlign(length, hexStr);
+            }
         }
-
-        // if length == 1, X/x, else 08/16
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "x", Length = 1)]
-        protected string GetXFlag(int offset, int length)
+        
+        public class AssemblyGenerateDataBytes : AssemblyPartialLineGenerator
         {
-            var x = Data.GetXFlag(offset);
-            if (length == 1) return x ? "X" : "x";
-            else return x ? "08" : "16";
+            public AssemblyGenerateDataBytes()
+            {
+                Token = "bytes";
+                DefaultLength = 8;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                var bytes = "";
+                if (Data.GetFlag(offset) == FlagType.Opcode)
+                {
+                    for (var i = 0; i < Data.GetInstructionLength(offset); i++)
+                    {
+                        bytes += Util.NumberToBaseString(Data.GetRomByte(offset + i), Util.NumberBase.Hexadecimal);
+                    }
+                }
+                // TODO: FIXME: use 'length here'
+                return $"{bytes,-8}";
+            }
         }
-
+        
+        public class AssemblyGenerateComment : AssemblyPartialLineGenerator
+        {
+            public AssemblyGenerateComment()
+            {
+                Token = "comment";
+                DefaultLength = 1;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                var snesOffset = Data.ConvertPCtoSnes(offset);
+                var str = Data.GetCommentText(snesOffset);
+                return Util.LeftAlign(length, str);
+            }
+        }
+        
+        public class AssemblyGenerateDataBank : AssemblyPartialLineGenerator
+        {
+            public AssemblyGenerateDataBank()
+            {
+                Token = "b";
+                DefaultLength = 2;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                return Util.NumberToBaseString(Data.GetDataBank(offset), Util.NumberBase.Hexadecimal, 2);
+            }
+        }
+        
+        public class AssemblyGenerateDirectPage : AssemblyPartialLineGenerator
+        {
+            public AssemblyGenerateDirectPage()
+            {
+                Token = "d";
+                DefaultLength = 4;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                return Util.NumberToBaseString(Data.GetDirectPage(offset), Util.NumberBase.Hexadecimal, 4);
+            }
+        }
+        
+        public class AssemblyGenerateMFlag : AssemblyPartialLineGenerator
+        {
+            public AssemblyGenerateMFlag()
+            {
+                Token = "m";
+                DefaultLength = 1;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                var m = Data.GetMFlag(offset);
+                if (length == 1) 
+                    return m ? "M" : "m";
+            
+                return m ? "08" : "16";
+            }
+        }
+        
+        public class AssemblyGenerateXFlag : AssemblyPartialLineGenerator
+        {
+            public AssemblyGenerateXFlag()
+            {
+                Token = "x";
+                DefaultLength = 1;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                var x = Data.GetXFlag(offset);
+                if (length == 1) 
+                    return x ? "X" : "x";
+            
+                return x ? "08" : "16";
+            }
+        }
+        
         // output label at snes offset, and its value
-        [UsedImplicitly]
-        [AssemblerHandler(Token = "%labelassign", Length = 1)]
-        protected string GetLabelAssign(int offset, int length)
+        public class AssemblyGenerateLabelAssign : AssemblyPartialLineGenerator
         {
-            var snesAddress = Data.ConvertPCtoSnes(offset);
-            var labelName = Data.LabelProvider.GetLabelName(snesAddress);
-            var offsetStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true);
-            var labelComment = Data.LabelProvider.GetLabelComment(snesAddress);
+            public AssemblyGenerateLabelAssign()
+            {
+                Token = "%labelassign";
+                DefaultLength = 1;
+            }
+            protected override string Generate(int offset, int length)
+            {
+                var snesAddress = Data.ConvertPCtoSnes(offset);
+                var labelName = Data.LabelProvider.GetLabelName(snesAddress);
+                var offsetStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true);
+                var labelComment = Data.LabelProvider.GetLabelComment(snesAddress);
 
-            if (string.IsNullOrEmpty(labelName))
-                return "";
+                if (string.IsNullOrEmpty(labelName))
+                    return "";
 
-            labelComment ??= "";
+                labelComment ??= "";
 
-            var finalCommentText = "";
+                var finalCommentText = "";
 
-            // TODO: probably not the best way to stuff this in here. -Dom
-            // we should consider putting this in the %comment% section in the future.
-            // for now, just hacking this in so it's included somewhere. this option defaults to OFF
-            if (Settings.PrintLabelSpecificComments && labelComment != "")
-                finalCommentText = $"; !^ {labelComment} ^!";
+                // TODO: probably not the best way to stuff this in here. -Dom
+                // we should consider putting this in the %comment% section in the future.
+                // for now, just hacking this in so it's included somewhere. this option defaults to OFF
+                if (LogCreator.Settings.PrintLabelSpecificComments && labelComment != "")
+                    finalCommentText = $"; !^ {labelComment} ^!";
 
-            return LeftAlign(length, $"{labelName} = {offsetStr}{finalCommentText}");
+                var str = $"{labelName} = {offsetStr}{finalCommentText}";
+                return Util.LeftAlign(length, str);
+            }
+        }
+
+        public Dictionary<string, AssemblyPartialLineGenerator> CreateAssemblyGenerators()
+        {
+            var list = new List<AssemblyPartialLineGenerator>
+            {
+                new AssemblyGeneratePercent(),
+                new AssemblyGenerateEmpty(),
+                new AssemblyGenerateLabel(),
+                new AssemblyGenerateCode(),
+                new AssemblyGenerateOrg(),
+                new AssemblyGenerateMap(),
+                new AssemblyGenerateIncSrc(),
+                new AssemblyGenerateBankCross(),
+                new AssemblyGenerateIndirectAddress(),
+                new AssemblyGenerateProgramCounter(),
+                new AssemblyGenerateOffset(),
+                new AssemblyGenerateDataBytes(),
+                new AssemblyGenerateComment(),
+                new AssemblyGenerateDataBank(),
+                new AssemblyGenerateDirectPage(),
+                new AssemblyGenerateMFlag(),
+                new AssemblyGenerateXFlag(),
+                new AssemblyGenerateLabelAssign(),
+            };
+
+            var dict = new Dictionary<string, AssemblyPartialLineGenerator>();
+            foreach (var generator in list)
+            {
+                generator.LogCreator = this;
+                dict.Add(generator.Token, generator);
+            }
+
+            return dict;
         }
     }
 

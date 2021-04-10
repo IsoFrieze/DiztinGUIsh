@@ -316,5 +316,9 @@ namespace Diz.Core.util
             firstPart = instr.Substring(0, instr.IndexOf(','));
             remainder = instr.Substring(instr.IndexOf(',') + 1);
         }
+
+        public static string LeftAlign(int length, string str) => string.Format(GetLeftAlignFormatStr(length), str);
+
+        public static string GetLeftAlignFormatStr(int length) => $"{{0,{-length}}}";
     }
 }

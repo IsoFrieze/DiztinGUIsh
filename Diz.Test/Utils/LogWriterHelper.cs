@@ -96,7 +96,7 @@ namespace Diz.Test.Utils
             
             var expectedOut = ParseAll(expectedRaw);
             var actualOut = ParseAll(result.OutputStr);
-            AssertAssemblyOutputEqual(result, expectedOut, actualOut);
+            AssertAssemblyOutputEqual(expectedOut, actualOut);
         }
 
         public static LogCreator.OutputResult ExportAssembly(Data inputRom)
@@ -120,7 +120,7 @@ namespace Diz.Test.Utils
             Assert.True(result.ErrorCount == 0);
         }
 
-        private static void AssertAssemblyOutputEqual(LogCreator.OutputResult result, List<ParsedOutput> expectedOut, List<ParsedOutput> actualOut)
+        private static void AssertAssemblyOutputEqual(IReadOnlyList<ParsedOutput> expectedOut, IReadOnlyList<ParsedOutput> actualOut)
         {
             Assert.Equal(expectedOut.Count, actualOut.Count);
 

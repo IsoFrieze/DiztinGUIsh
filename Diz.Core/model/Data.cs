@@ -531,9 +531,7 @@ namespace Diz.Core.model
 
         public void AddTemporaryLabel(int snesAddress, Label label)
         {
-            // originally was AddLabel(address, label, false);
-            
-            if (NormalProvider.GetLabel(snesAddress) == null)
+            if (NormalProvider.GetLabel(snesAddress) == null && TemporaryProvider.GetLabel(snesAddress) == null)
                 TemporaryProvider.AddLabel(snesAddress, label);
         }
 

@@ -25,6 +25,7 @@ namespace Diz.Core.model
         string GetCommentText(int offset);
 
         int GetRomSize();
+        int GetBankSize();
 
         int GetRomByte(int offset);
         public int GetRomWord(int offset);
