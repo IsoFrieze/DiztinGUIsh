@@ -33,8 +33,7 @@ namespace Diz.Core.model.byteSources
         public override int ConvertSourceToDestination(int source, ByteSource byteSource)
         {
             // given a SNES address, convert to a ROM offset
-            var romOffset = RomUtil.ConvertSnesToPc(source, RomMapMode, byteSource.Bytes.Count);
-            return romOffset;
+            return RomUtil.ConvertSnesToPc(source, RomMapMode, byteSource.Bytes.Count);
         }
 
         public override int ConvertDestinationToSource(int destination, ByteSource byteSource)
@@ -43,8 +42,7 @@ namespace Diz.Core.model.byteSources
             
             // TODO: eventually, make this map the entire SNES address space and not just the ROM area.
             // underlying stuff in RomUtil will need an update to do that.
-            var snesAddress = RomUtil.ConvertPCtoSnes(destination, RomMapMode, RomSpeed);
-            return snesAddress;
+            return RomUtil.ConvertPCtoSnes(destination, RomMapMode, RomSpeed);
         }
     }
 }

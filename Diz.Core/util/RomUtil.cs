@@ -460,10 +460,10 @@ namespace Diz.Core.util
             };
         }
 
-        public static ByteSourceMapping CreateMappingFromRomRawBytes(
+        public static ByteSourceMapping CreateRomMappingFromRomRawBytes(
             IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
         {
-            return CreateRomMappingFromRomByteSource(new ByteSource(actualRomBytes), romMapMode, romSpeed);
+            return CreateRomMappingFromRomByteSource(new ByteSource(actualRomBytes) { Name = "Snes ROM" }, romMapMode, romSpeed);
         }
     }
 }

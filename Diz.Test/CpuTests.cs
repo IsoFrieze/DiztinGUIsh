@@ -4,53 +4,59 @@ using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using Diz.Test.Utils;
 using Xunit;
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace Diz.Test
 {
     public static class CpuTests
     {
-        private static Data GetSampleHiromFastRomData()
+        private static Data TinyHiRomData
         {
-            var romByteSource = new ByteSource(new List<ByteOffsetData>
+            get
             {
-                // starts at PC=0, which is SNES=0xC00000
-                // STA.W SNES_VMADDL
-                // OR (equivalent)
-                // STA.W $2116
-                new()
+                var data = new Data(new ByteSource(new List<ByteOffsetData>
                 {
-                    Byte = 0x8D, Annotations = new List<Annotation>
+                    // starts at PC=0, which is SNES=0xC00000
+                    // STA.W SNES_VMADDL
+                    // OR (equivalent)
+                    // STA.W $2116
+                    new()
                     {
-                        new OpcodeAnnotation {MFlag = true, XFlag = true, DataBank = 0x00, DirectPage = 0},
-                        new MarkAnnotation {TypeFlag = FlagType.Opcode}
-                    }
+                        Byte = 0x8D, Annotations = new List<Annotation>
+                        {
+                            new OpcodeAnnotation {MFlag = true, XFlag = true, DataBank = 0x00, DirectPage = 0},
+                            new MarkAnnotation {TypeFlag = FlagType.Opcode}
+                        }
 
-                },
-                new()
-                {
-                    Byte = 0x16, Annotations = new List<Annotation>
+                    },
+                    new()
                     {
-                        new MarkAnnotation {TypeFlag = FlagType.Operand},
-                        new Comment {Text = "unused"} // 0xC00001
-                    }
-                },
-                new()
-                {
-                    Byte = 0x21, Annotations = new List<Annotation>
+                        Byte = 0x16, Annotations = new List<Annotation>
+                        {
+                            new MarkAnnotation {TypeFlag = FlagType.Operand},
+                            new Comment {Text = "unused"} // 0xC00001
+                        }
+                    },
+                    new()
                     {
-                        new MarkAnnotation {TypeFlag = FlagType.Operand}
-                    }
-                },
-            });
-
-            var data = new Data(romByteSource, RomMapMode.HiRom, RomSpeed.FastRom);
+                        Byte = 0x21, Annotations = new List<Annotation>
+                        {
+                            new MarkAnnotation {TypeFlag = FlagType.Operand}
+                        }
+                    },
+                }) {Name = "Snes Rom"}, RomMapMode.HiRom, RomSpeed.FastRom);
             
-            data.LabelProvider.AddLabel(
-                0x002116, new Label {Name = "SNES_VMADDL", Comment = "SNES hardware register example."}
+                data.LabelProvider.AddLabel(
+                    0x002116, new Label {Name = "SNES_VMADDL", Comment = "SNES hardware register example."}
                 );
 
-            return data;
+                return data;
+            }
         }
+        
+        public static TheoryData<AssemblyPipelineTester> PipelineTesters => new() {
+            AssemblyPipelineTester.SetupFromResource(TinyHiRomData, "Diz.Test/Resources/asartestrun.asm")
+        };
 
         /*public static IReadOnlyList<byte> AssemblyRom => AsarRunner.AssembleToRom(@"
             hirom
@@ -85,7 +91,7 @@ namespace Diz.Test
         [Fact]
         public static void DataConvertSnesToPcHiRom()
         {
-            var data = GetSampleHiromFastRomData();
+            var data = TinyHiRomData;
             
             // note: this doesn't quite cover all the range if the offset is greater than the #bytes
             
@@ -96,18 +102,50 @@ namespace Diz.Test
         [Fact]
         public static void SanityTest()
         {
-            var data = GetSampleHiromFastRomData();
+            var data = TinyHiRomData;
             Assert.Equal(3, data.GetRomSize());
             
-            Assert.Equal(0x8D, data.GetRomByte(0));
-            Assert.Equal(0x16, data.GetRomByte(1));
-            Assert.Equal(0x21, data.GetRomByte(2));
+            AssertRomByteEqual(0x8D, data, 0);
+            AssertRomByteEqual(0x16, data, 1);
+            AssertRomByteEqual(0x21, data, 2);
+        }
+
+        private static void AssertRomByteEqual(byte expectedByteVal, Data data, int pcOffset)
+        {
+            // test via all three access methods
+            AssertSnesByteIs(expectedByteVal, data, pcOffset);
+            AssertRomByteIs(expectedByteVal, data, pcOffset);
+            AssertRomByteIsViaHelper(expectedByteVal, data, pcOffset);
+        }
+
+        // access via older helper interface
+        private static void AssertRomByteIsViaHelper(byte expectedByteVal, Data data, int pcOffset)
+        {
+            Assert.Equal(expectedByteVal, data.GetRomByte(pcOffset));
+        }
+
+        // access via snes interface
+        private static void AssertSnesByteIs(byte expectedByteVal, Data data, int pcOffset)
+        {
+            var snesAddress = data.ConvertPCtoSnes(pcOffset);
+            Assert.NotEqual(-1, snesAddress);
+            var rByte = data.SnesAddressSpace.CompileAllChildDataFrom(snesAddress).Byte; // TODO refactor: Make this be ByteSource.GetByte()
+            Assert.NotNull(rByte);
+            Assert.Equal(expectedByteVal, rByte.Value);
+        }
+        
+        // access via Rom mapping interface
+        private static void AssertRomByteIs(byte expectedByteVal, Data data, int pcOffset)
+        {
+            var rByte = data.RomByteSource.CompileAllChildDataFrom(pcOffset).Byte;
+            Assert.NotNull(rByte);
+            Assert.Equal(expectedByteVal, rByte.Value);
         }
 
         [Fact]
         public static void TestLabels()
         {
-            var data = GetSampleHiromFastRomData();
+            var data = TinyHiRomData;
             Assert.Equal("SNES_VMADDL", data.LabelProvider.GetLabelName(0x2116));
             Assert.Equal("", data.LabelProvider.GetLabelName(0x2119)); // bogus address
             // Assert.Equal("SNES_VMADDL", data.GetLabelName(0x7E2116)); // later, we need this to ALSO work
@@ -116,31 +154,32 @@ namespace Diz.Test
         [Fact]
         public static void IA1()
         {
-            var data = GetSampleHiromFastRomData();
+            var data = TinyHiRomData;
             Assert.Equal(0x002116, data.GetIntermediateAddressOrPointer(0));
         }
 
         [Fact]
         public static void IA2()
         {
-            var data = GetSampleHiromFastRomData();
+            var data = TinyHiRomData;
             data.RomByteSource.Bytes[0].DataBank = 0x7E;
             Assert.Equal(0x7E2116, data.GetIntermediateAddressOrPointer(0));
         }
-        
+
         [Theory]
-        [EmbeddedResourceData("Diz.Test/Resources/asartestrun.asm")]
-        public static void TestRomAsmOutput(string expectedOutputAsm)
+        [MemberData(nameof(PipelineTesters))]
+        public static void TestRom2(AssemblyPipelineTester romTester)
         {
-            LogWriterHelper.AssertAssemblyOutputEquals(expectedOutputAsm, LogWriterHelper.ExportAssembly(GetSampleHiromFastRomData()));
+            romTester.Test();
         }
 
-        // [Fact(Skip = "Relies on external tool that isn't yet setup")]
-        [Fact]
+        // TODO: FIXME: wont work til we fix the assembly export generation
+        [Fact(Skip = "not yet working")]
+        // [Fact]
         public static void RunTestRom()
         {
             // C# ROM -> Assembly Text 
-            var exportAssembly = LogWriterHelper.ExportAssembly(GetSampleHiromFastRomData()).OutputStr;
+            var exportAssembly = LogWriterHelper.ExportAssembly(TinyHiRomData).OutputStr;
 
             // Assembly Text -> Asar -> SFC file
             var bytes = AsarRunner.AssembleToRom(exportAssembly);

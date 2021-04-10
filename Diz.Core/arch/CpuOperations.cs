@@ -6,7 +6,7 @@ namespace Diz.Core.arch
     public interface IReadOnlyCpuOperableByteSource
     {
         public Architecture GetArchitecture(int i);
-        int GetRomByte(int offset);
+        byte GetRomByte(int offset);
         public FlagType GetFlag(int i);
         int GetMxFlags(int i);
         

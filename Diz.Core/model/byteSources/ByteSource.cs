@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Diz.Core.util;
+using System.IO;
 
 namespace Diz.Core.model.byteSources
 {
@@ -9,6 +8,8 @@ namespace Diz.Core.model.byteSources
     {
         public string Name { get; set; }
 
+        // TODO; we need to replace this with a more sparse version, like a Dictionary.
+        // list access is nice, but it's too much mem to create all upfront, especially for one object per 24bits of address space
         protected List<ByteOffsetData> bytes = new();
 
         public IReadOnlyList<ByteOffsetData> Bytes => bytes;
@@ -19,26 +20,13 @@ namespace Diz.Core.model.byteSources
         {
             
         }
-
-        public void AddByte(ByteOffsetData byteOffset)
-        {
-            bytes.Add(byteOffset);
-            byteOffset.ContainerOffset = Bytes.Count - 1; // IMPORTANT
-            byteOffset.Container = this;
-        }
         
-        public ByteSource(IReadOnlyCollection<ByteOffsetData> inBytes)
+        // create an empty list of bytes
+        public ByteSource(int size) : this(CreateEmptyBytesList(size))
         {
-            bytes = new List<ByteOffsetData>(inBytes.Count);
             
-            var i = 0;
-            foreach (var b in inBytes)
-            {
-                AddByte(b);
-                ++i;
-            }
         }
-        
+
         public ByteSource(IReadOnlyCollection<byte> inBytes)
         {
             bytes = new List<ByteOffsetData>(inBytes.Count);
@@ -54,6 +42,48 @@ namespace Diz.Core.model.byteSources
 
                 ++i;
             }
+        }
+
+        public ByteSource(IReadOnlyCollection<ByteOffsetData> inBytes)
+        {
+            bytes = new List<ByteOffsetData>(inBytes.Count);
+            foreach (var b in inBytes)
+            {
+                AddByte(b);
+            }
+        }
+
+        private static IReadOnlyCollection<ByteOffsetData> CreateEmptyBytesList(int size)
+        {
+            var emptyOffsetData = new List<ByteOffsetData>(size);
+            
+            for (var i = 0; i < size; ++i)
+                emptyOffsetData.Add(new ByteOffsetData());
+
+            return emptyOffsetData;
+        }
+
+        public byte GetByte(int index)
+        {
+            var dataAtOffset = CompileAllChildDataFrom(index); // EXPENSIVE
+
+            if (dataAtOffset == null)
+                throw new InvalidDataException("ERROR: GetByte() no data available at that offset");
+
+            if (dataAtOffset.Byte == null)
+                throw new InvalidDataException("ERROR: GetByte() doesn't map to a real byte");
+
+            return (byte) dataAtOffset.Byte;
+        }
+
+        // important to always go through this function when adding bytes, so we can cache some data
+        public void AddByte(ByteOffsetData byteOffset)
+        {
+            bytes.Add(byteOffset);
+            
+            // cache these values
+            byteOffset.ContainerOffset = Bytes.Count - 1;
+            byteOffset.Container = this;
         }
 
         // return a directed graph with all possible values for this offset including all child regions.
@@ -78,16 +108,15 @@ namespace Diz.Core.model.byteSources
         {
             foreach (var childSourceToTraverse in ChildSources)
             {
-                var childIndex = childSourceToTraverse.RegionMapping.ConvertSourceToDestination(sourceIndex, childSourceToTraverse.ByteSource);
+                var childIndex = childSourceToTraverse.RegionMapping
+                    .ConvertSourceToDestination(sourceIndex, childSourceToTraverse.ByteSource);
                 
                 var newChildNode = childSourceToTraverse.ByteSource.TraverseChildren(childIndex);
-                if (newChildNode != null)
-                {
-                    if (nodeToPopulate.Children == null)
-                        nodeToPopulate.Children = new List<ByteOffsetDataNode>();
-                    
-                    nodeToPopulate.Children.Add(newChildNode);
-                }
+                if (newChildNode == null) 
+                    continue;
+                
+                nodeToPopulate.Children ??= new List<ByteOffsetDataNode>();
+                nodeToPopulate.Children.Add(newChildNode);
             }
         }
 
@@ -98,7 +127,7 @@ namespace Diz.Core.model.byteSources
         // to be overwritten.  This doesn't work for more complex stuff like mirrored offsets/etc.
         // In those cases, you should more manually walk the graph node yourself in whatever manner
         // is appropriate for the calling code.
-        public ByteOffsetData CompileAllChildDataAt(int index)
+        public ByteOffsetData CompileAllChildDataFrom(int index)
         {
             if (!IsValidIndex(index))
                 return null;
@@ -147,7 +176,7 @@ namespace Diz.Core.model.byteSources
         {
             // PERF NOTE: this is now doing graph traversal and memory allocation, could get expensive
             // if called a lot. Keep an eye on it and do some caching if needed.
-            var offsetData = CompileAllChildDataAt(index);
+            var offsetData = CompileAllChildDataFrom(index);
             return offsetData?.GetOneAnnotation<T>();
         }
 
@@ -161,39 +190,6 @@ namespace Diz.Core.model.byteSources
 
                 yield return new KeyValuePair<int, T>(snesAddress, annotation);
             }   
-        }
-
-        public static ByteSource CreateEmpty(int size)
-        {
-            var emptyOffsetData = new List<ByteOffsetData>(size);
-            for (var i = 0; i < size; ++i)
-            {
-                emptyOffsetData.Add(new ByteOffsetData());
-            }
-
-            var newByteSource = new ByteSource(emptyOffsetData);
-            return newByteSource;
-        }
-    }
-    
-    public class SnesAddressSpaceByteSource : ByteSource
-    {
-        public SnesAddressSpaceByteSource() : base()
-        {
-            Debug.Assert(bytes.Count == 0);
-            
-            // create all addressable bytes for the SNES address space.
-            // by default all .byte are null and there's no annotations here.
-            const int snesAddressSpaceSizeInBytes = 0xFFFFFF;
-            
-            // note: potentially.... uses a lot of memory, yea.
-            // we probably want to switch to a dictionary or something sparse for this class specifically
-            // or, create these bytes on-demand only when needed since most will be empty.
-            bytes = new List<ByteOffsetData>(snesAddressSpaceSizeInBytes);
-            for (var i = 0; i < snesAddressSpaceSizeInBytes; ++i)
-            {
-                AddByte(new ByteOffsetData());
-            }
         }
     }
 }

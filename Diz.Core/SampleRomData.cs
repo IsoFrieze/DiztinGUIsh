@@ -188,7 +188,7 @@ namespace Diz.Core
                     new() {Byte = 0x83, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
                     new() {Byte = 0x34, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
                     new() {Byte = 0x6D, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
-                });
+                }) {Name = "Snes Rom"};
                 
                 var sampleData = new SampleRomData();
                 

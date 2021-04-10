@@ -27,7 +27,7 @@ namespace Diz.Core.model
         int GetRomSize();
         int GetBankSize();
 
-        int GetRomByte(int offset);
+        byte GetRomByte(int offset);
         public int GetRomWord(int offset);
         public int GetRomLong(int offset);
         public int GetRomDoubleWord(int offset);

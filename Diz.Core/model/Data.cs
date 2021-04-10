@@ -26,8 +26,13 @@ namespace Diz.Core.model
         // TODO: gotta carefully think about the serialization here. we need to not output bytes from the ROM itself.
         // everything else is fine.
         
+        public LabelProvider LabelProvider { get; }
+
+        IReadOnlyLabelProvider IReadOnlySnesRom.LabelProvider => LabelProvider;
+        ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => LabelProvider;
+        
         // the parent of all our data, the SNES address space
-        public SnesAddressSpaceByteSource SnesAddressSpace { get; private set; }
+        public ByteSource SnesAddressSpace { get; private set; }
         
         // cached access to stuff that livers in SnesAddressSpace. convenience only.
         public ByteSource RomByteSource => RomMapping?.ByteSource;
@@ -42,7 +47,7 @@ namespace Diz.Core.model
 
         public void PopulateFrom(IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
         {
-            var mapping = RomUtil.CreateMappingFromRomRawBytes(actualRomBytes, romMapMode, romSpeed);
+            var mapping = RomUtil.CreateRomMappingFromRomRawBytes(actualRomBytes, romMapMode, romSpeed);
             PopulateFrom(mapping);
         }
 
@@ -60,15 +65,16 @@ namespace Diz.Core.model
             // setup a common SNES mapping, just the ROM and nothing else.
             // this is very configurable, for now, this class is sticking with the simple setup.
             // you can get as elaborate as you want, with RAM, patches, overrides, etc.
-            RomMapping = romByteSourceMapping;
-            SnesAddressSpace = new SnesAddressSpaceByteSource
-            {
-                ChildSources = new List<ByteSourceMapping>
-                {
+            const int snesAddressableBytes = 0xFFFFFF;
+            SnesAddressSpace = new ByteSource(snesAddressableBytes) {
+                Name = "SNES Main Cpu BUS",
+                ChildSources = new List<ByteSourceMapping> {
                     romByteSourceMapping
                 }
             };
             
+            RomMapping = romByteSourceMapping;
+
             //SendNotificationChangedEvents = previousNotificationState;
         }
 
@@ -94,34 +100,36 @@ namespace Diz.Core.model
         }
         public Data InitializeEmptyRomMapping(int size, RomMapMode mode, RomSpeed speed)
         {
-            PopulateFromRom(ByteSource.CreateEmpty(size), mode, speed);
+            var romByteSource = new ByteSource(size) { Name = "Snes ROM" };
+            PopulateFromRom(romByteSource, mode, speed);
             return this;
         }
         
         #endregion
-
-        // TODO: something is messed up or just happens to work with the conversion of SNES->PC addresses here
-        // fix conversion of snes->pc
+        
         private byte[] GetRomBytes(int snesOffset, int count)
         {
             var output = new byte[count];
             for (var i = 0; i < output.Length; i++)
-                output[i] = (byte)GetRomByte(ConvertSnesToPc(snesOffset + i));
+            {
+                var pcOffset = ConvertSnesToPc(snesOffset + i);
+                output[i] = GetRomByte(pcOffset);
+            }
 
             return output;
         }
 
-        public string GetRomNameFromRomBytes()
+        // TODO: offset isn't snes it's rom? how is this still able to work? figure it out and fix variable naming
+        public string GetRomNameFromRomBytes() => GetFixedLengthStr(0xFFC0, 21);
+
+        private string GetFixedLengthStr(int snesOffset, int count)
         {
-            // TODO: offset isn't snes it's rom? how is this still able to work? figure it out and fix variable naming
-            return Encoding.UTF8.GetString(GetRomBytes(0xFFC0, 21));
+            return Encoding.UTF8.GetString(GetRomBytes(snesOffset, count));
         }
 
-        public int GetRomCheckSumsFromRomBytes()
-        {
-            // TODO: offset isn't snes it's rom? how is this still able to work? figure it out and fix variable naming
-            return ByteUtil.ByteArrayToInt32(GetRomBytes(0xFFDC, 4));
-        }
+        // TODO: offset isn't snes it's rom? how is this still able to work? figure it out and fix variable naming
+        // TODO: replace with GetRomDoubleWord()
+        public int GetRomCheckSumsFromRomBytes() => ByteUtil.ByteArrayToInt32(GetRomBytes(0xFFDC, 4));
 
         public int GetRomSize() => RomByteSource?.Bytes?.Count ?? 0;
         
@@ -144,11 +152,6 @@ namespace Diz.Core.model
         {
             PopulateFromRom(romByteSource, romMapMode, romSpeed);
         }
-
-        public LabelProvider LabelProvider { get; }
-
-        IReadOnlyLabelProvider IReadOnlySnesRom.LabelProvider => LabelProvider;
-        ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => LabelProvider;
 
         public T GetOrCreateAnnotationAtPc<T>(int pcOffset) where T : Annotation, new()
         {
@@ -239,54 +242,39 @@ namespace Diz.Core.model
         }
 
         // get the value of the byte at ROM index i
-        // FIXME: why are we returning int and not byte?
-        public int GetRomByte(int pcOffset)
+        public byte GetRomByte(int pcOffset)
         {
-            var snesOffset = ConvertPCtoSnes(pcOffset);
-            var dataAtOffset = GetRawDataAtSnesOffset(snesOffset);
-            
-            if (dataAtOffset?.Byte == null)
-                throw new InvalidDataException("ERROR: GetRomByte() doesn't map to a real byte");
-
-            return (int) dataAtOffset.Byte;
+            // weird thing: even though we're asking for a byte from the ROM,
+            // we should always access it via the top-level ByteSource which is the SNES address space.
+            // so, convert to that, and access via that.
+            return GetSnesByte(ConvertPCtoSnes(pcOffset));
         }
 
-        private ByteOffsetData GetRawDataAtSnesOffset(int snesOffset)
+        public byte GetSnesByte(int snesAddress)
         {
-            // PERF NOTE: this is now doing graph traversal and memory allocation, could get expensive
-            // if called a lot. Keep an eye on it and do some caching if needed.
-            return SnesAddressSpace.CompileAllChildDataAt(snesOffset);
-        }
-
-        // NOTE: technically not always correct. banks wrap around so, theoretically we should check what operation
-        // we're doing and wrap to the beginning of the bank. for now.... just glossing over it, bigger fish to fry.
-        // "past me" apologizes to 'future you' for this if you got hung up here.
-        //
-        // returns null if out of bounds
-        public byte? GetNextRomByte(int offset)
-        {
-            return offset + 1 >= 0 && offset + 1 < RomByteSource.Bytes.Count
-                ? RomByteSource.Bytes[offset + 1].Byte
-                : null;
+            return SnesAddressSpace.GetByte(snesAddress);
         }
 
         public int GetRomWord(int offset)
         {
-            if (offset + 1 < GetRomSize())
-                return GetRomByte(offset) + (GetRomByte(offset + 1) << 8);
-            return -1;
+            if (offset + 1 >= GetRomSize()) 
+                return -1;
+            
+            return GetRomByte(offset) + (GetRomByte(offset + 1) << 8);
         }
         public int GetRomLong(int offset)
         {
-            if (offset + 2 < GetRomSize())
-                return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16);
-            return -1;
+            if (offset + 2 >= GetRomSize()) 
+                return -1;
+            
+            return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16);
         }
         public int GetRomDoubleWord(int offset)
         {
-            if (offset + 3 < GetRomSize())
-                return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16) + (GetRomByte(offset + 3) << 24);
-            return -1;
+            if (offset + 3 >= GetRomSize()) 
+                return -1;
+            
+            return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16) + (GetRomByte(offset + 3) << 24);
         }
         public int GetIntermediateAddressOrPointer(int offset)
         {
@@ -303,6 +291,18 @@ namespace Diz.Core.model
                     return GetRomLong(offset);
             }
             return -1;
+        }
+        
+        // NOTE: technically not always correct. banks wrap around so, theoretically we should check what operation
+        // we're doing and wrap to the beginning of the bank. for now.... just glossing over it, bigger fish to fry.
+        // "past me" apologizes to 'future you' for this if you got hung up here.
+        //
+        // returns null if out of bounds
+        public byte? GetNextRomByte(int pcOffset)
+        {
+            return pcOffset + 1 >= 0 && pcOffset + 1 < RomByteSource.Bytes.Count
+                ? RomByteSource.Bytes[pcOffset + 1].Byte
+                : null;
         }
 
         public int GetBankSize()
