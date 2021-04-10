@@ -22,11 +22,12 @@ namespace Diz.Test.Utils
             swAsm.Write(assemblyCode);
 
             swAsm.Close(); swAsm.Dispose();
-            
-            var psi = new ProcessStartInfo();
-            psi.FileName = Path.GetFileName(pathToAsar);
-            psi.WorkingDirectory = Path.GetDirectoryName(pathToAsar);
-            psi.Arguments = $"\"{tmpOutputAsm}\" \"{tmpOutputRom}\"";
+
+            var psi = new ProcessStartInfo(pathToAsar)
+            {
+                WorkingDirectory = Path.GetDirectoryName(pathToAsar),
+                Arguments = $"\"{tmpOutputAsm}\" \"{tmpOutputRom}\""
+            };
             Process.Start(psi).WaitForExit(20000);
 
             return File.ReadAllBytes(tmpOutputRom);
