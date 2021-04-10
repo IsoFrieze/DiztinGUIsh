@@ -52,7 +52,7 @@ namespace Diz.Test
             return data;
         }
 
-        public static IReadOnlyList<byte> AssemblyRom => AsarRunner.AssembleToRom(@"
+        /*public static IReadOnlyList<byte> AssemblyRom => AsarRunner.AssembleToRom(@"
             hirom
 
             SNES_VMADDL = $002116
@@ -61,7 +61,7 @@ namespace Diz.Test
             ORG $C00000
 
             STA.W SNES_VMADDL"
-        );
+        );*/
 
         [Fact]
         public static void ConvertSnesToPcHiRom()
@@ -127,8 +127,16 @@ namespace Diz.Test
             data.RomByteSource.Bytes[0].DataBank = 0x7E;
             Assert.Equal(0x7E2116, data.GetIntermediateAddressOrPointer(0));
         }
+        
+        [Theory]
+        [EmbeddedResourceData("Diz.Test/Resources/asartestrun.asm")]
+        public static void TestRomAsmOutput(string expectedOutputAsm)
+        {
+            LogWriterHelper.AssertAssemblyOutputEquals(expectedOutputAsm, LogWriterHelper.ExportAssembly(GetSampleHiromFastRomData()));
+        }
 
-        [Fact(Skip = "Relies on external tool that isn't yet setup")]
+        // [Fact(Skip = "Relies on external tool that isn't yet setup")]
+        [Fact]
         public static void RunTestRom()
         {
             // C# ROM -> Assembly Text 
@@ -137,10 +145,11 @@ namespace Diz.Test
             // Assembly Text -> Asar -> SFC file
             var bytes = AsarRunner.AssembleToRom(exportAssembly);
 
+            Assert.Equal(3, bytes.Count);
+            
             Assert.Equal(0x8D, bytes[0]);
             Assert.Equal(0x16, bytes[1]);
             Assert.Equal(0x21, bytes[2]);
-            Assert.Equal(3, bytes.Count);
         }
     }
 }

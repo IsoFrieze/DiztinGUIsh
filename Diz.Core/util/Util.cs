@@ -320,5 +320,16 @@ namespace Diz.Core.util
         public static string LeftAlign(int length, string str) => string.Format(GetLeftAlignFormatStr(length), str);
 
         public static string GetLeftAlignFormatStr(int length) => $"{{0,{-length}}}";
+        
+        public static string ReadManifestData(Assembly assembly, string resourceName)
+        {
+            resourceName = resourceName.Replace("/", ".");
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            
+            if (stream == null)
+                throw new InvalidOperationException("Could not load manifest resource stream.");
+
+            return new StreamReader(stream).ReadToEnd();
+        }
     }
 }

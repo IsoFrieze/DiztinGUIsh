@@ -274,5 +274,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Resources\asartestrun.asm" />
+    <EmbeddedResource Include="Resources\asartestrun.asm" />
+  </ItemGroup>
 
 </Project>
