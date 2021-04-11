@@ -109,7 +109,7 @@ namespace DiztinGUIsh.window
             ShowError(errorMsg, "Error opening project");
         }
 
-        public void OnExportFinished(LogCreator.OutputResult result)
+        public void OnExportFinished(LogCreatorOutput.OutputResult result)
         {
             ExportDisassembly.ShowExportResults(result);
         }

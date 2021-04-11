@@ -8,6 +8,14 @@ namespace Diz.Core.export
 {
     public abstract class LogCreatorOutput
     {
+        public class OutputResult
+        {
+            public bool Success;
+            public int ErrorCount = -1;
+            public LogCreator LogCreator;
+            public string OutputStr = ""; // this is only populated if outputString=true
+        }
+        
         protected LogCreator LogCreator;
 
         public void Init(LogCreator logCreator)
@@ -17,7 +25,7 @@ namespace Diz.Core.export
         }
 
         protected virtual void Init() { }
-        public virtual void Finish(LogCreator.OutputResult result) { }
+        public virtual void Finish(OutputResult result) { }
         public virtual void SwitchToBank(int bankNum) { }
         public virtual void SwitchToStream(string streamName, bool isErrorStream = false) { }
         public abstract void WriteLine(string line);
@@ -34,13 +42,13 @@ namespace Diz.Core.export
 
         protected override void Init()
         {
-            Debug.Assert(LogCreator.Settings.OutputToString && LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile);
+            Debug.Assert(LogCreator.Settings.OutputToString && LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.SingleFile);
         }
 
         public override void WriteLine(string line) => outputBuilder.AppendLine(line);
         public override void WriteErrorLine(string line) => errorBuilder.AppendLine(line);
 
-        public override void Finish(LogCreator.OutputResult result)
+        public override void Finish(OutputResult result)
         {
             result.OutputStr = OutputString;
         }
@@ -62,12 +70,12 @@ namespace Diz.Core.export
         {
             var basePath = LogCreator.Settings.FileOrFolderOutPath;
 
-            if (LogCreator.Settings.Structure == LogCreator.FormatStructure.OneBankPerFile)
+            if (LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.OneBankPerFile)
                 basePath += "\\"; // force it to treat it as a path. not the best way.
 
             folder = Path.GetDirectoryName(basePath);
 
-            if (LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile)
+            if (LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.SingleFile)
             {
                 filename = Path.GetFileName(LogCreator.Settings.FileOrFolderOutPath);
                 SwitchToStream(filename);
@@ -80,7 +88,7 @@ namespace Diz.Core.export
             SwitchToStream(LogCreator.Settings.ErrorFilename, isErrorStream: true);
         }
 
-        public override void Finish(LogCreator.OutputResult result)
+        public override void Finish(OutputResult result)
         {
             foreach (var stream in outputStreams)
             {
@@ -105,7 +113,7 @@ namespace Diz.Core.export
         public override void SwitchToStream(string streamName, bool isErrorStream = false)
         {
             // don't switch off the main file IF we're only supposed to be outputting one file
-            if (LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile &&
+            if (LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.SingleFile &&
                 !string.IsNullOrEmpty(activeStreamName))
                 return;
 
@@ -125,7 +133,7 @@ namespace Diz.Core.export
             activeOutputStream = streamWriter;
         }
 
-        protected virtual StreamWriter OpenNewStream(string streamName)
+        protected StreamWriter OpenNewStream(string streamName)
         {
             var streamWriter = new StreamWriter(BuildStreamPath(streamName));
             outputStreams.Add(streamName, streamWriter);

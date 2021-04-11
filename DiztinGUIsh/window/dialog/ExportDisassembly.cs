@@ -86,7 +86,7 @@ namespace DiztinGUIsh
 
         private bool PromptForPath()
         {
-            var singleFile = settings.Structure == LogCreator.FormatStructure.SingleFile;
+            var singleFile = settings.Structure == LogWriterSettings.FormatStructure.SingleFile;
             var fileOrFolderPath = PromptForLogPathFromFileOrFolderDialog(singleFile);
 
             if (string.IsNullOrEmpty(fileOrFolderPath))
@@ -118,13 +118,13 @@ namespace DiztinGUIsh
 
         private void comboUnlabeled_SelectedIndexChanged(object sender, EventArgs e)
         {
-            settings.Unlabeled = (LogCreator.FormatUnlabeled)comboUnlabeled.SelectedIndex;
+            settings.Unlabeled = (LogWriterSettings.FormatUnlabeled)comboUnlabeled.SelectedIndex;
             RegenerateSampleOutput();
         }
 
         private void comboStructure_SelectedIndexChanged(object sender, EventArgs e)
         {
-            settings.Structure = (LogCreator.FormatStructure)comboStructure.SelectedIndex;
+            settings.Structure = (LogWriterSettings.FormatStructure)comboStructure.SelectedIndex;
         }
 
         private bool ValidateFormat()
@@ -152,7 +152,7 @@ namespace DiztinGUIsh
             settings.IncludeUnusedLabels = chkIncludeUnusedLabels.Checked;
         }
 
-        public static void ShowExportResults(LogCreator.OutputResult result)
+        public static void ShowExportResults(LogCreatorOutput.OutputResult result)
         {
             if (result.ErrorCount > 0)
                 MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",

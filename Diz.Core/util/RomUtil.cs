@@ -429,11 +429,11 @@ namespace Diz.Core.util
 
         public const int LengthOfTitleName = 0x15;
 
-        public static LogCreator.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
+        public static LogCreatorOutput.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
         {
             var sampleRomData = SampleRomData.SampleData;
 
-            sampleSettings.Structure = LogCreator.FormatStructure.SingleFile;
+            sampleSettings.Structure = LogWriterSettings.FormatStructure.SingleFile;
             sampleSettings.FileOrFolderOutPath = "";
             sampleSettings.OutputToString = true;
             sampleSettings.RomSizeOverride = sampleRomData.OriginalRomSizeBeforePadding;

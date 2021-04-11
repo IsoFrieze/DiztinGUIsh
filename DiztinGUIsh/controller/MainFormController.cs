@@ -205,7 +205,7 @@ namespace DiztinGUIsh.controller
                 Data = Project.Data,
             };
 
-            LogCreator.OutputResult result = null;
+            LogCreatorOutput.OutputResult result = null;
             DoLongRunningTask(delegate { result = lc.CreateLog(); }, "Exporting assembly source code...");
 
             ProjectView.OnExportFinished(result);

@@ -14,7 +14,7 @@ namespace DiztinGUIsh.controller
     {
         void OnProjectOpenWarning(string warningMsg);
         void OnProjectOpenFail(string errorMsg);
-        void OnExportFinished(LogCreator.OutputResult result);
+        void OnExportFinished(LogCreatorOutput.OutputResult result);
         
         string AskToSelectNewRomFilename(string promptSubject, string promptText);
         IImportRomDialogView GetImportView();
