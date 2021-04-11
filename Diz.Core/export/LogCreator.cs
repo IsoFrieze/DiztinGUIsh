@@ -333,9 +333,9 @@ namespace Diz.Core.export
         {
             var line = "";
 
-            foreach (var (parameter, length) in LogCreatorLineFormatter.ParsedLineFormat)
+            foreach (var formatItem in LogCreatorLineFormatter.ParsedFormat)
             {
-                line += GenerateLinePartial(offset, parameter, length, specialStr);
+                line += GenerateLinePartial(offset, formatItem, specialStr);
             }
 
             if (specialStr == null)
@@ -344,20 +344,42 @@ namespace Diz.Core.export
             return line;
         }
 
-        private string GenerateLinePartial(int offset, string parameter, int length, string specialModifierStr)
+        private string GenerateLinePartial(int offset, LogCreatorLineFormatter.FormatItem formatItem, string specialModifierStr)
         {
             // string literal version
-            if (length == int.MaxValue)
-                return parameter;
+            if (formatItem.IsLiteral)
+                return formatItem.Value;
+            
+            var generatorName = GetGeneratorName(formatItem, specialModifierStr);
 
-            // special case (replaces code & everything else = empty)
-            if (specialModifierStr != null)
-                parameter = $"%{(parameter != "code" ? "empty" : specialModifierStr)}";
+            var generator = GetGeneratorFor(generatorName);
+            
+            return generator.Emit(offset, formatItem.LengthOverride);
+        }
 
+        private static string GetGeneratorName(LogCreatorLineFormatter.FormatItem formatItem, string generatorOverrideIfCode = null)
+        {
+            // normal non-special case
+            if (generatorOverrideIfCode == null)
+                return formatItem.Value;
+
+            return GetOverrideGeneratorNameIfCode(formatItem.Value, generatorOverrideIfCode);
+        }
+
+        private static string GetOverrideGeneratorNameIfCode(string nameToOverride, string generatorOverrideIfCode)
+        {
+            if (nameToOverride != "code")
+                return "%empty";
+
+            return $"%{generatorOverrideIfCode}";
+        }
+
+        private AssemblyPartialLineGenerator GetGeneratorFor(string parameter)
+        {
             if (!Generators.TryGetValue(parameter, out var generator))
                 throw new InvalidOperationException($"Can't find generator for {parameter}");
-
-            return generator.Emit(offset, length);
+            
+            return generator;
         }
 
         internal int GetLineByteLength(int offset)
@@ -500,44 +522,29 @@ namespace Diz.Core.export
             return text + "\"";
         }
 
-        public static IEnumerable<Type> AssemblyGeneratorTypes()
-        {
-            return new List<Type>
-            {
-                typeof(AssemblyGeneratePercent),
-                typeof(AssemblyGenerateEmpty),
-                typeof(AssemblyGenerateLabel),
-                typeof(AssemblyGenerateCode),
-                typeof(AssemblyGenerateOrg),
-                typeof(AssemblyGenerateMap),
-                typeof(AssemblyGenerateIncSrc),
-                typeof(AssemblyGenerateBankCross),
-                typeof(AssemblyGenerateIndirectAddress),
-                typeof(AssemblyGenerateProgramCounter),
-                typeof(AssemblyGenerateOffset),
-                typeof(AssemblyGenerateDataBytes),
-                typeof(AssemblyGenerateComment),
-                typeof(AssemblyGenerateDataBank),
-                typeof(AssemblyGenerateDirectPage),
-                typeof(AssemblyGenerateMFlag),
-                typeof(AssemblyGenerateXFlag),
-                typeof(AssemblyGenerateLabelAssign),
-            };
-        }
-
         public Dictionary<string, AssemblyPartialLineGenerator> CreateAssemblyGenerators()
         {
-            return AssemblyGeneratorTypes()
-                .Select(CreateGenerator)
-                .ToDictionary(generator => generator.Token);
+            var generators = AssemblyGeneratorRegistration.Create();
+            generators.ForEach(kvp => kvp.Value.LogCreator = this);
+            return generators;
         }
 
-        private AssemblyPartialLineGenerator CreateGenerator(Type gType)
+        public static bool ValidateFormatStr(string formatStr)
         {
-            var generator = (AssemblyPartialLineGenerator) Activator.CreateInstance(gType);
-            Debug.Assert(generator != null);
-            generator.LogCreator = this;
-            return generator;
+            // this is not really a good way to do this, too much mem alloc
+            // see if we can do it statically instead using data on the generators
+            var logCreator = new LogCreator();
+            var generators = logCreator.CreateAssemblyGenerators();
+
+            try
+            {
+                var unused = new LogCreatorLineFormatter(formatStr, generators);
+                return true;
+            }
+            catch (Exception _)
+            {
+                return false;
+            }
         }
     }
 

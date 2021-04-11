@@ -1,15 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 
 namespace Diz.Core.export
 {
     public class LogCreatorLineFormatter
     {
-        public readonly List<Tuple<string, int>> ParsedLineFormat;
+        public class FormatItem
+        {
+            public string Value;
+            public int? LengthOverride;
+            public bool IsLiteral;
+            
+            protected bool Equals(FormatItem other)
+            {
+                return Value == other.Value && LengthOverride == other.LengthOverride && IsLiteral == other.IsLiteral;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((FormatItem) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Value, LengthOverride, IsLiteral);
+            }
+        }
+
+        public string FormatString { get; }
+        public List<FormatItem> ParsedFormat { get; private set; }
+
+        private readonly IReadOnlyDictionary<string, AssemblyPartialLineGenerator> generators;
 
         public LogCreatorLineFormatter(string lineFormatStr, IReadOnlyDictionary<string, AssemblyPartialLineGenerator> generators)
         {
-            ParsedLineFormat = ParseLineFormatStr(lineFormatStr, generators);
+            this.generators = generators;
+            FormatString = lineFormatStr;
+            
+            Parse();
         }
         
         // every line printed in a .asm file is done so by variable substitution according to a format string.
@@ -29,69 +62,79 @@ namespace Diz.Core.export
         // 
         // It will look for a function in LogCreator tagged with an AssemblerHandler attribute that matches the 
         // parameter passed in.
-        private static List<Tuple<string, int>> ParseLineFormatStr(string lineFormatStr, IReadOnlyDictionary<string, AssemblyPartialLineGenerator> generators)
+        private void Parse()
         {
-            var formatItems = new List<Tuple<string, int>>();
+            var output = new List<FormatItem>();
             
-            var split = lineFormatStr.Split('%');
+            var split = FormatString.Split('%');
+            
+            if (split.Length % 2 == 0)
+                throw new InvalidDataException("Format string has a non-even amount of % signs");
+            
             for (var i = 0; i < split.Length; i++)
             {
-                string param;
-                int length;
-                if (i % 2 == 0)
-                {
-                    param = split[i];
-                    length = int.MaxValue;
-                }
-                else
-                {
-                    var indexColon = split[i].IndexOf(':');
-                    if (indexColon < 0)
-                    {
-                        // default, length comes from the attribute.
-                        // NOTE: this is weird and could use a refactor because later this value will
-                        // be passed into AssemblyGenerator code to be compared against itself. works fine
-                        // just kind of adds extra confusion.
-                        param = split[i];
-                        length = generators[param].DefaultLength;
-                    }
-                    else
-                    {
-                        // override, length comes from the format string
-                        // example: "%label:-22%"
-                        param = split[i].Substring(0, indexColon);
-                        length = int.Parse(split[i].Substring(indexColon + 1));
-                    }
-                }
-
-                formatItems.Add(Tuple.Create(param, length));
+                var isLiteral = i % 2 == 0; 
+                ParseOneItem(isLiteral, output, split[i]);
             }
 
-            return formatItems;
+            ParsedFormat = output;
         }
 
-        public static bool ValidateFormat(string formatString, IReadOnlyDictionary<string, AssemblyPartialLineGenerator> generators)
+        private void ParseOneItem(bool isLiteral, ICollection<FormatItem> output, string token)
         {
-            var tokens = formatString.ToLower().Split('%');
+            var newItem = isLiteral 
+                ? ParseStringLiteral(token) 
+                : ParseFormatItem(token);
+            
+            if (newItem != null)
+                output.Add(newItem);
+        }
+        
+        private FormatItem ParseFormatItem(string token)
+        {
+            var item = new FormatItem();
 
-            // not valid if format has an odd amount of %s
-            if (tokens.Length % 2 == 0) return false;
-
-            for (var i = 1; i < tokens.Length; i += 2)
+            string overrideLenStr = null;
+            var indexColon = token.IndexOf(':');
+            if (indexColon < 0)
             {
-                var indexOfColon = tokens[i].IndexOf(':');
-                var kind = indexOfColon >= 0 ? tokens[i].Substring(0, indexOfColon) : tokens[i];
+                // default, length comes from the attribute, generator not involved
+                // example: "%label%"
+                item.Value = token;
+            }
+            else
+            {
+                // override, length comes from the format string
+                // example: for token "%label:-22%", length would be "-22"
+                item.Value = token.Substring(0, indexColon);
+                overrideLenStr = token.Substring(indexColon + 1);
+            }
+            
+            var validGenerator = generators.TryGetValue(item.Value, out var generator);
+            if (!validGenerator)
+                throw new InvalidDataException($"Can't find handler for item '{item.Value}'");
 
-                // not valid if base token isn't one we know of
-                if (!generators.ContainsKey(kind))
-                    return false;
+            if (overrideLenStr != null)
+            {
+                if (!int.TryParse(overrideLenStr, out var lengthOverride))
+                    throw new InvalidDataException($"Invalid length specified for '{item.Value}'");
 
-                // not valid if parameter isn't an integer
-                if (indexOfColon >= 0 && !int.TryParse(tokens[i].Substring(indexOfColon + 1), out _)) 
-                    return false;
+                item.LengthOverride = lengthOverride;
             }
 
-            return true;
+            return item;
+        }
+
+        private static FormatItem ParseStringLiteral(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return null;
+            
+            return new()
+            {
+                Value = token,
+                IsLiteral = true
+            };
         }
     }
 }

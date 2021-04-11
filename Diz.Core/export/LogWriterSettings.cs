@@ -46,10 +46,12 @@ namespace Diz.Core.export
 
         public bool OutputToString;
         public string ErrorFilename;
+        
+        public const string DefaultStr = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
 
         public void SetDefaults()
         {
-            Format = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
+            Format = DefaultStr;
             DataPerLine = 8;
             Unlabeled = LogWriterSettings.FormatUnlabeled.ShowInPoints;
             Structure = LogWriterSettings.FormatStructure.OneBankPerFile;

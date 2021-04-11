@@ -129,11 +129,7 @@ namespace DiztinGUIsh
 
         private bool ValidateFormat()
         {
-            // this is not a good way to do this, too much mem alloc. hack.
-            var logCreator = new LogCreator();
-            var generators = logCreator.CreateAssemblyGenerators();
-            
-            return LogCreatorLineFormatter.ValidateFormat(textFormat.Text, generators);
+            return LogCreator.ValidateFormatStr(textFormat.Text);
         }
 
         private void RegenerateSampleOutput()

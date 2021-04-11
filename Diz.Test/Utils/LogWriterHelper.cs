@@ -122,13 +122,7 @@ namespace Diz.Test.Utils
 
         private static void AssertAssemblyOutputEqual(IReadOnlyList<ParsedOutput> expectedOut, IReadOnlyList<ParsedOutput> actualOut)
         {
-            Assert.Equal(expectedOut.Count, actualOut.Count);
-
-            for (var i = 0; i < expectedOut.Count; ++i) {
-                Assert.Equal(expectedOut[i], actualOut[i]);
-            }
-
-            Assert.True(expectedOut.SequenceEqual(actualOut));
+            TestUtil.AssertCollectionEqual(expectedOut, actualOut);
         }
     }
 }
