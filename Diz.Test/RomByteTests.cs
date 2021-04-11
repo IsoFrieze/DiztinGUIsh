@@ -54,6 +54,8 @@ namespace Diz.Test
         {
             // same as above, but just change .Rom
             var rb = SampleRomByte2();
+            rb.GetOrCreateAnnotationsList();
+            
             rb.Annotations.Add(new Comment() {Text="CommentText"});
             rb.Annotations.Add(new Label() {Name="fn_stuff", Comment = "some_comment"});
             return rb;
@@ -98,7 +100,10 @@ namespace Diz.Test
         {
             var rb1 = SampleRomByte1();
             var rb3 = SampleRomByte3();
-            
+
+            rb1.GetOrCreateAnnotationsList();
+            rb3.GetOrCreateAnnotationsList();
+
             rb1.Annotations.Add(new Comment() {Text="asdf2"});
             rb1.Annotations.Add(new Comment() {Text="asdf1"});
             

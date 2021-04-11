@@ -23,7 +23,6 @@ namespace Diz.Core.model.byteSources
             {
                 ContainerOffset = Data.ContainerOffset,
                 Container = Data.Container,
-                Annotations = new List<Annotation>()
             };
 
             // traverse any child nodes first.
@@ -38,8 +37,8 @@ namespace Diz.Core.model.byteSources
             // now, add in any of our own changes/overrides AFTER children populated.
             
             // annotations are concatenated together
-            if (Data.Annotations != null)
-                dataBeingConstructed.Annotations.AddRange(Data.Annotations);
+            if (Data.Annotations != null && Data.Annotations.Count > 0)
+                dataBeingConstructed.GetOrCreateAnnotationsList().AddRange(Data.Annotations);
             
             // only change the byte if we're non-null and overriding something underneath
             if (Data.Byte != null)

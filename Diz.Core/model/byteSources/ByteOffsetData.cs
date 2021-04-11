@@ -9,15 +9,17 @@ namespace Diz.Core.model.byteSources
     // JUST holds the data. no traversal.
     public class ByteOffsetData
     {
-        // if null, it means caller either needs to dig one level deeper in parent container to find it, or, there is no data
+        // if null, it means caller either needs to dig one level deeper in parent container to find the byte value, or, there is no data
         public byte? Byte { get; set; }
 
-        private List<Annotation> annotations;
-        public List<Annotation> Annotations
+        // might want to consider replace List<Annotation> with its own dedicated type
+        // private List<Annotation> annotations.
+        // Note: don't allocate this immediately, wait for it to be used. we will have millions of them per ROM
+        public List<Annotation> Annotations { get; set; }
+
+        public List<Annotation> GetOrCreateAnnotationsList()
         {
-            // optimization: create on first use only, since we may have lots of empty lists
-            get => annotations ??= new List<Annotation>();
-            set => annotations = value;
+            return Annotations ??= new List<Annotation>();
         }
 
         public ByteSource Container { get; internal set; }
@@ -77,14 +79,29 @@ namespace Diz.Core.model.byteSources
         // end temporary stuff
         protected bool Equals(ByteOffsetData other)
         {
-            return Byte == other.Byte && AnnotationsEqual(other.Annotations) && Equals(Container, other.Container) && ContainerOffset == other.ContainerOffset;
+            return Byte == other.Byte && AnnotationsEqual(other) && Equals(Container, other.Container) && ContainerOffset == other.ContainerOffset;
         }
 
-        protected bool AnnotationsEqual(List<Annotation> otherAnnotations)
+        protected bool AnnotationsEqual(ByteOffsetData other)
         {
-            return Annotations.OrderBy(x => x.GetType().ToString()).ThenBy(x => x)
-                .SequenceEqual(
-               otherAnnotations.OrderBy(x => x.GetType().ToString()).ThenBy(x => x));
+            // considered equal if one or the other is null AND the other is non-null but zero-length
+            if (Annotations == null || other?.Annotations == null)
+            {
+                var ourCount = Annotations?.Count ?? 0;
+                var theirCount = other?.Annotations?.Count ?? 0;
+
+                return ourCount == 0 && theirCount == 0;
+            }
+
+            return Annotations.Count == other.Annotations.Count && 
+                   GetAnnotationEnumeratorForCompare()
+                       .SequenceEqual(
+                           other.GetAnnotationEnumeratorForCompare());
+        }
+
+        protected IEnumerable<Annotation> GetAnnotationEnumeratorForCompare()
+        {
+            return Annotations?.OrderBy(x => x.GetType().ToString()).ThenBy(x => x);
         }
 
         public override bool Equals(object obj)
@@ -129,7 +146,7 @@ namespace Diz.Core.model.byteSources
 
             var newItem = new T();
             
-            Annotations.Add(newItem);
+            GetOrCreateAnnotationsList().Add(newItem);
             return newItem;
         }
 
