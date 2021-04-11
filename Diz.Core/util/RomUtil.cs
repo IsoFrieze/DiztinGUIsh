@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
@@ -463,7 +464,9 @@ namespace Diz.Core.util
         public static ByteSourceMapping CreateRomMappingFromRomRawBytes(
             IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
         {
-            return CreateRomMappingFromRomByteSource(new ByteSource(actualRomBytes) { Name = "Snes ROM" }, romMapMode, romSpeed);
+            var data = actualRomBytes.Select(b => new ByteOffsetData() {Byte = b}).ToList();
+            
+            return CreateRomMappingFromRomByteSource(new ByteSource(data) { Name = "Snes ROM" }, romMapMode, romSpeed);
         }
     }
 }

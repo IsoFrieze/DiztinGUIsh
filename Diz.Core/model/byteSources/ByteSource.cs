@@ -1,67 +1,165 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model.byteSources
 {
-    public class ByteSource
+    public abstract class ByteStorage
     {
-        public string Name { get; set; }
+        // eventually, we gotta kill this interface. suggest replacing with []
+        public abstract IReadOnlyList<ByteOffsetData> Bytes { get; }
+        
+        protected ByteSource ParentContainer { get; }
 
-        // TODO; we need to replace this with a more sparse version, like a Dictionary.
-        // list access is nice, but it's too much mem to create all upfront, especially for one object per 24bits of address space
-        protected List<ByteOffsetData> bytes = new();
-
-        public IReadOnlyList<ByteOffsetData> Bytes => bytes;
-
-        public List<ByteSourceMapping> ChildSources { get; init; } = new();
-
-        public ByteSource()
+        protected ByteStorage(ByteSource parent)
         {
-            
+            ParentContainer = parent;
+            InitFromEmpty(0);
         }
         
-        // create an empty list of bytes
-        public ByteSource(int size) : this(CreateEmptyBytesList(size))
+        protected ByteStorage(ByteSource parent, IReadOnlyCollection<ByteOffsetData> inBytes)
         {
+            ParentContainer = parent;
+            InitFrom(inBytes);
+        }
+
+        protected ByteStorage(ByteSource parent, int emptyCreateSize)
+        {
+            ParentContainer = parent;
+            InitFromEmpty(emptyCreateSize);
+        }
+
+        private void InitFromEmpty(int emptyCreateSize)
+        {
+            Debug.Assert(ParentContainer != null);
+            Debug.Assert(emptyCreateSize >= 0);
             
+            InitEmptyContainer(emptyCreateSize);
+            FillEmptyContainerWithBlankBytes(emptyCreateSize);
+
+            Debug.Assert(Count == emptyCreateSize);
         }
 
-        public ByteSource(IReadOnlyCollection<byte> inBytes)
+        protected void InitFrom(IReadOnlyCollection<ByteOffsetData> inBytes)
         {
-            bytes = new List<ByteOffsetData>(inBytes.Count);
-
-            var i = 0;
-            foreach (var b in inBytes)
-            {
-                AddByte(new ByteOffsetData {
-                    Byte = b,
-                    Container = this,
-                    ContainerOffset = i
-                });
-
-                ++i;
-            }
+            Debug.Assert(ParentContainer != null);
+            Debug.Assert(inBytes != null);
+            
+            InitEmptyContainer(inBytes.Count);
+            FillEmptyContainerWithBytesFrom(inBytes);
+            
+            Debug.Assert(Count == inBytes.Count);
         }
 
-        public ByteSource(IReadOnlyCollection<ByteOffsetData> inBytes)
+        public int Count => Bytes?.Count ?? 0;
+
+        protected abstract void InitEmptyContainer(int emptyCreateSize);
+        protected abstract void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteOffsetData> inBytes);
+        protected abstract void FillEmptyContainerWithBlankBytes(int numEntries);
+
+        public abstract void AddByte(ByteOffsetData byteOffset);
+
+        protected void OnPreAddByteAt(int newIndex, ByteOffsetData byteOffset)
         {
-            bytes = new List<ByteOffsetData>(inBytes.Count);
+            Debug.Assert(ParentContainer != null);
+            
+            // cache these values
+            byteOffset.Container = ParentContainer;
+            byteOffset.ContainerOffset = newIndex; // this will be true after the Add() call below.
+        }
+    }
+    
+    // Simple version of byte storage that stores everything as an actual list
+    // This is fine for stuff like Roms, however, it's bad for mostly empty large things like SNES
+    // address spaces (24bits of addressible bytes x HUGE data = slowwwww)
+    public class ByteList : ByteStorage //, IByteStorage
+    {
+        public override IReadOnlyList<ByteOffsetData> Bytes => bytes;
+        
+        // only ever use AddByte() to add bytes here
+        private List<ByteOffsetData> bytes = new();
+        
+        [UsedImplicitly] public ByteList(ByteSource parent) : base(parent) { }
+        
+        [UsedImplicitly] public ByteList(ByteSource parent, int emptyCreateSize) : base(parent, emptyCreateSize) { }
+        
+        [UsedImplicitly] public ByteList(ByteSource parent, IReadOnlyCollection<ByteOffsetData> inBytes) : base(parent, inBytes) { }
+
+        protected override void InitEmptyContainer(int capacity)
+        {
+            bytes = new List<ByteOffsetData>(capacity);
+        }
+
+        protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteOffsetData> inBytes)
+        {
+            Debug.Assert(inBytes != null);
+
             foreach (var b in inBytes)
             {
                 AddByte(b);
             }
         }
 
-        private static IReadOnlyCollection<ByteOffsetData> CreateEmptyBytesList(int size)
+        protected override void FillEmptyContainerWithBlankBytes(int numEntries)
         {
-            var emptyOffsetData = new List<ByteOffsetData>(size);
-            
-            for (var i = 0; i < size; ++i)
-                emptyOffsetData.Add(new ByteOffsetData());
-
-            return emptyOffsetData;
+            for (var i = 0; i < numEntries; ++i)
+            {
+                AddByte(new ByteOffsetData());
+            }
         }
+
+        public override void AddByte(ByteOffsetData byteOffset)
+        {
+            Debug.Assert(bytes != null);
+            
+            var newIndex = Bytes.Count; // will be true once we add it 
+            OnPreAddByteAt(newIndex, byteOffset);
+
+            bytes.Add(byteOffset);
+        }
+    }
+
+    /*public class SparseByteStorage : IByteStorage
+    {
+        public IReadOnlyList<ByteOffsetData> Bytes { get; }
+        public void AddByte(ByteSource parent, ByteOffsetData byteOffset)
+        {
+            throw new NotImplementedException();
+        }
+    }*/
+
+    public class ByteSource
+    {
+        [UsedImplicitly] public Type ByteStorageType { get; init; } = typeof(ByteList);
+
+        private static T CreateByteStorage<T>(params object[] paramArray) where T : ByteStorage
+        {
+            return (T)Activator.CreateInstance(typeof(T), args:paramArray);
+        }
+        public ByteSource()
+        {
+            bytes = CreateByteStorage<ByteList>(this);
+        }
+
+        public ByteSource(IReadOnlyCollection<ByteOffsetData> inBytes)
+        {
+            bytes = CreateByteStorage<ByteList>(this, inBytes);
+        }
+        
+        public ByteSource(int emptySize)
+        {
+            bytes = CreateByteStorage<ByteList>(this, emptySize);
+        }
+
+        public string Name { get; set; }
+
+        protected ByteStorage bytes;
+
+        public IReadOnlyList<ByteOffsetData> Bytes => bytes.Bytes;
+
+        public List<ByteSourceMapping> ChildSources { get; init; } = new();
 
         public byte GetByte(int index)
         {
@@ -79,11 +177,7 @@ namespace Diz.Core.model.byteSources
         // important to always go through this function when adding bytes, so we can cache some data
         public void AddByte(ByteOffsetData byteOffset)
         {
-            bytes.Add(byteOffset);
-            
-            // cache these values
-            byteOffset.ContainerOffset = Bytes.Count - 1;
-            byteOffset.Container = this;
+            bytes.AddByte(byteOffset);
         }
 
         // return a directed graph with all possible values for this offset including all child regions.
@@ -140,7 +234,7 @@ namespace Diz.Core.model.byteSources
 
         private bool IsValidIndex(int index)
         {
-            return index >= 0 && index < bytes?.Count;
+            return index >= 0 && index < bytes?.Bytes?.Count;
         }
 
         public void RemoveAllAnnotations(Predicate<Annotation> match)
@@ -161,14 +255,14 @@ namespace Diz.Core.model.byteSources
                 childNodes.ByteSource.RemoveAllAnnotations(match);
         }
         
-        public void AddAnnotation<T>(int snesOffset, T newAnnotation) where T : Annotation, new()
+        public void AddAnnotation<T>(int index, T newAnnotation) where T : Annotation, new()
         {
             // for now, just put new annotations on us directly without looking at child bytesources
             //
             // in the future, we'll want to make it so we can intelligently choose to push these annotation down
             // to child regions (i.e. if we have mapped ROM or WRAM etc), so that annotation can live in the
             // best region. this will make dealing with weird stuff like mirroring, patches, etc much easier.
-            Bytes[snesOffset].Annotations.Add(newAnnotation);
+            Bytes[index].Annotations.Add(newAnnotation);
         }
         
         // recurses into the graph
@@ -182,13 +276,13 @@ namespace Diz.Core.model.byteSources
 
         public IEnumerable<KeyValuePair<int, T>> GetAnnotationEnumerator<T>() where T : Annotation 
         {
-            for (var snesAddress = 0; snesAddress < Bytes.Count; ++snesAddress)
+            for (var index = 0; index < Bytes.Count; ++index)
             {
-                var annotation = GetOneAnnotation<T>(snesAddress);
+                var annotation = GetOneAnnotation<T>(index);
                 if (annotation == null)
                     continue;
 
-                yield return new KeyValuePair<int, T>(snesAddress, annotation);
+                yield return new KeyValuePair<int, T>(index, annotation);
             }   
         }
     }

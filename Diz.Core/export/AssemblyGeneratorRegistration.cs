@@ -34,7 +34,7 @@ namespace Diz.Core.export
         public static Dictionary<string, AssemblyPartialLineGenerator> Create()
         {
             return AssemblyGeneratorTypes()
-                .Select(gType => (AssemblyPartialLineGenerator) Activator.CreateInstance(gType))
+                .Select(gType => (AssemblyPartialLineGenerator)Activator.CreateInstance(gType))
                 .ToDictionary(generator => generator.Token);
         }
     }
