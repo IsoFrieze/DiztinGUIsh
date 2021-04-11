@@ -8,12 +8,9 @@ namespace Diz.Core.model.byteSources
     public class ByteSource
     {
         public string Name { get; set; }
-        public IReadOnlyList<ByteOffsetData> Bytes => bytes.Bytes;
-
+        public ByteStorage Bytes { get; }
         public List<ByteSourceMapping> ChildSources { get; init; } = new();
-        
-        private readonly ByteStorage bytes;
-        
+
         [UsedImplicitly] public Type ByteStorageType { get; init; } = typeof(ByteList);
 
         private static T CreateByteStorage<T>(params object[] paramArray) where T : ByteStorage
@@ -22,17 +19,17 @@ namespace Diz.Core.model.byteSources
         }
         public ByteSource()
         {
-            bytes = CreateByteStorage<ByteList>(this);
+            Bytes = CreateByteStorage<ByteList>(this);
         }
 
         public ByteSource(IReadOnlyCollection<ByteOffsetData> inBytes)
         {
-            bytes = CreateByteStorage<ByteList>(this, inBytes);
+            Bytes = CreateByteStorage<ByteList>(this, inBytes);
         }
         
         public ByteSource(int emptySize)
         {
-            bytes = CreateByteStorage<ByteList>(this, emptySize);
+            Bytes = CreateByteStorage<ByteList>(this, emptySize);
         }
 
         public byte GetByte(int index)
@@ -51,7 +48,7 @@ namespace Diz.Core.model.byteSources
         // important to always go through this function when adding bytes, so we can cache some data
         public void AddByte(ByteOffsetData byteOffset)
         {
-            bytes.AddByte(byteOffset);
+            Bytes.AddByte(byteOffset);
         }
 
         // return a directed graph with all possible values for this offset including all child regions.
@@ -108,7 +105,7 @@ namespace Diz.Core.model.byteSources
 
         private bool IsValidIndex(int index)
         {
-            return index >= 0 && index < bytes?.Bytes?.Count;
+            return index >= 0 && index < Bytes?.Count;
         }
 
         public void RemoveAllAnnotations(Predicate<Annotation> match)

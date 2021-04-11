@@ -98,7 +98,7 @@ namespace Diz.Test
             }
         }
 
-        [Fact]
+        [Fact(Skip = "disabled, hard to run without specific stuff installed.")]
         public void TestTraceLogPerformance()
         {
             var test = new ImportTraceLogStreamTestHarness(output);

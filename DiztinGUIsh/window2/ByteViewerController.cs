@@ -33,6 +33,9 @@ namespace DiztinGUIsh.window2
     {
         protected override IEnumerable<ByteOffsetData> GetByteItems()
         {
+            // TODO: note: underlying data source could be a sparse set, so, enumerating here we
+            // may have to deal with null bytes or gaps in the sequence.
+            
             // right now, return everything 1:1.
             // in the future, this would be the place to make a filtered or subset of this list.
             return Data.RomByteSource.Bytes;
