@@ -1,12 +1,10 @@
 ﻿// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Diz.Core.export;
 using Diz.Test.Utils;
-using Sprache;
 using Xunit;
 
 namespace Diz.Test
@@ -22,7 +20,7 @@ namespace Diz.Test
                 // default: use the built-in system generators unless we explicitly override
                 get => generators ??= AssemblyGeneratorRegistration.Create();
                 
-                set
+                init
                 {
                     Debug.Assert(generators == null);
                     generators = value;
