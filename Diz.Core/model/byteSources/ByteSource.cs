@@ -12,11 +12,7 @@ namespace Diz.Core.model.byteSources
         public List<ByteSourceMapping> ChildSources { get; init; } = new();
 
         [UsedImplicitly] public Type ByteStorageType { get; init; } = typeof(ByteList);
-
-        private static T CreateByteStorage<T>(params object[] paramArray) where T : ByteStorage
-        {
-            return (T)Activator.CreateInstance(typeof(T), args:paramArray);
-        }
+        
         public ByteSource()
         {
             Bytes = CreateByteStorage<ByteList>(this);
@@ -30,6 +26,11 @@ namespace Diz.Core.model.byteSources
         public ByteSource(int emptySize)
         {
             Bytes = CreateByteStorage<ByteList>(this, emptySize);
+        }
+        
+        private static T CreateByteStorage<T>(params object[] paramArray) where T : ByteStorage
+        {
+            return (T)Activator.CreateInstance(typeof(T), args:paramArray);
         }
 
         public byte GetByte(int index)
