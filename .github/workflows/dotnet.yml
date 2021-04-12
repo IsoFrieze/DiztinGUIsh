@@ -1,0 +1,61 @@
+﻿# TODO: make sure support files are copied into the final release folder still.
+
+name: .NET Core Desktop
+
+on: [ push, pull_request ]
+
+jobs:
+
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Cache Packages
+        uses: actions/cache@v2
+        id: cache-packages
+        with:
+          path: packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Setup NuGet
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        uses: nuget/setup-nuget@v1
+        with:
+          nuget-api-key: ${{ secrets.NuGetAPIKey }}
+          nuget-version: '4.7'
+
+      - name: Restore NuGet Packages
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: nuget restore DiztinGUIsh.sln
+
+      - name: Build (x86, Release)
+        run: msbuild /p:Configuration=Release /p:Platform="x86"
+      - name: Build (x64, Release)
+        run: msbuild /p:Configuration=Release /p:Platform="x64"
+
+      - name: Upload (x86)
+        uses: actions/upload-artifact@v2
+        with:
+          name: DiztinGUIsh (x86)
+          path: DiztinGUIsh\bin\Release
+      - name: Upload (x64)
+        uses: actions/upload-artifact@v2
+        with:
+          name: DiztinGUIsh (x64)
+          path: DiztinGUIsh\bin\x64\Release

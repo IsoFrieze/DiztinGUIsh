@@ -305,6 +305,11 @@ https://docs.microsoft.com/en-us/visualstudio/msbuild/how-to-extend-the-visual-s
       <FinalReleaseSupportFiles Include="..\README.md" />
       <FinalReleaseSupportFiles Include="..\LICENSE.md" />
     </ItemGroup>
+    <ItemGroup>
+      <Content Include="..\.github\workflows\dotnet.yml">
+        <Link>diztinguish\.github\workflows\dotnet.yml</Link>
+      </Content>
+    </ItemGroup>
 
     <!-- 
     for final release, move some files around to make the distribution distro look nicer
