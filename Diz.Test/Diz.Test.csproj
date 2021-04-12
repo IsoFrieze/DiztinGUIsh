@@ -277,6 +277,8 @@
   <ItemGroup>
     <None Remove="Resources\asartestrun.asm" />
     <EmbeddedResource Include="Resources\asartestrun.asm" />
+    <None Remove="Resources\serialize-dictionary-test.xml" />
+    <EmbeddedResource Include="Resources\serialize-dictionary-test.xml" />
   </ItemGroup>
 
 </Project>
