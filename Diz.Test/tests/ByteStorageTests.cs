@@ -37,13 +37,21 @@ namespace Diz.Test.tests
                         .Select(i => new ByteOffsetData {Byte = (byte?)(i+0xE0)}).ToList();
                     return new SparseByteStorage(null, srcList);
                 },
+                
+                () =>
+                {
+                    const int count = 10;
+                    var srcList = Enumerable.Range(0, count)
+                        .Select(i => new ByteOffsetData {Byte = (byte?)(i+0xE0)}).ToList();
+                    return new ByteList(null, srcList);
+                },
             }.CreateTheoryData();
 
         [Theory]
         [MemberData(nameof(SampleValidSparseStorage))]
         public static void TestSparseStorageAdd(ByteStorage byteStorage)
         {
-            var hasGaps = ((SparseByteStorage) byteStorage)?.ActualCount != byteStorage.Count;
+            var hasGaps = byteStorage is SparseByteStorage sparse && sparse.ActualCount != byteStorage.Count;
             var shouldBeNonNullOn = new List<int> {1,7};
          
             var i = 0;
@@ -68,9 +76,8 @@ namespace Diz.Test.tests
         [MemberData(nameof(SampleValidSparseStorage))]
         public static void TestSparseStorageDict(ByteStorage byteStorage)
         {
-            var byteStorageSparse = (SparseByteStorage)byteStorage;
-            
-            var hasGaps = byteStorageSparse?.ActualCount != byteStorage.Count;
+            var byteStorageSparse = byteStorage as SparseByteStorage;
+            var hasGaps = byteStorageSparse != null && byteStorageSparse.ActualCount != byteStorage.Count;
             Assert.Equal(10, byteStorage.Count);
 
             List<int> expectedKeys;
@@ -85,9 +92,12 @@ namespace Diz.Test.tests
                 expectedActualCount = 10;
                 expectedKeys = Enumerable.Range(0, 10).ToList();
             }
-            Assert.Equal(expectedActualCount, byteStorageSparse?.ActualCount);
+
+            if (byteStorageSparse == null)
+                return;
             
             Assert.NotNull(byteStorageSparse);
+            Assert.Equal(expectedActualCount, byteStorageSparse.ActualCount);
             var en = byteStorageSparse.GetSparseEnumerator();
             
             var i = 0;
