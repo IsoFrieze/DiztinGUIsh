@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
@@ -218,6 +219,8 @@ namespace Diz.Core.model.byteSources
         private int count = 0;
         public override int Count => count;
 
+        public int ActualCount => bytes.Count;
+
         private bool ValidIndex(int index) => index >= 0 && index < Count;
 
         private void ValidateIndex(int index)
@@ -240,7 +243,20 @@ namespace Diz.Core.model.byteSources
 
         protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteOffsetData> inBytes)
         {
-            ImportBytes(inBytes);
+            Debug.Assert(inBytes != null);
+            if (inBytes.Count > count)
+                throw new InvalidDataException("Asked to add a list bigger than our current capacity");
+            
+            Debug.Assert(bytes?.Count == 0);
+            
+            foreach (var b in inBytes)
+            {
+                AddByte(b);
+                
+                // each byte added will tick up the count, when in reality we're filling in an existing container.
+                // correct that here.
+                count--;
+            }
         }
 
         protected override void FillEmptyContainerWithBlankBytes(int numEntries)
