@@ -153,7 +153,7 @@ namespace Diz.Core.serialization
             project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
 
             foreach (var pair in importSettings.InitialLabels)
-                project.Data.LabelProvider.AddLabel(pair.Key, pair.Value, true);
+                project.Data.Labels.AddLabel(pair.Key, pair.Value, true);
 
             foreach (var pair in importSettings.InitialHeaderFlags)
                 project.Data.SetFlag(pair.Key, pair.Value);

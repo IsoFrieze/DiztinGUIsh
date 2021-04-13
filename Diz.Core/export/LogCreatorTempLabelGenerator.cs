@@ -8,6 +8,9 @@ namespace Diz.Core.export
     // These labels exist only for the duration of this export, and then are discarded.
     //
     // TODO: generate some nice looking "+"/"-" labels here.
+    //
+    // TODO: rather than build a layer on top of the existing layer system, we should probably
+    // just generate these on the fly. it would save a lot of complexity on the data model. 
     internal class LogCreatorTempLabelGenerator
     {
         public LogCreator LogCreator { get; init; }

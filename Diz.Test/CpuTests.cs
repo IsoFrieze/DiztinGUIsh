@@ -78,7 +78,7 @@ namespace Diz.Test
             {
                 var data = SampleRomCreator1.CreateBaseRom();
 
-                data.LabelProvider.AddLabel(
+                data.Labels.AddLabel(
                     0x002116, new Label {Name = "SNES_VMADDL", Comment = "SNES hardware register example."}
                 );
 
@@ -285,8 +285,8 @@ namespace Diz.Test
         public static void TestLabels()
         {
             var data = TinyHiRomWithExtraLabel;
-            Assert.Equal("SNES_VMADDL", data.LabelProvider.GetLabelName(0x2116));
-            Assert.Equal("", data.LabelProvider.GetLabelName(0x2119)); // bogus address
+            Assert.Equal("SNES_VMADDL", data.Labels.GetLabelName(0x2116));
+            Assert.Equal("", data.Labels.GetLabelName(0x2119)); // bogus address
             // Assert.Equal("SNES_VMADDL", data.GetLabelName(0x7E2116)); // later, we need this to ALSO work
         }
 

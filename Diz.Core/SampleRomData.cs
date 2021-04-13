@@ -219,7 +219,7 @@ namespace Diz.Core
                         {0x808000 + 0x5B, new Label {Name = "Test_Data", Comment = "Pretty cool huh?"}}
                     }
                     .ForEach(kvp =>
-                        sampleData.LabelProvider.AddLabel(kvp.Key, kvp.Value)
+                        sampleData.Labels.AddLabel(kvp.Key, kvp.Value)
                     );
 
                 return sampleData;

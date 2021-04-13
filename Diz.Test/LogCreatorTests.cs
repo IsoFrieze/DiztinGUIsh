@@ -73,7 +73,7 @@ namespace Diz.Test
                 
                 // another way to add comments, adds it to the SNES address space instead of the ROM.
                 // retrievals should be unaffected.
-                data.LabelProvider.AddLabel(0x808000 + 0x5B, new Label {Name = "Test_Data", Comment = "Pretty cool huh?"});
+                data.Labels.AddLabel(0x808000 + 0x5B, new Label {Name = "Test_Data", Comment = "Pretty cool huh?"});
 
                 return data;
             }

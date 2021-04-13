@@ -528,7 +528,7 @@ namespace DiztinGUIsh.controller
             var errLine = 0;
             try
             {
-                Data.LabelProvider.ImportLabelsFromCsv(importFilename, replaceAll, ref errLine);
+                Data.Labels.ImportLabelsFromCsv(importFilename, replaceAll, ref errLine);
                 labelEditor.RepopulateFromData();
             }
             catch (Exception ex)

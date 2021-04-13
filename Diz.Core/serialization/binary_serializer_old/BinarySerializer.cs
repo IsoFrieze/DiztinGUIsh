@@ -263,7 +263,7 @@ namespace Diz.Core.serialization.binary_serializer_old
                         Name = strings[0],
                         Comment = strings.ElementAtOrDefault(1)
                     };
-                    project.Data.LabelProvider.AddLabel(offset, label, true);
+                    project.Data.Labels.AddLabel(offset, label, true);
                 });
         }
     }

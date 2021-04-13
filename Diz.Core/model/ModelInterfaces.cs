@@ -19,7 +19,7 @@ namespace Diz.Core.model
 
         public T GetOneAnnotationAtPc<T>(int pcOffset) where T : Annotation, new();
         
-        public IReadOnlyLabelProvider LabelProvider { get; }
+        public IReadOnlyLabelProvider Labels { get; }
 
         Comment GetComment(int offset);
         string GetCommentText(int offset);

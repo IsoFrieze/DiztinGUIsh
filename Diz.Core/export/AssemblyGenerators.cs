@@ -51,7 +51,7 @@ namespace Diz.Core.export
             // TODO: eventually, support multiple labels tagging the same address, it may not always be just one.
         
             var snesOffset = Data.ConvertPCtoSnes(offset); 
-            var label = Data.LabelProvider.GetLabelName(snesOffset);
+            var label = Data.Labels.GetLabelName(snesOffset);
             if (label == null)
                 return "";
         
@@ -338,9 +338,9 @@ namespace Diz.Core.export
         protected override string Generate(int offset, int length)
         {
             var snesAddress = Data.ConvertPCtoSnes(offset);
-            var labelName = Data.LabelProvider.GetLabelName(snesAddress);
+            var labelName = Data.Labels.GetLabelName(snesAddress);
             var offsetStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true);
-            var labelComment = Data.LabelProvider.GetLabelComment(snesAddress);
+            var labelComment = Data.Labels.GetLabelComment(snesAddress);
 
             if (string.IsNullOrEmpty(labelName))
                 return "";

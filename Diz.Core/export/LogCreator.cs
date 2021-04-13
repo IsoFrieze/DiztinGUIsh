@@ -224,7 +224,7 @@ namespace Diz.Core.export
         private bool AnyLabelsPresent(int pointer)
         {
             var snesAddress = Data.ConvertPCtoSnes(pointer);
-            return Data.LabelProvider.GetLabel(snesAddress)?.Name.Length > 0;
+            return Data.Labels.GetLabel(snesAddress)?.Name.Length > 0;
         }
 
         private void SwitchBanksIfNeeded(int pointer, ref int currentBank)
@@ -268,7 +268,7 @@ namespace Diz.Core.export
             var unvisitedLabels = new Dictionary<int, IReadOnlyLabel>(); // snes addresses
 
             // part 1: important: include all labels we aren't defining somewhere else. needed for disassembly
-            foreach (var (snesAddress, label) in Data.LabelProvider.Labels)
+            foreach (var (snesAddress, label) in Data.Labels.Labels)
             {
                 if (LabelsWeVisited.Contains(snesAddress))
                     continue;
@@ -303,7 +303,7 @@ namespace Diz.Core.export
 
             SwitchOutputStream(pointer, "all-labels.txt"); // TODO: csv in the future. escape commas
 
-            foreach (var (snesAddress, _) in Data.LabelProvider.Labels)
+            foreach (var (snesAddress, _) in Data.Labels.Labels)
             {
                 // not the best place to add formatting, TODO: cleanup
                 var category = unvisitedLabels.ContainsKey(snesAddress) ? "UNUSED" : "USED";
@@ -436,7 +436,7 @@ namespace Diz.Core.export
                 min < max &&
                 offset + min < size &&
                 Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
-                Data.LabelProvider.GetLabelName(Data.ConvertPCtoSnes(offset + min)) == "" &&
+                Data.Labels.GetLabelName(Data.ConvertPCtoSnes(offset + min)) == "" &&
                 (offset + min) / bankSize == myBank
             ) min += step;
             return min;
@@ -507,7 +507,7 @@ namespace Diz.Core.export
 
             if (Data.ConvertSnesToPc(ia) >= 0)
             {
-                var labelName = Data.LabelProvider.GetLabelName(ia);
+                var labelName = Data.Labels.GetLabelName(ia);
                 if (labelName != "")
                     param = labelName;
             }

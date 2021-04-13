@@ -41,11 +41,11 @@ namespace DiztinGUIsh.window2
         // [CellStyleFormatter(GetBackColorInOut)]
         public string Label
         {
-            get => Data.LabelProvider.GetLabelName(Data.ConvertPCtoSnes(ByteOffset.ContainerOffset));
+            get => Data.Labels.GetLabelName(Data.ConvertPCtoSnes(ByteOffset.ContainerOffset));
 
             // todo (validate for valid label characters)
             // (note: validation implemented in Furious's branch, integrate here)
-            set => Data.LabelProvider.AddLabel(
+            set => Data.Labels.AddLabel(
                     Data.ConvertPCtoSnes(ByteOffset.ContainerOffset),
                     new Label {Name = value},
                     true);

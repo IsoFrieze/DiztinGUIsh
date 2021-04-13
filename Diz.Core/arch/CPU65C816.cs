@@ -413,7 +413,7 @@ namespace Diz.Core.arch
             if (address < 0) 
                 return "";
 
-            var label = data.LabelProvider.GetLabelName(address);
+            var label = data.Labels.GetLabelName(address);
             if (label != "") 
                 return label;
 

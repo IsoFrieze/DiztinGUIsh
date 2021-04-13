@@ -77,7 +77,7 @@ namespace DiztinGUIsh.window
 
         private void WriteLabelsToCsv(TextWriter sw)
         {
-            foreach (var (snesOffset, label) in Data.LabelProvider.Labels)
+            foreach (var (snesOffset, label) in Data.Labels.Labels)
             {
                 OutputCsvLine(sw, snesOffset, label);
             }
@@ -94,7 +94,7 @@ namespace DiztinGUIsh.window
             if (!int.TryParse((string) dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null,
                 out var val)) return;
             Locked = true;
-            Data.LabelProvider.RemoveLabel(val);
+            Data.Labels.RemoveLabel(val);
             Locked = false;
         }
 
@@ -139,7 +139,7 @@ namespace DiztinGUIsh.window
                             break;
                         }
                         
-                        if (existingSnesAddress == -1 && Data.LabelProvider.GetLabel(newSnesAddress) != null)
+                        if (existingSnesAddress == -1 && Data.Labels.GetLabel(newSnesAddress) != null)
                         {
                             e.Cancel = true;
                             toolStripStatusLabel1.Text = "This address already has a label.";
@@ -172,9 +172,9 @@ namespace DiztinGUIsh.window
             if (currentlyEditing >= 0)
             {
                 if (newSnesAddress >= 0) 
-                    Data.LabelProvider.RemoveLabel(existingSnesAddress);
+                    Data.Labels.RemoveLabel(existingSnesAddress);
                 
-                Data.LabelProvider.AddLabel(newSnesAddress, newLabel, true);
+                Data.Labels.AddLabel(newSnesAddress, newLabel, true);
             }
             Locked = false;
 
@@ -264,7 +264,7 @@ namespace DiztinGUIsh.window
                 return;
 
             // TODO: replace with winforms databinding eventually
-            foreach (var item in Data.LabelProvider.Labels)
+            foreach (var item in Data.Labels.Labels)
             {
                 RawAdd(item.Key, item.Value);
             }
