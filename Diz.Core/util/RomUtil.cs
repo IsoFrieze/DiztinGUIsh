@@ -474,5 +474,15 @@ namespace Diz.Core.util
             
             return CreateRomMappingFromRomByteSource(romByteSource, romMapMode, romSpeed);
         }
+
+        public static ByteSource CreateSnesAddressSpace()
+        {
+            const int snesAddressableBytes = 0xFFFFFF;
+            return new ByteSource
+            {
+                Bytes = new SparseByteStorage(snesAddressableBytes),
+                Name = "SNES Main Cpu BUS",
+            };
+        }
     }
 }
