@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Xml;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
@@ -20,17 +19,11 @@ namespace Diz.Test
         {
             this.testOutputHelper = testOutputHelper;
         }
-
+        
         public class TestRoot
         {
-            public Dictionary<int, Comment> Odw { get; } = new() {
-                {1, new Comment{Text="Z test1"}},
-                {2, new Comment{Text="Z test3"}},
-            };
-            /*public Dictionary<int, Label> Odw2 { get; } = new() {
-                {100, new Label {Comment = "c1", Name = "location1"}},
-                {200, new Label {Comment = "c2", Name = "location2"}},
-            };
+            public Dictionary<int, Comment> Odw { get; } = new();
+            public Dictionary<int, Label> Odw2 { get; } = new();
 
             #region Equality
             protected bool Equals(TestRoot other)
@@ -55,7 +48,7 @@ namespace Diz.Test
                     return ((Odw != null ? Odw.GetHashCode() : 0) * 397) ^ (Odw2 != null ? Odw2.GetHashCode() : 0);
                 }
             }
-            #endregion*/
+            #endregion
         }
 
         private static IConfigurationContainer GetSerializer()
@@ -63,13 +56,21 @@ namespace Diz.Test
             return XmlSerializerSupport.GetSerializer()
                 .EnableImplicitTyping(typeof(TestRoot));
         }
-        
-        private static Dictionary<int, Comment> GetSerializeData()
+
+        private static TestRoot GetSerializeData()
         {
             return new()
             {
-                {1, new Comment{Text="Z test1"}},
-                {2, new Comment{Text="Z test2"}},
+                Odw =
+                {
+                    {1, new Comment {Text = "Z test1"}},
+                    {2, new Comment {Text = "Z test3"}},
+                },
+                Odw2 =
+                {
+                    {100, new Label {Comment = "c1", Name = "location1"}},
+                    {200, new Label {Comment = "c2", Name = "location2"}},
+                }
             };
         }
 
@@ -82,10 +83,6 @@ namespace Diz.Test
             var serializer = GetSerializer().Create();
             var toSerialize = GetSerializeData();
 
-            /*var xmlStr = serializer.Serialize(
-                new XmlWriterSettings(),
-                toSerialize);*/
-            
             var xmlStr = serializer.Serialize(
                 new XmlWriterSettings(),
                 toSerialize);
@@ -105,11 +102,11 @@ namespace Diz.Test
         private void DeSerialize(string inputXml)
         {
             var inputCleanedXml = SortaCleanupXml(inputXml);
-            
+
             var expectedObj = GetSerializeData();
 
             var serializer = GetSerializer().Create();
-            var actuallyDeserialized = serializer.Deserialize<Dictionary<int, Comment>>(inputCleanedXml);
+            var actuallyDeserialized = serializer.Deserialize<TestRoot>(inputCleanedXml);
 
             Assert.Equal(expectedObj, actuallyDeserialized);
         }
