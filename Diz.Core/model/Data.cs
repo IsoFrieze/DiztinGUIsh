@@ -11,8 +11,6 @@ using Diz.Core.arch;
 using Diz.Core.export;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
-using ExtendedXmlSerializer;
-using IX.Observable;
 
 namespace Diz.Core.model
 {

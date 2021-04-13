@@ -10,7 +10,6 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using Diz.Core.model;
-using IX.StandardExtensions;
 
 namespace Diz.Core.util
 {
@@ -295,7 +294,7 @@ namespace Diz.Core.util
         public static int ClampIndex(int index, int minIndex, int maxIndex)
         {
             if (minIndex < 0 || minIndex > maxIndex)
-                throw new ArgumentNotInRangeException("ClampIndex params not in range");
+                throw new IndexOutOfRangeException("ClampIndex params not in range");
             
             return index > maxIndex
                 ? maxIndex

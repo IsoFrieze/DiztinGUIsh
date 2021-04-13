@@ -541,7 +541,7 @@ namespace Diz.Core.export
                 var unused = new LogCreatorLineFormatter(formatStr, generators);
                 return true;
             }
-            catch (Exception _)
+            catch (Exception)
             {
                 return false;
             }

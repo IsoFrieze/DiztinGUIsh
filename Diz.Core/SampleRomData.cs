@@ -3,7 +3,6 @@ using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
-using IX.Observable;
 
 namespace Diz.Core
 {

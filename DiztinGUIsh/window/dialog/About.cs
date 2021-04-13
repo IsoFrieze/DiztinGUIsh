@@ -2,6 +2,9 @@
 using System.Reflection;
 using System.Windows.Forms;
 
+// for simplicity, disabled until we finish .net5 porting
+// #define USING_GITINFO_PACKAGE
+
 namespace DiztinGUIsh
 {
     partial class About : Form
@@ -43,11 +46,12 @@ namespace DiztinGUIsh
                 var attributes = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false);
                 var assembly = attributes.Length == 0 
                     ? null 
-                    : ((AssemblyDescriptionAttribute)attributes[0]);
+                    : (AssemblyDescriptionAttribute)attributes[0];
 
                 if (assembly == null)
                     return "";
 
+                #if USING_USING_GITINFO_PACKAGE
                 var description =
                     assembly.Description + "\r\n" + "\r\n" + "Build info:\r\n" +
                     "Git branch: " + ThisAssembly.Git.Branch + "\r\n" +
@@ -57,6 +61,9 @@ namespace DiztinGUIsh
                     "Git last commit date: " + ThisAssembly.Git.CommitDate + "\r\n";
 
                 return description;
+                #else
+                return "";
+                #endif
             }
         }
 
