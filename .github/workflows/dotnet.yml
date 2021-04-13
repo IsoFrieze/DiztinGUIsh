@@ -1,7 +1,4 @@
-﻿# TODO: make sure support files in dist/ are copied into the final release folder still, final dir structure mirrors original build process
- # TODO: add nuget package cache back in
-
-name: .NET 5 Win Desktop
+﻿name: .NET 5 Win Desktop
 
 on: [ push, pull_request ]
 
@@ -14,21 +11,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
+
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.x
-          
-      - name: Nuget Dependency Packages Install
-        run: dotnet restore DiztinGUIsh.sln
-          
+
+      - name: Setup Nuget
+        uses: nuget/setup-nuget@v1
+
+
+      - name: Nuget Dependency Packages Restore
+        run: dotnet restore
+
       - name: Build
-        run: dotnet build DiztinGUIsh.sln
-        
+        run: dotnet build --no-restore
+
       - name: Test
-        run: dotnet test DiztinGUIsh.sln
-  
+        run: dotnet test --no-build --verbosity normal
+
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
