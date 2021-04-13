@@ -34,4 +34,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: DiztinGUIsh
-          path: DiztinGUIsh\bin\Release\net5.0-windows
+          path: DiztinGUIsh\bin\Release
