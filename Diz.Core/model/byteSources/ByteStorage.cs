@@ -41,7 +41,7 @@ namespace Diz.Core.model.byteSources
             Debug.Assert(Count == emptyCreateSize);
         }
 
-        protected void InitFrom(IReadOnlyCollection<ByteOffsetData> inBytes)
+        private void InitFrom(IReadOnlyCollection<ByteOffsetData> inBytes)
         {
             Debug.Assert(inBytes != null);
             

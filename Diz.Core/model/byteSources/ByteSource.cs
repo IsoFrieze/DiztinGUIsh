@@ -41,37 +41,32 @@ namespace Diz.Core.model.byteSources
             Bytes.AddByte(byteOffset);
         }
 
-        // return a directed graph with all possible values for this offset including all child regions.
-        // if index is out of range, skip this.
-        public ByteOffsetDataNode TraverseChildren(int sourceIndex)
+        // return a directed graph with all possible values for this offset including all child regions
+        public ByteOffsetDataNode BuildFullGraph(int sourceIndex)
         {
             if (sourceIndex < 0 || sourceIndex >= Bytes.Count)
                 return null;
-            
-            var node = new ByteOffsetDataNode
-            {
-                ByteData = Bytes[sourceIndex],
-            };
-            
-            TraverseChildNodes(sourceIndex, ref node);
+
+            var node = new ByteOffsetDataNode(this, sourceIndex);
+
+            BuildChildGraph(sourceIndex, ref node);
             
             return node;
         }
 
         // caution: recursion
-        private void TraverseChildNodes(int sourceIndex, ref ByteOffsetDataNode nodeToPopulate)
+        private void BuildChildGraph(int sourceIndex, ref ByteOffsetDataNode nodeToPopulate)
         {
             foreach (var childSourceToTraverse in ChildSources)
             {
                 var childIndex = childSourceToTraverse.RegionMapping
                     .ConvertSourceToDestination(sourceIndex, childSourceToTraverse.ByteSource);
                 
-                var newChildNode = childSourceToTraverse.ByteSource.TraverseChildren(childIndex);
+                var newChildNode = childSourceToTraverse.ByteSource.BuildFullGraph(childIndex);
                 if (newChildNode == null) 
                     continue;
                 
-                nodeToPopulate.Children ??= new List<ByteOffsetDataNode>();
-                nodeToPopulate.Children.Add(newChildNode);
+                nodeToPopulate.AttachChildNode(newChildNode);
             }
         }
 
@@ -87,13 +82,13 @@ namespace Diz.Core.model.byteSources
             if (!IsValidIndex(index))
                 return null;
             
-            var node = TraverseChildren(index);
-            var finalData = node.ResolveToOne();
+            var node = BuildFullGraph(index);
+            var finalData = node.CreateByteByFlatteningGraph();
 
             return finalData;
         }
 
-        private bool IsValidIndex(int index)
+        public bool IsValidIndex(int index)
         {
             return index >= 0 && index < Bytes?.Count;
         }
@@ -123,7 +118,12 @@ namespace Diz.Core.model.byteSources
             // in the future, we'll want to make it so we can intelligently choose to push these annotation down
             // to child regions (i.e. if we have mapped ROM or WRAM etc), so that annotation can live in the
             // best region. this will make dealing with weird stuff like mirroring, patches, etc much easier.
-            Bytes[index].GetOrCreateAnnotationsList().Add(newAnnotation);
+
+            var b = Bytes[index];
+            if (b == null)
+                Bytes[index] = b = new ByteOffsetData();
+            
+            b.GetOrCreateAnnotationsList().Add(newAnnotation);
         }
         
         // NOTE: recursion into the graph, careful.

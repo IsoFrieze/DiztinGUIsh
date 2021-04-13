@@ -190,12 +190,12 @@ namespace Diz.Test
         }
 
         [Fact]
-        public static void TestCompileChildData()
+        public static void BuildBasicGraph()
         {
             var (srcData, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
             
             var snesAddress = data.ConvertPCtoSnes(0);
-            var graph = data.SnesAddressSpace.TraverseChildren(snesAddress);
+            var graph = data.SnesAddressSpace.BuildFullGraph(snesAddress);
 
             // ok, this is tricky, pay careful attention.
             // we got a graph back from the SNES address space that represents
@@ -230,6 +230,22 @@ namespace Diz.Test
             
             Assert.Same(data.RomByteSource, childNodeFromRom.ByteData.Container);
             Assert.Same(srcData[0], childNodeFromRom.ByteData);
+        }
+        
+         [Fact]
+        public static void TraverseChildren()
+        {
+            var (srcData, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
+            
+            var snesAddress = data.ConvertPCtoSnes(0);
+            var graph = data.SnesAddressSpace.BuildFullGraph(snesAddress);
+
+            var flattenedNode = graph.CreateByteByFlatteningGraph();
+            
+            Assert.NotNull(flattenedNode);
+            Assert.NotNull(flattenedNode.Byte);
+            Assert.Equal(0x8D, flattenedNode.Byte.Value);
+            Assert.Equal(2, flattenedNode.Annotations.Count);
         }
 
         private static void AssertRomByteEqual(byte expectedByteVal, Data data, int pcOffset)
