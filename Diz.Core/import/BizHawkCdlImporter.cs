@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 
 namespace Diz.Core.import
 {

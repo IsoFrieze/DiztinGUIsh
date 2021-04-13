@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.model.snes;
 using Diz.Core.serialization.xml_serializer.xml_migrations;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.model.snes;
 using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.util

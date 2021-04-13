@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 using JetBrains.Annotations;
 using Label = Diz.Core.model.Label;

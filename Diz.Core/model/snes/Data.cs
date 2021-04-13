@@ -8,7 +8,7 @@ using Diz.Core.export;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
 
-namespace Diz.Core.model
+namespace Diz.Core.model.snes
 {
     // old-style data container to phase out eventually.
     // right now this supports just 1 ByteSource that is a SNES address space with an attached Rom

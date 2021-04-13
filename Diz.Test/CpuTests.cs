@@ -2,6 +2,7 @@
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 using Diz.Test.Utils;
 using Xunit;

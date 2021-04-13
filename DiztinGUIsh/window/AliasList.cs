@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 using DiztinGUIsh.window2;
 using Label = Diz.Core.model.Label;

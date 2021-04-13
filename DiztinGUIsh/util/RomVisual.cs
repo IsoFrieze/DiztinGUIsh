@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.model.snes;
 using FastBitmapLib;
 
 namespace Diz.Core.util

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 
 // shows a collection of bank controls, so you can visualize the entire ROM
 

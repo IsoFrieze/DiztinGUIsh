@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Diz.Core.arch;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 
 namespace Diz.Core.arch

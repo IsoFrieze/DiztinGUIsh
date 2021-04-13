@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.serialization.binary_serializer_old;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;

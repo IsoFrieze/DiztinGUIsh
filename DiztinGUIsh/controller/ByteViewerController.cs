@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.model.snes;
+using Diz.Core.util;
 using DiztinGUIsh.util;
 using JetBrains.Annotations;
 

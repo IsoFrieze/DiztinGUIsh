@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using Diz.Core.util;
 
 namespace Diz.Core.model
@@ -46,5 +48,20 @@ namespace Diz.Core.model
         
         int GetIntermediateAddressOrPointer(int offset);
         int GetIntermediateAddress(int offset, bool resolve = false);
+    }
+    
+    public interface IDataManager : INotifyPropertyChanged
+    {
+        
+    }
+
+    public interface IDizObservable<T> : ICollection<T>, INotifyCollectionChanged, INotifyPropertyChanged
+    {
+        
+    }
+    
+    public interface IDizObservableList<T> : IDizObservable<T>
+    {
+        
     }
 }

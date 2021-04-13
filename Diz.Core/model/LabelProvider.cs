@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Diz.Core.export;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 
 namespace Diz.Core.model

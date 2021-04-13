@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using Diz.Core.export;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 
 namespace Diz.Core.model

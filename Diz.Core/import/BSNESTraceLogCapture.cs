@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 #if PROFILING
 using Microsoft.ConcurrencyVisualizer.Instrumentation;

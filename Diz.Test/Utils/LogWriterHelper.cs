@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Xunit;
 
 namespace Diz.Test.Utils

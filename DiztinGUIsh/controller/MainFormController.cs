@@ -8,6 +8,7 @@ using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using DiztinGUIsh.util;

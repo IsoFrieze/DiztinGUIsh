@@ -6,24 +6,12 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Diz.Core.util;
 using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
-    public interface IDataManager : INotifyPropertyChanged
-    {
-        
-    }
 
-    public interface IDizObservable<T> : ICollection<T>, INotifyCollectionChanged, INotifyPropertyChanged
-    {
-        
-    }
-    
-    public interface IDizObservableList<T> : IDizObservable<T>
-    {
-        
-    }
     //
     // public class DataManagerRomBytes : DataManagerList<ByteOffset, Observable>
     // {

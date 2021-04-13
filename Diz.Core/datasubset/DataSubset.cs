@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Diz.Core.model;
+using Diz.Core.util;
 using JetBrains.Annotations;
 
 namespace DiztinGUIsh.util
