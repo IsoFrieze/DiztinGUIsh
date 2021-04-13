@@ -106,7 +106,11 @@ namespace Diz.Core.serialization.xml_serializer
             return romBytes;
         }
 
-        private static ByteSource FinishRead(IReadOnlyCollection<ByteOffsetData> romBytes) => new(romBytes);
+        private static ByteSource FinishRead(IReadOnlyCollection<ByteOffsetData> romBytes) =>
+            new()
+            {
+                Bytes = new ByteList(romBytes)
+            };
 
         private static List<string> ReadMainDataRaw(string allLines)
         {

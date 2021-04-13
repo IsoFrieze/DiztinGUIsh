@@ -10,22 +10,23 @@ namespace Diz.Test.tests
 {
     public static class ByteStorageTests
     {
-        public static TheoryData<ByteStorage> SampleValidSparseStorage =>
+        public static TheoryData<ByteStorage> SampleStorages =>
             new List<Func<ByteStorage>> {
                 () => 
                 {
-                    var byteStorage = new SparseByteStorage(null, 10);
-                    byteStorage[1] = new ByteOffsetData {Byte = 0xE1};
-                    byteStorage[7] = new ByteOffsetData {Byte = 0xE7};
+                    var byteStorage = new SparseByteStorage(10)
+                    {
+                        [1] = new() {Byte = 0xE1}, 
+                        [7] = new() {Byte = 0xE7}
+                    };
                     return byteStorage;
                 },
                 () =>
                 {
                     const int count = 10;
-                    var byteStorage = new SparseByteStorage(null, count);
+                    var byteStorage = new SparseByteStorage(count);
                     for (var i = 0; i < count; ++i)
                     {
-                        Debug.Assert(byteStorage[i] == null);
                         byteStorage[i] = new ByteOffsetData {Byte = (byte?)(i+0xE0)};
                     }
                     return byteStorage;
@@ -35,7 +36,7 @@ namespace Diz.Test.tests
                     const int count = 10;
                     var srcList = Enumerable.Range(0, count)
                         .Select(i => new ByteOffsetData {Byte = (byte?)(i+0xE0)}).ToList();
-                    return new SparseByteStorage(null, srcList);
+                    return new SparseByteStorage(srcList);
                 },
                 
                 () =>
@@ -43,12 +44,12 @@ namespace Diz.Test.tests
                     const int count = 10;
                     var srcList = Enumerable.Range(0, count)
                         .Select(i => new ByteOffsetData {Byte = (byte?)(i+0xE0)}).ToList();
-                    return new ByteList(null, srcList);
+                    return new ByteList(srcList);
                 },
             }.CreateTheoryData();
 
         [Theory]
-        [MemberData(nameof(SampleValidSparseStorage))]
+        [MemberData(nameof(SampleStorages))]
         public static void TestSparseStorageAdd(ByteStorage byteStorage)
         {
             var hasGaps = byteStorage is SparseByteStorage sparse && sparse.ActualCount != byteStorage.Count;
@@ -73,7 +74,7 @@ namespace Diz.Test.tests
         }
 
         [Theory]
-        [MemberData(nameof(SampleValidSparseStorage))]
+        [MemberData(nameof(SampleStorages))]
         public static void TestSparseStorageDict(ByteStorage byteStorage)
         {
             var byteStorageSparse = byteStorage as SparseByteStorage;
@@ -114,7 +115,7 @@ namespace Diz.Test.tests
         }
 
         [Theory]
-        [MemberData(nameof(SampleValidSparseStorage))]
+        [MemberData(nameof(SampleStorages))]
         public static void TestSparseStorageRange(ByteStorage byteStorage)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => byteStorage[-1]);

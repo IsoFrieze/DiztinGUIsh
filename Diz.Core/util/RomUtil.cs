@@ -465,8 +465,14 @@ namespace Diz.Core.util
             IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
         {
             var data = actualRomBytes.Select(b => new ByteOffsetData() {Byte = b}).ToList();
+
+            var romByteSource = new ByteSource
+            {
+                Bytes = new ByteList(data),
+                Name = "Snes ROM"
+            };
             
-            return CreateRomMappingFromRomByteSource(new ByteSource(data) { Name = "Snes ROM" }, romMapMode, romSpeed);
+            return CreateRomMappingFromRomByteSource(romByteSource, romMapMode, romSpeed);
         }
     }
 }

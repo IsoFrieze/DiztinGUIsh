@@ -6,8 +6,30 @@ using System.Threading;
 
 namespace Diz.Core.model.byteSources
 {
+    public interface IReadOnlyByteOffsetData
+    {
+        byte? Byte { get; }
+        List<Annotation> Annotations { get; }
+
+        ByteSource Container { get; }
+        int ContainerOffset { get; }
+        
+        byte DataBank{ get; }
+        int DirectPage { get; }
+        bool XFlag { get; }
+        bool MFlag{ get; }
+        Architecture Arch { get; }
+        FlagType TypeFlag{ get; }
+        InOutPoint Point { get; }
+        bool Equals(object obj);
+        int GetHashCode();
+        
+        T GetOneAnnotation<T>() where T : Annotation;
+        ReaderWriterLockSlim Lock { get; }
+    }
+    
     // JUST holds the data. no traversal.
-    public class ByteOffsetData
+    public class ByteOffsetData : IReadOnlyByteOffsetData
     {
         // if null, it means caller either needs to dig one level deeper in parent container to find the byte value, or, there is no data
         public byte? Byte { get; set; }
@@ -22,7 +44,8 @@ namespace Diz.Core.model.byteSources
             return Annotations ??= new List<Annotation>();
         }
 
-        public ByteSource Container { get; internal set; }
+        protected internal ByteStorage ByteStorageContainer { get; internal set; }
+        public ByteSource Container => ByteStorageContainer?.ParentContainer;
         public int ContainerOffset  { get; internal set; }
 
         // --------------------------------------------------------------------------------

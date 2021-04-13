@@ -14,23 +14,20 @@ namespace Diz.Core.model.byteSources
 
         public abstract int Count { get; }
 
-        protected ByteSource ParentContainer { get; }
+        protected internal ByteSource ParentContainer { get; set; }
 
-        protected ByteStorage(ByteSource parent)
+        protected ByteStorage()
         {
-            ParentContainer = parent;
             InitFromEmpty(0);
         }
         
-        protected ByteStorage(ByteSource parent, IReadOnlyCollection<ByteOffsetData> inBytes)
+        protected ByteStorage(IReadOnlyCollection<ByteOffsetData> inBytes)
         {
-            ParentContainer = parent;
             InitFrom(inBytes);
         }
 
-        protected ByteStorage(ByteSource parent, int emptyCreateSize)
+        protected ByteStorage(int emptyCreateSize)
         {
-            ParentContainer = parent;
             InitFromEmpty(emptyCreateSize);
         }
 
@@ -63,7 +60,7 @@ namespace Diz.Core.model.byteSources
         protected void OnPreAddByteAt(int newIndex, ByteOffsetData byteOffset)
         {
             // cache these values
-            byteOffset.Container = ParentContainer;
+            byteOffset.ByteStorageContainer = this;
             byteOffset.ContainerOffset = newIndex; // this will be true after the Add() call below.
         }
 
@@ -137,11 +134,11 @@ namespace Diz.Core.model.byteSources
         // only ever use AddByte() to add bytes here
         private List<ByteOffsetData> bytes = new();
         
-        [UsedImplicitly] public ByteList(ByteSource parent) : base(parent) { }
+        [UsedImplicitly] public ByteList() : base() { }
         
-        [UsedImplicitly] public ByteList(ByteSource parent, int emptyCreateSize) : base(parent, emptyCreateSize) { }
+        [UsedImplicitly] public ByteList(int emptyCreateSize) : base(emptyCreateSize) { }
         
-        [UsedImplicitly] public ByteList(ByteSource parent, IReadOnlyCollection<ByteOffsetData> inBytes) : base(parent, inBytes) { }
+        [UsedImplicitly] public ByteList(IReadOnlyCollection<ByteOffsetData> inBytes) : base(inBytes) { }
 
         protected override void InitEmptyContainer(int capacity)
         {
@@ -183,9 +180,9 @@ namespace Diz.Core.model.byteSources
 
     public class SparseByteStorage : ByteStorage
     {
-        [UsedImplicitly] public SparseByteStorage(ByteSource parent) : base(parent) { }
-        [UsedImplicitly] public SparseByteStorage(ByteSource parent, IReadOnlyCollection<ByteOffsetData> inBytes) : base(parent, inBytes) { }
-        [UsedImplicitly] public SparseByteStorage(ByteSource parent, int emptyCreateSize) : base(parent, emptyCreateSize) { }
+        [UsedImplicitly] public SparseByteStorage() : base() { }
+        [UsedImplicitly] public SparseByteStorage(IReadOnlyCollection<ByteOffsetData> inBytes) : base(inBytes) { }
+        [UsedImplicitly] public SparseByteStorage(int emptyCreateSize) : base(emptyCreateSize) { }
 
         // keeps the keys sorted, which is what we want.
         public SortedDictionary<int, ByteOffsetData> bytes;

@@ -1,37 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using JetBrains.Annotations;
 
 namespace Diz.Core.model.byteSources
 {
     public class ByteSource
     {
         public string Name { get; set; }
-        public ByteStorage Bytes { get; }
-        public List<ByteSourceMapping> ChildSources { get; init; } = new();
 
-        [UsedImplicitly] public Type ByteStorageType { get; init; } = typeof(ByteList);
-        
-        public ByteSource()
+        private readonly ByteStorage bytes;
+        public ByteStorage Bytes
         {
-            Bytes = CreateByteStorage<ByteList>(this);
+            get => bytes;
+            init
+            {
+                bytes = value;
+                bytes.ParentContainer = this;
+            }
         }
 
-        public ByteSource(IReadOnlyCollection<ByteOffsetData> inBytes)
-        {
-            Bytes = CreateByteStorage<ByteList>(this, inBytes);
-        }
-        
-        public ByteSource(int emptySize)
-        {
-            Bytes = CreateByteStorage<ByteList>(this, emptySize);
-        }
-        
-        private static T CreateByteStorage<T>(params object[] paramArray) where T : ByteStorage
-        {
-            return (T)Activator.CreateInstance(typeof(T), args:paramArray);
-        }
+        private readonly List<ByteSourceMapping> childSources = new();
+        public IReadOnlyList<ByteSourceMapping> ChildSources => childSources;
 
         public byte GetByte(int index)
         {
@@ -61,7 +50,7 @@ namespace Diz.Core.model.byteSources
             
             var node = new ByteOffsetDataNode
             {
-                Data = Bytes[sourceIndex],
+                ByteData = Bytes[sourceIndex],
             };
             
             TraverseChildNodes(sourceIndex, ref node);
@@ -156,6 +145,11 @@ namespace Diz.Core.model.byteSources
 
                 yield return new KeyValuePair<int, T>(index, annotation);
             }   
+        }
+
+        public void AttachChildByteSource(ByteSourceMapping childByteSourceMapping)
+        {
+            childSources.Add(childByteSourceMapping);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -63,17 +62,21 @@ namespace Diz.Core.model
             // setup a common SNES mapping, just the ROM and nothing else.
             // this is very configurable, for now, this class is sticking with the simple setup.
             // you can get as elaborate as you want, with RAM, patches, overrides, etc.
-            const int snesAddressableBytes = 0xFFFFFF;
-            SnesAddressSpace = new ByteSource(snesAddressableBytes) {
-                Name = "SNES Main Cpu BUS",
-                ChildSources = new List<ByteSourceMapping> {
-                    romByteSourceMapping
-                }
-            };
-            
+            CreateSnesAddressSpace();
+            SnesAddressSpace.AttachChildByteSource(romByteSourceMapping);
             RomMapping = romByteSourceMapping;
 
             //SendNotificationChangedEvents = previousNotificationState;
+        }
+
+        private void CreateSnesAddressSpace()
+        {
+            const int snesAddressableBytes = 0xFFFFFF;
+            SnesAddressSpace = new ByteSource
+            {
+                Bytes = new SparseByteStorage(snesAddressableBytes),
+                Name = "SNES Main Cpu BUS",
+            };
         }
 
         // precondition, everything else has already been setup but adding in the actual bytes,
@@ -98,7 +101,11 @@ namespace Diz.Core.model
         }
         public Data InitializeEmptyRomMapping(int size, RomMapMode mode, RomSpeed speed)
         {
-            var romByteSource = new ByteSource(size) { Name = "Snes ROM" };
+            var romByteSource = new ByteSource()
+            {
+                Bytes = new ByteList(size),
+                Name = "Snes ROM"
+            };
             PopulateFromRom(romByteSource, mode, speed);
             return this;
         }

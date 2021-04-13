@@ -5,7 +5,7 @@ namespace Diz.Core.model.byteSources
     // represent a node of a per-byte graph through the mappings of various ByteSources
     public class ByteOffsetDataNode
     {
-        public ByteOffsetData Data { get; set; }
+        public ByteOffsetData ByteData { get; set; }
         public List<ByteOffsetDataNode> Children { get; set; }
 
         // Simplified graph traversal utility.
@@ -21,8 +21,8 @@ namespace Diz.Core.model.byteSources
         {
             dataBeingConstructed ??= new ByteOffsetData
             {
-                ContainerOffset = Data.ContainerOffset,
-                Container = Data.Container,
+                ByteStorageContainer = ByteData.ByteStorageContainer,
+                ContainerOffset = ByteData.ContainerOffset,
             };
 
             // traverse any child nodes first.
@@ -37,12 +37,12 @@ namespace Diz.Core.model.byteSources
             // now, add in any of our own changes/overrides AFTER children populated.
             
             // annotations are concatenated together
-            if (Data.Annotations != null && Data.Annotations.Count > 0)
-                dataBeingConstructed.GetOrCreateAnnotationsList().AddRange(Data.Annotations);
+            if (ByteData.Annotations != null && ByteData.Annotations.Count > 0)
+                dataBeingConstructed.GetOrCreateAnnotationsList().AddRange(ByteData.Annotations);
             
             // only change the byte if we're non-null and overriding something underneath
-            if (Data.Byte != null)
-                dataBeingConstructed.Byte = Data.Byte;
+            if (ByteData.Byte != null)
+                dataBeingConstructed.Byte = ByteData.Byte;
 
             return dataBeingConstructed;
         }

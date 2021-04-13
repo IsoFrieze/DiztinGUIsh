@@ -27,7 +27,7 @@ namespace Diz.Test
         {
             get
             {
-                var romByteSource = new ByteSource(new List<ByteOffsetData>
+                var bytes = new List<ByteOffsetData>
                 {
                     // --------------------------
                     // highlighting a particular section here
@@ -63,9 +63,13 @@ namespace Diz.Test
                     new() {Byte = 0xF7, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
 
                     // ------------------------------------
-                });
+                };
 
-                var data = new Data(romByteSource, RomMapMode.LoRom, RomSpeed.FastRom);
+                var data = new Data(
+                    new ByteSource {
+                    Name = "Super Matador Brothers 2, Now you're power with playing",
+                    Bytes = new ByteList(bytes)
+                }, RomMapMode.LoRom, RomSpeed.FastRom);
                 
                 // another way to add comments, adds it to the SNES address space instead of the ROM.
                 // retrievals should be unaffected.
