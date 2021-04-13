@@ -1,6 +1,4 @@
 # DiztinGUIsh ("Diz")
-[![Build status](https://ci.appveyor.com/api/projects/status/kempt97c11k5sor2?svg=true)](https://ci.appveyor.com/project/binary1230/diztinguish)
-
 A Super NES ROM Disassembler and tracelog capture/analysis tool with a focus on collaborative workflow UX. Exports .asm files ready to be compiled back into the original binary. Written in Winforms/C#.
 
 _Diz tools suite:_
