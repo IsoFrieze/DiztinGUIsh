@@ -53,7 +53,9 @@ namespace Diz.Test
                 Bytes = new ByteList(srcData)
             };
 
-            return new Data(romByteSource, RomMapMode.HiRom, RomSpeed.FastRom);
+            var data = new Data();
+            data.PopulateFromRom(romByteSource,RomMapMode.HiRom, RomSpeed.FastRom);
+            return data;
         }
 
         public static (List<ByteEntry>, Data) CreateSampleRomByteSourceElements()

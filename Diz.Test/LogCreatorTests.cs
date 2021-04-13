@@ -66,11 +66,12 @@ namespace Diz.Test
                     // ------------------------------------
                 };
 
-                var data = new Data(
-                    new ByteSource {
+                var actualRomBytes = new ByteSource {
                     Name = "Super Matador Brothers 2, Now you're power with playing",
                     Bytes = new ByteList(bytes)
-                }, RomMapMode.LoRom, RomSpeed.FastRom);
+                };
+                
+                var data = new Data().PopulateFromRom(actualRomBytes, RomMapMode.LoRom, RomSpeed.FastRom);
                 
                 // another way to add comments, adds it to the SNES address space instead of the ROM.
                 // retrievals should be unaffected.

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using Diz.Core;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Xunit;

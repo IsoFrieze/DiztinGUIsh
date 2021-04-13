@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Diz.Core.arch;
@@ -25,7 +24,7 @@ namespace Diz.Core.model.snes
         ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => Labels;
         
         // the parent of all our data, the SNES address space
-        public ByteSource SnesAddressSpace { get; private set; }
+        public ByteSource SnesAddressSpace { get; internal set; }
         
         // cached access to stuff that livers in SnesAddressSpace. convenience only.
         public ByteSource RomByteSource => 
@@ -44,64 +43,6 @@ namespace Diz.Core.model.snes
 
         #region Initialization Helpers
 
-        public void PopulateFrom(IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
-        {
-            var mapping = RomUtil.CreateRomMappingFromRomRawBytes(actualRomBytes, romMapMode, romSpeed);
-            PopulateFrom(mapping);
-        }
-
-        public void PopulateFromRom(ByteSource romByteSource, RomMapMode romMapMode, RomSpeed romSpeed)
-        {
-            var mapping = RomUtil.CreateRomMappingFromRomByteSource(romByteSource, romMapMode, romSpeed);
-            PopulateFrom(mapping);
-        }
-
-        public void PopulateFrom(ByteSourceMapping romByteSourceMapping)
-        {
-            // var previousNotificationState = SendNotificationChangedEvents;
-            // SendNotificationChangedEvents = false;
-
-            // setup a common SNES mapping, just the ROM and nothing else.
-            // this is very configurable, for now, this class is sticking with the simple setup.
-            // you can get as elaborate as you want, with RAM, patches, overrides, etc.
-            SnesAddressSpace = RomUtil.CreateSnesAddressSpace();
-            SnesAddressSpace.AttachChildByteSource(romByteSourceMapping);
-
-            //SendNotificationChangedEvents = previousNotificationState;
-        }
-
-        // precondition, everything else has already been setup but adding in the actual bytes,
-        // and is ready for actual rom byte data now
-        public void PopulateFrom(IReadOnlyCollection<byte> actualRomBytes)
-        {
-            // this method is basically a shortcut which only works under some very specific constraints
-            Debug.Assert(SnesAddressSpace != null);
-            Debug.Assert(SnesAddressSpace.ChildSources.Count == 1);
-            Debug.Assert(SnesAddressSpace.ChildSources[0].RegionMapping.GetType() == typeof(RegionMappingSnesRom));
-            Debug.Assert(ReferenceEquals(RomByteSourceMapping, SnesAddressSpace.ChildSources[0]));
-            Debug.Assert(RomMapping != null);
-            Debug.Assert(RomByteSourceMapping?.ByteSource != null);
-            Debug.Assert(actualRomBytes.Count == RomByteSource.Bytes.Count);
-
-            var i = 0;
-            foreach (var b in actualRomBytes)
-            {
-                RomByteSource.Bytes[i].Byte = b;
-                ++i;
-            }
-        }
-        
-        public Data InitializeEmptyRomMapping(int size, RomMapMode mode, RomSpeed speed)
-        {
-            var romByteSource = new ByteSource
-            {
-                Bytes = new ByteList(size),
-                Name = "Snes ROM"
-            };
-            PopulateFromRom(romByteSource, mode, speed);
-            return this;
-        }
-        
         #endregion
         
         private byte[] GetRomBytes(int snesOffset, int count)
@@ -143,11 +84,6 @@ namespace Diz.Core.model.snes
         public Data()
         {
             Labels = new LabelProvider(this);
-        }
-
-        public Data(ByteSource romByteSource, RomMapMode romMapMode, RomSpeed romSpeed) : this()
-        {
-            PopulateFromRom(romByteSource, romMapMode, romSpeed);
         }
 
         public T GetOrCreateAnnotationAtPc<T>(int pcOffset) where T : Annotation, new()
