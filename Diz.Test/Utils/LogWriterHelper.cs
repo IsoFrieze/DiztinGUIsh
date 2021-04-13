@@ -90,21 +90,21 @@ namespace Diz.Test.Utils
                 .Select(line => ParseLine(line.Trim()))
                 .ToList();
 
-        public static void AssertAssemblyOutputEquals(string expectedRaw, LogCreator.OutputResult result)
+        public static void AssertAssemblyOutputEquals(string expectedRaw, LogCreatorOutput.OutputResult result)
         {
             AssertGoodOutput(result);
             
             var expectedOut = ParseAll(expectedRaw);
             var actualOut = ParseAll(result.OutputStr);
-            AssertAssemblyOutputEqual(result, expectedOut, actualOut);
+            AssertAssemblyOutputEqual(expectedOut, actualOut);
         }
 
-        public static LogCreator.OutputResult ExportAssembly(Data inputRom)
+        public static LogCreatorOutput.OutputResult ExportAssembly(Data inputRom)
         {
             var settings = new LogWriterSettings();
             settings.SetDefaults();
             settings.OutputToString = true;
-            settings.Structure = LogCreator.FormatStructure.SingleFile;
+            settings.Structure = LogWriterSettings.FormatStructure.SingleFile;
 
             return new LogCreator()
             {
@@ -113,22 +113,16 @@ namespace Diz.Test.Utils
             }.CreateLog();
         }
 
-        private static void AssertGoodOutput(LogCreator.OutputResult result)
+        private static void AssertGoodOutput(LogCreatorOutput.OutputResult result)
         {
             Assert.True(result.LogCreator != null);
             Assert.True(result.OutputStr != null);
             Assert.True(result.ErrorCount == 0);
         }
 
-        private static void AssertAssemblyOutputEqual(LogCreator.OutputResult result, List<LogWriterHelper.ParsedOutput> expectedOut, List<LogWriterHelper.ParsedOutput> actualOut)
+        private static void AssertAssemblyOutputEqual(IReadOnlyList<ParsedOutput> expectedOut, IReadOnlyList<ParsedOutput> actualOut)
         {
-            Assert.Equal(expectedOut.Count, actualOut.Count);
-
-            for (var i = 0; i < expectedOut.Count; ++i) {
-                Assert.Equal(expectedOut[i], actualOut[i]);
-            }
-
-            Assert.True(expectedOut.SequenceEqual(actualOut));
+            TestUtil.AssertCollectionEqual(expectedOut, actualOut);
         }
     }
 }

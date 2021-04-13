@@ -25,12 +25,16 @@ namespace Diz.Core.serialization
         {
             if (deepCut)
             {
-                for (var i = 0; i < project1.Data.RomBytes.Count; ++i)
+                for (var i = 0; i < project1.Data.RomByteSource?.Bytes.Count; ++i)
                 {
-                    Debug.Assert(project1.Data.RomBytes[i].EqualsButNoRomByte(project2.Data.RomBytes[i]));
+                    // TMP DISABLE // Debug.Assert(project1.Data.RomBytes[i].EqualsButNoRomByte(project2.Data.RomBytes[i]));
                 }
 
-                Debug.Assert(project1.Data.RomBytes.Equals(project2.Data.RomBytes));
+                Debug.Assert(
+                    project1.Data.RomByteSource != null && 
+                    project1.Data.RomByteSource.Bytes.Equals(project2.Data.RomByteSource.Bytes)
+                    );
+                
                 Debug.Assert(project1.Data.Equals(project2.Data));
             }
             Debug.Assert(project1.Equals(project2));

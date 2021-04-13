@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh;
+using JetBrains.Annotations;
 
 namespace Diz.Core.serialization
 {
-    public class ImportRomSettings : PropertyNotifyChanged
+    public class ImportRomSettings : INotifyPropertyChanged
     {
         private RomMapMode mode;
         private RomSpeed romSpeed;
@@ -15,29 +17,31 @@ namespace Diz.Core.serialization
         public RomMapMode RomMapMode
         {
             get => mode;
-            set => SetField(ref mode, value);
+            set => this.SetField(PropertyChanged, ref mode, value);
         }
 
         public RomSpeed RomSpeed
         {
             get => romSpeed;
-            set => SetField(ref romSpeed, value);
+            set => this.SetField(PropertyChanged, ref romSpeed, value);
         }
 
         // todo: add INotify stuff if we care. probably dont need to.
         public Dictionary<int, Label> InitialLabels { get; set; }
-        public Dictionary<int, Data.FlagType> InitialHeaderFlags { get; set; }
+        public Dictionary<int, FlagType> InitialHeaderFlags { get; set; }
 
         public byte[] RomBytes
         {
             get => romBytes;
-            set => SetField(ref romBytes, value);
+            set => this.SetField(PropertyChanged, ref romBytes, value);
         }
 
         public string RomFilename
         {
             get => romFilename;
-            set => SetField(ref romFilename, value);
+            set => this.SetField(PropertyChanged, ref romFilename, value);
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

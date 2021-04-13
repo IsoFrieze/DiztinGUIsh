@@ -1,0 +1,37 @@
+﻿name: .NET 5 Win Desktop
+
+on: [ push, pull_request ]
+
+jobs:
+
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Setup Nuget
+        uses: nuget/setup-nuget@v1
+
+
+      - name: Nuget Dependency Packages Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: DiztinGUIsh
+          path: DiztinGUIsh\bin\Release\net5.0-windows

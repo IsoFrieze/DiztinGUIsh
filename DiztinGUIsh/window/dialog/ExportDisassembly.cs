@@ -56,7 +56,7 @@ namespace DiztinGUIsh
             this.Close();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void disassembleButton_Click(object sender, EventArgs e)
         {
             if (!PromptForPath())
                 return;
@@ -86,13 +86,13 @@ namespace DiztinGUIsh
 
         private bool PromptForPath()
         {
-            var singleFile = settings.Structure == LogCreator.FormatStructure.SingleFile;
+            var singleFile = settings.Structure == LogWriterSettings.FormatStructure.SingleFile;
             var fileOrFolderPath = PromptForLogPathFromFileOrFolderDialog(singleFile);
 
             if (string.IsNullOrEmpty(fileOrFolderPath))
                 return false;
-
-            settings.FileOrFolderOutPath = fileOrFolderPath;
+            
+            settings.SetFileOrFolderOutputPathRelativeToDir(fileOrFolderPath, project.ProjectDirectory);
 
             return true;
         }
@@ -103,10 +103,10 @@ namespace DiztinGUIsh
             {
                 settings.Format = textFormat.Text.ToLower();
                 RegenerateSampleOutput();
-                button2.Enabled = true;
+                disassembleButton.Enabled = true;
             } else {
                 textSample.Text = "Invalid format!";
-                button2.Enabled = false;
+                disassembleButton.Enabled = false;
             }
         }
 
@@ -118,18 +118,18 @@ namespace DiztinGUIsh
 
         private void comboUnlabeled_SelectedIndexChanged(object sender, EventArgs e)
         {
-            settings.Unlabeled = (LogCreator.FormatUnlabeled)comboUnlabeled.SelectedIndex;
+            settings.Unlabeled = (LogWriterSettings.FormatUnlabeled)comboUnlabeled.SelectedIndex;
             RegenerateSampleOutput();
         }
 
         private void comboStructure_SelectedIndexChanged(object sender, EventArgs e)
         {
-            settings.Structure = (LogCreator.FormatStructure)comboStructure.SelectedIndex;
+            settings.Structure = (LogWriterSettings.FormatStructure)comboStructure.SelectedIndex;
         }
 
         private bool ValidateFormat()
         {
-            return LogCreator.ValidateFormat(textFormat.Text);
+            return LogCreator.ValidateFormatStr(textFormat.Text);
         }
 
         private void RegenerateSampleOutput()
@@ -146,6 +146,16 @@ namespace DiztinGUIsh
         private void chkIncludeUnusedLabels_CheckedChanged(object sender, EventArgs e)
         {
             settings.IncludeUnusedLabels = chkIncludeUnusedLabels.Checked;
+        }
+
+        public static void ShowExportResults(LogCreatorOutput.OutputResult result)
+        {
+            if (result.ErrorCount > 0)
+                MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else
+                MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK,
+                    MessageBoxIcon.Asterisk);
         }
     }
 }

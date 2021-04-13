@@ -1,39 +1,41 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Forms;
-using DiztinGUIsh.window;
+using Diz.Core.util;
+using DiztinGUIsh.util;
+using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh
 {
     internal static class Program
     {
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern bool SetProcessDPIAware();
+        public static DizApplicationContext.DizApplicationArgs ParseArgs(string[] args)
+        {
+            var parsedArgs = new DizApplicationContext.DizApplicationArgs();
+            
+            if (args.Length > 0)
+                parsedArgs.FileToOpen = args[0];
+
+            return parsedArgs;
+        }
         
         [STAThread]
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            var openFile = "";
-            if (args.Length > 0)
-                openFile = args[0];
-            
-            RunNormally(openFile);
-        }
+            // example stuff you can do:
+            // ProfilerDotTrace.Enabled = true;
+            //
+            // args = args.Append(SampleRomHackProjectsController.SampleProjectName).ToArray();
+            // or
+            // args = args.Append(@"some-test-file.dizraw").ToArray();
+            // END TEMP
 
-        private static void RunNormally(string openFile = "")
-        {
-            if (Environment.OSVersion.Version.Major >= 6)
-            {
-                SetProcessDPIAware();
-            }
+            var parsedArgs = ParseArgs(args);
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            var window = new MainWindow();
+            // call before setting up any forms/GUI elements
+            GuiUtil.SetupDPIStuff();
 
-            if (openFile != "")
-                window.ProjectController.OpenProject("");
-
-            Application.Run(window);
+            Application.Run(new DizApplicationContext(parsedArgs));
         }
     }
 }

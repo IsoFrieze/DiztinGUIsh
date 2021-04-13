@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh
 {
-    // TODO: use https://www.wpf-tutorial.com/misc/multi-threading-with-the-backgroundworker/ backgroundworker
+    // TODO: replace this with Task and async/await. don't use threads directly.
     public abstract class ProgressBarWorker
     {
         private ProgressDialog dialog;
@@ -48,7 +49,10 @@ namespace DiztinGUIsh
             backgroundThread = new Thread(Thread_Main);
 
             // honestly, not sure about this. works around some Invoke() stuff
-            backgroundThread.SetApartmentState(ApartmentState.STA); 
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                backgroundThread.SetApartmentState(ApartmentState.STA);
+            }
         }
 
         // blocking function

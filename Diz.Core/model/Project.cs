@@ -1,36 +1,64 @@
 ﻿using System;
+using System.ComponentModel;
+using System.IO;
 using Diz.Core.export;
 using Diz.Core.util;
-using DiztinGUIsh;
 
 namespace Diz.Core.model
 {
-    public class Project : DizDataModel
+    public class Project : INotifyPropertyChanged
     {
         // Any public properties will be automatically serialized to XML unless noted.
         // They will require a get AND set.
         // Order is important.
 
-        // not saved in XML
+        // NOT saved in XML, just a cache of the last filename this project was saved as.
+        // (This field may require some rework for GUI multi-project support)
         public string ProjectFileName
         {
             get => projectFileName;
-            set => SetField(ref projectFileName, value);
+            set
+            {
+                string GetFullBasePathToRomFile()
+                {
+                    if (ProjectDirectory != "")
+                        return ProjectDirectory;
+                    
+                    return value != "" ? Util.GetDirNameOrEmpty(value) : "";
+                }
+                
+                var absolutePathToRomFile = Path.Combine(GetFullBasePathToRomFile(), Path.GetFileName(AttachedRomFilename) ?? "");
+                
+                if (!this.SetField(PropertyChanged, ref projectFileName, value))
+                    return;
+
+                // this will take the absolute path to the ROM file and convert it to a relative path
+                // relative to the Project's dir.
+                AttachedRomFilename = absolutePathToRomFile;
+            }
         }
 
-        // not saved in XML
+        public string ProjectDirectory =>
+            Util.GetDirNameOrEmpty(projectFileName);
+        
+        // RELATIVE PATH from ProjectDirectory to the original ROM file (.smc/.sfc/etc)
         public string AttachedRomFilename
         {
             get => attachedRomFilename;
-            set => SetField(ref attachedRomFilename, value);
+            set => this.SetField(PropertyChanged, ref attachedRomFilename, 
+                Util.TryGetRelativePath(value, ProjectDirectory));
         }
 
-        // would be cool to make this more automatic. probably hook into SetField()
-        // for a lot of it.
+        public string AttachedRomFileFullPath =>
+            Path.Combine(ProjectDirectory, AttachedRomFilename);
+
+        // NOT saved in XML
+        // (would be cool to make this more automatic. probably hook into SetField()
+        // for a lot of it)
         public bool UnsavedChanges
         {
             get => unsavedChanges;
-            set => SetField(ref unsavedChanges, value);
+            set => this.SetField(PropertyChanged, ref unsavedChanges, value);
         }
 
         // safety checks:
@@ -48,28 +76,19 @@ namespace Diz.Core.model
         public string InternalRomGameName
         {
             get => internalRomGameName;
-            set => SetField(ref internalRomGameName, value);
+            set => this.SetField(PropertyChanged, ref internalRomGameName, value);
         }
 
         public int InternalCheckSum
         {
             get => internalCheckSum;
-            set => SetField(ref internalCheckSum, value);
+            set => this.SetField(PropertyChanged, ref internalCheckSum, value);
         }
 
         public LogWriterSettings LogWriterSettings
         {
             get => logWriterSettings;
-            set => SetField(ref logWriterSettings, value);
-        }
-
-        // purely visual. what offset is currently being looked at in the main grid.
-        // we store it here because we want to save it out with the project file
-        private int currentViewOffset;
-        public int CurrentViewOffset
-        {
-            get => currentViewOffset;
-            set => SetField(ref currentViewOffset, value);
+            set => this.SetField(PropertyChanged, ref logWriterSettings, value);
         }
 
         // needs to come last for serialization. this is the heart of the app, the actual
@@ -77,8 +96,10 @@ namespace Diz.Core.model
         public Data Data
         {
             get => data;
-            set => SetField(ref data, value);
+            set => this.SetField(PropertyChanged, ref data, value);
         }
+        
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public Project()
         {

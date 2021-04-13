@@ -1,9 +1,11 @@
-﻿using System.Xml;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Xml;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
+using Diz.Test.Utils;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
-using IX.Observable;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -17,24 +19,18 @@ namespace Diz.Test
         {
             this.testOutputHelper = testOutputHelper;
         }
-
+        
         public class TestRoot
         {
-            public ObservableDictionary<int, string> ODW { get; set; } = new ObservableDictionary<int, string>() {
-                {1, "Z test1"},
-                {2, "Z test3"},
-            };
-            public ObservableDictionary<int, Label> ODW2 { get; set; } = new ObservableDictionary<int, Label>() {
-                {100, new Label {Comment = "c1", Name = "location1"}},
-                {200, new Label {Comment = "c2", Name = "location2"}},
-            };
+            public Dictionary<int, Comment> Odw { get; } = new();
+            public Dictionary<int, Label> Odw2 { get; } = new();
 
             #region Equality
             protected bool Equals(TestRoot other)
             {
                 return
-                    System.Linq.Enumerable.SequenceEqual(ODW, other.ODW) &&
-                    System.Linq.Enumerable.SequenceEqual(ODW2, other.ODW2);
+                    Odw.SequenceEqual(other.Odw) &&
+                    Odw2.SequenceEqual(other.Odw2);
             }
 
             public override bool Equals(object obj)
@@ -49,7 +45,7 @@ namespace Diz.Test
             {
                 unchecked
                 {
-                    return ((ODW != null ? ODW.GetHashCode() : 0) * 397) ^ (ODW2 != null ? ODW2.GetHashCode() : 0);
+                    return ((Odw != null ? Odw.GetHashCode() : 0) * 397) ^ (Odw2 != null ? Odw2.GetHashCode() : 0);
                 }
             }
             #endregion
@@ -61,31 +57,58 @@ namespace Diz.Test
                 .EnableImplicitTyping(typeof(TestRoot));
         }
 
-        [Fact]
-        private void Serializer()
+        private static TestRoot GetSerializeData()
         {
+            return new()
+            {
+                Odw =
+                {
+                    {1, new Comment {Text = "Z test1"}},
+                    {2, new Comment {Text = "Z test3"}},
+                },
+                Odw2 =
+                {
+                    {100, new Label {Comment = "c1", Name = "location1"}},
+                    {200, new Label {Comment = "c2", Name = "location2"}},
+                }
+            };
+        }
+
+        [Theory]
+        [EmbeddedResourceData("Diz.Test/Resources/serialize-dictionary-test.xml")]
+        private void Serializer(string expectedXml)
+        {
+            var expectedCleanedXml = SortaCleanupXml(expectedXml);
+            
             var serializer = GetSerializer().Create();
+            var toSerialize = GetSerializeData();
 
             var xmlStr = serializer.Serialize(
-                new XmlWriterSettings() {},
-                testRootElementGood);
+                new XmlWriterSettings(),
+                toSerialize);
 
             testOutputHelper.WriteLine(xmlStr);
 
-            Assert.Equal(xmlShouldBe, xmlStr);
+            Assert.Equal(expectedCleanedXml, xmlStr);
         }
 
-        [Fact]
-        private void DeSerialize()
+        private static string SortaCleanupXml(string expectedXml)
         {
-            var serializer = GetSerializer().Create();
-            var restoredRoot = serializer.Deserialize<TestRoot>(xmlShouldBe);
-
-            Assert.Equal(testRootElementGood, restoredRoot);
+            return expectedXml.Replace("\r\n", "");
         }
 
-        private readonly TestRoot testRootElementGood = new TestRoot();
+        [Theory]
+        [EmbeddedResourceData("Diz.Test/Resources/serialize-dictionary-test.xml")]
+        private void DeSerialize(string inputXml)
+        {
+            var inputCleanedXml = SortaCleanupXml(inputXml);
 
-        string xmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerDictionaryTest-TestRoot xmlns:ns1=\"clr-namespace:IX.Observable;assembly=IX.Observable\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:ns2=\"clr-namespace:Diz.Core.model;assembly=Diz.Core\"><ODW AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"1\" Value=\"Z test1\" /><sys:Item Key=\"2\" Value=\"Z test3\" /></ODW><ODW2 AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"100\"><Value Name=\"location1\" Comment=\"c1\" /></sys:Item><sys:Item Key=\"200\"><Value Name=\"location2\" Comment=\"c2\" /></sys:Item></ODW2></SerializerDictionaryTest-TestRoot>";
+            var expectedObj = GetSerializeData();
+
+            var serializer = GetSerializer().Create();
+            var actuallyDeserialized = serializer.Deserialize<TestRoot>(inputCleanedXml);
+
+            Assert.Equal(expectedObj, actuallyDeserialized);
+        }
     }
 }

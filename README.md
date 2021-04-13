@@ -1,14 +1,48 @@
-# DiztinGUIsh
+# DiztinGUIsh ("Diz")
 [![Build status](https://ci.appveyor.com/api/projects/status/kempt97c11k5sor2?svg=true)](https://ci.appveyor.com/project/binary1230/diztinguish)
 
-A Super NES ROM Disassembler.
+A Super NES ROM Disassembler and tracelog capture/analysis tool with a focus on collaborative workflow UX. Exports .asm files ready to be compiled back into the original binary. Written in Winforms/C#.
 
-"Distinguish" but with a 'z' because it's rad. It's also a GUI application so might as well highlight that fact.
+_Diz tools suite:_
+![image](https://user-images.githubusercontent.com/5413064/110195709-45767d80-7e0d-11eb-9f5f-1e21489dc8cd.png)
+
+Official support channel is #diztinguish in the https://sneslab.net/ discord
+
+---
+
+# Features
+
+## Main features
+
+**Disassembling programs** (like SNES games) for some CPU architectures (like the SNES's 658016) is a pain because you have to know a lot of information about the program at the point where it's running. Diz is designed to make this less of a nightmare.
+
+_Demo of basic disassembling:_
+![ezgif com-gif-maker](https://i.imgur.com/Tb2H484.gif)
+
+---
+
+**Realtime tracelog capturing**: We provide a tight integration with a custom BSNES build to capture CPU tracelog data over a socket connection. You don't have to play the game at 2FPS anymore, or deal with wrangling gigabyte-sized tracelog files.  Simply hit 'capture' and Diz will talk directly to a running BSNES CPU, capturing data for as long as you like. Turn the ROM visualizer on and watch this process in realtime.
+
+![ezgif com-gif-maker](https://user-images.githubusercontent.com/5413064/97286056-69033900-1819-11eb-925d-67e1bbce95a7.gif)
+![image](https://user-images.githubusercontent.com/5413064/97133932-ed729080-1721-11eb-894e-4c110787aa75.png)
+
+_Tracelog capturing tutorial_: https://github.com/Dotsarecool/DiztinGUIsh/blob/master/TRACE%20CAPTURE%20INSTRUCTIONS.md
+
+## Other useful features
+
+- Tracelog file import support for Bizhawk and BSNES (record where the CPU is executing and what flags are set)
+- BSNES usage map import / Bizhawk CDL import (record which sections of ROM are code vs data)
+- Annotation of ROM and RAM addresses, labels, and comments. These are exported in the assembly output for humans
+- Merge-friendly XML based file format. Save your project file with a .dizraw extension (~1.5MB), and the uncompressed XML is easy to share, collaborate, and merge with other people easily.  Great for group aggregration projects or building a database from various sources of info laying around the internet. Re-export the assembly and generate code with everyone's collective efforts stored in one place. Say goodbye to search+replace for adding labels and variable names all over the place.
+- ROM visualizer, view which parts of the ROM you've marked as code vs data, and see visual progress.
+- C# .NET WinForms app, easy to add features to. Write your own plugins or use our plumbing or GUI as a base for your own tools.
 
 NOTE: Works fine with stock asar though, there's a bugfix you may want:
 - https://github.com/binary1230/asar/tree/fix_relative_addressing/src/asar
 
-## Doesn't this already exist?
+## Details
+
+### Doesn't this already exist?
 
 There is at least one 65C816 disassembler out there already. The biggest issue with it (not with that program, but with disassembling 65C816 in general) is that some instructions assemble to different sizes depending on context. This makes it difficult to automate. 
 
@@ -24,8 +58,6 @@ So to take all of this into consideration, DiztinGUIsh tries to make the manual 
 
 ## Features
 
-I'm working on porting this over from a scrappy Java app I made a long time ago. There are also some things I want to add.
-
 Implemented or currently in progress:
 
 * Manual and Auto Stepping
@@ -34,19 +66,17 @@ Implemented or currently in progress:
 * Goto first or nearby unreached data
 * Marking data types (plain data, graphics, pointers, etc.)
 * Tracking M & X flags, Data Bank & Direct Page registers
-* Saving/Loading project files that store all of the above data
 * Producing a customizable output file that assembles with asar
-* Add custom labels and comments that fit into the disassembly file
 
 Planned stuff:
 
 * SPC700 & SuperFX architechtures
-* Importing CDL files from emulators
-* Importing trace logs from emulators
 * Merging multiple project files together
-* Labelling effective addresses that aren't ROM
-* Visual map of the entire ROM; seeing what is/isn't disassembled
+* Better labelling effective addresses that aren't ROM
 * Programmable data viewer to locate graphics easily
 * Setting a "base" per instruction for relocateable code
 * Option to put large data blocks into separate .bin files intead of in the .asm
 * Scripting engine & API
+
+
+### "Distinguish" but with a 'z' because it's rad. It's also a GUI application so might as well highlight that fact."

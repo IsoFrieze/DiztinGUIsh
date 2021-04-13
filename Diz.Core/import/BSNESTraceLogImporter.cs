@@ -16,14 +16,14 @@ namespace Diz.Core.import
         public BsnesTraceLogImporter(Data data)
         {
             this.data = data;
-            romSizeCached = data.GetRomSize();
-            romMapModeCached = data.RomMapMode;
+            romSizeCached = data?.GetRomSize() ?? 0;
+            romMapModeCached = data?.RomMapMode ?? default;
 
             InitStats();
             InitObjectPool();
         }
 
-        // Mark collected trace data for a RomByte (which should be an opcode) AND any of the operands that follow us.
+        // Mark collected trace data for a ByteOffset (which should be an opcode) AND any of the operands that follow us.
         private void SetOpcodeAndOperandsFromTraceData(ModificationData modData, int instructionByteLen = -1) 
         {
             // extremely performance-intensive function. be really careful when adding stuff
@@ -86,19 +86,19 @@ namespace Diz.Core.import
             //
             // Calling code should ideally not let us get to here, and instead supply us with a valid instructionByteLen
 
-            return GetFlag(pc) == Data.FlagType.Operand;
+            return GetFlag(pc) == FlagType.Operand;
         }
 
-        private Data.FlagType GetFlag(int pc)
+        private FlagType GetFlag(int pc)
         {
-            data.RomBytes[pc].Lock.EnterReadLock();
+            data.RomByteSource?.Bytes[pc].Lock.EnterReadLock();
             try
             {
                 return data.GetFlag(pc);
             }
             finally
             {
-                data.RomBytes[pc].Lock.ExitReadLock();       
+                data.RomByteSource?.Bytes[pc].Lock.ExitReadLock();       
             }
         }
 

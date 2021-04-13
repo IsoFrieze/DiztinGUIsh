@@ -1,4 +1,5 @@
 ﻿using Diz.Core.model;
+using Diz.Core.model.byteSources;
 
 namespace Diz.Core.import
 {
@@ -17,7 +18,7 @@ namespace Diz.Core.import
             // imported data from trace log
             public int SnesAddress;
             public int Pc;
-            public Data.FlagType FlagType;
+            public FlagType FlagType;
             public int DataBank;
             public int DirectPage;
             public bool XFlagSet;
@@ -28,7 +29,7 @@ namespace Diz.Core.import
             public bool mDb, mMarks, mDp, mX, mM;
 
             // precondition: rombyte (minimum of) read lock already acquired
-            private void CompareToExisting(RomByteData romByte)
+            private void CompareToExisting(ByteOffsetData romByte)
             {
                 mDb = romByte.DataBank != DataBank;
                 mMarks = romByte.TypeFlag != FlagType;
@@ -40,35 +41,35 @@ namespace Diz.Core.import
             }
 
             // precondition: rombyte (minimum of) read lock already acquired
-            private void ApplyModification(RomByte romByte)
+            private void ApplyModification(ByteOffsetData byteOffset)
             {
-                romByte.Lock.EnterWriteLock();
+                byteOffset.Lock.EnterWriteLock();
                 try
                 {
-                    romByte.TypeFlag = FlagType;
-                    romByte.DataBank = (byte) DataBank;
-                    romByte.DirectPage = 0xFFFF & DirectPage;
-                    romByte.XFlag = XFlagSet;
-                    romByte.MFlag = MFlagSet;
+                    byteOffset.TypeFlag = FlagType;
+                    byteOffset.DataBank = (byte) DataBank;
+                    byteOffset.DirectPage = 0xFFFF & DirectPage;
+                    byteOffset.XFlag = XFlagSet;
+                    byteOffset.MFlag = MFlagSet;
                 }
                 finally
                 {
-                    romByte.Lock.ExitWriteLock();
+                    byteOffset.Lock.ExitWriteLock();
                 }
             }
 
-            public void ApplyModificationIfNeeded(RomByte romByte)
+            public void ApplyModificationIfNeeded(ByteOffsetData byteOffset)
             {
-                romByte.Lock.EnterUpgradeableReadLock();
+                byteOffset.Lock.EnterUpgradeableReadLock();
                 try
                 {
-                    CompareToExisting(romByte);
+                    CompareToExisting(byteOffset);
                     if (changed)
-                        ApplyModification(romByte);
+                        ApplyModification(byteOffset);
                 }
                 finally
                 {
-                    romByte.Lock.ExitUpgradeableReadLock();
+                    byteOffset.Lock.ExitUpgradeableReadLock();
                 }
             }
         }
@@ -90,7 +91,7 @@ namespace Diz.Core.import
 
         private void ApplyModificationIfNeeded(ModificationData modData)
         {
-            var romByte = data.RomBytes[modData.Pc];
+            var romByte = data.RomByteSource?.Bytes[modData.Pc];
             modData.ApplyModificationIfNeeded(romByte);
         }
 

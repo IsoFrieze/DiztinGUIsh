@@ -1,22 +1,26 @@
 ﻿using System;
 using Diz.Core.export;
-using Diz.Core.model;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.controller
 {
-    public interface IProjectView
+    public interface ILongRunningTaskHandler
     {
-        Project Project { get; set; }
-        void OnProjectOpenFail(string errorMsg);
-        void OnProjectSaved();
-        void OnExportFinished(LogCreator.OutputResult result);
-
         public delegate void LongRunningTaskHandler(Action task, string description = null);
         LongRunningTaskHandler TaskHandler { get; }
-        void SelectOffset(int offset, int column=-1);
+    }
+    
+    public interface IProjectView : ILongRunningTaskHandler
+    {
+        void OnProjectOpenWarning(string warningMsg);
+        void OnProjectOpenFail(string errorMsg);
+        void OnExportFinished(LogCreatorOutput.OutputResult result);
+        
         string AskToSelectNewRomFilename(string promptSubject, string promptText);
         IImportRomDialogView GetImportView();
-        void OnProjectOpenWarning(string warningMsg);
+
+        bool PromptHarshAutoStep(int offset, out int newOffset, out int count);
+        MarkManyDialog PromptMarkMany(int offset, int whichIndex);
+        void ShowOffsetOutOfRangeMsg();
     }
 }

@@ -1,33 +1,60 @@
 ﻿using System.IO;
+using Diz.Core.util;
 
 namespace Diz.Core.export
 {
     public struct LogWriterSettings
     {
+        public enum FormatUnlabeled
+        {
+            ShowAll = 0,
+            ShowInPoints = 1, // TODO Add Show In Points with +/- labels
+            ShowNone = 2
+        }
+
+        public enum FormatStructure
+        {
+            SingleFile = 0,
+            OneBankPerFile = 1
+        }
+        
         // struct because we want to make a bunch of copies of this struct.
         // The plumbing could use a pass of something like 'ref readonly' because:
         // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/ref#reference-return-values
 
         public string Format;
         public int DataPerLine;
-        public LogCreator.FormatUnlabeled Unlabeled;
-        public LogCreator.FormatStructure Structure;
+        public LogWriterSettings.FormatUnlabeled Unlabeled;
+        public LogWriterSettings.FormatStructure Structure;
         public bool IncludeUnusedLabels;
         public bool PrintLabelSpecificComments;
 
         public bool WasInitialized;
         public int RomSizeOverride; // specify an override for the # of bytes to assemble. default is the entire ROM
 
-        public string FileOrFolderOutPath;
+        private string fileOrFolderOutPath;
+        public string FileOrFolderOutPath
+        {
+            get => fileOrFolderOutPath;
+            set => fileOrFolderOutPath = value;
+        }
+        
+        public void SetFileOrFolderOutputPathRelativeToDir(string fileOrFolderPath, string projectProjectDirectory)
+        {
+            FileOrFolderOutPath = Util.TryGetRelativePath(fileOrFolderPath, projectProjectDirectory);
+        }
+
         public bool OutputToString;
         public string ErrorFilename;
+        
+        public const string DefaultStr = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
 
         public void SetDefaults()
         {
-            Format = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
+            Format = DefaultStr;
             DataPerLine = 8;
-            Unlabeled = LogCreator.FormatUnlabeled.ShowInPoints;
-            Structure = LogCreator.FormatStructure.OneBankPerFile;
+            Unlabeled = LogWriterSettings.FormatUnlabeled.ShowInPoints;
+            Structure = LogWriterSettings.FormatStructure.OneBankPerFile;
             IncludeUnusedLabels = false;
             PrintLabelSpecificComments = false;
             FileOrFolderOutPath = ""; // path to output file or folder
@@ -47,7 +74,7 @@ namespace Diz.Core.export
 
             if (OutputToString)
             {
-                if (Structure == LogCreator.FormatStructure.OneBankPerFile)
+                if (Structure == LogWriterSettings.FormatStructure.OneBankPerFile)
                     return "Can't use one-bank-per-file output with string output";
 
                 if (FileOrFolderOutPath != "")
@@ -61,7 +88,7 @@ namespace Diz.Core.export
                 if (!Directory.Exists(Path.GetDirectoryName(FileOrFolderOutPath)))
                     return "File or folder output directory doesn't exist";
 
-                if (Structure == LogCreator.FormatStructure.SingleFile)
+                if (Structure == LogWriterSettings.FormatStructure.SingleFile)
                 {
                     // don't check for existence, just that what we have appears to be a filename and
                     // not a directory.

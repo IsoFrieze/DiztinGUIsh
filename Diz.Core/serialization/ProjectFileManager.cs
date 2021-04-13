@@ -1,4 +1,7 @@
-﻿using System;
+﻿#define PROFILING
+
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Diz.Core.model;
@@ -12,11 +15,10 @@ namespace Diz.Core.serialization
     {
         public Func<string, string> RomPromptFn { get; set; }
         
-        // TODO: move romPromptFn to be a field instead of a param passed around.
         protected override byte[] ReadFromOriginalRom(Project project)
         {
             string firstRomFileWeTried;
-            var nextFileToTry = firstRomFileWeTried = project.AttachedRomFilename;
+            var nextFileToTry = firstRomFileWeTried = project.AttachedRomFileFullPath;
             byte[] rom;
 
             // try to open a ROM that matches us, if not, ask the user until they give up
@@ -26,8 +28,18 @@ namespace Diz.Core.serialization
                 if (error == null)
                     break;
 
+                // we failed to open a valid ROM, so (if we can)
+                // ask the user to select one via RomPromptFn.
+                
+                // if there's no way to prompt the user,
+                // then we can't continue.
+                if (RomPromptFn == null)
+                    return null;
+
                 nextFileToTry = RomPromptFn(error);
-                if (nextFileToTry == null)
+
+                // they gave up... so bail.
+                if (string.IsNullOrEmpty(nextFileToTry))
                     return null;
             } while (true);
 
@@ -44,6 +56,9 @@ namespace Diz.Core.serialization
     {
         public (Project project, string warning) Open(string filename)
         {
+#if PROFILING
+            using var profilerSnapshot = new ProfilerDotTrace.CaptureSnapshot();
+#endif
             Trace.WriteLine("Opening Project START");
 
             var data = File.ReadAllBytes(filename);
@@ -73,14 +88,14 @@ namespace Diz.Core.serialization
 
             var data = project.Data;
 
-            Debug.Assert(data.Labels != null && data.Comments != null);
-            Debug.Assert(data.RomBytes != null && data.RomBytes.Count > 0);
+            // TODO: (don't need?) Debug.Assert(data.Labels != null && data.Comments != null);
+            Debug.Assert(data.RomByteSource?.Bytes != null && data.RomByteSource?.Bytes.Count > 0);
 
             var rom = ReadFromOriginalRom(project);
             if (rom == null)
                 return false;
 
-            data.CopyRomDataIn(rom);
+            data.PopulateFrom(rom);
             return true;
         }
 
@@ -134,13 +149,11 @@ namespace Diz.Core.serialization
                 ProjectFileName = null,
                 Data = new Data()
             };
-
-            project.Data.RomMapMode = importSettings.RomMapMode;
-            project.Data.RomSpeed = importSettings.RomSpeed;
-            project.Data.CreateRomBytesFromRom(importSettings.RomBytes);
+            
+            project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
 
             foreach (var pair in importSettings.InitialLabels)
-                project.Data.AddLabel(pair.Key, pair.Value, true);
+                project.Data.LabelProvider.AddLabel(pair.Key, pair.Value, true);
 
             foreach (var pair in importSettings.InitialHeaderFlags)
                 project.Data.SetFlag(pair.Key, pair.Value);

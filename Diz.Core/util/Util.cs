@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using Diz.Core.model;
 
@@ -13,6 +15,37 @@ namespace Diz.Core.util
 {
     public static class Util
     {
+        // https://stackoverflow.com/questions/703281/getting-path-relative-to-the-current-working-directory/703290#703290
+        public static string GetRelativePath(string fileSpec, string folder)
+        {
+            var pathUri = new Uri(fileSpec);
+            // Folders must end in a slash
+            if (!folder.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                folder += Path.DirectorySeparatorChar;
+            }
+            var folderUri = new Uri(folder);
+            return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
+        }
+        
+        public static string TryGetRelativePath(string fileSpec, string folder = null)
+        {
+            if (string.IsNullOrEmpty(folder))
+                return fileSpec;
+            
+            try
+            {
+                return GetRelativePath(fileSpec, folder);
+            }
+            catch (Exception)
+            {
+                return fileSpec;
+            }
+        }
+        
+        public static string GetDirNameOrEmpty(string path) => 
+            string.IsNullOrEmpty(path) ? "" : Path.GetDirectoryName(path);
+
         public enum NumberBase
         {
             Decimal = 3, Hexadecimal = 2, Binary = 8
@@ -40,6 +73,35 @@ namespace Diz.Core.util
                     return (showPrefix ? "%" : "") + b;
             }
             return "";
+        }
+        
+        public static string ToHexString6(int i)
+        {
+            return NumberToBaseString(i, NumberBase.Hexadecimal, 6);
+        }
+        
+        public static int ParseHexOrBase10String(string data)
+        {
+            var hex = false;
+            var hexDigitStartIndex = 0;
+
+            if (data.Length > 1)
+            {
+                hex = data[0] == '$';
+                hexDigitStartIndex = 1;
+            }
+            else if (data.Length > 2)
+            {
+                hexDigitStartIndex = 2;
+                hex =
+                    data[0] == '0' && data[1] == 'x' ||
+                    data[0] == '#' && data[1] == '$';
+            }
+
+            if (hex)
+                return (int)ByteUtil.ByteParseHex(data, hexDigitStartIndex, data.Length - hexDigitStartIndex);
+
+            return int.Parse(data);
         }
 
         public static IEnumerable<string> ReadLines(string path)
@@ -143,12 +205,31 @@ namespace Diz.Core.util
                 ) ?? value.ToString();
         }
 
-        public static TResult GetEnumAttribute<TAttribute, TResult>(Enum value, Func<TAttribute, TResult> getValueFn) where TAttribute : Attribute
+        public static TResult GetEnumAttribute<TAttribute, TResult>(object value, Func<TAttribute, TResult> getValueFn) where TAttribute : Attribute
         {
-            var type = value.GetType();
-            var memberInfo = type.GetField(value.ToString());
-            var descAttr = ((TAttribute)Attribute.GetCustomAttribute(memberInfo, typeof(TAttribute)));
-            return getValueFn(descAttr);
+            return GetFieldAttribute(getValueFn, value.GetType(), value.ToString());
+        }
+
+        public static TResult GetFieldAttribute<TAttribute, TResult>(Func<TAttribute, TResult> getValueFn, Type type, string memberName)
+            where TAttribute : Attribute
+        {
+            var memberInfo = type.GetField(memberName);
+            if (memberInfo == null)
+                return default;
+            
+            var attr = (TAttribute) Attribute.GetCustomAttribute(memberInfo, typeof(TAttribute));
+            return getValueFn(attr);
+        }
+        
+        public static TResult GetPropertyAttribute<TAttribute, TResult>(Func<TAttribute, TResult> getValueFn, Type type, string propertyName)
+            where TAttribute : Attribute
+        {
+            var property = type.GetProperty(propertyName);
+            if (property == null)
+                return default;
+            
+            var attr = (TAttribute) Attribute.GetCustomAttribute(property, typeof(TAttribute));
+            return getValueFn(attr);
         }
 
         // take a enum type that has [Description] attributes,
@@ -168,7 +249,7 @@ namespace Diz.Core.util
         {
             return GetEnumAttribute(
                 value,
-                (Data.ColorDescriptionAttribute d) => d?.Color
+                (ColorDescriptionAttribute d) => d?.Color
             ) ?? KnownColor.Black;
         }
 
@@ -185,10 +266,10 @@ namespace Diz.Core.util
         }
 
         // sadly, this entire conversion is a bit slow so, cache it as we look it up
-        private static readonly Dictionary<Data.FlagType, Color> CachedRomFlagColors =
-            new Dictionary<Data.FlagType, Color>();
+        private static readonly Dictionary<FlagType, Color> CachedRomFlagColors =
+            new Dictionary<FlagType, Color>();
 
-        public static Color GetColorFromFlag(Data.FlagType romFlag)
+        public static Color GetColorFromFlag(FlagType romFlag)
         {
             if (CachedRomFlagColors.TryGetValue(romFlag, out var color))
                 return color;
@@ -197,6 +278,57 @@ namespace Diz.Core.util
             CachedRomFlagColors[romFlag] = color;
 
             return color;
+        }
+
+        public static void OpenExternalProcess(string args)
+        {
+            var info = new ProcessStartInfo(args) { UseShellExecute = true };
+            Process.Start(info);
+        }
+
+        // clamp index so index >= 0 and index < size
+        // for arrays
+        public static int ClampIndex(int index, int size) => ClampIndex(index, 0, size - 1);
+        
+        // clamp index so index >= minIndex and index <= maxIndex
+        public static int ClampIndex(int index, int minIndex, int maxIndex)
+        {
+            if (minIndex < 0 || minIndex > maxIndex)
+                throw new IndexOutOfRangeException("ClampIndex params not in range");
+            
+            return index > maxIndex
+                ? maxIndex
+                : index < minIndex
+                    ? 0
+                    : index;
+        }
+
+        public static void SplitOnFirstComma(string instr, out string firstPart, out string remainder)
+        {
+            if (!instr.Contains(","))
+            {
+                firstPart = instr;
+                remainder = "";
+                return;
+            }
+
+            firstPart = instr.Substring(0, instr.IndexOf(','));
+            remainder = instr.Substring(instr.IndexOf(',') + 1);
+        }
+
+        public static string LeftAlign(int length, string str) => string.Format(GetLeftAlignFormatStr(length), str);
+
+        public static string GetLeftAlignFormatStr(int length) => $"{{0,{-length}}}";
+        
+        public static string ReadManifestData(Assembly assembly, string resourceName)
+        {
+            resourceName = resourceName.Replace("/", ".");
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            
+            if (stream == null)
+                throw new InvalidOperationException("Could not load manifest resource stream.");
+
+            return new StreamReader(stream).ReadToEnd();
         }
     }
 }

@@ -1,24 +1,123 @@
-﻿using Diz.Core.model;
+﻿using System;
+using System.Collections.Generic;
+using Diz.Core.arch;
+using Diz.Core.model;
 using Diz.Core.util;
 
 namespace Diz.Core.arch
 {
-    public class Cpu65C816
+    public class CpuDispatcher
     {
-        private readonly Data data;
-        public Cpu65C816(Data data)
+        private Cpu cpuDefault;
+        private Cpu65C816 cpu65C816;
+        private CpuSpc700 cpuSpc700;
+        private CpuSuperFx cpuSuperFx;
+
+        public Cpu Cpu(Data data, int offset)
         {
-            this.data = data;
+            var arch = data.GetArchitecture(offset);
+
+            return arch switch
+            {
+                Architecture.Cpu65C816 => cpu65C816 ??= new Cpu65C816(),
+                Architecture.Apuspc700 => cpuSpc700 ??= new CpuSpc700(),
+                Architecture.GpuSuperFx => cpuSuperFx ??= new CpuSuperFx(),
+                _ => cpuDefault ??= new Cpu()
+            };
         }
-        public int Step(int offset, bool branch, bool force, int prevOffset)
+    }
+
+    public class Cpu
+    {
+        public virtual int Step(Data data, int offset, bool branch, bool force, int prevOffset) => offset;
+        public virtual int GetInstructionLength(Data data, int offset) => 1;
+        public virtual int GetIntermediateAddress(Data data, int offset, bool resolve) => -1;
+        public virtual void MarkInOutPoints(Data data, int offset) {} // nop
+        public virtual string GetInstruction(Data data, int offset) => "";
+
+        protected virtual bool DoOneAutoStepNormal(ICpuOperableByteSource byteSource, List<int> seenBranches, ref int newOffset, ref int nextOffset, ref int prevOffset, Stack<int> stack)
+        {
+            return false;
+        }
+        
+        public int AutoStep(ICpuOperableByteSource byteSource, int offset, bool harsh, int amount)
+        {
+            return harsh
+                ? AutoStepHarsh(byteSource, offset, amount)
+                : AutoStepNormal(byteSource, offset);
+        }
+
+        private int AutoStepNormal(ICpuOperableByteSource byteSource, int offset)
+        {
+            var newOffset = offset;
+            var prevOffset = newOffset - 1;
+            
+            var stack = new Stack<int>();
+            var seenBranches = new List<int>();
+            var keepGoing = true;
+
+            while (keepGoing)
+            {
+                var nextOffset = 0;
+                keepGoing = DoOneAutoStepNormal(byteSource, seenBranches, ref newOffset, ref nextOffset, ref prevOffset, stack);
+
+                var flag = byteSource.GetFlag(newOffset);
+                if (!(flag == FlagType.Unreached || flag == FlagType.Opcode || flag == FlagType.Operand)) 
+                    keepGoing = false;
+            }
+
+            return newOffset;
+        }
+
+        private int AutoStepHarsh(ICpuOperableByteSource byteSource, int offset, int amount)
+        {
+            var newOffset = offset;
+            var prevOffset = offset - 1;
+
+            while (newOffset < offset + amount)
+            {
+                var nextOffset = byteSource.Step(newOffset, false, true, prevOffset);
+                prevOffset = newOffset;
+                newOffset = nextOffset;
+            }
+
+            return newOffset;
+        }
+    }
+
+    // a base Cpu for common things for real but mostly placeholder CPU types.
+    public abstract class CpuGenericHelper : Cpu
+    {
+        protected override bool DoOneAutoStepNormal(ICpuOperableByteSource byteSource, List<int> seenBranches, ref int newOffset, ref int nextOffset, ref int prevOffset, Stack<int> stack)
+        {
+            nextOffset = byteSource.Step(newOffset, false, true, prevOffset);
+            prevOffset = newOffset;
+            newOffset = nextOffset;
+            return true;
+        }
+    }
+
+    public class CpuSpc700 : CpuGenericHelper
+    {
+        
+    }
+    
+    public class CpuSuperFx : CpuGenericHelper
+    {
+        
+    }
+    
+    public class Cpu65C816 : Cpu
+    {
+        public override int Step(Data data, int offset, bool branch, bool force, int prevOffset)
         {
             var opcode = data.GetRomByte(offset);
             var prevDirectPage = data.GetDirectPage(offset);
             var prevDataBank = data.GetDataBank(offset);
             bool prevX = data.GetXFlag(offset), prevM = data.GetMFlag(offset);
 
-            while (prevOffset >= 0 && data.GetFlag(prevOffset) == Data.FlagType.Operand) prevOffset--;
-            if (prevOffset >= 0 && data.GetFlag(prevOffset) == Data.FlagType.Opcode)
+            while (prevOffset >= 0 && data.GetFlag(prevOffset) == FlagType.Operand) prevOffset--;
+            if (prevOffset >= 0 && data.GetFlag(prevOffset) == FlagType.Opcode)
             {
                 prevDirectPage = data.GetDirectPage(prevOffset);
                 prevDataBank = data.GetDataBank(prevOffset);
@@ -33,13 +132,13 @@ namespace Diz.Core.arch
             }
 
             // set first byte first, so the instruction length is correct
-            data.SetFlag(offset, Data.FlagType.Opcode);
+            data.SetFlag(offset, FlagType.Opcode);
             data.SetDataBank(offset, prevDataBank);
             data.SetDirectPage(offset, prevDirectPage);
             data.SetXFlag(offset, prevX);
             data.SetMFlag(offset, prevM);
 
-            var length = GetInstructionLength(offset);
+            var length = GetInstructionLength(data, offset);
 
             // TODO: I don't think this is handling execution bank boundary wrapping correctly? -Dom
             // If we run over the edge of a bank, we need to go back to the beginning of that bank, not go into
@@ -54,14 +153,14 @@ namespace Diz.Core.arch
             // in most situations.
             for (var i = 1; i < length; i++)
             {
-                data.SetFlag(offset + i, Data.FlagType.Operand);
+                data.SetFlag(offset + i, FlagType.Operand);
                 data.SetDataBank(offset + i, prevDataBank);
                 data.SetDirectPage(offset + i, prevDirectPage);
                 data.SetXFlag(offset + i, prevX);
                 data.SetMFlag(offset + i, prevM);
             }
 
-            MarkInOutPoints(offset);
+            MarkInOutPoints(data, offset);
 
             var nextOffset = offset + length;
 
@@ -71,21 +170,86 @@ namespace Diz.Core.arch
                  opcode != 0x22)))) 
                 return nextOffset;
 
-            var iaNextOffsetPc = data.ConvertSnesToPc(GetIntermediateAddress(offset, true));
+            var iaNextOffsetPc = data.ConvertSnesToPc(GetIntermediateAddress(data, offset, true));
             if (iaNextOffsetPc >= 0) 
                 nextOffset = iaNextOffsetPc;
 
             return nextOffset;
         }
 
+        protected override bool DoOneAutoStepNormal(ICpuOperableByteSource byteSource, List<int> seenBranches, 
+            ref int newOffset, ref int nextOffset, ref int prevOffset, Stack<int> stack)
+        {
+            if (seenBranches.Contains(newOffset))
+                return false;
+
+            var opcode = byteSource.GetRomByte(newOffset);
+
+            nextOffset = byteSource.Step(newOffset, false, false, prevOffset);
+            var jumpOffset = byteSource.Step(newOffset, true, false, prevOffset);
+
+            var shouldStop =
+                   opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8     // RTI WAI STP SED
+                || opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42  // XCE BRK COP WDM
+                || opcode == 0x6C || opcode == 0x7C || opcode == 0xDC || opcode == 0xFC; // JMP JMP JML JSR
+
+            if (   opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
+                || opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70 // BPL BMI BVC BVS
+                || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0 // BCC BCS BNE BEQ
+            )
+            {
+                seenBranches.Add(newOffset);
+            }
+
+            switch (opcode)
+            {
+                // PHP
+                case 0x08:
+                    stack.Push(byteSource.GetMxFlags(newOffset));
+                    break;
+                
+                // PLP
+                case 0x28:
+                    if (stack.Count == 0)
+                        return false;
+                    
+                    byteSource.SetMxFlags(newOffset, stack.Pop());
+                    break;
+                
+                // RTS RTL
+                case 0x60: case 0x6B:
+                    if (stack.Count == 0)
+                        return false;
+
+                    prevOffset = newOffset;
+                    newOffset = stack.Pop();
+                    break;
+
+                    // JSR JSL
+                case 0x20: case 0x22:
+                    stack.Push(nextOffset);
+                    prevOffset = newOffset;
+                    newOffset = jumpOffset;
+                    break;
+                
+                default:
+                    prevOffset = newOffset;
+                    newOffset = nextOffset;
+                    break;
+            }
+
+            return !shouldStop;
+        }
+
         // input: ROM offset
         // return: a SNES address
-        public int GetIntermediateAddress(int offset, bool resolve)
+        public override int GetIntermediateAddress(Data data, int offset, bool resolve)
         {
-            int bank, directPage, operand, programCounter;
+            int bank;
+            int operand, programCounter;
             var opcode = data.GetRomByte(offset);
 
-            var mode = GetAddressMode(offset);
+            var mode = GetAddressMode(data, offset);
             switch (mode)
             {
                 case AddressMode.DirectPage:
@@ -98,7 +262,7 @@ namespace Diz.Core.arch
                 case AddressMode.DirectPageLongIndirectYIndex:
                     if (resolve)
                     {
-                        directPage = data.GetDirectPage(offset);
+                        var directPage = data.GetDirectPage(offset);
                         operand = data.GetRomByte(offset + 1);
                         return (directPage + operand) & 0xFFFF;
                     }
@@ -140,42 +304,71 @@ namespace Diz.Core.arch
             return -1;
         }
 
-        public string GetInstruction(int offset)
+        public override string GetInstruction(Data data, int offset)
         {
-            AddressMode mode = GetAddressMode(offset);
-            string format = GetInstructionFormatString(offset);
-            string mnemonic = GetMnemonic(offset);
+            var mode = GetAddressMode(data, offset);
+            var format = GetInstructionFormatString(data, offset);
+            var mnemonic = GetMnemonic(data, offset);
             string op1, op2 = "";
-            if (mode == AddressMode.BlockMove)
+            switch (mode)
             {
-                op1 = Util.NumberToBaseString(data.GetRomByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
-                op2 = Util.NumberToBaseString(data.GetRomByte(offset + 2), Util.NumberBase.Hexadecimal, 2, true);
-            }
-            else if (mode == AddressMode.Constant8 || mode == AddressMode.Immediate8)
-            {
-                op1 = Util.NumberToBaseString(data.GetRomByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
-            }
-            else if (mode == AddressMode.Immediate16)
-            {
-                op1 = Util.NumberToBaseString(data.GetRomWord(offset + 1), Util.NumberBase.Hexadecimal, 4, true);
-            }
-            else
-            {
-                // dom note: this is where we could inject expressions if needed. it gives stuff like "$F001".
-                // we could substitute our expression of "$#F000 + $#01" or "some_struct.member" like "player.hp"
-                // the expression must be verified to always match the bytes in the file [unless we allow overriding]
-                op1 = FormatOperandAddress(offset, mode);
+                case AddressMode.BlockMove:
+                    op1 = Util.NumberToBaseString(data.GetRomByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
+                    op2 = Util.NumberToBaseString(data.GetRomByte(offset + 2), Util.NumberBase.Hexadecimal, 2, true);
+                    break;
+                case AddressMode.Constant8:
+                case AddressMode.Immediate8:
+                    op1 = Util.NumberToBaseString(data.GetRomByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
+                    break;
+                case AddressMode.Immediate16:
+                    op1 = Util.NumberToBaseString(data.GetRomWord(offset + 1), Util.NumberBase.Hexadecimal, 4, true);
+                    break;
+                default:
+                    // dom note: this is where we could inject expressions if needed. it gives stuff like "$F001".
+                    // we could substitute our expression of "$#F000 + $#01" or "some_struct.member" like "player.hp"
+                    // the expression must be verified to always match the bytes in the file [unless we allow overriding]
+                    op1 = FormatOperandAddress(data, offset, mode);
+                    break;
             }
             return string.Format(format, mnemonic, op1, op2);
         }
 
-        public int GetInstructionLength(int offset)
+        public override int GetInstructionLength(Data data, int offset) => 
+            InstructionLength(GetAddressMode(data, offset));
+
+        public override void MarkInOutPoints(Data data, int offset)
         {
-            var mode = GetAddressMode(offset);
-            return InstructionLength(mode);
+            var opcode = data.GetRomByte(offset);
+            var iaOffsetPc = data.ConvertSnesToPc(data.GetIntermediateAddress(offset, true));
+
+            // set read point on EA
+            if (iaOffsetPc >= 0 && ( // these are all read/write/math instructions
+                ((opcode & 0x04) != 0) || ((opcode & 0x0F) == 0x01) || ((opcode & 0x0F) == 0x03) ||
+                ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
+                (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
+                (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
+            ) data.SetInOutPoint(iaOffsetPc, InOutPoint.ReadPoint);
+
+            // set end point on offset
+            if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
+                || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
+                || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC // BRL STP JML
+            ) data.SetInOutPoint(offset, InOutPoint.EndPoint);
+
+            // set out point on offset
+            // set in point on EA
+            if (iaOffsetPc >= 0 && (
+                opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
+                || opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70  // BPL BMI BVC BVS
+                || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0  // BCC BCS BNE BEQ
+                || opcode == 0x20 || opcode == 0x22)) // JSR JSL
+            {
+                data.SetInOutPoint(offset, InOutPoint.OutPoint);
+                data.SetInOutPoint(iaOffsetPc, InOutPoint.InPoint);
+            }
         }
 
-        public static int InstructionLength(AddressMode mode)
+        private static int InstructionLength(AddressMode mode)
         {
             switch (mode)
             {
@@ -214,45 +407,13 @@ namespace Diz.Core.arch
             return 1;
         }
 
-        public void MarkInOutPoints(int offset)
+        private string FormatOperandAddress(IReadOnlySnesRom data, int offset, AddressMode mode)
         {
-            int opcode = data.GetRomByte(offset);
-            int iaOffsetPc = data.ConvertSnesToPc(data.GetIntermediateAddress(offset, true));
-
-            // set read point on EA
-            if (iaOffsetPc >= 0 && ( // these are all read/write/math instructions
-                ((opcode & 0x04) != 0) || ((opcode & 0x0F) == 0x01) || ((opcode & 0x0F) == 0x03) ||
-                ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
-                (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
-                (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
-            ) data.SetInOutPoint(iaOffsetPc, Data.InOutPoint.ReadPoint);
-
-            // set end point on offset
-            if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
-                || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
-                || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC // BRL STP JML
-            ) data.SetInOutPoint(offset, Data.InOutPoint.EndPoint);
-
-            // set out point on offset
-            // set in point on EA
-            if (iaOffsetPc >= 0 && (
-                opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
-                || opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70  // BPL BMI BVC BVS
-                || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0  // BCC BCS BNE BEQ
-                || opcode == 0x20 || opcode == 0x22)) // JSR JSL
-            {
-                data.SetInOutPoint(offset, Data.InOutPoint.OutPoint);
-                data.SetInOutPoint(iaOffsetPc, Data.InOutPoint.InPoint);
-            }
-        }
-
-        private string FormatOperandAddress(int offset, AddressMode mode)
-        {
-            int address = data.GetIntermediateAddress(offset);
+            var address = data.GetIntermediateAddress(offset);
             if (address < 0) 
                 return "";
 
-            var label = data.GetLabelName(address);
+            var label = data.LabelProvider.GetLabelName(address);
             if (label != "") 
                 return label;
 
@@ -262,22 +423,22 @@ namespace Diz.Core.arch
             return Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 2 * count, true);
         }
 
-        private string GetMnemonic(int offset, bool showHint = true)
+        private string GetMnemonic(IReadOnlyCpuOperableByteSource data, int offset, bool showHint = true)
         {
             var mn = Mnemonics[data.GetRomByte(offset)];
             if (!showHint) 
                 return mn;
 
-            var mode = GetAddressMode(offset);
+            var mode = GetAddressMode(data, offset);
             var count = BytesToShow(mode);
 
             if (mode == AddressMode.Constant8 || mode == AddressMode.Relative16 || mode == AddressMode.Relative8) return mn;
 
             return count switch
             {
-                1 => mn += ".B",
-                2 => mn += ".W",
-                3 => mn += ".L",
+                1 => mn + ".B",
+                2 => mn + ".W",
+                3 => mn + ".L",
                 _ => mn
             };
         }
@@ -319,9 +480,9 @@ namespace Diz.Core.arch
         // {0} = mnemonic
         // {1} = intermediate address / label OR operand 1 for block move
         // {2} = operand 2 for block move
-        private string GetInstructionFormatString(int offset)
+        private string GetInstructionFormatString(IReadOnlyCpuOperableByteSource data, int offset)
         {
-            var mode = GetAddressMode(offset);
+            var mode = GetAddressMode(data, offset);
             switch (mode)
             {
                 case AddressMode.Implied:
@@ -368,7 +529,7 @@ namespace Diz.Core.arch
             return "";
         }
 
-        private AddressMode GetAddressMode(int offset)
+        private AddressMode GetAddressMode(IReadOnlyCpuOperableByteSource data, int offset)
         {
             var mode = AddressingModes[data.GetRomByte(offset)];
             return mode switch
@@ -383,7 +544,7 @@ namespace Diz.Core.arch
             };
         }
 
-        public enum AddressMode : byte
+        private enum AddressMode : byte
         {
             Implied, Accumulator, Constant8, Immediate8, Immediate16,
             ImmediateXFlagDependent, ImmediateMFlagDependent,

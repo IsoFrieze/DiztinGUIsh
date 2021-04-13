@@ -36,7 +36,7 @@ namespace Diz.Test
         }
 
         private static List<(IEnumerable<string>, IEnumerable<string>)> ValidDataReal() =>
-            new List<(IEnumerable<string>, IEnumerable<string>)>
+            new()
             {
                 GenerateRepeat("TestItem", 20),
                 GenerateRepeat("TestItem", 30),

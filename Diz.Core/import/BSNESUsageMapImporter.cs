@@ -55,18 +55,18 @@ namespace Diz.Core.import
                 return false;
 
             // skip if there is something already set..
-            if (data.GetFlag(pc) != Data.FlagType.Unreached)
+            if (data.GetFlag(pc) != FlagType.Unreached)
                 return false;
 
             // opcode: 0x30, operand: 0x20
             if (flags.HasFlag(BsnesPlusUsage.UsageExec))
             {
-                data.SetFlag(pc, Data.FlagType.Operand);
+                data.SetFlag(pc, FlagType.Operand);
 
                 if (flags.HasFlag(BsnesPlusUsage.UsageOpcode))
                 {
                     prevFlags = ((int) flags & 3) << 4;
-                    data.SetFlag(pc, Data.FlagType.Opcode);
+                    data.SetFlag(pc, FlagType.Opcode);
                 }
 
                 data.SetMxFlags(pc, prevFlags);
@@ -75,7 +75,7 @@ namespace Diz.Core.import
             
             if (flags.HasFlag(BsnesPlusUsage.UsageRead))
             {
-                data.SetFlag(pc, Data.FlagType.Data8Bit);
+                data.SetFlag(pc, FlagType.Data8Bit);
                 return true;
             }
 

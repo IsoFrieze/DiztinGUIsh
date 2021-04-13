@@ -2,8 +2,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 
 namespace Diz.Core.util
 {
@@ -36,6 +38,11 @@ namespace Diz.Core.util
     
     public static class RomUtil
     {
+        public const int LoromSettingOffset = 0x7FD5;
+        public const int HiromSettingOffset = 0xFFD5;
+        public const int ExhiromSettingOffset = 0x40FFD5;
+        public const int ExloromSettingOffset = 0x407FD5;
+        
         public static int CalculateSnesOffsetWithWrap(int snesAddress, int offset)
         {
             return (GetBankFromSnesAddress(snesAddress) << 16) + ((snesAddress + offset) & 0xFFFF);
@@ -219,49 +226,49 @@ namespace Diz.Core.util
         }
 
         // TODO: these can be attributes on the enum itself. like [AsmLabel("UNREACH")]
-        public static string TypeToLabel(Data.FlagType flag)
+        public static string TypeToLabel(FlagType flag)
         {
             return flag switch
             {
-                Data.FlagType.Unreached => "UNREACH",
-                Data.FlagType.Opcode => "CODE",
-                Data.FlagType.Operand => "LOOSE_OP",
-                Data.FlagType.Data8Bit => "DATA8",
-                Data.FlagType.Graphics => "GFX",
-                Data.FlagType.Music => "MUSIC",
-                Data.FlagType.Empty => "EMPTY",
-                Data.FlagType.Data16Bit => "DATA16",
-                Data.FlagType.Pointer16Bit => "PTR16",
-                Data.FlagType.Data24Bit => "DATA24",
-                Data.FlagType.Pointer24Bit => "PTR24",
-                Data.FlagType.Data32Bit => "DATA32",
-                Data.FlagType.Pointer32Bit => "PTR32",
-                Data.FlagType.Text => "TEXT",
+                FlagType.Unreached => "UNREACH",
+                FlagType.Opcode => "CODE",
+                FlagType.Operand => "LOOSE_OP",
+                FlagType.Data8Bit => "DATA8",
+                FlagType.Graphics => "GFX",
+                FlagType.Music => "MUSIC",
+                FlagType.Empty => "EMPTY",
+                FlagType.Data16Bit => "DATA16",
+                FlagType.Pointer16Bit => "PTR16",
+                FlagType.Data24Bit => "DATA24",
+                FlagType.Pointer24Bit => "PTR24",
+                FlagType.Data32Bit => "DATA32",
+                FlagType.Pointer32Bit => "PTR32",
+                FlagType.Text => "TEXT",
                 _ => ""
             };
         }
 
-        public static int GetByteLengthForFlag(Data.FlagType flag)
+        public static int GetByteLengthForFlag(FlagType flag)
         {
             switch (flag)
             {
-                case Data.FlagType.Unreached:
-                case Data.FlagType.Opcode:
-                case Data.FlagType.Operand:
-                case Data.FlagType.Data8Bit:
-                case Data.FlagType.Graphics:
-                case Data.FlagType.Music:
-                case Data.FlagType.Empty:
-                case Data.FlagType.Text:
+                case FlagType.Unreached:
+                case FlagType.Opcode:
+                case FlagType.Operand:
+                case FlagType.Data8Bit:
+                case FlagType.Graphics:
+                case FlagType.Music:
+                case FlagType.Empty:
+                case FlagType.Text:
                     return 1;
-                case Data.FlagType.Data16Bit:
-                case Data.FlagType.Pointer16Bit:
+                case FlagType.Data16Bit:
+                case FlagType.Pointer16Bit:
                     return 2;
-                case Data.FlagType.Data24Bit:
-                case Data.FlagType.Pointer24Bit:
+                case FlagType.Data24Bit:
+                case FlagType.Pointer24Bit:
                     return 3;
-                case Data.FlagType.Data32Bit:
-                case Data.FlagType.Pointer32Bit:
+                case FlagType.Data32Bit:
+                case FlagType.Pointer32Bit:
                     return 4;
             }
             return 0;
@@ -271,19 +278,19 @@ namespace Diz.Core.util
         {
             detectedValidRomMapType = true;
 
-            if ((romBytes[Data.LoromSettingOffset] & 0xEF) == 0x23)
+            if ((romBytes[RomUtil.LoromSettingOffset] & 0xEF) == 0x23)
                 return romBytes.Count > 0x400000 ? RomMapMode.ExSa1Rom : RomMapMode.Sa1Rom;
 
-            if ((romBytes[Data.LoromSettingOffset] & 0xEC) == 0x20)
-                return (romBytes[Data.LoromSettingOffset + 1] & 0xF0) == 0x10 ? RomMapMode.SuperFx : RomMapMode.LoRom;
+            if ((romBytes[RomUtil.LoromSettingOffset] & 0xEC) == 0x20)
+                return (romBytes[RomUtil.LoromSettingOffset + 1] & 0xF0) == 0x10 ? RomMapMode.SuperFx : RomMapMode.LoRom;
 
-            if (romBytes.Count >= 0x10000 && (romBytes[Data.HiromSettingOffset] & 0xEF) == 0x21)
+            if (romBytes.Count >= 0x10000 && (romBytes[RomUtil.HiromSettingOffset] & 0xEF) == 0x21)
                 return RomMapMode.HiRom;
 
-            if (romBytes.Count >= 0x10000 && (romBytes[Data.HiromSettingOffset] & 0xE7) == 0x22)
+            if (romBytes.Count >= 0x10000 && (romBytes[RomUtil.HiromSettingOffset] & 0xE7) == 0x22)
                 return RomMapMode.SuperMmc;
 
-            if (romBytes.Count >= 0x410000 && (romBytes[Data.ExhiromSettingOffset] & 0xEF) == 0x25)
+            if (romBytes.Count >= 0x410000 && (romBytes[RomUtil.ExhiromSettingOffset] & 0xEF) == 0x25)
                 return RomMapMode.ExHiRom;
 
             // detection failed. take our best guess.....
@@ -295,24 +302,24 @@ namespace Diz.Core.util
         {
             return mode switch
             {
-                RomMapMode.LoRom => Data.LoromSettingOffset,
-                RomMapMode.HiRom => Data.HiromSettingOffset,
-                RomMapMode.ExHiRom => Data.ExhiromSettingOffset,
-                RomMapMode.ExLoRom => Data.ExloromSettingOffset,
-                _ => Data.LoromSettingOffset
+                RomMapMode.LoRom => RomUtil.LoromSettingOffset,
+                RomMapMode.HiRom => RomUtil.HiromSettingOffset,
+                RomMapMode.ExHiRom => RomUtil.ExhiromSettingOffset,
+                RomMapMode.ExLoRom => RomUtil.ExloromSettingOffset,
+                _ => RomUtil.LoromSettingOffset
             };
         }
 
-        public static string PointToString(Data.InOutPoint point)
+        public static string PointToString(InOutPoint point)
         {
             string result;
 
-            if ((point & Data.InOutPoint.EndPoint) == Data.InOutPoint.EndPoint) result = "X";
-            else if ((point & Data.InOutPoint.OutPoint) == Data.InOutPoint.OutPoint) result = "<";
+            if ((point & InOutPoint.EndPoint) == InOutPoint.EndPoint) result = "X";
+            else if ((point & InOutPoint.OutPoint) == InOutPoint.OutPoint) result = "<";
             else result = " ";
 
-            result += ((point & Data.InOutPoint.ReadPoint) == Data.InOutPoint.ReadPoint) ? "*" : " ";
-            result += ((point & Data.InOutPoint.InPoint) == Data.InOutPoint.InPoint) ? ">" : " ";
+            result += ((point & InOutPoint.ReadPoint) == InOutPoint.ReadPoint) ? "*" : " ";
+            result += ((point & InOutPoint.InPoint) == InOutPoint.InPoint) ? ">" : " ";
 
             return result;
         }
@@ -352,34 +359,34 @@ namespace Diz.Core.util
             return rom;
         }
 
-        public static void GenerateHeaderFlags(int romSettingsOffset, IDictionary<int, Data.FlagType> flags, byte[] romBytes)
+        public static void GenerateHeaderFlags(int romSettingsOffset, IDictionary<int, FlagType> flags, byte[] romBytes)
         {
             for (int i = 0; i < LengthOfTitleName; i++)
-                flags.Add(romSettingsOffset - LengthOfTitleName + i, Data.FlagType.Text);
+                flags.Add(romSettingsOffset - LengthOfTitleName + i, FlagType.Text);
             
             for (int i = 0; i < 7; i++) 
-                flags.Add(romSettingsOffset + i, Data.FlagType.Data8Bit);
+                flags.Add(romSettingsOffset + i, FlagType.Data8Bit);
             
             for (int i = 0; i < 4; i++) 
-                flags.Add(romSettingsOffset + 7 + i, Data.FlagType.Data16Bit);
+                flags.Add(romSettingsOffset + 7 + i, FlagType.Data16Bit);
             
             for (int i = 0; i < 0x20; i++) 
-                flags.Add(romSettingsOffset + 11 + i, Data.FlagType.Pointer16Bit);
+                flags.Add(romSettingsOffset + 11 + i, FlagType.Pointer16Bit);
 
             if (romBytes[romSettingsOffset - 1] == 0)
             {
                 flags.Remove(romSettingsOffset - 1);
-                flags.Add(romSettingsOffset - 1, Data.FlagType.Data8Bit);
+                flags.Add(romSettingsOffset - 1, FlagType.Data8Bit);
                 for (int i = 0; i < 0x10; i++) 
-                    flags.Add(romSettingsOffset - 0x25 + i, Data.FlagType.Data8Bit);
+                    flags.Add(romSettingsOffset - 0x25 + i, FlagType.Data8Bit);
             }
             else if (romBytes[romSettingsOffset + 5] == 0x33)
             {
                 for (int i = 0; i < 6; i++) 
-                    flags.Add(romSettingsOffset - 0x25 + i, Data.FlagType.Text);
+                    flags.Add(romSettingsOffset - 0x25 + i, FlagType.Text);
 
                 for (int i = 0; i < 10; i++) 
-                    flags.Add(romSettingsOffset - 0x1F + i, Data.FlagType.Data8Bit);
+                    flags.Add(romSettingsOffset - 0x1F + i, FlagType.Data8Bit);
             }
         }
 
@@ -423,19 +430,43 @@ namespace Diz.Core.util
 
         public const int LengthOfTitleName = 0x15;
 
-        public static LogCreator.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
+        public static LogCreatorOutput.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
         {
             var sampleRomData = SampleRomData.SampleData;
-            sampleSettings.Structure = LogCreator.FormatStructure.SingleFile;
+
+            sampleSettings.Structure = LogWriterSettings.FormatStructure.SingleFile;
             sampleSettings.FileOrFolderOutPath = "";
             sampleSettings.OutputToString = true;
             sampleSettings.RomSizeOverride = sampleRomData.OriginalRomSizeBeforePadding;
+            
             var lc = new LogCreator()
             {
                 Settings = sampleSettings,
                 Data = sampleRomData,
             };
+            
             return lc.CreateLog();
+        }
+        
+        public static ByteSourceMapping CreateRomMappingFromRomByteSource(ByteSource romByteSource, RomMapMode romMapMode, RomSpeed romSpeed)
+        {
+            return new()
+            {
+                ByteSource = romByteSource,
+                RegionMapping = new RegionMappingSnesRom
+                {
+                    RomSpeed = romSpeed,
+                    RomMapMode = romMapMode,
+                }
+            };
+        }
+
+        public static ByteSourceMapping CreateRomMappingFromRomRawBytes(
+            IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
+        {
+            var data = actualRomBytes.Select(b => new ByteOffsetData() {Byte = b}).ToList();
+            
+            return CreateRomMappingFromRomByteSource(new ByteSource(data) { Name = "Snes ROM" }, romMapMode, romSpeed);
         }
     }
 }

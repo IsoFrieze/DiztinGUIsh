@@ -26,10 +26,10 @@ namespace DiztinGUIsh
 
             while (found < 500 && offset < Data.GetRomSize())
             {
-                Data.FlagType flag = Data.GetFlag(offset), check = flag == Data.FlagType.Opcode ? Data.FlagType.Operand : flag;
-                var step = flag == Data.FlagType.Opcode ? Data.GetInstructionLength(offset) : RomUtil.GetByteLengthForFlag(flag);
+                FlagType flag = Data.GetFlag(offset), check = flag == FlagType.Opcode ? FlagType.Operand : flag;
+                var step = flag == FlagType.Opcode ? Data.GetInstructionLength(offset) : RomUtil.GetByteLengthForFlag(flag);
 
-                if (flag == Data.FlagType.Operand)
+                if (flag == FlagType.Operand)
                 {
                     found++;
                     textLog.Text +=

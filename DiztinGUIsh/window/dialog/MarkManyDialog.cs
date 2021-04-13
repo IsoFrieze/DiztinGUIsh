@@ -53,20 +53,20 @@ namespace DiztinGUIsh.window.dialog
                     case 0:
                         switch (flagCombo.SelectedIndex)
                         {
-                            case 0: return Data.FlagType.Unreached;
-                            case 1: return Data.FlagType.Opcode;
-                            case 2: return Data.FlagType.Operand;
-                            case 3: return Data.FlagType.Data8Bit;
-                            case 4: return Data.FlagType.Graphics;
-                            case 5: return Data.FlagType.Music;
-                            case 6: return Data.FlagType.Empty;
-                            case 7: return Data.FlagType.Data16Bit;
-                            case 8: return Data.FlagType.Pointer16Bit;
-                            case 9: return Data.FlagType.Data24Bit;
-                            case 10: return Data.FlagType.Pointer24Bit;
-                            case 11: return Data.FlagType.Data32Bit;
-                            case 12: return Data.FlagType.Pointer32Bit;
-                            case 13: return Data.FlagType.Text;
+                            case 0: return FlagType.Unreached;
+                            case 1: return FlagType.Opcode;
+                            case 2: return FlagType.Operand;
+                            case 3: return FlagType.Data8Bit;
+                            case 4: return FlagType.Graphics;
+                            case 5: return FlagType.Music;
+                            case 6: return FlagType.Empty;
+                            case 7: return FlagType.Data16Bit;
+                            case 8: return FlagType.Pointer16Bit;
+                            case 9: return FlagType.Data24Bit;
+                            case 10: return FlagType.Pointer24Bit;
+                            case 11: return FlagType.Data32Bit;
+                            case 12: return FlagType.Pointer32Bit;
+                            case 13: return FlagType.Text;
                         }
 
                         break;
@@ -79,9 +79,9 @@ namespace DiztinGUIsh.window.dialog
                     case 5:
                         switch (archCombo.SelectedIndex)
                         {
-                            case 0: return Data.Architecture.Cpu65C816;
-                            case 1: return Data.Architecture.Apuspc700;
-                            case 2: return Data.Architecture.GpuSuperFx;
+                            case 0: return Architecture.Cpu65C816;
+                            case 1: return Architecture.Apuspc700;
+                            case 2: return Architecture.GpuSuperFx;
                         }
 
                         break;
@@ -107,10 +107,10 @@ namespace DiztinGUIsh.window.dialog
 
         private void UpdateText(TextBox selected)
         {
-            Util.NumberBase noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-            int digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
-            int size = data.GetRomSize();
-            int maxValue = property.SelectedIndex == 1 ? 0x100 : 0x10000;
+            var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
+            var digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
+            var size = data.GetRomSize();
+            var maxValue = property.SelectedIndex == 1 ? 0x100 : 0x10000;
 
             if (Start < 0) Start = 0;
             if (End >= size) End = size - 1;

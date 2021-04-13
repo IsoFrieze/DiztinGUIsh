@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog
 {
@@ -23,12 +24,12 @@ namespace DiztinGUIsh.window.dialog
         {
             if (overrideText != null)
             {
-                label2.Text = overrideText;
+                lblStatusText.Text = overrideText;
                 return;
             }
 
             var percentDone = (int)(100 * ((float)progressBar1.Value / (float)progressBar1.Maximum));
-            label2.Text = $@"{percentDone}%";
+            lblStatusText.Text = $@"{percentDone}%";
         }
 
         public void UpdateProgress(int i)
@@ -38,6 +39,11 @@ namespace DiztinGUIsh.window.dialog
                 progressBar1.Value = i;
                 UpdateProgressText();
             });
+        }
+
+        private void label1_Click(object sender, System.EventArgs e)
+        {
+
         }
     }
 }

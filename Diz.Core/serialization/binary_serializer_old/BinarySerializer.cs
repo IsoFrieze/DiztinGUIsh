@@ -4,7 +4,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
+
+// IMPORTANT NOTE:
+// This serializer is compact, but it's deprecated in favor of the XML serializer, which is way easier
+// to make changes to and deal with backwards compatibility.
+//
+// This is only here for loading older files saved in this format, it shouldn't be used for anything new going forward.
 
 namespace Diz.Core.serialization.binary_serializer_old
 {
@@ -29,7 +36,7 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             var everything = new byte[HeaderSize + data.Length];
             everything[0] = versionToSave;
-            ByteUtil.StringToByteArray(Watermark).CopyTo(everything, 1);
+            ByteUtil.StringToNullTermByteArray(Watermark).CopyTo(everything, 1);
             data.CopyTo(everything, HeaderSize);
 
             return data;
@@ -38,7 +45,7 @@ namespace Diz.Core.serialization.binary_serializer_old
         public override (Project project, string warning) Load(byte[] data)
         {
             if (!IsBinaryFileFormat(data))
-                throw new InvalidDataException($"This is not a binary serialized project file!");
+                throw new InvalidDataException("This is not a binary serialized project file!");
 
             byte version = data[0];
             ValidateProjectFileVersion(version);
@@ -54,8 +61,8 @@ namespace Diz.Core.serialization.binary_serializer_old
                 converter = project.Data.ConvertPCtoSnes;
 
             // read mode, speed, size
-            project.Data.RomMapMode = (RomMapMode)data[HeaderSize];
-            project.Data.RomSpeed = (RomSpeed)data[HeaderSize + 1];
+            var mode = (RomMapMode)data[HeaderSize];
+            var speed = (RomSpeed)data[HeaderSize + 1];
             var size = ByteUtil.ByteArrayToInt32(data, HeaderSize + 2);
 
             // read internal title
@@ -71,16 +78,16 @@ namespace Diz.Core.serialization.binary_serializer_old
             while (data[pointer] != 0)
                 project.AttachedRomFilename += (char)data[pointer++];
             pointer++;
-
-            project.Data.RomBytes.Create(size);
+            
+            project.Data.InitializeEmptyRomMapping(size, mode, speed);
 
             for (int i = 0; i < size; i++) project.Data.SetDataBank(i, data[pointer + i]);
             for (int i = 0; i < size; i++) project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
             for (int i = 0; i < size; i++) project.Data.SetXFlag(i, data[pointer + 3 * size + i] != 0);
             for (int i = 0; i < size; i++) project.Data.SetMFlag(i, data[pointer + 4 * size + i] != 0);
-            for (int i = 0; i < size; i++) project.Data.SetFlag(i, (Data.FlagType)data[pointer + 5 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetArchitecture(i, (Data.Architecture)data[pointer + 6 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (Data.InOutPoint)data[pointer + 7 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetFlag(i, (FlagType)data[pointer + 5 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetArchitecture(i, (Architecture)data[pointer + 6 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (InOutPoint)data[pointer + 7 * size + i]);
             pointer += 8 * size;
 
             ReadLabels(project, data, ref pointer, converter, version >= 2);
@@ -110,8 +117,19 @@ namespace Diz.Core.serialization.binary_serializer_old
             bytes.Add(0);
         }
 
+        private void VoidTheWarranty()
+        {
+            // comment this out only if you are an expert and know what you're doing. Binary serialization is deprecated.
+            //
+            // How did you even get here, dawg? #yolo
+            throw new NotSupportedException("Binary serializer saving is OLD, please use the XML serializer instead.");
+        }
+
         private byte[] SaveVersion(Project project, int version)
         {
+            VoidTheWarranty();
+            /*
+            
             ValidateSaveVersion(version);
 
             int size = project.Data.GetRomSize();
@@ -130,10 +148,8 @@ namespace Diz.Core.serialization.binary_serializer_old
             var romChecksum = project.Data.GetRomCheckSumsFromRomBytes();
             BitConverter.GetBytes(romChecksum).CopyTo(romSettings, 27);
 
-            // TODO put selected offset in save file
-
             // save all labels ad comments
-            List<byte> label = new List<byte>(), comment = new List<byte>();
+            List<byte> label = new(), comment = new();
             var allLabels = project.Data.Labels;
             var allComments = project.Data.Comments;
 
@@ -150,14 +166,14 @@ namespace Diz.Core.serialization.binary_serializer_old
             }
 
             ByteUtil.IntegerIntoByteList(allComments.Count, comment);
-            foreach (KeyValuePair<int, string> pair in allComments)
+            foreach (KeyValuePair<int, Comment> pair in allComments)
             {
                 ByteUtil.IntegerIntoByteList(pair.Key, comment);
-                SaveStringToBytes(pair.Value, comment);
+                SaveStringToBytes(pair.Value.Text, comment);
             }
 
             // save current Rom full path - "c:\whatever\someRom.sfc"
-            var romLocation = ByteUtil.StringToByteArray(project.AttachedRomFilename);
+            var romLocation = ByteUtil.StringToNullTermByteArray(project.AttachedRomFilename);
 
             var data = new byte[romSettings.Length + romLocation.Length + 8 * size + label.Count + comment.Count];
             romSettings.CopyTo(data, 0);
@@ -185,7 +201,7 @@ namespace Diz.Core.serialization.binary_serializer_old
                 var op = readOps[whichOp];
                 for (var i = 0; i < size; i++)
                 {
-                    data[baseidx + i] = (byte)op(i);
+                    data[baseidx + i] = op(i);
                 }
             }
 
@@ -200,7 +216,8 @@ namespace Diz.Core.serialization.binary_serializer_old
             comment.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size + label.Count);
             // ???
 
-            return data;
+            return data;*/ // tmp
+            return null;
         }
 
         private static void ValidateSaveVersion(int version) {
@@ -227,7 +244,7 @@ namespace Diz.Core.serialization.binary_serializer_old
         {
             const int stringsPerEntry = 1;
             pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter, 
-                (int offset, string[] strings) =>
+                (offset, strings) =>
             {
                 Debug.Assert(strings.Length == 1);
                 project.Data.AddComment(offset, strings[0], true);
@@ -238,7 +255,7 @@ namespace Diz.Core.serialization.binary_serializer_old
         {
             var stringsPerEntry = readAliasComments ? 2 : 1;
             pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter,
-                (int offset, string[] strings) =>
+                (offset, strings) =>
                 {
                     Debug.Assert(strings.Length == stringsPerEntry);
                     var label = new Label
@@ -246,8 +263,7 @@ namespace Diz.Core.serialization.binary_serializer_old
                         Name = strings[0],
                         Comment = strings.ElementAtOrDefault(1)
                     };
-                    label.CleanUp();
-                    project.Data.AddLabel(offset, label, true);
+                    project.Data.LabelProvider.AddLabel(offset, label, true);
                 });
         }
     }

@@ -13,7 +13,7 @@ namespace DiztinGUIsh.window.dialog
         {
             InitializeComponent();
             Data = data;
-            textROM.Text = Util.NumberToBaseString(Data.ConvertPCtoSnes(offset), Util.NumberBase.Hexadecimal, 6);
+            textROM.Text = Util.ToHexString6(Data.ConvertPCtoSnes(offset));
             textPC.Text = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0);
         }
 
@@ -127,7 +127,7 @@ namespace DiztinGUIsh.window.dialog
                 int addr = Data.ConvertPCtoSnes(offset);
 
                 textPC.Text = finaltext;
-                textROM.Text = Util.NumberToBaseString(addr, noBase, 6);
+                textROM.Text = Util.ToHexString6(addr);
             });
 
             UpdateUi();

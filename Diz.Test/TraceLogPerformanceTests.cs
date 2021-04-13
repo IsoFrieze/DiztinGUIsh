@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
-using BenchmarkDotNet.Analysers;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Loggers;
-using BenchmarkDotNet.Running;
 using Diz.Core.import;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -72,9 +67,10 @@ namespace Diz.Test
         public class ImportTraceLogStreamTestHarness
         {
             const string datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
-            readonly Data Data = new EmptyRom();
+            Data Data => new Data().InitializeEmptyRomMapping(0xFFFF * 64, RomMapMode.LoRom, RomSpeed.FastRom);
+
             private readonly BsnesTraceLogDebugBenchmarkFileCapture capturing;
-            private readonly Stopwatch stopWatch = new Stopwatch();
+            private readonly Stopwatch stopWatch = new();
             private readonly ITestOutputHelper output;
 
             public ImportTraceLogStreamTestHarness(ITestOutputHelper output)
@@ -102,7 +98,7 @@ namespace Diz.Test
             }
         }
 
-        [Fact]
+        [Fact(Skip = "disabled, hard to run without specific stuff installed.")]
         public void TestTraceLogPerformance()
         {
             var test = new ImportTraceLogStreamTestHarness(output);

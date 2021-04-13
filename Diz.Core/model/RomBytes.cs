@@ -1,128 +1,158 @@
-﻿using System.Collections;
+﻿#nullable enable
+
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
+using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
-    public class RomBytes : IEnumerable<RomByte>, INotifyCollectionChanged, INotifyPropertyChanged
+    public interface IDataManager : INotifyPropertyChanged
     {
-        private ObservableCollection<RomByte> bytes;
+        
+    }
 
-        // TODO: might be able to do something more generic for RomBytes now that other refactorings are completed.
-        // This class needs to do these things that are special:
-        // 1) Be handled specially by our custom XML serializer (compresses to save disk space)
-        // 2) Handle Equals() by comparing each element in the list (SequenceEqual)
-        // 3) Emit notifypropertychanged if any members change
-        private ObservableCollection<RomByte> Bytes
+    public interface IDizObservable<T> : ICollection<T>, INotifyCollectionChanged, INotifyPropertyChanged
+    {
+        
+    }
+    
+    public interface IDizObservableList<T> : IDizObservable<T>
+    {
+        
+    }
+    //
+    // public class DataManagerRomBytes : DataManagerList<ByteOffset, Observable>
+    // {
+    //     
+    // }
+
+    public class DataManagerList<TItem, TObservableList> : DataManager<TItem, TObservableList>
+        where TItem : INotifyPropertyChanged, new()
+        where TObservableList : IDizObservableList<TItem>, new()
+    {
+        
+    }
+
+    // does two things:
+    // 1) stores and manages data in a particular type of list.
+    // 2) handles routing the events from the inner collections out 
+    public class DataManager<TItem, TObservableCollection> : IDataManager
+        where TItem : INotifyPropertyChanged, new()
+        where TObservableCollection : IDizObservable<TItem>, new()
+    {
+        public CollectionItemObserver<TItem>? CollectionObserver { get; set; }
+
+        public DataManager()
         {
-            get => bytes;
+            if (CollectionObserver != null)
+            {
+                CollectionObserver.CollectionItemPropertyChanged += CollectionItemPropertyChanged;
+                CollectionObserver.CollectionChanged += CollectionOnCollectionChanged;
+            }
+        }
+
+        private TObservableCollection dataSource = new();
+
+        public TObservableCollection DataSource
+        {
+            get => dataSource;
             set
             {
-                bytes = value;
+                var prevNotifyState = CollectionObserver?.ChangeNotificationsEnabled ?? false; 
 
-                bytes.CollectionChanged += Bytes_CollectionChanged;
-                foreach (var romByte in bytes)
+                if (CollectionObserver != null)
+                    CollectionObserver.ChangeNotificationsEnabled = false;
+                
+                if (!NotifyPropertyChangedExtensions.FieldIsEqual(dataSource, value))
                 {
-                    romByte.PropertyChanged += RomByteObjectChanged;
+                    dataSource = value;
+                    // TODO : CollectionObserver.Collection = dataSource;
                 }
+
+                // TODO: ResetCachedOffsets();
+
+                if (CollectionObserver != null)
+                    CollectionObserver.ChangeNotificationsEnabled = prevNotifyState;
+                
+                OnPropertyChanged();
             }
         }
 
-        public RomByte this[int i]
+        private void CollectionOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            get => Bytes[i];
-            set => Bytes[i] = value;
+            // when dataSource collection changes. NOT individual items in the list.
         }
 
-        public RomBytes()
+        private void CollectionItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            Bytes = new ObservableCollection<RomByte>();
+            // when any individual ByteOffset changes. nothing to do with the list.
+            PropertyChanged?.Invoke(sender, e);
         }
 
-        public void SetFrom(RomByte[] romBytes)
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
-            Bytes = new ObservableCollection<RomByte>(romBytes);
-            for (var i = 0; i < romBytes.Length; ++i)
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+    
+    // raise notifications when either 1) a collection changes or 2) items inside a collection change
+    public class CollectionItemObserver<T> : INotifyCollectionChanged
+    where T : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler? CollectionItemPropertyChanged;
+        public bool ChangeNotificationsEnabled { get; set; } = true;
+        
+        private ObservableCollection<T>? collection;
+        public ObservableCollection<T>? Collection
+        {
+            get => collection;
+            set
             {
-                romBytes[i].SetCachedOffset(i);
+                if (collection != null)
+                    collection.CollectionChanged -= CollectionOnCollectionChanged; 
+                
+                SetupPropertyChangedOn(null, collection);
+                
+                collection = value;
+                
+                SetupPropertyChangedOn(collection, null);
+                
+                if (collection != null)
+                    collection.CollectionChanged += CollectionOnCollectionChanged;
             }
         }
 
-        public int Count => Bytes.Count;
-        public bool SendNotificationChangedEvents { get; set; } = true;
-
-        public void Add(RomByte romByte)
+        private void CollectionOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            Bytes.Add(romByte);
-            romByte.SetCachedOffset(Bytes.Count - 1); // I don't love this....
-        }
-
-        public void Create(int size)
-        {
-            for (var i = 0; i < size; ++i)
-                Add(new RomByte());
-        }
-        public void Clear()
-        {
-            Bytes.Clear();
-        }
-
-        #region Equality
-        protected bool Equals(RomBytes other)
-        {
-            return Bytes.SequenceEqual(other.Bytes);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((RomBytes)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return (Bytes != null ? Bytes.GetHashCode() : 0);
-        }
-        #endregion
-
-        #region Enumerator
-        public IEnumerator<RomByte> GetEnumerator()
-        {
-            return Bytes.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-        #endregion
-
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void Bytes_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-                foreach (RomByte item in e.NewItems)
-                    item.PropertyChanged += RomByteObjectChanged;
-
-            if (e.OldItems != null)
-                foreach (RomByte item in e.OldItems)
-                    item.PropertyChanged -= RomByteObjectChanged;
-
-            if (SendNotificationChangedEvents)
+            SetupPropertyChangedOn(e.NewItems, e.OldItems);
+            
+            if (ChangeNotificationsEnabled)
                 CollectionChanged?.Invoke(sender, e);
         }
-
-        private void RomByteObjectChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        
+        private void OnCollectionItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (SendNotificationChangedEvents)
-                PropertyChanged?.Invoke(sender, e);
+            CollectionItemPropertyChanged?.Invoke(sender, e);
         }
+
+        private void SetupPropertyChangedOn(IEnumerable? newItems, IEnumerable? oldItems)
+        {
+            if (newItems != null)
+                foreach (T item in newItems)
+                    item.PropertyChanged += OnCollectionItemPropertyChanged;
+
+            if (oldItems != null)
+                foreach (T item in oldItems)
+                    item.PropertyChanged -= OnCollectionItemPropertyChanged;
+        }
+
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
     }
 }
