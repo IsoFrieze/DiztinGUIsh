@@ -20,6 +20,9 @@ jobs:
         with:
           dotnet-version: 5.0.x
           
+      - name: Nuget Dependency Packages Install
+        run: dotnet restore
+          
       - name: Build
         run: dotnet build
         
@@ -30,4 +33,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: DiztinGUIsh
-          path: DiztinGUIsh\bin\Release
+          path: DiztinGUIsh\bin\Release\net5.0-windows
