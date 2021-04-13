@@ -153,11 +153,11 @@ namespace Diz.Core.serialization
             
             project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
 
-            foreach (var pair in importSettings.InitialLabels)
-                project.Data.Labels.AddLabel(pair.Key, pair.Value, true);
+            foreach (var (offset, label) in importSettings.InitialLabels)
+                project.Data.Labels.AddLabel(offset, label, true);
 
-            foreach (var pair in importSettings.InitialHeaderFlags)
-                project.Data.SetFlag(pair.Key, pair.Value);
+            foreach (var (offset, flagType) in importSettings.InitialHeaderFlags)
+                project.Data.SetFlag(offset, flagType);
 
             // Save a copy of these identifying ROM bytes with the project file itself.
             // When we reload, we will make sure the linked ROM still matches them.
