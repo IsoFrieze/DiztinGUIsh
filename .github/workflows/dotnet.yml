@@ -1,6 +1,7 @@
-﻿# TODO: make sure support files are copied into the final release folder still.
+﻿# TODO: make sure support files in dist/ are copied into the final release folder still, final dir structure mirrors original build process
+ # TODO: add nuget package cache back in
 
-name: .NET Core Desktop
+name: .NET 5 Win Desktop
 
 on: [ push, pull_request ]
 
@@ -13,40 +14,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Install .NET Core
+      
+      - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.x
-
-      - name: Setup MSBuild.exe
-        uses: microsoft/setup-msbuild@v1.0.2
-
-      - name: Cache Packages
-        uses: actions/cache@v2
-        id: cache-packages
-        with:
-          path: packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Setup NuGet
-        if: steps.cache-packages.outputs.cache-hit != 'true'
-        uses: nuget/setup-nuget@v1
-        with:
-          nuget-api-key: ${{ secrets.NuGetAPIKey }}
-          nuget-version: '4.7'
-
-      - name: Restore NuGet Packages
-        if: steps.cache-packages.outputs.cache-hit != 'true'
-        run: nuget restore DiztinGUIsh.sln
-
-      - name: Build (Release)
-        run: msbuild /p:Configuration=Release
-
+          
+      - name: Build
+        run: dotnet build
+        
+      - name: Test
+        run: dotnet test
+  
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
