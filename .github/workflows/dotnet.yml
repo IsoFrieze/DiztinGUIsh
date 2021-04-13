@@ -21,13 +21,13 @@ jobs:
           dotnet-version: 5.0.x
           
       - name: Nuget Dependency Packages Install
-        run: dotnet restore
+        run: dotnet restore DiztinGUIsh.sln
           
       - name: Build
-        run: dotnet build
+        run: dotnet build DiztinGUIsh.sln
         
       - name: Test
-        run: dotnet test
+        run: dotnet test DiztinGUIsh.sln
   
       - name: Upload
         uses: actions/upload-artifact@v2
