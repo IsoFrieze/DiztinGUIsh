@@ -44,18 +44,11 @@ jobs:
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: nuget restore DiztinGUIsh.sln
 
-      - name: Build (x86, Release)
-        run: msbuild /p:Configuration=Release /p:Platform="x86"
-      - name: Build (x64, Release)
-        run: msbuild /p:Configuration=Release /p:Platform="x64"
+      - name: Build (Release)
+        run: msbuild /p:Configuration=Release
 
-      - name: Upload (x86)
+      - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: DiztinGUIsh (x86)
+          name: DiztinGUIsh
           path: DiztinGUIsh\bin\Release
-      - name: Upload (x64)
-        uses: actions/upload-artifact@v2
-        with:
-          name: DiztinGUIsh (x64)
-          path: DiztinGUIsh\bin\x64\Release
