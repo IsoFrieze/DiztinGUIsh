@@ -172,6 +172,11 @@ namespace Diz.Core.util
                 ByteParseHex1(hexChar4);
         }
 
+        public static uint ByteParseHex(string str)
+        {
+            return ByteParseHex(str, 0, str.Length);
+        }
+
         // note: likely isn't quite as fast, use one of the other ByteParseHex1/2/3/4() functions directly
         // if you have to care about performance.
         //
