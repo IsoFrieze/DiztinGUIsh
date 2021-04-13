@@ -16,8 +16,8 @@ namespace Diz.Core.import
         public BsnesTraceLogImporter(Data data)
         {
             this.data = data;
-            romSizeCached = data.GetRomSize();
-            romMapModeCached = data.RomMapMode;
+            romSizeCached = data?.GetRomSize() ?? 0;
+            romMapModeCached = data?.RomMapMode ?? default;
 
             InitStats();
             InitObjectPool();

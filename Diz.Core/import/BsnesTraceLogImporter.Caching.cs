@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.ComponentModel;
+using System.IO;
 
 namespace Diz.Core.import
 {
@@ -11,18 +13,22 @@ namespace Diz.Core.import
         // Tracelogs from even a few seconds of SNES runtime can produce something like
         // 250 MILLION lines of text.
         //
-        // Optimization: since the BSNES tracelogs contain lines that are always 80 chars long with the data always
+        // Optimization: since the BSNES tracelogs contain lines that are always the same width with the data always
         // starting on the same offset. so, what we can take a known sample line, and then parse it ONE TIME.
         // we'll then save the position of each section of data
         //
         // This is basically the fastest way to parse text tracelogs (80 bytes per line). HOWEVER, if you really
         // want to move fast, you should use a binary file format (for BSNES, it's just 8 bytes per instruction,
         // and no text parsing required) 
-        
+        //
+        // NOTE: we will make the assumption that lines in a file will always be the same width and offsets.
+        // however, different versions of BSNES can output different line lengths, so always re-parse the first line
+        // on each use of this file. it's up to the caller to figure that out.
+
         public class CachedTraceLineTextIndex
         {
             // index of the start of the info
-            public readonly int
+            public int
                 Addr,
                 D,
                 Db,
@@ -36,14 +42,15 @@ namespace Diz.Core.import
                 FZ,
                 FC;
 
-            public CachedTraceLineTextIndex()
-            {
-                if (SampleLineText.Length != 97)
-                    throw new InvalidDataException("BSNES sample tracelog line must be EXACTLY 80 bytes in length");
+            public int LastLineLength { get; set; } = -1;
 
-                static int GetIndexOfDataAfterToken(string token)
+            public void RecomputeCachedIndicesBasedOn(string templateLine)
+            {
+                LastLineLength = templateLine.Length;
+
+                int GetIndexOfDataAfterToken(string token)
                 {
-                    return SampleLineText.IndexOf(token) + token.Length;
+                    return templateLine.IndexOf(token, StringComparison.Ordinal) + token.Length;
                 }
 
                 Addr = 0;
@@ -62,12 +69,5 @@ namespace Diz.Core.import
                 FC = Flags + 7;
             }
         }
-        
-        // NOTE: newer versions of BSNES use dots to represent flags.
-        // i.e. instead of "nvmxdiZC" it would be "......ZC"
-        public const string SampleLineText =
-            @"028cde rep #$30               A:0004 X:0000 Y:0004 S:1fdd D:0000 DB:02 nvmxdiZC V:133 H: 654 F:36";
-
-        private static readonly CachedTraceLineTextIndex CachedIdx = new CachedTraceLineTextIndex();
     }
 }
