@@ -28,7 +28,7 @@ namespace Diz.Core
                 
                 BaseSampleData.OriginalRomSizeBeforePadding = BaseSampleData.RomByteSource.Bytes.Count;
                 while (BaseSampleData.RomByteSource.Bytes.Count < 0x8000)
-                    BaseSampleData.RomByteSource.AddByte(new ByteOffsetData());
+                    BaseSampleData.RomByteSource.AddByte(new ByteEntry());
 
                 _finalSampleData = BaseSampleData;
                 return BaseSampleData;
@@ -45,7 +45,7 @@ namespace Diz.Core
             get
             {
                 var romByteSource = new ByteSource() {
-                    Bytes = new ByteList(new List<ByteOffsetData> {
+                    Bytes = new ByteList(new List<ByteEntry> {
                         new() {Byte = 0x78, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, Point = InOutPoint.InPoint},
                         new() {Byte = 0xA9, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true},
                         new() {Byte = 0x01, TypeFlag = FlagType.Operand},

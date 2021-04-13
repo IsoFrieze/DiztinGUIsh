@@ -27,7 +27,7 @@ namespace Diz.Test.tests
                     var byteStorage = new SparseByteStorage(count);
                     for (var i = 0; i < count; ++i)
                     {
-                        byteStorage[i] = new ByteOffsetData {Byte = (byte?)(i+0xE0)};
+                        byteStorage[i] = new ByteEntry {Byte = (byte?)(i+0xE0)};
                     }
                     return byteStorage;
                 },
@@ -35,7 +35,7 @@ namespace Diz.Test.tests
                 {
                     const int count = 10;
                     var srcList = Enumerable.Range(0, count)
-                        .Select(i => new ByteOffsetData {Byte = (byte?)(i+0xE0)}).ToList();
+                        .Select(i => new ByteEntry {Byte = (byte?)(i+0xE0)}).ToList();
                     return new SparseByteStorage(srcList);
                 },
                 
@@ -43,7 +43,7 @@ namespace Diz.Test.tests
                 {
                     const int count = 10;
                     var srcList = Enumerable.Range(0, count)
-                        .Select(i => new ByteOffsetData {Byte = (byte?)(i+0xE0)}).ToList();
+                        .Select(i => new ByteEntry {Byte = (byte?)(i+0xE0)}).ToList();
                     return new ByteList(srcList);
                 },
             }.CreateTheoryData();

@@ -18,15 +18,15 @@ using UserControl = System.Windows.Forms.UserControl;
 
 namespace DiztinGUIsh.window2
 {
-    public partial class DataGridEditorControl : UserControl, IBytesGridViewer<ByteOffsetData>
+    public partial class DataGridEditorControl : UserControl, IBytesGridViewer<ByteEntry>
     {
         #region Properties
 
         public Util.NumberBase NumberBaseToShow { get; set; } = Util.NumberBase.Hexadecimal;
 
-        private IBytesGridViewerDataController<RomByteDataGridRow, ByteOffsetData> dataController;
+        private IBytesGridViewerDataController<RomByteDataGridRow, ByteEntry> dataController;
 
-        public IBytesGridViewerDataController<RomByteDataGridRow, ByteOffsetData> DataController
+        public IBytesGridViewerDataController<RomByteDataGridRow, ByteEntry> DataController
         {
             get => dataController;
             set
@@ -56,7 +56,7 @@ namespace DiztinGUIsh.window2
 
                 case nameof(DataSubsetWithSelection<object, object>.StartingRowLargeIndex):
                 case nameof(DataSubsetWithSelection<object, object>.RowCount):
-                case nameof(ByteViewerDataBindingGridController<RomByteDataGridRow, ByteOffsetData>.DataSubset):
+                case nameof(ByteViewerDataBindingGridController<RomByteDataGridRow, ByteEntry>.DataSubset):
                     rowsChanged = true;
                     break;
             }
@@ -91,9 +91,9 @@ namespace DiztinGUIsh.window2
             vScrollBar1.Value = DataController.DataSubset.StartingRowLargeIndex;
         }
 
-        private List<ByteOffsetData> dataSource;
+        private List<ByteEntry> dataSource;
 
-        public List<ByteOffsetData> DataSource
+        public List<ByteEntry> DataSource
         {
             get => dataSource;
             set
@@ -193,7 +193,7 @@ namespace DiztinGUIsh.window2
 
         #region RowColumnAccess
 
-        public ByteOffsetData SelectedByteOffset => DataController?.DataSubset?.SelectedRow?.ByteOffset;
+        public ByteEntry SelectedByteOffset => DataController?.DataSubset?.SelectedRow?.ByteOffset;
 
         private RomByteDataGridRow GetValueAtRowIndex(int row)
         {
@@ -387,7 +387,7 @@ namespace DiztinGUIsh.window2
         public void BeginEditingSelectionLabel() =>
             BeginEditingSelectedRowProperty(nameof(RomByteDataGridRow.Label));
 
-        public event IBytesGridViewer<ByteOffsetData>.SelectedOffsetChange SelectedOffsetChanged;
+        public event IBytesGridViewer<ByteEntry>.SelectedOffsetChange SelectedOffsetChanged;
 
         private void AdjustSelectedColumnByKeyCode(Keys keyCode)
         {
@@ -405,7 +405,7 @@ namespace DiztinGUIsh.window2
                 return;
 
             SelectedOffsetChanged?.Invoke(this,
-                new IBytesGridViewer<ByteOffsetData>.SelectedOffsetChangedEventArgs
+                new IBytesGridViewer<ByteEntry>.SelectedOffsetChangedEventArgs
                 {
                     Row = selectedRomByteRow,
                     RowIndex = SelectedTableRow,

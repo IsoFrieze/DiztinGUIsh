@@ -116,7 +116,7 @@ namespace DiztinGUIsh.window2
         void GoTo(int offset);
         void GoToUnreached(bool end, bool direction);
         void GoToIntermediateAddress(int offset);
-        void OnUserChangedSelection(ByteOffsetData newSelection);
+        void OnUserChangedSelection(ByteEntry newSelection);
     }
 
     public interface ILabelController

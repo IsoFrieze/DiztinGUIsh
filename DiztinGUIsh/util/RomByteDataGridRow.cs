@@ -19,7 +19,7 @@ namespace DiztinGUIsh.window2
     {
         IBytesGridViewer<TItem> ParentView { get; init; }
         Data Data { get; init; }
-        ByteOffsetData ByteOffset { get; init; }
+        ByteEntry ByteOffset { get; init; }
     }
     
     /*[AttributeUsage(AttributeTargets.Property)]
@@ -34,7 +34,7 @@ namespace DiztinGUIsh.window2
     }*/
 
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    public class RomByteDataGridRow : INotifyPropertyChanged, IGridRow<ByteOffsetData>
+    public class RomByteDataGridRow : INotifyPropertyChanged, IGridRow<ByteEntry>
     {
         [DisplayName("Label")]
         [Editable(true)]
@@ -166,10 +166,10 @@ namespace DiztinGUIsh.window2
             }
         }
         
-        private readonly ByteOffsetData byteOffset;
+        private readonly ByteEntry byteOffset;
 
         [Browsable(false)]
-        public ByteOffsetData ByteOffset
+        public ByteEntry ByteOffset
         {
             get => byteOffset;
             init
@@ -181,7 +181,7 @@ namespace DiztinGUIsh.window2
         }
 
         [Browsable(false)] public Data Data { get; init; }
-        [Browsable(false)] public IBytesGridViewer<ByteOffsetData> ParentView { get; init; }
+        [Browsable(false)] public IBytesGridViewer<ByteEntry> ParentView { get; init; }
         [Browsable(false)] private Util.NumberBase NumberBase => ParentView.NumberBaseToShow;
 
         [Browsable(false)] public event PropertyChangedEventHandler PropertyChanged;
@@ -197,20 +197,20 @@ namespace DiztinGUIsh.window2
             // NOTE: if any properties under ByteOffset change, make sure the names update here
             switch (e.PropertyName)
             {
-                case nameof(ByteOffsetData.Byte):
+                case nameof(ByteEntry.Byte):
                     OnPropertyChanged(nameof(AsciiCharRep));
                     OnPropertyChanged(nameof(NumericRep));
                     OnInstructionRelatedChanged();
                     break;
-                case nameof(ByteOffsetData.Arch):
+                case nameof(ByteEntry.Arch):
                     OnInstructionRelatedChanged();
                     break;
-                case nameof(ByteOffsetData.DataBank):
-                case nameof(ByteOffsetData.DirectPage):
-                case nameof(ByteOffsetData.XFlag):
-                case nameof(ByteOffsetData.MFlag):
-                case nameof(ByteOffsetData.TypeFlag):
-                case nameof(ByteOffsetData.Point):
+                case nameof(ByteEntry.DataBank):
+                case nameof(ByteEntry.DirectPage):
+                case nameof(ByteEntry.XFlag):
+                case nameof(ByteEntry.MFlag):
+                case nameof(ByteEntry.TypeFlag):
+                case nameof(ByteEntry.Point):
                     OnPropertyChanged(e.PropertyName);
                     break;
             }

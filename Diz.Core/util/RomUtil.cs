@@ -464,7 +464,7 @@ namespace Diz.Core.util
         public static ByteSourceMapping CreateRomMappingFromRomRawBytes(
             IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
         {
-            var data = actualRomBytes.Select(b => new ByteOffsetData() {Byte = b}).ToList();
+            var data = actualRomBytes.Select(b => new ByteEntry() {Byte = b}).ToList();
 
             var romByteSource = new ByteSource
             {

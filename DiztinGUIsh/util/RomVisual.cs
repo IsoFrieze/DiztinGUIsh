@@ -114,7 +114,7 @@ namespace Diz.Core.util
         private Project project;
 
         private readonly object dirtyLock = new object();
-        private readonly Dictionary<int, ByteOffsetData> dirtyRomBytes = new Dictionary<int, ByteOffsetData>();
+        private readonly Dictionary<int, ByteEntry> dirtyRomBytes = new Dictionary<int, ByteEntry>();
 
         private void RomBytes_CollectionChanged(object sender,
             System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -129,7 +129,7 @@ namespace Diz.Core.util
 
         private void RomBytes_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (!(sender is ByteOffsetData romByte))
+            if (!(sender is ByteEntry romByte))
                 return;
 
             if (e.PropertyName != nameof(MarkAnnotation.TypeFlag))
@@ -206,7 +206,7 @@ namespace Diz.Core.util
         // returns the RomBytes we should use to update our image
         // this can either be ALL RomBytes, or, a small set of dirty RomBytes that were changed
         // since our last redraw.
-        private IEnumerable<ByteOffsetData> ConsumeRomDirtyBytes(out bool usedDirtyList)
+        private IEnumerable<ByteEntry> ConsumeRomDirtyBytes(out bool usedDirtyList)
         {
             usedDirtyList = false;
 
@@ -218,11 +218,11 @@ namespace Diz.Core.util
                     .ToList();
 
             usedDirtyList = true;
-            IEnumerable<ByteOffsetData> romBytes;
+            IEnumerable<ByteEntry> romBytes;
             lock (dirtyLock)
             {
                 // make a copy so we can release the lock.
-                romBytes = new List<ByteOffsetData>(dirtyRomBytes.Values.Select(kvp => kvp));
+                romBytes = new List<ByteEntry>(dirtyRomBytes.Values.Select(kvp => kvp));
                 dirtyRomBytes.Clear();
             }
 
@@ -236,7 +236,7 @@ namespace Diz.Core.util
             return (x, y);
         }
 
-        private void SetPixel(ByteOffsetData byteOffset, FastBitmap fastBitmap)
+        private void SetPixel(ByteEntry byteOffset, FastBitmap fastBitmap)
         {
             var pixelIndex = ConvertRomOffsetToPixelIndex(byteOffset.ContainerOffset);
             var (x, y) = ConvertPixelIndexToXy(pixelIndex);
@@ -254,7 +254,7 @@ namespace Diz.Core.util
             ImageDataUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        protected virtual void MarkDirty(ByteOffsetData byteOffset)
+        protected virtual void MarkDirty(ByteEntry byteOffset)
         {
             lock (dirtyLock)
             {

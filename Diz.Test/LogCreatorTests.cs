@@ -27,7 +27,7 @@ namespace Diz.Test
         {
             get
             {
-                var bytes = new List<ByteOffsetData>
+                var bytes = new List<ByteEntry>
                 {
                     // --------------------------
                     // highlighting a particular section here

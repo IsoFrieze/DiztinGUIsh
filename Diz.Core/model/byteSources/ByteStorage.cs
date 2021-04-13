@@ -8,9 +8,9 @@ using JetBrains.Annotations;
 
 namespace Diz.Core.model.byteSources
 {
-    public abstract class ByteStorage : IEnumerable<ByteOffsetData>
+    public abstract class ByteStorage : IEnumerable<ByteEntry>
     {
-        public abstract ByteOffsetData this[int index] { get; set; }
+        public abstract ByteEntry this[int index] { get; set; }
 
         public abstract int Count { get; }
 
@@ -21,7 +21,7 @@ namespace Diz.Core.model.byteSources
             InitFromEmpty(0);
         }
         
-        protected ByteStorage(IReadOnlyCollection<ByteOffsetData> inBytes)
+        protected ByteStorage(IReadOnlyCollection<ByteEntry> inBytes)
         {
             InitFrom(inBytes);
         }
@@ -41,7 +41,7 @@ namespace Diz.Core.model.byteSources
             Debug.Assert(Count == emptyCreateSize);
         }
 
-        private void InitFrom(IReadOnlyCollection<ByteOffsetData> inBytes)
+        private void InitFrom(IReadOnlyCollection<ByteEntry> inBytes)
         {
             Debug.Assert(inBytes != null);
             
@@ -52,12 +52,12 @@ namespace Diz.Core.model.byteSources
         }
 
         protected abstract void InitEmptyContainer(int emptyCreateSize);
-        protected abstract void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteOffsetData> inBytes);
+        protected abstract void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteEntry> inBytes);
         protected abstract void FillEmptyContainerWithBlankBytes(int numEntries);
 
-        public abstract void AddByte(ByteOffsetData byteOffset);
+        public abstract void AddByte(ByteEntry byteOffset);
 
-        protected void OnPreAddByteAt(int newIndex, ByteOffsetData byteOffset)
+        protected void OnPreAddByteAt(int newIndex, ByteEntry byteOffset)
         {
             // cache these values
             byteOffset.ByteStorageContainer = this;
@@ -66,13 +66,13 @@ namespace Diz.Core.model.byteSources
 
         // note: enumerators will behave differently depending on underlying storages.
         // some may produce gaps in the sequence, nulls, or skip to just the bytes actually instantiated.
-        public abstract IEnumerator<ByteOffsetData> GetEnumerator();
+        public abstract IEnumerator<ByteEntry> GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
         
-        protected void ImportBytes(IReadOnlyCollection<ByteOffsetData> inBytes)
+        protected void ImportBytes(IReadOnlyCollection<ByteEntry> inBytes)
         {
             Debug.Assert(inBytes != null);
             foreach (var b in inBytes)
@@ -83,7 +83,7 @@ namespace Diz.Core.model.byteSources
 
         // iterate through a sparse ByteStorage class, if we encounter any gaps in the sequence,
         // fill them in 
-        protected class GapFillingEnumerator : IEnumerator<ByteOffsetData>
+        protected class GapFillingEnumerator : IEnumerator<ByteEntry>
         {
             public ByteStorage ByteStorage { get; protected set; }
             public int Position { get; set; } = -1;
@@ -104,7 +104,7 @@ namespace Diz.Core.model.byteSources
                 Position = -1;
             }
 
-            ByteOffsetData IEnumerator<ByteOffsetData>.Current => ByteStorage[Position];
+            ByteEntry IEnumerator<ByteEntry>.Current => ByteStorage[Position];
             public object Current => ByteStorage[Position];
             public void Dispose()
             {
@@ -119,7 +119,7 @@ namespace Diz.Core.model.byteSources
     // address spaces (24bits of addressible bytes x HUGE data = slowwwww)
     public class ByteList : ByteStorage
     {
-        public override ByteOffsetData this[int index]
+        public override ByteEntry this[int index]
         {
             get => bytes[index];
             set
@@ -132,20 +132,20 @@ namespace Diz.Core.model.byteSources
         public override int Count => bytes?.Count ?? 0;
 
         // only ever use AddByte() to add bytes here
-        private List<ByteOffsetData> bytes = new();
+        private List<ByteEntry> bytes = new();
         
         [UsedImplicitly] public ByteList() : base() { }
         
         [UsedImplicitly] public ByteList(int emptyCreateSize) : base(emptyCreateSize) { }
         
-        [UsedImplicitly] public ByteList(IReadOnlyCollection<ByteOffsetData> inBytes) : base(inBytes) { }
+        [UsedImplicitly] public ByteList(IReadOnlyCollection<ByteEntry> inBytes) : base(inBytes) { }
 
         protected override void InitEmptyContainer(int capacity)
         {
-            bytes = new List<ByteOffsetData>(capacity);
+            bytes = new List<ByteEntry>(capacity);
         }
 
-        protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteOffsetData> inBytes)
+        protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteEntry> inBytes)
         {
             ImportBytes(inBytes);
         }
@@ -154,11 +154,11 @@ namespace Diz.Core.model.byteSources
         {
             for (var i = 0; i < numEntries; ++i)
             {
-                AddByte(new ByteOffsetData());
+                AddByte(new ByteEntry());
             }
         }
 
-        public override void AddByte(ByteOffsetData byteOffset)
+        public override void AddByte(ByteEntry byteOffset)
         {
             Debug.Assert(bytes != null);
             
@@ -172,7 +172,7 @@ namespace Diz.Core.model.byteSources
         // this will never return null or have gaps in the sequence.
         //
         // other implementations may differ.
-        public override IEnumerator<ByteOffsetData> GetEnumerator()
+        public override IEnumerator<ByteEntry> GetEnumerator()
         {
             return bytes.GetEnumerator();
         }
@@ -181,11 +181,11 @@ namespace Diz.Core.model.byteSources
     public class SparseByteStorage : ByteStorage
     {
         [UsedImplicitly] public SparseByteStorage() : base() { }
-        [UsedImplicitly] public SparseByteStorage(IReadOnlyCollection<ByteOffsetData> inBytes) : base(inBytes) { }
+        [UsedImplicitly] public SparseByteStorage(IReadOnlyCollection<ByteEntry> inBytes) : base(inBytes) { }
         [UsedImplicitly] public SparseByteStorage(int emptyCreateSize) : base(emptyCreateSize) { }
 
         // keeps the keys sorted, which is what we want.
-        public SortedDictionary<int, ByteOffsetData> bytes;
+        public SortedDictionary<int, ByteEntry> bytes;
 
         private int GetLargestKey()
         {
@@ -195,13 +195,13 @@ namespace Diz.Core.model.byteSources
             return bytes.Keys.Last();
         }
 
-        public override ByteOffsetData this[int index]
+        public override ByteEntry this[int index]
         {
             get => GetByte(index);
             set => SetByte(index, value);
         }
 
-        private void SetByte(int index, ByteOffsetData value)
+        private void SetByte(int index, ByteEntry value)
         {
             ValidateIndex(index);
             OnPreAddByteAt(index, value);
@@ -225,7 +225,7 @@ namespace Diz.Core.model.byteSources
                 throw new ArgumentOutOfRangeException($"Index {index} out of range in SparseByteStorage");   
         }
 
-        protected ByteOffsetData GetByte(int index)
+        protected ByteEntry GetByte(int index)
         {
             ValidateIndex(index);
             return bytes.GetValueOrDefault(index);
@@ -233,11 +233,11 @@ namespace Diz.Core.model.byteSources
 
         protected override void InitEmptyContainer(int emptyCreateSize)
         {
-            bytes = new SortedDictionary<int, ByteOffsetData>();
+            bytes = new SortedDictionary<int, ByteEntry>();
             count = emptyCreateSize;
         }
 
-        protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteOffsetData> inBytes)
+        protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteEntry> inBytes)
         {
             Debug.Assert(inBytes != null);
             if (inBytes.Count > count)
@@ -265,7 +265,7 @@ namespace Diz.Core.model.byteSources
             count = numEntries;
         }
 
-        public override void AddByte(ByteOffsetData byteOffset)
+        public override void AddByte(ByteEntry byteOffset)
         {
             // going to be a little weird. this would normally be "append" however it's
             // arbitrary where to do that with a dictionary. we wil interpret this as taking the highest
@@ -287,14 +287,14 @@ namespace Diz.Core.model.byteSources
         // this is not the most efficient thing but makes the client code easier
         // to write. if performance becomes an issue, use GetSparseEnumerator()
         // which will just return the sections that have been populated.
-        public override IEnumerator<ByteOffsetData> GetEnumerator()
+        public override IEnumerator<ByteEntry> GetEnumerator()
         {
             return new GapFillingEnumerator(this);
         }
 
         // note: indices are going to be ordered, BUT there can be gaps.
         // caller should be prepared to handle this. 
-        public SortedDictionary<int, ByteOffsetData>.Enumerator GetSparseEnumerator()
+        public SortedDictionary<int, ByteEntry>.Enumerator GetSparseEnumerator()
         {
             return bytes.GetEnumerator();
         }

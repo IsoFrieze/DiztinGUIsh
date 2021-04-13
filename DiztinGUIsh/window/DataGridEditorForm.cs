@@ -73,7 +73,7 @@ namespace DiztinGUIsh.window
                 OpenLastProject();
         }
 
-        private void DataGridEditorControl1OnSelectedOffsetChanged(object sender, IBytesGridViewer<ByteOffsetData>.SelectedOffsetChangedEventArgs e)
+        private void DataGridEditorControl1OnSelectedOffsetChanged(object sender, IBytesGridViewer<ByteEntry>.SelectedOffsetChangedEventArgs e)
         {
             // called when the user clicks a different cell in the child data grid
             MainFormController.OnUserChangedSelection(e.Row);
@@ -144,7 +144,7 @@ namespace DiztinGUIsh.window
 
         private void DataOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ByteOffsetData.TypeFlag))
+            if (e.PropertyName == nameof(ByteEntry.TypeFlag))
             {
                 percentComplete.Text = "";
                 if (Project?.Data == null || Project.Data.GetRomSize() <= 0) 

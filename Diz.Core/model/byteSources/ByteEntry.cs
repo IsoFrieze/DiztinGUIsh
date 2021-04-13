@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace Diz.Core.model.byteSources
 {
-    public interface IReadOnlyByteOffsetData
+    public interface IReadOnlyByteEntry
     {
         byte? Byte { get; }
         List<Annotation> Annotations { get; }
@@ -29,7 +29,7 @@ namespace Diz.Core.model.byteSources
     }
     
     // JUST holds the data. no traversal.
-    public class ByteOffsetData : IReadOnlyByteOffsetData
+    public class ByteEntry : IReadOnlyByteEntry
     {
         // if null, it means caller either needs to dig one level deeper in parent container to find the byte value, or, there is no data
         public byte? Byte { get; set; }
@@ -100,12 +100,12 @@ namespace Diz.Core.model.byteSources
 
         // -------------------------------------------------------------------------
         // end temporary stuff
-        protected bool Equals(ByteOffsetData other)
+        protected bool Equals(ByteEntry other)
         {
             return Byte == other.Byte && AnnotationsEqual(other) && Equals(Container, other.Container) && ContainerOffset == other.ContainerOffset;
         }
 
-        protected bool AnnotationsEqual(ByteOffsetData other)
+        protected bool AnnotationsEqual(ByteEntry other)
         {
             // considered equal if one or the other is null AND the other is non-null but zero-length
             if (Annotations == null || other?.Annotations == null)
@@ -132,7 +132,7 @@ namespace Diz.Core.model.byteSources
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((ByteOffsetData) obj);
+            return Equals((ByteEntry) obj);
         }
 
         public override int GetHashCode()

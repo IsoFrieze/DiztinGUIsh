@@ -461,7 +461,7 @@ namespace Diz.Core.model
         // note: don't save these anywhere permanent because ROM data is usually copyrighted.
         public IEnumerable<byte> GetFileBytes()
         {
-            return RomByteSource.Bytes.Select(b => ((ByteOffsetData) b).Byte.Value);
+            return RomByteSource.Bytes.Select(b => ((ByteEntry) b).Byte.Value);
         }
 
         public bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch)

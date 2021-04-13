@@ -9,7 +9,7 @@ namespace Diz.Test
     public sealed class RomByteTests
     {
         // old-style
-        private static ByteOffsetData SampleRomByte1()
+        private static ByteEntry SampleRomByte1()
         {
             return new() {
                 Arch = Architecture.Apuspc700,
@@ -24,7 +24,7 @@ namespace Diz.Test
         }
         
         // new-style
-        private static ByteOffsetData SampleRomByte3()
+        private static ByteEntry SampleRomByte3()
         {
             return new() {
                 Annotations = new List<Annotation>
@@ -50,7 +50,7 @@ namespace Diz.Test
             };
         }
         
-        private static ByteOffsetData SampleRomByte4()
+        private static ByteEntry SampleRomByte4()
         {
             // same as above, but just change .Rom
             var rb = SampleRomByte2();
@@ -61,7 +61,7 @@ namespace Diz.Test
             return rb;
         }
 
-        private static ByteOffsetData SampleRomByte2()
+        private static ByteEntry SampleRomByte2()
         {
             // same as above, but just change .Rom
             var rb = SampleRomByte1();

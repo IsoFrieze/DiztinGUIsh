@@ -29,9 +29,9 @@ namespace DiztinGUIsh.window2
     }
 
     public class RomByteDataBindingController : 
-        ByteViewerDataBindingGridController<RomByteDataGridRow, ByteOffsetData>
+        ByteViewerDataBindingGridController<RomByteDataGridRow, ByteEntry>
     {
-        protected override IEnumerable<ByteOffsetData> GetByteItems()
+        protected override IEnumerable<ByteEntry> GetByteItems()
         {
             // TODO: note: underlying data source could be a sparse set, so, enumerating here we
             // may have to deal with null bytes or gaps in the sequence.
@@ -81,7 +81,7 @@ namespace DiztinGUIsh.window2
         INotifyPropertyChangedExt
     
         // TODO: eventually, we should try and get rid of "ByteOffsetData" here to make this more generic.
-        where TItem : ByteOffsetData
+        where TItem : ByteEntry
         
         where TRow : class, IGridRow<TItem>
     {

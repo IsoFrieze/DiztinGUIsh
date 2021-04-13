@@ -11,7 +11,7 @@ namespace Diz.Test
 {
     public static class SampleRomCreator1
     {
-        public static List<ByteOffsetData> CreateByteOffsetData() =>
+        public static List<ByteEntry> CreateByteOffsetData() =>
             new()
             {
                 // starts at PC=0, which is SNES=0xC00000
@@ -44,7 +44,7 @@ namespace Diz.Test
                 },
             };
 
-        public static Data CreateSampleRomByteSource(IReadOnlyCollection<ByteOffsetData> srcData)
+        public static Data CreateSampleRomByteSource(IReadOnlyCollection<ByteEntry> srcData)
         {
             var romByteSource = new ByteSource
             {
@@ -55,7 +55,7 @@ namespace Diz.Test
             return new Data(romByteSource, RomMapMode.HiRom, RomSpeed.FastRom);
         }
 
-        public static (List<ByteOffsetData>, Data) CreateSampleRomByteSourceElements()
+        public static (List<ByteEntry>, Data) CreateSampleRomByteSourceElements()
         {
             var byteOffsetData = CreateByteOffsetData();
             return (byteOffsetData, CreateSampleRomByteSource(byteOffsetData));
@@ -168,7 +168,7 @@ namespace Diz.Test
         {
             var data = TinyHiRom;
             
-            data.SnesAddressSpace.Bytes[0xC00000] = new ByteOffsetData
+            data.SnesAddressSpace.Bytes[0xC00000] = new ByteEntry
             {
                 Byte = 0xEE,
             };
@@ -195,7 +195,7 @@ namespace Diz.Test
             var (srcData, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
             
             var snesAddress = data.ConvertPCtoSnes(0);
-            var graph = data.SnesAddressSpace.BuildFullGraph(snesAddress);
+            var graph = ByteGraphUtil.BuildFullGraph(data.SnesAddressSpace, snesAddress);
 
             // ok, this is tricky, pay careful attention.
             // we got a graph back from the SNES address space that represents
@@ -238,9 +238,9 @@ namespace Diz.Test
             var (srcData, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
             
             var snesAddress = data.ConvertPCtoSnes(0);
-            var graph = data.SnesAddressSpace.BuildFullGraph(snesAddress);
+            var graph = ByteGraphUtil.BuildFullGraph(data.SnesAddressSpace, snesAddress);
 
-            var flattenedNode = graph.CreateByteByFlatteningGraph();
+            var flattenedNode = ByteGraphUtil.BuildFlatDataFrom(graph);
             
             Assert.NotNull(flattenedNode);
             Assert.NotNull(flattenedNode.Byte);
@@ -267,7 +267,7 @@ namespace Diz.Test
         {
             var snesAddress = data.ConvertPCtoSnes(pcOffset);
             Assert.NotEqual(-1, snesAddress);
-            var rByte = data.SnesAddressSpace.CompileAllChildDataFrom(snesAddress)
+            var rByte = ByteGraphUtil.BuildFlatDataFrom(data.SnesAddressSpace, snesAddress)
                 .Byte; // TODO refactor: Make this be ByteSource.GetByte()
             Assert.NotNull(rByte);
             Assert.Equal(expectedByteVal, rByte.Value);
@@ -276,7 +276,7 @@ namespace Diz.Test
         // access via Rom mapping interface
         private static void AssertRomByteIs(byte expectedByteVal, Data data, int pcOffset)
         {
-            var rByte = data.RomByteSource.CompileAllChildDataFrom(pcOffset).Byte;
+            var rByte = ByteGraphUtil.BuildFlatDataFrom(data.RomByteSource, pcOffset).Byte;
             Assert.NotNull(rByte);
             Assert.Equal(expectedByteVal, rByte.Value);
         }

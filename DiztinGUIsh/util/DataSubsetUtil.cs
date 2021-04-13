@@ -7,7 +7,7 @@ namespace DiztinGUIsh.util
 {
     public class DataSubsetLookaheadCacheRomByteDataGridLoader<TRow, TItem> : 
         DataSubsetLookaheadCacheLoader<TRow, TItem>
-        where TItem : ByteOffsetData
+        where TItem : ByteEntry
         where TRow : class, IGridRow<TItem>
     {
         public IBytesGridViewer<TItem> View { get; init; }
@@ -19,7 +19,7 @@ namespace DiztinGUIsh.util
             {
                 ByteOffset = subset.Items[largeIndex],
                 Data = Data,
-                ParentView = View as IBytesGridViewer<ByteOffsetData>,
+                ParentView = View as IBytesGridViewer<ByteEntry>,
             } as TRow;
         }
     }

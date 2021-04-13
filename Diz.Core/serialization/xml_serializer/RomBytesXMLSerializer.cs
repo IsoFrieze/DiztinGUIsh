@@ -47,14 +47,14 @@ namespace Diz.Core.serialization.xml_serializer
             return FinishRead(romBytes);
         }
 
-        private ByteOffsetData[] DecodeAllBytes(List<string> allLines)
+        private ByteEntry[] DecodeAllBytes(List<string> allLines)
         {
             // TODO: probably should use parallel LINQ here instead?
             
             if (numTasksToUse == 1)
                 return DecodeRomBytes(allLines, 0, allLines.Count);
 
-            var tasks = new List<Task<ByteOffsetData[]>>(numTasksToUse);
+            var tasks = new List<Task<ByteEntry[]>>(numTasksToUse);
 
             var nextIndex = 0;
             var workListCount = allLines.Count / numTasksToUse;
@@ -74,17 +74,17 @@ namespace Diz.Core.serialization.xml_serializer
             return continuation.Result.SelectMany(i => i).ToArray();
         }
 
-        private static Task<ByteOffsetData[]> CreateDecodeRomBytesTask(List<string> allLines, int nextIndex, int workListCount)
+        private static Task<ByteEntry[]> CreateDecodeRomBytesTask(List<string> allLines, int nextIndex, int workListCount)
         {
             // ReSharper disable once AccessToStaticMemberViaDerivedType
-            return Task<ByteOffsetData[]>.Run(() => DecodeRomBytes(allLines, nextIndex, workListCount));
+            return Task<ByteEntry[]>.Run(() => DecodeRomBytes(allLines, nextIndex, workListCount));
         }
 
         // NOTE: runs in its own thread, a few times in parallel
-        private static ByteOffsetData[] DecodeRomBytes(IReadOnlyList<string> allLines, int startIndex, int count)
+        private static ByteEntry[] DecodeRomBytes(IReadOnlyList<string> allLines, int startIndex, int count)
         {
             // perf: allocate all at once, don't use List.Add() one at a time
-            var romBytes = new ByteOffsetData[count];
+            var romBytes = new ByteEntry[count];
             var romByteEncoding = new RomByteEncoding();
             var i = 0;
 
@@ -106,7 +106,7 @@ namespace Diz.Core.serialization.xml_serializer
             return romBytes;
         }
 
-        private static ByteSource FinishRead(IReadOnlyCollection<ByteOffsetData> romBytes) =>
+        private static ByteSource FinishRead(IReadOnlyCollection<ByteEntry> romBytes) =>
             new()
             {
                 Bytes = new ByteList(romBytes)

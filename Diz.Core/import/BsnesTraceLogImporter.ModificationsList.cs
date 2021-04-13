@@ -29,7 +29,7 @@ namespace Diz.Core.import
             public bool mDb, mMarks, mDp, mX, mM;
 
             // precondition: rombyte (minimum of) read lock already acquired
-            private void CompareToExisting(ByteOffsetData romByte)
+            private void CompareToExisting(ByteEntry romByte)
             {
                 mDb = romByte.DataBank != DataBank;
                 mMarks = romByte.TypeFlag != FlagType;
@@ -41,7 +41,7 @@ namespace Diz.Core.import
             }
 
             // precondition: rombyte (minimum of) read lock already acquired
-            private void ApplyModification(ByteOffsetData byteOffset)
+            private void ApplyModification(ByteEntry byteOffset)
             {
                 byteOffset.Lock.EnterWriteLock();
                 try
@@ -58,7 +58,7 @@ namespace Diz.Core.import
                 }
             }
 
-            public void ApplyModificationIfNeeded(ByteOffsetData byteOffset)
+            public void ApplyModificationIfNeeded(ByteEntry byteOffset)
             {
                 byteOffset.Lock.EnterUpgradeableReadLock();
                 try
