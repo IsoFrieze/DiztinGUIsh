@@ -4,7 +4,12 @@ using System.IO;
 
 namespace Diz.Core.export
 {
-    public abstract class AssemblyPartialLineGenerator
+    public interface IAssemblyPartialGenerator
+    {
+        string Emit(int? offset, int? lengthOverride);
+    }
+    
+    public abstract class AssemblyPartialLineGenerator : IAssemblyPartialGenerator
     {
         protected internal LogCreator LogCreator { get; set; }
         protected ILogCreatorDataSource Data => LogCreator.Data;

@@ -27,7 +27,6 @@ namespace Diz.Core.model.snes
             // setup a common SNES mapping, just the ROM and nothing else.
             // this is very configurable, for now, this class is sticking with the simple setup.
             // you can get as elaborate as you want, with RAM, patches, overrides, etc.
-            data.SnesAddressSpace = RomUtil.CreateSnesAddressSpace();
             data.SnesAddressSpace.AttachChildByteSource(romByteSourceMapping);
 
             //data.SendNotificationChangedEvents = previousNotificationState;

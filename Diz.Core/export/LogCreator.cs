@@ -374,7 +374,7 @@ namespace Diz.Core.export
             return $"%{generatorOverrideIfCode}";
         }
 
-        private AssemblyPartialLineGenerator GetGeneratorFor(string parameter)
+        public AssemblyPartialLineGenerator GetGeneratorFor(string parameter)
         {
             if (!Generators.TryGetValue(parameter, out var generator))
                 throw new InvalidOperationException($"Can't find generator for {parameter}");

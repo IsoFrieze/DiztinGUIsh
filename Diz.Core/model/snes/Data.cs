@@ -83,6 +83,8 @@ namespace Diz.Core.model.snes
 
         public Data()
         {
+            SnesAddressSpace = RomUtil.CreateSnesAddressSpace();
+            
             Labels = new LabelProvider(this);
         }
 
