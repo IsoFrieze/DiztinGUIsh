@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Global
 
@@ -8,10 +9,22 @@ namespace Diz.Core.export
     {
         string Emit(int? offset, int? lengthOverride);
     }
+
+    public interface ILogCreatorForGenerator
+    { 
+        public LogWriterSettings Settings { get; }
+        ILogCreatorDataSource Data { get; }
+        List<int> LabelsWeVisited { get; }
+        
+        int GetLineByteLength(int offset);
+        string GetFormattedBytes(int offset, int step, int bytes);
+        string GetPointer(int offset, int bytes);
+        string GetFormattedText(int offset, int bytes);
+    }
     
     public abstract class AssemblyPartialLineGenerator : IAssemblyPartialGenerator
     {
-        protected internal LogCreator LogCreator { get; set; }
+        public ILogCreatorForGenerator LogCreator { get; set; }
         protected ILogCreatorDataSource Data => LogCreator.Data;
         
         public string Token { get; init; } = "";

@@ -7,13 +7,13 @@ using Diz.Core.util;
 
 namespace Diz.Core.export
 {
-    public class LogCreator
+    public class LogCreator : ILogCreatorForGenerator
     {
         public LogWriterSettings Settings { get; init; }
         public ILogCreatorDataSource Data { get; init; }
         private LogCreatorOutput Output { get; set; }
-        
-        protected internal List<int> LabelsWeVisited { get; private set; } // snes addresses
+
+        public List<int> LabelsWeVisited { get; private set; } // snes addresses
         
         private LogCreatorTempLabelGenerator LogCreatorTempLabelGenerator { get; set; }
         private LogCreatorLineFormatter LogCreatorLineFormatter { get; set; }
@@ -382,7 +382,7 @@ namespace Diz.Core.export
             return generator;
         }
 
-        internal int GetLineByteLength(int offset)
+        public int GetLineByteLength(int offset)
         {
             int max = 1, step = 1;
             var size = GetRomSize();

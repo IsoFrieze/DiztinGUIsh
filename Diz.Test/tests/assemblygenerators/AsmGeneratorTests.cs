@@ -66,9 +66,9 @@ public static class AsmGeneratorTests
     }
     
     public static TheoryData<(int, string)> SamplePC =>
-        new List<int> {0, 22, -22, -1, 1, 100}
+        new List<int> {0, 50, 0xFF, 0xFFFFFF}
             .Select(i => new Func<(int, string)>(
-                    () => (i, new string(' ', Math.Abs(i)))
+                    () => (i, $"{i,6:X6}") 
                 )
             )
             .CreateTheoryData();
@@ -77,13 +77,22 @@ public static class AsmGeneratorTests
     [MemberData(nameof(SamplePC))]
     public static void TestPCGenerator((int, string) expected)
     {
-        var generator = new AssemblyGenerateProgramCounter();
+        var expectedOffset = expected.Item1;
+        var expectedStr = expected.Item2;
         
-        var eLen = expected.Item1;
-        var eString = expected.Item2;
-        
-        // var gen = new Func<string>(() => generator.Emit(null, eLen));
+        var dataMock = new Mock<ILogCreatorDataSource>();
+        dataMock
+            .Setup(m => m.ConvertPCtoSnes(
+                It.IsAny<int>())).Returns(() =>
+            {
+                return expectedOffset;
+            });
 
-        Assert.Equal(eString, generator.Emit(27, null));
+        var logCreatorMock = new Mock<ILogCreatorForGenerator>();
+        logCreatorMock.SetupGet(prop => prop.Data).Returns(dataMock.Object);
+        
+        var generator = new AssemblyGenerateProgramCounter {LogCreator = logCreatorMock.Object};
+        var actual = generator.Emit(expectedOffset, null);
+        Assert.Equal(expectedStr, actual);
     }
 }
