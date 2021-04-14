@@ -36,8 +36,7 @@ namespace Diz.Core.model
 
 
         // returns both real and temporary labels
-        IEnumerable<KeyValuePair<int, IReadOnlyLabel>> IReadOnlyLabelProvider.Labels => 
-            Labels.Select(l => new KeyValuePair<int, IReadOnlyLabel>(l.Key, l.Value));
+        IEnumerable<KeyValuePair<int, Label>> IReadOnlyLabelProvider.Labels => Labels;
 
         public void AddTemporaryLabel(int snesAddress, Label label)
         {

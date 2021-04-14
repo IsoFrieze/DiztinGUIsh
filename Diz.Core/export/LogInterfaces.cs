@@ -5,6 +5,7 @@ namespace Diz.Core.export
     public interface ILogCreatorDataSource : IReadOnlySnesRom
     {
         ITemporaryLabelProvider TemporaryLabelProvider { get; }
+        int GetInstructionLength(int offset);
     }
     
     public interface ITemporaryLabelProvider

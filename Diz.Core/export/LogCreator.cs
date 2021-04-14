@@ -84,6 +84,13 @@ namespace Diz.Core.export
             
             InitTempLabelGenerator();
         }
+        
+        public Dictionary<string, AssemblyPartialLineGenerator> CreateAssemblyGenerators()
+        {
+            var generators = AssemblyGeneratorRegistration.Create();
+            generators.ForEach(kvp => kvp.Value.LogCreator = this);
+            return generators;
+        }
 
         private void InitTempLabelGenerator()
         {
@@ -92,7 +99,8 @@ namespace Diz.Core.export
 
             LogCreatorTempLabelGenerator = new LogCreatorTempLabelGenerator
             {
-                LogCreator = this, GenerateAllUnlabeled = Settings.Unlabeled == LogWriterSettings.FormatUnlabeled.ShowAll,
+                LogCreator = this, 
+                GenerateAllUnlabeled = Settings.Unlabeled == LogWriterSettings.FormatUnlabeled.ShowAll,
             };
         }
 
@@ -123,7 +131,7 @@ namespace Diz.Core.export
             return result;
         }
 
-        private void ReportError(int offset, string msg)
+        protected internal void ReportError(int offset, string msg)
         {
             ++errorCount;
             var offsetMsg = offset >= 0 ? $" Offset 0x{offset:X}" : "";
@@ -142,125 +150,69 @@ namespace Diz.Core.export
 
         protected virtual void WriteLog()
         {
+            WriteMainIncludes();
+
+            var instructionGenerator = new AsmCreationInstructions {LogCreator = this};
+            instructionGenerator.Generate();
+            
+            WriteLabels();
+        }
+
+        // main function that writes one line of the assembly output at a time.
+        protected void WriteMainIncludes()
+        {
+            GenerateRomMapLine();
+            GenerateEmptyLine();
+            WriteMainBankIncludes();
+        }
+
+        private void WriteMainBankIncludes()
+        {
             var size = GetRomSize();
 
-            WriteMainIncludes(size);
-            var pointer = WriteMainAssembly(size);
-            WriteLabels(pointer);
-        }
-
-        private int WriteMainAssembly(int size)
-        {
-            // perf: this is the meat of the export, takes a while
-            var pointer = 0;
-            var bank = -1;
-            while (pointer < size)
-            {
-                WriteAddress(ref pointer, ref bank);
-            }
-
-            return pointer;
-        }
-
-        protected void WriteMainIncludes(int size)
-        {
-            const int ignored = 0;
-            Output.WriteLine(GenerateLine(ignored, "map"));
-            Output.WriteLine(GenerateLine(ignored, "empty"));
-            WriteMainBankIncludes(size);
-        }
-
-        private void WriteMainBankIncludes(int size)
-        {
             if (Settings.Structure != LogWriterSettings.FormatStructure.OneBankPerFile)
                 return;
 
             for (var i = 0; i < size; i += Data.GetBankSize())
-                Output.WriteLine(GenerateLine(i, "incsrc"));
+                WriteLine(GenerateLine(i, "incsrc"));
 
-            Output.WriteLine(GenerateLine(-1, "incsrc"));
+            const int labelsAsmFileId = -1;
+            WriteLine(GenerateLine(labelsAsmFileId, "incsrc"));
         }
 
-        // address is a "PC address" i.e. offset into the ROM.
-        // not a SNES address.
-        protected void WriteAddress(ref int pointer, ref int currentBank)
+
+        void WriteLine(string line)
         {
-            SwitchBanksIfNeeded(pointer, ref currentBank);
-
-            WriteBlankLineIfStartingNewParagraph(pointer);
-            WriteTheRealLine(pointer);
-            WriteBlankLineIfEndPoint(pointer);
-
-            pointer += GetLineByteLength(pointer);
+            Output.WriteLine(line);
         }
 
-        private void WriteTheRealLine(int pointer) =>
-            Output.WriteLine(GenerateLine(pointer, null));
+        protected internal void WriteTheRealLine(int pointer) =>
+            WriteLine(GenerateLine(pointer));
 
-        private void WriteBlankLineIfEndPoint(int pointer)
+        protected internal void GenerateEmptyLine() => GenerateSpecialLine("empty");
+        private void GenerateRomMapLine() => GenerateSpecialLine("map");
+
+        private void GenerateSpecialLine(string special)
         {
-            if (!IsLocationAnEndPoint(pointer))
-                return;
-
             const int ignored = 0;
-            Output.WriteLine(GenerateLine(ignored, "empty"));
+            WriteLine(GenerateLine(ignored, special));
         }
 
-        private void WriteBlankLineIfStartingNewParagraph(int pointer)
+        protected internal void OpenNewBank(int pointer, int bankToSwitchTo)
         {
-            if (!IsLocationAReadPoint(pointer) && !AnyLabelsPresent(pointer))
-                return;
-
-            const int ignored = 0;
-            Output.WriteLine(GenerateLine(ignored, "empty"));
+            Output.SwitchToBank(bankToSwitchTo);
+            
+            GenerateEmptyLine();
+            WriteLine(GenerateLine(pointer, "org"));
+            GenerateEmptyLine();
         }
 
-        private bool IsLocationPoint(int pointer, InOutPoint mustHaveFlag) =>
-            (Data.GetInOutPoint(pointer) & mustHaveFlag) != 0;
-
-        private bool IsLocationAnEndPoint(int pointer) => IsLocationPoint(pointer, InOutPoint.EndPoint);
-        private bool IsLocationAReadPoint(int pointer) => IsLocationPoint(pointer, InOutPoint.ReadPoint);
-
-        private bool AnyLabelsPresent(int pointer)
-        {
-            var snesAddress = Data.ConvertPCtoSnes(pointer);
-            return Data.Labels.GetLabel(snesAddress)?.Name.Length > 0;
-        }
-
-        private void SwitchBanksIfNeeded(int pointer, ref int currentBank)
-        {
-            var snesAddress = Data.ConvertPCtoSnes(pointer);
-
-            var thisBank = snesAddress >> 16;
-
-            if (thisBank == currentBank)
-                return;
-
-            OpenNewBank(pointer, thisBank);
-            currentBank = thisBank;
-
-            if (snesAddress % Data.GetBankSize() == 0)
-                return;
-
-            ReportError(pointer, "An instruction crossed a bank boundary.");
-        }
-
-        private void OpenNewBank(int pointer, int thisBank)
-        {
-            Output.SwitchToBank(thisBank);
-
-            const int ignored = 0;
-            Output.WriteLine(GenerateLine(ignored, "empty"));
-            Output.WriteLine(GenerateLine(pointer, "org"));
-            Output.WriteLine(GenerateLine(ignored, "empty"));
-        }
-
-        protected void WriteLabels(int pointer)
+        protected void WriteLabels()
         {
             // TODO check for PC to snes stuff
             var unvisitedLabels = GetUnvisitedLabels();
-            WriteAnyUnvisitedLabels(pointer, unvisitedLabels);
-            PrintAllLabelsIfRequested(pointer, unvisitedLabels);
+            WriteAnyUnvisitedLabels(unvisitedLabels);
+            WriteAllLabelsIfRequested(unvisitedLabels);
         }
 
         private Dictionary<int, IReadOnlyLabel> GetUnvisitedLabels()
@@ -280,19 +232,19 @@ namespace Diz.Core.export
             return unvisitedLabels;
         }
 
-        private void WriteAnyUnvisitedLabels(int pointer, Dictionary<int, IReadOnlyLabel> unvisitedLabels)
+        private void WriteAnyUnvisitedLabels(Dictionary<int, IReadOnlyLabel> unvisitedLabels)
         {
-            SwitchOutputStream(pointer, "labels");
-
+            SwitchOutputStream("labels");
+            
             foreach (var pair in unvisitedLabels)
             {
                 var snesAddress = pair.Key;
                 var pcOffset = Data.ConvertSnesToPc(snesAddress);
-                Output.WriteLine(GenerateLine(pcOffset, "labelassign"));
+                WriteLine(GenerateLine(pcOffset, "labelassign"));
             }
         }
 
-        private void PrintAllLabelsIfRequested(int pointer, IReadOnlyDictionary<int, IReadOnlyLabel> unvisitedLabels)
+        private void WriteAllLabelsIfRequested(IReadOnlyDictionary<int, IReadOnlyLabel> unvisitedLabels)
         {
             // part 2: optional: if requested, print all labels regardless of use.
             // Useful for debugging, documentation, or reverse engineering workflow.
@@ -301,19 +253,18 @@ namespace Diz.Core.export
             if (!Settings.IncludeUnusedLabels)
                 return;
 
-            SwitchOutputStream(pointer, "all-labels.txt"); // TODO: csv in the future. escape commas
+            SwitchOutputStream("all-labels.txt"); // TODO: csv in the future. escape commas
 
             foreach (var (snesAddress, _) in Data.Labels.Labels)
             {
                 // not the best place to add formatting, TODO: cleanup
                 var category = unvisitedLabels.ContainsKey(snesAddress) ? "UNUSED" : "USED";
-                var labelPcAddress = Data.ConvertPCtoSnes(pointer);
-                // TODO: double check this is the right snes/pc conversion
-                Output.WriteLine($";!^!-{category}-! " + GenerateLine(labelPcAddress, "labelassign"));
+                var labelPcAddress = Data.ConvertSnesToPc(snesAddress);
+                WriteLine($";!^!-{category}-! " + GenerateLine(labelPcAddress, "labelassign"));
             }
         }
 
-        protected void SwitchOutputStream(int pointer, string streamName)
+        protected void SwitchOutputStream(string streamName)
         {
             Output.SwitchToStream(streamName);
 
@@ -321,15 +272,14 @@ namespace Diz.Core.export
             if (Settings.Structure != LogWriterSettings.FormatStructure.SingleFile)
                 return;
 
-            const int ignored = 0;
-            Output.WriteLine(GenerateLine(ignored, "empty"));
+            GenerateEmptyLine();
         }
 
         // --------------------------
 
         #region WriteOperations
 
-        private string GenerateLine(int offset, string specialStr)
+        private string GenerateLine(int offset, string specialStr = null)
         {
             var line = "";
 
@@ -384,35 +334,40 @@ namespace Diz.Core.export
 
         public int GetLineByteLength(int offset)
         {
-            int max = 1, step = 1;
-            var size = GetRomSize();
+            return GetLineByteLength(offset, GetRomSize());
+        }
 
-            switch (Data.GetFlag(offset))
+        private static void GetLineByteLengthMaxAndStep(FlagType flagType, 
+            out int max, out int step, int dataPerLineSize)
+        {
+            max = 1; step = 1;
+
+            switch (flagType)
             {
                 case FlagType.Opcode:
-                    return Data.GetInstructionLength(offset);
+                    break;
                 case FlagType.Unreached:
                 case FlagType.Operand:
                 case FlagType.Data8Bit:
                 case FlagType.Graphics:
                 case FlagType.Music:
                 case FlagType.Empty:
-                    max = Settings.DataPerLine;
+                    max = dataPerLineSize;
                     break;
                 case FlagType.Text:
                     max = 21;
                     break;
                 case FlagType.Data16Bit:
                     step = 2;
-                    max = Settings.DataPerLine;
+                    max = dataPerLineSize;
                     break;
                 case FlagType.Data24Bit:
                     step = 3;
-                    max = Settings.DataPerLine;
+                    max = dataPerLineSize;
                     break;
                 case FlagType.Data32Bit:
                     step = 4;
-                    max = Settings.DataPerLine;
+                    max = dataPerLineSize;
                     break;
                 case FlagType.Pointer16Bit:
                     step = 2;
@@ -427,6 +382,16 @@ namespace Diz.Core.export
                     max = 4;
                     break;
             }
+        }
+
+        public int GetLineByteLength(int offset, int romSizeMax)
+        {
+            var flagType = Data.GetFlag(offset);
+            
+            if (flagType == FlagType.Opcode)
+                return Data.GetInstructionLength(offset);
+            
+            GetLineByteLengthMaxAndStep(flagType, out var max, out var step, Settings.DataPerLine);
 
             var bankSize = Data.GetBankSize();
             var myBank = offset / bankSize;
@@ -434,8 +399,8 @@ namespace Diz.Core.export
             var min = step;
             while (
                 min < max &&
-                offset + min < size &&
-                Data.GetFlag(offset + min) == Data.GetFlag(offset) &&
+                offset + min < romSizeMax &&
+                Data.GetFlag(offset + min) == flagType &&
                 Data.Labels.GetLabelName(Data.ConvertPCtoSnes(offset + min)) == "" &&
                 (offset + min) / bankSize == myBank
             ) min += step;
@@ -481,7 +446,7 @@ namespace Diz.Core.export
             return res;
         }
 
-        public string GetPointer(int offset, int bytes)
+        public string GeneratePointerStr(int offset, int bytes)
         {
             var ia = -1;
             string format = "", param = "";
@@ -520,13 +485,6 @@ namespace Diz.Core.export
             var text = "db \"";
             for (var i = 0; i < bytes; i++) text += (char) Data.GetRomByte(offset + i);
             return text + "\"";
-        }
-
-        public Dictionary<string, AssemblyPartialLineGenerator> CreateAssemblyGenerators()
-        {
-            var generators = AssemblyGeneratorRegistration.Create();
-            generators.ForEach(kvp => kvp.Value.LogCreator = this);
-            return generators;
         }
 
         public static bool ValidateFormatStr(string formatStr)

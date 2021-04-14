@@ -99,13 +99,13 @@ namespace Diz.Core.export.assemblyGenerators
                     code = LogCreator.GetFormattedBytes(offset, 4, bytes);
                     break;
                 case FlagType.Pointer16Bit:
-                    code = LogCreator.GetPointer(offset, 2);
+                    code = LogCreator.GeneratePointerStr(offset, 2);
                     break;
                 case FlagType.Pointer24Bit:
-                    code = LogCreator.GetPointer(offset, 3);
+                    code = LogCreator.GeneratePointerStr(offset, 3);
                     break;
                 case FlagType.Pointer32Bit:
-                    code = LogCreator.GetPointer(offset, 4);
+                    code = LogCreator.GeneratePointerStr(offset, 4);
                     break;
                 case FlagType.Text:
                     code = LogCreator.GetFormattedText(offset, bytes);

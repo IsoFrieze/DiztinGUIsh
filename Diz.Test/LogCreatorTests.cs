@@ -85,13 +85,29 @@ namespace Diz.Test
             }
         }
 
-        [Fact(Skip="currently busted til we fix the log exporter, disabling for now")]
+        [Fact(Skip="until labels are less busted")]
         public void TestAFewLines()
         {
             LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(InputRom));
         }
 
-        [Theory(Skip="currently busted til we fix the log exporter, disabling for now")]
+        [Fact(Skip="mirroring is busted at the moment")]
+        public void TestLabelCount()
+        {
+            // this is failing because we're glossing over mirroring, and maybe our ROM -> SNES mapping function isn't
+            // good enough anymore in this new world.
+            //
+            // also, we probably need to do something where the graph being collapsed is able to indicate that
+            // there are multiple SNES address matches (mirrors) for a given ROM address. and that we can ignore all the 
+            // mirrored stuff and pick the "Real" one here.
+            
+            // should give us "Test22" and "Test_Data"
+            var actual = InputRom.Labels.Labels.ToList();
+            Assert.Equal(2, actual.Count);
+        }
+
+        
+        [Theory(Skip="until labels are less busted")]
         [EmbeddedResourceData("Diz.Test/Resources/emptyrom.asm")]
         public void TestEmptyRom(string expectedAsm)
         {

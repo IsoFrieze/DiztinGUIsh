@@ -18,7 +18,7 @@ namespace Diz.Core.export
         
         int GetLineByteLength(int offset);
         string GetFormattedBytes(int offset, int step, int bytes);
-        string GetPointer(int offset, int bytes);
+        string GeneratePointerStr(int offset, int bytes);
         string GetFormattedText(int offset, int bytes);
     }
     

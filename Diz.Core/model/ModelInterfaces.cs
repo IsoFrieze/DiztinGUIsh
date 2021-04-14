@@ -7,7 +7,7 @@ namespace Diz.Core.model
 {
     public interface IReadOnlyLabelProvider
     {
-        public IEnumerable<KeyValuePair<int, IReadOnlyLabel>> Labels { get; }
+        public IEnumerable<KeyValuePair<int, Label>> Labels { get; }
 
         Label GetLabel(int snesAddress);
         string GetLabelName(int snesAddress);

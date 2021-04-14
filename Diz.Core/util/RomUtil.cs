@@ -6,6 +6,7 @@ using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.model.snes;
 
 namespace Diz.Core.util
 {
@@ -48,7 +49,7 @@ namespace Diz.Core.util
             return (GetBankFromSnesAddress(snesAddress) << 16) + ((snesAddress + offset) & 0xFFFF);
         }
 
-        private static int GetBankFromSnesAddress(int snesAddress)
+        public static int GetBankFromSnesAddress(int snesAddress)
         {
             return (snesAddress >> 16) & 0xFF;
         }
@@ -484,5 +485,15 @@ namespace Diz.Core.util
                 Name = "SNES Main Cpu BUS",
             };
         }
+        
+        public static bool IsLocationPoint(this ILogCreatorDataSource data, int pointer, InOutPoint mustHaveFlag) =>
+            (data.GetInOutPoint(pointer) & mustHaveFlag) != 0;
+
+        public static bool IsLocationAnEndPoint(this ILogCreatorDataSource data, int pointer) => 
+            IsLocationPoint(data, pointer, InOutPoint.EndPoint);
+        
+        public static bool IsLocationAReadPoint(this ILogCreatorDataSource data, int pointer) => 
+            IsLocationPoint(data, pointer, InOutPoint.ReadPoint);
+
     }
 }
