@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Xunit;
@@ -27,7 +28,7 @@ namespace Diz.Test
         private static ByteEntry SampleRomByte3()
         {
             return new() {
-                Annotations = new List<Annotation>
+                Annotations = new AnnotationCollection
                 {
                     new BranchAnnotation
                     {
@@ -56,8 +57,8 @@ namespace Diz.Test
             var rb = SampleRomByte2();
             rb.GetOrCreateAnnotationsList();
             
-            rb.Annotations.Add(new Comment() {Text="CommentText"});
-            rb.Annotations.Add(new Label() {Name="fn_stuff", Comment = "some_comment"});
+            rb.Annotations.Add(new Comment {Text="CommentText"});
+            rb.Annotations.Add(new Label {Name="fn_stuff", Comment = "some_comment"});
             return rb;
         }
 
@@ -129,6 +130,29 @@ namespace Diz.Test
             
             rb3.Annotations.Add(new Comment() {Text="2"});
             Assert.Throws<InvalidDataException>(() => rb3.GetOneAnnotation<Comment>());
+        }
+
+        [Fact]
+        public void AnnotationCollectionTests()
+        {
+            var b = new ByteEntry();
+            var label1 = new Label {Name = "test11", Comment = "asdf"};
+            var mark1 = new MarkAnnotation {TypeFlag = FlagType.Graphics};
+
+            Assert.Null(mark1.Parent);
+            Assert.Null(label1.Parent);
+            var ac = new AnnotationCollection() {label1, mark1};
+            
+            Assert.Null(mark1.Parent);
+            Assert.Null(label1.Parent);
+            b.Annotations = ac;
+            
+            Assert.Equal(b, mark1.Parent);
+            Assert.Equal(b, label1.Parent);
+
+            b.Annotations = null;
+            Assert.Null(mark1.Parent);
+            Assert.Null(label1.Parent);
         }
         
 

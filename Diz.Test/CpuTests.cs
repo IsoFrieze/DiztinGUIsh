@@ -22,7 +22,7 @@ namespace Diz.Test
                 // STA.W $2116
                 new()
                 {
-                    Byte = 0x8D, Annotations = new List<Annotation>
+                    Byte = 0x8D, Annotations = new AnnotationCollection
                     {
                         new OpcodeAnnotation {MFlag = true, XFlag = true, DataBank = 0x00, DirectPage = 0},
                         new MarkAnnotation {TypeFlag = FlagType.Opcode}
@@ -30,7 +30,7 @@ namespace Diz.Test
                 },
                 new()
                 {
-                    Byte = 0x16, Annotations = new List<Annotation>
+                    Byte = 0x16, Annotations = new AnnotationCollection
                     {
                         new MarkAnnotation {TypeFlag = FlagType.Operand},
                         new Comment {Text = "unused"} // 0xC00001
@@ -38,7 +38,7 @@ namespace Diz.Test
                 },
                 new()
                 {
-                    Byte = 0x21, Annotations = new List<Annotation>
+                    Byte = 0x21, Annotations = new AnnotationCollection
                     {
                         new MarkAnnotation {TypeFlag = FlagType.Operand}
                     }

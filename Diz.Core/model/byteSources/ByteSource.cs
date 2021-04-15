@@ -74,8 +74,8 @@ namespace Diz.Core.model.byteSources
             var b = Bytes[index];
             if (b == null)
                 Bytes[index] = b = new ByteEntry();
-            
-            b.GetOrCreateAnnotationsList().Add(newAnnotation);
+
+            b.AddAnnotation(newAnnotation);
         }
         
         // NOTE: recursion into the graph, careful.
@@ -87,6 +87,8 @@ namespace Diz.Core.model.byteSources
             return offsetData?.GetOneAnnotation<T>();
         }
 
+        // forward graph walk, kind of inefficient
+        // will return mirrored copies of annotations
         public IEnumerable<KeyValuePair<int, T>> GetAnnotationEnumerator<T>() where T : Annotation 
         {
             for (var index = 0; index < Bytes.Count; ++index)
@@ -98,6 +100,12 @@ namespace Diz.Core.model.byteSources
                 yield return new KeyValuePair<int, T>(index, annotation);
             }   
         }
+        
+        // same as above, but start with the children first and bubble upwards
+        /*public IEnumerable<KeyValuePair<int, T>> GetAnnotationEnumerator2<T>() where T : Annotation
+        {
+            // first, children
+        }*/
 
         public void AttachChildByteSource(ByteSourceMapping childByteSourceMapping)
         {

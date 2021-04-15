@@ -1,13 +1,15 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
-    public abstract class Annotation : INotifyPropertyChangedExt
+    public abstract class Annotation : IParentAware<ByteEntry>, INotifyPropertyChangedExt
     {
+        public ByteEntry Parent { get; protected set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
@@ -15,12 +17,29 @@ namespace Diz.Core.model
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        
-        // protected virtual bool Equals(Annotation other)
-        // {
-        //     // right now? everything might as well be equal.
-        //     return true;
-        // }
+
+        protected bool Equals(Annotation other)
+        {
+            return Equals(Parent, other.Parent);
+        }
+
+        public void OnParentChanged(ByteEntry parent)
+        {
+            Parent = parent;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Annotation) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Parent != null ? Parent.GetHashCode() : 0);
+        }
     }
 
     public class MarkAnnotation : Annotation, IComparable<MarkAnnotation>, IComparable

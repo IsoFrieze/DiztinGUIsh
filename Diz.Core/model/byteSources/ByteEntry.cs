@@ -9,7 +9,7 @@ namespace Diz.Core.model.byteSources
     public interface IReadOnlyByteEntry
     {
         byte? Byte { get; }
-        List<Annotation> Annotations { get; }
+        IReadOnlyList<Annotation> Annotations { get; }
 
         ByteSource Container { get; }
         int ContainerOffset { get; }
@@ -34,14 +34,27 @@ namespace Diz.Core.model.byteSources
         // if null, it means caller either needs to dig one level deeper in parent container to find the byte value, or, there is no data
         public byte? Byte { get; set; }
 
-        // might want to consider replace List<Annotation> with its own dedicated type
-        // private List<Annotation> annotations.
         // Note: don't allocate this immediately, wait for it to be used. we will have millions of them per ROM
-        public List<Annotation> Annotations { get; set; }
-
-        public List<Annotation> GetOrCreateAnnotationsList()
+        public AnnotationCollection Annotations
         {
-            return Annotations ??= new List<Annotation>();
+            get => annotations;
+            set
+            {
+                if (annotations != null)
+                    annotations.Parent = null;
+                
+                annotations = value;
+                
+                if (annotations != null)
+                    annotations.Parent = this;
+            }
+        }
+
+        IReadOnlyList<Annotation> IReadOnlyByteEntry.Annotations => Annotations;
+
+        public AnnotationCollection GetOrCreateAnnotationsList()
+        {
+            return Annotations ??= new AnnotationCollection();
         }
 
         protected internal ByteStorage ByteStorageContainer { get; internal set; }
@@ -127,19 +140,6 @@ namespace Diz.Core.model.byteSources
             return Annotations?.OrderBy(x => x.GetType().ToString()).ThenBy(x => x);
         }
 
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ByteEntry) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Byte, Annotations, Container, ContainerOffset);
-        }
-        
         // helpers:
         public T GetOneAnnotation<T>() where T : Annotation
         {
@@ -168,16 +168,34 @@ namespace Diz.Core.model.byteSources
                 return existing;
 
             var newItem = new T();
-            
-            GetOrCreateAnnotationsList().Add(newItem);
+
+            AddAnnotation(newItem);
             return newItem;
+        }
+        
+        public void AddAnnotation(Annotation newAnnotation)
+        {
+            GetOrCreateAnnotationsList().Add(newAnnotation);
+        }
+        
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ByteEntry) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Byte, Annotations, Container, ContainerOffset);
         }
 
         // note: our thread safety isn't comprehensive in this project yet.
         // be careful with this if you're doing anything clever, especially writing.
-        //
-        // TODO: instead of doing this, see if ConcurrentBag or similar classes would work.
+        // TODO: instead of doing this, see if ConcurrentBag or similar classes for the container itself would work?
         public ReaderWriterLockSlim Lock => _lock ??= new ReaderWriterLockSlim();
         private ReaderWriterLockSlim _lock;
+        private AnnotationCollection annotations;
     }
 }
