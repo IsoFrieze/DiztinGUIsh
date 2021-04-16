@@ -64,13 +64,21 @@ namespace Diz.Core.model.byteSources
             byteOffset.ContainerOffset = newIndex; // this will be true after the Add() call below.
         }
 
-        // note: enumerators will behave differently depending on underlying storages.
-        // some may produce gaps in the sequence, nulls, or skip to just the bytes actually instantiated.
-        public abstract IEnumerator<ByteEntry> GetEnumerator();
+        // GetEnumerator() will return an item at each index, or null if no Byte is present at that address.
+        // this means, as long as clients check for null items during enumeration, the behavior will be the same
+        // regardless of the internal storage type.
+        //
+        // This is potentially more inefficient but creates a consistent interface.
+        // For performance-heavy code, or cases where you only only want non-null bytes, choose another enumerator function
+        public abstract IEnumerator<ByteEntry> GetGaplessEnumerator();
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return GetGaplessEnumerator();
         }
+
+        public IEnumerator<ByteEntry> GetEnumerator() => GetGaplessEnumerator();
+
+        public abstract IEnumerator<ByteEntry> GetNativeEnumerator();
         
         protected void ImportBytes(IReadOnlyCollection<ByteEntry> inBytes)
         {
@@ -167,15 +175,14 @@ namespace Diz.Core.model.byteSources
 
             bytes.Add(byteOffset);
         }
-
+        
+        public override IEnumerator<ByteEntry> GetGaplessEnumerator() => bytes.GetEnumerator();
+        
         // NOTE: in this implementation, all bytes at all addresses always exist, so,
         // this will never return null or have gaps in the sequence.
         //
-        // other implementations may differ.
-        public override IEnumerator<ByteEntry> GetEnumerator()
-        {
-            return bytes.GetEnumerator();
-        }
+        // other implementations can differ.
+        public override IEnumerator<ByteEntry> GetNativeEnumerator() => GetGaplessEnumerator();
     }
 
     public class SparseByteStorage : ByteStorage
@@ -285,16 +292,22 @@ namespace Diz.Core.model.byteSources
         // which will return sequential items but fill in the aps with Null.
         //
         // this is not the most efficient thing but makes the client code easier
-        // to write. if performance becomes an issue, use GetSparseEnumerator()
+        // to write. if performance becomes an issue, use GetTrueEnumerator() or GetNativeEnumerator()
         // which will just return the sections that have been populated.
-        public override IEnumerator<ByteEntry> GetEnumerator()
+        public override IEnumerator<ByteEntry> GetGaplessEnumerator()
         {
             return new GapFillingEnumerator(this);
+        }
+        
+        // return only elements that actually exist (no gaps, no null items will be returned).
+        public override IEnumerator<ByteEntry> GetNativeEnumerator()
+        {
+            return bytes.Select(pair => pair.Value).GetEnumerator();
         }
 
         // note: indices are going to be ordered, BUT there can be gaps.
         // caller should be prepared to handle this. 
-        public SortedDictionary<int, ByteEntry>.Enumerator GetSparseEnumerator()
+        public SortedDictionary<int, ByteEntry>.Enumerator GetRealEnumerator()
         {
             return bytes.GetEnumerator();
         }

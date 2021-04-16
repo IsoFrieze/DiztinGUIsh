@@ -99,7 +99,7 @@ namespace Diz.Test.tests
             
             Assert.NotNull(byteStorageSparse);
             Assert.Equal(expectedActualCount, byteStorageSparse.ActualCount);
-            var en = byteStorageSparse.GetSparseEnumerator();
+            var en = byteStorageSparse.GetRealEnumerator();
             
             var i = 0;
             while (en.MoveNext())

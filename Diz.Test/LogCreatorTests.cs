@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -38,7 +35,8 @@ namespace Diz.Test
                     // highlighting a particular section here
                     // we will use this for unit tests as well.
 
-                    // CODE_808000: LDA.W Test_Data,X
+                    // SNES address: 808000
+                    // instruction: LDA.W Test_Data,X
                     new()
                     {
                         Byte = 0xBD, TypeFlag = FlagType.Opcode, MFlag = true, Point = InOutPoint.InPoint,
@@ -47,31 +45,32 @@ namespace Diz.Test
                     new() {Byte = 0x5B, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100}, // Test_Data
                     new() {Byte = 0x80, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100}, // Test_Data
 
-                    // STA.W $0100,X
+                    // SNES address: 808003
+                    // instruction: STA.W $0100,X
                     new() {Byte = 0x9D, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
                     new() {Byte = 0x00, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
                     new() {Byte = 0x01, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
 
-                    // DEX
+                    // SNES address: 808006
+                    // instruction: DEX
                     new()
                     {
                         Byte = 0xCA, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100,
                         Annotations = {new Label {Name = "Test22"}}
                     },
 
-                    // BPL CODE_808000
+                    // SNES address: 808007
+                    // instruction: BPL CODE_808000
                     new()
                     {
                         Byte = 0x10, TypeFlag = FlagType.Opcode, MFlag = true, Point = InOutPoint.OutPoint,
                         DataBank = 0x80, DirectPage = 0x2100
                     },
                     new() {Byte = 0xF7, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-
-                    // ------------------------------------
                 };
 
                 var actualRomBytes = new ByteSource {
-                    Name = "Super Matador Brothers 2, Now you're power with playing",
+                    Name = "Space Cats 2: Rise of Lopsy Dumpwell",
                     Bytes = new ByteList(bytes)
                 };
                 
@@ -91,19 +90,24 @@ namespace Diz.Test
             LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(InputRom));
         }
 
-        [Fact(Skip="mirroring is busted at the moment")]
-        public void TestLabelCount()
+        [Fact]
+        public void TestLabelAccess()
         {
-            // this is failing because we're glossing over mirroring, and maybe our ROM -> SNES mapping function isn't
-            // good enough anymore in this new world.
-            //
-            // also, we probably need to do something where the graph being collapsed is able to indicate that
-            // there are multiple SNES address matches (mirrors) for a given ROM address. and that we can ignore all the 
-            // mirrored stuff and pick the "Real" one here.
-            
-            // should give us "Test22" and "Test_Data"
-            var actual = InputRom.Labels.Labels.ToList();
+            var actual = InputRom.SnesAddressSpace
+                .GetAnnotationsIncludingChildrenEnumerator<Label>()
+                .ToDictionary(pair => pair.Key);
+
             Assert.Equal(2, actual.Count);
+
+            var l1 = actual.GetValueOrDefault(0x808006);
+            Assert.NotEqual(default, l1);
+            Assert.Equal("Test22", l1.Value.Name);
+            
+            var l2 = actual.GetValueOrDefault(0x80805B);
+            Assert.NotEqual(default, l2);
+            Assert.Equal("Test_Data", l2.Value.Name);
+
+            Assert.Equal(default, actual.GetValueOrDefault(0x808008));
         }
 
         

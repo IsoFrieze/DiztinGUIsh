@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using Diz.Core.util;
 
 namespace Diz.Core.model.byteSources
 {
@@ -87,9 +91,15 @@ namespace Diz.Core.model.byteSources
             return offsetData?.GetOneAnnotation<T>();
         }
 
-        // forward graph walk, kind of inefficient
-        // will return mirrored copies of annotations
-        public IEnumerable<KeyValuePair<int, T>> GetAnnotationEnumerator<T>() where T : Annotation 
+        // go through every byte we contain, return all annotations found at every byte
+        // WILL RETURN MIRRORED DATA. i.e. if a SNES ROM bank is mirrored 20 times,
+        // there will be 20 references to the same annotation.
+        //
+        // the int addresses here are an index into THIS bytesource (not the one the Annotations came from).
+        // you can access their underlying ByteSource (if different) via Annotation.Parent
+        //
+        // if you want a unique list, use another enumerator below.
+        public IEnumerable<KeyValuePair<int, T>> GetEveryAnnotationEnumerator<T>() where T : Annotation 
         {
             for (var index = 0; index < Bytes.Count; ++index)
             {
@@ -101,11 +111,74 @@ namespace Diz.Core.model.byteSources
             }   
         }
         
-        // same as above, but start with the children first and bubble upwards
-        /*public IEnumerable<KeyValuePair<int, T>> GetAnnotationEnumerator2<T>() where T : Annotation
+        // this will search our children for annotations, and translate them into our address space.
+        // returns: a unique list of annotations found in all ByteSources (including us and our children),
+        // mapping into our address space.
+        //
+        // NOTES:
+        // - this will NOT return mirrored labels, for that use GetEveryAnnotationEnumerator().
+        // - to get the Annotation's index into its true containing ByteSource, use Annotation.Parent
+        // - results are unordered
+        public IEnumerable<KeyValuePair<int, T>> GetAnnotationsIncludingChildrenEnumerator<T>(int startIndex = 0, int count = -1) where T : Annotation
         {
-            // first, children
-        }*/
+            if (ChildSources == null)
+                yield break;
+            
+            var endingIndex = GetEndingIndexForRange(startIndex, count);
+
+            // return annotations found in children
+            foreach (var child in ChildSources)
+            {
+                foreach (var (childIndex, childAnnotation) in child.ByteSource.GetAnnotationsIncludingChildrenEnumerator<T>())
+                {
+                    var ourIndex = child.ConvertIndexFromChildToParent(childIndex);
+                    Debug.Assert(IsValidIndex(ourIndex));
+
+                    if (ourIndex < startIndex || ourIndex > endingIndex)
+                        continue;
+                    
+                    yield return new KeyValuePair<int, T>(ourIndex, childAnnotation);
+                }
+            }
+
+            foreach (var annotation in GetOnlyOwnAnnotations<T>())
+                yield return new KeyValuePair<int, T>(annotation.Parent.ContainerOffset, annotation);
+        }
+
+        // return a list of annotations attached to our ByteStorage (and nothing from our children)
+        public IEnumerable<T> GetOnlyOwnAnnotations<T>(int startIndex = 0, int count = -1) where T : Annotation
+        {
+            var endingIndex = GetEndingIndexForRange(startIndex, count);
+            
+            // return our own annotations
+            // PERFORMANCE: we use GetNativeEnumerator() which will skip any ByteEntry that doesn't really exist.
+            var enumerator = Bytes.GetNativeEnumerator();
+            while (enumerator.MoveNext())
+            {
+                var byteEntry = enumerator.Current;
+                Debug.Assert(byteEntry != null);
+                
+                if (byteEntry.ContainerOffset < startIndex || byteEntry.ContainerOffset > endingIndex)
+                    continue;
+                
+                var annotation = byteEntry.GetOneAnnotation<T>();
+
+                if (annotation != null)
+                    yield return annotation;
+            }
+        }
+
+        private int GetEndingIndexForRange(int startIndex, int count)
+        {
+            if (!IsValidIndex(startIndex))
+                throw new IndexOutOfRangeException(nameof(startIndex));
+
+            var endingIndex = startIndex + (count != -1 ? count : Bytes.Count) - 1;
+            if (!IsValidIndex(endingIndex))
+                throw new ArgumentOutOfRangeException(nameof(count));
+            
+            return endingIndex;
+        }
 
         public void AttachChildByteSource(ByteSourceMapping childByteSourceMapping)
         {
