@@ -84,7 +84,7 @@ namespace Diz.Test
             }
         }
 
-        [Fact(Skip="until labels are less busted")]
+        [Fact]
         public void TestAFewLines()
         {
             LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(InputRom));

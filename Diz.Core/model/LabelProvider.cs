@@ -148,7 +148,8 @@ namespace Diz.Core.model
             Data = data;
         }
 
-        public IEnumerable<KeyValuePair<int, Label>> Labels => Data.SnesAddressSpace.GetEveryAnnotationEnumerator<Label>();
+        public IEnumerable<KeyValuePair<int, Label>> Labels => 
+            Data.SnesAddressSpace.GetAnnotationsIncludingChildrenEnumerator<Label>();
 
         private static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
         

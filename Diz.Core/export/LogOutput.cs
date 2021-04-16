@@ -17,6 +17,7 @@ namespace Diz.Core.export
         }
         
         protected LogCreator LogCreator;
+        public int ErrorCount { get; protected set; }
 
         public void Init(LogCreator logCreator)
         {
@@ -26,10 +27,17 @@ namespace Diz.Core.export
 
         protected virtual void Init() { }
         public virtual void Finish(OutputResult result) { }
-        public virtual void SwitchToBank(int bankNum) { }
+        public virtual void SetBank(int bankNum) { }
         public virtual void SwitchToStream(string streamName, bool isErrorStream = false) { }
         public abstract void WriteLine(string line);
         public abstract void WriteErrorLine(string line);
+
+        public void WriteErrorLine(int offset, string msg)
+        {
+            ErrorCount++;
+            var offsetMsg = offset >= 0 ? $" Offset 0x{offset:X}" : "";
+            WriteErrorLine($"({ErrorCount}){offsetMsg}: {msg}");
+        }
     }
 
     public class LogCreatorStringOutput : LogCreatorOutput
@@ -46,7 +54,11 @@ namespace Diz.Core.export
         }
 
         public override void WriteLine(string line) => outputBuilder.AppendLine(line);
-        public override void WriteErrorLine(string line) => errorBuilder.AppendLine(line);
+        public override void WriteErrorLine(string line)
+        {
+            ErrorCount++;
+            errorBuilder.AppendLine(line);
+        }
 
         public override void Finish(OutputResult result)
         {
@@ -104,7 +116,7 @@ namespace Diz.Core.export
                 File.Delete(BuildStreamPath(LogCreator.Settings.ErrorFilename));
         }
 
-        public override void SwitchToBank(int bankNum)
+        public override void SetBank(int bankNum)
         {
             var bankStr = Util.NumberToBaseString(bankNum, Util.NumberBase.Hexadecimal, 2);
             SwitchToStream($"bank_{bankStr}");
@@ -157,6 +169,7 @@ namespace Diz.Core.export
 
         public override void WriteErrorLine(string line)
         {
+            ErrorCount++;
             errorOutputStream?.WriteLine(line);
         }
     }

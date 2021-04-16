@@ -47,15 +47,15 @@ namespace Diz.Core.export.assemblyGenerators
             // i.e. given that we are at PC offset = 0,
             // we find valid SNES offsets mirrored of 0xC08000 and 0x808000 which both refer to the same place
             // 
-            // TODO: we need to deal with that mirroring here
+            // TODO: we may still need to deal with that mirroring here
             // TODO: eventually, support multiple labels tagging the same address, it may not always be just one.
         
-            var snesOffset = Data.ConvertPCtoSnes(offset); 
-            var label = Data.Labels.GetLabelName(snesOffset);
+            var snesAddress = Data.ConvertPCtoSnes(offset); 
+            var label = Data.Labels.GetLabelName(snesAddress);
             if (label == null)
                 return "";
         
-            LogCreator.LabelsWeVisited.Add(snesOffset);
+            LogCreator.OnLabelVisited(snesAddress);
 
             var noColon = label.Length == 0 || label[0] == '-' || label[0] == '+';
 
@@ -87,28 +87,28 @@ namespace Diz.Core.export.assemblyGenerators
                 case FlagType.Graphics:
                 case FlagType.Music:
                 case FlagType.Empty:
-                    code = LogCreator.GetFormattedBytes(offset, 1, bytes);
+                    code = Data.GetFormattedBytes(offset, 1, bytes);
                     break;
                 case FlagType.Data16Bit:
-                    code = LogCreator.GetFormattedBytes(offset, 2, bytes);
+                    code = Data.GetFormattedBytes(offset, 2, bytes);
                     break;
                 case FlagType.Data24Bit:
-                    code = LogCreator.GetFormattedBytes(offset, 3, bytes);
+                    code = Data.GetFormattedBytes(offset, 3, bytes);
                     break;
                 case FlagType.Data32Bit:
-                    code = LogCreator.GetFormattedBytes(offset, 4, bytes);
+                    code = Data.GetFormattedBytes(offset, 4, bytes);
                     break;
                 case FlagType.Pointer16Bit:
-                    code = LogCreator.GeneratePointerStr(offset, 2);
+                    code = Data.GeneratePointerStr(offset, 2);
                     break;
                 case FlagType.Pointer24Bit:
-                    code = LogCreator.GeneratePointerStr(offset, 3);
+                    code = Data.GeneratePointerStr(offset, 3);
                     break;
                 case FlagType.Pointer32Bit:
-                    code = LogCreator.GeneratePointerStr(offset, 4);
+                    code = Data.GeneratePointerStr(offset, 4);
                     break;
                 case FlagType.Text:
-                    code = LogCreator.GetFormattedText(offset, bytes);
+                    code = Data.GetFormattedText(offset, bytes);
                     break;
             }
 

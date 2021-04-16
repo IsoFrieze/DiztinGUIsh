@@ -14,13 +14,9 @@ namespace Diz.Core.export
     { 
         public LogWriterSettings Settings { get; }
         ILogCreatorDataSource Data { get; }
-        List<int> LabelsWeVisited { get; }
-        public DataErrorChecking DataErrorChecking { get; }
-        
+        void OnLabelVisited(int snesAddress);
+
         int GetLineByteLength(int offset);
-        string GetFormattedBytes(int offset, int step, int bytes);
-        string GeneratePointerStr(int offset, int bytes);
-        string GetFormattedText(int offset, int bytes);
     }
     
     public abstract class AssemblyPartialLineGenerator : IAssemblyPartialGenerator
