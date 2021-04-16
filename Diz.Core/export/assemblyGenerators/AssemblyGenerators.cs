@@ -328,6 +328,7 @@ namespace Diz.Core.export.assemblyGenerators
     }
     
     // output label at snes offset, and its value
+    // example output:  "FnMultiplyByTwo = $808012"
     public class AssemblyGenerateLabelAssign : AssemblyPartialLineGenerator
     {
         public AssemblyGenerateLabelAssign()
@@ -339,7 +340,7 @@ namespace Diz.Core.export.assemblyGenerators
         {
             var snesAddress = Data.ConvertPCtoSnes(offset);
             var labelName = Data.Labels.GetLabelName(snesAddress);
-            var offsetStr = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 6, true);
+            var snesAddrFormatted = Util.NumberToBaseString(snesAddress, Util.NumberBase.Hexadecimal, 6, true);
             var labelComment = Data.Labels.GetLabelComment(snesAddress);
 
             if (string.IsNullOrEmpty(labelName))
@@ -355,7 +356,7 @@ namespace Diz.Core.export.assemblyGenerators
             if (LogCreator.Settings.PrintLabelSpecificComments && labelComment != "")
                 finalCommentText = $"; !^ {labelComment} ^!";
 
-            var str = $"{labelName} = {offsetStr}{finalCommentText}";
+            var str = $"{labelName} = {snesAddrFormatted}{finalCommentText}";
             return Util.LeftAlign(length, str);
         }
     }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -290,7 +289,7 @@ namespace Diz.Test
             var data = TinyHiRomWithExtraLabel;
             Assert.Equal("SNES_VMADDL", data.Labels.GetLabelName(0x2116));
             Assert.Equal("", data.Labels.GetLabelName(0x2119)); // bogus address
-            // Assert.Equal("SNES_VMADDL", data.GetLabelName(0x7E2116)); // later, we need this to ALSO work
+            // Assert.Equal("SNES_VMADDL", data.Labels.GetLabelName(0x7E2116)); // later, we need mirrors like this to ALSO work for WRAM
         }
 
         [Fact]
