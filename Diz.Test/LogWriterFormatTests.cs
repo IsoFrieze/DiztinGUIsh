@@ -13,7 +13,7 @@ namespace Diz.Test
     {
         public class LogFormatStrTestHarness
         {
-            public List<LogCreatorLineFormatter.FormatItem> ExpectedOutput { get; init; }
+            public List<LogCreatorLineFormatter.ColumnFormat> ExpectedOutput { get; init; }
             public string FormatStr { get; init; }
             public Dictionary<string, AssemblyPartialLineGenerator> Generators
             {
@@ -50,7 +50,7 @@ namespace Diz.Test
                     }.ToDictionary(generator => generator.Token),
 
                     // output
-                    ExpectedOutput = new List<LogCreatorLineFormatter.FormatItem>
+                    ExpectedOutput = new List<LogCreatorLineFormatter.ColumnFormat>
                     {
                         new() { Value = "test1" },
                         new() { Value = ";", IsLiteral = true }, 
@@ -69,7 +69,7 @@ namespace Diz.Test
         public static void TestLogWriterFormatStr(LogFormatStrTestHarness harness)
         {
             var formatter = new LogCreatorLineFormatter(harness.FormatStr, harness.Generators);
-            TestUtil.AssertCollectionEqual(harness.ExpectedOutput, formatter.ParsedFormat);
+            TestUtil.AssertCollectionEqual(harness.ExpectedOutput, formatter.ColumnFormats);
         }
     }
 }

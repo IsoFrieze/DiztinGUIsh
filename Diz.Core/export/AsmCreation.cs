@@ -68,7 +68,9 @@ namespace Diz.Core.export
             BankManager.SwitchBanksIfNeeded(pointer);
 
             WriteBlankLineIfStartingNewParagraph(pointer);
-            LogCreator.WriteTheRealLine(pointer);
+            var lineTxt = LogCreator.LineGenerator.GenerateNormalLine(pointer);
+            LogCreator.WriteLine(lineTxt);
+            LogCreator.DataErrorChecking.CheckForErrorsAt(pointer);
             WriteBlankLineIfEndPoint(pointer);
 
             pointer += LogCreator.GetLineByteLength(pointer);

@@ -129,7 +129,7 @@ namespace DiztinGUIsh
 
         private bool ValidateFormat()
         {
-            return LogCreator.ValidateFormatStr(textFormat.Text);
+            return LogCreatorLineFormatter.Validate(textFormat.Text);
         }
 
         private void RegenerateSampleOutput()

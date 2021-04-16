@@ -15,6 +15,7 @@ namespace Diz.Core.export
         public LogWriterSettings Settings { get; }
         ILogCreatorDataSource Data { get; }
         List<int> LabelsWeVisited { get; }
+        public DataErrorChecking DataErrorChecking { get; }
         
         int GetLineByteLength(int offset);
         string GetFormattedBytes(int offset, int step, int bytes);

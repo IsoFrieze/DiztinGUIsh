@@ -6,13 +6,13 @@ namespace Diz.Core.export
 {
     public class LogCreatorLineFormatter
     {
-        public class FormatItem
+        public class ColumnFormat
         {
             public string Value;
             public int? LengthOverride;
             public bool IsLiteral;
             
-            protected bool Equals(FormatItem other)
+            protected bool Equals(ColumnFormat other)
             {
                 return Value == other.Value && LengthOverride == other.LengthOverride && IsLiteral == other.IsLiteral;
             }
@@ -22,7 +22,7 @@ namespace Diz.Core.export
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
-                return Equals((FormatItem) obj);
+                return Equals((ColumnFormat) obj);
             }
 
             public override int GetHashCode()
@@ -32,7 +32,7 @@ namespace Diz.Core.export
         }
 
         public string FormatString { get; }
-        public List<FormatItem> ParsedFormat { get; private set; }
+        public List<ColumnFormat> ColumnFormats { get; private set; }
 
         private readonly IReadOnlyDictionary<string, AssemblyPartialLineGenerator> generators;
 
@@ -43,6 +43,8 @@ namespace Diz.Core.export
             
             Parse();
         }
+        
+        public LogCreatorLineFormatter(string lineFormatStr) : this(lineFormatStr, AssemblyGeneratorRegistration.Create()) {}
         
         // every line printed in a .asm file is done so by variable substitution according to a format string.
         //
@@ -63,7 +65,7 @@ namespace Diz.Core.export
         // parameter passed in.
         private void Parse()
         {
-            var output = new List<FormatItem>();
+            var output = new List<ColumnFormat>();
             
             var split = FormatString.Split('%');
             
@@ -76,10 +78,10 @@ namespace Diz.Core.export
                 ParseOneItem(isLiteral, output, split[i]);
             }
 
-            ParsedFormat = output;
+            ColumnFormats = output;
         }
 
-        private void ParseOneItem(bool isLiteral, ICollection<FormatItem> output, string token)
+        private void ParseOneItem(bool isLiteral, ICollection<ColumnFormat> output, string token)
         {
             var newItem = isLiteral 
                 ? ParseStringLiteral(token) 
@@ -89,9 +91,9 @@ namespace Diz.Core.export
                 output.Add(newItem);
         }
         
-        private FormatItem ParseFormatItem(string token)
+        private ColumnFormat ParseFormatItem(string token)
         {
-            var item = new FormatItem();
+            var item = new ColumnFormat();
 
             string overrideLenStr = null;
             var indexColon = token.IndexOf(':');
@@ -124,7 +126,7 @@ namespace Diz.Core.export
             return item;
         }
 
-        private static FormatItem ParseStringLiteral(string token)
+        private static ColumnFormat ParseStringLiteral(string token)
         {
             if (string.IsNullOrEmpty(token))
                 return null;
@@ -134,6 +136,19 @@ namespace Diz.Core.export
                 Value = token,
                 IsLiteral = true
             };
+        }
+        
+        public static bool Validate(string formatStr)
+        {
+            try
+            {
+                var unusedJustForValidation = new LogCreatorLineFormatter(formatStr);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

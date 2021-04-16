@@ -107,7 +107,7 @@ namespace Diz.Test
         }
 
         
-        [Theory(Skip="until labels are less busted")]
+        [Theory]
         [EmbeddedResourceData("Diz.Test/Resources/emptyrom.asm")]
         public void TestEmptyRom(string expectedAsm)
         {

@@ -24,7 +24,7 @@ namespace Diz.Core.export
         
         private DataErrorChecking dataErrorChecking;
 
-        private DataErrorChecking DataErrorChecking
+        public DataErrorChecking DataErrorChecking
         {
             get
             {
@@ -59,7 +59,6 @@ namespace Diz.Core.export
             try
             {
                 LogCreatorTempLabelGenerator?.GenerateTemporaryLabels();
-                
                 WriteLog();
             }
             finally
@@ -68,6 +67,8 @@ namespace Diz.Core.export
                 LogCreatorTempLabelGenerator?.ClearTemporaryLabels();
             }
         }
+        
+        public LineGenerator LineGenerator { get; protected set; }
 
         protected virtual void Init()
         {
@@ -75,23 +76,14 @@ namespace Diz.Core.export
 
             InitOutput();
 
-            Generators = CreateAssemblyGenerators();
-            
-            LogCreatorLineFormatter = new LogCreatorLineFormatter(Settings.Format, Generators);
-            
+            LineGenerator = new LineGenerator(this, Settings.Format);
+
             errorCount = 0;
             LabelsWeVisited = new List<int>();
             
             InitTempLabelGenerator();
         }
         
-        public Dictionary<string, AssemblyPartialLineGenerator> CreateAssemblyGenerators()
-        {
-            var generators = AssemblyGeneratorRegistration.Create();
-            generators.ForEach(kvp => kvp.Value.LogCreator = this);
-            return generators;
-        }
-
         private void InitTempLabelGenerator()
         {
             if (Settings.Unlabeled == LogWriterSettings.FormatUnlabeled.ShowNone)
@@ -138,11 +130,6 @@ namespace Diz.Core.export
             Output.WriteErrorLine($"({errorCount}){offsetMsg}: {msg}");
         }
 
-        private void CheckForErrorsAt(int offset)
-        {
-            DataErrorChecking.CheckForErrorsAt(offset);
-        }
-
         public int GetRomSize()
         {
             return Settings.RomSizeOverride != -1 ? Settings.RomSizeOverride : Data.GetRomSize();
@@ -151,10 +138,7 @@ namespace Diz.Core.export
         protected virtual void WriteLog()
         {
             WriteMainIncludes();
-
-            var instructionGenerator = new AsmCreationInstructions {LogCreator = this};
-            instructionGenerator.Generate();
-            
+            new AsmCreationInstructions {LogCreator = this}.Generate();
             WriteLabels();
         }
 
@@ -172,30 +156,25 @@ namespace Diz.Core.export
 
             if (Settings.Structure != LogWriterSettings.FormatStructure.OneBankPerFile)
                 return;
-
+            
             for (var i = 0; i < size; i += Data.GetBankSize())
-                WriteLine(GenerateLine(i, "incsrc"));
-
-            const int labelsAsmFileId = -1;
-            WriteLine(GenerateLine(labelsAsmFileId, "incsrc"));
+                WriteLine(LineGenerator.GenerateSpecialLine("incsrc", i));
+            
+            // output the include for labels.asm file
+            WriteLine(LineGenerator.GenerateSpecialLine("incsrc"));
         }
 
-
-        void WriteLine(string line)
+        public void WriteLine(string line)
         {
             Output.WriteLine(line);
         }
-
-        protected internal void WriteTheRealLine(int pointer) =>
-            WriteLine(GenerateLine(pointer));
 
         protected internal void GenerateEmptyLine() => GenerateSpecialLine("empty");
         private void GenerateRomMapLine() => GenerateSpecialLine("map");
 
         private void GenerateSpecialLine(string special)
         {
-            const int ignored = 0;
-            WriteLine(GenerateLine(ignored, special));
+            WriteLine(LineGenerator.GenerateSpecialLine(special));
         }
 
         protected internal void OpenNewBank(int pointer, int bankToSwitchTo)
@@ -203,7 +182,7 @@ namespace Diz.Core.export
             Output.SwitchToBank(bankToSwitchTo);
             
             GenerateEmptyLine();
-            WriteLine(GenerateLine(pointer, "org"));
+            WriteLine(LineGenerator.GenerateSpecialLine("org", pointer));
             GenerateEmptyLine();
         }
 
@@ -240,7 +219,7 @@ namespace Diz.Core.export
             {
                 var snesAddress = pair.Key;
                 var pcOffset = Data.ConvertSnesToPc(snesAddress);
-                WriteLine(GenerateLine(pcOffset, "labelassign"));
+                WriteLine(LineGenerator.GenerateSpecialLine("labelassign", pcOffset));
             }
         }
 
@@ -260,7 +239,7 @@ namespace Diz.Core.export
                 // not the best place to add formatting, TODO: cleanup
                 var category = unvisitedLabels.ContainsKey(snesAddress) ? "UNUSED" : "USED";
                 var labelPcAddress = Data.ConvertSnesToPc(snesAddress);
-                WriteLine($";!^!-{category}-! " + GenerateLine(labelPcAddress, "labelassign"));
+                WriteLine($";!^!-{category}-! " + LineGenerator.GenerateSpecialLine("labelassign", labelPcAddress));
             }
         }
 
@@ -278,59 +257,6 @@ namespace Diz.Core.export
         // --------------------------
 
         #region WriteOperations
-
-        private string GenerateLine(int offset, string specialStr = null)
-        {
-            var line = "";
-
-            foreach (var formatItem in LogCreatorLineFormatter.ParsedFormat)
-            {
-                line += GenerateLinePartial(offset, formatItem, specialStr);
-            }
-
-            if (specialStr == null)
-                CheckForErrorsAt(offset);
-
-            return line;
-        }
-
-        private string GenerateLinePartial(int offset, LogCreatorLineFormatter.FormatItem formatItem, string specialModifierStr)
-        {
-            // string literal version
-            if (formatItem.IsLiteral)
-                return formatItem.Value;
-            
-            var generatorName = GetGeneratorName(formatItem, specialModifierStr);
-
-            var generator = GetGeneratorFor(generatorName);
-            
-            return generator.Emit(offset, formatItem.LengthOverride);
-        }
-
-        private static string GetGeneratorName(LogCreatorLineFormatter.FormatItem formatItem, string generatorOverrideIfCode = null)
-        {
-            // normal non-special case
-            if (generatorOverrideIfCode == null)
-                return formatItem.Value;
-
-            return GetOverrideGeneratorNameIfCode(formatItem.Value, generatorOverrideIfCode);
-        }
-
-        private static string GetOverrideGeneratorNameIfCode(string nameToOverride, string generatorOverrideIfCode)
-        {
-            if (nameToOverride != "code")
-                return "%empty";
-
-            return $"%{generatorOverrideIfCode}";
-        }
-
-        public AssemblyPartialLineGenerator GetGeneratorFor(string parameter)
-        {
-            if (!Generators.TryGetValue(parameter, out var generator))
-                throw new InvalidOperationException($"Can't find generator for {parameter}");
-            
-            return generator;
-        }
 
         public int GetLineByteLength(int offset)
         {
@@ -485,24 +411,6 @@ namespace Diz.Core.export
             var text = "db \"";
             for (var i = 0; i < bytes; i++) text += (char) Data.GetRomByte(offset + i);
             return text + "\"";
-        }
-
-        public static bool ValidateFormatStr(string formatStr)
-        {
-            // this is not really a good way to do this, too much mem alloc
-            // see if we can do it statically instead using data on the generators
-            var logCreator = new LogCreator();
-            var generators = logCreator.CreateAssemblyGenerators();
-
-            try
-            {
-                var unused = new LogCreatorLineFormatter(formatStr, generators);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
         }
     }
 
