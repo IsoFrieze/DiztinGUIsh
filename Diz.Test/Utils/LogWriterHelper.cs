@@ -5,6 +5,7 @@ using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Diz.Test.Utils
 {
@@ -91,8 +92,14 @@ namespace Diz.Test.Utils
                 .Select(line => ParseLine(line.Trim()))
                 .ToList();
 
-        public static void AssertAssemblyOutputEquals(string expectedRaw, LogCreatorOutput.OutputResult result)
+        public static void AssertAssemblyOutputEquals(string expectedRaw, LogCreatorOutput.OutputResult result, ITestOutputHelper testOutputHelper = null)
         {
+            testOutputHelper?.WriteLine("** EXPECTED **");
+            testOutputHelper?.WriteLine(expectedRaw);
+            
+            testOutputHelper?.WriteLine("** ACTUAL **");
+            testOutputHelper?.WriteLine(result.OutputStr);
+            
             AssertGoodOutput(result);
             
             // parse the output so we can better pinpoint where errors are

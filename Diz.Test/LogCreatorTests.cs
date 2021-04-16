@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
@@ -6,6 +7,7 @@ using Diz.Core.model.snes;
 using Diz.Core.util;
 using Diz.Test.Utils;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Diz.Test
 {
@@ -83,11 +85,18 @@ namespace Diz.Test
                 return data;
             }
         }
+        
+        private readonly ITestOutputHelper debugWriter;
+        public LogCreatorTests(ITestOutputHelper debugWriter)
+        {
+            this.debugWriter = debugWriter;
+        }
 
         [Fact]
         public void TestAFewLines()
         {
-            LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(InputRom));
+            var assemblyOutput = LogWriterHelper.ExportAssembly(InputRom);
+            LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, assemblyOutput, debugWriter);
         }
 
         [Fact]

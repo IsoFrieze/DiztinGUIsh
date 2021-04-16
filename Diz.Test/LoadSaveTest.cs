@@ -38,7 +38,6 @@ namespace Diz.Test
         }
         
         private readonly ITestOutputHelper output;
-
         public LoadSaveTest(ITestOutputHelper output)
         {
             this.output = output;
