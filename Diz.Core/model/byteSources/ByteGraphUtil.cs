@@ -98,7 +98,7 @@
             foreach (var childSourceToTraverse in byteSource.ChildSources)
             {
                 var childIndex = childSourceToTraverse.RegionMapping
-                    .ConvertSourceToDestination(sourceIndex, childSourceToTraverse.ByteSource);
+                    .ConvertIndexFromParentToChild(sourceIndex, childSourceToTraverse.ByteSource);
 
                 var newChildNode = BuildFullGraph(childSourceToTraverse.ByteSource, childIndex);
                 if (newChildNode == null)
