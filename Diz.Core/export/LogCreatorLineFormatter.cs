@@ -11,10 +11,11 @@ namespace Diz.Core.export
             public string Value;
             public int? LengthOverride;
             public bool IsLiteral;
-            
+            public bool IgnoreOffset;
+
             protected bool Equals(ColumnFormat other)
             {
-                return Value == other.Value && LengthOverride == other.LengthOverride && IsLiteral == other.IsLiteral;
+                return Value == other.Value && LengthOverride == other.LengthOverride && IsLiteral == other.IsLiteral && IgnoreOffset == other.IgnoreOffset;
             }
 
             public override bool Equals(object obj)
@@ -27,7 +28,12 @@ namespace Diz.Core.export
 
             public override int GetHashCode()
             {
-                return HashCode.Combine(Value, LengthOverride, IsLiteral);
+                return HashCode.Combine(Value, LengthOverride, IsLiteral, IgnoreOffset);
+            }
+
+            public int? SanitizeOffset(int offset)
+            {
+                return IgnoreOffset || offset == -1 ? null : offset;
             }
         }
 

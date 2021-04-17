@@ -22,7 +22,7 @@
         protected abstract void Execute();
     }
 
-    public class AsmCreationMainBankIncludes : AsmCreationBase, IAsmCreationStep
+    public class AsmCreationMainBankIncludes : AsmCreationBase
     {
         protected override void Execute()
         {
@@ -36,7 +36,7 @@
         }
     }
     
-    public class AsmCreationRomMap : AsmCreationBase, IAsmCreationStep
+    public class AsmCreationRomMap : AsmCreationBase
     {
         protected override void Execute()
         {

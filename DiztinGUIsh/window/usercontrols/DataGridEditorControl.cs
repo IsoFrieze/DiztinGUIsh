@@ -193,7 +193,7 @@ namespace DiztinGUIsh.window2
 
         #region RowColumnAccess
 
-        public ByteEntry SelectedByteOffset => DataController?.DataSubset?.SelectedRow?.ByteOffset;
+        public ByteEntry SelectedByteOffset => DataController?.DataSubset?.SelectedRow?.ByteEntry;
 
         private RomByteDataGridRow GetValueAtRowIndex(int row)
         {
@@ -336,7 +336,7 @@ namespace DiztinGUIsh.window2
                 var romByteAtRow = GetValueAtRowIndex(e.RowIndex);
                 var colHeaderDataProperty = GetColumnHeaderDataProperty(e);
 
-                if (romByteAtRow?.ByteOffset == null || string.IsNullOrEmpty(colHeaderDataProperty))
+                if (romByteAtRow?.ByteEntry == null || string.IsNullOrEmpty(colHeaderDataProperty))
                     return;
 
                 romByteAtRow.SetStyleForCell(colHeaderDataProperty, e.CellStyle);

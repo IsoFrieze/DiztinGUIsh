@@ -69,7 +69,7 @@ namespace DiztinGUIsh.window2
         
         private static bool IsRomByteOpcode(RomByteDataGridRow romByteRow)
         {
-            return romByteRow.ByteOffset.TypeFlag == FlagType.Opcode;
+            return romByteRow.ByteEntry.TypeFlag == FlagType.Opcode;
         }
         
         #endregion

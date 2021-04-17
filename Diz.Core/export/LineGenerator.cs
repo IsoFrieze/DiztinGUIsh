@@ -43,24 +43,34 @@ namespace Diz.Core.export
         private string GenerateColumnFromFormatter(int offset, LogCreatorLineFormatter.ColumnFormat columnFormat)
         {
             var columnGenerator = GetGeneratorFor(columnFormat.Value);
-            return columnGenerator.Emit(offset, columnFormat.LengthOverride);
+            return columnGenerator.Emit(columnFormat.SanitizeOffset(offset), columnFormat.LengthOverride);
         }
 
-        private LogCreatorLineFormatter.ColumnFormat SelectFinalColumnFormatter(
-            LogCreatorLineFormatter.ColumnFormat columnFormat, string overrideName = null) =>
-            overrideName != null ? BuildSpecialFormatterFrom(columnFormat, overrideName) : columnFormat;
+        private LogCreatorLineFormatter.ColumnFormat SelectFinalColumnFormatter(LogCreatorLineFormatter.ColumnFormat columnFormat, string overrideName = null)
+        {
+            return overrideName != null 
+                ? BuildSpecialFormatterFrom(columnFormat, overrideName) 
+                : columnFormat;
+        }
 
         private LogCreatorLineFormatter.ColumnFormat BuildSpecialFormatterFrom(LogCreatorLineFormatter.ColumnFormat originalColumn, string specialModifierStr)
         {
-            var replacementColumnName = originalColumn.Value == "code" 
-                ? $"%{specialModifierStr}" 
-                : "%empty";
-
-            return new LogCreatorLineFormatter.ColumnFormat
+            var specialNewFormatter = new LogCreatorLineFormatter.ColumnFormat
             {
-                Value = replacementColumnName,
                 LengthOverride = GetGeneratorFor(originalColumn.Value).DefaultLength,
             };
+
+            if (originalColumn.Value != "code")
+            {
+                specialNewFormatter.IgnoreOffset = true;
+                specialNewFormatter.Value = "%empty";
+            }
+            else
+            {
+                specialNewFormatter.Value = $"%{specialModifierStr}";
+            }
+
+            return specialNewFormatter;
         }
 
         public AssemblyPartialLineGenerator GetGeneratorFor(string parameter)

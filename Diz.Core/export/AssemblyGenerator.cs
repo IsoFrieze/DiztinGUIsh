@@ -32,7 +32,7 @@ namespace Diz.Core.export
         public string Emit(int? offset, int? lengthOverride)
         {
             var finalLength = lengthOverride ?? DefaultLength;
-            
+
             Validate(offset, finalLength);
 
             if (!UsesOffset) 
@@ -71,10 +71,13 @@ namespace Diz.Core.export
             // we should throw exceptions both ways, for now though we'll let it slide if we were passed in
             // an offset and we don't need it.
             var hasOffset = offset != null;
-            if (UsesOffset && UsesOffset != hasOffset)
-                throw new InvalidDataException(UsesOffset 
-                    ? "Assembly output component needed an offset but received none."
-                    : "Assembly output component doesn't use an offset but we were provided one anyway.");
+            //if (UsesOffset)
+            //{
+                if (UsesOffset != hasOffset)
+                    throw new InvalidDataException(UsesOffset
+                        ? "Assembly output component needed an offset but received none."
+                        : "Assembly output component doesn't use an offset but we were provided one anyway.");
+            //}
         }
     }
 }

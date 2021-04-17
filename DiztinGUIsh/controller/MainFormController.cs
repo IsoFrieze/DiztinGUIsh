@@ -473,7 +473,7 @@ namespace DiztinGUIsh.controller
         public void OnUserChangedSelection(ByteEntry newSelection)
         {
             // when user clicks on a new row in the child data grid editor, this fires
-            SelectedSnesOffset = newSelection.ContainerOffset;
+            SelectedSnesOffset = newSelection.ParentByteSourceIndex;
         }
 
         private bool IsOffsetInRange(int offset)

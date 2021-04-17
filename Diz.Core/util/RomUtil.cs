@@ -97,6 +97,12 @@ namespace Diz.Core.util
 
         public static int ConvertSnesToPc(int address, RomMapMode mode, int size)
         {
+            var index = ConvertSnesToPcRaw(address, mode, size);
+            return index < 0 ? -1 : index;
+        }
+
+        private static int ConvertSnesToPcRaw(int address, RomMapMode mode, int size)
+        {
             int UnmirroredOffset(int offset) => RomUtil.UnmirroredOffset(offset, size);
 
             // WRAM is N/A to PC addressing
@@ -110,7 +116,7 @@ namespace Diz.Core.util
                 case RomMapMode.LoRom:
                 {
                     // SRAM is N/A to PC addressing
-                    if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) 
+                    if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0))
                         return -1;
 
                     return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
@@ -130,7 +136,9 @@ namespace Diz.Core.util
                     if (address >= 0x400000 && address <= 0x7FFFFF) return -1;
 
                     if (address >= 0xC00000)
-                        return mode == RomMapMode.ExSa1Rom ? UnmirroredOffset(address & 0x7FFFFF) : UnmirroredOffset(address & 0x3FFFFF);
+                        return mode == RomMapMode.ExSa1Rom
+                            ? UnmirroredOffset(address & 0x7FFFFF)
+                            : UnmirroredOffset(address & 0x3FFFFF);
 
                     if (address >= 0x800000) address -= 0x400000;
 
@@ -142,7 +150,7 @@ namespace Diz.Core.util
                 case RomMapMode.SuperFx:
                 {
                     // BW-RAM is N/A to PC addressing
-                    if (address >= 0x600000 && address <= 0x7FFFFF) 
+                    if (address >= 0x600000 && address <= 0x7FFFFF)
                         return -1;
 
                     if (address < 0x400000)
@@ -163,7 +171,7 @@ namespace Diz.Core.util
                 case RomMapMode.ExLoRom:
                 {
                     // SRAM is N/A to PC addressing
-                    if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) 
+                    if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0))
                         return -1;
 
                     return UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
@@ -478,7 +486,7 @@ namespace Diz.Core.util
 
         public static ByteSource CreateSnesAddressSpace()
         {
-            const int snesAddressableBytes = 0xFFFFFF;
+            const int snesAddressableBytes = 0x1000000;
             return new ByteSource
             {
                 Bytes = new SparseByteStorage(snesAddressableBytes),

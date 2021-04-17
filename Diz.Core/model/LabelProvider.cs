@@ -1,12 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Diz.Core.export;
 using Diz.Core.model.snes;
-using Diz.Core.util;
 
 namespace Diz.Core.model
 {
@@ -20,7 +16,7 @@ namespace Diz.Core.model
     //
     // I think once things are further along, it should be possible to just use a new ByteSource that's overlaid
     // on top of SnesAddressSpace and add labels to just THAT.
-    public class LabelProvider : IReadOnlyLabelProvider, ITemporaryLabelProvider
+    public class LabelProvider : ILabelProvider
     {
         public LabelProvider(Data data)
         {
@@ -92,50 +88,6 @@ namespace Diz.Core.model
             // we should only operate on real (not temporary) labels here. use AddTemporaryLabel() for temp stuff.
             
             NormalProvider.AddLabel(snesAddress, labelToAdd, overwrite);
-        }
-        
-        public void ImportLabelsFromCsv(string importFilename, bool replaceAll, ref int errLine)
-        {
-            var labelsFromCsv = ReadLabelsFromCsv(importFilename, ref errLine);
-            
-            if (replaceAll)
-                DeleteAllLabels();
-            
-            foreach (var (key, value) in labelsFromCsv)
-            {
-                AddLabel(key, value, true);
-            }
-        }
-        
-        private static Dictionary<int, Label> ReadLabelsFromCsv(string importFilename, ref int errLine)
-        {
-            var newValues = new Dictionary<int, Label>();
-            var lines = Util.ReadLines(importFilename).ToArray();
-
-            var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
-
-            // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
-            // section. replace with something better
-            for (var i = 0; i < lines.Length; i++)
-            {
-                var label = new Label();
-
-                errLine = i + 1;
-
-                Util.SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
-                Util.SplitOnFirstComma(remainder, out var labelName, out var labelComment);
-
-                label.Name = labelName.Trim();
-                label.Comment = labelComment;
-
-                if (!validLabelChars.Match(label.Name).Success)
-                    throw new InvalidDataException("invalid label name: " + label.Name);
-
-                newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), label);
-            }
-
-            errLine = -1;
-            return newValues;
         }
     }
 

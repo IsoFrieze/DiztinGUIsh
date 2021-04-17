@@ -106,7 +106,7 @@ namespace Diz.Test.tests
             {
                 var expectedKey = expectedKeys[i];
                 Assert.Equal(expectedKey, en.Current.Key);
-                Assert.Equal(expectedKey, en.Current.Value.ContainerOffset);
+                Assert.Equal(expectedKey, en.Current.Value.ParentByteSourceIndex);
                 i++;
             }
             

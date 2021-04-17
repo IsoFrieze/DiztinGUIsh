@@ -18,7 +18,7 @@ namespace DiztinGUIsh.util
         {
             return new RomByteDataGridRow
             {
-                ByteOffset = subset.Items[largeIndex],
+                ByteEntry = subset.Items[largeIndex],
                 Data = Data,
                 ParentView = View as IBytesGridViewer<ByteEntry>,
             } as TRow;

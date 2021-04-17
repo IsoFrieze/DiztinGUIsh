@@ -19,7 +19,7 @@ namespace Diz.Core.model.snes
         // TODO: gotta carefully think about the serialization here. we need to not output bytes from the ROM itself.
         // everything else is fine.
         
-        public LabelProvider Labels { get; }
+        public ILabelProvider Labels { get; protected init; }
         IReadOnlyLabelProvider IReadOnlySnesRom.Labels => Labels;
         ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => Labels;
         

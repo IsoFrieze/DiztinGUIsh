@@ -20,6 +20,9 @@
         private void WriteUnusedLabel(int snesAddress)
         {
             var pcOffset = Data.ConvertSnesToPc(snesAddress);
+            if (pcOffset == -1)
+                return;
+                
             LogCreator.WriteLine(LogCreator.LineGenerator.GenerateSpecialLine("labelassign", pcOffset));
         }
     }

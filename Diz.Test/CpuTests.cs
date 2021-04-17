@@ -151,7 +151,7 @@ namespace Diz.Test
             Assert.Equal(3, data.GetRomSize());
             Assert.Equal(3, data.RomByteSource.Bytes.Count);
 
-            Assert.Equal(0xFFFFFF, data.SnesAddressSpace.Bytes.Count);
+            Assert.Equal(0x1000000, data.SnesAddressSpace.Bytes.Count);
         }
 
         [Fact]
@@ -188,7 +188,7 @@ namespace Diz.Test
             Assert.NotNull(byteOffsetData);
             
             Assert.Equal(expectedByteVal, b.Value);
-            Assert.Same(expectedByteSource, byteOffsetData.Container);
+            Assert.Same(expectedByteSource, byteOffsetData.ParentByteSource);
         }
 
         [Fact]
@@ -230,7 +230,7 @@ namespace Diz.Test
             Assert.NotNull(childNodeFromRom.ByteData.Byte);
             Assert.Equal(0x8D, childNodeFromRom.ByteData.Byte.Value);
             
-            Assert.Same(data.RomByteSource, childNodeFromRom.ByteData.Container);
+            Assert.Same(data.RomByteSource, childNodeFromRom.ByteData.ParentByteSource);
             Assert.Same(srcData[0], childNodeFromRom.ByteData);
         }
         
@@ -240,6 +240,20 @@ namespace Diz.Test
             var (srcData, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
             
             var snesAddress = data.ConvertPCtoSnes(0);
+
+            var snesByte = data.SnesAddressSpace.Bytes[snesAddress];
+            var romByte = data.RomByteSource.Bytes[0];
+            
+            Assert.Null(snesByte);
+            Assert.NotNull(romByte);
+            
+            Assert.NotNull(romByte.Annotations.Parent);
+            Assert.Equal(2, romByte.Annotations.Count);
+            var opcodeAnnotation = romByte.GetOneAnnotation<OpcodeAnnotation>();
+            Assert.NotNull(opcodeAnnotation);
+            Assert.NotNull(opcodeAnnotation.Parent);
+            Assert.Equal(opcodeAnnotation.Parent, romByte);
+            
             var graph = ByteGraphUtil.BuildFullGraph(data.SnesAddressSpace, snesAddress);
 
             var flattenedNode = ByteGraphUtil.BuildFlatDataFrom(graph);
@@ -248,6 +262,9 @@ namespace Diz.Test
             Assert.NotNull(flattenedNode.Byte);
             Assert.Equal(0x8D, flattenedNode.Byte.Value);
             Assert.Equal(2, flattenedNode.Annotations.Count);
+            
+            // make sure the parent hasn't changed after we built our flattened node
+            Assert.Equal(opcodeAnnotation.Parent, romByte);
         }
 
         private static void AssertRomByteEqual(byte expectedByteVal, Data data, int pcOffset)

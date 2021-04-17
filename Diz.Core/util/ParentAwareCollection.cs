@@ -37,6 +37,7 @@ namespace Diz.Core.util
         where TItem : IParentAware<TParent>
     {
         private TParent parent;
+        public bool DontSetParentOnCollectionItems { get; set; }
 
         [PublicAPI]
         public TParent Parent
@@ -49,8 +50,11 @@ namespace Diz.Core.util
             }
         }
 
-        private static void SetItemParent(TItem item, TParent newParent)
+        private void SetItemParent(TItem item, TParent newParent)
         {
+            if (DontSetParentOnCollectionItems)
+                return;
+            
             item?.OnParentChanged(newParent);
         }
 
@@ -71,20 +75,20 @@ namespace Diz.Core.util
         protected override void InsertItem(int index, TItem item)
         {
             base.InsertItem(index, item);
-            item?.OnParentChanged(Parent);
+            SetItemParent(item, Parent);
         }
 
         protected override void RemoveItem(int index)
         {
             var item = Items[index];
-            item?.OnParentChanged(null);
+            SetItemParent(item, null);
             base.RemoveItem(index);
         }
 
         protected override void SetItem(int index, TItem item)
         {
             base.SetItem(index, item);
-            item?.OnParentChanged(Parent);
+            SetItemParent(item, Parent);
         }
     }
 }

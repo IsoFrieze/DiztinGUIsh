@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -10,6 +11,8 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
+using Diz.Core.export;
 using Diz.Core.model;
 
 namespace Diz.Core.util
@@ -380,6 +383,53 @@ namespace Diz.Core.util
             }
 
             return true;
+        }
+        
+        public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, ref int errLine)
+        {
+            var labelsFromCsv = ContentUtils.ReadLabelsFromCsv(importFilename, ref errLine);
+            
+            if (replaceAll)
+                labelProvider.DeleteAllLabels();
+            
+            foreach (var (key, value) in labelsFromCsv)
+            {
+                labelProvider.AddLabel(key, value, true);
+            }
+        }
+    }
+
+    public static class ContentUtils
+    {
+        public static Dictionary<int, Label> ReadLabelsFromCsv(string importFilename, ref int errLine)
+        {
+            var newValues = new Dictionary<int, Label>();
+            var lines = Util.ReadLines(importFilename).ToArray();
+
+            var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
+
+            // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
+            // section. replace with something better
+            for (var i = 0; i < lines.Length; i++)
+            {
+                var label = new Label();
+
+                errLine = i + 1;
+
+                Util.SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
+                Util.SplitOnFirstComma(remainder, out var labelName, out var labelComment);
+
+                label.Name = labelName.Trim();
+                label.Comment = labelComment;
+
+                if (!validLabelChars.Match(label.Name).Success)
+                    throw new InvalidDataException("invalid label name: " + label.Name);
+
+                newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), label);
+            }
+
+            errLine = -1;
+            return newValues;
         }
     }
 }

@@ -11,8 +11,8 @@ namespace Diz.Core.model.byteSources
         byte? Byte { get; }
         IReadOnlyList<Annotation> Annotations { get; }
 
-        ByteSource Container { get; }
-        int ContainerOffset { get; }
+        ByteSource ParentByteSource { get; }
+        int ParentByteSourceIndex { get; }
         
         byte DataBank{ get; }
         int DirectPage { get; }
@@ -33,6 +33,7 @@ namespace Diz.Core.model.byteSources
     {
         // if null, it means caller either needs to dig one level deeper in parent container to find the byte value, or, there is no data
         public byte? Byte { get; set; }
+        public bool DontSetParentOnCollectionItems { get; init; }
 
         // Note: don't allocate this immediately, wait for it to be used. we will have millions of them per ROM
         public AnnotationCollection Annotations
@@ -40,13 +41,20 @@ namespace Diz.Core.model.byteSources
             get => annotations;
             set
             {
+                // if DontSetParentOnCollectionItems is true:
+                // it's still OK for our annotation COLLECTION itself to have its parent set to us.
+                // but: The items in this annotation collection should still keep their original parent. 
+                
                 if (annotations != null)
                     annotations.Parent = null;
                 
                 annotations = value;
-                
+
                 if (annotations != null)
+                {
+                    annotations.DontSetParentOnCollectionItems = DontSetParentOnCollectionItems;
                     annotations.Parent = this;
+                }
             }
         }
 
@@ -57,9 +65,11 @@ namespace Diz.Core.model.byteSources
             return Annotations ??= new AnnotationCollection();
         }
 
-        protected internal ByteStorage ByteStorageContainer { get; internal set; }
-        public ByteSource Container => ByteStorageContainer?.ParentContainer;
-        public int ContainerOffset  { get; internal set; }
+        #region References to parent enclosures
+        protected internal ByteStorage ParentStorage { get; internal set; }
+        public ByteSource ParentByteSource => ParentStorage?.ParentByteSource;
+        public int ParentByteSourceIndex  { get; internal set; }
+        #endregion
 
         // --------------------------------------------------------------------------------
         // temporary annotation access stuff. remove all this eventually after further refactoring is complete.
@@ -115,7 +125,7 @@ namespace Diz.Core.model.byteSources
         // end temporary stuff
         protected bool Equals(ByteEntry other)
         {
-            return Byte == other.Byte && AnnotationsEqual(other) && Equals(Container, other.Container) && ContainerOffset == other.ContainerOffset;
+            return Byte == other.Byte && AnnotationsEqual(other) && Equals(ParentByteSource, other.ParentByteSource) && ParentByteSourceIndex == other.ParentByteSourceIndex;
         }
 
         protected bool AnnotationsEqual(ByteEntry other)
@@ -188,13 +198,14 @@ namespace Diz.Core.model.byteSources
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Byte, Annotations, Container, ContainerOffset);
+            return HashCode.Combine(Byte, Annotations, ParentByteSource, ParentByteSourceIndex);
         }
 
         // note: our thread safety isn't comprehensive in this project yet.
         // be careful with this if you're doing anything clever, especially writing.
         // TODO: instead of doing this, see if ConcurrentBag or similar classes for the container itself would work?
         public ReaderWriterLockSlim Lock => _lock ??= new ReaderWriterLockSlim();
+
         private ReaderWriterLockSlim _lock;
         private AnnotationCollection annotations;
     }

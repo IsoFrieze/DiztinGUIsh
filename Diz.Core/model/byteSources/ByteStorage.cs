@@ -14,7 +14,7 @@ namespace Diz.Core.model.byteSources
 
         public abstract int Count { get; }
 
-        protected internal ByteSource ParentContainer { get; set; }
+        protected internal ByteSource ParentByteSource { get; set; }
 
         protected ByteStorage()
         {
@@ -60,8 +60,8 @@ namespace Diz.Core.model.byteSources
         protected void OnPreAddByteAt(int newIndex, ByteEntry byteOffset)
         {
             // cache these values
-            byteOffset.ByteStorageContainer = this;
-            byteOffset.ContainerOffset = newIndex; // this will be true after the Add() call below.
+            byteOffset.ParentStorage = this;
+            byteOffset.ParentByteSourceIndex = newIndex; // this will be true after the Add() call below.
         }
 
         // GetEnumerator() will return an item at each index, or null if no Byte is present at that address.

@@ -122,6 +122,7 @@ namespace Diz.Core.export.assemblyGenerators
         {
             Token = "%org";
             DefaultLength = 37;
+            UsesOffset = true;
         }
         protected override string Generate(int offset, int length)
         {

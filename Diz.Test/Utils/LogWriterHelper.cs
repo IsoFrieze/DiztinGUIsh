@@ -112,18 +112,22 @@ namespace Diz.Test.Utils
             Assert.Equal(expectedRaw, result.OutputStr);
         }
 
-        public static LogCreatorOutput.OutputResult ExportAssembly(Data inputRom)
+        public static LogCreatorOutput.OutputResult ExportAssembly(Data inputRom, Action<LogCreator> postInitHook = null)
         {
             var settings = new LogWriterSettings();
             settings.SetDefaults();
             settings.OutputToString = true;
             settings.Structure = LogWriterSettings.FormatStructure.SingleFile;
 
-            return new LogCreator()
+            var logCreator = new LogCreator
             {
                 Data = inputRom,
                 Settings = settings,
-            }.CreateLog();
+            };
+            
+            postInitHook?.Invoke(logCreator);
+
+            return logCreator.CreateLog();
         }
 
         private static void AssertGoodOutput(LogCreatorOutput.OutputResult result)

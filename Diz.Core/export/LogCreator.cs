@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Diz.Core.export
@@ -12,6 +13,35 @@ namespace Diz.Core.export
         public LabelTracker LabelTracker { get; private set; }
         private LogCreatorTempLabelGenerator LogCreatorTempLabelGenerator { get; set; }
         public DataErrorChecking DataErrorChecking { get; private set; }
+
+        public class ProgressEvent
+        {
+            public enum Status
+            {
+                StartInit,
+                DoneInit,
+                StartTemporaryLabelsGenerate,
+                DoneTemporaryLabelsGenerate,
+                StartMainOutputSteps,
+                StartNewMainOutputStep,
+                DoneMainOutputSteps,
+                StartTemporaryLabelsRemoval,
+                EndTemporaryLabelsRemoval,
+                FinishingCleanup,
+                Done,
+            }
+
+            public Status State { get; init; }
+        }
+
+        public event EventHandler<ProgressEvent> ProgressChanged;
+        
+        protected virtual void OnProgressChanged(ProgressEvent.Status status)
+        {
+            ProgressChanged?.Invoke(this, new ProgressEvent {
+                State = status,
+            });
+        }
         
         public virtual LogCreatorOutput.OutputResult CreateLog()
         {
@@ -19,23 +49,62 @@ namespace Diz.Core.export
 
             try
             {
-                LogCreatorTempLabelGenerator?.GenerateTemporaryLabels();
+                CreateTemporaryLabels();
+                
                 WriteAllOutput();
             }
             finally
             {
                 // MODIFIES UNDERLYING DATA. WE MUST ALWAYS MAKE SURE TO UNDO THIS
-                LogCreatorTempLabelGenerator?.ClearTemporaryLabels();
+                RemoveTemporaryLabels();
             }
 
+            OnProgressChanged(ProgressEvent.Status.FinishingCleanup);
             var result = GetResult();
             CloseOutput(result);
 
+            OnProgressChanged(ProgressEvent.Status.Done);
             return result;
+        }
+
+        private void RemoveTemporaryLabels()
+        {
+            OnProgressChanged(ProgressEvent.Status.StartTemporaryLabelsRemoval);
+            LogCreatorTempLabelGenerator?.ClearTemporaryLabels();
+            OnProgressChanged(ProgressEvent.Status.EndTemporaryLabelsRemoval);
+        }
+
+        private void CreateTemporaryLabels()
+        {
+            OnProgressChanged(ProgressEvent.Status.StartTemporaryLabelsGenerate);
+            LogCreatorTempLabelGenerator?.GenerateTemporaryLabels();
+            OnProgressChanged(ProgressEvent.Status.DoneTemporaryLabelsGenerate);
+        }
+
+        public IAsmCreationStep CurrentOutputStep { get; private set; }
+        
+        protected virtual void WriteAllOutput()
+        {
+            OnProgressChanged(ProgressEvent.Status.StartMainOutputSteps);
+            
+            Steps.ForEach(step =>
+            {
+                if (step == null)
+                    return;
+                
+                CurrentOutputStep = step;
+                OnProgressChanged(ProgressEvent.Status.StartNewMainOutputStep);
+                CurrentOutputStep.Generate();
+                CurrentOutputStep = null;
+            });
+            
+            OnProgressChanged(ProgressEvent.Status.DoneMainOutputSteps);
         }
 
         protected virtual void Init()
         {
+            OnProgressChanged(ProgressEvent.Status.StartInit);
+            
             Debug.Assert(Settings.RomSizeOverride == -1 || Settings.RomSizeOverride <= Data.GetRomSize());
 
             InitOutput();
@@ -56,6 +125,8 @@ namespace Diz.Core.export
             }
 
             RegisterSteps();
+            
+            OnProgressChanged(ProgressEvent.Status.DoneInit);
         }
 
         public List<IAsmCreationStep> Steps { get; private set; }
@@ -117,7 +188,6 @@ namespace Diz.Core.export
 
         protected internal void OnErrorReported(int offset, string msg) => Output.WriteErrorLine(offset, msg);
         public int GetRomSize() => Settings.RomSizeOverride != -1 ? Settings.RomSizeOverride : Data.GetRomSize();
-        protected virtual void WriteAllOutput() => Steps.ForEach(step => step?.Generate());
         public void WriteLine(string line) => Output.WriteLine(line);
         protected internal void WriteEmptyLine() => WriteSpecialLine("empty");
         internal void WriteSpecialLine(string special, int offset = -1)

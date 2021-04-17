@@ -35,21 +35,28 @@
         }
         
         private static ByteEntry CreateByteEntryByFlatteningGraph(
-            ByteGraphNode byteGraphNode, ByteEntry dataBeingConstructed = null
+            ByteGraphNode byteGraphNode, ByteEntry rootEntryToPopulate = null
         )
         {
             byteGraphNode.Validate();
             EnsureRootEntryExists();
             PopulateFromChildNodes(); // use child data first
             PopulateFromRootNode(); // override/append our data second as the priority
-            return dataBeingConstructed;
+            return rootEntryToPopulate;
 
             void EnsureRootEntryExists()
             {
-                dataBeingConstructed ??= new ByteEntry()
+                rootEntryToPopulate ??= new ByteEntry
                 {
-                    ByteStorageContainer = byteGraphNode.ByteSource.Bytes,
-                    ContainerOffset = byteGraphNode.ByteData?.ContainerOffset ?? byteGraphNode.SourceIndex,
+                    ParentStorage = byteGraphNode.ByteSource.Bytes,
+                    ParentByteSourceIndex = byteGraphNode.ByteData?.ParentByteSourceIndex ?? byteGraphNode.SourceIndex,
+                    
+                    // several of our collection items (bytes, annotations, etc) will store
+                    // a reference to their parent container. since this new ByteEntry object we're making
+                    // is more of an aggregator, we don't want to modify the parents of the things we're storing.
+                    // we just store a reference, they really live elsewhere and hence, we're not their 'real' parent.
+                    // "YOU'RE NOT MY REAL DAD"
+                    DontSetParentOnCollectionItems = true,
                 };
             }
 
@@ -61,7 +68,7 @@
 
                 foreach (var childNode in byteGraphNode.Children)
                 {
-                    CreateByteEntryByFlatteningGraph(childNode, dataBeingConstructed);
+                    CreateByteEntryByFlatteningGraph(childNode, rootEntryToPopulate);
                 }
             }
 
@@ -69,12 +76,12 @@
             {
                 // annotations are concatenated together
                 if (byteGraphNode.ByteData?.Annotations?.Count > 0)
-                    dataBeingConstructed.GetOrCreateAnnotationsList().AddRange(byteGraphNode.ByteData.Annotations);
+                    rootEntryToPopulate.GetOrCreateAnnotationsList().AddRange(byteGraphNode.ByteData.Annotations);
 
                 // only change the byte if we're non-null and overriding something underneath.
                 // we hide any bytes lower in the graph than us.
                 if (byteGraphNode.ByteData?.Byte != null)
-                    dataBeingConstructed.Byte = byteGraphNode.ByteData.Byte;
+                    rootEntryToPopulate.Byte = byteGraphNode.ByteData.Byte;
             }
         }
 

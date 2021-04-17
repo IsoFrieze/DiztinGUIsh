@@ -19,7 +19,7 @@ namespace Diz.Core.model.byteSources
             init
             {
                 bytes = value;
-                bytes.ParentContainer = this;
+                bytes.ParentByteSource = this;
             }
         }
 
@@ -131,6 +131,9 @@ namespace Diz.Core.model.byteSources
             {
                 foreach (var (childIndex, childAnnotation) in child.ByteSource.GetAnnotationsIncludingChildrenEnumerator<T>())
                 {
+                    // ACTUAL BUG: child has the WRONG PARENT after an AddTemporaryLabel
+                    // BUG: somewhere in here we're converting twice.
+                    Debug.Assert(child.ByteSource.IsValidIndex(childIndex));
                     var ourIndex = child.ConvertIndexFromChildToParent(childIndex);
                     Debug.Assert(IsValidIndex(ourIndex));
 
@@ -142,7 +145,7 @@ namespace Diz.Core.model.byteSources
             }
 
             foreach (var annotation in GetOnlyOwnAnnotations<T>())
-                yield return new KeyValuePair<int, T>(annotation.Parent.ContainerOffset, annotation);
+                yield return new KeyValuePair<int, T>(annotation.Parent.ParentByteSourceIndex, annotation);
         }
 
         // return a list of annotations attached to our ByteStorage (and nothing from our children)
@@ -156,15 +159,20 @@ namespace Diz.Core.model.byteSources
             while (enumerator.MoveNext())
             {
                 var byteEntry = enumerator.Current;
-                Debug.Assert(byteEntry != null);
                 
-                if (byteEntry.ContainerOffset < startIndex || byteEntry.ContainerOffset > endingIndex)
+                Debug.Assert(byteEntry != null);
+                Debug.Assert(ReferenceEquals(byteEntry.ParentByteSource, this));
+                
+                if (byteEntry.ParentByteSourceIndex < startIndex || byteEntry.ParentByteSourceIndex > endingIndex)
                     continue;
                 
                 var annotation = byteEntry.GetOneAnnotation<T>();
 
                 if (annotation != null)
+                {
+                    Debug.Assert(ReferenceEquals(annotation.Parent, byteEntry));
                     yield return annotation;
+                }
             }
         }
 
