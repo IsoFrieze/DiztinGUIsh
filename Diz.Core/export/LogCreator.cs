@@ -6,7 +6,7 @@ namespace Diz.Core.export
 {
     public class LogCreator : ILogCreatorForGenerator
     {
-        public LogWriterSettings Settings { get; init; }
+        public LogWriterSettings Settings { get; set; }
         public ILogCreatorDataSource Data { get; init; }
         private LogCreatorOutput Output { get; set; }
         public LineGenerator LineGenerator { get; private set; }
@@ -192,6 +192,9 @@ namespace Diz.Core.export
         protected internal void WriteEmptyLine() => WriteSpecialLine("empty");
         internal void WriteSpecialLine(string special, int offset = -1)
         {
+            if (special == "empty" && !Settings.OutputExtraWhitespace)
+                return;
+            
             var output = LineGenerator.GenerateSpecialLine(special, offset); 
             WriteLine(output);
         }

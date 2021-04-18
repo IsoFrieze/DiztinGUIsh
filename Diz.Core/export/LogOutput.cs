@@ -38,6 +38,8 @@ namespace Diz.Core.export
             var offsetMsg = offset >= 0 ? $" Offset 0x{offset:X}" : "";
             WriteErrorLine($"({ErrorCount}){offsetMsg}: {msg}");
         }
+        
+        protected bool ShouldOutput(string line) => !string.IsNullOrEmpty(line);
     }
 
     public class LogCreatorStringOutput : LogCreatorOutput
@@ -53,7 +55,14 @@ namespace Diz.Core.export
             Debug.Assert(LogCreator.Settings.OutputToString && LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.SingleFile);
         }
 
-        public override void WriteLine(string line) => outputBuilder.AppendLine(line);
+        public override void WriteLine(string line)
+        {
+            if (!ShouldOutput(line))
+                return;
+            
+            outputBuilder.AppendLine(line);
+        }
+
         public override void WriteErrorLine(string line)
         {
             ErrorCount++;
@@ -163,6 +172,9 @@ namespace Diz.Core.export
 
         public override void WriteLine(string line)
         {
+            if (!ShouldOutput(line))
+                return;
+            
             Debug.Assert(activeOutputStream != null && !string.IsNullOrEmpty(activeStreamName));
             activeOutputStream.WriteLine(line);
         }

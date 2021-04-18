@@ -21,17 +21,13 @@ namespace Diz.Test
         private const string ExpectedRaw =
             //          label:       instructions                         ;PC    |rawbytes|ia
             "                        lorom                                ;      |        |      ;  \r\n" +
-            "                                                             ;      |        |      ;  \r\n" +
-            "                                                             ;      |        |      ;  \r\n" +
             "                        ORG $808000                          ;      |        |      ;  \r\n" +
-            "                                                             ;      |        |      ;  \r\n" +
             "           CODE_808000: LDA.W Test_Data,X                    ;808000|BD5B80  |80805B;  \r\n" +
             "                        STA.W $0100,X                        ;808003|9D0001  |800100;  \r\n" +
             "           Test22:      DEX                                  ;808006|CA      |      ;  \r\n" +
             "                        BPL CODE_808000                      ;808007|10F7    |808000;  \r\n" +
-            "                                                             ;      |        |      ;  \r\n" +
             "                        Test_Data = $80805B                  ;      |        |      ;  \r\n";
-
+        
         private Data CreateInputRom()
         {
             var bytes = new List<ByteEntry>
@@ -177,6 +173,10 @@ namespace Diz.Test
             var data = CreateInputRom();
             var assemblyOutput = LogWriterHelper.ExportAssembly(data, logCreator =>
             {
+                var settings = logCreator.Settings;
+                settings.OutputExtraWhitespace = false;
+                logCreator.Settings = settings;
+                
                 logCreator.ProgressChanged += (_, progressEvent) =>
                 {
                     switch (progressEvent.State)

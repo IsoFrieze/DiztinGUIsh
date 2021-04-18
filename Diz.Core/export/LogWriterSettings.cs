@@ -28,8 +28,9 @@ namespace Diz.Core.export
         public LogWriterSettings.FormatStructure Structure;
         public bool IncludeUnusedLabels;
         public bool PrintLabelSpecificComments;
+        public bool OutputExtraWhitespace;
 
-        public bool WasInitialized;
+        private bool wasInitialized;
         public int RomSizeOverride; // specify an override for the # of bytes to assemble. default is the entire ROM
 
         private string fileOrFolderOutPath;
@@ -58,16 +59,17 @@ namespace Diz.Core.export
             IncludeUnusedLabels = false;
             PrintLabelSpecificComments = false;
             FileOrFolderOutPath = ""; // path to output file or folder
-            WasInitialized = true;
+            wasInitialized = true;
             RomSizeOverride = -1;
             ErrorFilename = "errors.txt";
+            OutputExtraWhitespace = true;
         }
 
         // return null if no error, or message if there is
         public string Validate()
         {
             // for now, just make sure it was initialized somewhere by someone
-            if (!WasInitialized)
+            if (!wasInitialized)
                 return "Not initialized";
 
             // TODO: add more validation.
