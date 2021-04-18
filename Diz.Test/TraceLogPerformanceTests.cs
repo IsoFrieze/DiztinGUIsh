@@ -102,7 +102,7 @@ namespace Diz.Test
             }
         }
 
-        [Fact]
+        [Fact(Skip="Benchmarking, skip by default.")]
         public void TestTraceLogPerformance()
         {
             var test = new ImportTraceLogStreamTestHarness(output);
