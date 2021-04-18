@@ -30,7 +30,7 @@ namespace Diz.Core
                 
                 sampleData.OriginalRomSizeBeforePadding = sampleData.RomByteSource.Bytes.Count;
                 while (sampleData.RomByteSource.Bytes.Count < 0x8000)
-                    sampleData.RomByteSource.AddByte(new ByteEntry());
+                    sampleData.RomByteSource.AddByte(new ByteEntry {Byte = 0x00});
 
                 _finalSampleData = sampleData;
                 return sampleData;
