@@ -22,6 +22,8 @@ namespace Diz.Core.export
         public virtual void SwitchToStream(string streamName, bool isErrorStream = false) { }
         public abstract void WriteLine(string line);
         public abstract void WriteErrorLine(string line);
+
+        protected bool ShouldOutput(string line) => !string.IsNullOrEmpty(line);
     }
 
     public class LogCreatorStringOutput : LogCreatorOutput
@@ -37,7 +39,14 @@ namespace Diz.Core.export
             Debug.Assert(LogCreator.Settings.OutputToString && LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile);
         }
 
-        public override void WriteLine(string line) => OutputBuilder.AppendLine(line);
+        public override void WriteLine(string line)
+        {
+            if (!ShouldOutput(line))
+                return;
+            
+            OutputBuilder.AppendLine(line);
+        }
+
         public override void WriteErrorLine(string line) => ErrorBuilder.AppendLine(line);
 
         public override void Finish(LogCreator.OutputResult result)
@@ -143,6 +152,9 @@ namespace Diz.Core.export
 
         public override void WriteLine(string line)
         {
+            if (!ShouldOutput(line))
+                return;
+            
             Debug.Assert(activeOutputStream != null && !string.IsNullOrEmpty(activeStreamName));
             activeOutputStream.WriteLine(line);
         }
