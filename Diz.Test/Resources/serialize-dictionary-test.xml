@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SerializerDictionaryTest-TestRoot xmlns:sys="https://extendedxmlserializer.github.io/system" xmlns:exs="https://extendedxmlserializer.github.io/v2" xmlns:ns1="clr-namespace:Diz.Core.model;assembly=Diz.Core">
+<Odw>
+<sys:Item Key="1">
+<Value Text="Z test1" />
+</sys:Item>
+<sys:Item Key="2">
+<Value Text="Z test3" />
+</sys:Item>
+</Odw>
+<Odw2>
+<sys:Item Key="100">
+<Value Name="location1" Comment="c1" />
+</sys:Item>
+<sys:Item Key="200">
+<Value Name="location2" Comment="c2" />
+</sys:Item>
+</Odw2>
+</SerializerDictionaryTest-TestRoot>
