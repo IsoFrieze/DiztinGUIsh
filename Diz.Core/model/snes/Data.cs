@@ -177,6 +177,7 @@ namespace Diz.Core.model.snes
         }
 
         // get the value of the byte at ROM index i
+        // throws an exception if no byte present at that address
         public byte GetRomByte(int pcOffset)
         {
             // weird thing: even though we're asking for a byte from the ROM,

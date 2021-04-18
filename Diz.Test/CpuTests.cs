@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -217,6 +218,15 @@ namespace Diz.Test
         {
             var data = TinyHiRomWithExtraLabel;
             Assert.Equal(0x002116, data.GetIntermediateAddressOrPointer(0));
+        }
+
+        [Fact]
+        public static void TestWhenNoIAPresent()
+        {
+            var sampleData = SampleRomData.SampleData;
+            const int offset = 0x1C1F;
+            var result = sampleData.GetIntermediateAddressOrPointer(offset);
+            Assert.Equal(result, -1);
         }
 
         [Fact]

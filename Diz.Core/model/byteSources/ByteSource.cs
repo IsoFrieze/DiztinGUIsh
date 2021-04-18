@@ -23,19 +23,29 @@ namespace Diz.Core.model.byteSources
         private readonly List<ByteSourceMapping> childSources = new();
         public IReadOnlyList<ByteSourceMapping> ChildSources => childSources;
 
+        // helper method: return the actual byte value at an index, or, if null,
+        // throw an exception. this method is accommodating an older interface and
+        // new could should migrate to GetCompiledByteEntry() and check for NULL
         public byte GetByte(int index)
         {
-            var dataAtOffset = ByteGraphUtil.BuildFlatDataFrom(this, index); // EXPENSIVE
-
+            var dataAtOffset = BuildFlatByteEntryFor(index);
+            
             if (dataAtOffset == null)
                 throw new InvalidDataException("ERROR: GetByte() no data available at that offset");
 
+            // if you hit this, you should think about updating client code to instead call GetCompiledByteEntry() and handle null
             if (dataAtOffset.Byte == null)
                 throw new InvalidDataException("ERROR: GetByte() doesn't map to a real byte");
 
             return (byte) dataAtOffset.Byte;
         }
-        
+
+        // returns null if none found
+        public ByteEntry BuildFlatByteEntryFor(int index)
+        {
+            return ByteGraphUtil.BuildFlatDataFrom(this, index);
+        }
+
         public void AddByte(ByteEntry byteOffset)
         {
             Bytes.AddByte(byteOffset);

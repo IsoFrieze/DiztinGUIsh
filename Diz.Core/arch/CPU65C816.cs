@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Diz.Core.arch;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 
@@ -248,7 +249,11 @@ namespace Diz.Core.arch
         {
             int bank;
             int operand, programCounter;
-            var opcode = data.GetRomByte(offset);
+            
+            var byteEntry = GetByteEntryRom(data, offset);
+            var opcode = byteEntry?.Byte;
+            if (opcode == null)
+                return -1;
 
             var mode = GetAddressMode(data, offset);
             switch (mode)
@@ -303,6 +308,24 @@ namespace Diz.Core.arch
                     return (bank << 16) | ((programCounter + offset) & 0xFFFF);
             }
             return -1;
+        }
+
+        // get a compiled byte entry representing all info at an offset contained in any layer.
+        // return null if there's no entries in that index
+        // input: ROM offset
+        // new code should be migrated to use this instead of GetRomByte()
+        private static ByteEntry GetByteEntryRom(Data data, int romOffset)
+        {
+            return GetByteEntrySnes(data, data.ConvertPCtoSnes(romOffset));
+        }
+        
+        // get a compiled byte entry representing all info at an offset contained in any layer.
+        // return null if there's no entries in that index
+        // input: SNES address
+        // new code should be migrated to use this instead of GetSnesByte()
+        private static ByteEntry GetByteEntrySnes(Data data, int snesAddress)
+        {
+            return data.SnesAddressSpace.BuildFlatByteEntryFor(snesAddress);
         }
 
         public override string GetInstruction(Data data, int offset)
