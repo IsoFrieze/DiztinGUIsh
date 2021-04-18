@@ -19,29 +19,27 @@ namespace Diz.Test
                 // STA.W SNES_VMADDL
                 // OR (equivalent)
                 // STA.W $2116
-                new()
+                
+                new ByteEntry(new AnnotationCollection {
+                    new OpcodeAnnotation {MFlag = true, XFlag = true, DataBank = 0x00, DirectPage = 0},
+                    new MarkAnnotation {TypeFlag = FlagType.Opcode}
+                })
                 {
-                    Byte = 0x8D, Annotations = new AnnotationCollection
-                    {
-                        new OpcodeAnnotation {MFlag = true, XFlag = true, DataBank = 0x00, DirectPage = 0},
-                        new MarkAnnotation {TypeFlag = FlagType.Opcode}
-                    }
+                    Byte = 0x8D
                 },
-                new()
+                new(new AnnotationCollection {
+                    new MarkAnnotation {TypeFlag = FlagType.Operand},
+                    new Comment {Text = "unused"} // 0xC00001
+                })
                 {
-                    Byte = 0x16, Annotations = new AnnotationCollection
-                    {
-                        new MarkAnnotation {TypeFlag = FlagType.Operand},
-                        new Comment {Text = "unused"} // 0xC00001
-                    }
+                    Byte = 0x16
                 },
-                new()
-                {
-                    Byte = 0x21, Annotations = new AnnotationCollection
-                    {
-                        new MarkAnnotation {TypeFlag = FlagType.Operand}
-                    }
-                },
+                
+                // sidenote: demonstrates another way to create Byte's, identical to above
+                new(new AnnotationCollection {
+                    new MarkAnnotation {TypeFlag = FlagType.Operand},
+                    new ByteAnnotation {Byte = 0x21}
+                })
             };
 
         public static Data CreateSampleRomByteSource(IReadOnlyCollection<ByteEntry> srcData)
@@ -104,24 +102,6 @@ namespace Diz.Test
             STA.W SNES_VMADDL"
         );*/
 
-        [Fact]
-        public static void ConvertSnesToPcHiRom()
-        {
-            var romSize = RomUtil.GetBankSize(RomMapMode.HiRom) * 64;
-            Assert.Equal(-1, RomUtil.ConvertSnesToPc(0x202000, RomMapMode.HiRom, romSize));
-            Assert.Equal(0x01FFFF, RomUtil.ConvertSnesToPc(0x41FFFF, RomMapMode.HiRom, romSize));
-            Assert.Equal(0x000123, RomUtil.ConvertSnesToPc(0xC00123, RomMapMode.HiRom, romSize));
-            Assert.Equal(0x3F0123, RomUtil.ConvertSnesToPc(0xFF0123, RomMapMode.HiRom, romSize));
-            Assert.Equal(-1, RomUtil.ConvertSnesToPc(0x10000000, RomMapMode.HiRom, romSize));
-        }
-
-        [Fact]
-        public static void ConvertSnesToPcLoRom()
-        {
-            var romSize = RomUtil.GetBankSize(RomMapMode.LoRom) * 8;
-            Assert.Equal(-1, RomUtil.ConvertSnesToPc(0x790000, RomMapMode.LoRom, romSize));
-            Assert.Equal(0x00, RomUtil.ConvertSnesToPc(0x808000, RomMapMode.LoRom, romSize));
-        }
 
         [Fact]
         public static void DataConvertSnesToPcHiRom()
@@ -129,7 +109,6 @@ namespace Diz.Test
             var data = TinyHiRomWithExtraLabel;
 
             // note: this doesn't quite cover all the range if the offset is greater than the #bytes
-
             Assert.Equal(0x000002, data.ConvertSnesToPc(0xC00002));
             Assert.Equal(0xC00000, data.ConvertPCtoSnes(0x000000));
         }
@@ -175,11 +154,11 @@ namespace Diz.Test
                 Byte = 0xEE,
             };
             
-            Test2(0xEE, 0xC00000, data.SnesAddressSpace);
-            Test2(0x8D, 0x0, data.RomByteSource);
+            TestParentByteSourceRefs(0xEE, 0xC00000, data.SnesAddressSpace);
+            TestParentByteSourceRefs(0x8D, 0x0, data.RomByteSource);
         }
 
-        private static void Test2(int expectedByteVal, int index, ByteSource expectedByteSource)
+        public static void TestParentByteSourceRefs(int expectedByteVal, int index, ByteSource expectedByteSource)
         {
             var byteOffsetData = expectedByteSource.Bytes[index];
             var b = byteOffsetData?.Byte;
@@ -190,83 +169,7 @@ namespace Diz.Test
             Assert.Equal(expectedByteVal, b.Value);
             Assert.Same(expectedByteSource, byteOffsetData.ParentByteSource);
         }
-
-        [Fact]
-        public static void BuildBasicGraph()
-        {
-            var (srcData, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
-            
-            var snesAddress = data.ConvertPCtoSnes(0);
-            var graph = ByteGraphUtil.BuildFullGraph(data.SnesAddressSpace, snesAddress);
-
-            // ok, this is tricky, pay careful attention.
-            // we got a graph back from the SNES address space that represents
-            // stored in each of the 2 layers:
-            // layer 1: the SNES address space
-            // layer 2: the ROM
-            //
-            // we're using Sparse byte storage, which means that unless something needs to be stored
-            // in the SNES address space (and NOT with the ROM), then that entry will be null.
-            //
-            // what we expect is this resulting graph:
-            // - root node: ByteOffsetData from SNES address space @ offset 0xC00000.
-            //               THIS *should be NULL* because there's nothing stored there.
-            //   - child node 1: A ByteOffsetData from the ROM. this WILL have data because we loaded a ROM.
-            //
-            // remember, this is showing a graph of the underlying data, and not flattened into something useful for
-            // looking at it as a condensed, flat view.
-            
-            Assert.NotNull(graph);
-            Assert.Null(graph.ByteData);        // snes address space result
-            
-            Assert.NotNull(graph.Children);     // 1 child = the ROM ByteSource
-            Assert.Single(graph.Children);
-
-            var childNodeFromRom = graph.Children[0];   // get the node that represents the
-                                                        // next (and only) layer down, the ROM
-            Assert.NotNull(childNodeFromRom);
-            Assert.Null(childNodeFromRom.Children);
-            Assert.NotNull(childNodeFromRom.ByteData);
-            Assert.NotNull(childNodeFromRom.ByteData.Byte);
-            Assert.Equal(0x8D, childNodeFromRom.ByteData.Byte.Value);
-            
-            Assert.Same(data.RomByteSource, childNodeFromRom.ByteData.ParentByteSource);
-            Assert.Same(srcData[0], childNodeFromRom.ByteData);
-        }
         
-         [Fact]
-        public static void TraverseChildren()
-        {
-            var (srcData, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
-            
-            var snesAddress = data.ConvertPCtoSnes(0);
-
-            var snesByte = data.SnesAddressSpace.Bytes[snesAddress];
-            var romByte = data.RomByteSource.Bytes[0];
-            
-            Assert.Null(snesByte);
-            Assert.NotNull(romByte);
-            
-            Assert.NotNull(romByte.Annotations.Parent);
-            Assert.Equal(2, romByte.Annotations.Count);
-            var opcodeAnnotation = romByte.GetOneAnnotation<OpcodeAnnotation>();
-            Assert.NotNull(opcodeAnnotation);
-            Assert.NotNull(opcodeAnnotation.Parent);
-            Assert.Equal(opcodeAnnotation.Parent, romByte);
-            
-            var graph = ByteGraphUtil.BuildFullGraph(data.SnesAddressSpace, snesAddress);
-
-            var flattenedNode = ByteGraphUtil.BuildFlatDataFrom(graph);
-            
-            Assert.NotNull(flattenedNode);
-            Assert.NotNull(flattenedNode.Byte);
-            Assert.Equal(0x8D, flattenedNode.Byte.Value);
-            Assert.Equal(2, flattenedNode.Annotations.Count);
-            
-            // make sure the parent hasn't changed after we built our flattened node
-            Assert.Equal(opcodeAnnotation.Parent, romByte);
-        }
-
         private static void AssertRomByteEqual(byte expectedByteVal, Data data, int pcOffset)
         {
             // test via all three access methods

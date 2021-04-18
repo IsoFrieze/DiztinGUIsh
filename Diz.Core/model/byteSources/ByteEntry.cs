@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading;
 
 namespace Diz.Core.model.byteSources
@@ -27,58 +25,27 @@ namespace Diz.Core.model.byteSources
         T GetOneAnnotation<T>() where T : Annotation;
         ReaderWriterLockSlim Lock { get; }
     }
-    
-    // JUST holds the data. no traversal.
-    public class ByteEntry : IReadOnlyByteEntry
-    {
-        // if null, it means caller either needs to dig one level deeper in parent container to find the byte value, or, there is no data
-        public byte? Byte { get; set; }
-        public bool DontSetParentOnCollectionItems { get; init; }
 
-        // Note: don't allocate this immediately, wait for it to be used. we will have millions of them per ROM
-        public AnnotationCollection Annotations
+    // mostly, adds helper methods to ByteEntryBase, which is what does the heavy lifting
+    public class ByteEntry : ByteEntryBase, IReadOnlyByteEntry
+    {
+        public ByteEntry() : base() {}
+        public ByteEntry(AnnotationCollection annotationsToAppend) : base(annotationsToAppend) {}
+        
+        // if null, it means caller either needs to dig one level deeper in
+        // parent container to find the byte value, or, there is no data
+        public byte? Byte
         {
-            get => annotations;
+            get => GetOneAnnotation<ByteAnnotation>()?.Byte;
             set
             {
-                // if DontSetParentOnCollectionItems is true:
-                // it's still OK for our annotation COLLECTION itself to have its parent set to us.
-                // but: The items in this annotation collection should still keep their original parent. 
-                
-                if (annotations != null)
-                    annotations.Parent = null;
-                
-                annotations = value;
-
-                if (annotations != null)
-                {
-                    annotations.DontSetParentOnCollectionItems = DontSetParentOnCollectionItems;
-                    annotations.Parent = this;
-                }
+                if (value == null)
+                    RemoveOneAnnotationIfExists<ByteAnnotation>();
+                else
+                    GetOrCreateAnnotation<ByteAnnotation>().Byte = (byte)value;
             }
         }
 
-        IReadOnlyList<Annotation> IReadOnlyByteEntry.Annotations => Annotations;
-
-        public AnnotationCollection GetOrCreateAnnotationsList()
-        {
-            return Annotations ??= new AnnotationCollection();
-        }
-
-        #region References to parent enclosures
-        protected internal ByteStorage ParentStorage { get; internal set; }
-        public ByteSource ParentByteSource => ParentStorage?.ParentByteSource;
-        public int ParentByteSourceIndex  { get; internal set; }
-        #endregion
-
-        // --------------------------------------------------------------------------------
-        // temporary annotation access stuff. remove all this eventually after further refactoring is complete.
-        // this is just helper stuff as this stuff gets migrated into Data/Annotations classes
-        // -------------------------------------------------------------------------
-        
-        private OpcodeAnnotation GetOneOpcodeAnnotation() => GetOneAnnotation<OpcodeAnnotation>();
-        private OpcodeAnnotation GetOrCreateOpcodeAnnotation() => GetOrCreateAnnotation<OpcodeAnnotation>();
-        
         public byte DataBank
         {
             get => GetOneOpcodeAnnotation()?.DataBank ?? default;
@@ -120,93 +87,124 @@ namespace Diz.Core.model.byteSources
             get => GetOneAnnotation<BranchAnnotation>()?.Point ?? default;
             set => GetOrCreateAnnotation<BranchAnnotation>().Point = value;
         }
-
-        // -------------------------------------------------------------------------
-        // end temporary stuff
-        protected bool Equals(ByteEntry other)
+        
+        IReadOnlyList<Annotation> IReadOnlyByteEntry.Annotations => Annotations;
+        
+        private OpcodeAnnotation GetOneOpcodeAnnotation() => GetOneAnnotation<OpcodeAnnotation>();
+        private OpcodeAnnotation GetOrCreateOpcodeAnnotation() => GetOrCreateAnnotation<OpcodeAnnotation>();
+    }
+    
+    // JUST holds the data. no traversal.
+    public class ByteEntryBase
+    {
+        public ByteEntryBase()
         {
-            return Byte == other.Byte && AnnotationsEqual(other) && Equals(ParentByteSource, other.ParentByteSource) && ParentByteSourceIndex == other.ParentByteSourceIndex;
-        }
-
-        protected bool AnnotationsEqual(ByteEntry other)
-        {
-            // considered equal if one or the other is null AND the other is non-null but zero-length
-            if (Annotations == null || other?.Annotations == null)
-            {
-                var ourCount = Annotations?.Count ?? 0;
-                var theirCount = other?.Annotations?.Count ?? 0;
-
-                return ourCount == 0 && theirCount == 0;
-            }
-
-            return Annotations.Count == other.Annotations.Count && 
-                   GetAnnotationEnumeratorForCompare()
-                       .SequenceEqual(
-                           other.GetAnnotationEnumeratorForCompare());
-        }
-
-        protected IEnumerable<Annotation> GetAnnotationEnumeratorForCompare()
-        {
-            return Annotations?.OrderBy(x => x.GetType().ToString()).ThenBy(x => x);
-        }
-
-        // helpers:
-        public T GetOneAnnotation<T>() where T : Annotation
-        {
-            if (Annotations == null)
-                return null;
             
-            T ret = null;
-            foreach (var annotation in Annotations)
+        }
+
+        public ByteEntryBase(AnnotationCollection annotationsToAppend)
+        {
+            // during initialization, append in case other object initializers have added annotations
+            // via the other properties
+            AppendAnnotationsFrom(annotationsToAppend, true);
+        }
+
+        public bool DontSetParentOnCollectionItems
+        {
+            get => dontSetParentOnCollectionItems;
+            init
             {
-                if (annotation.GetType() != typeof(T))
-                    continue;
-
-                if (ret != null)
-                    throw new InvalidDataException("Found multiple annotations when we required to find exactly 0 or 1");
-
-                ret = (T)annotation;
+                dontSetParentOnCollectionItems = value;
+                if (annotations != null)
+                    annotations.DontSetParentOnCollectionItems = dontSetParentOnCollectionItems;
             }
-
-            return ret;
-        }
-        
-        public T GetOrCreateAnnotation<T>() where T : Annotation, new()
-        {
-            var existing = GetOneAnnotation<T>();
-            if (existing != null)
-                return existing;
-
-            var newItem = new T();
-
-            AddAnnotation(newItem);
-            return newItem;
-        }
-        
-        public void AddAnnotation(Annotation newAnnotation)
-        {
-            GetOrCreateAnnotationsList().Add(newAnnotation);
-        }
-        
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ByteEntry) obj);
         }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Byte, Annotations, ParentByteSource, ParentByteSourceIndex);
-        }
+        // Note: don't allocate this immediately, wait for it to be used. we will have millions of them per ROM
+        public AnnotationCollection Annotations => annotations;
 
         // note: our thread safety isn't comprehensive in this project yet.
         // be careful with this if you're doing anything clever, especially writing.
         // TODO: instead of doing this, see if ConcurrentBag or similar classes for the container itself would work?
         public ReaderWriterLockSlim Lock => _lock ??= new ReaderWriterLockSlim();
-
         private ReaderWriterLockSlim _lock;
+
+        #region References to parent enclosures
+        protected internal ByteStorage ParentStorage { get; internal set; }
+        public ByteSource ParentByteSource => ParentStorage?.ParentByteSource;
+        public int ParentByteSourceIndex  { get; internal set; }
+        #endregion
+        
         private AnnotationCollection annotations;
+        private readonly bool dontSetParentOnCollectionItems;
+
+        public AnnotationCollection GetOrCreateAnnotationsList()
+        {
+            return annotations ??= new AnnotationCollection
+            {
+                DontSetParentOnCollectionItems = DontSetParentOnCollectionItems,
+                Parent = this
+            };
+        }
+
+        protected bool AnnotationsEffectivelyEqual(ByteEntryBase other) => 
+            AnnotationCollection.EffectivelyEqual(Annotations, other?.Annotations);
+
+        public T GetOneAnnotation<T>() where T : Annotation => Annotations?.GetOne<T>();
+        public T GetOrCreateAnnotation<T>() where T : Annotation, new() => GetOrCreateAnnotationsList().GetOrCreateOne<T>();
+        public void AddAnnotation(Annotation newAnnotation) => GetOrCreateAnnotationsList().Add(newAnnotation);
+        public void RemoveOneAnnotationIfExists<T>() where T : Annotation => Annotations?.RemoveOneIfExists<T>();
+        
+        public void ReplaceAnnotationsWith(AnnotationCollection itemsToReplaceWith)
+        {
+            Annotations?.Clear();
+            AppendAnnotationsFrom(itemsToReplaceWith);
+        }
+        
+        private void AppendAnnotationsFrom(IReadOnlyList<Annotation> itemsToAppend, bool overrideParentCheck = false)
+        {
+            // this must be set so that any Annotation references we pick up here retain their original .Parent
+            if (!DontSetParentOnCollectionItems && !overrideParentCheck)
+                throw new InvalidOperationException("DontSetParentOnCollectionItems must be true to aggregate annotations");
+            
+            if (itemsToAppend == null)
+                return;
+
+            GetOrCreateAnnotationsList();
+            Annotations.DontSetParentOnCollectionItems = overrideParentCheck || DontSetParentOnCollectionItems;
+            Annotations.CombineWith(itemsToAppend);
+            Annotations.DontSetParentOnCollectionItems = DontSetParentOnCollectionItems;
+            Annotations.Parent = this;
+        }
+
+        // really, use this only when doing graph building stuff.  
+        public void AppendAnnotationsFrom(IReadOnlyByteEntry lowerPriorityByteEntry)
+        {
+            AppendAnnotationsFrom(lowerPriorityByteEntry?.Annotations);
+        }
+
+        #region Equality
+
+        protected bool Equals(ByteEntryBase other)
+        {
+            return AnnotationsEffectivelyEqual(other) &&
+                   DontSetParentOnCollectionItems == other.DontSetParentOnCollectionItems &&
+                   Equals(ParentStorage, other.ParentStorage) && ParentByteSourceIndex == other.ParentByteSourceIndex;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ByteEntryBase) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(annotations, DontSetParentOnCollectionItems, ParentStorage, ParentByteSourceIndex);
+        }
+
+        #endregion
     }
 }

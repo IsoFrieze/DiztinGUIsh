@@ -46,7 +46,7 @@ namespace Diz.Core.util
             set
             {
                 parent = value;
-                UpdateAllItemParent(parent);
+                SetAllItemParentsTo(parent);
             }
         }
 
@@ -58,7 +58,7 @@ namespace Diz.Core.util
             item?.OnParentChanged(newParent);
         }
 
-        private void UpdateAllItemParent(TParent newParent)
+        private void SetAllItemParentsTo(TParent newParent)
         {
             foreach (var item in this)
             {
@@ -68,7 +68,7 @@ namespace Diz.Core.util
 
         protected override void ClearItems()
         {
-            UpdateAllItemParent(null);
+            SetAllItemParentsTo(null);
             base.ClearItems();
         }
 

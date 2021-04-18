@@ -49,7 +49,7 @@
                 rootEntryToPopulate ??= new ByteEntry
                 {
                     ParentStorage = byteGraphNode.ByteSource.Bytes,
-                    ParentByteSourceIndex = byteGraphNode.ByteData?.ParentByteSourceIndex ?? byteGraphNode.SourceIndex,
+                    ParentByteSourceIndex = byteGraphNode.ByteEntry?.ParentByteSourceIndex ?? byteGraphNode.SourceIndex,
                     
                     // several of our collection items (bytes, annotations, etc) will store
                     // a reference to their parent container. since this new ByteEntry object we're making
@@ -75,13 +75,8 @@
             void PopulateFromRootNode()
             {
                 // annotations are concatenated together
-                if (byteGraphNode.ByteData?.Annotations?.Count > 0)
-                    rootEntryToPopulate.GetOrCreateAnnotationsList().AddRange(byteGraphNode.ByteData.Annotations);
-
-                // only change the byte if we're non-null and overriding something underneath.
-                // we hide any bytes lower in the graph than us.
-                if (byteGraphNode.ByteData?.Byte != null)
-                    rootEntryToPopulate.Byte = byteGraphNode.ByteData.Byte;
+                if (byteGraphNode.ByteEntry?.Annotations?.Count > 0)
+                    rootEntryToPopulate.AppendAnnotationsFrom(byteGraphNode.ByteEntry);
             }
         }
 

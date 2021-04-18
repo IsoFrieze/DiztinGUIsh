@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
@@ -7,9 +8,9 @@ using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
-    public abstract class Annotation : IParentAware<ByteEntry>, INotifyPropertyChangedExt
+    public abstract class Annotation : IParentAware<ByteEntryBase>, INotifyPropertyChangedExt
     {
-        public ByteEntry Parent { get; protected set; }
+        public ByteEntryBase Parent { get; protected set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
@@ -18,27 +19,9 @@ namespace Diz.Core.model
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        protected bool Equals(Annotation other)
-        {
-            return Equals(Parent, other.Parent);
-        }
-
-        public void OnParentChanged(ByteEntry parent)
+        public void OnParentChanged(ByteEntryBase parent)
         {
             Parent = parent;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Annotation) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return (Parent != null ? Parent.GetHashCode() : 0);
         }
     }
 
@@ -83,6 +66,51 @@ namespace Diz.Core.model
             if (ReferenceEquals(this, obj)) return 0;
             return obj is MarkAnnotation other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(MarkAnnotation)}");
         }
+    }
+
+    public class ByteAnnotation : Annotation, IComparable<ByteAnnotation>, IComparable
+    {
+        public byte Byte
+        {
+            get => dataByte;
+            set => this.SetField(ref dataByte, value);
+        }
+        
+        private byte dataByte;
+
+        #region Generated Comparison
+        public int CompareTo(ByteAnnotation other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+            return dataByte.CompareTo(other.dataByte);
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return 1;
+            if (ReferenceEquals(this, obj)) return 0;
+            return obj is ByteAnnotation other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(ByteAnnotation)}");
+        }
+
+        protected bool Equals(ByteAnnotation other)
+        {
+            return dataByte == other?.dataByte;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ByteAnnotation) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), dataByte);
+        }
+        #endregion
     }
     
     public class OpcodeAnnotation : Annotation, IComparable<OpcodeAnnotation>, IComparable

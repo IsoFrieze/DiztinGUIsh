@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -14,6 +15,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Diz.Core.export;
 using Diz.Core.model;
+using JetBrains.Annotations;
 
 namespace Diz.Core.util
 {
@@ -430,6 +432,17 @@ namespace Diz.Core.util
 
             errLine = -1;
             return newValues;
+        }
+        
+        public static object SingleOrDefaultOfType<T>(this IEnumerable<T> enumerable, Type desiredType)
+        {
+            return enumerable.SingleOrDefault(item => item.GetType() == desiredType);
+        }
+        
+        [CanBeNull]
+        public static TDesired SingleOrDefaultOfType<TDesired, T>(this IEnumerable<T> enumerable)
+        {
+            return enumerable.OfType<TDesired>().SingleOrDefault();
         }
     }
 }

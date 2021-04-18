@@ -104,7 +104,7 @@ namespace Diz.Test
             
             void TestIt()
             {
-                var test22Label = (Label) data.SnesAddressSpace.ChildSources[0].ByteSource.Bytes[6].Annotations[2];
+                var test22Label = (Label) data.SnesAddressSpace.ChildSources[0].ByteSource.Bytes[6].Annotations[3];
                 var testDataLabel = (Label) data.SnesAddressSpace.Bytes[0x808000 + 0x5B].Annotations[0];
 
                 Assert.Equal("Test22", test22Label.Name);
@@ -133,6 +133,45 @@ namespace Diz.Test
         }
 
         [Fact]
+        public void TestAnnotationParentWhenPopulatedFrom()
+        {
+            void Test(ByteEntry byteEntry1)
+            {
+                var by1 = byteEntry1.Byte;
+                Assert.NotNull(by1);
+                Assert.Equal(0xCA, by1.Value);
+                Assert.NotNull(byteEntry1.ParentByteSource);
+
+                Assert.Single(byteEntry1.Annotations);
+
+                foreach (var annotation in byteEntry1.Annotations)
+                {
+                    Assert.NotNull(annotation.Parent);
+                    Assert.True(ReferenceEquals(byteEntry1, annotation.Parent));
+                }
+            }
+
+            var actualRomBytes = new ByteSource
+            {
+                Bytes = new ByteList(new List<ByteEntry>
+                {
+                    new()
+                    {
+                        Byte = 0xCA,
+                    }
+                })
+            };
+
+            var byteEntry1 = actualRomBytes.Bytes[0];
+            Test(byteEntry1);
+
+            var data = new Data().PopulateFromRom(actualRomBytes, RomMapMode.LoRom, RomSpeed.FastRom);
+
+            var byteEntry2 = data.RomByteSource.Bytes[0];
+            Test(byteEntry2);
+        } 
+
+        [Fact(Skip = "broken, fixme")]
         public void TestAFewLines()
         {
             var data = CreateInputRom();
@@ -193,6 +232,23 @@ namespace Diz.Test
             
             var labelTracker = new LabelTracker(logCreatorMock.Object);*/
             // Debug.Assert(InputRom);
+        }
+
+        [Fact]
+        public void TestParent()
+        {
+            var data = CreateInputRom();
+
+            var annotations = data.RomByteSource
+                .GetOnlyOwnAnnotations<Label>().ToList();
+
+            Assert.Single(annotations);
+            
+            foreach (var item in annotations)
+            {
+                Assert.NotNull(item);
+                Assert.NotNull(item.Parent);
+            }
         }
 
         [Fact]

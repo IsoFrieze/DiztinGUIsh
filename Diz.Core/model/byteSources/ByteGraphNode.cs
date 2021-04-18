@@ -12,7 +12,7 @@ namespace Diz.Core.model.byteSources
         public int SourceIndex { get; }
         [CanBeNull] public IReadOnlyList<ByteGraphNode> Children => children;
         
-        [CanBeNull] public ByteEntry ByteData => ByteSource.Bytes[SourceIndex];
+        [CanBeNull] public ByteEntry ByteEntry => ByteSource.Bytes[SourceIndex];
 
 
         [CanBeNull] private List<ByteGraphNode> children;
