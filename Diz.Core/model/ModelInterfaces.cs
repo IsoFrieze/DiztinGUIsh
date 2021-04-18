@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
 
 namespace Diz.Core.model
@@ -13,8 +14,16 @@ namespace Diz.Core.model
         string GetLabelName(int snesAddress);
         string GetLabelComment(int snesAddress);
     }
+    
+    public interface IReadOnlyByteSource
+    {
+        byte? GetRomByte(int offset);
+        int? GetRomWord(int offset);
+        int? GetRomLong(int offset);
+        int? GetRomDoubleWord(int offset);
+    }
 
-    public interface IReadOnlySnesRom
+    public interface IReadOnlySnesRom : IReadOnlyByteSource
     {
         RomMapMode RomMapMode { get; }
         RomSpeed RomSpeed { get; }
@@ -29,11 +38,9 @@ namespace Diz.Core.model
         int GetRomSize();
         int GetBankSize();
 
-        byte GetRomByte(int offset);
-        public int GetRomWord(int offset);
-        public int GetRomLong(int offset);
-        public int GetRomDoubleWord(int offset);
-        
+        ByteEntry BuildFlatByteEntryForSnes(int snesAddress);
+        ByteEntry BuildFlatByteEntryForRom(int snesAddress);
+
         int ConvertPCtoSnes(int offset);
         int ConvertSnesToPc(int offset);
         

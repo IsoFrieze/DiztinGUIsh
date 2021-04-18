@@ -3,10 +3,9 @@ using Diz.Core.model;
 
 namespace Diz.Core.arch
 {
-    public interface IReadOnlyCpuOperableByteSource
+    public interface IReadOnlyCpuOperableByteSource : IReadOnlyByteSource
     {
         public Architecture GetArchitecture(int i);
-        byte GetRomByte(int offset);
         public FlagType GetFlag(int i);
         int GetMxFlags(int i);
         

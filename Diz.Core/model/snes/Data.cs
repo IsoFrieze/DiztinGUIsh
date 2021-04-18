@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Diz.Core.arch;
@@ -50,8 +50,9 @@ namespace Diz.Core.model.snes
             var output = new byte[count];
             for (var i = 0; i < output.Length; i++)
             {
-                var pcOffset = ConvertSnesToPc(snesOffset + i);
-                output[i] = GetRomByte(pcOffset);
+                var snesAddress = snesOffset + i;
+                output[i] = GetSnesByte(snesAddress) 
+                            ?? throw new InvalidDataException($"No data at SNES offset {snesAddress:X}");
             }
 
             return output;
@@ -178,40 +179,63 @@ namespace Diz.Core.model.snes
 
         // get the value of the byte at ROM index i
         // throws an exception if no byte present at that address
-        public byte GetRomByte(int pcOffset)
+        public ByteEntry BuildFlatByteEntryForRom(int romOffset)
+        {
+            var snesAddress = ConvertPCtoSnes(romOffset);
+            return SnesAddressSpace.BuildFlatByteEntryFor(snesAddress);
+        }
+
+        public byte? GetRomByte(int pcOffset)
         {
             // weird thing: even though we're asking for a byte from the ROM,
             // we should always access it via the top-level ByteSource which is the SNES address space.
             // so, convert to that, and access via that.
             return GetSnesByte(ConvertPCtoSnes(pcOffset));
         }
-
-        public byte GetSnesByte(int snesAddress)
+        
+        public byte? GetSnesByte(int snesAddress)
         {
-            return SnesAddressSpace.GetByte(snesAddress);
+            return SnesAddressSpace.BuildFlatByteEntryFor(snesAddress)?.Byte;
         }
 
-        public int GetRomWord(int offset)
+        public int? GetRomWord(int offset)
         {
-            if (offset + 1 >= GetRomSize()) 
-                return -1;
-            
-            return GetRomByte(offset) + (GetRomByte(offset + 1) << 8);
+            if (offset + 1 >= GetRomSize())
+                return null;
+
+            var rb1Null = GetRomByte(offset);
+            var rb2Null = GetRomByte(offset + 1);
+            if (!rb1Null.HasValue || !rb2Null.HasValue)
+                return null;
+
+            return rb1Null + (rb2Null << 8);
         }
-        public int GetRomLong(int offset)
+        public int? GetRomLong(int offset)
         {
             if (offset + 2 >= GetRomSize()) 
-                return -1;
+                return null;
+
+            var romWord = GetRomWord(offset);
+            var rb3Null = GetRomByte(offset + 2);
+            if (!romWord.HasValue || !rb3Null.HasValue)
+                return null;
             
-            return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16);
+            return romWord + (rb3Null << 16);
         }
-        public int GetRomDoubleWord(int offset)
+        
+        public int? GetRomDoubleWord(int offset)
         {
-            if (offset + 3 >= GetRomSize()) 
-                return -1;
+            if (offset + 3 >= GetRomSize())
+                return null;
+
+            var romLong = GetRomLong(offset);
+            var rb4Null = GetRomByte(offset + 3);
+            if (!romLong.HasValue || !rb4Null.HasValue)
+                return null;
             
-            return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16) + (GetRomByte(offset + 3) << 24);
+            return romLong + (rb4Null << 24);
         }
+        
         public int GetIntermediateAddressOrPointer(int offset)
         {
             switch (GetFlag(offset))
@@ -221,10 +245,18 @@ namespace Diz.Core.model.snes
                     return GetIntermediateAddress(offset, true);
                 case FlagType.Pointer16Bit:
                     int bank = GetDataBank(offset);
-                    return (bank << 16) | GetRomWord(offset);
+                    var romWord = GetRomWord(offset);
+                    if (!romWord.HasValue)
+                        return -1;
+                    
+                    return (bank << 16) | (int)romWord;
                 case FlagType.Pointer24Bit:
                 case FlagType.Pointer32Bit:
-                    return GetRomLong(offset);
+                    var romLong = GetRomLong(offset);
+                    if (!romLong.HasValue)
+                        return -1;
+                    
+                    return (int)romLong;
             }
             return -1;
         }
@@ -244,6 +276,11 @@ namespace Diz.Core.model.snes
         public int GetBankSize()
         {
             return RomUtil.GetBankSize(RomMapMode);
+        }
+
+        public ByteEntry BuildFlatByteEntryForSnes(int snesAddress)
+        {
+            return SnesAddressSpace?.BuildFlatByteEntryFor(snesAddress);
         }
 
         private int UnmirroredOffset(int offset)
@@ -386,13 +423,6 @@ namespace Diz.Core.model.snes
             var bankStartingPcOffset = bankIndex << 16;
             var bankSnesNumber = ConvertPCtoSnes(bankStartingPcOffset) >> 16;
             return bankSnesNumber;
-        }
-
-        // get the actual ROM file bytes (i.e. the contents of the SMC file on the disk)
-        // note: don't save these anywhere permanent because ROM data is usually copyrighted.
-        public IEnumerable<byte> GetFileBytes()
-        {
-            return RomByteSource.Bytes.Select(b => ((ByteEntry) b).Byte.Value);
         }
 
         public bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch)

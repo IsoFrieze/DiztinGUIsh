@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.model.snes;
@@ -19,7 +20,11 @@ namespace Diz.Test
             var sampleProject = new Project {Data = SampleRomData.SampleData};
             
             // extract the bytes that would normally be in the SMC file (they only exist in code for this sample data)
-            var romFileBytes = sampleProject.Data.GetFileBytes();
+            var romFileBytes = sampleProject.Data.RomByteSource.Bytes.Select(b =>
+            {
+                Debug.Assert(b.Byte != null, "Null byte");
+                return b.Byte.Value;
+            });
 
             // save it to create an output byte stream, we'd normally write this to the disk
             var serializer = new ProjectXmlSerializer();

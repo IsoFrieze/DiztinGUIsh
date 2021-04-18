@@ -83,6 +83,37 @@ namespace Diz.Core.export
                     break;
             }
         }
+
+        #region UnsafeCompatabilityHelpers
+        
+        // older interface never had to worry about null. new interface now we do. 
+        // these are unsafe helper methods for code not yet using the new interface.
+        // new code shouldn't use these if possible, and older code should migrate to checking for null directly.
+        
+        public static byte GetRomByteUnsafe(this IReadOnlyByteSource data, int offset)
+        {
+            // ReSharper disable once PossibleInvalidOperationException
+            return (byte)data.GetRomByte(offset);
+        }
+        
+        public static int GetRomWordUnsafe(this IReadOnlyByteSource data, int offset)
+        {
+            // ReSharper disable once PossibleInvalidOperationException
+            return (byte)data.GetRomWord(offset);
+        }
+        
+        public static int GetRomLongUnsafe(this IReadOnlyByteSource data, int offset)
+        {
+            // ReSharper disable once PossibleInvalidOperationException
+            return (byte)data.GetRomLong(offset);
+        }
+
+        public static int GetRomDoubleWordUnsafe(this IReadOnlyByteSource data, int offset)
+        {
+            // ReSharper disable once PossibleInvalidOperationException
+            return (byte)data.GetRomDoubleWord(offset);
+        }
+        #endregion
         
         public static string GeneratePointerStr(this ILogCreatorDataSource data, int offset, int bytes)
         {
@@ -91,20 +122,20 @@ namespace Diz.Core.export
             switch (bytes)
             {
                 case 2:
-                    ia = (data.GetDataBank(offset) << 16) | data.GetRomWord(offset);
+                    ia = (data.GetDataBank(offset) << 16) | data.GetRomWordUnsafe(offset);
                     format = "dw {0}";
-                    param = Util.NumberToBaseString(data.GetRomWord(offset), Util.NumberBase.Hexadecimal, 4, true);
+                    param = Util.NumberToBaseString(data.GetRomWordUnsafe(offset), Util.NumberBase.Hexadecimal, 4, true);
                     break;
                 case 3:
-                    ia = data.GetRomLong(offset);
+                    ia = data.GetRomLongUnsafe(offset);
                     format = "dl {0}";
-                    param = Util.NumberToBaseString(data.GetRomLong(offset), Util.NumberBase.Hexadecimal, 6, true);
+                    param = Util.NumberToBaseString(data.GetRomLongUnsafe(offset), Util.NumberBase.Hexadecimal, 6, true);
                     break;
                 case 4:
-                    ia = data.GetRomLong(offset);
+                    ia = data.GetRomLongUnsafe(offset);
                     format = "dl {0}" +
-                             $" : db {Util.NumberToBaseString(data.GetRomByte(offset + 3), Util.NumberBase.Hexadecimal, 2, true)}";
-                    param = Util.NumberToBaseString(data.GetRomLong(offset), Util.NumberBase.Hexadecimal, 6, true);
+                             $" : db {Util.NumberToBaseString(data.GetRomByteUnsafe(offset + 3), Util.NumberBase.Hexadecimal, 2, true)}";
+                    param = Util.NumberToBaseString(data.GetRomLongUnsafe(offset), Util.NumberBase.Hexadecimal, 6, true);
                     break;
             }
 
@@ -136,19 +167,19 @@ namespace Diz.Core.export
                 switch (step)
                 {
                     case 1:
-                        res += Util.NumberToBaseString(data.GetRomByte(offset + i), Util.NumberBase.Hexadecimal, 2,
+                        res += Util.NumberToBaseString(data.GetRomByteUnsafe(offset + i), Util.NumberBase.Hexadecimal, 2,
                             true);
                         break;
                     case 2:
-                        res += Util.NumberToBaseString(data.GetRomWord(offset + i), Util.NumberBase.Hexadecimal, 4,
+                        res += Util.NumberToBaseString(data.GetRomWordUnsafe(offset + i), Util.NumberBase.Hexadecimal, 4,
                             true);
                         break;
                     case 3:
-                        res += Util.NumberToBaseString(data.GetRomLong(offset + i), Util.NumberBase.Hexadecimal, 6,
+                        res += Util.NumberToBaseString(data.GetRomLongUnsafe(offset + i), Util.NumberBase.Hexadecimal, 6,
                             true);
                         break;
                     case 4:
-                        res += Util.NumberToBaseString(data.GetRomDoubleWord(offset + i), Util.NumberBase.Hexadecimal,
+                        res += Util.NumberToBaseString(data.GetRomDoubleWordUnsafe(offset + i), Util.NumberBase.Hexadecimal,
                             8, true);
                         break;
                 }

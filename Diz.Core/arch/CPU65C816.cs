@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Diz.Core.arch;
+using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -185,7 +187,7 @@ namespace Diz.Core.arch
             if (seenBranches.Contains(newOffset))
                 return false;
 
-            var opcode = byteSource.GetRomByte(newOffset);
+            var opcode = byteSource.GetRomByteUnsafe(newOffset);
 
             nextOffset = byteSource.Step(newOffset, false, false, prevOffset);
             var jumpOffset = byteSource.Step(newOffset, true, false, prevOffset);
@@ -248,7 +250,7 @@ namespace Diz.Core.arch
         public override int GetIntermediateAddress(Data data, int offset, bool resolve)
         {
             int bank;
-            int operand, programCounter;
+            int programCounter;
             
             var byteEntry = GetByteEntryRom(data, offset);
             var opcode = byteEntry?.Byte;
@@ -269,8 +271,10 @@ namespace Diz.Core.arch
                     if (resolve)
                     {
                         var directPage = data.GetDirectPage(offset);
-                        operand = data.GetRomByte(offset + 1);
-                        return (directPage + operand) & 0xFFFF;
+                        var operand = data.GetRomByte(offset + 1);
+                        if (!operand.HasValue)
+                            return -1;
+                        return (directPage + (int)operand) & 0xFFFF;
                     }
                     else
                     {
@@ -278,34 +282,53 @@ namespace Diz.Core.arch
                     }
                 case AddressMode.DirectPageSIndex:
                 case AddressMode.DirectPageSIndexIndirectYIndex:
-                    return data.GetRomByte(offset + 1);
+                    return data.GetRomByte(offset + 1) ?? -1;
                 case AddressMode.Address:
                 case AddressMode.AddressXIndex:
                 case AddressMode.AddressYIndex:
                 case AddressMode.AddressXIndexIndirect:
-                    bank = (opcode == 0x20 || opcode == 0x4C || opcode == 0x7C || opcode == 0xFC) ?
-                        data.ConvertPCtoSnes(offset) >> 16 :
-                        data.GetDataBank(offset);
-                    operand = data.GetRomWord(offset + 1); 
-                    return (bank << 16) | operand;
+                {
+                    bank = (opcode == 0x20 || opcode == 0x4C || opcode == 0x7C || opcode == 0xFC)
+                        ? data.ConvertPCtoSnes(offset) >> 16
+                        : data.GetDataBank(offset);
+                    var operand = data.GetRomWord(offset + 1);
+                    if (!operand.HasValue)
+                        return -1;
+                    
+                    return (bank << 16) | (int)operand;
+                }
                 case AddressMode.AddressIndirect:
                 case AddressMode.AddressLongIndirect:
-                    operand = data.GetRomWord(offset + 1);
+                {
+                    var operand = data.GetRomWord(offset + 1) ?? -1;
                     return operand;
+                }
                 case AddressMode.Long:
                 case AddressMode.LongXIndex:
-                    operand = data.GetRomLong(offset + 1);
+                {
+                    var operand = data.GetRomLong(offset + 1) ?? -1;
                     return operand;
+                }
                 case AddressMode.Relative8:
+                {
                     programCounter = data.ConvertPCtoSnes(offset + 2);
                     bank = programCounter >> 16;
-                    offset = (sbyte)data.GetRomByte(offset + 1);
-                    return (bank << 16) | ((programCounter + offset) & 0xFFFF);
+                    var romByte = data.GetRomByte(offset + 1);
+                    if (!romByte.HasValue)
+                        return -1;
+                    
+                    return (bank << 16) | ((programCounter + (sbyte)romByte) & 0xFFFF);
+                }
                 case AddressMode.Relative16:
+                {
                     programCounter = data.ConvertPCtoSnes(offset + 3);
                     bank = programCounter >> 16;
-                    offset = (short)data.GetRomWord(offset + 1);
-                    return (bank << 16) | ((programCounter + offset) & 0xFFFF);
+                    var romByte = data.GetRomWord(offset + 1);
+                    if (!romByte.HasValue)
+                        return -1;
+                    
+                    return (bank << 16) | ((programCounter + (short)romByte) & 0xFFFF);
+                }
             }
             return -1;
         }
@@ -325,40 +348,82 @@ namespace Diz.Core.arch
         // new code should be migrated to use this instead of GetSnesByte()
         private static ByteEntry GetByteEntrySnes(Data data, int snesAddress)
         {
-            return data.SnesAddressSpace.BuildFlatByteEntryFor(snesAddress);
+            return data.BuildFlatByteEntryForSnes(snesAddress);
         }
 
         public override string GetInstruction(Data data, int offset)
         {
             var mode = GetAddressMode(data, offset);
+            if (mode == null)
+                throw new InvalidDataException("Expected non-null mode");
+            
             var format = GetInstructionFormatString(data, offset);
             var mnemonic = GetMnemonic(data, offset);
-            string op1, op2 = "";
+            
+            int numDigits1 = 0, numDigits2 = 0;
+            int? value1 = null, value2 = null;
+            var identified = false;
+            
             switch (mode)
             {
                 case AddressMode.BlockMove:
-                    op1 = Util.NumberToBaseString(data.GetRomByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
-                    op2 = Util.NumberToBaseString(data.GetRomByte(offset + 2), Util.NumberBase.Hexadecimal, 2, true);
+                    identified = true;
+                    numDigits1 = numDigits2 = 2;
+                    value1 = data.GetRomByte(offset + 1);
+                    value2 = data.GetRomByte(offset + 2);
                     break;
                 case AddressMode.Constant8:
                 case AddressMode.Immediate8:
-                    op1 = Util.NumberToBaseString(data.GetRomByte(offset + 1), Util.NumberBase.Hexadecimal, 2, true);
+                    identified = true;
+                    numDigits1 = 2;
+                    value1 = data.GetRomByte(offset + 1);
                     break;
                 case AddressMode.Immediate16:
-                    op1 = Util.NumberToBaseString(data.GetRomWord(offset + 1), Util.NumberBase.Hexadecimal, 4, true);
-                    break;
-                default:
-                    // dom note: this is where we could inject expressions if needed. it gives stuff like "$F001".
-                    // we could substitute our expression of "$#F000 + $#01" or "some_struct.member" like "player.hp"
-                    // the expression must be verified to always match the bytes in the file [unless we allow overriding]
-                    op1 = FormatOperandAddress(data, offset, mode);
+                    identified = true;
+                    numDigits1 = 4;
+                    value1 = data.GetRomWord(offset + 1);
                     break;
             }
+
+            string op1, op2 = "";
+            if (identified)
+            {
+                op1 = CreateHexStr(value1, numDigits1);
+                op2 = CreateHexStr(value2, numDigits2);
+            }
+            else
+            {
+                // dom note: this is where we could inject expressions if needed. it gives stuff like "$F001".
+                // we could substitute our expression of "$#F000 + $#01" or "some_struct.member" like "player.hp"
+                // the expression must be verified to always match the bytes in the file [unless we allow overriding]
+                op1 = FormatOperandAddress(data, offset, mode.Value);
+            }
+            
             return string.Format(format, mnemonic, op1, op2);
         }
 
-        public override int GetInstructionLength(Data data, int offset) => 
-            InstructionLength(GetAddressMode(data, offset));
+        private static string CreateHexStr(int? v, int numDigits)
+        {
+            if (numDigits == 0)
+                return "";
+
+            if (v == null)
+                throw new InvalidDataException("Expected non-null input value, got null");
+            
+            return Util.NumberToBaseString((int) v, Util.NumberBase.Hexadecimal, numDigits, true);
+        }
+
+        public override int GetInstructionLength(Data data, int offset)
+        {
+            var mode = GetAddressMode(data, offset);
+            
+            // not sure if this is the right thing. probably fine, if we hit this.
+            // we're in a weird mess anyway.
+            if (mode == null)
+                return 1;
+            
+            return GetInstructionLength(mode.Value);
+        }
 
         public override void MarkInOutPoints(Data data, int offset)
         {
@@ -392,7 +457,7 @@ namespace Diz.Core.arch
             }
         }
 
-        private static int InstructionLength(AddressMode mode)
+        private static int GetInstructionLength(AddressMode mode)
         {
             switch (mode)
             {
@@ -426,9 +491,9 @@ namespace Diz.Core.arch
                 case AddressMode.Long:
                 case AddressMode.LongXIndex:
                     return 4;
+                default:
+                    return 1;
             }
-
-            return 1;
         }
 
         private string FormatOperandAddress(IReadOnlySnesRom data, int offset, AddressMode mode)
@@ -442,21 +507,33 @@ namespace Diz.Core.arch
                 return label;
 
             var count = BytesToShow(mode);
-            if (mode == AddressMode.Relative8 || mode == AddressMode.Relative16) address = data.GetRomWord(offset + 1);
+            if (mode == AddressMode.Relative8 || mode == AddressMode.Relative16)
+            {
+                var romWord = data.GetRomWord(offset + 1);
+                if (!romWord.HasValue)
+                    return "";
+                
+                address = (int)romWord;
+            }
+            
             address &= ~(-1 << (8 * count));
             return Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 2 * count, true);
         }
 
         private string GetMnemonic(IReadOnlyCpuOperableByteSource data, int offset, bool showHint = true)
         {
-            var mn = Mnemonics[data.GetRomByte(offset)];
+            var mn = Mnemonics[data.GetRomByteUnsafe(offset)];
             if (!showHint) 
                 return mn;
 
             var mode = GetAddressMode(data, offset);
-            var count = BytesToShow(mode);
+            if (mode == null)
+                return mn;
+                
+            var count = BytesToShow(mode.Value);
 
-            if (mode == AddressMode.Constant8 || mode == AddressMode.Relative16 || mode == AddressMode.Relative8) return mn;
+            if (mode == AddressMode.Constant8 || mode == AddressMode.Relative16 || mode == AddressMode.Relative8) 
+                return mn;
 
             return count switch
             {
@@ -552,23 +629,35 @@ namespace Diz.Core.arch
             }
             return "";
         }
-
-        private AddressMode GetAddressMode(IReadOnlyCpuOperableByteSource data, int offset)
+        
+        public static AddressMode? GetAddressMode(IReadOnlyCpuOperableByteSource data, int offset)
         {
-            var mode = AddressingModes[data.GetRomByte(offset)];
+            var opcode = data.GetRomByte(offset);
+            if (!opcode.HasValue)
+                return null;
+            
+            var mFlag = data.GetMFlag(offset);
+            var xFlag = data.GetXFlag(offset);
+            
+            return GetAddressMode(opcode.Value, mFlag, xFlag);
+        }
+
+        public static AddressMode GetAddressMode(int opcode, bool mFlag, bool xFlag)
+        {
+            var mode = AddressingModes[opcode];
             return mode switch
             {
-                AddressMode.ImmediateMFlagDependent => data.GetMFlag(offset)
+                AddressMode.ImmediateMFlagDependent => mFlag
                     ? AddressMode.Immediate8
                     : AddressMode.Immediate16,
-                AddressMode.ImmediateXFlagDependent => data.GetXFlag(offset)
+                AddressMode.ImmediateXFlagDependent => xFlag
                     ? AddressMode.Immediate8
                     : AddressMode.Immediate16,
                 _ => mode
             };
         }
 
-        private enum AddressMode : byte
+        public enum AddressMode : byte
         {
             Implied, Accumulator, Constant8, Immediate8, Immediate16,
             ImmediateXFlagDependent, ImmediateMFlagDependent,

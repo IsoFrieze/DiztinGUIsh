@@ -26,6 +26,7 @@ namespace Diz.Core.model.byteSources
         // helper method: return the actual byte value at an index, or, if null,
         // throw an exception. this method is accommodating an older interface and
         // new could should migrate to GetCompiledByteEntry() and check for NULL
+        [Obsolete("Use BuildFlatByteEntryFor() instead and check for null")]
         public byte GetByte(int index)
         {
             var dataAtOffset = BuildFlatByteEntryFor(index);

@@ -240,16 +240,25 @@ namespace Diz.Core.export.assemblyGenerators
         }
         protected override string Generate(int offset, int length)
         {
-            var bytes = "";
-            if (Data.GetFlag(offset) == FlagType.Opcode)
-            {
-                for (var i = 0; i < Data.GetInstructionLength(offset); i++)
-                {
-                    bytes += Util.NumberToBaseString(Data.GetRomByte(offset + i), Util.NumberBase.Hexadecimal);
-                }
-            }
-            // TODO: FIXME: use 'length here'
+            var bytes = BuildByteString(offset);
+            
+            // TODO: FIXME: use 'length' here in this format string
             return $"{bytes,-8}";
+        }
+
+        private string BuildByteString(int offset)
+        {
+            if (Data.GetFlag(offset) != FlagType.Opcode) 
+                return "";
+            
+            var bytes = "";
+            for (var i = 0; i < Data.GetInstructionLength(offset); i++)
+            {
+                var romByte = Data.GetRomByteUnsafe(offset + i);
+                bytes += Util.NumberToBaseString(romByte, Util.NumberBase.Hexadecimal);
+            }
+
+            return bytes;
         }
     }
     

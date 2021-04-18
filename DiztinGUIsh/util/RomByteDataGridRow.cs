@@ -80,8 +80,9 @@ namespace DiztinGUIsh.window2
             {
                 // NOTE: this does not handle instructions whose opcodes cross banks correctly.
                 // if we hit this situation, just return empty for the grid, it's likely real instruction won't do this?
-                var len = Data.GetInstructionLength(ByteEntry.ParentByteSourceIndex);
-                return ByteEntry.ParentByteSourceIndex + len <= Data.GetRomSize() ? Data.GetInstruction(ByteEntry.ParentByteSourceIndex) : "";
+                var romOffset = ByteEntry.ParentByteSourceIndex;
+                var len = Data.GetInstructionLength(romOffset);
+                return romOffset + len <= Data.GetRomSize() ? Data.GetInstruction(romOffset) : "";
             }
         }
 
