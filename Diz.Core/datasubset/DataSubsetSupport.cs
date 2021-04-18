@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Diz.Core.model;
 
-namespace DiztinGUIsh.util
+namespace Diz.Core.datasubset
 {
     public abstract class DataSubsetLookaheadCacheLoader<TRow, TItem> : DataSubsetLookaheadCacheLoaderBase<TRow, TItem>
     {

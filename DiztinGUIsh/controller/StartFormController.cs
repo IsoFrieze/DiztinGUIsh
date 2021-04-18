@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DiztinGUIsh.controller;
 
-namespace DiztinGUIsh.window2
+namespace DiztinGUIsh.controller
 {
     public class StartFormController : IFormController
     {

@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.util
 {

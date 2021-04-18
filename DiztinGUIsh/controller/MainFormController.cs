@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using Diz.Core.arch;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
@@ -14,8 +13,6 @@ using Diz.Core.util;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
-using DiztinGUIsh.window2;
-using Label = Diz.Core.model.Label;
 
 // Model-View-Controller architecture.
 // goal: while this class's purpose is to be the middleman between dumb GUI elements and 

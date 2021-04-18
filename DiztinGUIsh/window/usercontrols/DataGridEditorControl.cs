@@ -5,9 +5,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using Diz.Core.model;
+using Diz.Core.datasubset;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
+using DiztinGUIsh.controller;
 using DiztinGUIsh.util;
 using UserControl = System.Windows.Forms.UserControl;
 
@@ -16,7 +17,7 @@ using UserControl = System.Windows.Forms.UserControl;
 //
 // Keep ".Data" out of here if we can.  this class shouldn't know anything about Roms or data or whatever.
 
-namespace DiztinGUIsh.window2
+namespace DiztinGUIsh.window.usercontrols
 {
     public partial class DataGridEditorControl : UserControl, IBytesGridViewer<ByteEntry>
     {

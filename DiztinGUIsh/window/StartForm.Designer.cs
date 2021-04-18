@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace DiztinGUIsh.window2
+namespace DiztinGUIsh.window
 {
     partial class StartForm
     {

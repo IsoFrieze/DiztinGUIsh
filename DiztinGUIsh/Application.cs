@@ -4,7 +4,6 @@ using System.Linq;
 using System.Windows.Forms;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.window;
-using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh
 {

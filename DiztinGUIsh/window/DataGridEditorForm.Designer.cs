@@ -1,4 +1,6 @@
-﻿namespace DiztinGUIsh.window
+﻿using DiztinGUIsh.window.usercontrols;
+
+namespace DiztinGUIsh.window
 {
     partial class DataGridEditorForm
     {
@@ -115,7 +117,7 @@
             this.openUsageMapFile = new System.Windows.Forms.OpenFileDialog();
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
-            this.dataGridEditorControl1 = new DiztinGUIsh.window2.DataGridEditorControl();
+            this.dataGridEditorControl1 = new DataGridEditorControl();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -957,7 +959,7 @@
         private System.Windows.Forms.ToolStripMenuItem importCaptureToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importTraceLogBinary;
         private System.Windows.Forms.ToolStripMenuItem closeProjectToolStripMenuItem;
-        private window2.DataGridEditorControl dataGridEditorControl1;
+        private DataGridEditorControl dataGridEditorControl1;
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem showOpcodesOnly;
     }

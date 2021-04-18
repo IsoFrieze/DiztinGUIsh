@@ -10,7 +10,6 @@ using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
-using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.window
 {

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using Diz.Core.util;
-using DiztinGUIsh.util;
+using DiztinGUIsh.controller;
 
-namespace DiztinGUIsh.window2
+namespace DiztinGUIsh.window
 {
     public partial class StartForm : Form, IFormViewer
     {

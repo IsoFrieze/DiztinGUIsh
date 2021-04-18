@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Diz.Core.datasubset;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -15,7 +16,7 @@ using JetBrains.Annotations;
 //
 // 1) TODO: need to catch notifychanged from labels and comments or else updates won't propagate
 
-namespace DiztinGUIsh.window2
+namespace DiztinGUIsh.controller
 {
     public class RomByteDataBindingGridController : RomByteDataBindingController
     {

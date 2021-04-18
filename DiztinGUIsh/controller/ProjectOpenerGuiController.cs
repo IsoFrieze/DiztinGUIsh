@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using Diz.Core.model;
 using Diz.Core.serialization;
-using DiztinGUIsh.window2;
 
 namespace DiztinGUIsh.controller
 {

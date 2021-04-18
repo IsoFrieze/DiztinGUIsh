@@ -5,7 +5,7 @@ using Diz.Core.model;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 
-namespace DiztinGUIsh.window2
+namespace DiztinGUIsh.controller
 {
     public class ProjectsController
     {

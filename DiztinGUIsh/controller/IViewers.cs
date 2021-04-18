@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Diz.Core.util;
+using DiztinGUIsh.controller;
 
-namespace DiztinGUIsh.window2
+namespace DiztinGUIsh.controller
 {
     public interface IViewer
     {

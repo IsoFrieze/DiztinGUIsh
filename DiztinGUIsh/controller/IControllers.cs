@@ -1,18 +1,16 @@
 ﻿using System;
 using System.ComponentModel;
+using Diz.Core.datasubset;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
-using DiztinGUIsh.controller;
-using DiztinGUIsh.util;
-using DiztinGUIsh.window;
 
 // NOTE: lots of these interfaces were created temporarily for major refactoring.
 // when that process is finished, we should probably take a pass here to simplify anything
 // that ended up being unnecessary or over-complicated
 
-namespace DiztinGUIsh.window2
+namespace DiztinGUIsh.controller
 {
     public interface IController
     {

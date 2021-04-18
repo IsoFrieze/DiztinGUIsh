@@ -11,10 +11,11 @@ using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
+using DiztinGUIsh.controller;
 using JetBrains.Annotations;
 using Label = Diz.Core.model.Label;
 
-namespace DiztinGUIsh.window2
+namespace DiztinGUIsh.util
 {
     public interface IGridRow<TItem>
     {

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using Diz.Core.model;
 using Diz.Core.util;
 
-namespace DiztinGUIsh.util
+namespace Diz.Core.datasubset
 {
     // controls what rows are visible and scrolls intelligently based on our offset
     public class DataSubsetWithSelection<TRow, TItem> : DataSubset<TRow, TItem>

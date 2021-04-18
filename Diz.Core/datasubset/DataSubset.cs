@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using Diz.Core.util;
 using JetBrains.Annotations;
 
-namespace DiztinGUIsh.util
+namespace Diz.Core.datasubset
 {
     public abstract class DataSubsetLookaheadCacheLoaderBase<TRow, TItem>
     {

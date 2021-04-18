@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
-using DiztinGUIsh.window2;
+using DiztinGUIsh.controller;
 using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window
