@@ -121,7 +121,7 @@ namespace Diz.Core.model.byteSources
         
         // this will search our children for annotations, and translate them into our address space.
         // returns: a unique list of annotations found in all ByteSources (including us and our children),
-        // mapping into our address space.
+        // mapped into our address space.
         //
         // NOTES:
         // - this will NOT return mirrored labels, for that use GetEveryAnnotationEnumerator().
@@ -139,8 +139,6 @@ namespace Diz.Core.model.byteSources
             {
                 foreach (var (childIndex, childAnnotation) in child.ByteSource.GetAnnotationsIncludingChildrenEnumerator<T>())
                 {
-                    // ACTUAL BUG: child has the WRONG PARENT after an AddTemporaryLabel
-                    // BUG: somewhere in here we're converting twice.
                     Debug.Assert(child.ByteSource.IsValidIndex(childIndex));
                     var ourIndex = child.ConvertIndexFromChildToParent(childIndex);
                     Debug.Assert(IsValidIndex(ourIndex));

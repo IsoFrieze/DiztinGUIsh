@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
+using DiztinGUIsh.util;
 
 // this usercontrol is JUST to show the raw image data (no markup, formatting, etc)
 

@@ -5,9 +5,10 @@ using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
+using Diz.Core.util;
 using FastBitmapLib;
 
-namespace Diz.Core.util
+namespace DiztinGUIsh.util
 {
     public class RomVisual
     {
@@ -36,7 +37,7 @@ namespace Diz.Core.util
             if (project?.Data == null) 
                 return;
 
-            // TODO
+            // TODO. DO THIS ON THE ADDRESS SPACE COMBINED STUFF.
             //project.Data.RomBytes += RomBytes_PropertyChanged;
             //project.Data.RomBytes.CollectionChanged += RomBytes_CollectionChanged;
         }
@@ -114,8 +115,8 @@ namespace Diz.Core.util
         private Bitmap bitmap;
         private Project project;
 
-        private readonly object dirtyLock = new object();
-        private readonly Dictionary<int, ByteEntry> dirtyRomBytes = new Dictionary<int, ByteEntry>();
+        private readonly object dirtyLock = new();
+        private readonly Dictionary<int, MarkAnnotation> dirtyRomBytes = new();
 
         private void RomBytes_CollectionChanged(object sender,
             System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -123,9 +124,13 @@ namespace Diz.Core.util
             AllDirty = true;
         }
 
-        private bool OffsetInRange(int offset)
+        private bool RomOffsetInRange(int romOffset) => 
+            romOffset >= romStartingOffset && romOffset < romStartingOffset + lengthOverride;
+        
+        private bool IsSnesAddressInValidRange(int snesAddress)
         {
-            return (offset >= romStartingOffset && offset < romStartingOffset + lengthOverride);
+            var pcOffset = Data.ConvertSnesToPc(snesAddress);
+            return RomOffsetInRange(pcOffset);
         }
 
         private void RomBytes_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -136,10 +141,13 @@ namespace Diz.Core.util
             if (e.PropertyName != nameof(MarkAnnotation.TypeFlag))
                 return;
 
-            if (!OffsetInRange(entry.ParentByteSourceIndex))
+            if (!RomOffsetInRange(entry.ParentByteSourceIndex))
                 return;
-
-            MarkDirty(entry);
+            
+            // check that this still makes sense.
+            var snesAddress = entry.ParentByteSourceIndex;
+            var markAnnotation = entry.GetOneAnnotation<MarkAnnotation>(); 
+            MarkDirty(snesAddress, markAnnotation);
         }
 
         private void InvalidateImage()
@@ -175,15 +183,15 @@ namespace Diz.Core.util
             if (shouldRecreateBitmap)
                 bitmap = new Bitmap(w, h);
 
-            var romBytes = ConsumeRomDirtyBytes(out var usedDirtyList);
+            var dirtyAnnotations = ConsumeRomDirtyBytes(out var usedDirtyList);
             var currentPixel = 0;
 
             var fastBitmap = new FastBitmap(bitmap); // needs compiler flag "/unsafe" enabled
             using (fastBitmap.Lock())
             {
-                foreach (var romByte in romBytes)
+                foreach (var (snesAddress, annotation) in dirtyAnnotations)
                 {
-                    SetPixel(romByte, fastBitmap);
+                    SetPixel(snesAddress, annotation, fastBitmap);
                     ++currentPixel;
                 }
 
@@ -207,41 +215,40 @@ namespace Diz.Core.util
         // returns the RomBytes we should use to update our image
         // this can either be ALL RomBytes, or, a small set of dirty RomBytes that were changed
         // since our last redraw.
-        private IEnumerable<ByteEntry> ConsumeRomDirtyBytes(out bool usedDirtyList)
+        private IEnumerable<KeyValuePair<int, MarkAnnotation>> ConsumeRomDirtyBytes(out bool usedDirtyList)
         {
             usedDirtyList = false;
 
             if (AllDirty)
-                return Data.RomByteSource?.Bytes
-                    .Where(rb => 
-                        rb.ParentByteSourceIndex >= RomStartingOffset && rb.ParentByteSourceIndex <= RomMaxOffsetAllowed
-                    )
-                    .ToList();
+                return Data.SnesAddressSpace.GetAnnotationsIncludingChildrenEnumerator<MarkAnnotation>()
+                    .Where(mark => IsSnesAddressInValidRange(mark.Key));
 
             usedDirtyList = true;
-            IEnumerable<ByteEntry> romBytes;
+            Dictionary<int, MarkAnnotation> copyOfMarkAnnotations;
             lock (dirtyLock)
             {
                 // make a copy so we can release the lock.
-                romBytes = new List<ByteEntry>(dirtyRomBytes.Values.Select(kvp => kvp));
+                copyOfMarkAnnotations = dirtyRomBytes.ToDictionary(pair => pair.Key, pair => pair.Value);
                 dirtyRomBytes.Clear();
             }
 
-            return romBytes;
+            return copyOfMarkAnnotations;
         }
 
         private (int x, int y) ConvertPixelIndexToXy(int offset)
         {
             var y = offset / Width;
-            var x = offset - (y * Width);
+            var x = offset - y * Width;
             return (x, y);
         }
 
-        private void SetPixel(ByteEntry byteOffset, FastBitmap fastBitmap)
+        private void SetPixel(int snesAddress, MarkAnnotation markAnnotation, FastBitmap fastBitmap)
         {
-            var pixelIndex = ConvertRomOffsetToPixelIndex(byteOffset.ParentByteSourceIndex);
+            var romOffset = Data.ConvertSnesToPc(snesAddress);
+            var pixelIndex = ConvertRomOffsetToPixelIndex(romOffset);
             var (x, y) = ConvertPixelIndexToXy(pixelIndex);
-            var color = Util.GetColorFromFlag(byteOffset.GetOneAnnotation<MarkAnnotation>().TypeFlag);
+            var typeFlag = markAnnotation?.TypeFlag ?? default;
+            var color = Util.GetColorFromFlag(typeFlag);
             fastBitmap.SetPixel(x, y, color);
         }
 
@@ -255,14 +262,14 @@ namespace Diz.Core.util
             ImageDataUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        protected virtual void MarkDirty(ByteEntry byteOffset)
+        protected virtual void MarkDirty(int snesAddress, MarkAnnotation markAnnotation)
         {
             lock (dirtyLock)
             {
-                if (!dirtyRomBytes.ContainsKey(byteOffset.ParentByteSourceIndex))
-                    dirtyRomBytes.Add(byteOffset.ParentByteSourceIndex, byteOffset);
+                if (!dirtyRomBytes.ContainsKey(snesAddress))
+                    dirtyRomBytes.Add(snesAddress, markAnnotation);
                 else
-                    dirtyRomBytes[byteOffset.ParentByteSourceIndex] = byteOffset;
+                    dirtyRomBytes[snesAddress] = markAnnotation;
             }
 
             MarkedDirty?.Invoke(this, EventArgs.Empty);
