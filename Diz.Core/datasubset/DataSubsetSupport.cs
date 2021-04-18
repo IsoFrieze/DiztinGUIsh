@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Diz.Core.datasubset
 {
-    public abstract class DataSubsetLookaheadCacheLoader<TRow, TItem> : DataSubsetLookaheadCacheLoaderBase<TRow, TItem>
+    public abstract class DataSubsetLoader<TRow, TItem> : IDataSubsetLoader<TRow, TItem>
     {
         public class Entry
         {
-            public TRow row;
-            public int ageScore; // 0 = newer, higher = older
+            public TRow Row { get; set; }
+            public int AgeScore { get; set; } // 0 = newer, higher = older
         }
 
         // map large data index offset to a row
@@ -32,7 +33,7 @@ namespace Diz.Core.datasubset
         // that way we're only cleaning up in chunks and not in individual rows.
         public int FuzzThreshold => (int)(TargetCachedRows / (float)TargetCachedMultiplier);
 
-        public override void OnBigWindowChangeStart(DataSubset<TRow, TItem> subset)
+        public virtual void OnBigWindowChangeStart(DataSubset<TRow, TItem> subset)
         {
             TargetCachedRows = subset.RowCount * TargetCachedMultiplier;
             
@@ -42,14 +43,14 @@ namespace Diz.Core.datasubset
         private void IncrementAllAgeScores()
         {
             foreach (var entry in cachedRows)
-                entry.Value.ageScore++;
+                entry.Value.AgeScore++;
         }
 
-        public override TRow GetOrCreateRow(int largeOffset, DataSubset<TRow, TItem> subset)
+        public virtual TRow RowValueNeeded(int largeOffset, DataSubset<TRow, TItem> subset)
         {
             var entry = GetOrCreateRowEntry(largeOffset, subset);
-            entry.ageScore = 0; // any recent rows will always be aged at zero
-            return entry.row;
+            entry.AgeScore = 0; // any recent rows will always be aged at zero
+            return entry.Row;
         }
 
         private Entry GetOrCreateRowEntry(int largeIndex, DataSubset<TRow, TItem> subset)
@@ -57,12 +58,10 @@ namespace Diz.Core.datasubset
             if (cachedRows.TryGetValue(largeIndex, out var entry))
                 return entry;
 
-            var dataRomByte = subset.Items[largeIndex];
-
             // assume this creation is expensive, we're optimizing to minimize # initializations here
-            entry = new Entry()
+            entry = new Entry
             {
-                row = CreateNewRow(subset, largeIndex),
+                Row = CreateNewRow(subset, largeIndex),
             };
 
             cachedRows[largeIndex] = entry;
@@ -79,7 +78,7 @@ namespace Diz.Core.datasubset
         // we could do a bunch of clever stuff, I'm just going to a really simple age check
         // and kick out the oldest rows (rows that haven't been in any view for a while)
         // which are furthest away from the current window
-        public override void OnBigWindowChangeFinished(DataSubset<TRow, TItem> subset)
+        public virtual void OnBigWindowChangeFinished(DataSubset<TRow, TItem> subset)
         {
             tmpEntriesForDeletion.Clear();
 
@@ -90,8 +89,8 @@ namespace Diz.Core.datasubset
             
             // we're over our target, so start dropping the oldest least useful stuff from the cache
             var oldestDeletionCandidates = (from kvp in cachedRows
-                where kvp.Value.ageScore != 0
-                orderby kvp.Value.ageScore descending
+                where kvp.Value.AgeScore != 0
+                orderby kvp.Value.AgeScore descending
                 select kvp).Take(FuzzThreshold).ToList();
 
             foreach (var entry in oldestDeletionCandidates)
@@ -99,5 +98,26 @@ namespace Diz.Core.datasubset
                 cachedRows.Remove(entry.Key);
             }
         }
+    }
+
+    public class DataSubsetSimpleLoader<TRow, TItem> : IDataSubsetLoader<TRow, TItem> where TRow : new()
+    {
+        // no caching, just create a new row as needed each time
+        // if performance is an issue, use another strategy.
+        public TRow RowValueNeeded(int largeOffset, DataSubset<TRow, TItem> subset)
+        {
+            TRow newRow = new();
+
+            PopulateRow?.Invoke(ref newRow, largeOffset);
+
+            return newRow;
+        }
+        
+        public delegate void PopulateNewlyCreatedRow(ref TRow newlyCreatedRow, int largeIndex);
+
+        public PopulateNewlyCreatedRow PopulateRow { get; set; }
+
+        public void OnBigWindowChangeStart(DataSubset<TRow, TItem> subset) {}
+        public void OnBigWindowChangeFinished(DataSubset<TRow, TItem> subset) {}
     }
 }

@@ -8,11 +8,13 @@ using JetBrains.Annotations;
 
 namespace Diz.Core.datasubset
 {
-    public abstract class DataSubsetLookaheadCacheLoaderBase<TRow, TItem>
+    public interface IDataSubsetLoader<TRow, TItem>
     {
-        public abstract TRow GetOrCreateRow(int largeOffset, DataSubset<TRow, TItem> subset);
-        public abstract void OnBigWindowChangeStart(DataSubset<TRow, TItem> subset);
-        public abstract void OnBigWindowChangeFinished(DataSubset<TRow, TItem> subset);
+        // provide a row (either retrieve from cache or make a new one, either way)
+        TRow RowValueNeeded(int largeOffset, DataSubset<TRow, TItem> subset);
+        
+        void OnBigWindowChangeStart(DataSubset<TRow, TItem> subset);
+        void OnBigWindowChangeFinished(DataSubset<TRow, TItem> subset);
     }
 
     public class DataSubset<TRow, TItem> : INotifyPropertyChangedExt
@@ -31,7 +33,7 @@ namespace Diz.Core.datasubset
             }
         }
 
-        public DataSubsetLookaheadCacheLoaderBase<TRow, TItem> RowLoader { get; init; }
+        public IDataSubsetLoader<TRow, TItem> RowLoader { get; init; }
 
         // rows (relative)
         public int StartingRowLargeIndex
@@ -139,7 +141,7 @@ namespace Diz.Core.datasubset
             RowLoader.OnBigWindowChangeStart(this);
             for (var i = StartingRowLargeIndex; i < StartingRowLargeIndex + RowCount; ++i)
             {
-                var newRow = GetOrCreateRow(i);
+                var newRow = RowValueNeededForLargeOffset(i);
                 outputRows.Add(newRow);
             }
             SetNotifyChangedForAllRows(register: true);
@@ -178,20 +180,31 @@ namespace Diz.Core.datasubset
             PropertyChanged?.Invoke(sender, e);
         }
 
-        // key thing: we cache outputRows as long as the view doesn't change.
-        // RowLoader will cache both the visible rows and potentially lots more of the most
-        // recently loaded rows as well.
+        // key thing: this class (DataSubset) will itself cache the current outputRows
+        // which don't need to change as long as the view doesn't change.
+        //
+        // RowLoader's job is:
+        // - must cache all visible rows
+        // - optionally, selectively cache some rows no longer in view anymore
         //
         // the goal is: for small amounts of scrolling, make sure repopulating outputRows
         // is a quick operation. this will be true if RowLoader does a good job saving recently
-        // cached rows.
+        // cached rows and predicting which ones might be needed soon.
         //
         // this also keeps the complex caching logic can stay out of this class and in RowLoader.
-        protected TRow GetOrCreateRow(int largeOffset) =>
-            RowLoader.GetOrCreateRow(largeOffset, this);
+        //
+        // example: if a user is looking at 10 rows in the middle of a 100 count data source,
+        // the screen GUI only need 10 row objects to exist.  however, RowLoader might choose to also cache
+        // an extra +/- 25 most recently used and rows that might be probably used in the near future.
+        // so if the user is scrolling around in the same area, they might hit some of the non-visible cache
+        // when rows are needed. that will speed up the GUI operations.
+        //
+        // if needed, in the future, predictive row caching could be done on a background thread as well.
+        protected TRow RowValueNeededForLargeOffset(int largeOffset) =>
+            RowLoader.RowValueNeeded(largeOffset, this);
 
-        private TRow GetOrCreateRowAtRow(int row) =>
-            GetOrCreateRow(GetLargeOffsetFromRowOffset(row));
+        private TRow RowValueNeededForRowIndex(int row) =>
+            RowValueNeededForLargeOffset(GetLargeOffsetFromRowOffset(row));
 
         private bool IsRowOffsetValid(int rowOffset) =>
             rowOffset >= 0 && rowOffset < RowCount;

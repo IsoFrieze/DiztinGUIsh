@@ -5,8 +5,8 @@ using DiztinGUIsh.controller;
 
 namespace DiztinGUIsh.util
 {
-    public class DataSubsetLookaheadCacheRomByteDataGridLoader<TRow, TItem> : 
-        DataSubsetLookaheadCacheLoader<TRow, TItem>
+    public class DataSubsetRomByteDataGridLoader<TRow, TItem> : 
+        DataSubsetLoader<TRow, TItem>
         where TItem : ByteEntry
         where TRow : class, IGridRow<TItem>
     {

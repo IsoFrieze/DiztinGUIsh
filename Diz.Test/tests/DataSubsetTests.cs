@@ -1,102 +1,82 @@
-﻿/*using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Diz.Core.serialization.xml_serializer;
+using Diz.Core.datasubset;
+using Diz.Core.model.snes;
+using Iced.Intel;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.tests
 {
     public static class DataSubsetTests
     {
-        private static IEnumerable<TOut> Repeat<TOut>(TOut toRepeat, int times)
+        public class TestRow
         {
-            for (var i = 0; i < times; ++i)
+            public TestItem OriginalItem { get; set; }
+        }
+
+        public class TestItem
+        {
+            public int CopyOfSourceLargeIndex { get; set; }
+        }
+
+        public class DataSubsetTestHarness
+        {
+            public List<TestItem> DataSource { get; init; }
+            public DataSubsetWithSelection<TestRow, TestItem> DataSubset { get; init; }
+
+            public void AssertSelectedIndexCorrect(int expectedLargeIndex)
             {
-                yield return toRepeat;
+                Assert.Equal(expectedLargeIndex,DataSubset.SelectedRow.OriginalItem.CopyOfSourceLargeIndex);
             }
         }
 
-        private static (IEnumerable<string>, IEnumerable<string>) GenerateRepeat(string toRepeat, int times)
+        private static DataSubsetTestHarness CreateSetupData()
         {
-            var repeated = Repeat($"{toRepeat}", times);
-            return (repeated.ToList(),
-                    times >= 8
-                        ? new List<string>(new[] {$"r {times} {toRepeat}"})
-                        : repeated.ToList()
-                );
-        }
-
-        /*public static TheoryData<IEnumerable<string>, IEnumerable<string>> ValidCompressionData
-        {
-            get
+            return new()
             {
-                var tmp = new TheoryData<IEnumerable<string>, IEnumerable<string>>();
-                ValidDataReal.ForEach(i => tmp.Add(i.Item1, i.Item2));
-                return tmp;
+                DataSource = Enumerable.Range(0, 1000)
+                    .Select(i => new TestItem {CopyOfSourceLargeIndex = i})
+                    .ToList(),
                 
-                // ValidDataReal.Select(x => )
-            }
-        }#1#
-        
-        public static TheoryData<IEnumerable<string>, IEnumerable<string>> ValidTest =>
-            new TheoryData<IEnumerable<string>, IEnumerable<string>>
-            {
-                { -4, -6, -10 },
-                { -2, 2, 0 },
-                { int.MinValue, -1, int.MaxValue }
-            };
-
-        /*
-        private static List<(IEnumerable<string>, IEnumerable<string>)> ValidDataReal =>
-            new List<(IEnumerable<string>, IEnumerable<string>)>
-            {
-                GenerateRepeat("TestItem", 20),
-                
-                GenerateRepeat("TestItem", 30),
-                
-                (
-                    Repeat("YO", 20).Concat(new[]
+                DataSubset = new DataSubsetWithSelection<TestRow, TestItem>
+                {
+                    Items = Enumerable.Range(0, 1000)
+                        .Select(i => new TestItem {CopyOfSourceLargeIndex = i})
+                        .ToList(),
+                    RowLoader = new DataSubsetSimpleLoader<TestRow, TestItem>
                     {
-                        "different @ end"
-                    }),
-                    new List<string>(new[]
-                    {
-                        "r 20 YO",
-                        "different @ end"
-                    })
-                ),
-                
-                (
-                    new List<string>()
+                        PopulateRow = (ref TestRow rowToPopulate, int largeIndex) =>
                         {
-                            "start",
-                            "start2",
+                            rowToPopulate.OriginalItem = Enumerable.Range(0, 1000)
+                                .Select(i => new TestItem {CopyOfSourceLargeIndex = i})
+                                .ToList()[largeIndex];
                         }
-                        .Concat(
-                            Repeat("YO1", 22).Concat(
-                                Repeat("YO2", 20).Concat(
-                                    new[]
-                                    {
-                                        "different @ end"
-                                    }))),
-                    new List<string>(new[]
-                    {
-                        "start",
-                        "start2",
-                        "r 22 YO1",
-                        "r 20 YO2",
-                        "different @ end"
-                    })
-                )
-            };#1#
-
-        [Theory]
-        [MemberData(nameof(ValidTest))]
-        public static void TestWindowSizings(int startingLargeIndex, int rowCount, int selectedLargeOffset, int expectedAtValue)
+                    },
+                    RowCount = 10,
+                    StartingRowLargeIndex = 15,
+                    EndingRowLargeIndex = 24,
+                    SelectedLargeIndex = 17
+                },
+            };
+        }
+        
+        
+        [Fact]
+        public static void TestSelection()
         {
-            var dataSubset = new DataSubsetWithSelection();
+            var harness = CreateSetupData();
+            var subset = harness.DataSubset;
+
+            Assert.Equal(10, subset.RowCount);
+            Assert.Equal(10, subset.OutputRows.Count);
             
-            Assert.Equal(expected, inputListCopy);
-            Assert.Equal(inputListCopy, input);
+            harness.AssertSelectedIndexCorrect(17);
+
+            harness.DataSubset.SelectRow(0);
+            harness.AssertSelectedIndexCorrect(15);
+            
+            harness.DataSubset.SelectRow(9);
+            harness.AssertSelectedIndexCorrect(24);
         }
     }
-}*/
+}

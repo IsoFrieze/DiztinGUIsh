@@ -8,7 +8,7 @@ namespace Diz.Core.datasubset
     public class DataSubsetWithSelection<TRow, TItem> : DataSubset<TRow, TItem>
     {
         public TRow SelectedRow =>
-            GetOrCreateRow(SelectedLargeIndex);
+            RowValueNeededForLargeOffset(SelectedLargeIndex);
         
         public int SelectedRowIndex => 
             GetRowIndexFromLargeOffset(SelectedLargeIndex);

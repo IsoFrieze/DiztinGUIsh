@@ -136,7 +136,7 @@ namespace DiztinGUIsh.controller
             DataSubset = new()
             {
                 Items = dataBindSource,
-                RowLoader = new DataSubsetLookaheadCacheRomByteDataGridLoader<TRow, TItem>
+                RowLoader = new DataSubsetRomByteDataGridLoader<TRow, TItem>
                 {
                     View = ViewGrid,
                     Data = Data,
