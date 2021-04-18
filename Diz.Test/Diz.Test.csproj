@@ -60,6 +60,8 @@
     <EmbeddedResource Include="Resources\serialize-dictionary-test.xml" />
     <None Remove="Resources\emptyrom.asm" />
     <EmbeddedResource Include="Resources\emptyrom.asm" />
+    <None Remove="Resources\test42.asm" />
+    <EmbeddedResource Include="Resources\samplerom-a-few-lines.asm" />
   </ItemGroup>
 
 </Project>

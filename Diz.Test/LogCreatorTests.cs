@@ -18,16 +18,6 @@ namespace Diz.Test
 {
     public sealed class LogCreatorTests
     {
-        private const string ExpectedRaw =
-            //          label:       instructions                         ;PC    |rawbytes|ia
-            "                        lorom                                ;      |        |      ;  \r\n" +
-            "                        ORG $808000                          ;      |        |      ;  \r\n" +
-            "           CODE_808000: LDA.W Test_Data,X                    ;808000|BD5B80  |80805B;  \r\n" +
-            "                        STA.W $0100,X                        ;808003|9D0001  |800100;  \r\n" +
-            "           Test22:      DEX                                  ;808006|CA      |      ;  \r\n" +
-            "                        BPL CODE_808000                      ;808007|10F7    |808000;  \r\n" +
-            "                        Test_Data = $80805B                  ;      |        |      ;  \r\n";
-        
         private Data CreateInputRom()
         {
             var bytes = new List<ByteEntry>
@@ -167,8 +157,9 @@ namespace Diz.Test
             Test(byteEntry2);
         } 
 
-        [Fact]
-        public void TestAFewLines()
+        [Theory]
+        [EmbeddedResourceData("Diz.Test/Resources/samplerom-a-few-lines.asm")]
+        public void TestAFewLines(string expectedAsm)
         {
             var data = CreateInputRom();
             var assemblyOutput = LogWriterHelper.ExportAssembly(data, logCreator =>
@@ -198,7 +189,7 @@ namespace Diz.Test
                 };
             });
 
-            LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, assemblyOutput, debugWriter);
+            LogWriterHelper.AssertAssemblyOutputEquals(expectedAsm, assemblyOutput, debugWriter);
         }
 
         [Fact]
