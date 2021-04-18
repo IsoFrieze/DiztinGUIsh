@@ -25,7 +25,7 @@ namespace DiztinGUIsh
             // example stuff you can do:
             // ProfilerDotTrace.Enabled = true;
             //
-            // args = args.Append(SampleRomHackProjectsController.SampleProjectName).ToArray();
+            args = args.Append(SampleRomHackProjectsController.SampleProjectName).ToArray();
             // or
             // args = args.Append(@"some-test-file.dizraw").ToArray();
             // END TEMP

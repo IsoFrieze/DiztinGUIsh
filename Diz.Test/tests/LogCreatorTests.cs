@@ -1,20 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Diz.Core.export;
-using Diz.Core.export.assemblyGenerators;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 using Diz.Test.Utils;
-using Moq;
 using Xunit;
 using Xunit.Abstractions;
+
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
-namespace Diz.Test
+namespace Diz.Test.tests
 {
     public sealed class LogCreatorTests
     {

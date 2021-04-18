@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using Diz.Core.model.byteSources;
-using Diz.Test.Utils;
-using Xunit;
-
-namespace Diz.Test.tests
+﻿namespace Diz.Test.tests.bytesources
 {
     public class ByteSourceTests
     {

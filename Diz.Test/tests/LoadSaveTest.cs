@@ -9,7 +9,7 @@ using Diz.Core.serialization.xml_serializer;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Diz.Test
+namespace Diz.Test.tests
 {
     public class LoadSaveTest
     {

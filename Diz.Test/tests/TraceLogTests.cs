@@ -1,7 +1,7 @@
 ﻿using Diz.Core.import;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.tests
 {
     public static class TraceLogTests
     {

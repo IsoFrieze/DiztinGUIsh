@@ -6,9 +6,10 @@ using Diz.Core.model.snes;
 using Diz.Core.util;
 using Diz.Test.Utils;
 using Xunit;
+
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
-namespace Diz.Test
+namespace Diz.Test.tests
 {
     public static class SampleRomCreator1
     {

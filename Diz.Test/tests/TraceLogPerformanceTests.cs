@@ -4,14 +4,12 @@ using System.IO;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Loggers;
 using Diz.Core.import;
-using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
-using Diz.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Diz.Test
+namespace Diz.Test.tests
 {
     public sealed class XOutLogger : ILogger
     {

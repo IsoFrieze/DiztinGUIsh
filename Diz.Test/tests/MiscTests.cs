@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +8,7 @@ using Diz.Core.util;
 using LightInject;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.tests
 {
     public interface ILogCreator
     {

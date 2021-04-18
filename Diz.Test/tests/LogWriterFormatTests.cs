@@ -7,7 +7,7 @@ using Diz.Core.export;
 using Diz.Test.Utils;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.tests
 {
     public static class LogWriterFormatTests
     {

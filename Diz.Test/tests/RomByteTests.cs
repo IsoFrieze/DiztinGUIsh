@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
 using Diz.Core;
 using Diz.Core.arch;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.tests
 {
     public sealed class RomByteTests
     {
