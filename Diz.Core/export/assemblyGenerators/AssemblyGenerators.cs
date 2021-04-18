@@ -339,7 +339,11 @@ namespace Diz.Core.export.assemblyGenerators
         }
         protected override string Generate(int offset, int length)
         {
-            var snesAddress = Data.ConvertPCtoSnes(offset);
+            // EXTREMELY IMPORTANT:
+            // unlike all the other generators where offset is a ROM offset,
+            // for us, offset will be a SNES address.
+            var snesAddress = offset; // yes. this is correct.
+            
             var labelName = Data.Labels.GetLabelName(snesAddress);
             var snesAddrFormatted = Util.NumberToBaseString(snesAddress, Util.NumberBase.Hexadecimal, 6, true);
             var labelComment = Data.Labels.GetLabelComment(snesAddress);

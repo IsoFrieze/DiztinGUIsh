@@ -19,11 +19,11 @@
 
         private void WriteUnusedLabel(int snesAddress)
         {
-            var pcOffset = Data.ConvertSnesToPc(snesAddress);
-            if (pcOffset == -1)
-                return;
+            // shove this in here even though what we SHOULD do is express it as a ROM offset.
+            // however, we need to be able to pass in non-ROM SNES addresses.
+            var stuffSnesAddressInOffset = snesAddress;
                 
-            LogCreator.WriteLine(LogCreator.LineGenerator.GenerateSpecialLine("labelassign", pcOffset));
+            LogCreator.WriteLine(LogCreator.LineGenerator.GenerateSpecialLine("labelassign", stuffSnesAddressInOffset));
         }
     }
 
@@ -46,9 +46,12 @@
         {
             // not the best place to add formatting, TODO: cleanup
             var category = LabelTracker.UnvisitedLabels.ContainsKey(snesAddress) ? "UNUSED" : "USED";
-            var labelPcAddress = Data.ConvertSnesToPc(snesAddress);
-            LogCreator.WriteLine($";!^!-{category}-! " +
-                                 LogCreator.LineGenerator.GenerateSpecialLine("labelassign", labelPcAddress));
+            
+            // shove this in here even though what we SHOULD do is express it as a ROM offset.
+            // however, we need to be able to pass in non-ROM SNES addresses.
+            var stuffSnesAddressInOffset = snesAddress;
+            
+            LogCreator.WriteLine($";!^!-{category}-! " + LogCreator.LineGenerator.GenerateSpecialLine("labelassign", stuffSnesAddressInOffset));
         }
     }
 }

@@ -167,7 +167,7 @@ namespace Diz.Test
             Test(byteEntry2);
         } 
 
-        [Fact(Skip = "broken, fixme")]
+        [Fact]
         public void TestAFewLines()
         {
             var data = CreateInputRom();
