@@ -63,7 +63,7 @@ namespace Diz.Core.datasubset
             set
             {
                 if (value < 0) 
-                    throw new ArgumentOutOfRangeException(nameof(value));
+                    throw new ArgumentOutOfRangeException(nameof(RowCount));
                 
                 if (Items == null)
                     throw new ArgumentException("RomBytes must be set before setting view dimensions");
@@ -206,13 +206,13 @@ namespace Diz.Core.datasubset
         private TRow RowValueNeededForRowIndex(int row) =>
             RowValueNeededForLargeOffset(GetLargeOffsetFromRowOffset(row));
 
-        private bool IsRowOffsetValid(int rowOffset) =>
+        public bool IsRowOffsetValid(int rowOffset) =>
             rowOffset >= 0 && rowOffset < RowCount;
 
-        private bool IsLargeOffsetContainedInVisibleRows(int largeOffset) =>
+        public bool IsLargeOffsetContainedInVisibleRows(int largeOffset) =>
             largeOffset >= startingRowLargeIndex && largeOffset <= EndingRowLargeIndex;
 
-        protected bool IsValidLargeOffset(int largeOffset) =>
+        public bool IsValidLargeOffset(int largeOffset) =>
             largeOffset >= 0 && largeOffset < Items?.Count;
 
         public int GetRowIndexFromLargeOffset(int largeOffset) =>
@@ -220,7 +220,7 @@ namespace Diz.Core.datasubset
                 ? -1
                 : largeOffset - startingRowLargeIndex;
 
-        protected int GetLargeOffsetFromRowOffset(int rowOffset) =>
+        public int GetLargeOffsetFromRowOffset(int rowOffset) =>
             !IsRowOffsetValid(rowOffset)
                 ? -1
                 : rowOffset + startingRowLargeIndex;
