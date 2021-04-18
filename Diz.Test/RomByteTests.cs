@@ -1,4 +1,6 @@
-﻿using Diz.Core.model;
+﻿using Diz.Core;
+using Diz.Core.arch;
+using Diz.Core.model;
 using Xunit;
 
 namespace Diz.Test
@@ -25,6 +27,29 @@ namespace Diz.Test
             var rb = SampleRomByte1();
             rb.Rom = 0x99;
             return rb;
+        }
+        
+        [Fact]
+        public static void TestWhenNoIAPresent()
+        {
+            var sampleData = SampleRomData.SampleData;
+            const int offset = 0x1C1F;
+            var result = sampleData.GetIntermediateAddressOrPointer(offset);
+            Assert.Equal(result, -1);
+        }
+        
+        [Fact]
+        public static void TestGetAddressMode()
+        {
+            var sampleData = SampleRomData.SampleData;
+            const int romOffset1 = 0xEB;
+            var mode1 = Cpu65C816.GetAddressMode(sampleData, romOffset1);
+            Assert.Equal(Cpu65C816.AddressMode.Constant8, mode1);
+
+            Assert.True(romOffset1 >= sampleData.OriginalRomSizeBeforePadding);
+
+            var mode2 = Cpu65C816.GetAddressMode(sampleData, 0x0A);
+            Assert.Equal(Cpu65C816.AddressMode.Constant8, mode2);
         }
 
         [Fact]

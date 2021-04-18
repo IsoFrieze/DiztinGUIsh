@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
@@ -7,6 +8,7 @@ using Diz.Core.util;
 using Diz.Test.Utils;
 using IX.Observable;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Diz.Test
 {
@@ -66,7 +68,41 @@ namespace Diz.Test
         [Fact]
         public void TestAFewLines()
         {
-            LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(InputRom));
+            LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(InputRom, creator =>
+            {
+                var settings = creator.Settings;
+                settings.OutputExtraWhitespace = false;
+                creator.Settings = settings;
+            }), debugWriter);
+        }
+        
+        [Fact]
+        public void TestLabelCount()
+        {
+            // should give us "Test22" and "Test_Data"
+            Assert.Equal(2, InputRom.Labels.Count);
+        }
+        
+        [Fact]
+        public void TestOneLine()
+        {
+            var exportAssembly = LogWriterHelper.ExportAssembly(new Data());
+            LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, exportAssembly);
+        }
+        
+        [Theory]
+        [EmbeddedResourceData("Diz.Test/Resources/emptyrom.asm")]
+        public void TestEmptyRom(string expectedAsm)
+        {
+            var result = LogWriterHelper.ExportAssembly(new Data());
+            LogWriterHelper.AssertAssemblyOutputEquals(expectedAsm, result, debugWriter);
+        }
+        
+        
+        private readonly ITestOutputHelper debugWriter;
+        public LogCreatorTests(ITestOutputHelper debugWriter)
+        {
+            this.debugWriter = debugWriter;
         }
     }
 }

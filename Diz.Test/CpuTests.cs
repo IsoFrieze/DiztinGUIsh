@@ -86,10 +86,11 @@ namespace Diz.Test
             // Assembly Text -> Asar -> SFC file
             var bytes = AsarRunner.AssembleToRom(exportAssembly);
             
+            Assert.Equal(3, bytes.Count);
+            
             Assert.Equal(0x8D, bytes[0]);
             Assert.Equal(0x16, bytes[1]);
             Assert.Equal(0x21, bytes[2]);
-            Assert.Equal(3, bytes.Count);
         } 
     }
 }
