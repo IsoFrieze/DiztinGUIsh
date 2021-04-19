@@ -167,13 +167,32 @@ namespace Diz.Core.export.assemblyGenerators
         }
         protected override string Generate(int offset, int length)
         {
-            var s = "incsrc \"labels.asm\"";
-            if (offset >= 0)
-            {
-                var bank = Data.ConvertPCtoSnes(offset) >> 16;
-                s = $"incsrc \"bank_{Util.NumberToBaseString(bank, Util.NumberBase.Hexadecimal, 2)}.asm\"";
-            }
-            return Util.LeftAlign(length, s);
+            return Util.LeftAlign(length,BuildIncsrc(offset));
+        }
+
+        private string BuildIncsrc(int offset)
+        {
+            return offset >= 0
+                ? BuildOutputForOffset(offset)
+                : BuildIncSrc("labels.asm");
+        }
+
+        private string BuildOutputForOffset(int offset)
+        {
+            var bank = Data.ConvertPCtoSnes(offset) >> 16;
+            var name = Util.NumberToBaseString(bank, Util.NumberBase.Hexadecimal, 2);
+            return BuildBankInclude(name);
+        }
+
+        private static string BuildBankInclude(string name)
+        {
+            var val = $"bank_{name}.asm";
+            return BuildIncSrc(val);
+        }
+
+        private static string BuildIncSrc(string val)
+        {
+            return $"incsrc \"{val}\"";
         }
     }
     

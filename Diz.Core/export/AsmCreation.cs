@@ -1,4 +1,6 @@
-﻿namespace Diz.Core.export
+﻿using System;
+
+namespace Diz.Core.export
 {
     public interface IAsmCreationStep
     {
@@ -32,7 +34,8 @@
                 LogCreator.WriteSpecialLine("incsrc", i);
             
             // output the include for labels.asm file
-            LogCreator.WriteSpecialLine("incsrc");
+            // in.Minvalue just means output a line with "labels.asm" on it
+            LogCreator.WriteSpecialLine("incsrc", int.MinValue);
         }
     }
     
