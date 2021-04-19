@@ -305,7 +305,7 @@ namespace Diz.Core.util
             return index > maxIndex
                 ? maxIndex
                 : index < minIndex
-                    ? 0
+                    ? minIndex
                     : index;
         }
 
@@ -351,7 +351,7 @@ namespace Diz.Core.util
         // returns true if we set property to a new value
         public static bool SetField<T>(this INotifyPropertyChanged sender, PropertyChangedEventHandler handler, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
-            if (!FieldIsEqual(field, value, compareRefOnly)) 
+            if (FieldIsEqual(field, value, compareRefOnly)) 
                 return false;
             
             field = value;
@@ -363,7 +363,7 @@ namespace Diz.Core.util
         // returns true if we set property to a new value
         public static bool SetField<T>(this INotifyPropertyChangedExt sender, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
-            if (!FieldIsEqual(field, value, compareRefOnly)) 
+            if (FieldIsEqual(field, value, compareRefOnly)) 
                 return false;
             
             field = value;
@@ -377,27 +377,14 @@ namespace Diz.Core.util
             if (compareRefOnly)
             {
                 if (ReferenceEquals(field, value))
-                    return false;
+                    return true;
             }
             else if (EqualityComparer<T>.Default.Equals(field, value))
             {
-                return false;
+                return true;
             }
 
-            return true;
-        }
-        
-        public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, ref int errLine)
-        {
-            var labelsFromCsv = ContentUtils.ReadLabelsFromCsv(importFilename, ref errLine);
-            
-            if (replaceAll)
-                labelProvider.DeleteAllLabels();
-            
-            foreach (var (key, value) in labelsFromCsv)
-            {
-                labelProvider.AddLabel(key, value, true);
-            }
+            return false;
         }
     }
 
@@ -432,6 +419,19 @@ namespace Diz.Core.util
 
             errLine = -1;
             return newValues;
+        }
+        
+        public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, ref int errLine)
+        {
+            var labelsFromCsv = ReadLabelsFromCsv(importFilename, ref errLine);
+            
+            if (replaceAll)
+                labelProvider.DeleteAllLabels();
+            
+            foreach (var (key, value) in labelsFromCsv)
+            {
+                labelProvider.AddLabel(key, value, true);
+            }
         }
         
         public static object SingleOrDefaultOfType<T>(this IEnumerable<T> enumerable, Type desiredType)

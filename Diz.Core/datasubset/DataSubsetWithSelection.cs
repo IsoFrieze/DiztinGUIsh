@@ -13,34 +13,26 @@ namespace Diz.Core.datasubset
         public int SelectedRowIndex => 
             GetRowIndexFromLargeOffset(SelectedLargeIndex);
 
-        // when this display mode is enabled, the selection will not be allowed to change 
-        // outside the range of the currently visible rows
-        public bool AlwaysEnsureSelectionWithinVisibleRows
+        // when set: when the start or end range changes, the selected row will be
+        // clamped to be within the Start..End range.
+        public bool WindowResizeKeepsSelectionInRange
         {
-            get => clampSelectionToVisibleRows;
+            get => windowResizeKeepsSelectionInRange;
             set
             {
-                if (value)
-                    ScrollToShowSelection = false;
-                
-                this.SetField(ref clampSelectionToVisibleRows, value);
-                
+                this.SetField(ref windowResizeKeepsSelectionInRange, value);
                 ClampSelectionIfNeeded();
             }
         }
 
-        // when this display mode is enabled, when the selection is changed,
-        // the starting and ending rows will change to ensure the selected index is visible
-        public bool ScrollToShowSelection
+        // when set: when the selection is changed, the start and end points will move
+        // to keep the selection inside the range.
+        public bool EnsureBoundariesEncompassWhenSelectionChanges
         {
-            get => autoScrollToShowSelection;
+            get => ensureBoundariesEncompassWhenSelectionChanges;
             set
             {
-                if (value)
-                    AlwaysEnsureSelectionWithinVisibleRows = false;
-
-                this.SetField(ref autoScrollToShowSelection, value);
-
+                this.SetField(ref ensureBoundariesEncompassWhenSelectionChanges, value);
                 EnsureViewContainsLargeIndex(SelectedLargeIndex);
             }
         }
@@ -70,13 +62,14 @@ namespace Diz.Core.datasubset
                 if (!IsValidLargeOffset(value))
                     throw new ArgumentException("Invalid large value");
 
-                var clampedValue = GetClampedIndexIfNeeded(value);
-                
-                if (!NotifyPropertyChangedExtensions.FieldIsEqual(selectedLargeIndex, clampedValue)) 
+                // var clampedValue = GetClampedIndexIfNeeded(value);
+
+                if (NotifyPropertyChangedExtensions.FieldIsEqual(selectedLargeIndex, value))
                     return;
-            
-                selectedLargeIndex = clampedValue;
-                EnsureViewContainsLargeIndex(selectedLargeIndex);
+
+                selectedLargeIndex = value;
+
+                EnsureViewContainsSelectionIfNeeded();
             
                 OnPropertyChanged();
             }
@@ -87,21 +80,21 @@ namespace Diz.Core.datasubset
         private int selectedLargeIndex;
 
         // display modes, pick one or the other
-        private bool autoScrollToShowSelection = true;
-        private bool clampSelectionToVisibleRows;
+        private bool ensureBoundariesEncompassWhenSelectionChanges = true;
+        private bool windowResizeKeepsSelectionInRange;
 
 
         private void EnsureViewContainsSelectionIfNeeded()
         {
-            if (ScrollToShowSelection)
+            if (ensureBoundariesEncompassWhenSelectionChanges)
                 EnsureViewContainsLargeIndex(SelectedLargeIndex);
         }
 
-        private void ClampSelectionIfNeeded() => SelectedLargeIndex = GetClampedIndexIfNeeded(SelectedLargeIndex);
-
-
+        private void ClampSelectionIfNeeded() => 
+            SelectedLargeIndex = GetClampedIndexIfNeeded(SelectedLargeIndex);
+        
         private int GetClampedIndexIfNeeded(int largeIndex) =>
-            !clampSelectionToVisibleRows 
+            !windowResizeKeepsSelectionInRange 
                 ? largeIndex
                 : GetLargeIndexClampedToVisibleRows(largeIndex);
 
