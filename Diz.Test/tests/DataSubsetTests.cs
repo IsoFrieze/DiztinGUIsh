@@ -148,6 +148,10 @@ namespace Diz.Test.tests
             var harness = CreateSetupData(numSourceItems: 100, numRows: 10);
             var subset = harness.DataSubset;
             subset.WindowResizeKeepsSelectionInRange = true;
+            subset.EnsureBoundariesEncompassWhenSelectionChanges = false;
+            
+            Assert.False(subset.EnsureBoundariesEncompassWhenSelectionChanges);
+            Assert.True(subset.WindowResizeKeepsSelectionInRange);
             
             // setup a window with 10 items starting at index=10 [so.. 10...19 inclusive]
             subset.StartingRowLargeIndex = 10;
@@ -158,15 +162,20 @@ namespace Diz.Test.tests
             harness.AssertSelectedLargeIndexCorrect(10);
             harness.AssertSelectedRowIndexCorrect(0);
             
-            // if we try and set the index outside of that window, the selection should be clamped
-            // to the window
+            // if we try and set the index outside of that window, the selection should be allowed
+            // outside the window AND the boundaries shouldn't change
+            Assert.False(subset.EnsureBoundariesEncompassWhenSelectionChanges);
             subset.SelectedLargeIndex = 0;
-            harness.AssertSelectedLargeIndexCorrect(10);
-            harness.AssertSelectedRowIndexCorrect(0);
-            
+            harness.AssertSelectedLargeIndexCorrect(0);
+            harness.AssertSelectedRowIndexCorrect(-1);
+            Assert.Equal(10, subset.StartingRowLargeIndex);
+            Assert.Equal(19, subset.EndingRowLargeIndex);
+
             subset.SelectedLargeIndex = 25;
-            harness.AssertSelectedLargeIndexCorrect(19);
-            harness.AssertSelectedRowIndexCorrect(9);
+            harness.AssertSelectedLargeIndexCorrect(25);
+            harness.AssertSelectedRowIndexCorrect(-1);
+            Assert.Equal(10, subset.StartingRowLargeIndex);
+            Assert.Equal(19, subset.EndingRowLargeIndex);
         }
 
         [Fact]
@@ -217,6 +226,22 @@ namespace Diz.Test.tests
             
             subset.EndingRowLargeIndex = 20;
             harness.AssertSelectedLargeIndexCorrect(20);
+        }
+
+        [Fact]
+        public static void TestWindowMovePastEnd()
+        {
+            var harness = CreateSetupData(numSourceItems: 100, numRows: 10);
+            var subset = harness.DataSubset;
+
+            subset.EnsureBoundariesEncompassWhenSelectionChanges = true;
+            subset.WindowResizeKeepsSelectionInRange = true;
+            
+            subset.StartingRowLargeIndex = 90;
+            Assert.ThrowsAny<Exception>(() => subset.StartingRowLargeIndex = 91);
+
+            subset.EndingRowLargeIndex = 9;
+            Assert.ThrowsAny<Exception>(() => subset.EndingRowLargeIndex = 8);
         }
 
         [Fact]

@@ -24,6 +24,7 @@ namespace Diz.Core.datasubset
                 ClampSelectionIfNeeded();
             }
         }
+        private bool windowResizeKeepsSelectionInRange;
 
         // when set: when the selection is changed, the start and end points will move
         // to keep the selection inside the range.
@@ -36,6 +37,7 @@ namespace Diz.Core.datasubset
                 EnsureViewContainsLargeIndex(SelectedLargeIndex);
             }
         }
+        private bool ensureBoundariesEncompassWhenSelectionChanges = true;
         
         private void EnsureViewContainsLargeIndex(int largeIndex)
         {
@@ -78,10 +80,6 @@ namespace Diz.Core.datasubset
         public int LargestPossibleStartingLargeIndex => Items.Count - RowCount;
 
         private int selectedLargeIndex;
-
-        // display modes, pick one or the other
-        private bool ensureBoundariesEncompassWhenSelectionChanges = true;
-        private bool windowResizeKeepsSelectionInRange;
 
 
         private void EnsureViewContainsSelectionIfNeeded()
