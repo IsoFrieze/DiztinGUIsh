@@ -25,7 +25,7 @@ namespace Diz.Core.model.byteSources
             Validate();
         }
         
-        public ByteGraphNode(IReadOnlyByteEntry byteData) 
+        public ByteGraphNode(ByteEntry byteData) 
             : this(byteData?.ParentByteSource, byteData?.ParentByteSourceIndex ?? -1)
         {
             Validate();

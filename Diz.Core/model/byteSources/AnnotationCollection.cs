@@ -34,25 +34,31 @@ namespace Diz.Core.model.byteSources
             if (existing != null)
                 Remove(existing);
         }
-        
-        public bool EffectivelyEqual(AnnotationCollection other)
+
+        #region Equality
+
+        public bool EffectivelyEquals(AnnotationCollection other)
         {
             if (other == null)
                 return Count == 0;
 
-            return Count == other.Count && GetEnumeratorForCompare().SequenceEqual(other.GetEnumeratorForCompare());
+            return Count == other.Count && 
+                   GetEnumeratorSortByAnnotationType()
+                       .SequenceEqual(other.GetEnumeratorSortByAnnotationType());
         }
 
-        // "Effectively Equal" means null list and zero-length list are equal
+        // "Effectively Equal" means null list and zero-length list are equal.
+        // this is not used by the normal Equals() function and must be invoked explicitly by client code
         public static bool EffectivelyEqual(AnnotationCollection item1, AnnotationCollection item2)
         {
-            return item1?.EffectivelyEqual(item2) ?? item2?.Count == 0;
+            return item1?.EffectivelyEquals(item2) ?? item2 == null || item2.Count == 0;
         } 
         
-        public IEnumerable<Annotation> GetEnumeratorForCompare()
+        public IEnumerable<Annotation> GetEnumeratorSortByAnnotationType()
         {
-            return this.OrderBy(x => x.GetType().ToString()).ThenBy(x => x);
+            return this.OrderBy(x => x.GetType().GUID).ThenBy(x => x);
         }
+        #endregion
 
         public void CombineWith(IReadOnlyList<Annotation> itemsToAddIn)
         {

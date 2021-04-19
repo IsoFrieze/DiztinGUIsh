@@ -27,7 +27,7 @@ namespace Diz.Core.model.byteSources
     }
 
     // mostly, adds helper methods to ByteEntryBase, which is what does the heavy lifting
-    public class ByteEntry : ByteEntryBase, IReadOnlyByteEntry
+    public class ByteEntry : ByteEntryBase//, IReadOnlyByteEntry
     {
         public ByteEntry() {}
         public ByteEntry(AnnotationCollection annotationsToAppend) : base(annotationsToAppend) {}
@@ -88,7 +88,7 @@ namespace Diz.Core.model.byteSources
             set => GetOrCreateAnnotation<BranchAnnotation>().Point = value;
         }
         
-        IReadOnlyList<Annotation> IReadOnlyByteEntry.Annotations => Annotations;
+        // IReadOnlyList<Annotation> IReadOnlyByteEntry.Annotations => Annotations;
         
         private OpcodeAnnotation GetOneOpcodeAnnotation() => GetOneAnnotation<OpcodeAnnotation>();
         private OpcodeAnnotation GetOrCreateOpcodeAnnotation() => GetOrCreateAnnotation<OpcodeAnnotation>();
@@ -178,7 +178,7 @@ namespace Diz.Core.model.byteSources
         }
 
         // really, use this only when doing graph building stuff.  
-        public void AppendAnnotationsFrom(IReadOnlyByteEntry lowerPriorityByteEntry)
+        public void AppendAnnotationsFrom(ByteEntry lowerPriorityByteEntry)
         {
             AppendAnnotationsFrom(lowerPriorityByteEntry?.Annotations);
         }
@@ -187,9 +187,10 @@ namespace Diz.Core.model.byteSources
 
         protected bool Equals(ByteEntryBase other)
         {
+            // customized code, not auto-generated.
             return AnnotationsEffectivelyEqual(other) &&
                    DontSetParentOnCollectionItems == other.DontSetParentOnCollectionItems &&
-                   Equals(ParentStorage, other.ParentStorage) && ParentByteSourceIndex == other.ParentByteSourceIndex;
+                   ReferenceEquals(ParentStorage, other.ParentStorage) && ParentByteSourceIndex == other.ParentByteSourceIndex;
         }
 
         public override bool Equals(object obj)

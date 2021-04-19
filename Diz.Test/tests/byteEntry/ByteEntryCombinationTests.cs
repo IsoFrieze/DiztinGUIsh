@@ -4,10 +4,65 @@ using System.IO;
 using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Test.Utils;
 using Xunit;
 
 namespace Diz.Test.tests.byteEntry
 {
+    public class AnnotationCollectionEqualityTests
+    {
+        public static TheoryData<(AnnotationCollection, AnnotationCollection, bool)> AnnotationEqualityTestData
+        {
+            get
+            {
+                static AnnotationCollection OneComment() => new() {new Comment()};
+                static AnnotationCollection ZeroCount() => new();
+
+                return new List<Func<(AnnotationCollection, AnnotationCollection, bool)>>
+                {
+                    // comparisonItem1, comparisonItem2, shouldBeEqual
+                    () => (null, null, true),
+                    () => (ZeroCount(), null, true),
+                    () => (null, ZeroCount(), true),
+                    () => (ZeroCount(), ZeroCount(), true),
+
+                    () => (OneComment(), ZeroCount(), false),
+                    () => (OneComment(), null, false),
+                    () => (ZeroCount(), OneComment(), false),
+                    () => (null, OneComment(), false),
+                }.CreateTheoryData();
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(AnnotationEqualityTestData))]
+        public void TestAnnotationCollectionEquality((AnnotationCollection, AnnotationCollection, bool) harness)
+        {
+            var (collection1, collection2, expected) = harness;
+            AssertEqualityBothWays(expected, collection1, collection2);
+        }
+
+        private static void AssertEqualityBothWays(bool expectedEqual, AnnotationCollection o1, AnnotationCollection o2)
+        {
+            var byteEntry1 = new ByteEntryBase(o1);
+            var byteEntry2 = new ByteEntryBase(o2);
+            
+            // note: AnnotationCollection.Equals() does NOT call EffectivelyEqual() by default
+            if (expectedEqual)
+            {
+                Assert.True(AnnotationCollection.EffectivelyEqual(o1, o2));
+                Assert.Equal(byteEntry1, byteEntry2);
+                Assert.Equal(byteEntry2, byteEntry1);
+            }
+            else
+            {
+                Assert.False(AnnotationCollection.EffectivelyEqual(o1, o2));
+                Assert.NotEqual(byteEntry1, byteEntry2);
+                Assert.NotEqual(byteEntry2, byteEntry1);
+            }
+        }
+    }
+    
     public static class ByteCombineTests
     {
         [Fact]

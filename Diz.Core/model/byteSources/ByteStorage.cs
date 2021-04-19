@@ -13,7 +13,6 @@ namespace Diz.Core.model.byteSources
         public abstract ByteEntry this[int index] { get; set; }
 
         public abstract int Count { get; }
-
         protected internal ByteSource ParentByteSource { get; set; }
 
         protected ByteStorage()
@@ -129,18 +128,18 @@ namespace Diz.Core.model.byteSources
     {
         public override ByteEntry this[int index]
         {
-            get => bytes[index];
+            get => Bytes[index];
             set
             {
                 OnPreAddByteAt(index, value);
-                bytes[index] = value;
+                Bytes[index] = value;
             }
         }
 
-        public override int Count => bytes?.Count ?? 0;
+        public override int Count => Bytes?.Count ?? 0;
 
         // only ever use AddByte() to add bytes here
-        private List<ByteEntry> bytes = new();
+        public List<ByteEntry> Bytes { get; set; } = new();
         
         [UsedImplicitly] public ByteList() { }
         
@@ -150,7 +149,7 @@ namespace Diz.Core.model.byteSources
 
         protected override void InitEmptyContainer(int capacity)
         {
-            bytes = new List<ByteEntry>(capacity);
+            Bytes = new List<ByteEntry>(capacity);
         }
 
         protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteEntry> inBytes)
@@ -168,15 +167,15 @@ namespace Diz.Core.model.byteSources
 
         public override void AddByte(ByteEntry byteOffset)
         {
-            Debug.Assert(bytes != null);
+            Debug.Assert(Bytes != null);
             
             var newIndex = Count; // will be true once we add it 
             OnPreAddByteAt(newIndex, byteOffset);
 
-            bytes.Add(byteOffset);
+            Bytes.Add(byteOffset);
         }
         
-        public override IEnumerator<ByteEntry> GetGaplessEnumerator() => bytes.GetEnumerator();
+        public override IEnumerator<ByteEntry> GetGaplessEnumerator() => Bytes.GetEnumerator();
         
         // NOTE: in this implementation, all bytes at all addresses always exist, so,
         // this will never return null or have gaps in the sequence.
@@ -192,14 +191,14 @@ namespace Diz.Core.model.byteSources
         [UsedImplicitly] public SparseByteStorage(int emptyCreateSize) : base(emptyCreateSize) { }
 
         // keeps the keys sorted, which is what we want.
-        private SortedDictionary<int, ByteEntry> bytes;
+        public SortedDictionary<int, ByteEntry> Bytes { get; set; }
 
         private int GetLargestKey()
         {
-            if (bytes == null || bytes.Count == 0)
+            if (Bytes == null || Bytes.Count == 0)
                 return -1;
             
-            return bytes.Keys.Last();
+            return Bytes.Keys.Last();
         }
 
         public override ByteEntry this[int index]
@@ -214,7 +213,7 @@ namespace Diz.Core.model.byteSources
             OnPreAddByteAt(index, value);
 
             // will replace if it exists
-            bytes[index] = value;
+            Bytes[index] = value;
         }
 
         // we need to maintain this. it's not the # of bytes we're storing,
@@ -222,7 +221,7 @@ namespace Diz.Core.model.byteSources
         private int count;
         public override int Count => count;
 
-        public int ActualCount => bytes.Count;
+        public int ActualCount => Bytes.Count;
 
         private bool ValidIndex(int index) => index >= 0 && index < Count;
 
@@ -235,12 +234,12 @@ namespace Diz.Core.model.byteSources
         protected ByteEntry GetByte(int index)
         {
             ValidateIndex(index);
-            return bytes.GetValueOrDefault(index);
+            return Bytes.GetValueOrDefault(index);
         }
 
         protected override void InitEmptyContainer(int emptyCreateSize)
         {
-            bytes = new SortedDictionary<int, ByteEntry>();
+            Bytes = new SortedDictionary<int, ByteEntry>();
             count = emptyCreateSize;
         }
 
@@ -250,7 +249,7 @@ namespace Diz.Core.model.byteSources
             if (inBytes.Count > count)
                 throw new InvalidDataException("Asked to add a list bigger than our current capacity");
             
-            Debug.Assert(bytes?.Count == 0);
+            Debug.Assert(Bytes?.Count == 0);
             
             foreach (var b in inBytes)
             {
@@ -284,7 +283,7 @@ namespace Diz.Core.model.byteSources
             ValidateIndex(indexThisWillBeAddedTo);
             OnPreAddByteAt(indexThisWillBeAddedTo, byteOffset);
             
-            bytes[indexThisWillBeAddedTo] = byteOffset;
+            Bytes[indexThisWillBeAddedTo] = byteOffset;
             count++;
         }
 
@@ -302,14 +301,14 @@ namespace Diz.Core.model.byteSources
         // return only elements that actually exist (no gaps, no null items will be returned).
         public override IEnumerator<ByteEntry> GetNativeEnumerator()
         {
-            return bytes.Select(pair => pair.Value).GetEnumerator();
+            return Bytes.Select(pair => pair.Value).GetEnumerator();
         }
 
         // note: indices are going to be ordered, BUT there can be gaps.
         // caller should be prepared to handle this. 
         public SortedDictionary<int, ByteEntry>.Enumerator GetRealEnumerator()
         {
-            return bytes.GetEnumerator();
+            return Bytes.GetEnumerator();
         }
     }
 }

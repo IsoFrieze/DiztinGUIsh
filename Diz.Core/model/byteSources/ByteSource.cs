@@ -8,20 +8,19 @@ namespace Diz.Core.model.byteSources
     public class ByteSource
     {
         public string Name { get; set; }
-
-        private readonly ByteStorage bytes;
+        
         public ByteStorage Bytes
         {
             get => bytes;
-            init
+            set
             {
                 bytes = value;
                 bytes.ParentByteSource = this;
             }
         }
 
-        private readonly List<ByteSourceMapping> childSources = new();
-        public IReadOnlyList<ByteSourceMapping> ChildSources => childSources;
+        public List<ByteSourceMapping> ChildSources { get; set; } = new();
+        private ByteStorage bytes;
 
         // helper method: return the actual byte value at an index, or, if null,
         // throw an exception. this method is accommodating an older interface and
@@ -173,12 +172,11 @@ namespace Diz.Core.model.byteSources
                     continue;
                 
                 var annotation = byteEntry.GetOneAnnotation<T>();
-
-                if (annotation != null)
-                {
-                    Debug.Assert(ReferenceEquals(annotation.Parent, byteEntry));
-                    yield return annotation;
-                }
+                if (annotation == null) 
+                    continue;
+                
+                Debug.Assert(ReferenceEquals(annotation.Parent, byteEntry));
+                yield return annotation;
             }
         }
 
@@ -192,11 +190,6 @@ namespace Diz.Core.model.byteSources
                 throw new ArgumentOutOfRangeException(nameof(count));
             
             return endingIndex;
-        }
-
-        public void AttachChildByteSource(ByteSourceMapping childByteSourceMapping)
-        {
-            childSources.Add(childByteSourceMapping);
         }
     }
 }

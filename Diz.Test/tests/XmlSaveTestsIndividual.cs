@@ -5,50 +5,12 @@ using Diz.Core.model.byteSources;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 using Xunit;
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace Diz.Test.tests
 {
     public class XmlTestSerializationSupport
     {
-        /*public class ByteEntrySerializer : IExtendedXmlCustomSerializer<ByteEntry>, IExtendedXmlCustomSerializer
-        {
-            public void Serializer(XmlWriter xmlWriter, ByteEntry entry)
-            {
-                if (entry == null)
-                    return;
-                
-                this.
-
-                // var (key, value) = kvp;
-                // xmlWriter.WriteElementString("Key", key.ToString("X"));
-                // xmlWriter.WriteElementString("Value", value);
-            }
-
-            ByteEntry IExtendedXmlCustomSerializer<ByteEntry>.Deserialize(XElement xElement)
-            {
-                // var xElementKey = xElement.Member("Key");
-                // var xElementValue = xElement.Member("Value");
-                //
-                // if (xElementKey == null || xElementValue == null)
-                //     throw new InvalidOperationException("Invalid xml for class TestClassWithSerializer");
-                //
-                // var strValue = xElement.Value;
-                //
-                // var intValue = Util.ParseHexOrBase10String(xElementKey.Value);
-                // return new KeyValuePair<int, string>(intValue, strValue);
-            }
-
-            public void Serializer(XmlWriter xmlWriter, object instance)
-            {
-                Serializer(xmlWriter, (ByteEntry) instance);
-            }
-
-            public object Deserialize(XElement xElement)
-            {
-                
-            }
-        }*/
-        
         // .Type<Project>()
         // .Member(x => x.UnsavedChanges).Ignore()
         // .Member(x => x.ProjectFileName).Ignore()
@@ -68,29 +30,6 @@ namespace Diz.Test.tests
         // // .Member(x => x.Comments.Keys).Register().Converter().)
         // // .CustomSerializer(new HexKVPSerializer())// cant get it working!!!
         // // .AddMigration(new DizProjectMigrations())
-        
-        public static IConfigurationContainer GetByteEntrySerializer()
-        {
-            return new ConfigurationContainer()
-                // these are all helpers and we shouldn't serialize them
-                .Type<ByteEntry>()
-                .EnableReferences()
-                // .Register().Converter(ByteEntryConverter.Default)
-                // .Member(x => x.Arch).Ignore()
-                // .Member(x => x.Byte).Ignore()
-                // .Member(x => x.Point).Ignore()
-                // .Member(x => x.DataBank).Ignore()
-                // .Member(x => x.DirectPage).Ignore()
-                // .Member(x => x.MFlag).Ignore()
-                // .Member(x => x.XFlag).Ignore()
-                // .Member(x => x.TypeFlag).Ignore()
-                // .Member(x => x.DontSetParentOnCollectionItems).Ignore()
-
-                .UseOptimizedNamespaces()
-                .UseAutoFormatting();
-
-            // .EnableImplicitTyping(typeof(Label));
-        }
 
         public sealed class ByteEntryProfile : IConfigurationProfile
         {
@@ -99,8 +38,8 @@ namespace Diz.Test.tests
             private ByteEntryProfile() {}
 
             public IConfigurationContainer Get(IConfigurationContainer parameter)
-                => parameter.Type<ByteEntry>()
-                    .Name("Byte")
+                => parameter
+                    .Type<ByteEntry>()
                     .Member(x => x.Arch).Ignore()
                     .Member(x => x.Byte).Ignore()
                     .Member(x => x.Point).Ignore()
@@ -113,8 +52,6 @@ namespace Diz.Test.tests
                     .EnableReferences()
                     .UseOptimizedNamespaces()
                     .UseAutoFormatting();
-
-            // .Register().Converter(ByteEntryConverter.Default)
         }
         
         public sealed class AnnotationCollectionProfile : IConfigurationProfile
@@ -125,6 +62,8 @@ namespace Diz.Test.tests
 
             public IConfigurationContainer Get(IConfigurationContainer parameter)
                 => parameter.Type<AnnotationCollection>()
+                    .Member(x=>x.DontSetParentOnCollectionItems).Ignore()
+                    .Member(x=>x.EnforcePolicy).Ignore()
                     .UseOptimizedNamespaces()
                     .UseAutoFormatting();
         }
@@ -186,9 +125,26 @@ namespace Diz.Test.tests
 
         private static string Serialize(object toSerialize)
         {
-            var container = ConfiguredContainer.New<XmlTestSerializationSupport.MainProfile>();
+            var config = CreateConfig();
+            
+            return config.Serialize(
+                new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
+                toSerialize);
+        }
+        
+        private static T Deserialize<T>(string input)
+        {
+            var config = CreateConfig();
+            return config.Deserialize<T>(input);
+        }
 
-            var serializer = container
+        private static IExtendedXmlSerializer CreateConfig()
+        {
+            var container = ConfiguredContainer.New<XmlTestSerializationSupport.MainProfile>();
+            
+            return container
+                .UseOptimizedNamespaces()
+                .UseAutoFormatting()
                 .EnableImplicitTyping(typeof(ByteEntry))
                 .EnableImplicitTyping(typeof(ByteSource))
                 .EnableImplicitTyping(typeof(ByteStorage))
@@ -201,22 +157,57 @@ namespace Diz.Test.tests
                 .EnableImplicitTyping(typeof(ByteAnnotation))
                 .EnableImplicitTyping(typeof(MarkAnnotation))
                 .EnableImplicitTyping(typeof(OpcodeAnnotation))
-                .UseOptimizedNamespaces()
-                .UseAutoFormatting()
+                .Type<ByteSource>()
+                .EnableReferences()
+                .Type<ByteStorage>()
+                .EnableReferences()
+                .Type<ByteList>()
+                .EnableReferences()
+                .Type<SparseByteStorage>()
+                .EnableReferences()
+                .Type<RegionMapping>()
+                .EnableReferences()
+                .Type<ByteSourceMapping>()
+                .EnableReferences()
                 .Create();
-            
-            return serializer.Serialize(
-                new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
-                toSerialize);
         }
 
-
-        [Fact]
-        public void TestSerializeEmptyByteEntry()
+        public void XmlFullCycle<T>(T objToCycle, T expectedEqual)
         {
-            var entry = CreateSampleEntry();
-            var serialized = Serialize(entry);
-            int x = 3;
+            var xmlToCycle = Serialize(objToCycle);
+            var deserialized = Deserialize<T>(xmlToCycle);
+            
+            Assert.Equal(expectedEqual, deserialized);
         }
+
+
+        public void XmlFullCycleTwoCopies(Func<object> createFn)
+        {
+            var obj1 = createFn(); 
+            var objCopy = createFn();
+            XmlFullCycle(obj1, objCopy);
+        }
+
+        public static TheoryData<Func<object>> SimpleCycleObjects => new() {
+            () => new MarkAnnotation {TypeFlag = FlagType.Graphics},
+            () => new AnnotationCollection {
+                new MarkAnnotation {TypeFlag = FlagType.Graphics}, new Comment {Text = "asdf"}
+            },
+            () => new ByteEntryBase(),
+        };
+        
+        public static TheoryData<Func<object>> MoreComplexCycleObjects => new() {
+            () => SampleRomCreator1.CreateBaseRom().RomByteSource.Bytes,
+            () => SampleRomCreator1.CreateBaseRom().RomByteSource,
+            () => SampleRomCreator1.CreateBaseRom().SnesAddressSpace,
+        };
+
+        [Theory]
+        [MemberData(nameof(SimpleCycleObjects))]
+        public void TestCycleObjsSimple(Func<object> createFn) => XmlFullCycleTwoCopies(createFn);
+        
+        [Theory(Skip="not quite yet working")]
+        [MemberData(nameof(MoreComplexCycleObjects))]
+        public void TestCycleObjsComplex(Func<object> createFn) => XmlFullCycleTwoCopies(createFn);
     }
 }

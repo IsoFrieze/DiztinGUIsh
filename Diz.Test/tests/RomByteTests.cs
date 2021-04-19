@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Diz.Core.arch;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
@@ -278,8 +279,29 @@ namespace Diz.Test.tests
         [Fact]
         public void TestEquals()
         {
+            static void AssertImplementsComparable<TAnnotation>(AnnotationCollection annotations)
+            {
+                var annotation = (Annotation)annotations.SingleOrDefaultOfType(typeof(TAnnotation));
+                Assert.NotNull(annotation);
+                Assert.True(annotation is IComparable<TAnnotation>);
+            }
+
             var rb1 = SampleRomByte1();
             var rb2 = SampleRomByte1();
+            
+            foreach (var item in rb1.Annotations)
+            {
+                Assert.True(item is IComparable);
+            }
+
+            AssertImplementsComparable<OpcodeAnnotation>(rb1.Annotations);
+            AssertImplementsComparable<ByteAnnotation>(rb1.Annotations);
+            AssertImplementsComparable<MarkAnnotation>(rb1.Annotations);
+            AssertImplementsComparable<BranchAnnotation>(rb1.Annotations);
+
+            rb1.Annotations.OrderBy(x => x);
+
+            Assert.True(rb1.Annotations.EffectivelyEquals(rb2.Annotations));
 
             Assert.True(rb1.Equals(rb2));
             //Assert.True(rb1.EqualsButNoRomByte(rb2));
