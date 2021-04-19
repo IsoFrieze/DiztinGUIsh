@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using Diz.Core.model;
 using Diz.Core.util;
 
 namespace DiztinGUIsh.util
@@ -83,11 +81,11 @@ namespace DiztinGUIsh.util
             cb.ValueMember = "Key";
         }
 
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [DllImport("user32.dll")]
         private static extern bool SetProcessDPIAware();
 
         // call before you start any forms
-        public static void SetupDPIStuff()
+        public static void SetupDpiStuff()
         {
             if (Environment.OSVersion.Version.Major >= 6)
             {
@@ -118,6 +116,7 @@ namespace DiztinGUIsh.util
         [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, Int32 wMsg, bool wParam, Int32 lParam);
 
+        // ReSharper disable once InconsistentNaming
         public const int WM_SETREDRAW = 11;
     }
 }

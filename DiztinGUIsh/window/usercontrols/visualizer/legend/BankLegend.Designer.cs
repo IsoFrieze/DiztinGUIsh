@@ -1,4 +1,4 @@
-﻿namespace DiztinGUIsh.window.usercontrols
+﻿namespace DiztinGUIsh.window.usercontrols.visualizer.legend
 {
     partial class BankLegend
     {

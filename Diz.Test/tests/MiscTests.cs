@@ -73,14 +73,14 @@ namespace Diz.Test.tests
             Assert.Equal(0xF, ByteUtil.ByteParseHex1('F'));
         }
 
-        private const string validHexChars = "0123456789ABCDEF";
+        private const string ValidHexChars = "0123456789ABCDEF";
         
         [Fact]
         public static void TestHexRange()
         {
             for (var c = '\0'; c < 255; ++c)
             {
-                if (validHexChars.Contains(char.ToUpper(c)))
+                if (ValidHexChars.Contains(char.ToUpper(c)))
                 {
                     Assert.Equal(Convert.ToInt32(c.ToString(), 16), ByteUtil.ByteParseHex1(c));
                 }

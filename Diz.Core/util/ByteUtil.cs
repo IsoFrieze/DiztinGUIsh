@@ -20,7 +20,7 @@ namespace Diz.Core.util
             if (string.IsNullOrEmpty(addressTxt))
                 return false;
 
-            var inputText = new string(Array.FindAll<char>(addressTxt.ToCharArray(), (c =>
+            var inputText = new string(Array.FindAll(addressTxt.ToCharArray(), (c =>
                     (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
                 )));
 
@@ -70,7 +70,7 @@ namespace Diz.Core.util
 
         public static byte[] IntegerToByteArray(int a)
         {
-            return new byte[]
+            return new[]
             {
                 (byte)a,
                 (byte)(a >> 8),

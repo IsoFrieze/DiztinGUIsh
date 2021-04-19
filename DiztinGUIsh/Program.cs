@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using Diz.Core.util;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.util;
 
@@ -33,7 +32,7 @@ namespace DiztinGUIsh
             var parsedArgs = ParseArgs(args);
 
             // call before setting up any forms/GUI elements
-            GuiUtil.SetupDPIStuff();
+            GuiUtil.SetupDpiStuff();
 
             Application.Run(new DizApplicationContext(parsedArgs));
         }

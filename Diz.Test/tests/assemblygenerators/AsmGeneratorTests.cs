@@ -67,7 +67,7 @@ namespace Diz.Test.tests.assemblygenerators
             // Assert.Equal("qrx", gen.Emit(null,45));
         }
     
-        public static TheoryData<(int, string)> SamplePC =>
+        public static TheoryData<(int, string)> SamplePc =>
             new List<int> {0, 50, 0xFF, 0xFFFFFF}
                 .Select(i => new Func<(int, string)>(
                         () => (i, $"{i,6:X6}") 
@@ -76,12 +76,11 @@ namespace Diz.Test.tests.assemblygenerators
                 .CreateTheoryData();
     
         [Theory]
-        [MemberData(nameof(SamplePC))]
-        public static void TestPCGenerator((int, string) expected)
+        [MemberData(nameof(SamplePc))]
+        public static void TestPcGenerator((int, string) expected)
         {
-            var expectedOffset = expected.Item1;
-            var expectedStr = expected.Item2;
-        
+            var (expectedOffset, expectedStr) = expected;
+
             var dataMock = new Mock<ILogCreatorDataSource>();
             dataMock
                 .Setup(m => m.ConvertPCtoSnes(

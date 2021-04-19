@@ -21,10 +21,11 @@ namespace DiztinGUIsh.window
     public partial class DataGridEditorForm : Form, IDataGridEditorForm
     {
         // sub windows
-        private AliasList AliasList;
-        private VisualizerForm visualForm;
+        public AliasList AliasList { get; protected set; }
+        public VisualizerForm VisualForm { get; protected set; }
+        
         private IMainFormController mainFormController;
-        public Project Project { get; set; }
+        public Project Project { get; protected set; }
 
         // not sure if this will be the final place this lives. OK for now. -Dom
         public IMainFormController MainFormController
@@ -141,21 +142,22 @@ namespace DiztinGUIsh.window
             }
         }
 
-        private void DataOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void DataOnPropertyChanged(object _, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ByteEntry.TypeFlag))
-            {
-                percentComplete.Text = "";
-                if (Project?.Data == null || Project.Data.GetRomSize() <= 0) 
-                    return;
+            if (e.PropertyName != nameof(ByteEntry.TypeFlag)) 
+                return;
+            
+            percentComplete.Text = "";
+            if (Project?.Data == null || Project.Data.GetRomSize() <= 0) 
+                return;
                     
-                int totalUnreached1 = 0, size1 = Project.Data.GetRomSize();
-                for (var i1 = 0; i1 < size1; i1++)
-                    if (Project.Data.GetFlag(i1) == FlagType.Unreached)
-                        totalUnreached1++;
-                var reached1 = size1 - totalUnreached1;
-                percentComplete.Text = $"{reached1 * 100.0 / size1:N3}% ({reached1:D}/{size1:D})";
-            }
+            int totalUnreached1 = 0, size1 = Project.Data.GetRomSize();
+            for (var i1 = 0; i1 < size1; i1++)
+                if (Project.Data.GetFlag(i1) == FlagType.Unreached)
+                    totalUnreached1++;
+            
+            var reached1 = size1 - totalUnreached1;
+            percentComplete.Text = $"{reached1 * 100.0 / size1:N3}% ({reached1:D}/{size1:D})";
         }
 
         #region Actions
@@ -169,10 +171,7 @@ namespace DiztinGUIsh.window
             // this will be reset later
             var projectToOpen = ProjectsController.LastOpenedProjectFilename;
             ProjectsController.LastOpenedProjectFilename = "";
-            
-            #if ALLOW_OPEN_LAST_PROJECT
             MainFormController.OpenProject(projectToOpen);
-            #endif
         }
 
         private void OpenProject()
@@ -236,8 +235,8 @@ namespace DiztinGUIsh.window
 
         private void ShowVisualizerForm()
         {
-            visualForm ??= new VisualizerForm(this);
-            visualForm.Show();
+            VisualForm ??= new VisualizerForm(this);
+            VisualForm.Show();
         }
 
         private void ShowCommentList()
@@ -263,7 +262,7 @@ namespace DiztinGUIsh.window
 
         public IImportRomDialogView GetImportView() => new ImportRomDialog();
 
-        private void ImportBizhawkCDL()
+        private void ImportBizhawkCdl()
         {
             var filename = PromptOpenBizhawkCDLFile();
             if (filename != null && filename == "") return;
@@ -278,19 +277,19 @@ namespace DiztinGUIsh.window
             }
             catch (Exception ex)
             {
-                ShowError(ex.Message, "Error");
+                ShowError(ex.Message);
             }
         }
 
         private void ImportBsnesTraceLogText()
         {
             if (!PromptForImportBsnesTraceLogFile()) return;
-            var (numModifiedFlags, numFiles) = ImportBSNESTraceLogs();
+            var (numModifiedFlags, numFiles) = ImportBsnesTraceLogs();
             
             ReportNumberFlagsModified(numModifiedFlags, numFiles);
         }
 
-        private void ImportBSNESUsageMap()
+        private void ImportBsnesUsageMap()
         {
             if (openUsageMapFile.ShowDialog() != DialogResult.OK)
                 return;
@@ -300,7 +299,7 @@ namespace DiztinGUIsh.window
             ShowInfo($"Modified total {numModifiedFlags} flags!", "Done");
         }
 
-        private (long numBytesModified, int numFiles) ImportBSNESTraceLogs()
+        private (long numBytesModified, int numFiles) ImportBsnesTraceLogs()
         {
             var numBytesModified = MainFormController.ImportBsnesTraceLogs(openTraceLogDialog.FileNames);
             return (numBytesModified, openTraceLogDialog.FileNames.Length);
@@ -338,8 +337,8 @@ namespace DiztinGUIsh.window
             
             AliasList?.RebindProject();
             
-            if (visualForm != null) 
-                visualForm.Project = Project;
+            if (VisualForm != null) 
+                VisualForm.Project = Project;
         }
 
         private void UpdateUiFromSettings()
@@ -521,11 +520,11 @@ namespace DiztinGUIsh.window
         }
 
         private void importCDLToolStripMenuItem_Click_1(object sender, EventArgs e) => 
-            ImportBizhawkCDL();
+            ImportBizhawkCdl();
         private void importBsnesTracelogText_Click(object sender, EventArgs e) => 
             ImportBsnesTraceLogText();
         private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => 
-            ImportBSNESUsageMap();
+            ImportBsnesUsageMap();
 
         private void graphicsWindowToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -577,6 +576,7 @@ namespace DiztinGUIsh.window
             return openProjectFile.ShowDialog() == DialogResult.OK;
         }
 
+        // ReSharper disable once InconsistentNaming
         private string PromptOpenBizhawkCDLFile()
         {
             openCDLDialog.InitialDirectory = Project.ProjectFileName;
@@ -601,7 +601,7 @@ namespace DiztinGUIsh.window
         
         private static void ShowOffsetOutOfRangeMsg()
         {
-            ShowError("That offset is out of range.", "Error");
+            ShowError("That offset is out of range.");
         }
 
         private int PromptForGotoOffset()

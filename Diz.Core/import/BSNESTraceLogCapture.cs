@@ -8,7 +8,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 #if PROFILING
@@ -28,8 +27,8 @@ namespace Diz.Core.import
         
         private BsnesTraceLogImporter importer;
         
-        private int statsBytesToProcess = 0;
-        private int statsCompressedBlocksToProcess = 0;
+        private int statsBytesToProcess;
+        private int statsCompressedBlocksToProcess;
         private BsnesTraceLogImporter.Stats cachedStats;
 
         public bool Running { get; protected set; }
@@ -76,7 +75,7 @@ namespace Diz.Core.import
         {
             // multi-threaded version
             // return new BsnesTraceLogImporter(data, streamProcessor.CancelToken.Token, taskManager);
-            return new BsnesTraceLogImporter(data);
+            return new(data);
         }
 
         protected virtual IWorkerTaskManager CreateWorkerTaskManager()
@@ -110,12 +109,10 @@ namespace Diz.Core.import
             #endif
         }
 
-        private const int maxNumCompressedItemsToProcess = -1; // debug only.
-
         // set a limit for the max# of worker tasks allowed to operate on the compressed data. tweak this number as needed.
         // this is purely for throttling and not for thread safety, otherwise # of Tasks will run out of control.
-        private SemaphoreSlim compressedWorkersLimit = new SemaphoreSlim(4,4);
-        private SemaphoreSlim uncompressedWorkersLimit = new SemaphoreSlim(4, 4);
+        private readonly SemaphoreSlim compressedWorkersLimit = new(4,4);
+        private readonly SemaphoreSlim uncompressedWorkersLimit = new(4, 4);
 
         private void ProcessStreamData(Stream networkStream)
         {
@@ -152,12 +149,16 @@ namespace Diz.Core.import
                 Stats_MarkQueued(compressedItem);
 
                 count++;
-                if (maxNumCompressedItemsToProcess != -1 && count >= maxNumCompressedItemsToProcess)
-                    return;
+                
+                // enable for debugging/perf testing if needed:
+                // if (MaxNumCompressedItemsToProcess != -1 && count >= MaxNumCompressedItemsToProcess)
+                //   return;
             }
             
             Trace.WriteLine($"Processed {count} compressed work items.");
         }
+        
+        // private const int MaxNumCompressedItemsToProcess = -1; // debug only.
 
         private async void ProcessCompressedWorkItem(BsnesImportStreamProcessor.CompressedWorkItem compressedItem)
         {    
@@ -181,10 +182,10 @@ namespace Diz.Core.import
 
         private IEnumerable<Task> DispatchWorkersForCompressedWorkItem(BsnesImportStreamProcessor.CompressedWorkItem compressedItem)
         {
-            var subTasks = new List<Task>(capacity: compressedItem.listHeads.Count);
-            for (var i = 0; i < compressedItem.listHeads.Count; ++i)
+            var subTasks = new List<Task>(capacity: compressedItem.ListHeads.Count);
+            for (var i = 0; i < compressedItem.ListHeads.Count; ++i)
             {
-                var workItemListHead = compressedItem.listHeads[i];
+                var workItemListHead = compressedItem.ListHeads[i];
                 
                 subTasks.Add(taskManager.Run(() =>
                 {
@@ -209,7 +210,7 @@ namespace Diz.Core.import
                     }
                 }));
 
-                compressedItem.listHeads[i] = null; // remove the reference.
+                compressedItem.ListHeads[i] = null; // remove the reference.
             }
 
             return subTasks;
@@ -217,10 +218,10 @@ namespace Diz.Core.import
 
         private void PartitionWorkItemQueue(BsnesImportStreamProcessor.CompressedWorkItem compressedItem)
         {
-            Debug.Assert(compressedItem.wasDecompressed);
+            Debug.Assert(compressedItem.WasDecompressed);
             
             using var stream = new MemoryStream(compressedItem.UncompressedBuffer, 0, compressedItem.UncompressedSize);
-            compressedItem.tmpHeader ??= new byte[2];
+            compressedItem.TmpHeader ??= new byte[2];
             
             // tune this as needed.
             // we want parallel jobs going, but, we don't want too many of them at once.
@@ -229,18 +230,18 @@ namespace Diz.Core.import
             bool keepGoing;
             var itemsRemainingBeforeEnd = numItemsPerTask;
 
-            Debug.Assert(compressedItem.listHeads != null && compressedItem.listHeads.Count == 0);
+            Debug.Assert(compressedItem.ListHeads != null && compressedItem.ListHeads.Count == 0);
             
             BsnesImportStreamProcessor.WorkItem currentHead = null;
             BsnesImportStreamProcessor.WorkItem currentItem = null;
 
             do
             {
-                var nextItem = ReadNextWorkItem(stream, compressedItem.tmpHeader);
+                var nextItem = ReadNextWorkItem(stream, compressedItem.TmpHeader);
 
                 if (nextItem != null)
                 {
-                    Debug.Assert(nextItem.next == null);
+                    Debug.Assert(nextItem.Next == null);
 
                     if (currentHead == null)
                     {
@@ -249,7 +250,7 @@ namespace Diz.Core.import
                     }
                     else
                     {
-                        currentItem.next = nextItem;
+                        currentItem.Next = nextItem;
                     }
                     currentItem = nextItem;
 
@@ -264,8 +265,8 @@ namespace Diz.Core.import
                 // finish list
                 if (currentHead != null)
                 {
-                    Debug.Assert(currentItem.next == null);
-                    compressedItem.listHeads.Add(currentHead);
+                    Debug.Assert(currentItem.Next == null);
+                    compressedItem.ListHeads.Add(currentHead);
                 }
                 
                 // reset list
@@ -289,12 +290,12 @@ namespace Diz.Core.import
             Debug.Assert(compressedItem.CompressedBuffer != null);
             Debug.Assert(compressedItem.UncompressedSize != 0);
             Debug.Assert(compressedItem.UncompressedSize != 0);
-            Debug.Assert(!compressedItem.wasDecompressed);
+            Debug.Assert(!compressedItem.WasDecompressed);
             
             streamProcessor.DecompressWorkItem(compressedItem);
             
             Debug.Assert(compressedItem.UncompressedBuffer != null);
-            Debug.Assert(compressedItem.wasDecompressed);
+            Debug.Assert(compressedItem.WasDecompressed);
         }
 
         private void ProcessWorkItemsLinkedList(BsnesImportStreamProcessor.WorkItem workItemListHead)
@@ -307,7 +308,7 @@ namespace Diz.Core.import
             var current = workItemListHead;
             while (current != null) { 
                 ProcessWorkItem(current);
-                var next = current.next;
+                var next = current.Next;
                 streamProcessor.FreeWorkItem(ref current);
                 
                 current = next;
@@ -372,7 +373,7 @@ namespace Diz.Core.import
     {
         private readonly byte[] bytes;
 
-        public BsnesTraceLogFileCapture(string dataFile) : base()
+        public BsnesTraceLogFileCapture(string dataFile)
         {
             bytes = File.ReadAllBytes(dataFile);
         }
@@ -382,16 +383,17 @@ namespace Diz.Core.import
             return new MemoryStream(bytes);
         }
         
-        protected override IWorkerTaskManager CreateWorkerTaskManager()
-        {
-            return base.CreateWorkerTaskManager(); // regular version (multithreaded)
-            // return new WorkerTaskManagerSynchronous(); // single-threaded version (for testing/debug only)
-        }
+        // Example for setting up different versions:
+        // protected override IWorkerTaskManager CreateWorkerTaskManager()
+        // {
+        //     return base.CreateWorkerTaskManager(); // regular version (multithreaded)
+        //     // return new WorkerTaskManagerSynchronous(); // single-threaded version (for testing/debug only)
+        // }
         
         protected override BsnesTraceLogImporter CreateTraceLogImporter(Data data)
         {
             // single-threaded version
-            return new BsnesTraceLogImporter(data);
+            return new(data);
         }
     }
 

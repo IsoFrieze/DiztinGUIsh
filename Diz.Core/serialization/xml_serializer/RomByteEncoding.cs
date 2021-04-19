@@ -165,7 +165,7 @@ namespace Diz.Core.serialization.xml_serializer
 
             // light compression: chop off any trailing zeroes.
             // this alone saves a giant amount of space.
-            data = data.TrimEnd(new char[] { '0' });
+            data = data.TrimEnd(new[] { '0' });
 
             // future compression but dilutes readability:
             // if type is opcode or operand with same flags, combine those into 1 type.

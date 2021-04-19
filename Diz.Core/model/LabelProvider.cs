@@ -22,7 +22,7 @@ namespace Diz.Core.model
         {
             Data = data;
             NormalProvider = new NormalLabelProvider(data);
-            TemporaryProvider = new TemporaryLabelProvider(data);
+            TemporaryProvider = new TemporaryLabelProvider();
         }
         
         public Data Data { get; }
@@ -133,13 +133,6 @@ namespace Diz.Core.model
     
     public class TemporaryLabelProvider
     {
-        private Data Data { get; }
-        
-        public TemporaryLabelProvider(Data data)
-        {
-            Data = data;
-        }
-        
         private Dictionary<int, Label> TempLabels { get; } = new();  // NEVER serialize
         
         public IEnumerable<KeyValuePair<int, Label>> Labels => TempLabels;

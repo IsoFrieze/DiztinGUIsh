@@ -6,7 +6,6 @@ using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
-using Diz.Core.model.snes;
 
 namespace Diz.Core.util
 {
@@ -103,7 +102,7 @@ namespace Diz.Core.util
 
         private static int ConvertSnesToPcRaw(int address, RomMapMode mode, int size)
         {
-            int UnmirroredOffset(int offset) => RomUtil.UnmirroredOffset(offset, size);
+            int GetUnmirroredOffset(int offset) => UnmirroredOffset(offset, size);
 
             // WRAM is N/A to PC addressing
             if ((address & 0xFE0000) == 0x7E0000) return -1;
@@ -119,15 +118,15 @@ namespace Diz.Core.util
                     if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0))
                         return -1;
 
-                    return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                    return GetUnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                 }
                 case RomMapMode.HiRom:
                 {
-                    return UnmirroredOffset(address & 0x3FFFFF);
+                    return GetUnmirroredOffset(address & 0x3FFFFF);
                 }
                 case RomMapMode.SuperMmc:
                 {
-                    return UnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
+                    return GetUnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
                 }
                 case RomMapMode.Sa1Rom:
                 case RomMapMode.ExSa1Rom:
@@ -137,15 +136,15 @@ namespace Diz.Core.util
 
                     if (address >= 0xC00000)
                         return mode == RomMapMode.ExSa1Rom
-                            ? UnmirroredOffset(address & 0x7FFFFF)
-                            : UnmirroredOffset(address & 0x3FFFFF);
+                            ? GetUnmirroredOffset(address & 0x7FFFFF)
+                            : GetUnmirroredOffset(address & 0x3FFFFF);
 
                     if (address >= 0x800000) address -= 0x400000;
 
                     // SRAM is N/A to PC addressing
                     if (((address & 0x8000) == 0)) return -1;
 
-                    return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                    return GetUnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                 }
                 case RomMapMode.SuperFx:
                 {
@@ -154,19 +153,19 @@ namespace Diz.Core.util
                         return -1;
 
                     if (address < 0x400000)
-                        return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        return GetUnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
 
                     if (address < 0x600000)
-                        return UnmirroredOffset(address & 0x3FFFFF);
+                        return GetUnmirroredOffset(address & 0x3FFFFF);
 
                     if (address < 0xC00000)
-                        return 0x200000 + UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        return 0x200000 + GetUnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
 
-                    return 0x400000 + UnmirroredOffset(address & 0x3FFFFF);
+                    return 0x400000 + GetUnmirroredOffset(address & 0x3FFFFF);
                 }
                 case RomMapMode.ExHiRom:
                 {
-                    return UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
+                    return GetUnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
                 }
                 case RomMapMode.ExLoRom:
                 {
@@ -174,7 +173,7 @@ namespace Diz.Core.util
                     if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0))
                         return -1;
 
-                    return UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
+                    return GetUnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
                 }
                 default:
                 {
@@ -287,19 +286,19 @@ namespace Diz.Core.util
         {
             detectedValidRomMapType = true;
 
-            if ((romBytes[RomUtil.LoromSettingOffset] & 0xEF) == 0x23)
+            if ((romBytes[LoromSettingOffset] & 0xEF) == 0x23)
                 return romBytes.Count > 0x400000 ? RomMapMode.ExSa1Rom : RomMapMode.Sa1Rom;
 
-            if ((romBytes[RomUtil.LoromSettingOffset] & 0xEC) == 0x20)
-                return (romBytes[RomUtil.LoromSettingOffset + 1] & 0xF0) == 0x10 ? RomMapMode.SuperFx : RomMapMode.LoRom;
+            if ((romBytes[LoromSettingOffset] & 0xEC) == 0x20)
+                return (romBytes[LoromSettingOffset + 1] & 0xF0) == 0x10 ? RomMapMode.SuperFx : RomMapMode.LoRom;
 
-            if (romBytes.Count >= 0x10000 && (romBytes[RomUtil.HiromSettingOffset] & 0xEF) == 0x21)
+            if (romBytes.Count >= 0x10000 && (romBytes[HiromSettingOffset] & 0xEF) == 0x21)
                 return RomMapMode.HiRom;
 
-            if (romBytes.Count >= 0x10000 && (romBytes[RomUtil.HiromSettingOffset] & 0xE7) == 0x22)
+            if (romBytes.Count >= 0x10000 && (romBytes[HiromSettingOffset] & 0xE7) == 0x22)
                 return RomMapMode.SuperMmc;
 
-            if (romBytes.Count >= 0x410000 && (romBytes[RomUtil.ExhiromSettingOffset] & 0xEF) == 0x25)
+            if (romBytes.Count >= 0x410000 && (romBytes[ExhiromSettingOffset] & 0xEF) == 0x25)
                 return RomMapMode.ExHiRom;
 
             // detection failed. take our best guess.....
@@ -311,11 +310,11 @@ namespace Diz.Core.util
         {
             return mode switch
             {
-                RomMapMode.LoRom => RomUtil.LoromSettingOffset,
-                RomMapMode.HiRom => RomUtil.HiromSettingOffset,
-                RomMapMode.ExHiRom => RomUtil.ExhiromSettingOffset,
-                RomMapMode.ExLoRom => RomUtil.ExloromSettingOffset,
-                _ => RomUtil.LoromSettingOffset
+                RomMapMode.LoRom => LoromSettingOffset,
+                RomMapMode.HiRom => HiromSettingOffset,
+                RomMapMode.ExHiRom => ExhiromSettingOffset,
+                RomMapMode.ExLoRom => ExloromSettingOffset,
+                _ => LoromSettingOffset
             };
         }
 

@@ -102,7 +102,7 @@ namespace Diz.Test.tests.byteEntry
             {
                 typeof(Label), typeof(ByteAnnotation), typeof(Comment),
                 typeof(OpcodeAnnotation), typeof(MarkAnnotation)
-            }.ToDictionary(item => item, item => 0);
+            }.ToDictionary(item => item, _ => 0);
 
             foreach (var item in entry1.Annotations)
             {

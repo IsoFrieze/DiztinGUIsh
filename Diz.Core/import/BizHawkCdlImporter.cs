@@ -9,7 +9,7 @@ namespace Diz.Core.import
 {
     public class BizHawkCdlImporter
     {
-        private readonly Dictionary<string, IList<BizHawkCdlImporter.Flag>> cdl = new Dictionary<string, IList<Flag>>();
+        private readonly Dictionary<string, IList<Flag>> cdl = new Dictionary<string, IList<Flag>>();
         
         [Flags]
         public enum Flag : byte
@@ -76,21 +76,21 @@ namespace Diz.Core.import
             for (var offset = 0; offset < size; offset++)
             {
                 var cdlFlag = cdlRomFlags[offset];
-                if (cdlFlag == BizHawkCdlImporter.Flag.None)
+                if (cdlFlag == Flag.None)
                     continue;
 
                 var type = FlagType.Unreached;
-                if ((cdlFlag & BizHawkCdlImporter.Flag.ExecFirst) != 0)
+                if ((cdlFlag & Flag.ExecFirst) != 0)
                 {
                     type = FlagType.Opcode;
-                    m = (cdlFlag & BizHawkCdlImporter.Flag.CpumFlag) != 0;
-                    x = (cdlFlag & BizHawkCdlImporter.Flag.CpuxFlag) != 0;
+                    m = (cdlFlag & Flag.CpumFlag) != 0;
+                    x = (cdlFlag & Flag.CpuxFlag) != 0;
                 }
-                else if ((cdlFlag & BizHawkCdlImporter.Flag.ExecOperand) != 0)
+                else if ((cdlFlag & Flag.ExecOperand) != 0)
                     type = FlagType.Operand;
-                else if ((cdlFlag & BizHawkCdlImporter.Flag.CpuData) != 0)
+                else if ((cdlFlag & Flag.CpuData) != 0)
                     type = FlagType.Data8Bit;
-                else if ((cdlFlag & BizHawkCdlImporter.Flag.DmaData) != 0)
+                else if ((cdlFlag & Flag.DmaData) != 0)
                     type = FlagType.Data8Bit;
                 data.MarkTypeFlag(offset, type, 1);
 

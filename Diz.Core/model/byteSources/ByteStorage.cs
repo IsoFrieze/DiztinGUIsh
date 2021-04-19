@@ -142,7 +142,7 @@ namespace Diz.Core.model.byteSources
         // only ever use AddByte() to add bytes here
         private List<ByteEntry> bytes = new();
         
-        [UsedImplicitly] public ByteList() : base() { }
+        [UsedImplicitly] public ByteList() { }
         
         [UsedImplicitly] public ByteList(int emptyCreateSize) : base(emptyCreateSize) { }
         
@@ -187,12 +187,12 @@ namespace Diz.Core.model.byteSources
 
     public class SparseByteStorage : ByteStorage
     {
-        [UsedImplicitly] public SparseByteStorage() : base() { }
+        [UsedImplicitly] public SparseByteStorage() { }
         [UsedImplicitly] public SparseByteStorage(IReadOnlyCollection<ByteEntry> inBytes) : base(inBytes) { }
         [UsedImplicitly] public SparseByteStorage(int emptyCreateSize) : base(emptyCreateSize) { }
 
         // keeps the keys sorted, which is what we want.
-        public SortedDictionary<int, ByteEntry> bytes;
+        private SortedDictionary<int, ByteEntry> bytes;
 
         private int GetLargestKey()
         {
@@ -219,7 +219,7 @@ namespace Diz.Core.model.byteSources
 
         // we need to maintain this. it's not the # of bytes we're storing,
         // it's the max size of the sparse container. i.e. this will never change.
-        private int count = 0;
+        private int count;
         public override int Count => count;
 
         public int ActualCount => bytes.Count;

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
@@ -44,7 +43,7 @@ namespace Diz.Core.model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((MarkAnnotation) obj);
         }
         
@@ -102,7 +101,7 @@ namespace Diz.Core.model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((ByteAnnotation) obj);
         }
 
@@ -162,7 +161,7 @@ namespace Diz.Core.model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((OpcodeAnnotation)obj);
+            return obj.GetType() == GetType() && Equals((OpcodeAnnotation)obj);
         }
 
         public override int GetHashCode()
@@ -227,16 +226,13 @@ namespace Diz.Core.model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((BranchAnnotation)obj);
+            return obj.GetType() == GetType() && Equals((BranchAnnotation)obj);
         }
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = (int)Point;
-                return hashCode;
-            }
+            var hashCode = (int)Point;
+            return hashCode;
         }
         
         public int CompareTo(BranchAnnotation other)
@@ -297,7 +293,7 @@ namespace Diz.Core.model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((Label)obj);
         }
         public override int GetHashCode()
@@ -351,15 +347,12 @@ namespace Diz.Core.model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((Comment)obj);
         }
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return Text != null ? Text.GetHashCode() : 0;
-            }
+            return Text != null ? Text.GetHashCode() : 0;
         }
         
         public int CompareTo(Comment other)

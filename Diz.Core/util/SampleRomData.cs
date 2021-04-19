@@ -3,9 +3,8 @@ using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
-using Diz.Core.util;
 
-namespace Diz.Core
+namespace Diz.Core.util
 {
     public class SampleRomData : Data
     {

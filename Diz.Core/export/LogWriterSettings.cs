@@ -24,8 +24,8 @@ namespace Diz.Core.export
 
         public string Format;
         public int DataPerLine;
-        public LogWriterSettings.FormatUnlabeled Unlabeled;
-        public LogWriterSettings.FormatStructure Structure;
+        public FormatUnlabeled Unlabeled;
+        public FormatStructure Structure;
         public bool IncludeUnusedLabels;
         public bool PrintLabelSpecificComments;
         public bool OutputExtraWhitespace;
@@ -54,8 +54,8 @@ namespace Diz.Core.export
         {
             Format = DefaultStr;
             DataPerLine = 8;
-            Unlabeled = LogWriterSettings.FormatUnlabeled.ShowInPoints;
-            Structure = LogWriterSettings.FormatStructure.OneBankPerFile;
+            Unlabeled = FormatUnlabeled.ShowInPoints;
+            Structure = FormatStructure.OneBankPerFile;
             IncludeUnusedLabels = false;
             PrintLabelSpecificComments = false;
             FileOrFolderOutPath = ""; // path to output file or folder
@@ -76,7 +76,7 @@ namespace Diz.Core.export
 
             if (OutputToString)
             {
-                if (Structure == LogWriterSettings.FormatStructure.OneBankPerFile)
+                if (Structure == FormatStructure.OneBankPerFile)
                     return "Can't use one-bank-per-file output with string output";
 
                 if (FileOrFolderOutPath != "")
@@ -90,7 +90,7 @@ namespace Diz.Core.export
                 if (!Directory.Exists(Path.GetDirectoryName(FileOrFolderOutPath)))
                     return "File or folder output directory doesn't exist";
 
-                if (Structure == LogWriterSettings.FormatStructure.SingleFile)
+                if (Structure == FormatStructure.SingleFile)
                 {
                     // don't check for existence, just that what we have appears to be a filename and
                     // not a directory.

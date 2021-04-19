@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Diz.Core.export;
-using Diz.Core.model;
 using Diz.Core.model.snes;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,7 +22,7 @@ namespace Diz.Test.Utils
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((ParsedOutput) obj);
             }
 
@@ -130,6 +130,7 @@ namespace Diz.Test.Utils
             return logCreator.CreateLog();
         }
 
+        [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
         private static void AssertGoodOutput(LogCreatorOutput.OutputResult result)
         {
             Assert.True(result.LogCreator != null);

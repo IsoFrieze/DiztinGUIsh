@@ -5,13 +5,18 @@ using System.Windows.Forms;
 // for simplicity, disabled until we finish .net5 porting
 // #define USING_GITINFO_PACKAGE
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window.dialog
 {
     partial class About : Form
     {
         public About()
         {
             InitializeComponent();
+            Init();
+        }
+
+        private void Init()
+        {
             Text = $"About {AssemblyTitle}";
             labelProductName.Text = AssemblyProduct;
             labelVersion.Text = $"Version {AssemblyVersion}";
@@ -37,7 +42,7 @@ namespace DiztinGUIsh
             }
         }
 
-        public string AssemblyVersion => Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        private string AssemblyVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString();
 
         public string AssemblyDescription
         {

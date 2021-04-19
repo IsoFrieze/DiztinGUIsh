@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 
@@ -7,6 +8,7 @@ namespace Diz.Core.import
     public class BsnesUsageMapImporter
     {
         [Flags]
+        [SuppressMessage("ReSharper", "UnusedMember.Local")]
         private enum BsnesPlusUsage : byte
         {
             UsageRead = 0x80,

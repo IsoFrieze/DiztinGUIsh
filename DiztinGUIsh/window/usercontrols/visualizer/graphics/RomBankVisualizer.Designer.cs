@@ -1,4 +1,4 @@
-﻿namespace DiztinGUIsh.window.usercontrols
+﻿namespace DiztinGUIsh.window.usercontrols.visualizer.graphics
 {
     partial class RomBankVisualizer
     {
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.lblBankName = new System.Windows.Forms.Label();
-            this.romImage1 = new DiztinGUIsh.window.usercontrols.RomImage();
+            this.romImage1 = new RomImage();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();

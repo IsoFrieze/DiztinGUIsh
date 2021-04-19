@@ -5,7 +5,7 @@ using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.util;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window.dialog
 {
     // consider renaming? this class is mostly about editing settings, with a 'save' button at the
     // end.
@@ -53,7 +53,7 @@ namespace DiztinGUIsh
 
         private void cancel_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void disassembleButton_Click(object sender, EventArgs e)
@@ -61,7 +61,7 @@ namespace DiztinGUIsh
             if (!PromptForPath())
                 return;
 
-            this.DialogResult = DialogResult.OK;
+            DialogResult = DialogResult.OK;
         }
 
         // Prompt user for either a filename to save, or a folder location

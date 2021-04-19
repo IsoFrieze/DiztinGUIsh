@@ -25,22 +25,22 @@ namespace Diz.Core.import
             public bool MFlagSet;
 
             // we will set these if any of the above field were modified
-            public bool changed;
-            public bool mDb, mMarks, mDp, mX, mM;
+            public bool Changed;
+            public bool MDb, MMarks, MDp, Mx, Mm;
 
             // precondition: rombyte (minimum of) read lock already acquired
             private void CompareToExisting(ByteEntry romByte)
             {
-                mDb = romByte.DataBank != DataBank;
-                mMarks = romByte.TypeFlag != FlagType;
-                mDp = romByte.DirectPage != DirectPage;
-                mX = romByte.XFlag != XFlagSet;
-                mM = romByte.MFlag != MFlagSet;
+                MDb = romByte.DataBank != DataBank;
+                MMarks = romByte.TypeFlag != FlagType;
+                MDp = romByte.DirectPage != DirectPage;
+                Mx = romByte.XFlag != XFlagSet;
+                Mm = romByte.MFlag != MFlagSet;
 
-                changed = mMarks || mDb || mDp || mX || mM;
+                Changed = MMarks || MDb || MDp || Mx || Mm;
             }
 
-            // precondition: rombyte (minimum of) read lock already acquired
+            // precondition: ByteEntry (minimum of) read lock already acquired
             private void ApplyModification(ByteEntry byteOffset)
             {
                 byteOffset.Lock.EnterWriteLock();
@@ -64,7 +64,7 @@ namespace Diz.Core.import
                 try
                 {
                     CompareToExisting(byteOffset);
-                    if (changed)
+                    if (Changed)
                         ApplyModification(byteOffset);
                 }
                 finally
@@ -97,7 +97,7 @@ namespace Diz.Core.import
 
         private void UpdateStats(ModificationData modData)
         {
-            if (!modData.changed)
+            if (!modData.Changed)
                 return;
 
             statsLock.EnterWriteLock();
@@ -105,11 +105,11 @@ namespace Diz.Core.import
             {
                 currentStats.NumRomBytesModified++;
 
-                currentStats.NumMarksModified += modData.mMarks ? 1 : 0;
-                currentStats.NumDbModified += modData.mDb ? 1 : 0;
-                currentStats.NumDpModified += modData.mDp ? 1 : 0;
-                currentStats.NumXFlagsModified += modData.mX ? 1 : 0;
-                currentStats.NumMFlagsModified += modData.mM ? 1 : 0;
+                currentStats.NumMarksModified += modData.MMarks ? 1 : 0;
+                currentStats.NumDbModified += modData.MDb ? 1 : 0;
+                currentStats.NumDpModified += modData.MDp ? 1 : 0;
+                currentStats.NumXFlagsModified += modData.Mx ? 1 : 0;
+                currentStats.NumMFlagsModified += modData.Mm ? 1 : 0;
             }
             finally
             {

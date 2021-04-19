@@ -1,4 +1,4 @@
-﻿namespace DiztinGUIsh
+﻿namespace DiztinGUIsh.window.dialog
 {
     partial class InOutPointChecker
     {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -174,10 +173,10 @@ namespace Diz.Core.util
         public static int ReadNext(Stream stream, byte[] buffer, int count)
         {
             // not in love with this.
-            return ReadNext(stream, buffer, count, stream is NetworkStream);
+            return DoReadNext(stream, buffer, count, stream is NetworkStream);
         }
 
-        public static int ReadNext(Stream stream, byte[] buffer, int count, bool continueOnZeroBytesRead=false)
+        private static int DoReadNext(Stream stream, byte[] buffer, int count, bool continueOnZeroBytesRead=false)
         {
             var offset = 0;
 

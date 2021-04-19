@@ -31,7 +31,7 @@
         // If you need anything more advanced than this, parse it yourself.
         public static ByteEntry BuildFlatDataFrom(ByteGraphNode byteGraphNode)
         {
-            return CreateByteEntryByFlatteningGraph(byteGraphNode, null);
+            return CreateByteEntryByFlatteningGraph(byteGraphNode);
         }
         
         private static ByteEntry CreateByteEntryByFlatteningGraph(

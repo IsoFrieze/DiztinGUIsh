@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
@@ -8,7 +7,7 @@ using Diz.Core.model.snes;
 
 // shows a collection of bank controls, so you can visualize the entire ROM
 
-namespace DiztinGUIsh.window.usercontrols
+namespace DiztinGUIsh.window.usercontrols.visualizer.graphics
 {
     public partial class RomFullVisualizer : UserControl
     {

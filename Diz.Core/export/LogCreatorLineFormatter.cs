@@ -8,10 +8,10 @@ namespace Diz.Core.export
     {
         public class ColumnFormat
         {
-            public string Value;
-            public int? LengthOverride;
-            public bool IsLiteral;
-            public bool IgnoreOffset;
+            public string Value { get; set; }
+            public int? LengthOverride { get; set; }
+            public bool IsLiteral { get; set; }
+            public bool IgnoreOffset { get; set; }
 
             protected bool Equals(ColumnFormat other)
             {
@@ -22,7 +22,7 @@ namespace Diz.Core.export
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((ColumnFormat) obj);
             }
 
@@ -117,7 +117,7 @@ namespace Diz.Core.export
                 overrideLenStr = token.Substring(indexColon + 1);
             }
             
-            var validGenerator = generators.TryGetValue(item.Value, out var generator);
+            var validGenerator = generators.TryGetValue(item.Value, out _);
             if (!validGenerator)
                 throw new InvalidDataException($"Can't find handler for item '{item.Value}'");
 
@@ -148,7 +148,7 @@ namespace Diz.Core.export
         {
             try
             {
-                var unusedJustForValidation = new LogCreatorLineFormatter(formatStr);
+                var unused = new LogCreatorLineFormatter(formatStr);
                 return true;
             }
             catch (Exception)

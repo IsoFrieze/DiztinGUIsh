@@ -12,7 +12,7 @@ namespace Diz.Core.import
 {
     public abstract class PoolItem
     {
-        public bool isFree = true;
+        public bool IsFree = true;
     }
 
     public class ObjPool<T> where T : PoolItem, new()
@@ -27,8 +27,8 @@ namespace Diz.Core.import
         public T Get()
         {
             var item = Alloc();
-            Debug.Assert(item.isFree);
-            item.isFree = false;
+            Debug.Assert(item.IsFree);
+            item.IsFree = false;
             return item;
         }
 
@@ -42,8 +42,8 @@ namespace Diz.Core.import
             if (item == null)
                 return;
             
-            Debug.Assert(!item.isFree);
-            item.isFree = true;
+            Debug.Assert(!item.IsFree);
+            item.IsFree = true;
             DeAlloc(item);
 
             item = null;
@@ -60,24 +60,24 @@ namespace Diz.Core.import
         public class CompressedWorkItem : PoolItem
         {
             public byte[] Header;
-            public const int headerSize = 9;
+            public const int HeaderSize = 9;
 
             public byte[] CompressedBuffer;
             public int CompressedSize;
 
             public byte[] UncompressedBuffer;
             public int UncompressedSize;
-            public bool wasDecompressed;
+            public bool WasDecompressed;
 
-            public byte[] tmpHeader;
-            public List<WorkItem> listHeads = new List<BsnesImportStreamProcessor.WorkItem>();
+            public byte[] TmpHeader;
+            public readonly List<WorkItem> ListHeads = new();
         }
 
         public class WorkItem : PoolItem
         {
             public byte[] Buffer;
             public bool AbridgedFormat;
-            public WorkItem next;
+            public WorkItem Next;
         }
 
         private ObjPool<CompressedWorkItem> poolCompressedWorkItems;
@@ -126,7 +126,7 @@ namespace Diz.Core.import
 
             try
             {
-                Util.ReadNext(stream, item.Header, CompressedWorkItem.headerSize);
+                Util.ReadNext(stream, item.Header, CompressedWorkItem.HeaderSize);
             }
             catch (EndOfStreamException)
             {
@@ -138,7 +138,7 @@ namespace Diz.Core.import
             Markers.WriteFlag("initial read");
 #endif
 
-            if (item.Header.Length != CompressedWorkItem.headerSize)
+            if (item.Header.Length != CompressedWorkItem.HeaderSize)
                 throw new InvalidDataException($"invalid header length for compressed data chunk");
 
             if (item.Header[0] != 'Z')
@@ -190,12 +190,12 @@ namespace Diz.Core.import
             var item = AllocCompressedWorkItem();
 
             item.CompressedSize = item.UncompressedSize = 0;
-            item.wasDecompressed = false;
+            item.WasDecompressed = false;
 
-            if (item.Header != null && item.Header.Length == CompressedWorkItem.headerSize)
+            if (item.Header != null && item.Header.Length == CompressedWorkItem.HeaderSize)
                 return item;
 
-            item.Header = new byte[CompressedWorkItem.headerSize];
+            item.Header = new byte[CompressedWorkItem.HeaderSize];
             return item;
         }
 
@@ -218,14 +218,14 @@ namespace Diz.Core.import
 
             // keep the capacity, but kill the contents.
             // also, go a little overkill and kill the references to WorkItem list heads inside the List.
-            if (compressedItem.listHeads != null)
+            if (compressedItem.ListHeads != null)
             {
-                for (var i = 0; i < compressedItem.listHeads.Count; ++i)
+                for (var i = 0; i < compressedItem.ListHeads.Count; ++i)
                 {
-                    compressedItem.listHeads[0] = null;
+                    compressedItem.ListHeads[0] = null;
                 }
 
-                compressedItem.listHeads.Clear();
+                compressedItem.ListHeads.Clear();
             }
 
             poolCompressedWorkItems?.Return(ref compressedItem);
@@ -238,7 +238,7 @@ namespace Diz.Core.import
 
             // don't kill the big buffers. main point of this pool is to hopefully re-use them later.
 
-            workItem.next = null;
+            workItem.Next = null;
 
             poolWorkItems?.Return(ref workItem);
         }
@@ -248,11 +248,12 @@ namespace Diz.Core.import
             var workItem = AllocWorkItem();
 
             // turn this on if you ever think you have a memroy alloc issue
-            const bool seriousChecking = false;
-            if (seriousChecking && (workItem.isFree || workItem.next != null))
+            #if SERIOUS_DEBUG_MEM_VERIFY
+            if (workItem.IsFree || workItem.Next != null)
             {
                 Debugger.Break();
             }
+            #endif
 
             workItem.AbridgedFormat = false;
 
@@ -288,7 +289,7 @@ namespace Diz.Core.import
 
         public void DecompressWorkItem(CompressedWorkItem compressedWorkItem)
         {
-            Debug.Assert(!compressedWorkItem.wasDecompressed);
+            Debug.Assert(!compressedWorkItem.WasDecompressed);
 
             AllocateUncompressedBuffer(compressedWorkItem);
             var decompressedLength = 0;
@@ -300,7 +301,7 @@ namespace Diz.Core.import
                     compressedWorkItem.UncompressedSize);
             }
 
-            compressedWorkItem.wasDecompressed = true;
+            compressedWorkItem.WasDecompressed = true;
 
             if (decompressedLength != compressedWorkItem.UncompressedSize)
                 throw new InvalidDataException("incorrect decompressed data size");

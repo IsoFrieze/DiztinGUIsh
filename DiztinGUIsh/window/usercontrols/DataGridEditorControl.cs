@@ -228,8 +228,8 @@ namespace DiztinGUIsh.window.usercontrols
             DataController.DataSubset.SelectedLargeIndex = largeIndex;
         }
 
-        private int GetRowIndexFromLargeIndex(int largeIndex) =>
-            DataController?.DataSubset?.GetRowIndexFromLargeOffset(largeIndex) ?? -1;
+        // private int GetRowIndexFromLargeIndex(int largeIndex) =>
+        //     DataController?.DataSubset?.GetRowIndexFromLargeOffset(largeIndex) ?? -1;
 
         private int SelectedTableRow => Table.CurrentCell?.RowIndex ?? -1;
         private int SelectedTableCol => Table.CurrentCell?.ColumnIndex ?? -1;
@@ -270,7 +270,7 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void SelectCell(DataGridViewCell cellToSelect)
         {
-            DizUIGridTrace.Log.SelectCell_Start();
+            DizUiGridTrace.Log.SelectCell_Start();
             try
             {
                 // important so we don't accidentally recurse during updates
@@ -286,7 +286,7 @@ namespace DiztinGUIsh.window.usercontrols
             }
             finally
             {
-                DizUIGridTrace.Log.SelectCell_Stop();
+                DizUiGridTrace.Log.SelectCell_Stop();
             }
         }
 
@@ -327,7 +327,7 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void table_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            DizUIGridTrace.Log.CellPainting_Start();
+            DizUiGridTrace.Log.CellPainting_Start();
             try
             {
                 var valid = IsDataValid() && IsValidRowIndex(e.RowIndex) && e.ColumnIndex != -1;
@@ -344,7 +344,7 @@ namespace DiztinGUIsh.window.usercontrols
             }
             finally
             {
-                DizUIGridTrace.Log.CellPainting_Stop();
+                DizUiGridTrace.Log.CellPainting_Stop();
             }
         }
 
@@ -496,7 +496,7 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
-            DizUIGridTrace.Log.CellValueNeeded_Start();
+            DizUiGridTrace.Log.CellValueNeeded_Start();
             try
             {
                 if (!IsValidRowIndex(e.RowIndex))
@@ -510,17 +510,18 @@ namespace DiztinGUIsh.window.usercontrols
             }
             finally
             {
-                DizUIGridTrace.Log.CellValueNeeded_Stop();
+                DizUiGridTrace.Log.CellValueNeeded_Stop();
             }
         }
 
+        /*
         private object CalculateCellValueForLargeIndex(int largeIndex, int colIndex)
         {
             var rowIndex = GetRowIndexFromLargeIndex(largeIndex);
             return rowIndex == -1
                 ? null
                 : CalculateCellValueForRowIndex(rowIndex, colIndex);
-        }
+        }*/
 
         private object CalculateCellValueForRowIndex(int rowIndex, int colIndex)
         {

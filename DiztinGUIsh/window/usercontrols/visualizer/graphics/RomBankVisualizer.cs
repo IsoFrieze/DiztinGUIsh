@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using Diz.Core.model;
 
 // this usercontrol shows:
@@ -8,7 +7,7 @@ using Diz.Core.model;
 //
 // If you create a bunch of these you can view the entire ROM as a series of banks
 
-namespace DiztinGUIsh.window.usercontrols
+namespace DiztinGUIsh.window.usercontrols.visualizer.graphics
 {
     public partial class RomBankVisualizer : UserControl
     {

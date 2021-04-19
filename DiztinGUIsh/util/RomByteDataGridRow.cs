@@ -89,6 +89,7 @@ namespace DiztinGUIsh.util
 
         [DisplayName("IA")]
         [ReadOnly(true)]
+        // ReSharper disable once InconsistentNaming
         public string IA
         {
             get
@@ -255,7 +256,6 @@ namespace DiztinGUIsh.util
         /// <summary>
         /// Format an arbitrary cell in the grid. it may or may not be the currently selected cell.
         /// </summary>
-        /// <param name="rowRomByte">the ByteOffset associated with this row</param>
         /// <param name="colPropName">the name of the data property associated with this column (not the column header, this is the internal name)</param>
         /// <param name="style">Out param, modify this to set the style</param>
         public void SetStyleForCell(string colPropName, DataGridViewCellStyle style)
@@ -379,10 +379,10 @@ namespace DiztinGUIsh.util
             }
         }
 
-        public Color? GetMFlagColor() => GetMXFlagColor(0x20);
-        public Color? GetXFlagColor() => GetMXFlagColor(0x10);
+        public Color? GetMFlagColor() => GetMxFlagColor(0x20);
+        public Color? GetXFlagColor() => GetMxFlagColor(0x10);
 
-        private Color? GetMXFlagColor(int nextByteMask)
+        private Color? GetMxFlagColor(int nextByteMask)
         {
             var nextByte = Data.GetNextRomByte(ByteEntry.ParentByteSourceIndex) ?? 0;
             switch (ByteEntry.Byte)

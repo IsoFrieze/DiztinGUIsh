@@ -25,7 +25,7 @@ namespace Diz.Core.import
         }
 
         // Mark collected trace data for a ByteOffset (which should be an opcode) AND any of the operands that follow us.
-        private void SetOpcodeAndOperandsFromTraceData(ModificationData modData, int instructionByteLen = -1) 
+        private void SetOpcodeAndOperandsFromTraceData(ModificationData modDataIn, int instructionByteLen = -1) 
         {
             // extremely performance-intensive function. be really careful when adding stuff
             var currentOffset = 0;
@@ -34,7 +34,7 @@ namespace Diz.Core.import
             bool Prep(ModificationData modData)
             {
                 numBytesAnalyzed++;
-                UpdatePCAddress(modData);
+                UpdatePcAddress(modData);
                 if (!IsOkToSetThisRomByte(modData.Pc, instructionByteLen, currentOffset)) 
                     return false;
                 
@@ -42,15 +42,15 @@ namespace Diz.Core.import
                 return true;
             }
 
-            while (Prep(modData))
+            while (Prep(modDataIn))
             {
-                ApplyModification(modData);
+                ApplyModification(modDataIn);
 
-                modData.SnesAddress = GetNextSNESAddress(modData.SnesAddress);
+                modDataIn.SnesAddress = GetNextSnesAddress(modDataIn.SnesAddress);
                 currentOffset++;
             }
             
-            FreeModificationData(ref modData); // sets to Null after called
+            FreeModificationData(ref modDataIn); // sets to Null after called
 
             currentStats.NumRomBytesAnalyzed += numBytesAnalyzed;
         }

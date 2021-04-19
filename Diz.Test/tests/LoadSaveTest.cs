@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
+using Diz.Core.util;
 using Xunit;
 using Xunit.Abstractions;
 

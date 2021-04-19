@@ -15,11 +15,11 @@ namespace Diz.Test.tests
 
         private static (IEnumerable<string>, IEnumerable<string>) GenerateRepeat(string toRepeat, int times)
         {
-            var repeated = Repeat($"{toRepeat}", times);
-            return (repeated.ToList(),
+            var repeated = Repeat($"{toRepeat}", times).ToList();
+            return (repeated,
                     times >= 8
                         ? new List<string>(new[] {$"r {times} {toRepeat}"})
-                        : repeated.ToList()
+                        : repeated
                 );
         }
 
@@ -76,11 +76,12 @@ namespace Diz.Test.tests
         public static void TestCompressionsValid(IEnumerable<string> input, IEnumerable<string> expected)
         {
             var inputListCopy = new List<string>(input);
+            var originalData = new List<string>(inputListCopy);
             RepeaterCompression.Compress(ref inputListCopy);
             Assert.Equal(expected, inputListCopy);
             
             RepeaterCompression.Decompress(ref inputListCopy);
-            Assert.Equal(inputListCopy, input);
+            Assert.Equal(inputListCopy, originalData);
         }
     }
 }

@@ -145,7 +145,7 @@ namespace DiztinGUIsh.window.dialog
 
         private void okay_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.OK;
+            DialogResult = DialogResult.OK;
         }
 
         private void cancel_Click(object sender, EventArgs e)
@@ -155,38 +155,38 @@ namespace DiztinGUIsh.window.dialog
 
         private void textCount_TextChanged(object sender, EventArgs e)
         {
-            OnTextChanged(textCount, value =>
+            OnTextChanged(textCount, v =>
             {
-                Count = value;
+                Count = v;
                 End = Start + Count;
             });
         }
 
         private void textEnd_TextChanged(object sender, EventArgs e)
         {
-            OnTextChanged(textEnd, value =>
+            OnTextChanged(textEnd, v =>
             {
                 if (radioROM.Checked)
-                    value = data.ConvertSnesToPc(value);
+                    v = data.ConvertSnesToPc(v);
 
-                End = value;
+                End = v;
                 Count = End - Start;
             });
         }
 
         private void textStart_TextChanged(object sender, EventArgs e)
         {
-            OnTextChanged(textStart, value =>
+            OnTextChanged(textStart, v =>
             {
                 if (radioROM.Checked)
-                    value = data.ConvertSnesToPc(value);
+                    v = data.ConvertSnesToPc(v);
 
-                Start = value;
+                Start = v;
                 Count = End - Start;
             });
         }
         
-        private void OnTextChanged(TextBox textBox, Action<int> OnResult)
+        private void OnTextChanged(TextBox textBox, Action<int> onResult)
         {        
             if (updatingText)
                 return;
@@ -195,7 +195,7 @@ namespace DiztinGUIsh.window.dialog
             var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
             if (int.TryParse(textBox.Text, style, null, out var result))
-                OnResult(result);
+                onResult(result);
 
             UpdateText(textBox);
         }

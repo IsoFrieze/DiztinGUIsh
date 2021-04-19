@@ -7,6 +7,7 @@ using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 using FastBitmapLib;
+using JetBrains.Annotations;
 
 namespace DiztinGUIsh.util
 {
@@ -88,8 +89,10 @@ namespace DiztinGUIsh.util
             }
         }
 
+        [PublicAPI]
         public int PixelCount => lengthOverride != -1 ? lengthOverride : project.Data.RomByteSource?.Bytes.Count ?? 0;
 
+        [PublicAPI]
         private int RomMaxOffsetAllowed => RomStartingOffset + PixelCount - 1;
 
         public int Width
@@ -109,7 +112,7 @@ namespace DiztinGUIsh.util
 
         public bool AllDirty { get; set; } = true;
 
-        private int romStartingOffset = 0;
+        private int romStartingOffset;
         private int lengthOverride = -1;
         private int width = 1024;
         private Bitmap bitmap;

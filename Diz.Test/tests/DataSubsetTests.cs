@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Diz.Core.datasubset;
-using Diz.Core.model.snes;
 using Diz.Core.util;
-using Iced.Intel;
 using Xunit;
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Global
 

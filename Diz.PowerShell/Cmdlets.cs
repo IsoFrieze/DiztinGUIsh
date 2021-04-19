@@ -1,8 +1,7 @@
-﻿using System.Management.Automation;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Management.Automation;
 using Diz.Core.export;
-using Diz.Core.model;
 using Diz.Core.serialization;
-using JetBrains.Annotations;
 
 namespace Diz.PowerShell
 {
@@ -33,6 +32,7 @@ namespace Diz.PowerShell
             }
         }
 
+        [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Local")]
         private bool BuildAssembly(string projectFileName)
         {
             var (project, warning) = new ProjectFileManager().Open(projectFileName);

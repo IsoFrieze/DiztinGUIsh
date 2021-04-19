@@ -28,7 +28,7 @@ namespace DiztinGUIsh.window.dialog
                 return;
             }
 
-            var percentDone = (int)(100 * ((float)progressBar1.Value / (float)progressBar1.Maximum));
+            var percentDone = (int)(100 * (progressBar1.Value / (float)progressBar1.Maximum));
             lblStatusText.Text = $@"{percentDone}%";
         }
 

@@ -283,11 +283,6 @@ namespace Diz.Core.model.snes
             return SnesAddressSpace?.BuildFlatByteEntryFor(snesAddress);
         }
 
-        private int UnmirroredOffset(int offset)
-        {
-            return RomUtil.UnmirroredOffset(offset, GetRomSize());
-        }
-
         public int ConvertSnesToPc(int snesAddress)
         {
             return RomUtil.ConvertSnesToPc(snesAddress, RomMapMode, GetRomSize());
@@ -445,7 +440,7 @@ namespace Diz.Core.model.snes
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((Data)obj);
+            return obj.GetType() == GetType() && Equals((Data)obj);
         }
 
         public override int GetHashCode()

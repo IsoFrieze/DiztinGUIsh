@@ -108,29 +108,24 @@ namespace Diz.Test.tests
             Assert.NotNull(codeLabel);
             Assert.Equal("CODE_808000", codeLabel.Name);
             Assert.Null(codeLabel.Parent);
-
-            var actual = data.Labels.Labels;
-                //.GetAnnotationsIncludingChildrenEnumerator<Label>()
-                
-            var x = 3;
         }
 
         [Fact]
         public void TestAnnotationParentWhenPopulatedFrom()
         {
-            void Test(ByteEntry byteEntry1)
+            static void TestParents(ByteEntry byteEntry9)
             {
-                var by1 = byteEntry1.Byte;
+                var by1 = byteEntry9.Byte;
                 Assert.NotNull(by1);
                 Assert.Equal(0xCA, by1.Value);
-                Assert.NotNull(byteEntry1.ParentByteSource);
+                Assert.NotNull(byteEntry9.ParentByteSource);
 
-                Assert.Single(byteEntry1.Annotations);
+                Assert.Single(byteEntry9.Annotations);
 
-                foreach (var annotation in byteEntry1.Annotations)
+                foreach (var annotation in byteEntry9.Annotations)
                 {
                     Assert.NotNull(annotation.Parent);
-                    Assert.True(ReferenceEquals(byteEntry1, annotation.Parent));
+                    Assert.True(ReferenceEquals(byteEntry9, annotation.Parent));
                 }
             }
 
@@ -146,12 +141,12 @@ namespace Diz.Test.tests
             };
 
             var byteEntry1 = actualRomBytes.Bytes[0];
-            Test(byteEntry1);
+            TestParents(byteEntry1);
 
             var data = new Data().PopulateFromRom(actualRomBytes, RomMapMode.LoRom, RomSpeed.FastRom);
 
             var byteEntry2 = data.RomByteSource.Bytes[0];
-            Test(byteEntry2);
+            TestParents(byteEntry2);
         } 
 
         [Theory]
@@ -198,11 +193,13 @@ namespace Diz.Test.tests
                 Assert.NotNull(l.Value);
             }
             
-            Dictionary<int, IReadOnlyLabel> cachedUnvisitedLabels = new();
+            // TODO: cleanup
+            
+            /*Dictionary<int, IReadOnlyLabel> cachedUnvisitedLabels = new();
             foreach (var (snesAddress, label) in data.Labels.Labels)
             {
                 cachedUnvisitedLabels.Add(snesAddress, label);
-            }
+            }*/
             
             /*var labelMock = new Mock<IReadOnlyLabelProvider>();
             labelMock

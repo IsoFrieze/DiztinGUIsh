@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Text;
 using System.Xml;
 using Diz.Core.model;
@@ -15,8 +16,10 @@ namespace Diz.Core.serialization.xml_serializer
         private const int CurrentSaveFormatVersion = FirstSaveFormatVersion;
 
         // update this if we are dropped support for really old save formats.
+        // ReSharper disable once UnusedMember.Local
         private const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
 
+        [SuppressMessage("ReSharper", "UnusedMember.Local")]
         private class Root
         {
             // XML serializer specific metadata, top-level deserializer.
@@ -41,7 +44,7 @@ namespace Diz.Core.serialization.xml_serializer
             var rootElement = new Root()
             {
                 SaveVersion = CurrentSaveFormatVersion,
-                Watermark = ProjectSerializer.Watermark,
+                Watermark = DizWatermark,
                 Project = project,
             };
 
@@ -52,12 +55,14 @@ namespace Diz.Core.serialization.xml_serializer
             var finalBytes = Encoding.UTF8.GetBytes(xmlStr);
 
             // if you want some sanity checking, run this to verify everything saved correctly
-            // DebugVerifyProjectEquality(project, finalBytes);
-            // end debug
+            #if HEAVY_LOADSAVE_VERIFICATION
+            DebugVerifyProjectEquality(project, finalBytes);
+            #endif
 
             return finalBytes;
         }
 
+        #if HEAVY_LOADSAVE_VERIFICATION
         // just for debugging purposes, compare two projects together to make sure they serialize/deserialize
         // correctly.
         private void DebugVerifyProjectEquality(Project originalProjectWeJustSaved, byte[] projectBytesWeJustSerialized)
@@ -68,6 +73,7 @@ namespace Diz.Core.serialization.xml_serializer
             new ProjectFileManager().PostSerialize(project2);
             DebugVerifyProjectEquality(originalProjectWeJustSaved, project2);
         }
+        #endif
 
         public override (Project project, string warning) Load(byte[] data)
         {
@@ -80,7 +86,7 @@ namespace Diz.Core.serialization.xml_serializer
             var text = Encoding.UTF8.GetString(data);
             var root = XmlSerializerSupport.GetSerializer().Create().Deserialize<Root>(text);
 
-            if (root.Watermark != Watermark)
+            if (root.Watermark != DizWatermark)
                 throw new InvalidDataException(
                     "This file doesn't appear to be a valid DiztinGUIsh XML file (missing/invalid watermark element in XML)");
 

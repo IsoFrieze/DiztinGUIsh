@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.Tracing;
-using System.Threading;
 
 namespace DiztinGUIsh.util
 {
@@ -25,9 +24,9 @@ namespace DiztinGUIsh.util
     }*/
     
     [EventSource(Name="GridUI")]
-    public sealed class DizUIGridTrace : EventSource {
+    public sealed class DizUiGridTrace : EventSource {
 
-        public static readonly DizUIGridTrace Log = new();
+        public static readonly DizUiGridTrace Log = new();
 
         public class Tasks {
             public const EventTask CellValueNeeded = (EventTask)0x1;

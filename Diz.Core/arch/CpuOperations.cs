@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Diz.Core.model;
+﻿using Diz.Core.model;
 
 namespace Diz.Core.arch
 {

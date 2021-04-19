@@ -2,9 +2,8 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using Diz.Core.export;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window.dialog
 {
     partial class ExportDisassembly
     {

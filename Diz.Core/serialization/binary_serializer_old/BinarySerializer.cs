@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Diz.Core.model;
-using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 
@@ -23,8 +22,8 @@ namespace Diz.Core.serialization.binary_serializer_old
 
         public static bool IsBinaryFileFormat(byte[] data)
         {
-            for (var i = 0; i < Watermark.Length; i++) {
-                if (data[i + 1] != (byte) Watermark[i])
+            for (var i = 0; i < DizWatermark.Length; i++) {
+                if (data[i + 1] != (byte) DizWatermark[i])
                     return false;
             }
             return true;
@@ -37,7 +36,7 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             var everything = new byte[HeaderSize + data.Length];
             everything[0] = versionToSave;
-            ByteUtil.StringToNullTermByteArray(Watermark).CopyTo(everything, 1);
+            ByteUtil.StringToNullTermByteArray(DizWatermark).CopyTo(everything, 1);
             data.CopyTo(everything, HeaderSize);
 
             return data;
@@ -107,6 +106,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             return (project, warning);
         }
 
+        #if ALLOW_OLD_SAVE_FORMATS
         private static void SaveStringToBytes(string str, ICollection<byte> bytes)
         {
             // TODO: combine with Util.StringToByteArray() probably.
@@ -117,6 +117,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             }
             bytes.Add(0);
         }
+        #endif
 
         private void VoidTheWarranty()
         {
@@ -126,11 +127,12 @@ namespace Diz.Core.serialization.binary_serializer_old
             throw new NotSupportedException("Binary serializer saving is OLD, please use the XML serializer instead.");
         }
 
+        [SuppressMessage("ReSharper", "UnusedParameter.Local")]
         private byte[] SaveVersion(Project project, int version)
         {
             VoidTheWarranty();
-            /*
             
+            #if ALLOW_OLD_SAVE_FORMATS
             ValidateSaveVersion(version);
 
             int size = project.Data.GetRomSize();
@@ -217,15 +219,18 @@ namespace Diz.Core.serialization.binary_serializer_old
             comment.CopyTo(data, romSettings.Length + romLocation.Length + 8 * size + label.Count);
             // ???
 
-            return data;*/ // tmp
+            return data;
+            #endif
             return null;
         }
 
+        #if ALLOW_OLD_SAVE_FORMATS
         private static void ValidateSaveVersion(int version) {
             if (version < 1 || version > LatestFileFormatVersion) {
                 throw new ArgumentException($"Saving: Invalid save version requested for saving: {version}.");
             }
         }
+        #endif
 
         private static void ValidateProjectFileVersion(int version)
         {

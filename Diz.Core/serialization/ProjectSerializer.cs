@@ -1,12 +1,11 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using Diz.Core.model;
 
 namespace Diz.Core.serialization
 {
     public abstract class ProjectSerializer
     {
-        public const string Watermark = "DiztinGUIsh";
+        protected const string DizWatermark = "DiztinGUIsh";
 
         public abstract byte[] Save(Project project);
         public abstract (Project project, string warning) Load(byte[] data);
@@ -21,6 +20,7 @@ namespace Diz.Core.serialization
             return Load(File.ReadAllBytes(filename));
         }
 
+        #if HEAVY_LOADSAVE_VERIFICATION
         protected static void DebugVerifyProjectEquality(Project project1, Project project2, bool deepCut = true)
         {
             if (deepCut)
@@ -39,5 +39,6 @@ namespace Diz.Core.serialization
             }
             Debug.Assert(project1.Equals(project2));
         }
+        #endif
     }
 }

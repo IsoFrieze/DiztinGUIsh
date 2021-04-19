@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
@@ -19,7 +18,7 @@ namespace DiztinGUIsh.window
         private IMainFormController MainFormController => parentWindow?.MainFormController;
         private Data Data => MainFormController?.Project?.Data;
 
-        private bool Locked;
+        private bool locked;
         private int currentlyEditing = -1;
         
         public AliasList(DataGridEditorForm main)
@@ -94,9 +93,9 @@ namespace DiztinGUIsh.window
         {
             if (!int.TryParse((string) dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null,
                 out var val)) return;
-            Locked = true;
+            locked = true;
             Data.Labels.RemoveLabel(val);
-            Locked = false;
+            locked = false;
         }
 
         private void dataGridView1_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
@@ -169,7 +168,7 @@ namespace DiztinGUIsh.window
                     }
             }
 
-            Locked = true;
+            locked = true;
             if (currentlyEditing >= 0)
             {
                 if (newSnesAddress >= 0) 
@@ -177,14 +176,14 @@ namespace DiztinGUIsh.window
                 
                 Data.Labels.AddLabel(newSnesAddress, newLabel, true);
             }
-            Locked = false;
+            locked = false;
 
             currentlyEditing = -1;
         }
 
         public void AddRow(int address, Label alias)
         {
-            if (Locked) 
+            if (locked) 
                 return;
             RawAdd(address, alias);
             dataGridView1.Invalidate();
@@ -197,7 +196,7 @@ namespace DiztinGUIsh.window
 
         public void RemoveRow(int address)
         {
-            if (Locked) 
+            if (locked) 
                 return;
 
             for (var index = 0; index < dataGridView1.Rows.Count; index++)

@@ -1,4 +1,4 @@
-﻿namespace DiztinGUIsh.window.usercontrols
+﻿namespace DiztinGUIsh.window.usercontrols.visualizer.graphics
 {
     partial class RomFullVisualizer
     {

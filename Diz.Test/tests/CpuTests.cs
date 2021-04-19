@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -160,7 +159,7 @@ namespace Diz.Test.tests
             TestParentByteSourceRefs(0x8D, 0x0, data.RomByteSource);
         }
 
-        public static void TestParentByteSourceRefs(int expectedByteVal, int index, ByteSource expectedByteSource)
+        private static void TestParentByteSourceRefs(int expectedByteVal, int index, ByteSource expectedByteSource)
         {
             var byteOffsetData = expectedByteSource.Bytes[index];
             var b = byteOffsetData?.Byte;
@@ -215,14 +214,14 @@ namespace Diz.Test.tests
         }
 
         [Fact]
-        public static void IA1()
+        public static void IndirectAddress1()
         {
             var data = TinyHiRomWithExtraLabel;
             Assert.Equal(0x002116, data.GetIntermediateAddressOrPointer(0));
         }
 
         [Fact]
-        public static void TestWhenNoIAPresent()
+        public static void TestWhenNoIaPresent()
         {
             var sampleData = SampleRomData.SampleData;
             const int offset = 0x1C1F;
@@ -231,7 +230,7 @@ namespace Diz.Test.tests
         }
 
         [Fact]
-        public static void IA2()
+        public static void IntermediateAddress2()
         {
             var data = TinyHiRomWithExtraLabel;
             data.RomByteSource.Bytes[0].DataBank = 0x7E;

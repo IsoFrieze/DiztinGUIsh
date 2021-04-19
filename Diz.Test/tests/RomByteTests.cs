@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
-using Diz.Core;
 using Diz.Core.arch;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.util;
 using Xunit;
 
 namespace Diz.Test.tests
@@ -32,11 +32,11 @@ namespace Diz.Test.tests
             {
                 new BranchAnnotation
                 {
-                    Point = InOutPoint.InPoint | InOutPoint.ReadPoint        
+                    Point = InOutPoint.InPoint | InOutPoint.ReadPoint
                 },
                 new MarkAnnotation
                 {
-                    TypeFlag = FlagType.Graphics,        
+                    TypeFlag = FlagType.Graphics,
                 },
                 new OpcodeAnnotation
                 {
@@ -44,30 +44,12 @@ namespace Diz.Test.tests
                     DataBank = 90,
                     DirectPage = 3,
                     MFlag = true,
-                    XFlag = false,        
+                    XFlag = false,
                 }
-            }) {
+            })
+            {
                 Byte = 0x78,
             };
-        }
-        
-        private static ByteEntry SampleRomByte4()
-        {
-            // same as above, but just change .Rom
-            var rb = SampleRomByte2();
-            rb.GetOrCreateAnnotationsList();
-            
-            rb.Annotations.Add(new Comment {Text="CommentText"});
-            rb.Annotations.Add(new Label {Name="fn_stuff", Comment = "some_comment"});
-            return rb;
-        }
-
-        private static ByteEntry SampleRomByte2()
-        {
-            // same as above, but just change .Rom
-            var rb = SampleRomByte1();
-            rb.Byte = 0x99;
-            return rb;
         }
 
         [Fact]
@@ -141,7 +123,7 @@ namespace Diz.Test.tests
 
             Assert.Null(mark1.Parent);
             Assert.Null(label1.Parent);
-            var ac = new AnnotationCollection {label1, mark1};
+            var unused = new AnnotationCollection {label1, mark1};
             
             Assert.Null(mark1.Parent);
             Assert.Null(label1.Parent);

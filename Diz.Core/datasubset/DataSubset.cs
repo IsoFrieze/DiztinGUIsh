@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Diz.Core.util;
 using JetBrains.Annotations;
@@ -94,6 +95,7 @@ namespace Diz.Core.datasubset
         }
 
         // called right before we change StartingRowLargeIndex and RowCount
+        [SuppressMessage("ReSharper", "UnusedParameter.Local")]
         private void OnWindowDimensionsChanging(int newRowStartingIndex, int newRowCount)
         {
             DropRowCache();
@@ -121,8 +123,6 @@ namespace Diz.Core.datasubset
 
                 return outputRows;
             }
-            
-            private set => this.SetField(ref outputRows, value);
         }
 
         private int startingRowLargeIndex;
@@ -202,9 +202,6 @@ namespace Diz.Core.datasubset
         // if needed, in the future, predictive row caching could be done on a background thread as well.
         protected TRow RowValueNeededForLargeOffset(int largeOffset) =>
             RowLoader.RowValueNeeded(largeOffset, this);
-
-        private TRow RowValueNeededForRowIndex(int row) =>
-            RowValueNeededForLargeOffset(GetLargeOffsetFromRowOffset(row));
 
         public bool IsRowOffsetValid(int rowOffset) =>
             rowOffset >= 0 && rowOffset < RowCount;

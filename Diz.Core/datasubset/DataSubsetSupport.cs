@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Diz.Core.datasubset
@@ -68,9 +67,7 @@ namespace Diz.Core.datasubset
             return entry;
         }
 
-        protected abstract TRow CreateNewRow(DataSubset<TRow, TItem> subset, int largeIndex); 
-
-        private readonly List<Entry> tmpEntriesForDeletion = new();
+        protected abstract TRow CreateNewRow(DataSubset<TRow, TItem> subset, int largeIndex);
 
         // this is a hint that big changes just finished up (like recreating the rows due to a scroll),
         // so it's likely a good time to kick irrelevant rows out of the cache.
@@ -80,8 +77,6 @@ namespace Diz.Core.datasubset
         // which are furthest away from the current window
         public virtual void OnBigWindowChangeFinished(DataSubset<TRow, TItem> subset)
         {
-            tmpEntriesForDeletion.Clear();
-
             // see if we're about 10% over our target, and if so, dump about 10% of the cache.
             // it's OK to go over so that we're not constantly dumping cache with every small change.
             if (cachedRows.Count <= TargetCachedRows + FuzzThreshold)

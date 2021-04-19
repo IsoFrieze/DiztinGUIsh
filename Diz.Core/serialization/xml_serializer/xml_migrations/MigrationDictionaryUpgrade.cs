@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using ExtendedXmlSerializer;
 
 namespace Diz.Core.serialization.xml_serializer.xml_migrations
 {

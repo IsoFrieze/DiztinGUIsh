@@ -52,7 +52,7 @@ namespace Diz.Test.tests
          [Fact]
         public static void TraverseChildren()
         {
-            var (srcData, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
+            var (_, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
             
             var snesAddress = data.ConvertPCtoSnes(0);
 

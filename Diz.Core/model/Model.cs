@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
+﻿/*
 namespace Diz.Core.model
 {
 
@@ -9,7 +6,7 @@ namespace Diz.Core.model
     ///     This class adds the ability to refresh the list when any property of
     ///     the objects changes in the list which implements the INotifyPropertyChanged. 
     /// </summary>
-    /*public class ItemsChangeObservableCollection<TKey, TValue> :
+    public class ItemsChangeObservableCollection<TKey, TValue> :
         ObservableDictionary<TKey, TValue> where TValue : INotifyPropertyChanged
     {
         /*
@@ -65,7 +62,7 @@ namespace Diz.Core.model
             base.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
         
-    }*/
+    }#1#
 
     /*public class Watcher<TK, TV> : INotifyPropertyChanged, INotifyCollectionChanged where TV : INotifyPropertyChanged
     {
@@ -100,5 +97,6 @@ namespace Diz.Core.model
             if (SendNotificationChangedEvents)
                 PropertyChanged?.Invoke(sender, e);
         }
-    }*/
+    }
 }
+*/

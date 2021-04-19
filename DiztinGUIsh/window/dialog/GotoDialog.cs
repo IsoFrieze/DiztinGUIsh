@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Forms;
-using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 
@@ -38,28 +37,29 @@ namespace DiztinGUIsh.window.dialog
 
         private void Go()
         {
-            this.DialogResult = DialogResult.OK;
+            DialogResult = DialogResult.OK;
         }
 
         private bool updatingText;
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool UpdateTextChanged(string txtChanged, Action<string, int, Util.NumberBase> onSuccess)
         {
-            bool result = false;
-            if (!updatingText)
+            if (updatingText) 
+                return false;
+         
+            var result = false;
+            updatingText = true;
+
+            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+            var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
+
+            if (ByteUtil.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
             {
-                updatingText = true;
-
-                var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-                var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-
-                if (ByteUtil.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
-                {
-                    onSuccess(txtChanged, address, noBase);
-                    result = true;
-                }
-                updatingText = false;
+                onSuccess(txtChanged, address, noBase);
+                result = true;
             }
+            updatingText = false;
 
             return result;
         }
@@ -123,12 +123,12 @@ namespace DiztinGUIsh.window.dialog
 
         private void textPC_TextChanged(object sender, EventArgs e)
         {
-            UpdateTextChanged(textPC.Text, (finaltext, offset, noBase) =>
+            UpdateTextChanged(textPC.Text, (finalText, offset, _) =>
             {
-                int addr = Data.ConvertPCtoSnes(offset);
+                var snesAddress = Data.ConvertPCtoSnes(offset);
 
-                textPC.Text = finaltext;
-                textROM.Text = Util.ToHexString6(addr);
+                textPC.Text = finalText;
+                textROM.Text = Util.ToHexString6(snesAddress);
             });
 
             UpdateUi();
@@ -141,7 +141,7 @@ namespace DiztinGUIsh.window.dialog
 
         private void cancel_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void textROM_KeyDown(object sender, KeyEventArgs e)

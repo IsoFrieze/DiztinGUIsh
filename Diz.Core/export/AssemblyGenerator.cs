@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Global
 

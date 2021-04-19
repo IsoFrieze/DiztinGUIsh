@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using Diz.Core.arch;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
@@ -39,8 +37,10 @@ namespace Diz.Core.arch
         public virtual void MarkInOutPoints(Data data, int offset) {} // nop
         public virtual string GetInstruction(Data data, int offset) => "";
 
-        protected virtual bool DoOneAutoStepNormal(ICpuOperableByteSource byteSource, List<int> seenBranches, ref int newOffset, ref int nextOffset, ref int prevOffset, Stack<int> stack)
+        // TODO: cleanup this function signature
+        protected virtual bool DoOneAutoStepNormal(ICpuOperableByteSource byteSource, List<int> seenBranches, ref int newOffset, out int nextOffset, ref int prevOffset, Stack<int> stack)
         {
+            nextOffset = -1;
             return false;
         }
         
@@ -62,8 +62,7 @@ namespace Diz.Core.arch
 
             while (keepGoing)
             {
-                var nextOffset = 0;
-                keepGoing = DoOneAutoStepNormal(byteSource, seenBranches, ref newOffset, ref nextOffset, ref prevOffset, stack);
+                keepGoing = DoOneAutoStepNormal(byteSource, seenBranches, ref newOffset, out _, ref prevOffset, stack);
 
                 var flag = byteSource.GetFlag(newOffset);
                 if (!(flag == FlagType.Unreached || flag == FlagType.Opcode || flag == FlagType.Operand)) 
@@ -92,7 +91,7 @@ namespace Diz.Core.arch
     // a base Cpu for common things for real but mostly placeholder CPU types.
     public abstract class CpuGenericHelper : Cpu
     {
-        protected override bool DoOneAutoStepNormal(ICpuOperableByteSource byteSource, List<int> seenBranches, ref int newOffset, ref int nextOffset, ref int prevOffset, Stack<int> stack)
+        protected override bool DoOneAutoStepNormal(ICpuOperableByteSource byteSource, List<int> seenBranches, ref int newOffset, out int nextOffset, ref int prevOffset, Stack<int> stack)
         {
             nextOffset = byteSource.Step(newOffset, false, true, prevOffset);
             prevOffset = newOffset;
@@ -182,8 +181,9 @@ namespace Diz.Core.arch
         }
 
         protected override bool DoOneAutoStepNormal(ICpuOperableByteSource byteSource, List<int> seenBranches, 
-            ref int newOffset, ref int nextOffset, ref int prevOffset, Stack<int> stack)
+            ref int newOffset, out int nextOffset, ref int prevOffset, Stack<int> stack)
         {
+            nextOffset = newOffset;
             if (seenBranches.Contains(newOffset))
                 return false;
 

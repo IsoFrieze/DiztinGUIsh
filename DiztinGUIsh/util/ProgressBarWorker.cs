@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using DiztinGUIsh.window.dialog;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.util
 {
     // TODO: replace this with Task and async/await. don't use threads directly.
     public abstract class ProgressBarWorker
@@ -87,12 +87,8 @@ namespace DiztinGUIsh
             dialog?.BeginInvoke(new Action(() => dialog.Close()));
         }
     }
-}
 
 
-
-namespace DiztinGUIsh
-{
     public class ProgressBarJob : ProgressBarWorker
     {
         // a version that keeps calling 'callback' until it returns -1

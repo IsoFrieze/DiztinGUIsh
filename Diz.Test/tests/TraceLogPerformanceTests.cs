@@ -1,11 +1,11 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Loggers;
 using Diz.Core.import;
 using Diz.Core.model.snes;
 using Diz.Core.util;
+using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -13,6 +13,7 @@ namespace Diz.Test.tests
 {
     public sealed class XOutLogger : ILogger
     {
+        // ReSharper disable once InconsistentNaming
         private readonly ITestOutputHelper _helper;
 
         public XOutLogger(ITestOutputHelper helper)
@@ -40,7 +41,7 @@ namespace Diz.Test.tests
         }
 
         public string Id { get; } = "xunitLogger";
-        public int Priority { get; }
+        [UsedImplicitly] public int Priority { get; }
     }
 
     public class TraceLogPerformanceTests
@@ -52,7 +53,7 @@ namespace Diz.Test.tests
             this.output = output;
         }
 
-        private void RunPrintTiming(Action item)
+        /*private void RunPrintTiming(Action item)
         {
             var s = Stopwatch.StartNew();
             s.Start();
@@ -61,23 +62,23 @@ namespace Diz.Test.tests
                 
             s.Stop();
             output.WriteLine($"runtime: {s.ElapsedMilliseconds:N0}ms");
-        }
+        }*/
 
         public class ImportTraceLogStreamTestHarness
         {
-            const string datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
+            private const string Datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
             Data Data => new Data().InitializeEmptyRomMapping(0xFFFF * 64, RomMapMode.LoRom, RomSpeed.FastRom);
 
             private readonly BsnesTraceLogDebugBenchmarkFileCapture capturing;
             private readonly Stopwatch stopWatch = new();
-            private readonly ITestOutputHelper output;
+            [UsedImplicitly] private readonly ITestOutputHelper output;
 
             public ImportTraceLogStreamTestHarness(ITestOutputHelper output)
             {
                 this.output = output;
 
                 var cwd = Directory.GetCurrentDirectory();
-                var fullPath = Path.Combine(cwd, datafile);
+                var fullPath = Path.Combine(cwd, Datafile);
 
                 capturing = new BsnesTraceLogDebugBenchmarkFileCapture(fullPath, 1)
                 {

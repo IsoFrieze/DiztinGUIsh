@@ -29,7 +29,7 @@ namespace Diz.Core.model.byteSources
     // mostly, adds helper methods to ByteEntryBase, which is what does the heavy lifting
     public class ByteEntry : ByteEntryBase, IReadOnlyByteEntry
     {
-        public ByteEntry() : base() {}
+        public ByteEntry() {}
         public ByteEntry(AnnotationCollection annotationsToAppend) : base(annotationsToAppend) {}
         
         // if null, it means caller either needs to dig one level deeper in
@@ -126,8 +126,8 @@ namespace Diz.Core.model.byteSources
         // note: our thread safety isn't comprehensive in this project yet.
         // be careful with this if you're doing anything clever, especially writing.
         // TODO: instead of doing this, see if ConcurrentBag or similar classes for the container itself would work?
-        public ReaderWriterLockSlim Lock => _lock ??= new ReaderWriterLockSlim();
-        private ReaderWriterLockSlim _lock;
+        public ReaderWriterLockSlim Lock => @lock ??= new ReaderWriterLockSlim();
+        private ReaderWriterLockSlim @lock;
 
         #region References to parent enclosures
         protected internal ByteStorage ParentStorage { get; internal set; }
@@ -196,7 +196,7 @@ namespace Diz.Core.model.byteSources
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((ByteEntryBase) obj);
         }
 

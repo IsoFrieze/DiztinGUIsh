@@ -14,9 +14,9 @@ namespace DiztinGUIsh
             public string FileToOpen { get; set; }
         }
         
-        public DizApplicationContext(DizApplicationArgs Args)
+        public DizApplicationContext(DizApplicationArgs args)
         {
-            DizApplication.App.Run(Args);
+            DizApplication.App.Run(args);
         }
     }
     
@@ -25,10 +25,10 @@ namespace DiztinGUIsh
         public GlobalViewControllers GlobalViewControllers { get; } = new ();
         public ProjectsController ProjectsController { get; } = new SampleRomHackProjectsController();
         
-        private static DizApplication appInstance;
+        private static DizApplication _appInstance;
 
         public static DizApplication App => 
-            appInstance ??= new DizApplication();
+            _appInstance ??= new DizApplication();
 
         public void OpenProjectFileWithNewView(string filename)
         {
@@ -43,15 +43,15 @@ namespace DiztinGUIsh
             controller.SetProject(filename, project);
         }
 
-        public void Run(DizApplicationContext.DizApplicationArgs Args)
+        public void Run(DizApplicationContext.DizApplicationArgs args)
         {
             Application.ApplicationExit += OnApplicationExit;
-            GlobalViewControllers.AllFormsClosed += (o, args) => Application.Exit();
+            GlobalViewControllers.AllFormsClosed += (_, _) => Application.Exit();
 
             // kick us off with the home screen
             ShowNewStartForm();
 
-            OpenProjectFileWithNewView(Args.FileToOpen);
+            OpenProjectFileWithNewView(args.FileToOpen);
         }
 
         private void ShowNewStartForm()

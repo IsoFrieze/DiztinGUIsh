@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Diz.Core;
 using Diz.Core.model;
-using DiztinGUIsh.controller;
+using Diz.Core.util;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.controller

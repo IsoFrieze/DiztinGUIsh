@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using ExtendedXmlSerializer.ContentModel;
 using ExtendedXmlSerializer.ContentModel.Format;
@@ -38,7 +37,7 @@ namespace Diz.Core.serialization.xml_serializer
 
         private const bool CompressGroupBlock = true;
         private const bool CompressUsingTable1 = true;
-        public int numTasksToUse = 5; // seems like the sweet spot
+        private const int NumTasksToUse = 5; // seems like the sweet spot
 
         public ByteSource Get(IFormatReader parameter)
         {
@@ -47,21 +46,22 @@ namespace Diz.Core.serialization.xml_serializer
             return FinishRead(romBytes);
         }
 
-        private ByteEntry[] DecodeAllBytes(List<string> allLines)
+        private static ByteEntry[] DecodeAllBytes(List<string> allLines)
         {
             // TODO: probably should use parallel LINQ here instead?
             
-            if (numTasksToUse == 1)
-                return DecodeRomBytes(allLines, 0, allLines.Count);
+            #if NO_PARALLEL
+            return DecodeRomBytes(allLines, 0, allLines.Count);
+            #endif
 
-            var tasks = new List<Task<ByteEntry[]>>(numTasksToUse);
+            var tasks = new List<Task<ByteEntry[]>>(NumTasksToUse);
 
             var nextIndex = 0;
-            var workListCount = allLines.Count / numTasksToUse;
+            var workListCount = allLines.Count / NumTasksToUse;
 
-            for (var t = 0; t < numTasksToUse; ++t)
+            for (var t = 0; t < NumTasksToUse; ++t)
             {
-                if (t == numTasksToUse - 1)
+                if (t == NumTasksToUse - 1)
                     workListCount = allLines.Count - nextIndex;
 
                 tasks.Add(CreateDecodeRomBytesTask(allLines, nextIndex, workListCount));
@@ -129,9 +129,9 @@ namespace Diz.Core.serialization.xml_serializer
 
         private static (List<string> lines, List<string> options) ReadHeader(string allLines)
         {
-            var lines = allLines.Split(new char[] {'\n'}, 3).ToList();
-            var options = lines[1].Split(new char[] {','}).ToList();
-            lines = lines[2].Split(new char[] {'\n'}).ToList();
+            var lines = allLines.Split(new[] {'\n'}, 3).ToList();
+            var options = lines[1].Split(new[] {','}).ToList();
+            lines = lines[2].Split(new[] {'\n'}).ToList();
             if (lines[lines.Count - 1] == "")
                 lines.RemoveAt(lines.Count - 1);
             return (lines, options);

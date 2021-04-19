@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
 
 namespace DiztinGUIsh.controller
 {

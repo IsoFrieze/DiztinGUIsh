@@ -10,7 +10,7 @@ namespace Diz.Core.import
         {
             var modData = modificationDataPool.Get();
             
-            modData.changed = false;
+            modData.Changed = false;
             
             return modData;
         }
@@ -29,7 +29,7 @@ namespace Diz.Core.import
             if (!ParseTextLine(line, modData))
                 return;
 
-            UpdatePCAddress(modData);
+            UpdatePcAddress(modData);
             SetOpcodeAndOperandsFromTraceData(modData); // note: frees modData, don't use after
         }
         
@@ -40,7 +40,7 @@ namespace Diz.Core.import
             var modData = AllocateModificationData();
             ParseBinary(bytes, abridgedFormat, out var opcodeLen, modData);
             
-            UpdatePCAddress(modData);
+            UpdatePcAddress(modData);
             SetOpcodeAndOperandsFromTraceData(modData, opcodeLen);  // note: frees modData, don't use after
         }
 
@@ -69,11 +69,11 @@ namespace Diz.Core.import
             
             // 'X' (if emulation mode) or 'B' (if native mode) = unchecked in bsnesplus debugger UI = (8bit)
             // 'x' or '.' = checked (16bit)
-            modData.XFlagSet = line[TextImportFormatCached.FX] == 'X' || line[TextImportFormatCached.FX] == 'B';
+            modData.XFlagSet = line[TextImportFormatCached.Fx] == 'X' || line[TextImportFormatCached.Fx] == 'B';
 
             // 'M' (if emulation mode) or '1' (if native mode) = unchecked in bsnesplus debugger UI = (8bit)
             // 'm' or '.' = checked (16bit)
-            modData.MFlagSet = line[TextImportFormatCached.FM] == 'M' || line[TextImportFormatCached.FM] == '1';
+            modData.MFlagSet = line[TextImportFormatCached.Fm] == 'M' || line[TextImportFormatCached.Fm] == '1';
             
             // TODO: we could capture native vs emulation mode here and mark that.
 
