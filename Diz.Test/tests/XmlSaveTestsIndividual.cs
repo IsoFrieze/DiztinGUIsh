@@ -63,7 +63,7 @@ namespace Diz.Test.tests
             // }
             public override object Activating(Type instanceType)
             {
-                return new ByteStorageList();
+                return new StorageList<ByteEntry>();
             }
             
             public override object Serializing(IFormatWriter writer, object instance)
@@ -82,7 +82,7 @@ namespace Diz.Test.tests
             // var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
 
             var serializer = XmlSerializationSupportNew.GetConfig()
-                .Type<ByteStorageList>()
+                .Type<StorageList<ByteEntry>>()
                 .WithInterceptor(new ByteListInterceptor())
                 .Create();
             
@@ -110,16 +110,16 @@ namespace Diz.Test.tests
             () => SampleRomCreator1.CreateBaseRom().SnesAddressSpace,
         };
 
-        public static ByteStorageList CreateSampleByteList()
+        public static StorageList<ByteEntry> CreateSampleByteList()
         {
             var sample2 = CreateSampleEntry();
             sample2.DataBank = 95;
             sample2.Point = InOutPoint.ReadPoint;
 
-            return new ByteStorageList(new List<ByteEntry> {CreateSampleEntry(), sample2});
+            return new StorageList<ByteEntry>(new List<ByteEntry> {CreateSampleEntry(), sample2});
         }
         
-        public static ByteStorageList CreateSampleEmptyByteList()
+        public static StorageList<ByteEntry> CreateSampleEmptyByteList()
         {
             return new();
         }

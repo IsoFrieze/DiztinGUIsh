@@ -476,7 +476,7 @@ namespace Diz.Core.util
 
             var romByteSource = new ByteSource
             {
-                Bytes = new ByteStorageList(data),
+                Bytes = new StorageList<ByteEntry>(data),
                 Name = "Snes ROM"
             };
             
@@ -488,7 +488,7 @@ namespace Diz.Core.util
             const int snesAddressableBytes = 0x1000000;
             return new ByteSource
             {
-                Bytes = new ByteStorageSparse(snesAddressableBytes),
+                Bytes = new StorageSparse<ByteEntry>(snesAddressableBytes),
                 Name = "SNES Main Cpu BUS",
             };
         }

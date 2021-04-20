@@ -25,11 +25,11 @@ namespace Diz.Core.model.byteSources
             Validate();
         }
         
-        public ByteGraphNode(ByteEntry byteData) 
-            : this(byteData?.ParentByteSource, byteData?.ParentByteSourceIndex ?? -1)
-        {
-            Validate();
-        }
+        // public ByteGraphNode(ByteEntry byteData) 
+        //     : this(byteData?.ParentByteSource, byteData?.ParentByteSourceIndex ?? -1)
+        // {
+        //     Validate();
+        // }
 
         internal void Validate()
         {

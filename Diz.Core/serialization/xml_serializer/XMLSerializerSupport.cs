@@ -94,9 +94,9 @@ namespace Diz.Core.serialization.xml_serializer
         }
     }*/
     
-    public class ByteListSerializer : IExtendedXmlCustomSerializer<ByteStorageList>
+    public class ByteListSerializer : IExtendedXmlCustomSerializer<StorageList<ByteEntry>>
         {
-            public void Serializer(XmlWriter xmlWriter, ByteStorageList entry)
+            public void Serializer(XmlWriter xmlWriter, StorageList<ByteEntry> entry)
             {
                 if (entry == null)
                     return;
@@ -109,7 +109,7 @@ namespace Diz.Core.serialization.xml_serializer
                 throw new NotImplementedException();
             }
 
-            ByteStorageList IExtendedXmlCustomSerializer<ByteStorageList>.Deserialize(XElement xElement)
+            StorageList<ByteEntry> IExtendedXmlCustomSerializer<StorageList<ByteEntry>>.Deserialize(XElement xElement)
             {
                 // var xElementKey = xElement.Member("Key");
                 // var xElementValue = xElement.Member("Value");
@@ -254,7 +254,7 @@ namespace Diz.Core.serialization.xml_serializer
             private ByteStorageProfile() {}
 
             public IConfigurationContainer Get(IConfigurationContainer parameter)
-                => parameter.Type<ByteStorageList>()
+                => parameter.Type<StorageList<ByteEntry>>()
                     // .Member(x => x.Bytes).Ignore()
                     .EnableReferences();
 
@@ -315,11 +315,11 @@ namespace Diz.Core.serialization.xml_serializer
                 .EnableImplicitTyping(typeof(OpcodeAnnotation))*/
                 .Type<ByteSource>()
                 // .EnableReferences()
-                .Type<ByteStorage>()
+                //.Type<ByteStorage>()
 //                .EnableReferences()
-                .Type<ByteStorageList>()
+                //.Type<ByteStorageList>()
 //                .EnableReferences()
-                .Type<ByteStorageSparse>()
+                //.Type<ByteStorageSparse>()
 //                .EnableReferences()
                 .Type<RegionMapping>()
 //                .EnableReferences()

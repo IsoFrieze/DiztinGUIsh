@@ -11,18 +11,18 @@ namespace Diz.Core.model.byteSources
     {
         public string Name { get; set; }
         
-        public ByteStorage Bytes
+        public Storage<ByteEntry> Bytes
         {
             get => bytes;
             set
             {
                 bytes = value;
-                bytes.ParentByteSource = this;
+                // TODO? bytes.ParentByteSource = this;
             }
         }
 
         public List<ByteSourceMapping> ChildSources { get; set; } = new();
-        private ByteStorage bytes;
+        private Storage<ByteEntry> bytes;
 
         // helper method: return the actual byte value at an index, or, if null,
         // throw an exception. this method is accommodating an older interface and
@@ -155,7 +155,7 @@ namespace Diz.Core.model.byteSources
                 yield return new KeyValuePair<int, T>(annotation.Parent.ParentByteSourceIndex, annotation);
         }
 
-        // return a list of annotations attached to our ByteStorage (and nothing from our children)
+        // return a list of annotations attached to our Storage<ByteEntry> (and nothing from our children)
         public IEnumerable<T> GetOnlyOwnAnnotations<T>(int startIndex = 0, int count = -1) where T : Annotation
         {
             var endingIndex = GetEndingIndexForRange(startIndex, count);
@@ -168,7 +168,7 @@ namespace Diz.Core.model.byteSources
                 var byteEntry = enumerator.Current;
                 
                 Debug.Assert(byteEntry != null);
-                Debug.Assert(ReferenceEquals(byteEntry.ParentByteSource, this));
+                // Debug.Assert(ReferenceEquals(byteEntry.ParentByteSource, this));
                 
                 if (byteEntry.ParentByteSourceIndex < startIndex || byteEntry.ParentByteSourceIndex > endingIndex)
                     continue;

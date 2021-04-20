@@ -2,36 +2,81 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using JetBrains.Annotations;
 
 // TODO: we can probably simplify this by replacing the parent class with ParentAwareCollection<ByteSource, ByteEntryBase>
 
 namespace Diz.Core.model.byteSources
 {
-    public interface IParentAwareItem<TItem> where TItem : IParentAwareItem<TItem>
+    public interface IParentIndexAwareItem<TItem> 
+        where TItem : IParentIndexAwareItem<TItem>
     {
         int ParentByteSourceIndex { get; internal set; }
         IStorage<TItem> ParentStorage { get; internal set; }
     }
 
-    public interface IStorage<TItem> : ICollection<TItem>, ICollection where TItem : IParentAwareItem<TItem>
+    public interface IParent
+    {
+        
+    }
+    
+    public interface IParentAwareX<TItem, TParent> where TItem : IParentAwareX<TItem, TParent> 
+    {
+        TParent Parent { get; set; }
+    }
+
+    /*
+    public class BItem : IParentAwareX<BItem, ParentSource>
+    {
+        public ParentSource Parent { get; set; }
+
+        public BItem()
+        {
+            IParent q;
+            IParentAwareX<BItem, ParentSource> that;
+
+            that = this;
+
+            that.Parent = new ParentSource();
+            var x = that.Parent;
+
+            Parent = new ParentSource();
+            q = Parent;
+            
+            q.Equals("3");
+        }
+        
+        public static void X()
+        {
+            var x = new BItem();
+            x.Parent = new ParentSource();
+        }
+    }
+    
+    public class ParentSource : IParent
+    {
+        public int Y { get; set; }
+    }*/
+
+    // public interface IParentAwareItem<TItem> where TItem : IParentAwareItem<TItem>
+    // {
+    //     IStorage<TItem> ParentStorage { get; internal set; }
+    // }
+
+    public interface IStorageB<TItem> : ICollection<TItem>, ICollection where TItem : IParentIndexAwareItem<TItem>
     {
         
     }
 
-    public abstract class ByteStorage : Storage<ByteEntry>
+    // rename to IParentAwareStorage
+    // make STorage or something derived from Storage grab this.
+    public interface IStorage<TItem> : /* IParentAwareX<TItem, TParent>,*/ IStorageB<TItem> where 
+        TItem : IParentIndexAwareItem<TItem>// , IParentAwareX<TItem, TParent>
     {
-        protected internal ByteSource ParentByteSource { get; set; }
         
-        [UsedImplicitly] public ByteStorage() : base(0) { }
-        
-        public ByteStorage(int emptyCreateSize) : base(emptyCreateSize) { }
-        
-        public ByteStorage(IReadOnlyCollection<ByteEntry> inBytes) : base(inBytes) { }
     }
 
     public abstract class Storage<TItem> : IStorage<TItem>
-        where TItem : IParentAwareItem<TItem>, new()
+        where TItem : IParentIndexAwareItem<TItem>
     {
         public abstract TItem this[int index] { get; set; }
 

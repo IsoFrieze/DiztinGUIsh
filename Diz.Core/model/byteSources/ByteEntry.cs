@@ -95,7 +95,7 @@ namespace Diz.Core.model.byteSources
     }
     
     // JUST holds the data. no graph traversal.
-    public class ByteEntryBase : IParentAwareItem<ByteEntry>
+    public class ByteEntryBase : IParentIndexAwareItem<ByteEntry>
     {
         public ByteEntryBase()
         {
@@ -132,20 +132,23 @@ namespace Diz.Core.model.byteSources
         #region References to parent enclosures
         
         // helper
-        public ByteSource ParentByteSource => ParentStorage?.ParentByteSource;
-        protected internal ByteStorage ParentStorage { get; internal set; }
+        // public ByteSource ParentByteSource => ParentStorage?.ParentByteSource;
+        
+        
+        // real stuff
+        protected internal Storage<ByteEntry> ParentStorage { get; internal set; }
         public int ParentByteSourceIndex  { get; internal set; }
         
-        int IParentAwareItem<ByteEntry>.ParentByteSourceIndex
+        int IParentIndexAwareItem<ByteEntry>.ParentByteSourceIndex
         {
             get => ParentByteSourceIndex;
             set => ParentByteSourceIndex = value;
         }
 
-        IStorage<ByteEntry> IParentAwareItem<ByteEntry>.ParentStorage
+        IStorage<ByteEntry> IParentIndexAwareItem<ByteEntry>.ParentStorage
         {
             get => ParentStorage;
-            set => ParentStorage = (ByteStorage) value;
+            set => ParentStorage = (Storage<ByteEntry>) value;
         }
         
         
