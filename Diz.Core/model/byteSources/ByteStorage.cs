@@ -2,40 +2,62 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using JetBrains.Annotations;
 
 // TODO: we can probably simplify this by replacing the parent class with ParentAwareCollection<ByteSource, ByteEntryBase>
 
 namespace Diz.Core.model.byteSources
 {
-    public abstract class ByteStorage : ICollection<ByteEntry>, ICollection
+    public interface IParentAwareItem<TItem> where TItem : IParentAwareItem<TItem>
     {
-        public abstract ByteEntry this[int index] { get; set; }
+        int ParentByteSourceIndex { get; internal set; }
+        IStorage<TItem> ParentStorage { get; internal set; }
+    }
 
-        public abstract void Add(ByteEntry item);
+    public interface IStorage<TItem> : ICollection<TItem>, ICollection where TItem : IParentAwareItem<TItem>
+    {
+        
+    }
+
+    public abstract class ByteStorage : Storage<ByteEntry>
+    {
+        protected internal ByteSource ParentByteSource { get; set; }
+        
+        [UsedImplicitly] public ByteStorage() : base(0) { }
+        
+        public ByteStorage(int emptyCreateSize) : base(emptyCreateSize) { }
+        
+        public ByteStorage(IReadOnlyCollection<ByteEntry> inBytes) : base(inBytes) { }
+    }
+
+    public abstract class Storage<TItem> : IStorage<TItem>
+        where TItem : IParentAwareItem<TItem>, new()
+    {
+        public abstract TItem this[int index] { get; set; }
+
+        public abstract void Add(TItem item);
         public abstract void Clear();
-        public abstract bool Contains(ByteEntry item);
-        public abstract void CopyTo(ByteEntry[] array, int arrayIndex);
-        public abstract bool Remove(ByteEntry item);
+        public abstract bool Contains(TItem item);
+        public abstract void CopyTo(TItem[] array, int arrayIndex);
+        public abstract bool Remove(TItem item);
         public abstract void CopyTo(Array array, int index);
         public abstract int Count { get; }
         
         public bool IsReadOnly => false;
         public bool IsSynchronized => false;
         public object SyncRoot => default;
-        
-        protected internal ByteSource ParentByteSource { get; set; }
 
-        protected ByteStorage()
+        protected Storage()
         {
             InitFromEmpty(0);
         }
         
-        protected ByteStorage(IReadOnlyCollection<ByteEntry> inBytes)
+        protected Storage(IReadOnlyCollection<TItem> inBytes)
         {
             InitFrom(inBytes);
         }
 
-        protected ByteStorage(int emptyCreateSize)
+        protected Storage(int emptyCreateSize)
         {
             InitFromEmpty(emptyCreateSize);
         }
@@ -50,7 +72,7 @@ namespace Diz.Core.model.byteSources
             Debug.Assert(Count == emptyCreateSize);
         }
 
-        private void InitFrom(IReadOnlyCollection<ByteEntry> inBytes)
+        private void InitFrom(IReadOnlyCollection<TItem> inBytes)
         {
             Debug.Assert(inBytes != null);
             
@@ -61,7 +83,7 @@ namespace Diz.Core.model.byteSources
         }
 
         protected abstract void InitEmptyContainer(int emptyCreateSize);
-        protected abstract void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteEntry> inBytes);
+        protected abstract void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<TItem> inBytes);
         protected abstract void FillEmptyContainerWithBlankBytes(int numEntries);
 
         // GetEnumerator() will return an item at each index, or null if no Byte is present at that address.
@@ -70,17 +92,17 @@ namespace Diz.Core.model.byteSources
         //
         // This is potentially more inefficient but creates a consistent interface.
         // For performance-heavy code, or cases where you only only want non-null bytes, choose another enumerator function
-        public abstract IEnumerator<ByteEntry> GetGaplessEnumerator();
+        public abstract IEnumerator<TItem> GetGaplessEnumerator();
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetGaplessEnumerator();
         }
 
-        public IEnumerator<ByteEntry> GetEnumerator() => GetGaplessEnumerator();
+        public IEnumerator<TItem> GetEnumerator() => GetGaplessEnumerator();
 
-        public abstract IEnumerator<ByteEntry> GetNativeEnumerator();
+        public abstract IEnumerator<TItem> GetNativeEnumerator();
         
-        protected void ImportBytes(IReadOnlyCollection<ByteEntry> inBytes)
+        protected void ImportBytes(IReadOnlyCollection<TItem> inBytes)
         {
             Debug.Assert(inBytes != null);
             foreach (var b in inBytes)
@@ -88,7 +110,7 @@ namespace Diz.Core.model.byteSources
                 Add(b);
             }
         }
-        protected void OnRemoved(ByteEntry item)
+        protected void OnRemoved(TItem item)
         {
             ClearParentInfoFor(item);
             UpdateAllParentInfo();
@@ -98,15 +120,16 @@ namespace Diz.Core.model.byteSources
         // update (or remove) all parent info when the collection has changed
         protected abstract void UpdateAllParentInfo(bool shouldUnsetAll = false);
 
-        protected static void ClearParentInfoFor(ByteEntry b) => SetParentInfoFor(b, -1, null);
-        protected void SetParentInfoFor(ByteEntry b, int index) => SetParentInfoFor(b, index, this);
-        protected static void SetParentInfoFor(ByteEntry b, int index, ByteStorage parent)
+        protected static void ClearParentInfoFor(TItem b) => SetParentInfoFor(b, -1, null);
+        protected void SetParentInfoFor(TItem b, int index) => SetParentInfoFor(b, index, this);
+        
+        protected static void SetParentInfoFor(TItem b, int index, IStorage<TItem> parent)
         {
             b.ParentByteSourceIndex = index;
             b.ParentStorage = parent;
         }
 
-        protected void UpdateParentInfoFor(ByteEntry byteEntry, bool shouldUnsetAll, int newIndex)
+        protected void UpdateParentInfoFor(TItem byteEntry, bool shouldUnsetAll, int newIndex)
         {
             if (shouldUnsetAll)
                 ClearParentInfoFor(byteEntry);
@@ -118,20 +141,20 @@ namespace Diz.Core.model.byteSources
 
         // iterate through a sparse ByteStorage class, if we encounter any gaps in the sequence,
         // fill them in 
-        protected class GapFillingEnumerator : IEnumerator<ByteEntry>
+        protected class GapFillingEnumerator : IEnumerator<TItem>
         {
-            public ByteStorage ByteStorage { get; protected set; }
+            public Storage<TItem> Storage { get; protected set; }
             public int Position { get; set; } = -1;
 
-            public GapFillingEnumerator(ByteStorage storage)
+            public GapFillingEnumerator(Storage<TItem> storage)
             {
                 Debug.Assert(storage != null);
-                ByteStorage = storage;
+                Storage = storage;
             }
             public bool MoveNext()
             {
                 Position++;
-                return Position < ByteStorage.Count;
+                return Position < Storage.Count;
             }
 
             public void Reset()
@@ -139,12 +162,12 @@ namespace Diz.Core.model.byteSources
                 Position = -1;
             }
 
-            ByteEntry IEnumerator<ByteEntry>.Current => ByteStorage[Position];
-            public object Current => ByteStorage[Position];
+            TItem IEnumerator<TItem>.Current => Storage[Position];
+            public object Current => Storage[Position];
             public void Dispose()
             {
                 Position = -1;
-                ByteStorage = null;
+                Storage = null;
             }
         }
     }

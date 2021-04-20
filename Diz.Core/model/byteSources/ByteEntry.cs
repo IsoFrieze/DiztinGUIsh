@@ -27,7 +27,7 @@ namespace Diz.Core.model.byteSources
     }
 
     // mostly, adds helper methods to ByteEntryBase, which is what does the heavy lifting
-    public class ByteEntry : ByteEntryBase//, IReadOnlyByteEntry
+    public class ByteEntry : ByteEntryBase //, IReadOnlyByteEntry
     {
         public ByteEntry() {}
         public ByteEntry(AnnotationCollection annotationsToAppend) : base(annotationsToAppend) {}
@@ -94,8 +94,8 @@ namespace Diz.Core.model.byteSources
         private OpcodeAnnotation GetOrCreateOpcodeAnnotation() => GetOrCreateAnnotation<OpcodeAnnotation>();
     }
     
-    // JUST holds the data. no traversal.
-    public class ByteEntryBase
+    // JUST holds the data. no graph traversal.
+    public class ByteEntryBase : IParentAwareItem<ByteEntry>
     {
         public ByteEntryBase()
         {
@@ -130,9 +130,25 @@ namespace Diz.Core.model.byteSources
         private ReaderWriterLockSlim @lock;
 
         #region References to parent enclosures
-        protected internal ByteStorage ParentStorage { get; internal set; }
+        
+        // helper
         public ByteSource ParentByteSource => ParentStorage?.ParentByteSource;
+        protected internal ByteStorage ParentStorage { get; internal set; }
         public int ParentByteSourceIndex  { get; internal set; }
+        
+        int IParentAwareItem<ByteEntry>.ParentByteSourceIndex
+        {
+            get => ParentByteSourceIndex;
+            set => ParentByteSourceIndex = value;
+        }
+
+        IStorage<ByteEntry> IParentAwareItem<ByteEntry>.ParentStorage
+        {
+            get => ParentStorage;
+            set => ParentStorage = (ByteStorage) value;
+        }
+        
+        
         #endregion
         
         private AnnotationCollection annotations;
