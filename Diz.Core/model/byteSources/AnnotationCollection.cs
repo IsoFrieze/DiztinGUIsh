@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -51,9 +52,12 @@ namespace Diz.Core.model.byteSources
         // this is not used by the normal Equals() function and must be invoked explicitly by client code
         public static bool EffectivelyEqual(AnnotationCollection item1, AnnotationCollection item2)
         {
-            return item1?.EffectivelyEquals(item2) ?? item2 == null || item2.Count == 0;
-        } 
-        
+            if (Util.BothListsNullOrContainNoItems(item1, item2))
+                return true;
+            
+            return item1?.EffectivelyEquals(item2) ?? false;
+        }
+
         public IEnumerable<Annotation> GetEnumeratorSortByAnnotationType()
         {
             return this.OrderBy(x => x.GetType().GUID).ThenBy(x => x);

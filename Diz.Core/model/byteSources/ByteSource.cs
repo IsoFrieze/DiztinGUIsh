@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using Diz.Core.util;
 
 namespace Diz.Core.model.byteSources
 {
@@ -48,7 +50,7 @@ namespace Diz.Core.model.byteSources
 
         public void AddByte(ByteEntry byteOffset)
         {
-            Bytes.AddByte(byteOffset);
+            Bytes.Add(byteOffset);
         }
 
         public bool IsValidIndex(int index)
@@ -191,5 +193,29 @@ namespace Diz.Core.model.byteSources
             
             return endingIndex;
         }
+
+        #region Equality
+
+        protected bool Equals(ByteSource other)
+        {
+            return Name == other.Name 
+                   && Util.CollectionsBothEmptyOrEqual(Bytes, other.Bytes) 
+                   && ChildSources.SequenceEqual(other.ChildSources);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ByteSource) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(bytes, Name, ChildSources);
+        }
+
+        #endregion
     }
 }

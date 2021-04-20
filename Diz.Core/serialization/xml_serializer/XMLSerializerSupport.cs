@@ -1,4 +1,5 @@
-﻿using Diz.Core.model;
+﻿using System.Xml;
+using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using ExtendedXmlSerializer;
@@ -128,6 +129,158 @@ namespace Diz.Core.serialization.xml_serializer
 
                 .EnableImplicitTyping(typeof(Data))
                 .EnableImplicitTyping(typeof(Label));
+        }
+    }
+    
+    // WIP
+    public class XmlSerializationSupportNew
+    {
+        // .Type<Project>()
+        // .Member(x => x.UnsavedChanges).Ignore()
+        // .Member(x => x.ProjectFileName).Ignore()
+        //
+        // .Type<ByteSource>()
+        // .Register().Serializer().Using(RomBytesSerializer.Default)
+        //
+        // .Type<Data>()
+        // // tmp. eventually, we do need to serialize this stuff.
+        // .Member(x => x.SnesAddressSpace).Ignore()
+        // .Member(x => x.RomByteSource).Ignore()
+        // // .Member(x => x.RomBytes).Ignore()
+        //
+        // // .Member(x=>x.Comments)
+        // // TODO: trying to get a converter up and running. not working yet....
+        // // .Register().Converter(HexIntConverter.Default)
+        // // .Member(x => x.Comments.Keys).Register().Converter().)
+        // // .CustomSerializer(new HexKVPSerializer())// cant get it working!!!
+        // // .AddMigration(new DizProjectMigrations())
+
+        private sealed class ByteEntryProfile : IConfigurationProfile
+        {
+            public static ByteEntryProfile Default { get; } = new();
+
+            private ByteEntryProfile() {}
+
+            public IConfigurationContainer Get(IConfigurationContainer parameter)
+                => parameter
+                    .Type<ByteEntry>()
+                    
+                    .Member(x => x.Arch).Ignore()
+                    .Member(x => x.Byte).Ignore()
+                    .Member(x => x.Point).Ignore()
+                    .Member(x => x.DataBank).Ignore()
+                    .Member(x => x.DirectPage).Ignore()
+                    .Member(x => x.MFlag).Ignore()
+                    .Member(x => x.XFlag).Ignore()
+                    .Member(x => x.TypeFlag).Ignore()
+                    .Member(x => x.DontSetParentOnCollectionItems).Ignore()
+
+                    .EnableReferences();
+
+            //.UseOptimizedNamespaces()
+            //.UseAutoFormatting();
+        }
+        
+        private  sealed class AnnotationProfile : IConfigurationProfile
+        {
+            public static AnnotationProfile Default { get; } = new();
+
+            private AnnotationProfile() {}
+
+            public IConfigurationContainer Get(IConfigurationContainer parameter)
+                => parameter
+                    .Type<Annotation>()
+                    .Member(x=>x.Parent)
+                    .EnableReferences();
+
+            //.UseOptimizedNamespaces()
+            //.UseAutoFormatting();
+        }
+        
+        private  sealed class AnnotationCollectionProfile : IConfigurationProfile
+        {
+            public static AnnotationCollectionProfile Default { get; } = new();
+
+            private AnnotationCollectionProfile() {}
+
+            public IConfigurationContainer Get(IConfigurationContainer parameter)
+                => parameter.Type<AnnotationCollection>()
+                    .Member(x=>x.DontSetParentOnCollectionItems).Ignore()
+                    .Member(x=>x.EnforcePolicy).Ignore()
+                    .UseOptimizedNamespaces()
+                    .UseAutoFormatting();
+        }
+        
+        private sealed class ByteStorageProfile : IConfigurationProfile
+        {
+            public static ByteStorageProfile Default { get; } = new();
+
+            private ByteStorageProfile() {}
+
+            public IConfigurationContainer Get(IConfigurationContainer parameter)
+                => parameter.Type<AnnotationCollection>();
+        }
+        
+        public sealed class MainProfile : CompositeConfigurationProfile
+        {
+            public static MainProfile Default { get; } = new();
+
+            private MainProfile() : 
+                base(
+                    AnnotationProfile.Default, 
+                    ByteStorageProfile.Default, 
+                    AnnotationCollectionProfile.Default, 
+                    ByteEntryProfile.Default) 
+            {}
+        }
+        
+        public static string Serialize(object toSerialize)
+        {
+            var config = CreateConfig();
+            
+            return config.Serialize(
+                new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
+                toSerialize);
+        }
+        
+        public static T Deserialize<T>(string input)
+        {
+            var config = CreateConfig();
+            return config.Deserialize<T>(input);
+        }
+
+        private static IExtendedXmlSerializer CreateConfig()
+        {
+            var container = ConfiguredContainer.New<XmlSerializationSupportNew.MainProfile>();
+            
+            return container
+//                .UseOptimizedNamespaces()
+//                .UseAutoFormatting()
+                /*.EnableImplicitTyping(typeof(ByteEntry))
+                .EnableImplicitTyping(typeof(ByteSource))
+                .EnableImplicitTyping(typeof(ByteStorage))
+                .EnableImplicitTyping(typeof(ByteList))
+                .EnableImplicitTyping(typeof(SparseByteStorage))
+                .EnableImplicitTyping(typeof(AnnotationCollection))
+                .EnableImplicitTyping(typeof(Label))
+                .EnableImplicitTyping(typeof(Comment))
+                .EnableImplicitTyping(typeof(BranchAnnotation))
+                .EnableImplicitTyping(typeof(ByteAnnotation))
+                .EnableImplicitTyping(typeof(MarkAnnotation))
+                .EnableImplicitTyping(typeof(OpcodeAnnotation))*/
+                .Type<ByteSource>()
+                // .EnableReferences()
+                .Type<ByteStorage>()
+//                .EnableReferences()
+                .Type<ByteList>()
+//                .EnableReferences()
+                .Type<SparseByteStorage>()
+//                .EnableReferences()
+                .Type<RegionMapping>()
+//                .EnableReferences()
+                .Type<ByteSourceMapping>()
+//                .EnableReferences()
+                .Create();
         }
     }
 }

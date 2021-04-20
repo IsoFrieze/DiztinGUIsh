@@ -1,4 +1,6 @@
-﻿using Diz.Core.util;
+﻿using System;
+using Diz.Core.util;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model.byteSources
 {
@@ -10,15 +12,38 @@ namespace Diz.Core.model.byteSources
 
         public ByteSource ByteSource { get; init; }
 
-        public int ConvertIndexFromParentToChild(int parentIndex)
+        [PublicAPI] public int ConvertIndexFromParentToChild(int parentIndex)
         {
             return RegionMapping.ConvertIndexFromParentToChild(parentIndex, ByteSource);
         }
 
-        public int ConvertIndexFromChildToParent(int childIndex)
+        [PublicAPI] public int ConvertIndexFromChildToParent(int childIndex)
         {
             return RegionMapping.ConvertIndexFromChildToParent(childIndex, ByteSource);
         }
+        
+        #region Equality
+
+        protected bool Equals(ByteSourceMapping other)
+        {
+            return Equals(RegionMapping, other.RegionMapping) 
+                   && Equals(ByteSource, other.ByteSource);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ByteSourceMapping) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(RegionMapping, ByteSource);
+        }
+
+        #endregion
     }
 
     public abstract class RegionMapping
@@ -37,21 +62,42 @@ namespace Diz.Core.model.byteSources
     {
         public RomMapMode RomMapMode { get; init; }
         public RomSpeed RomSpeed { get; init; }
-        
-        // convert SNES address -> ROM address. return -1 if not mapped
+
+        // convert SNES address -> ROM address. return -1 if it doesn't have an equivalent address
         public override int ConvertIndexFromParentToChild(int parentIndex, ByteSource byteSource)
         {
+            // NOTE: this function can do more than just ROM mapping, but, it might not be tested
+            // for our new use of it here. if in doubt, write some unit tests
             return RomUtil.ConvertSnesToPc(parentIndex, RomMapMode, byteSource.Bytes.Count);
         }
 
         // convert ROM offset to SNES address
         public override int ConvertIndexFromChildToParent(int childIndex, ByteSource byteSource)
         {
-            // given a Rom offset, convert to an address in SNES address space
-            
-            // TODO: eventually, make this map the entire SNES address space and not just the ROM area.
-            // underlying stuff in RomUtil will need an update to do that.
+            // NOTE: this function can do more than just ROM mapping, but, it might not be tested
+            // for our new use of it here. if in doubt, write some unit tests
             return RomUtil.ConvertPCtoSnes(childIndex, RomMapMode, RomSpeed);
         }
+
+        #region Equality
+
+        protected bool Equals(RegionMappingSnesRom other)
+        {
+            return RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((RegionMappingSnesRom) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine((int) RomMapMode, (int) RomSpeed);
+        }
+        #endregion
     }
 }

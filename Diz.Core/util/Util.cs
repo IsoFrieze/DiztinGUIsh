@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -14,6 +15,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Diz.Core.export;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using JetBrains.Annotations;
 
 namespace Diz.Core.util
@@ -335,6 +337,29 @@ namespace Diz.Core.util
 
             return new StreamReader(stream).ReadToEnd();
         }
+
+        // decent helper check before doing a deep compare on two lists.
+        // considers them equal if any are true:
+        // - both lists are null
+        // - if one list is non-null, and the other contains zero elements
+        public static bool BothListsNullOrContainNoItems<T>(ICollection<T> c1, ICollection<T> c2)
+        {
+            return c1 switch
+            {
+                null when c2 == null => true,
+                null => c2.Count == 0,
+                not null when c2 == null => c1.Count == 0,
+                _ => false
+            };
+        }
+        
+        public static bool CollectionsBothEmptyOrEqual<T>(ICollection<T> c1, ICollection<T> c2)
+        {
+            if (Util.BothListsNullOrContainNoItems(c1, c2)) 
+                return true;
+
+            return c1?.SequenceEqual(c2) ?? false;
+        } 
     }
     
     

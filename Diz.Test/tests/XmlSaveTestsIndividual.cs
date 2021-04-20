@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.serialization.xml_serializer;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 using Xunit;
@@ -9,74 +11,6 @@ using Xunit;
 
 namespace Diz.Test.tests
 {
-    public class XmlTestSerializationSupport
-    {
-        // .Type<Project>()
-        // .Member(x => x.UnsavedChanges).Ignore()
-        // .Member(x => x.ProjectFileName).Ignore()
-        //
-        // .Type<ByteSource>()
-        // .Register().Serializer().Using(RomBytesSerializer.Default)
-        //
-        // .Type<Data>()
-        // // tmp. eventually, we do need to serialize this stuff.
-        // .Member(x => x.SnesAddressSpace).Ignore()
-        // .Member(x => x.RomByteSource).Ignore()
-        // // .Member(x => x.RomBytes).Ignore()
-        //
-        // // .Member(x=>x.Comments)
-        // // TODO: trying to get a converter up and running. not working yet....
-        // // .Register().Converter(HexIntConverter.Default)
-        // // .Member(x => x.Comments.Keys).Register().Converter().)
-        // // .CustomSerializer(new HexKVPSerializer())// cant get it working!!!
-        // // .AddMigration(new DizProjectMigrations())
-
-        public sealed class ByteEntryProfile : IConfigurationProfile
-        {
-            public static ByteEntryProfile Default { get; } = new();
-
-            private ByteEntryProfile() {}
-
-            public IConfigurationContainer Get(IConfigurationContainer parameter)
-                => parameter
-                    .Type<ByteEntry>()
-                    .Member(x => x.Arch).Ignore()
-                    .Member(x => x.Byte).Ignore()
-                    .Member(x => x.Point).Ignore()
-                    .Member(x => x.DataBank).Ignore()
-                    .Member(x => x.DirectPage).Ignore()
-                    .Member(x => x.MFlag).Ignore()
-                    .Member(x => x.XFlag).Ignore()
-                    .Member(x => x.TypeFlag).Ignore()
-                    .Member(x => x.DontSetParentOnCollectionItems).Ignore()
-                    .EnableReferences()
-                    .UseOptimizedNamespaces()
-                    .UseAutoFormatting();
-        }
-        
-        public sealed class AnnotationCollectionProfile : IConfigurationProfile
-        {
-            public static AnnotationCollectionProfile Default { get; } = new();
-
-            private AnnotationCollectionProfile() {}
-
-            public IConfigurationContainer Get(IConfigurationContainer parameter)
-                => parameter.Type<AnnotationCollection>()
-                    .Member(x=>x.DontSetParentOnCollectionItems).Ignore()
-                    .Member(x=>x.EnforcePolicy).Ignore()
-                    .UseOptimizedNamespaces()
-                    .UseAutoFormatting();
-        }
-        
-        public sealed class MainProfile : CompositeConfigurationProfile
-        {
-            public static MainProfile Default { get; } = new();
-
-            MainProfile() : 
-                base(AnnotationCollectionProfile.Default, ByteEntryProfile.Default) {}
-        }
-    }
-    
     public class XmlSaveTestsIndividual
     {
         private static ByteEntry CreateSampleEntry()
@@ -115,77 +49,12 @@ namespace Diz.Test.tests
             AssertNotEqualWhenChanged(entry => entry.RemoveOneAnnotationIfExists<Comment>());
             AssertNotEqualWhenChanged(entry => entry.RemoveOneAnnotationIfExists<Label>());
         }
-        
-        [Fact]
-        public void TestSerializeAnnotationCollection()
-        {
-            var entry = CreateSampleEntry();
-            var serialized = Serialize(entry.Annotations);
-        }
 
-        private static string Serialize(object toSerialize)
+        private static T XmlFullCycle<T>(T objToCycle)
         {
-            var config = CreateConfig();
-            
-            return config.Serialize(
-                new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
-                toSerialize);
-        }
-        
-        private static T Deserialize<T>(string input)
-        {
-            var config = CreateConfig();
-            return config.Deserialize<T>(input);
-        }
-
-        private static IExtendedXmlSerializer CreateConfig()
-        {
-            var container = ConfiguredContainer.New<XmlTestSerializationSupport.MainProfile>();
-            
-            return container
-                .UseOptimizedNamespaces()
-                .UseAutoFormatting()
-                .EnableImplicitTyping(typeof(ByteEntry))
-                .EnableImplicitTyping(typeof(ByteSource))
-                .EnableImplicitTyping(typeof(ByteStorage))
-                .EnableImplicitTyping(typeof(ByteList))
-                .EnableImplicitTyping(typeof(SparseByteStorage))
-                .EnableImplicitTyping(typeof(AnnotationCollection))
-                .EnableImplicitTyping(typeof(Label))
-                .EnableImplicitTyping(typeof(Comment))
-                .EnableImplicitTyping(typeof(BranchAnnotation))
-                .EnableImplicitTyping(typeof(ByteAnnotation))
-                .EnableImplicitTyping(typeof(MarkAnnotation))
-                .EnableImplicitTyping(typeof(OpcodeAnnotation))
-                .Type<ByteSource>()
-                .EnableReferences()
-                .Type<ByteStorage>()
-                .EnableReferences()
-                .Type<ByteList>()
-                .EnableReferences()
-                .Type<SparseByteStorage>()
-                .EnableReferences()
-                .Type<RegionMapping>()
-                .EnableReferences()
-                .Type<ByteSourceMapping>()
-                .EnableReferences()
-                .Create();
-        }
-
-        public void XmlFullCycle<T>(T objToCycle, T expectedEqual)
-        {
-            var xmlToCycle = Serialize(objToCycle);
-            var deserialized = Deserialize<T>(xmlToCycle);
-            
-            Assert.Equal(expectedEqual, deserialized);
-        }
-
-
-        public void XmlFullCycleTwoCopies(Func<object> createFn)
-        {
-            var obj1 = createFn(); 
-            var objCopy = createFn();
-            XmlFullCycle(obj1, objCopy);
+            var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
+            var deserialized = XmlSerializationSupportNew.Deserialize<T>(xmlToCycle);
+            return deserialized;
         }
 
         public static TheoryData<Func<object>> SimpleCycleObjects => new() {
@@ -195,19 +64,55 @@ namespace Diz.Test.tests
             },
             () => new ByteEntryBase(),
         };
-        
+
         public static TheoryData<Func<object>> MoreComplexCycleObjects => new() {
-            () => SampleRomCreator1.CreateBaseRom().RomByteSource.Bytes,
+            () => new ByteSource(),
+            () => SampleRomCreator1.CreateBaseRom().RomByteSource.Bytes[0],
             () => SampleRomCreator1.CreateBaseRom().RomByteSource,
             () => SampleRomCreator1.CreateBaseRom().SnesAddressSpace,
         };
 
+        public static ByteList CreateSampleByteList()
+        {
+            var sample2 = CreateSampleEntry();
+            sample2.DataBank = 95;
+            sample2.Point = InOutPoint.ReadPoint;
+
+            return new ByteList(new List<ByteEntry> {CreateSampleEntry(), sample2});
+        }
+        
+        [Fact]
+        public void XmlFullCycleByteStorage()
+        {
+            RunFullCycle(CreateSampleByteList, out var unchanged, out var cycled);
+            
+            Assert.Equal(unchanged.Count, cycled.Count);
+            Assert.Equal(unchanged, cycled);
+        }
+
         [Theory]
         [MemberData(nameof(SimpleCycleObjects))]
-        public void TestCycleObjsSimple(Func<object> createFn) => XmlFullCycleTwoCopies(createFn);
-        
-        [Theory(Skip="not quite yet working")]
         [MemberData(nameof(MoreComplexCycleObjects))]
-        public void TestCycleObjsComplex(Func<object> createFn) => XmlFullCycleTwoCopies(createFn);
+        public void XmlFullCycleTwoCopies(Func<object> createFn)
+        {
+            RunFullCycle(createFn, out var unchanged, out var cycled);
+            Assert.Equal(unchanged, cycled);
+        }
+
+        private static void RunFullCycle<T>(Func<T> createFn, out T expectedCopy, out T deserializedObj)
+        {
+            RunFullCycleObj(() => createFn(), out var expectedObjCopy, out var deserializedObjCopy);
+
+            expectedCopy = (T)expectedObjCopy;
+            deserializedObj = (T) deserializedObjCopy;
+        }
+
+        private static void RunFullCycleObj(Func<object> createFn, out object expectedCopy, out object deserializedObj)
+        {
+            var objToCycle = createFn();
+            expectedCopy = createFn();
+            
+            deserializedObj = XmlFullCycle(objToCycle);
+        }
     }
 }
