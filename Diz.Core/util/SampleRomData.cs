@@ -47,7 +47,7 @@ namespace Diz.Core.util
         {
             var romByteSource = new ByteSource()
             {
-                Bytes = new ByteList(new List<ByteEntry>
+                Bytes = new ByteStorageList(new List<ByteEntry>
                 {
                     new() {Byte = 0x78, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, Point = InOutPoint.InPoint},
                     new() {Byte = 0xA9, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true},

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -15,13 +14,29 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Diz.Core.export;
 using Diz.Core.model;
-using Diz.Core.model.byteSources;
 using JetBrains.Annotations;
 
 namespace Diz.Core.util
 {
     public static class Util
     {
+        public static void RemoveAll<TItem>(this ICollection<TItem> collection, Predicate<TItem> match)
+        {
+            if (match == null)
+                throw new ArgumentNullException(nameof(match));
+
+            // make a copy to avoid removing items from the list we're enumerating
+            collection.Where(item => match(item))
+                .ToList()
+                .ForEach(item => collection.Remove(item));
+        }
+        
+        public static void AddRange<TItem>(this ICollection<TItem> collection, IEnumerable<TItem> newItems)
+        {
+            foreach (var newItem in newItems) 
+                collection.Add(newItem);
+        }
+        
         // https://stackoverflow.com/questions/703281/getting-path-relative-to-the-current-working-directory/703290#703290
         public static string GetRelativePath(string fileSpec, string folder)
         {

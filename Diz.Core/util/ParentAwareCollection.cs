@@ -11,28 +11,7 @@ namespace Diz.Core.util
         public void OnParentChanged(TParent parent);
     }
 
-    public class ParentAwareCollection<TParent, TItem> : ParentAwareCollectionBase<TParent, TItem>
-        where TParent : class
-        where TItem : IParentAware<TParent>
-    {
-        public void RemoveAll(Predicate<TItem> match)
-        {
-            if (match == null)
-                throw new ArgumentNullException(nameof(match));
-
-            this.Where(item => match(item)).ToList().ForEach(item => Remove(item));
-        }
-        
-        public void AddRange(IEnumerable<TItem> newItems)
-        {
-            foreach (var newItem in newItems)
-            {
-                Add(newItem);
-            }
-        }
-    }
-
-    public class ParentAwareCollectionBase<TParent, TItem> : Collection<TItem>
+    public class ParentAwareCollection<TParent, TItem> : Collection<TItem>
         where TParent : class
         where TItem : IParentAware<TParent>
     {

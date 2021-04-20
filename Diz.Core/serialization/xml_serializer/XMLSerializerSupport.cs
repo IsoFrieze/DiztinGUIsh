@@ -1,13 +1,15 @@
-﻿using System.Xml;
+﻿using System;
+using System.Xml;
+using System.Xml.Linq;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
+using ExtendedXmlSerializer.ExtensionModel.Xml;
 
 namespace Diz.Core.serialization.xml_serializer
 {
-
     /*public sealed class HexIntConverter : IConverter<int>
     {
         public static HexIntConverter Default { get; } = new();
@@ -91,6 +93,40 @@ namespace Diz.Core.serialization.xml_serializer
             Trace.WriteLine(instance);
         }
     }*/
+    
+    public class ByteListSerializer : IExtendedXmlCustomSerializer<ByteStorageList>
+        {
+            public void Serializer(XmlWriter xmlWriter, ByteStorageList entry)
+            {
+                if (entry == null)
+                    return;
+                
+                // this.
+
+                // var (key, value) = kvp;
+                // xmlWriter.WriteElementString("Key", key.ToString("X"));
+                // xmlWriter.WriteElementString("Value", value);
+                throw new NotImplementedException();
+            }
+
+            ByteStorageList IExtendedXmlCustomSerializer<ByteStorageList>.Deserialize(XElement xElement)
+            {
+                // var xElementKey = xElement.Member("Key");
+                // var xElementValue = xElement.Member("Value");
+                //
+                // if (xElementKey == null || xElementValue == null)
+                //     throw new InvalidOperationException("Invalid xml for class TestClassWithSerializer");
+                //
+                // var strValue = xElement.Value;
+                //
+                // var intValue = Util.ParseHexOrBase10String(xElementKey.Value);
+                // return new KeyValuePair<int, string>(intValue, strValue);
+
+                throw new NotImplementedException();
+            }
+
+            public static ByteListSerializer Default => new();
+        }
 
     public static class XmlSerializerSupport
     {
@@ -218,7 +254,11 @@ namespace Diz.Core.serialization.xml_serializer
             private ByteStorageProfile() {}
 
             public IConfigurationContainer Get(IConfigurationContainer parameter)
-                => parameter.Type<AnnotationCollection>();
+                => parameter.Type<ByteStorageList>()
+                    // .Member(x => x.Bytes).Ignore()
+                    .EnableReferences();
+
+            // .Register().Converter(ByteListSerializer.Default);
         }
         
         public sealed class MainProfile : CompositeConfigurationProfile
@@ -249,10 +289,15 @@ namespace Diz.Core.serialization.xml_serializer
             return config.Deserialize<T>(input);
         }
 
-        private static IExtendedXmlSerializer CreateConfig()
+        public static IExtendedXmlSerializer CreateConfig()
         {
-            var container = ConfiguredContainer.New<XmlSerializationSupportNew.MainProfile>();
-            
+            return GetConfig().Create();
+        }
+        
+        public static IConfigurationContainer GetConfig()
+        {
+            var container = ConfiguredContainer.New<MainProfile>();
+
             return container
 //                .UseOptimizedNamespaces()
 //                .UseAutoFormatting()
@@ -272,15 +317,14 @@ namespace Diz.Core.serialization.xml_serializer
                 // .EnableReferences()
                 .Type<ByteStorage>()
 //                .EnableReferences()
-                .Type<ByteList>()
+                .Type<ByteStorageList>()
 //                .EnableReferences()
-                .Type<SparseByteStorage>()
+                .Type<ByteStorageSparse>()
 //                .EnableReferences()
                 .Type<RegionMapping>()
 //                .EnableReferences()
-                .Type<ByteSourceMapping>()
+                .Type<ByteSourceMapping>();
 //                .EnableReferences()
-                .Create();
         }
     }
 }

@@ -155,29 +155,29 @@ namespace Diz.Core.model.byteSources
     // Simple version of byte storage that stores everything as an actual list
     // This is fine for stuff like Roms, however, it's bad for mostly empty large things like SNES
     // address spaces (24bits of addressable bytes x HUGE data = slowwwww)
-    public class ByteList : ByteStorage
+    public class ByteStorageList : ByteStorage
     {
         public override ByteEntry this[int index]
         {
-            get => Bytes[index];
+            get => bytes[index];
             set
             {
                 SetParentInfoFor(value, index);
-                Bytes[index] = value;
+                bytes[index] = value;
             }
         }
         
         public override void Clear()
         {
             OnPreClear();
-            Bytes?.Clear();
+            bytes?.Clear();
         }
 
-        public override bool Contains(ByteEntry item) => Bytes?.Contains(item) ?? false;
-        public override void CopyTo(ByteEntry[] array, int arrayIndex) => Bytes.CopyTo(array, arrayIndex);
+        public override bool Contains(ByteEntry item) => bytes?.Contains(item) ?? false;
+        public override void CopyTo(ByteEntry[] array, int arrayIndex) => bytes.CopyTo(array, arrayIndex);
         public override bool Remove(ByteEntry item)
         {
-            if (Bytes == null || !Bytes.Remove(item))
+            if (bytes == null || !bytes.Remove(item))
                 return false;
 
             OnRemoved(item);
@@ -186,29 +186,28 @@ namespace Diz.Core.model.byteSources
         
         protected override void UpdateAllParentInfo(bool shouldUnsetAll = false)
         {
-            for (var i = 0; i < Bytes.Count; ++i)
+            for (var i = 0; i < bytes.Count; ++i)
             {
-                UpdateParentInfoFor(Bytes[i], shouldUnsetAll, i);
+                UpdateParentInfoFor(bytes[i], shouldUnsetAll, i);
             }
         }
 
-        public override void CopyTo(Array array, int index) => Bytes.CopyTo((ByteEntry[]) array, index);
+        public override void CopyTo(Array array, int index) => bytes.CopyTo((ByteEntry[]) array, index);
 
-        public override int Count => Bytes?.Count ?? 0;
+        public override int Count => bytes?.Count ?? 0;
 
         // only ever use Add() to add bytes here
-        // TODO: fix: this is only public for serialization. really needs to be non-public 
-        [UsedImplicitly] public List<ByteEntry> Bytes { get; set; } = new();
+        private List<ByteEntry> bytes;
         
-        [UsedImplicitly] public ByteList() { }
+        [UsedImplicitly] public ByteStorageList() : base(0) { }
         
-        public ByteList(int emptyCreateSize) : base(emptyCreateSize) { }
+        public ByteStorageList(int emptyCreateSize) : base(emptyCreateSize) { }
         
-        public ByteList(IReadOnlyCollection<ByteEntry> inBytes) : base(inBytes) { }
+        public ByteStorageList(IReadOnlyCollection<ByteEntry> inBytes) : base(inBytes) { }
 
         protected override void InitEmptyContainer(int capacity)
         {
-            Bytes = new List<ByteEntry>(capacity);
+            bytes = new List<ByteEntry>(capacity);
         }
 
         protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<ByteEntry> inBytes)
@@ -224,15 +223,15 @@ namespace Diz.Core.model.byteSources
 
         public override void Add(ByteEntry byteOffset)
         {
-            Debug.Assert(Bytes != null);
+            Debug.Assert(bytes != null);
             
             var newIndex = Count; // will be true once we add it 
             SetParentInfoFor(byteOffset, newIndex);
 
-            Bytes.Add(byteOffset);
+            bytes.Add(byteOffset);
         }
         
-        public override IEnumerator<ByteEntry> GetGaplessEnumerator() => Bytes.GetEnumerator();
+        public override IEnumerator<ByteEntry> GetGaplessEnumerator() => bytes.GetEnumerator();
         
         // NOTE: in this implementation, all bytes at all addresses always exist, so,
         // this will never return null or have gaps in the sequence.
@@ -241,21 +240,21 @@ namespace Diz.Core.model.byteSources
         public override IEnumerator<ByteEntry> GetNativeEnumerator() => GetGaplessEnumerator();
     }
 
-    public class SparseByteStorage : ByteStorage
+    public class ByteStorageSparse : ByteStorage
     {
-        [UsedImplicitly] public SparseByteStorage() { }
-        public SparseByteStorage(IReadOnlyCollection<ByteEntry> inBytes) : base(inBytes) { }
-        public SparseByteStorage(int emptyCreateSize) : base(emptyCreateSize) { }
+        [UsedImplicitly] public ByteStorageSparse() : base(0) { }
+        public ByteStorageSparse(IReadOnlyCollection<ByteEntry> inBytes) : base(inBytes) { }
+        public ByteStorageSparse(int emptyCreateSize) : base(emptyCreateSize) { }
 
         // keeps the keys sorted, which is what we want.
-        public SortedDictionary<int, ByteEntry> Bytes { get; set; }
+        private SortedDictionary<int, ByteEntry> bytes;
 
         private int GetLargestKey()
         {
-            if (Bytes == null || Bytes.Count == 0)
+            if (bytes == null || bytes.Count == 0)
                 return -1;
             
-            return Bytes.Keys.Last();
+            return bytes.Keys.Last();
         }
 
         public override ByteEntry this[int index]
@@ -267,12 +266,12 @@ namespace Diz.Core.model.byteSources
         public override void Clear()
         {
             OnPreClear();
-            Bytes.Clear();
+            bytes.Clear();
         }
 
         public override bool Contains(ByteEntry item)
         {
-            return item != null && Bytes.Keys.Contains(item.ParentByteSourceIndex);
+            return item != null && bytes.Keys.Contains(item.ParentByteSourceIndex);
         }
 
         public override void CopyTo(ByteEntry[] array, int arrayIndex)
@@ -297,7 +296,7 @@ namespace Diz.Core.model.byteSources
             Debug.Assert(item.ParentStorage != null);
             Debug.Assert(ValidIndex(item.ParentByteSourceIndex));
             
-            return Bytes.Remove(item.ParentByteSourceIndex);
+            return bytes.Remove(item.ParentByteSourceIndex);
         }
 
         public override void CopyTo(Array array, int index)
@@ -311,7 +310,7 @@ namespace Diz.Core.model.byteSources
             SetParentInfoFor(value, index);
 
             // will replace if it exists
-            Bytes[index] = value;
+            bytes[index] = value;
         }
 
         // we need to maintain this. it's not the # of bytes we're storing,
@@ -319,7 +318,7 @@ namespace Diz.Core.model.byteSources
         private int count;
         public override int Count => count;
 
-        public int ActualCount => Bytes.Count;
+        public int ActualCount => bytes.Count;
 
         private bool ValidIndex(int index) => index >= 0 && index < Count;
 
@@ -332,12 +331,12 @@ namespace Diz.Core.model.byteSources
         protected ByteEntry GetByte(int index)
         {
             ValidateIndex(index);
-            return Bytes.GetValueOrDefault(index);
+            return bytes.GetValueOrDefault(index);
         }
 
         protected override void InitEmptyContainer(int emptyCreateSize)
         {
-            Bytes = new SortedDictionary<int, ByteEntry>();
+            bytes = new SortedDictionary<int, ByteEntry>();
             count = emptyCreateSize;
         }
 
@@ -347,7 +346,7 @@ namespace Diz.Core.model.byteSources
             if (inBytes.Count > count)
                 throw new InvalidDataException("Asked to add a list bigger than our current capacity");
             
-            Debug.Assert(Bytes?.Count == 0);
+            Debug.Assert(bytes?.Count == 0);
             
             foreach (var b in inBytes)
             {
@@ -381,7 +380,7 @@ namespace Diz.Core.model.byteSources
             ValidateIndex(indexThisWillBeAddedTo);
             SetParentInfoFor(byteOffset, indexThisWillBeAddedTo);
             
-            Bytes[indexThisWillBeAddedTo] = byteOffset;
+            bytes[indexThisWillBeAddedTo] = byteOffset;
             count++;
         }
 
@@ -404,19 +403,19 @@ namespace Diz.Core.model.byteSources
         // return only elements that actually exist (no gaps, no null items will be returned).
         public override IEnumerator<ByteEntry> GetNativeEnumerator()
         {
-            return Bytes.Select(pair => pair.Value).GetEnumerator();
+            return bytes.Select(pair => pair.Value).GetEnumerator();
         }
 
         protected override void UpdateAllParentInfo(bool shouldUnsetAll = false)
         {
-            Bytes.ForEach(pair => this.UpdateParentInfoFor(pair.Value, shouldUnsetAll, pair.Key));
+            bytes.ForEach(pair => this.UpdateParentInfoFor(pair.Value, shouldUnsetAll, pair.Key));
         }
 
         // note: indices are going to be ordered, BUT there can be gaps.
         // caller should be prepared to handle this. 
         public SortedDictionary<int, ByteEntry>.Enumerator GetRealEnumerator()
         {
-            return Bytes.GetEnumerator();
+            return bytes.GetEnumerator();
         }
     }
 }

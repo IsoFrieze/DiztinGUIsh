@@ -109,7 +109,7 @@ namespace Diz.Core.serialization.xml_serializer
         private static ByteSource FinishRead(IReadOnlyCollection<ByteEntry> romBytes) =>
             new()
             {
-                Bytes = new ByteList(romBytes)
+                Bytes = new ByteStorageList(romBytes)
             };
 
         private static List<string> ReadMainDataRaw(string allLines)

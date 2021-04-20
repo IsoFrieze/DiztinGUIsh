@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -80,7 +79,7 @@ namespace Diz.Core.model.byteSources
             
             // everything is good, so go ahead and modify the original list now
             Clear();
-            AddRange(copyOfExistingToAddTo);
+            this.AddRange(copyOfExistingToAddTo);
         }
 
         private void AppendIfPolicyAllows(ICollection<Annotation> copyOfExistingToAddTo, Annotation newItem)

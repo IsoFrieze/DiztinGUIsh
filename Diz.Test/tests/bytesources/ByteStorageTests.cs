@@ -13,7 +13,7 @@ namespace Diz.Test.tests.bytesources
             new List<Func<ByteStorage>> {
                 () => 
                 {
-                    var byteStorage = new SparseByteStorage(10)
+                    var byteStorage = new ByteStorageSparse(10)
                     {
                         [1] = new() {Byte = 0xE1}, 
                         [7] = new() {Byte = 0xE7}
@@ -23,7 +23,7 @@ namespace Diz.Test.tests.bytesources
                 () =>
                 {
                     const int count = 10;
-                    var byteStorage = new SparseByteStorage(count);
+                    var byteStorage = new ByteStorageSparse(count);
                     for (var i = 0; i < count; ++i)
                     {
                         byteStorage[i] = new ByteEntry {Byte = (byte?)(i+0xE0)};
@@ -35,7 +35,7 @@ namespace Diz.Test.tests.bytesources
                     const int count = 10;
                     var srcList = Enumerable.Range(0, count)
                         .Select(i => new ByteEntry {Byte = (byte?)(i+0xE0)}).ToList();
-                    return new SparseByteStorage(srcList);
+                    return new ByteStorageSparse(srcList);
                 },
                 
                 () =>
@@ -43,7 +43,7 @@ namespace Diz.Test.tests.bytesources
                     const int count = 10;
                     var srcList = Enumerable.Range(0, count)
                         .Select(i => new ByteEntry {Byte = (byte?)(i+0xE0)}).ToList();
-                    return new ByteList(srcList);
+                    return new ByteStorageList(srcList);
                 },
             }.CreateTheoryData();
 
@@ -51,7 +51,7 @@ namespace Diz.Test.tests.bytesources
         [MemberData(nameof(SampleStorages))]
         public static void TestSparseStorageAdd(ByteStorage byteStorage)
         {
-            var hasGaps = byteStorage is SparseByteStorage sparse && sparse.ActualCount != byteStorage.Count;
+            var hasGaps = byteStorage is ByteStorageSparse sparse && sparse.ActualCount != byteStorage.Count;
             var shouldBeNonNullOn = new List<int> {1,7};
          
             var i = 0;
@@ -76,7 +76,7 @@ namespace Diz.Test.tests.bytesources
         [MemberData(nameof(SampleStorages))]
         public static void TestSparseStorageDict(ByteStorage byteStorage)
         {
-            var byteStorageSparse = byteStorage as SparseByteStorage;
+            var byteStorageSparse = byteStorage as ByteStorageSparse;
             var hasGaps = byteStorageSparse != null && byteStorageSparse.ActualCount != byteStorage.Count;
             Assert.Equal(10, byteStorage.Count);
 

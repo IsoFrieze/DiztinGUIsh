@@ -48,7 +48,7 @@ namespace Diz.Test.tests
             var romByteSource = new ByteSource
             {
                 Name = "Snes Rom",
-                Bytes = new ByteList(srcData)
+                Bytes = new ByteStorageList(srcData)
             };
 
             var data = new Data();

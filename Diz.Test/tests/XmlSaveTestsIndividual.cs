@@ -6,6 +6,8 @@ using Diz.Core.model.byteSources;
 using Diz.Core.serialization.xml_serializer;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
+using ExtendedXmlSerializer.ContentModel.Format;
+using ExtendedXmlSerializer.ExtensionModel.Instances;
 using Xunit;
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
@@ -49,11 +51,47 @@ namespace Diz.Test.tests
             AssertNotEqualWhenChanged(entry => entry.RemoveOneAnnotationIfExists<Comment>());
             AssertNotEqualWhenChanged(entry => entry.RemoveOneAnnotationIfExists<Label>());
         }
+        
+        // public class ByteListInterceptor : SerializationInterceptor<ByteList>
+        public class ByteListInterceptor : SerializationActivator
+        {
+            // ByteList ISerializationInterceptor<ByteList>.Activating(Type instanceType)
+            // {
+            //     // processor should be retrieved from IoC container, but created manually for simplicity of test
+            //     // var processor = new ByteList(new Service());
+            //     return new ByteList();
+            // }
+            public override object Activating(Type instanceType)
+            {
+                return new ByteStorageList();
+            }
+            
+            public override object Serializing(IFormatWriter writer, object instance)
+            {
+                return base.Serializing(writer, instance);
+            }
+
+            public override object Deserialized(IFormatReader reader, object instance)
+            {
+                return base.Deserialized(reader, instance);
+            }
+        }
 
         private static T XmlFullCycle<T>(T objToCycle)
         {
-            var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
-            var deserialized = XmlSerializationSupportNew.Deserialize<T>(xmlToCycle);
+            // var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
+
+            var serializer = XmlSerializationSupportNew.GetConfig()
+                .Type<ByteStorageList>()
+                .WithInterceptor(new ByteListInterceptor())
+                .Create();
+            
+            var xmlToCycle = serializer.Serialize(
+                new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
+                objToCycle);
+            
+            var deserialized = serializer.Deserialize<T>(xmlToCycle);
+            
             return deserialized;
         }
 
@@ -72,13 +110,13 @@ namespace Diz.Test.tests
             () => SampleRomCreator1.CreateBaseRom().SnesAddressSpace,
         };
 
-        public static ByteList CreateSampleByteList()
+        public static ByteStorageList CreateSampleByteList()
         {
             var sample2 = CreateSampleEntry();
             sample2.DataBank = 95;
             sample2.Point = InOutPoint.ReadPoint;
 
-            return new ByteList(new List<ByteEntry> {CreateSampleEntry(), sample2});
+            return new ByteStorageList(new List<ByteEntry> {CreateSampleEntry(), sample2});
         }
         
         [Fact]

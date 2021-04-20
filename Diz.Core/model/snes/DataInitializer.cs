@@ -59,7 +59,7 @@ namespace Diz.Core.model.snes
         {
             var romByteSource = new ByteSource
             {
-                Bytes = new ByteList(size),
+                Bytes = new ByteStorageList(size),
                 Name = "Snes ROM"
             };
             PopulateFromRom(data, romByteSource, mode, speed);

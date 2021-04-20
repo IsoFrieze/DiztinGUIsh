@@ -60,7 +60,7 @@ namespace Diz.Test.tests
             var actualRomBytes = new ByteSource
             {
                 Name = "Space Cats 2: Rise of Lopsy Dumpwell",
-                Bytes = new ByteList(bytes)
+                Bytes = new ByteStorageList(bytes)
             };
 
             // var data = new TestData()
@@ -131,7 +131,7 @@ namespace Diz.Test.tests
 
             var actualRomBytes = new ByteSource
             {
-                Bytes = new ByteList(new List<ByteEntry>
+                Bytes = new ByteStorageList(new List<ByteEntry>
                 {
                     new()
                     {
