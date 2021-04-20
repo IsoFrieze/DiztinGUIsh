@@ -144,11 +144,11 @@ namespace DiztinGUIsh.util
             if (e.PropertyName != nameof(MarkAnnotation.TypeFlag))
                 return;
 
-            if (!RomOffsetInRange(entry.ParentByteSourceIndex))
+            if (!RomOffsetInRange(entry.ParentIndex))
                 return;
             
             // check that this still makes sense.
-            var snesAddress = entry.ParentByteSourceIndex;
+            var snesAddress = entry.ParentIndex;
             var markAnnotation = entry.GetOneAnnotation<MarkAnnotation>(); 
             MarkDirty(snesAddress, markAnnotation);
         }

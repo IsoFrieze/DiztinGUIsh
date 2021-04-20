@@ -48,8 +48,8 @@
             {
                 rootEntryToPopulate ??= new ByteEntry
                 {
-                    ParentStorage = byteGraphNode.ByteSource.Bytes,
-                    ParentByteSourceIndex = byteGraphNode.ByteEntry?.ParentByteSourceIndex ?? byteGraphNode.SourceIndex,
+                    Parent = byteGraphNode.ByteSource.Bytes,
+                    ParentIndex = byteGraphNode.ByteEntry?.ParentIndex ?? byteGraphNode.SourceIndex,
                     
                     // several of our collection items (bytes, annotations, etc) will store
                     // a reference to their parent container. since this new ByteEntry object we're making

@@ -26,7 +26,7 @@ namespace Diz.Core.model.byteSources
         }
         
         // public ByteGraphNode(ByteEntry byteData) 
-        //     : this(byteData?.ParentByteSource, byteData?.ParentByteSourceIndex ?? -1)
+        //     : this(byteData?.ParentByteSource, byteData?.ParentIndex ?? -1)
         // {
         //     Validate();
         // }

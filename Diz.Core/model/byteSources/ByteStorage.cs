@@ -3,88 +3,82 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-// TODO: we can probably simplify this by replacing the parent class with ParentAwareCollection<ByteSource, ByteEntryBase>
+// TODO: we can probably simplify most of this by replacing the parent class with ParentAwareCollection<ByteSource, ByteEntry>
 
 namespace Diz.Core.model.byteSources
 {
-    public interface IParentIndexAwareItem<TItem> 
-        where TItem : IParentIndexAwareItem<TItem>
+    
+    // a child who keeps track of their parent AND INDEX
+    public interface IParentReferenceTo<TParent>
     {
-        int ParentByteSourceIndex { get; internal set; }
-        IStorage<TItem> ParentStorage { get; internal set; }
+        int ParentIndex { get; set; }
+        TParent Parent { get; set; } // TODO: change to TParent later if we can
     }
 
-    public interface IParent
-    {
-        
-    }
+    // a child who keeps track of their parent (no index need be involved)
+    // public interface IAmItemThatTracksMyParent<TParent>
+    // {
+    //     
+    // }
     
-    public interface IParentAwareX<TItem, TParent> where TItem : IParentAwareX<TItem, TParent> 
+    // this is hot garbage. replace with IList<T> and just suck it up and implement the rest.
+    public interface IShouldReallyBeAListButIAmLazy<T> : ICollection<T>
     {
-        TParent Parent { get; set; }
+        T this[int index] { get; set; }
     }
 
     /*
-    public class BItem : IParentAwareX<BItem, ParentSource>
+    public interface IStorage<TItem> : IShouldReallyBeAListButIAmLazy<TItem> where
+        // our items: Track their parent and parent index, and it must be a parent of IStorage<Item> (us)
+        TItem : IParentReferenceTo<IStorage<TItem>>
     {
-        public ParentSource Parent { get; set; }
-
-        public BItem()
-        {
-            IParent q;
-            IParentAwareX<BItem, ParentSource> that;
-
-            that = this;
-
-            that.Parent = new ParentSource();
-            var x = that.Parent;
-
-            Parent = new ParentSource();
-            q = Parent;
-            
-            q.Equals("3");
-        }
         
-        public static void X()
-        {
-            var x = new BItem();
-            x.Parent = new ParentSource();
-        }
     }
     
-    public class ParentSource : IParent
+    public interface IStorageWithParent<TItem, TOurParent> :
+        // 1) we're storage that tracks an item type
+        IStorage<TItem>,
+        
+        // 2) we are (unrelated) a child that also keeps track of our own (different) parent
+        IAmItemThatTracksMyParent<TOurParent>
+        
+        where
+        
+        // we promise we're only storing items that know how to:
+        // track their parent (us) and parentindex (index into us)
+        TItem : IParentReferenceTo<IStorageWithParent<TItem, TOurParent>>
     {
-        public int Y { get; set; }
+        
+    }
+
+    public interface IByteStorage : Storage<ByteEntry> // add in for actual interfaces 
+        // we are a class that stores TItems, and OUR parent is TOurParent
+        //where 
+        //TItemWeStore : IParentReferenceTo<IStorage<TItemWeStore>>
+    {
+        // IEnumerator<ByteEntry> GetNativeEnumerator();
     }*/
 
-    // public interface IParentAwareItem<TItem> where TItem : IParentAwareItem<TItem>
-    // {
-    //     IStorage<TItem> ParentStorage { get; internal set; }
-    // }
-
-    public interface IStorageB<TItem> : ICollection<TItem>, ICollection where TItem : IParentIndexAwareItem<TItem>
+    public abstract class Storage<TItemWeStore> :
+        IShouldReallyBeAListButIAmLazy<TItemWeStore>
+        // // we are a class that stores TItems, and OUR parent is TOurParent
+        // IStorageWithParent<TItemWeStore, TOurParent> 
+        where 
+        TItemWeStore : IParentReferenceTo<Storage<TItemWeStore>>
     {
-        
-    }
+        // don't get confused: this is the Parent holding THIS class.
+        // it is unrelated to the items that WE hold, nor the fact that THEY also track
+        // a parent (which their parent is US).
+        // TODO: change to TParent if we can
+        public ByteSource Parent { get; set; } // (in Diz, this is ByteSource, which holds a Storage<ByteEntry>)
 
-    // rename to IParentAwareStorage
-    // make STorage or something derived from Storage grab this.
-    public interface IStorage<TItem> : /* IParentAwareX<TItem, TParent>,*/ IStorageB<TItem> where 
-        TItem : IParentIndexAwareItem<TItem>// , IParentAwareX<TItem, TParent>
-    {
-        
-    }
+        public abstract TItemWeStore this[int index] { get; set; }
 
-    public abstract class Storage<TItem> : IStorage<TItem>
-        where TItem : IParentIndexAwareItem<TItem>
-    {
-        public abstract TItem this[int index] { get; set; }
-
-        public abstract void Add(TItem item);
+        public abstract void Add(TItemWeStore item);
         public abstract void Clear();
-        public abstract bool Contains(TItem item);
-        public abstract void CopyTo(TItem[] array, int arrayIndex);
-        public abstract bool Remove(TItem item);
+        public abstract bool Contains(TItemWeStore item);
+        public abstract void CopyTo(TItemWeStore[] array, int arrayIndex);
+        public abstract bool Remove(TItemWeStore item);
         public abstract void CopyTo(Array array, int index);
         public abstract int Count { get; }
         
@@ -97,7 +91,7 @@ namespace Diz.Core.model.byteSources
             InitFromEmpty(0);
         }
         
-        protected Storage(IReadOnlyCollection<TItem> inBytes)
+        protected Storage(IReadOnlyCollection<TItemWeStore> inBytes)
         {
             InitFrom(inBytes);
         }
@@ -117,7 +111,7 @@ namespace Diz.Core.model.byteSources
             Debug.Assert(Count == emptyCreateSize);
         }
 
-        private void InitFrom(IReadOnlyCollection<TItem> inBytes)
+        private void InitFrom(IReadOnlyCollection<TItemWeStore> inBytes)
         {
             Debug.Assert(inBytes != null);
             
@@ -128,7 +122,7 @@ namespace Diz.Core.model.byteSources
         }
 
         protected abstract void InitEmptyContainer(int emptyCreateSize);
-        protected abstract void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<TItem> inBytes);
+        protected abstract void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<TItemWeStore> inBytes);
         protected abstract void FillEmptyContainerWithBlankBytes(int numEntries);
 
         // GetEnumerator() will return an item at each index, or null if no Byte is present at that address.
@@ -137,17 +131,17 @@ namespace Diz.Core.model.byteSources
         //
         // This is potentially more inefficient but creates a consistent interface.
         // For performance-heavy code, or cases where you only only want non-null bytes, choose another enumerator function
-        public abstract IEnumerator<TItem> GetGaplessEnumerator();
-        IEnumerator IEnumerable.GetEnumerator()
+        public abstract IEnumerator<TItemWeStore> GetGaplessEnumerator();
+        public IEnumerator GetEnumerator()
         {
             return GetGaplessEnumerator();
         }
 
-        public IEnumerator<TItem> GetEnumerator() => GetGaplessEnumerator();
+        IEnumerator<TItemWeStore> IEnumerable<TItemWeStore>.GetEnumerator() => GetGaplessEnumerator();
 
-        public abstract IEnumerator<TItem> GetNativeEnumerator();
+        public abstract IEnumerator<TItemWeStore> GetNativeEnumerator();
         
-        protected void ImportBytes(IReadOnlyCollection<TItem> inBytes)
+        protected void ImportBytes(IReadOnlyCollection<TItemWeStore> inBytes)
         {
             Debug.Assert(inBytes != null);
             foreach (var b in inBytes)
@@ -155,7 +149,7 @@ namespace Diz.Core.model.byteSources
                 Add(b);
             }
         }
-        protected void OnRemoved(TItem item)
+        protected void OnRemoved(TItemWeStore item)
         {
             ClearParentInfoFor(item);
             UpdateAllParentInfo();
@@ -165,16 +159,17 @@ namespace Diz.Core.model.byteSources
         // update (or remove) all parent info when the collection has changed
         protected abstract void UpdateAllParentInfo(bool shouldUnsetAll = false);
 
-        protected static void ClearParentInfoFor(TItem b) => SetParentInfoFor(b, -1, null);
-        protected void SetParentInfoFor(TItem b, int index) => SetParentInfoFor(b, index, this);
+        protected static void ClearParentInfoFor(TItemWeStore b) => SetParentInfoFor(b, -1, null);
+        protected void SetParentInfoFor(TItemWeStore b, int index) => SetParentInfoFor(b, index, this);
         
-        protected static void SetParentInfoFor(TItem b, int index, IStorage<TItem> parent)
+        protected static void SetParentInfoFor(TItemWeStore b, int index, 
+           Storage<TItemWeStore> parent)
         {
-            b.ParentByteSourceIndex = index;
-            b.ParentStorage = parent;
+            b.ParentIndex = index;
+            b.Parent = parent;
         }
 
-        protected void UpdateParentInfoFor(TItem byteEntry, bool shouldUnsetAll, int newIndex)
+        protected void UpdateParentInfoFor(TItemWeStore byteEntry, bool shouldUnsetAll, int newIndex)
         {
             if (shouldUnsetAll)
                 ClearParentInfoFor(byteEntry);
@@ -183,37 +178,37 @@ namespace Diz.Core.model.byteSources
         }
 
         protected void OnPreClear() => UpdateAllParentInfo(shouldUnsetAll: true);
+    }
+    
+    // iterate through a sparse Storage<ByteEntry> class, if we encounter any gaps in the sequence,
+    // fill them in 
+    public class GapFillingEnumerator<T> : IEnumerator<T>
+    {
+        public IShouldReallyBeAListButIAmLazy<T> Collection { get; protected set; }
+        public int Position { get; set; } = -1;
 
-        // iterate through a sparse ByteStorage class, if we encounter any gaps in the sequence,
-        // fill them in 
-        protected class GapFillingEnumerator : IEnumerator<TItem>
+        public GapFillingEnumerator(IShouldReallyBeAListButIAmLazy<T> collection)
         {
-            public Storage<TItem> Storage { get; protected set; }
-            public int Position { get; set; } = -1;
+            Debug.Assert(collection != null);
+            Collection = collection;
+        }
+        public bool MoveNext()
+        {
+            Position++;
+            return Position < Collection.Count;
+        }
 
-            public GapFillingEnumerator(Storage<TItem> storage)
-            {
-                Debug.Assert(storage != null);
-                Storage = storage;
-            }
-            public bool MoveNext()
-            {
-                Position++;
-                return Position < Storage.Count;
-            }
+        public void Reset()
+        {
+            Position = -1;
+        }
 
-            public void Reset()
-            {
-                Position = -1;
-            }
-
-            TItem IEnumerator<TItem>.Current => Storage[Position];
-            public object Current => Storage[Position];
-            public void Dispose()
-            {
-                Position = -1;
-                Storage = null;
-            }
+        T IEnumerator<T>.Current => Collection[Position];
+        public object Current => Collection[Position];
+        public void Dispose()
+        {
+            Position = -1;
+            Collection = null;
         }
     }
 }

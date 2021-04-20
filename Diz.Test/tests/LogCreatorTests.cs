@@ -96,8 +96,8 @@ namespace Diz.Test.tests
                 // TODO // Assert.Equal("Space Cats 2: Rise of Lopsy Dumpwell", test22Label.Parent.ParentByteSource.Name);
                 // TODO // Assert.Equal("SNES Main Cpu BUS", testDataLabel.Parent.ParentByteSource.Name);
                 
-                Assert.Equal(6, test22Label.Parent.ParentByteSourceIndex);
-                Assert.Equal(0x808000 + 0x5B, testDataLabel.Parent.ParentByteSourceIndex);
+                Assert.Equal(6, test22Label.Parent.ParentIndex);
+                Assert.Equal(0x808000 + 0x5B, testDataLabel.Parent.ParentIndex);
             }
 
             TestIt();
@@ -277,7 +277,7 @@ namespace Diz.Test.tests
                 return;
             
             parentIndex = parentIndex == -1 ? snesAddress : parentIndex;
-            Assert.Equal(parentIndex, label.Parent.ParentByteSourceIndex);
+            Assert.Equal(parentIndex, label.Parent.ParentIndex);
         }
 
         [Theory]

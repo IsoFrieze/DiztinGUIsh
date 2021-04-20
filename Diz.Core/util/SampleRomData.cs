@@ -45,7 +45,7 @@ namespace Diz.Core.util
 
         private static SampleRomData CreateBaseSampleData()
         {
-            var romByteSource = new ByteSource()
+            var romByteSource = new ByteSource
             {
                 Bytes = new StorageList<ByteEntry>(new List<ByteEntry>
                 {

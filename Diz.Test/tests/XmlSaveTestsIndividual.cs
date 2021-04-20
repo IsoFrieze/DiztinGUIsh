@@ -100,7 +100,7 @@ namespace Diz.Test.tests
             () => new AnnotationCollection {
                 new MarkAnnotation {TypeFlag = FlagType.Graphics}, new Comment {Text = "asdf"}
             },
-            () => new ByteEntryBase(),
+            () => new ByteEntry(),
         };
 
         public static TheoryData<Func<object>> MoreComplexCycleObjects => new() {

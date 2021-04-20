@@ -44,8 +44,8 @@ namespace Diz.Test.tests.byteEntry
 
         private static void AssertEqualityBothWays(bool expectedEqual, AnnotationCollection o1, AnnotationCollection o2)
         {
-            var byteEntry1 = new ByteEntryBase(o1);
-            var byteEntry2 = new ByteEntryBase(o2);
+            var byteEntry1 = new ByteEntry(o1);
+            var byteEntry2 = new ByteEntry(o2);
             
             // note: AnnotationCollection.Equals() does NOT call EffectivelyEqual() by default
             if (expectedEqual)

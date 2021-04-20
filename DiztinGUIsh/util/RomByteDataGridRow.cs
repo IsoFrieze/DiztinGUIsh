@@ -43,19 +43,19 @@ namespace DiztinGUIsh.util
         // [CellStyleFormatter(GetBackColorInOut)]
         public string Label
         {
-            get => Data.Labels.GetLabelName(Data.ConvertPCtoSnes(ByteEntry.ParentByteSourceIndex));
+            get => Data.Labels.GetLabelName(Data.ConvertPCtoSnes(ByteEntry.ParentIndex));
 
             // todo (validate for valid label characters)
             // (note: validation implemented in Furious's branch, integrate here)
             set => Data.Labels.AddLabel(
-                    Data.ConvertPCtoSnes(ByteEntry.ParentByteSourceIndex),
+                    Data.ConvertPCtoSnes(ByteEntry.ParentIndex),
                     new Label {Name = value},
                     true);
         }
 
         [DisplayName("PC")]
         [ReadOnly(true)]
-        public string Offset => Util.ToHexString6(Data.ConvertPCtoSnes(ByteEntry.ParentByteSourceIndex));
+        public string Offset => Util.ToHexString6(Data.ConvertPCtoSnes(ByteEntry.ParentIndex));
 
         // show the byte two different ways: ascii and numeric
         [DisplayName("@")]
@@ -66,7 +66,7 @@ namespace DiztinGUIsh.util
         [DisplayName("#")]
         [ReadOnly(true)]
         public string NumericRep =>
-            Util.NumberToBaseString(ByteEntry.ParentByteSourceIndex, NumberBase);
+            Util.NumberToBaseString(ByteEntry.ParentIndex, NumberBase);
 
         [DisplayName("<*>")]
         [ReadOnly(true)]
@@ -81,7 +81,7 @@ namespace DiztinGUIsh.util
             {
                 // NOTE: this does not handle instructions whose opcodes cross banks correctly.
                 // if we hit this situation, just return empty for the grid, it's likely real instruction won't do this?
-                var romOffset = ByteEntry.ParentByteSourceIndex;
+                var romOffset = ByteEntry.ParentIndex;
                 var len = Data.GetInstructionLength(romOffset);
                 return romOffset + len <= Data.GetRomSize() ? Data.GetInstruction(romOffset) : "";
             }
@@ -94,7 +94,7 @@ namespace DiztinGUIsh.util
         {
             get
             {
-                var ia = Data.GetIntermediateAddressOrPointer(ByteEntry.ParentByteSourceIndex);
+                var ia = Data.GetIntermediateAddressOrPointer(ByteEntry.ParentIndex);
                 return ia >= 0 ? Util.ToHexString6(ia) : "";
             }
         }
@@ -102,19 +102,19 @@ namespace DiztinGUIsh.util
         [DisplayName("Flag")]
         [ReadOnly(true)]
         public string TypeFlag =>
-            Util.GetEnumDescription(Data.GetFlag(ByteEntry.ParentByteSourceIndex));
+            Util.GetEnumDescription(Data.GetFlag(ByteEntry.ParentIndex));
 
         [DisplayName("B")]
         [Editable(true)]
         public string DataBank
         {
-            get => Util.NumberToBaseString(Data.GetDataBank(ByteEntry.ParentByteSourceIndex), Util.NumberBase.Hexadecimal, 2);
+            get => Util.NumberToBaseString(Data.GetDataBank(ByteEntry.ParentIndex), Util.NumberBase.Hexadecimal, 2);
             set
             {
                 if (!int.TryParse(value, NumberStyles.HexNumber, null, out var parsed))
                     return;
 
-                Data.SetDataBank(ByteEntry.ParentByteSourceIndex, parsed);
+                Data.SetDataBank(ByteEntry.ParentIndex, parsed);
                 //OnPropertyChanged();
             }
         }
@@ -123,13 +123,13 @@ namespace DiztinGUIsh.util
         [Editable(true)]
         public string DirectPage
         {
-            get => Util.NumberToBaseString(Data.GetDirectPage(ByteEntry.ParentByteSourceIndex), Util.NumberBase.Hexadecimal, 4);
+            get => Util.NumberToBaseString(Data.GetDirectPage(ByteEntry.ParentIndex), Util.NumberBase.Hexadecimal, 4);
             set
             {
                 if (!int.TryParse(value, NumberStyles.HexNumber, null, out var parsed))
                     return;
 
-                Data.SetDirectPage(ByteEntry.ParentByteSourceIndex, parsed);
+                Data.SetDirectPage(ByteEntry.ParentIndex, parsed);
                 //OnPropertyChanged();
             }
         }
@@ -138,10 +138,10 @@ namespace DiztinGUIsh.util
         [Editable(true)]
         public string MFlag
         {
-            get => RomUtil.BoolToSize(Data.GetMFlag(ByteEntry.ParentByteSourceIndex));
+            get => RomUtil.BoolToSize(Data.GetMFlag(ByteEntry.ParentIndex));
             set
             {
-                Data.SetMFlag(ByteEntry.ParentByteSourceIndex, value == "8" || value == "M");
+                Data.SetMFlag(ByteEntry.ParentIndex, value == "8" || value == "M");
                 //OnPropertyChanged();
             }
         }
@@ -150,10 +150,10 @@ namespace DiztinGUIsh.util
         [Editable(true)]
         public string XFlag
         {
-            get => RomUtil.BoolToSize(Data.GetXFlag(ByteEntry.ParentByteSourceIndex));
+            get => RomUtil.BoolToSize(Data.GetXFlag(ByteEntry.ParentIndex));
             set
             {
-                Data.SetXFlag(ByteEntry.ParentByteSourceIndex, value == "8" || value == "X");
+                Data.SetXFlag(ByteEntry.ParentIndex, value == "8" || value == "X");
                 // OnPropertyChanged();
             }
         }
@@ -162,10 +162,10 @@ namespace DiztinGUIsh.util
         [Editable(true)]
         public string Comment
         {
-            get => Data.GetCommentText(Data.ConvertPCtoSnes(ByteEntry.ParentByteSourceIndex));
+            get => Data.GetCommentText(Data.ConvertPCtoSnes(ByteEntry.ParentIndex));
             set
             {
-                Data.AddComment(Data.ConvertPCtoSnes(ByteEntry.ParentByteSourceIndex), value, true);
+                Data.AddComment(Data.ConvertPCtoSnes(ByteEntry.ParentIndex), value, true);
                 // OnPropertyChanged();
             }
         }
@@ -384,7 +384,7 @@ namespace DiztinGUIsh.util
 
         private Color? GetMxFlagColor(int nextByteMask)
         {
-            var nextByte = Data.GetNextRomByte(ByteEntry.ParentByteSourceIndex) ?? 0;
+            var nextByte = Data.GetNextRomByte(ByteEntry.ParentIndex) ?? 0;
             switch (ByteEntry.Byte)
             {
                 // PLP
@@ -408,9 +408,9 @@ namespace DiztinGUIsh.util
             var matchingIa = colPropName switch
             {
                 nameof(Offset) => 
-                    Data.IsMatchingIntermediateAddress(selectedRomByteRow.ParentByteSourceIndex, ByteEntry.ParentByteSourceIndex),
+                    Data.IsMatchingIntermediateAddress(selectedRomByteRow.ParentIndex, ByteEntry.ParentIndex),
                 nameof(IA) => 
-                    Data.IsMatchingIntermediateAddress(ByteEntry.ParentByteSourceIndex, selectedRomByteRow.ParentByteSourceIndex),
+                    Data.IsMatchingIntermediateAddress(ByteEntry.ParentIndex, selectedRomByteRow.ParentIndex),
                 _ => false
             };
 

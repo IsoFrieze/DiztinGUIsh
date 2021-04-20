@@ -8,13 +8,12 @@ using JetBrains.Annotations;
 namespace Diz.Core.model.byteSources
 {
     /// <summary>
-    /// Sparse version of ByteStorage which only stores bytes as they are created.
+    /// Sparse version of Storage which only stores bytes as they are created.
     /// Slower for indexed access, but, much better when you have a huge and mostly empty list
     /// i.e. great for stuff like emulator adress spaces which are huge and basically empty except
     /// for a few key areas.
     /// </summary>
-    public class StorageSparse<TItem> : Storage<TItem> 
-        where TItem : IParentIndexAwareItem<TItem>, new()
+    public class StorageSparse<TItem>: Storage<TItem> where TItem : IParentReferenceTo<Storage<TItem>>
     {
         [UsedImplicitly] public StorageSparse() : base(0) { }
         public StorageSparse(IReadOnlyCollection<TItem> inBytes) : base(inBytes) { }
@@ -45,7 +44,7 @@ namespace Diz.Core.model.byteSources
 
         public override bool Contains(TItem item)
         {
-            return item != null && bytes.Keys.Contains(item.ParentByteSourceIndex);
+            return item != null && bytes.Keys.Contains(item.ParentIndex);
         }
 
         public override void CopyTo(TItem[] array, int arrayIndex)
@@ -67,10 +66,10 @@ namespace Diz.Core.model.byteSources
             if (item == null)
                 return false;
 
-            Debug.Assert(item.ParentStorage != null);
-            Debug.Assert(ValidIndex(item.ParentByteSourceIndex));
+            Debug.Assert(item.Parent != null);
+            Debug.Assert(ValidIndex(item.ParentIndex));
             
-            return bytes.Remove(item.ParentByteSourceIndex);
+            return bytes.Remove(item.ParentIndex);
         }
 
         public override void CopyTo(Array array, int index)
@@ -172,7 +171,7 @@ namespace Diz.Core.model.byteSources
             return CreateGapFillingEnumerator();
         }
 
-        private GapFillingEnumerator CreateGapFillingEnumerator()
+        private GapFillingEnumerator<TItem> CreateGapFillingEnumerator()
         {
             return new(this);
         }

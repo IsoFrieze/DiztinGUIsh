@@ -10,7 +10,9 @@ namespace Diz.Core.model.byteSources
     /// Use for linear filled data (like Roms), don't use for mostly empty large storage (like SNES Address space)
     /// address spaces (24bits of addressable bytes x HUGE data = slowwwww) 
     /// </summary>
-    public class StorageList<TItem> : Storage<TItem> where TItem : IParentIndexAwareItem<TItem>, new()
+    public class StorageList<TItem> : Storage<TItem> 
+        where 
+        TItem : IParentReferenceTo<Storage<TItem>>, new()
     {
         public override TItem this[int index]
         {

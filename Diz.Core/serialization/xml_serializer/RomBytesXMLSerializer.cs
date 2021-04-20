@@ -180,7 +180,7 @@ namespace Diz.Core.serialization.xml_serializer
             var romByteEncoding = new RomByteEncoding();
 
             var lines = new List<string>();
-            foreach (var rb in instance.Bytes)
+            foreach (ByteEntry rb in instance.Bytes)
             {
                 var encodedTxt = romByteEncoding.EncodeByte(rb);
                 lines.Add(encodedTxt);

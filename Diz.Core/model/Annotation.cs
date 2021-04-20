@@ -7,9 +7,9 @@ using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
-    public abstract class Annotation : IParentAware<ByteEntryBase>, INotifyPropertyChangedExt
+    public abstract class Annotation : IParentAware<ByteEntry>, INotifyPropertyChangedExt
     {
-        public ByteEntryBase Parent { get; protected set; }
+        public ByteEntry Parent { get; protected set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
@@ -18,7 +18,7 @@ namespace Diz.Core.model
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public void OnParentChanged(ByteEntryBase parent)
+        public void OnParentChanged(ByteEntry parent)
         {
             Parent = parent;
         }

@@ -55,7 +55,7 @@ namespace Diz.Test.tests.bytesources
             var shouldBeNonNullOn = new List<int> {1,7};
          
             var i = 0;
-            foreach (var b in byteStorage)
+            foreach (ByteEntry b in byteStorage)
             {
                 if (b != null)
                     Assert.True(b.Byte == 0xE0 + i);
@@ -105,7 +105,7 @@ namespace Diz.Test.tests.bytesources
             {
                 var expectedKey = expectedKeys[i];
                 Assert.Equal(expectedKey, en.Current.Key);
-                Assert.Equal(expectedKey, en.Current.Value.ParentByteSourceIndex);
+                Assert.Equal(expectedKey, en.Current.Value.ParentIndex);
                 i++;
             }
             

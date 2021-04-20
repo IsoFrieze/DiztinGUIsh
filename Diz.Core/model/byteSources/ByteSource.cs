@@ -11,18 +11,8 @@ namespace Diz.Core.model.byteSources
     {
         public string Name { get; set; }
         
-        public Storage<ByteEntry> Bytes
-        {
-            get => bytes;
-            set
-            {
-                bytes = value;
-                // TODO? bytes.ParentByteSource = this;
-            }
-        }
-
+        public Storage<ByteEntry> Bytes { get; set; }
         public List<ByteSourceMapping> ChildSources { get; set; } = new();
-        private Storage<ByteEntry> bytes;
 
         // helper method: return the actual byte value at an index, or, if null,
         // throw an exception. this method is accommodating an older interface and
@@ -152,7 +142,7 @@ namespace Diz.Core.model.byteSources
             }
 
             foreach (var annotation in GetOnlyOwnAnnotations<T>())
-                yield return new KeyValuePair<int, T>(annotation.Parent.ParentByteSourceIndex, annotation);
+                yield return new KeyValuePair<int, T>(annotation.Parent.ParentIndex, annotation);
         }
 
         // return a list of annotations attached to our Storage<ByteEntry> (and nothing from our children)
@@ -170,7 +160,7 @@ namespace Diz.Core.model.byteSources
                 Debug.Assert(byteEntry != null);
                 // Debug.Assert(ReferenceEquals(byteEntry.ParentByteSource, this));
                 
-                if (byteEntry.ParentByteSourceIndex < startIndex || byteEntry.ParentByteSourceIndex > endingIndex)
+                if (byteEntry.ParentIndex < startIndex || byteEntry.ParentIndex > endingIndex)
                     continue;
                 
                 var annotation = byteEntry.GetOneAnnotation<T>();
@@ -213,7 +203,7 @@ namespace Diz.Core.model.byteSources
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(bytes, Name, ChildSources);
+            return HashCode.Combine(Bytes, Name, ChildSources);
         }
 
         #endregion
