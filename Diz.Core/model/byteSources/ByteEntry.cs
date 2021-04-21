@@ -25,7 +25,7 @@
     // mostly, adds helper methods to ByteEntry, which is what does the heavy lifting
     public partial class ByteEntry // IReadableByteEntry
     {
-        public ByteEntry() {}
+        #region Helper Methods
 
         // if null, it means caller either needs to dig one level deeper in
         // parent container to find the byte value, or, there is no data
@@ -87,5 +87,7 @@
         
         private OpcodeAnnotation GetOneOpcodeAnnotation() => GetOneAnnotation<OpcodeAnnotation>();
         private OpcodeAnnotation GetOrCreateOpcodeAnnotation() => GetOrCreateAnnotation<OpcodeAnnotation>();
+
+        #endregion
     }
 }
