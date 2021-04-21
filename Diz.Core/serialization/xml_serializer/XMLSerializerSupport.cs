@@ -1,12 +1,9 @@
-﻿using System;
-using System.Xml;
-using System.Xml.Linq;
+﻿using System.Xml;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
-using ExtendedXmlSerializer.ExtensionModel.Xml;
 
 namespace Diz.Core.serialization.xml_serializer
 {
@@ -94,39 +91,39 @@ namespace Diz.Core.serialization.xml_serializer
         }
     }*/
     
-    public class ByteListSerializer : IExtendedXmlCustomSerializer<StorageList<ByteEntry>>
-        {
-            public void Serializer(XmlWriter xmlWriter, StorageList<ByteEntry> entry)
-            {
-                if (entry == null)
-                    return;
-                
-                // this.
-
-                // var (key, value) = kvp;
-                // xmlWriter.WriteElementString("Key", key.ToString("X"));
-                // xmlWriter.WriteElementString("Value", value);
-                throw new NotImplementedException();
-            }
-
-            StorageList<ByteEntry> IExtendedXmlCustomSerializer<StorageList<ByteEntry>>.Deserialize(XElement xElement)
-            {
-                // var xElementKey = xElement.Member("Key");
-                // var xElementValue = xElement.Member("Value");
-                //
-                // if (xElementKey == null || xElementValue == null)
-                //     throw new InvalidOperationException("Invalid xml for class TestClassWithSerializer");
-                //
-                // var strValue = xElement.Value;
-                //
-                // var intValue = Util.ParseHexOrBase10String(xElementKey.Value);
-                // return new KeyValuePair<int, string>(intValue, strValue);
-
-                throw new NotImplementedException();
-            }
-
-            public static ByteListSerializer Default => new();
-        }
+    // public class ByteListSerializer : IExtendedXmlCustomSerializer<StorageList<ByteEntry>>
+    //     {
+    //         public void Serializer(XmlWriter xmlWriter, StorageList<ByteEntry> entry)
+    //         {
+    //             if (entry == null)
+    //                 return;
+    //             
+    //             // this.
+    //
+    //             // var (key, value) = kvp;
+    //             // xmlWriter.WriteElementString("Key", key.ToString("X"));
+    //             // xmlWriter.WriteElementString("Value", value);
+    //             throw new NotImplementedException();
+    //         }
+    //
+    //         StorageList<ByteEntry> IExtendedXmlCustomSerializer<StorageList<ByteEntry>>.Deserialize(XElement xElement)
+    //         {
+    //             // var xElementKey = xElement.Member("Key");
+    //             // var xElementValue = xElement.Member("Value");
+    //             //
+    //             // if (xElementKey == null || xElementValue == null)
+    //             //     throw new InvalidOperationException("Invalid xml for class TestClassWithSerializer");
+    //             //
+    //             // var strValue = xElement.Value;
+    //             //
+    //             // var intValue = Util.ParseHexOrBase10String(xElementKey.Value);
+    //             // return new KeyValuePair<int, string>(intValue, strValue);
+    //
+    //             throw new NotImplementedException();
+    //         }
+    //
+    //         public static ByteListSerializer Default => new();
+    //     }
 
     public static class XmlSerializerSupport
     {
@@ -201,6 +198,7 @@ namespace Diz.Core.serialization.xml_serializer
                 => parameter
                     .Type<ByteEntry>()
                     
+                    // ignore all helper stuff, this'll be in the Annotations list
                     .Member(x => x.Arch).Ignore()
                     .Member(x => x.Byte).Ignore()
                     .Member(x => x.Point).Ignore()
@@ -209,12 +207,16 @@ namespace Diz.Core.serialization.xml_serializer
                     .Member(x => x.MFlag).Ignore()
                     .Member(x => x.XFlag).Ignore()
                     .Member(x => x.TypeFlag).Ignore()
+                    
+                    // ignore anything about our parent references, that'll be re-created
                     .Member(x => x.DontSetParentOnCollectionItems).Ignore()
+                    .Member(x => x.Parent).Ignore()
+                    .Member(x => x.ParentIndex).Ignore()
+                    .Member(x => x.ParentByteSource).Ignore()
 
-                    .EnableReferences();
-
-            //.UseOptimizedNamespaces()
-            //.UseAutoFormatting();
+                    .EnableReferences()
+                    .UseOptimizedNamespaces()
+                    .UseAutoFormatting();
         }
         
         private  sealed class AnnotationProfile : IConfigurationProfile
@@ -227,10 +229,9 @@ namespace Diz.Core.serialization.xml_serializer
                 => parameter
                     .Type<Annotation>()
                     .Member(x=>x.Parent)
-                    .EnableReferences();
-
-            //.UseOptimizedNamespaces()
-            //.UseAutoFormatting();
+                    .EnableReferences()
+                    .UseOptimizedNamespaces()
+                    .UseAutoFormatting();
         }
         
         private  sealed class AnnotationCollectionProfile : IConfigurationProfile
@@ -243,6 +244,7 @@ namespace Diz.Core.serialization.xml_serializer
                 => parameter.Type<AnnotationCollection>()
                     .Member(x=>x.DontSetParentOnCollectionItems).Ignore()
                     .Member(x=>x.EnforcePolicy).Ignore()
+                    .Member(x=>x.Parent).Ignore()
                     .UseOptimizedNamespaces()
                     .UseAutoFormatting();
         }
@@ -299,20 +301,20 @@ namespace Diz.Core.serialization.xml_serializer
             var container = ConfiguredContainer.New<MainProfile>();
 
             return container
-//                .UseOptimizedNamespaces()
-//                .UseAutoFormatting()
-                /*.EnableImplicitTyping(typeof(ByteEntry))
+                .UseOptimizedNamespaces()
+                .UseAutoFormatting()
+                .EnableImplicitTyping(typeof(ByteEntry))
                 .EnableImplicitTyping(typeof(ByteSource))
                 .EnableImplicitTyping(typeof(Storage<ByteEntry>))
-                .EnableImplicitTyping(typeof(ByteList))
-                .EnableImplicitTyping(typeof(SparseByteStorage))
+                .EnableImplicitTyping(typeof(StorageList<ByteEntry>))
+                .EnableImplicitTyping(typeof(StorageSparse<ByteEntry>))
                 .EnableImplicitTyping(typeof(AnnotationCollection))
                 .EnableImplicitTyping(typeof(Label))
                 .EnableImplicitTyping(typeof(Comment))
                 .EnableImplicitTyping(typeof(BranchAnnotation))
                 .EnableImplicitTyping(typeof(ByteAnnotation))
                 .EnableImplicitTyping(typeof(MarkAnnotation))
-                .EnableImplicitTyping(typeof(OpcodeAnnotation))*/
+                .EnableImplicitTyping(typeof(OpcodeAnnotation))
                 .Type<ByteSource>()
                 // .EnableReferences()
                 //.Type<Storage<ByteEntry>>()

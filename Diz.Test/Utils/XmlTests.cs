@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Xml;
-using Diz.Core.model.byteSources;
 using Diz.Core.serialization.xml_serializer;
-using Diz.Test.tests;
-using ExtendedXmlSerializer;
 
 namespace Diz.Test.Utils
 {
@@ -24,40 +20,11 @@ namespace Diz.Test.Utils
             
             deserializedObj = XmlFullCycle(objToCycle);
         }
-
-
+        
         public static T XmlFullCycle<T>(T objToCycle)
         {
-            // var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
-
-            var serializer = XmlSerializationSupportNew.GetConfig()
-                .Type<StorageList<ByteEntry>>()
-                .WithInterceptor(new XmlSaveTestsIndividual.ByteListInterceptor())
-                // .Type<StorageList<ByteEntryTest>>()
-                // .Member(x=>x.Parent).Ignore()
-                //
-                // .Type<ByteEntryTest>()
-                //
-                // // .Member(x => x.Arch).Ignore()
-                // // .Member(x => x.Byte).Ignore()
-                // // .Member(x => x.Point).Ignore()
-                // // .Member(x => x.DataBank).Ignore()
-                // // .Member(x => x.DirectPage).Ignore()
-                // // .Member(x => x.MFlag).Ignore()
-                // // .Member(x => x.XFlag).Ignore()
-                // // .Member(x => x.TypeFlag).Ignore()
-                // //.Member(x => x.DontSetParentOnCollectionItems).Ignore()
-                //
-                // .EnableReferences()
-
-                .Create();
-
-            var xmlToCycle = serializer.Serialize(
-                new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
-                objToCycle);
-
-            var deserialized = serializer.Deserialize<T>(xmlToCycle);
-
+            var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
+            var deserialized = XmlSerializationSupportNew.Deserialize<T>(xmlToCycle);
             return deserialized;
         }
     }
