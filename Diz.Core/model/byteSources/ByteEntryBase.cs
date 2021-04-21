@@ -6,15 +6,8 @@ namespace Diz.Core.model.byteSources
 {
     // JUST holds the data. no graph traversal.
     public partial class ByteEntry
-        // IParentReferenceTo<IByteStorage>, 
-        // IParentReferenceTo<Storage<ByteEntry, ByteSource, StorageWithParentByteStorage>>
         : IParentReferenceTo<Storage<ByteEntry>>
     {
-        // public ByteEntry()
-        // {
-        //     
-        // }
-
         public ByteEntry(AnnotationCollection annotationsToAppend)
         {
             // during initialization, append in case other object initializers have added annotations
@@ -106,9 +99,9 @@ namespace Diz.Core.model.byteSources
         protected bool Equals(ByteEntry other)
         {
             // customized code, not auto-generated.
+            // we specifically ignore ParentIndex and Parent, as comparing those could get us in recursive trouble
             return AnnotationsEffectivelyEqual(other) &&
-                   DontSetParentOnCollectionItems == other.DontSetParentOnCollectionItems &&
-                   ReferenceEquals(Parent, other.Parent) && ParentIndex == other.ParentIndex;
+                   DontSetParentOnCollectionItems == other.DontSetParentOnCollectionItems;
         }
 
         public override bool Equals(object obj)
@@ -121,9 +114,11 @@ namespace Diz.Core.model.byteSources
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(annotations, DontSetParentOnCollectionItems, Parent, ParentIndex);
+            return HashCode.Combine(annotations, DontSetParentOnCollectionItems);
         }
 
         #endregion
+
+        public ByteEntry() {}
     }
 }
