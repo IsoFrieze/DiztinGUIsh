@@ -6,6 +6,7 @@ using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Test.Utils;
 using Xunit;
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace Diz.Test.tests.byteEntry
 {
@@ -44,9 +45,24 @@ namespace Diz.Test.tests.byteEntry
 
         private static void AssertEqualityBothWays(bool expectedEqual, AnnotationCollection o1, AnnotationCollection o2)
         {
-            var byteEntry1 = new ByteEntry(o1);
-            var byteEntry2 = new ByteEntry(o2);
-            
+            // method 1
+            {
+                var byteEntry1 = new ByteEntry(o1);
+                var byteEntry2 = new ByteEntry(o2);
+                AssertEqualityBothWays(expectedEqual, o1, o2, byteEntry1, byteEntry2);
+            }
+
+            // method 2
+            {
+                var byteEntry3 = new ByteEntry {Annotations = o1};
+                var byteEntry4 = new ByteEntry {Annotations = o2};
+                AssertEqualityBothWays(expectedEqual, o1, o2, byteEntry3, byteEntry4);
+            }
+        }
+
+        private static void AssertEqualityBothWays(bool expectedEqual, AnnotationCollection o1, AnnotationCollection o2,
+            ByteEntry byteEntry1, ByteEntry byteEntry2)
+        {
             // note: AnnotationCollection.Equals() does NOT call EffectivelyEqual() by default
             if (expectedEqual)
             {

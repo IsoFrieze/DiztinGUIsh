@@ -174,14 +174,21 @@ namespace Diz.Test.tests
         [Fact]
         public void TestNoAnnotation()
         {
+            static void TestNullAnnotations(ByteEntry entry)
+            {
+                #if EXPECTING_NULL_ANNOTATIONS
+                Assert.Null(entry.Annotations);
+                #endif    
+            }
+            
             var entry = new ByteEntry();
-            Assert.Null(entry.Annotations);
+            TestNullAnnotations(entry);
             var nothing = entry.GetOneAnnotation<Comment>();
             Assert.Null(nothing);
-            Assert.Null(entry.Annotations); // looking up something that doesn't exist should NOT auto-recreate this. save memory.
+            TestNullAnnotations(entry); // looking up something that doesn't exist should NOT auto-recreate this. save memory.
             Assert.Throws<InvalidOperationException>(() => entry.AppendAnnotationsFrom(null));
             Assert.Throws<InvalidOperationException>(() => entry.ReplaceAnnotationsWith(null));
-            Assert.Null(entry.Annotations);
+            TestNullAnnotations(entry);
         }
 
         [Fact]

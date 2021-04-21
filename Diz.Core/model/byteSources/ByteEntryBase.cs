@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model.byteSources
 {
     // JUST holds the data. no graph traversal.
-    public partial class ByteEntry
-        : IParentReferenceTo<Storage<ByteEntry>>
+    public partial class ByteEntry : IParentReferenceTo<Storage<ByteEntry>>
     {
+        // TODO: without the memory optimization of on-demand Annotation creation on the fly,
+        // this can be removed and regular object initialization handles this fine now.
         public ByteEntry(AnnotationCollection annotationsToAppend)
         {
             // during initialization, append in case other object initializers have added annotations
@@ -21,13 +23,32 @@ namespace Diz.Core.model.byteSources
             init
             {
                 dontSetParentOnCollectionItems = value;
-                if (annotations != null)
-                    annotations.DontSetParentOnCollectionItems = dontSetParentOnCollectionItems;
+                if (Annotations != null)
+                    Annotations.DontSetParentOnCollectionItems = dontSetParentOnCollectionItems;
             }
         }
+        private readonly bool dontSetParentOnCollectionItems;
 
-        // Note: don't allocate this immediately, wait for it to be used. we will have millions of them per ROM
-        public AnnotationCollection Annotations => annotations;
+        // future optimization: since we might have a lot of empty ByteEntry hanging around,
+        // don't allocate this immediately,instead do it on-demand.
+        // right now we're not doing that because it interacts badly with the serializer. 
+        public AnnotationCollection Annotations
+        {
+            get => GetOrCreateAnnotationsList();
+            [UsedImplicitly] set
+            {
+                annotations = value;
+                FixupAnnotationItems();
+            }
+        }
+        private AnnotationCollection annotations;
+
+        private void FixupAnnotationItems()
+        {
+            Annotations.DontSetParentOnCollectionItems = DontSetParentOnCollectionItems;
+            if (!DontSetParentOnCollectionItems)
+                Annotations.Parent = this;
+        }
 
         // note: our thread safety isn't comprehensive in this project yet.
         // be careful with this if you're doing anything clever, especially writing.
@@ -45,9 +66,6 @@ namespace Diz.Core.model.byteSources
         public Storage<ByteEntry> Parent { get; set; }
 
         #endregion
-        
-        private AnnotationCollection annotations;
-        private readonly bool dontSetParentOnCollectionItems;
 
         public AnnotationCollection GetOrCreateAnnotationsList()
         {
@@ -114,7 +132,7 @@ namespace Diz.Core.model.byteSources
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(annotations, DontSetParentOnCollectionItems);
+            return HashCode.Combine(Annotations, DontSetParentOnCollectionItems);
         }
 
         #endregion

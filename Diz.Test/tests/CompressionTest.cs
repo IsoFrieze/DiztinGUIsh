@@ -50,8 +50,8 @@ namespace Diz.Test.tests
                     })
                 ),
                 (
-                    new List<string>()
-                    {
+                    new List<string>
+                        {
                         "start",
                         "start2",
                     }

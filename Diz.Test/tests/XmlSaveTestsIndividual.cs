@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
-using Diz.Core.serialization.xml_serializer;
-using ExtendedXmlSerializer;
-using ExtendedXmlSerializer.Configuration;
+using Diz.Test.Utils;
 using ExtendedXmlSerializer.ContentModel.Format;
 using ExtendedXmlSerializer.ExtensionModel.Instances;
 using Xunit;
@@ -19,7 +16,7 @@ namespace Diz.Test.tests
         {
             return new()
             {
-                Byte = 0xCA, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100,
+                Byte = 0xCA, MFlag = true, DataBank = 0x80, DirectPage = 0x2100,
                 Annotations = {new Label {Name = "SomeLabel"}, new Comment {Text = "This is a comment"}}
             };
         }
@@ -77,24 +74,6 @@ namespace Diz.Test.tests
             }
         }
 
-        private static T XmlFullCycle<T>(T objToCycle)
-        {
-            // var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
-
-            var serializer = XmlSerializationSupportNew.GetConfig()
-                .Type<StorageList<ByteEntry>>()
-                .WithInterceptor(new ByteListInterceptor())
-                .Create();
-            
-            var xmlToCycle = serializer.Serialize(
-                new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
-                objToCycle);
-            
-            var deserialized = serializer.Deserialize<T>(xmlToCycle);
-            
-            return deserialized;
-        }
-
         public static TheoryData<Func<object>> SimpleCycleObjects => new() {
             () => new MarkAnnotation {TypeFlag = FlagType.Graphics},
             () => new AnnotationCollection {
@@ -107,62 +86,47 @@ namespace Diz.Test.tests
             () => new ByteSource(),
             () => SampleRomCreator1.CreateBaseRom().RomByteSource.Bytes[0],
             () => SampleRomCreator1.CreateBaseRom().RomByteSource,
-            () => SampleRomCreator1.CreateBaseRom().SnesAddressSpace,
+            // () => SampleRomCreator1.CreateBaseRom().SnesAddressSpace, // next up, not working yet.
         };
-
+        
         public static StorageList<ByteEntry> CreateSampleByteList()
         {
             var sample2 = CreateSampleEntry();
-            sample2.DataBank = 95;
-            sample2.Point = InOutPoint.ReadPoint;
+            sample2.Annotations.Add(new BranchAnnotation {Point = InOutPoint.OutPoint});
+            sample2.Annotations.Add(new MarkAnnotation {TypeFlag = FlagType.Opcode});
 
             return new StorageList<ByteEntry>(new List<ByteEntry> {CreateSampleEntry(), sample2});
         }
-        
+
         public static StorageList<ByteEntry> CreateSampleEmptyByteList()
         {
             return new();
         }
-        
+
         [Fact]
         public void XmlFullCycleEmptyByteStorage()
         {
-            RunFullCycle(CreateSampleEmptyByteList, out var unchanged, out var cycled);
+            XmlTestUtils.RunFullCycle(CreateSampleEmptyByteList, out var unchanged, out var cycled);
             Assert.Equal(unchanged, cycled);
         }
         
-        [Fact(Skip="XML serialization not fully implemented yet, TODO")]
-        public void XmlFullCycleByteStorage()
-        {
-            RunFullCycle(CreateSampleByteList, out var unchanged, out var cycled);
-            
-            Assert.Equal(unchanged.Count, cycled.Count);
-            Assert.Equal(unchanged, cycled);
-        }
 
         [Theory]
         [MemberData(nameof(SimpleCycleObjects))]
-        // TODO: re-enable, not working yet. [MemberData(nameof(MoreComplexCycleObjects))]
+        [MemberData(nameof(MoreComplexCycleObjects))]
         public void XmlFullCycleTwoCopies(Func<object> createFn)
         {
-            RunFullCycle(createFn, out var unchanged, out var cycled);
+            XmlTestUtils.RunFullCycle(createFn, out var unchanged, out var cycled);
             Assert.Equal(unchanged, cycled);
         }
 
-        private static void RunFullCycle<T>(Func<T> createFn, out T expectedCopy, out T deserializedObj)
+        [Fact]
+        public void XmlFullCycleByteStorage()
         {
-            RunFullCycleObj(() => createFn(), out var expectedObjCopy, out var deserializedObjCopy);
-
-            expectedCopy = (T)expectedObjCopy;
-            deserializedObj = (T) deserializedObjCopy;
-        }
-
-        private static void RunFullCycleObj(Func<object> createFn, out object expectedCopy, out object deserializedObj)
-        {
-            var objToCycle = createFn();
-            expectedCopy = createFn();
+            XmlTestUtils.RunFullCycle(CreateSampleByteList, out var unchanged, out var cycled);
             
-            deserializedObj = XmlFullCycle(objToCycle);
+            Assert.Equal(unchanged.Count, cycled.Count);
+            Assert.Equal(unchanged, cycled);
         }
     }
 }
