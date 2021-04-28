@@ -19,34 +19,6 @@ namespace Diz.Test.tests
             };
         }
 
-        [Fact]
-        public void TestByteEntryEquality()
-        {
-            var entry2 = CreateSampleEntry();
-            
-            void AssertNotEqualWhenChanged(Action<ByteEntry> changeSomething)
-            {
-                var byteEntry1 = CreateSampleEntry();
-                changeSomething(byteEntry1);
-                Assert.NotEqual(entry2, byteEntry1);
-            }
-
-            var entry1 = CreateSampleEntry();
-            Assert.Equal(entry1, entry2);
-
-            AssertNotEqualWhenChanged(entry => entry.Byte = 0xFF);
-            AssertNotEqualWhenChanged(entry => entry.Arch = Architecture.Apuspc700);
-            AssertNotEqualWhenChanged(entry => entry.Point = InOutPoint.ReadPoint);
-            AssertNotEqualWhenChanged(entry => entry.DataBank = 43);
-            AssertNotEqualWhenChanged(entry => entry.DirectPage = 222);
-            AssertNotEqualWhenChanged(entry => entry.Annotations.Clear());
-            AssertNotEqualWhenChanged(entry => entry.MFlag = false);
-            AssertNotEqualWhenChanged(entry => entry.XFlag = true);
-            AssertNotEqualWhenChanged(entry => entry.TypeFlag = FlagType.Music);
-            AssertNotEqualWhenChanged(entry => entry.RemoveOneAnnotationIfExists<Comment>());
-            AssertNotEqualWhenChanged(entry => entry.RemoveOneAnnotationIfExists<Label>());
-        }
-
         public static TheoryData<Func<object>> SimpleCycleObjects => new() {
             () => new MarkAnnotation {TypeFlag = FlagType.Graphics},
             () => new AnnotationCollection {
@@ -87,8 +59,13 @@ namespace Diz.Test.tests
 
         [Theory]
         [MemberData(nameof(SimpleCycleObjects))]
+        public void XmlFullCycleTwoCopiesSimple(Func<object> createFn) => RunFullCycle(createFn);
+        
+        [Theory]
         [MemberData(nameof(MoreComplexCycleObjects))]
-        public void XmlFullCycleTwoCopies(Func<object> createFn)
+        public void XmlFullCycleTwoCopiesComplex(Func<object> createFn) => RunFullCycle(createFn);
+
+        private static void RunFullCycle(Func<object> createFn)
         {
             XmlTestUtils.RunFullCycle(createFn, out var unchanged, out var cycled);
             Assert.Equal(unchanged, cycled);

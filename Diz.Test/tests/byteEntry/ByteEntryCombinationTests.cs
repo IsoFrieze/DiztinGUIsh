@@ -78,7 +78,7 @@ namespace Diz.Test.tests.byteEntry
             }
         }
     }
-    
+
     public static class ByteCombineTests
     {
         [Fact]
@@ -101,7 +101,7 @@ namespace Diz.Test.tests.byteEntry
             Assert.False(byteEntry1.DontSetParentOnCollectionItems);
             var ex = Assert.Throws<InvalidOperationException>(() => byteEntry1.AppendAnnotationsFrom(byteEntry2));
             Assert.Contains("DontSetParentOnCollectionItems", ex.Message);
-            
+
             Assert.Single(byteEntry1.Annotations);
             Assert.Single(byteEntry2.Annotations);
         }
@@ -115,7 +115,7 @@ namespace Diz.Test.tests.byteEntry
 
             var ex = Assert.Throws<InvalidDataException>(() => byteEntry1.AppendAnnotationsFrom(byteEntry2));
             Assert.Contains("Found multiple annotations", ex.Message);
-            
+
             Assert.Single(byteEntry1.Annotations);
             Assert.Single(byteEntry2.Annotations);
         }
@@ -129,11 +129,11 @@ namespace Diz.Test.tests.byteEntry
 
             Assert.Null(Record.Exception(() => byteEntry1.AppendAnnotationsFrom(byteEntry2)));
             Assert.Equal(2, byteEntry1.Annotations.Count);
-            
+
             Assert.Equal("9999", byteEntry1.GetOneAnnotation<Comment>().Text);
             Assert.Equal("test1111", byteEntry1.GetOneAnnotation<Label>().Name);
         }
-        
+
         [Fact]
         public static void TestByteAnnotationCombine()
         {
@@ -143,7 +143,7 @@ namespace Diz.Test.tests.byteEntry
             Assert.Single(byteEntry1.Annotations);
 
             Assert.Null(Record.Exception(() => byteEntry1.AppendAnnotationsFrom(byteEntry2)));
-            
+
             // a little counter-intuitive. the combination process will reject duplicates of anything,
             // EXCEPT ByteAnnotation.  with ByteAnnotation, if there are two, it'll pick only the one from the container
             // being used as the combination base.
@@ -157,7 +157,7 @@ namespace Diz.Test.tests.byteEntry
             var entry1 = new ByteEntry(new AnnotationCollection
             {
                 new Label {Name = "test1111"}, new ByteAnnotation(), new Comment()
-            }) { DontSetParentOnCollectionItems = true };
+            }) {DontSetParentOnCollectionItems = true};
 
             var entry2 = new ByteEntry(new AnnotationCollection
             {
@@ -190,7 +190,8 @@ namespace Diz.Test.tests.byteEntry
             return CreateByteOneAnnotation(new Label {Name = labelName}, dontSetParentOnCollectionItems);
         }
 
-        private static ByteEntry CreateByteOneAnnotation(Annotation annotation, bool dontSetParentOnCollectionItems = false)
+        private static ByteEntry CreateByteOneAnnotation(Annotation annotation,
+            bool dontSetParentOnCollectionItems = false)
         {
             var entry = new ByteEntry(new AnnotationCollection {annotation})
             {
@@ -199,6 +200,45 @@ namespace Diz.Test.tests.byteEntry
             Assert.Single(entry.Annotations);
             Assert.Equal(dontSetParentOnCollectionItems, dontSetParentOnCollectionItems);
             return entry;
+        }
+    }
+    public static class ByteEntryEquality 
+    {
+        private static ByteEntry CreateSampleEntry()
+        {
+            return new()
+            {
+                Byte = 0xCA, MFlag = true, DataBank = 0x80, DirectPage = 0x2100,
+                Annotations = {new Label {Name = "SomeLabel"}, new Comment {Text = "This is a comment"}}
+            };
+        }
+
+        [Fact]
+        public static void TestByteEntryEquality()
+        {
+            var entry2 = CreateSampleEntry();
+            
+            void AssertNotEqualWhenChanged(Action<ByteEntry> changeSomething)
+            {
+                var byteEntry1 = CreateSampleEntry();
+                changeSomething(byteEntry1);
+                Assert.NotEqual(entry2, byteEntry1);
+            }
+
+            var entry1 = CreateSampleEntry();
+            Assert.Equal(entry1, entry2);
+
+            AssertNotEqualWhenChanged(entry => entry.Byte = 0xFF);
+            AssertNotEqualWhenChanged(entry => entry.Arch = Architecture.Apuspc700);
+            AssertNotEqualWhenChanged(entry => entry.Point = InOutPoint.ReadPoint);
+            AssertNotEqualWhenChanged(entry => entry.DataBank = 43);
+            AssertNotEqualWhenChanged(entry => entry.DirectPage = 222);
+            AssertNotEqualWhenChanged(entry => entry.Annotations.Clear());
+            AssertNotEqualWhenChanged(entry => entry.MFlag = false);
+            AssertNotEqualWhenChanged(entry => entry.XFlag = true);
+            AssertNotEqualWhenChanged(entry => entry.TypeFlag = FlagType.Music);
+            AssertNotEqualWhenChanged(entry => entry.RemoveOneAnnotationIfExists<Comment>());
+            AssertNotEqualWhenChanged(entry => entry.RemoveOneAnnotationIfExists<Label>());
         }
     }
 }

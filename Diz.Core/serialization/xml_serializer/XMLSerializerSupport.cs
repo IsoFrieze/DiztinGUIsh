@@ -259,6 +259,18 @@ namespace Diz.Core.serialization.xml_serializer
                 => parameter
                     .Type<ByteEntry>()
                     
+                    // this class has a ton of helper properties that access stuff in .Annotations. ignore all of that
+                    // this class has a bunch of stuff about where it lives in parents, bytesources, etc. we don't need
+                    // to serialize it, it should be recreated when 
+                    
+                    // this should work in place of all the .Ignore() stuff below... but it doesn't yet.
+                    // sigh.
+                    // .Member(x => x.Annotations).Include()
+                    // .EmitWhenInstance()
+                    
+                    // set to include (whitelist) ONLY the stuff configured with .Member() above
+                    // .IncludeConfiguredMembers()
+                    
                     // ignore all helper stuff, this'll be in the Annotations list
                     .Member(x => x.Arch).Ignore()
                     .Member(x => x.Byte).Ignore()
