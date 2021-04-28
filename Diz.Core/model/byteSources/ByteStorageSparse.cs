@@ -13,7 +13,8 @@ namespace Diz.Core.model.byteSources
     /// i.e. great for stuff like emulator adress spaces which are huge and basically empty except
     /// for a few key areas.
     /// </summary>
-    public class StorageSparse<TItem>: Storage<TItem> where TItem : IParentReferenceTo<Storage<TItem>>
+    public class StorageSparse<T> : Storage<T> 
+        where T : IParentReferenceTo<Storage<T>>
     {
         public override int Count => count;
         
@@ -26,7 +27,7 @@ namespace Diz.Core.model.byteSources
         }
 
         // keeps the keys sorted, which is what we want.
-        private SortedDictionary<int, TItem> bytes;
+        private SortedDictionary<int, T> bytes;
         
         // we need to maintain this. it's not the # of bytes we're storing,
         // it's the max size of the sparse container. i.e. this will never change.
@@ -34,7 +35,7 @@ namespace Diz.Core.model.byteSources
 
         [UsedImplicitly] public StorageSparse() : base(0) { }
 
-        public StorageSparse(IReadOnlyCollection<TItem> inBytes) : base(inBytes) { }
+        public StorageSparse(IReadOnlyCollection<T> inBytes) : base(inBytes) { }
 
         public StorageSparse(int emptyCreateSize) : base(emptyCreateSize) { }
 
@@ -46,7 +47,7 @@ namespace Diz.Core.model.byteSources
             return bytes.Keys.Last();
         }
 
-        public override TItem this[int index]
+        public override T this[int index]
         {
             get => GetByte(index);
             set => SetByte(index, value);
@@ -58,12 +59,12 @@ namespace Diz.Core.model.byteSources
             bytes.Clear();
         }
 
-        public override bool Contains(TItem item)
+        public override bool Contains(T item)
         {
             return item != null && bytes.Keys.Contains(item.ParentIndex);
         }
 
-        public override void CopyTo(TItem[] array, int arrayIndex)
+        public override void CopyTo(T[] array, int arrayIndex)
         {
             if (array.Length < Count)
                 throw new ArgumentException(
@@ -73,11 +74,11 @@ namespace Diz.Core.model.byteSources
             var x = CreateGapFillingEnumerator();
             while (x.MoveNext())
             {
-                array[x.Position] = (TItem) x.Current;
+                array[x.Position] = (T) x.Current;
             }
         }
 
-        public override bool Remove(TItem item)
+        public override bool Remove(T item)
         {
             if (item == null)
                 return false;
@@ -90,10 +91,10 @@ namespace Diz.Core.model.byteSources
 
         public override void CopyTo(Array array, int index)
         {
-            CopyTo((TItem[])array, index);
+            CopyTo((T[])array, index);
         }
 
-        private void SetByte(int index, TItem value)
+        private void SetByte(int index, T value)
         {
             ValidateIndex(index);
             SetParentInfoFor(value, index);
@@ -110,7 +111,7 @@ namespace Diz.Core.model.byteSources
                 throw new ArgumentOutOfRangeException($"Index {index} out of range in SparseByteStorage");   
         }
 
-        protected TItem GetByte(int index)
+        protected T GetByte(int index)
         {
             ValidateIndex(index);
             return bytes.GetValueOrDefault(index);
@@ -118,11 +119,11 @@ namespace Diz.Core.model.byteSources
 
         protected override void InitEmptyContainer(int emptyCreateSize)
         {
-            bytes = new SortedDictionary<int, TItem>();
+            bytes = new SortedDictionary<int, T>();
             count = emptyCreateSize;
         }
 
-        protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<TItem> inBytes)
+        protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<T> inBytes)
         {
             Debug.Assert(inBytes != null);
             if (inBytes.Count > count)
@@ -150,7 +151,7 @@ namespace Diz.Core.model.byteSources
             count = numEntries;
         }
 
-        public override void Add(TItem byteOffset)
+        public override void Add(T byteOffset)
         {
             // going to be a little weird. this would normally be "append" however it's
             // arbitrary where to do that with a dictionary. we wil interpret this as taking the highest
@@ -202,19 +203,19 @@ namespace Diz.Core.model.byteSources
         // which will just return the sections that have been populated.
         //
         // *** For performance, use GetNativeEnumerator() instead where possible. *** 
-        public override IEnumerator<TItem> GetGaplessEnumerator()
+        public override IEnumerator<T> GetGaplessEnumerator()
         {
             return CreateGapFillingEnumerator();
         }
 
-        private GapFillingEnumerator<TItem> CreateGapFillingEnumerator()
+        private GapFillingEnumerator<T> CreateGapFillingEnumerator()
         {
             return new(this);
         }
 
         // return only elements that actually exist (no gaps, no null items will be returned).
         // *** USE THIS WHENEVER POSSIBLE instead of GetGaplessEnumerator() *** 
-        public override IEnumerator<TItem> GetNativeEnumerator()
+        public override IEnumerator<T> GetNativeEnumerator()
         {
             return bytes.Select(pair => pair.Value).GetEnumerator();
         }
@@ -226,7 +227,7 @@ namespace Diz.Core.model.byteSources
 
         // note: indices are going to be ordered, BUT there can be gaps.
         // caller should be prepared to handle this. 
-        public SortedDictionary<int, TItem>.Enumerator GetRealEnumerator()
+        public SortedDictionary<int, T>.Enumerator GetRealEnumerator()
         {
             return bytes.GetEnumerator();
         }

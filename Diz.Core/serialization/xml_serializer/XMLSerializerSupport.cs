@@ -34,8 +34,7 @@ namespace Diz.Core.serialization.xml_serializer
             public Contents(IContents previous)
                 : this(previous, 
                     new StorageSparseSerializer(
-                        previous.Get(
-                            typeof(StorageSparse<ByteEntry>)).For<StorageSparse<ByteEntry>>())
+                        previous.Get(typeof(StorageSparse<ByteEntry>)).For<StorageSparse<ByteEntry>>())
                     ) {}
 
             public Contents(IContents previous, ISerializer<StorageSparse<ByteEntry>> storageSparse)

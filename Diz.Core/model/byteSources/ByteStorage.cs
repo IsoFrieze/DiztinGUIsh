@@ -59,12 +59,12 @@ namespace Diz.Core.model.byteSources
         // IEnumerator<ByteEntry> GetNativeEnumerator();
     }*/
 
-    public abstract class Storage<TItemWeStore> :
-        IShouldReallyBeAListButIAmLazy<TItemWeStore>
+    public abstract class Storage<T> :
+        IShouldReallyBeAListButIAmLazy<T>
         // // we are a class that stores TItems, and OUR parent is TOurParent
         // IStorageWithParent<TItemWeStore, TOurParent> 
         where 
-        TItemWeStore : IParentReferenceTo<Storage<TItemWeStore>>
+        T : IParentReferenceTo<Storage<T>>
     {
         // don't get confused: this is the Parent holding THIS class.
         // it is unrelated to the items that WE hold, nor the fact that THEY also track
@@ -72,13 +72,13 @@ namespace Diz.Core.model.byteSources
         // TODO: change to TParent if we can
         public ByteSource Parent { get; set; } // (in Diz, this is ByteSource, which holds a Storage<ByteEntry>)
 
-        public abstract TItemWeStore this[int index] { get; set; }
+        public abstract T this[int index] { get; set; }
 
-        public abstract void Add(TItemWeStore item);
+        public abstract void Add(T item);
         public abstract void Clear();
-        public abstract bool Contains(TItemWeStore item);
-        public abstract void CopyTo(TItemWeStore[] array, int arrayIndex);
-        public abstract bool Remove(TItemWeStore item);
+        public abstract bool Contains(T item);
+        public abstract void CopyTo(T[] array, int arrayIndex);
+        public abstract bool Remove(T item);
         public abstract void CopyTo(Array array, int index);
         public abstract int Count { get; }
         
@@ -91,7 +91,7 @@ namespace Diz.Core.model.byteSources
             InitFromEmpty(0);
         }
         
-        protected Storage(IReadOnlyCollection<TItemWeStore> inBytes)
+        protected Storage(IReadOnlyCollection<T> inBytes)
         {
             InitFrom(inBytes);
         }
@@ -111,7 +111,7 @@ namespace Diz.Core.model.byteSources
             Debug.Assert(Count == emptyCreateSize);
         }
 
-        private void InitFrom(IReadOnlyCollection<TItemWeStore> inBytes)
+        private void InitFrom(IReadOnlyCollection<T> inBytes)
         {
             Debug.Assert(inBytes != null);
             
@@ -122,7 +122,7 @@ namespace Diz.Core.model.byteSources
         }
 
         protected abstract void InitEmptyContainer(int emptyCreateSize);
-        protected abstract void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<TItemWeStore> inBytes);
+        protected abstract void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<T> inBytes);
         protected abstract void FillEmptyContainerWithBlankBytes(int numEntries);
 
         // GetEnumerator() will return an item at each index, or null if no Byte is present at that address.
@@ -131,17 +131,17 @@ namespace Diz.Core.model.byteSources
         //
         // This is potentially more inefficient but creates a consistent interface.
         // For performance-heavy code, or cases where you only only want non-null bytes, choose another enumerator function
-        public abstract IEnumerator<TItemWeStore> GetGaplessEnumerator();
+        public abstract IEnumerator<T> GetGaplessEnumerator();
         public IEnumerator GetEnumerator()
         {
             return GetGaplessEnumerator();
         }
 
-        IEnumerator<TItemWeStore> IEnumerable<TItemWeStore>.GetEnumerator() => GetGaplessEnumerator();
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetGaplessEnumerator();
 
-        public abstract IEnumerator<TItemWeStore> GetNativeEnumerator();
+        public abstract IEnumerator<T> GetNativeEnumerator();
         
-        protected void ImportBytes(IReadOnlyCollection<TItemWeStore> inBytes)
+        protected void ImportBytes(IReadOnlyCollection<T> inBytes)
         {
             Debug.Assert(inBytes != null);
             foreach (var b in inBytes)
@@ -149,7 +149,7 @@ namespace Diz.Core.model.byteSources
                 Add(b);
             }
         }
-        protected void OnRemoved(TItemWeStore item)
+        protected void OnRemoved(T item)
         {
             ClearParentInfoFor(item);
             UpdateAllParentInfo();
@@ -159,16 +159,16 @@ namespace Diz.Core.model.byteSources
         // update (or remove) all parent info when the collection has changed
         protected abstract void UpdateAllParentInfo(bool shouldUnsetAll = false);
 
-        protected static void ClearParentInfoFor(TItemWeStore b) => SetParentInfoFor(b, -1, null);
-        protected void SetParentInfoFor(TItemWeStore b, int index) => SetParentInfoFor(b, index, this);
+        protected static void ClearParentInfoFor(T b) => SetParentInfoFor(b, -1, null);
+        protected void SetParentInfoFor(T b, int index) => SetParentInfoFor(b, index, this);
         
-        protected static void SetParentInfoFor(TItemWeStore b, int index, Storage<TItemWeStore> parent)
+        protected static void SetParentInfoFor(T b, int index, Storage<T> parent)
         {
             b.ParentIndex = index;
             b.Parent = parent;
         }
 
-        protected void UpdateParentInfoFor(TItemWeStore byteEntry, bool shouldUnsetAll, int newIndex)
+        protected void UpdateParentInfoFor(T byteEntry, bool shouldUnsetAll, int newIndex)
         {
             if (shouldUnsetAll)
                 ClearParentInfoFor(byteEntry);

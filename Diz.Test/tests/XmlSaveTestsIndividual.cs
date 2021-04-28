@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Test.Utils;
-using ExtendedXmlSerializer.ContentModel.Format;
-using ExtendedXmlSerializer.ExtensionModel.Instances;
 using Xunit;
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
