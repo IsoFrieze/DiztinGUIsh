@@ -1,5 +1,6 @@
 ﻿using System;
 using Diz.Core.serialization.xml_serializer;
+using Xunit;
 
 namespace Diz.Test.Utils
 {
@@ -26,6 +27,12 @@ namespace Diz.Test.Utils
             var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
             var deserialized = XmlSerializationSupportNew.Deserialize<T>(xmlToCycle);
             return deserialized;
+        }
+        
+        public static void RunFullCycle(Func<object> createFn)
+        {
+            RunFullCycle(createFn, out var unchanged, out var cycled);
+            Assert.Equal(unchanged, cycled);
         }
     }
 }
