@@ -1,12 +1,74 @@
-﻿using System.Xml;
+﻿using System;
+using System.Reflection;
+using System.Xml;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
+using ExtendedXmlSerializer.ContentModel;
+using ExtendedXmlSerializer.ContentModel.Content;
+using ExtendedXmlSerializer.ContentModel.Format;
+using ExtendedXmlSerializer.Core;
+using ExtendedXmlSerializer.ExtensionModel;
+using ExtendedXmlSerializer.ExtensionModel.Instances;
 
 namespace Diz.Core.serialization.xml_serializer
 {
+    internal sealed class StorageSparseExtension : ISerializerExtension
+    {
+        public static StorageSparseExtension Default { get; } = new();
+
+        private StorageSparseExtension() {}
+
+        public IServiceRepository Get(IServiceRepository parameter) => 
+            parameter.DecorateContentsWith<Contents>().Then();
+
+        void ICommand<IServices>.Execute(IServices parameter) {}
+
+        private sealed class Contents : IContents
+        {
+            private readonly IContents previous;
+            private readonly ISerializer<StorageSparse<ByteEntry>> storageSparse;
+
+            public Contents(IContents previous)
+                : this(previous, 
+                    new StorageSparseSerializer(
+                        previous.Get(
+                            typeof(StorageSparse<ByteEntry>)).For<StorageSparse<ByteEntry>>())
+                    ) {}
+
+            public Contents(IContents previous, ISerializer<StorageSparse<ByteEntry>> storageSparse)
+            {
+                this.previous = previous;
+                this.storageSparse = storageSparse;
+            }
+
+            public ISerializer Get(TypeInfo parameter)
+                => parameter == typeof(StorageSparse<ByteEntry>) 
+                    ? storageSparse.Adapt() 
+                    : previous.Get(parameter);
+        }
+
+        private sealed class StorageSparseSerializer : ISerializer<StorageSparse<ByteEntry>>
+        {
+            private readonly ISerializer<StorageSparse<ByteEntry>> previous;
+
+            public StorageSparseSerializer(ISerializer<StorageSparse<ByteEntry>> previous) => 
+                this.previous = previous;
+
+            public StorageSparse<ByteEntry> Get(IFormatReader parameter)
+            {
+                return previous.Get(parameter);
+            }
+
+            public void Write(IFormatWriter writer, StorageSparse<ByteEntry> instance)
+            {
+                previous.Write(writer, instance);
+            }
+        }
+    }
+    
     /*public sealed class HexIntConverter : IConverter<int>
     {
         public static HexIntConverter Default { get; } = new();
@@ -248,7 +310,7 @@ namespace Diz.Core.serialization.xml_serializer
                     .UseOptimizedNamespaces()
                     .UseAutoFormatting();
         }
-        
+
         private sealed class ByteStorageProfile : IConfigurationProfile
         {
             public static ByteStorageProfile Default { get; } = new();
@@ -257,10 +319,30 @@ namespace Diz.Core.serialization.xml_serializer
 
             public IConfigurationContainer Get(IConfigurationContainer parameter)
                 => parameter.Type<StorageList<ByteEntry>>()
-                    // .Member(x => x.Bytes).Ignore()
+                    .EnableReferences()
+                    .Type<StorageSparse<ByteEntry>>()
+                    .WithInterceptor(StorageSparseInterceptor.Default)
                     .EnableReferences();
 
-            // .Register().Converter(ByteListSerializer.Default);
+            public class StorageSparseInterceptor : SerializationActivator
+            {
+                public static StorageSparseInterceptor Default { get; } = new();
+                
+                // called when the deserialization system is about to create the new StorageSparse object
+                // that it will then populate with data.
+                public override object Activating(Type instanceType)
+                {
+                    var newStorage = new StorageSparse<ByteEntry>();
+                    
+                    // important: tell the storage that it's OK to allow growth beyond the internal 'count'.
+                    newStorage.SetAllowExpanding(true);
+                    
+                    return newStorage;
+                }
+
+                // TODO: override some other methods here if needed.
+                
+            }
         }
         
         public sealed class MainProfile : CompositeConfigurationProfile
@@ -276,25 +358,6 @@ namespace Diz.Core.serialization.xml_serializer
             {}
         }
         
-        public static string Serialize(object toSerialize)
-        {
-            var config = CreateConfig();
-            
-            return config.Serialize(
-                new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
-                toSerialize);
-        }
-        
-        public static T Deserialize<T>(string input)
-        {
-            var config = CreateConfig();
-            return config.Deserialize<T>(input);
-        }
-
-        public static IExtendedXmlSerializer CreateConfig()
-        {
-            return GetConfig().Create();
-        }
         
         public static IConfigurationContainer GetConfig()
         {
@@ -327,6 +390,26 @@ namespace Diz.Core.serialization.xml_serializer
 //                .EnableReferences()
                 .Type<ByteSourceMapping>();
 //                .EnableReferences()
+        }
+        
+        public static string Serialize(object toSerialize)
+        {
+            var config = CreateConfig();
+            
+            return config.Serialize(
+                new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
+                toSerialize);
+        }
+        
+        public static T Deserialize<T>(string input)
+        {
+            var config = CreateConfig();
+            return config.Deserialize<T>(input);
+        }
+
+        public static IExtendedXmlSerializer CreateConfig()
+        {
+            return GetConfig().Create();
         }
     }
 }

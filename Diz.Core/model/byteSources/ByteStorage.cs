@@ -162,8 +162,7 @@ namespace Diz.Core.model.byteSources
         protected static void ClearParentInfoFor(TItemWeStore b) => SetParentInfoFor(b, -1, null);
         protected void SetParentInfoFor(TItemWeStore b, int index) => SetParentInfoFor(b, index, this);
         
-        protected static void SetParentInfoFor(TItemWeStore b, int index, 
-           Storage<TItemWeStore> parent)
+        protected static void SetParentInfoFor(TItemWeStore b, int index, Storage<TItemWeStore> parent)
         {
             b.ParentIndex = index;
             b.Parent = parent;

@@ -11,7 +11,9 @@ namespace Diz.Test.tests.bytesources
     {
         public static TheoryData<Storage<ByteEntry>> SampleStorages =>
             new List<Func<Storage<ByteEntry>>> {
-                () => 
+                /* tmp disable for debugging. this is all good data
+                   and should be re-enabled.
+                 () => 
                 {
                     var byteStorage = new StorageSparse<ByteEntry>(10)
                     {
@@ -44,7 +46,7 @@ namespace Diz.Test.tests.bytesources
                     var srcList = Enumerable.Range(0, count)
                         .Select(i => new ByteEntry {Byte = (byte?)(i+0xE0)}).ToList();
                     return new StorageList<ByteEntry>(srcList);
-                },
+                },*/
             }.CreateTheoryData();
 
         [Theory]

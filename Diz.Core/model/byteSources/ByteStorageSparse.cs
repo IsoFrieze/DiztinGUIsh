@@ -15,12 +15,28 @@ namespace Diz.Core.model.byteSources
     /// </summary>
     public class StorageSparse<TItem>: Storage<TItem> where TItem : IParentReferenceTo<Storage<TItem>>
     {
-        [UsedImplicitly] public StorageSparse() : base(0) { }
-        public StorageSparse(IReadOnlyCollection<TItem> inBytes) : base(inBytes) { }
-        public StorageSparse(int emptyCreateSize) : base(emptyCreateSize) { }
+        public override int Count => count;
+        
+        public int ActualCount => bytes.Count;
+
+        private bool allowExpanding;
+        public void SetAllowExpanding(bool val)
+        {
+            allowExpanding = true;
+        }
 
         // keeps the keys sorted, which is what we want.
         private SortedDictionary<int, TItem> bytes;
+        
+        // we need to maintain this. it's not the # of bytes we're storing,
+        // it's the max size of the sparse container. i.e. this will never change.
+        private int count;
+
+        [UsedImplicitly] public StorageSparse() : base(0) { }
+
+        public StorageSparse(IReadOnlyCollection<TItem> inBytes) : base(inBytes) { }
+
+        public StorageSparse(int emptyCreateSize) : base(emptyCreateSize) { }
 
         private int GetLargestKey()
         {
@@ -86,13 +102,6 @@ namespace Diz.Core.model.byteSources
             bytes[index] = value;
         }
 
-        // we need to maintain this. it's not the # of bytes we're storing,
-        // it's the max size of the sparse container. i.e. this will never change.
-        private int count;
-        public override int Count => count;
-
-        public int ActualCount => bytes.Count;
-
         private bool ValidIndex(int index) => index >= 0 && index < Count;
 
         private void ValidateIndex(int index)
@@ -147,14 +156,41 @@ namespace Diz.Core.model.byteSources
             // arbitrary where to do that with a dictionary. we wil interpret this as taking the highest
             // index (key i.e. SNES or ROM offset) and adding one to that.
 
-            var largestKey = GetLargestKey();
-            var indexThisWillBeAddedTo = largestKey + 1; // go one higher than our biggest
+            var indexThisWillBeAddedTo = ComputeNewIndexForAdd();
 
-            ValidateIndex(indexThisWillBeAddedTo);
-            SetParentInfoFor(byteOffset, indexThisWillBeAddedTo);
+            // can happen during serialization, gracefully handle
+            if (byteOffset != null)
+            {
+                SetParentInfoFor(byteOffset, indexThisWillBeAddedTo);
+                bytes[indexThisWillBeAddedTo] = byteOffset;
+            }
             
-            bytes[indexThisWillBeAddedTo] = byteOffset;
             count++;
+        }
+
+        private int ComputeNewIndexForAdd()
+        {
+            int indexThisWillBeAddedTo; // go one higher than our biggest
+            if (!allowExpanding)
+            {
+                // normal: find the largest key already set, and add one to it. use that as the new key.
+                var largestKey = GetLargestKey();
+                indexThisWillBeAddedTo = largestKey + 1;
+                
+                ValidateIndex(indexThisWillBeAddedTo);
+            }
+            else
+            {
+                // expansion mode (used during deserialization)
+                // in this mode, 'count' is not prefilled so will tick up even for null entries. use it
+                // as the new index.
+                //
+                // NOTE: this will probably go away and can be re-unified once we get better serialization.
+                // this is a little wacky.
+                indexThisWillBeAddedTo = count;
+            }
+            
+            return indexThisWillBeAddedTo;
         }
 
         // for our normal enumerator facing client code, use our special enumerator
