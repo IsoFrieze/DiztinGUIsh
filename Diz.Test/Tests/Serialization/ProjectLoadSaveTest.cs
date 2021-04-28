@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
@@ -9,7 +8,7 @@ using Diz.Core.util;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Diz.Test.tests
+namespace Diz.Test.Tests.Serialization
 {
     public class LoadSaveTest
     {
@@ -17,7 +16,7 @@ namespace Diz.Test.tests
         private void FullSerializeAndDeserialize()
         {
             // use the sample data to fake a project
-            var sampleProject = new Project {Data = SampleRomData.SampleData};
+            var sampleProject = new Core.model.Project {Data = SampleRomData.SampleData};
             
             // extract the bytes that would normally be in the SMC file (they only exist in code for this sample data)
             var romFileBytes = sampleProject.Data.RomByteSource.Bytes.Select(b =>
@@ -48,7 +47,7 @@ namespace Diz.Test.tests
             this.output = output;
         }
         
-        private static Project OpenProject(string openFile)
+        private static Core.model.Project OpenProject(string openFile)
         {
             var projectFileManager = new ProjectFileManager();
             var (project, warning) = projectFileManager.Open(openFile);

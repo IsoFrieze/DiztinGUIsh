@@ -3,16 +3,15 @@ using System.IO;
 using System.Linq;
 using Diz.Core.arch;
 using Diz.Core.model;
-using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using Xunit;
 
-namespace Diz.Test.tests
+namespace Diz.Test.Tests.ByteEntry
 {
-    public sealed class RomByteTests
+    public sealed class ByteEntryAnnotationModificationTests
     {
-        // old-style
-        private static ByteEntry SampleRomByte1()
+        // old-style init (still valid, just shortcut-y)
+        private static Core.model.byteSources.ByteEntry SampleByteEntryOldStyle()
         {
             return new() {
                 Arch = Architecture.Apuspc700,
@@ -26,10 +25,10 @@ namespace Diz.Test.tests
             };
         }
         
-        // new-style
-        private static ByteEntry SampleRomByte3()
+        // new-style init
+        private static Core.model.byteSources.ByteEntry SampleRomByteNewStyle()
         {
-            return new(new AnnotationCollection
+            return new(new Core.model.byteSources.AnnotationCollection
             {
                 new BranchAnnotation
                 {
@@ -56,8 +55,8 @@ namespace Diz.Test.tests
         [Fact]
         public void OldVsNewStyle()
         {
-            var rb1 = SampleRomByte1();
-            var rb3 = SampleRomByte3();
+            var rb1 = SampleByteEntryOldStyle();
+            var rb3 = SampleRomByteNewStyle();
 
             Assert.Equal(rb1.GetOneAnnotation<MarkAnnotation>(), rb3.GetOneAnnotation<MarkAnnotation>());
             Assert.Equal(rb1.GetOneAnnotation<OpcodeAnnotation>(), rb3.GetOneAnnotation<OpcodeAnnotation>());
@@ -67,8 +66,8 @@ namespace Diz.Test.tests
         [Fact]
         public void RB_1vs3()
         {
-            var rb1 = SampleRomByte1();
-            var rb3 = SampleRomByte3();
+            var rb1 = SampleByteEntryOldStyle();
+            var rb3 = SampleRomByteNewStyle();
             
             Assert.Equal(rb1, rb3);
 
@@ -82,8 +81,8 @@ namespace Diz.Test.tests
         [Fact]
         public void UnorderedListEquality1()
         {
-            var rb1 = SampleRomByte1();
-            var rb3 = SampleRomByte3();
+            var rb1 = SampleByteEntryOldStyle();
+            var rb3 = SampleRomByteNewStyle();
 
             // create lists and tell it not to enforce no-duplicate annotation policy
             rb1.GetOrCreateAnnotationsList().EnforcePolicy = false;
@@ -107,7 +106,7 @@ namespace Diz.Test.tests
         [Fact]
         public void AnnotationAccess1()
         {
-            var rb3 = SampleRomByte3();
+            var rb3 = SampleRomByteNewStyle();
             Assert.Null(rb3.GetOneAnnotation<Comment>());
             
             rb3.Annotations.Add(new Comment {Text="1"});
@@ -124,7 +123,7 @@ namespace Diz.Test.tests
 
             Assert.Null(mark1.Parent);
             Assert.Null(label1.Parent);
-            var unused = new AnnotationCollection {label1, mark1};
+            var unused = new Core.model.byteSources.AnnotationCollection {label1, mark1};
             
             Assert.Null(mark1.Parent);
             Assert.Null(label1.Parent);
@@ -136,11 +135,11 @@ namespace Diz.Test.tests
             var label1 = new Label {Name = "test11", Comment = "asdf"};
             var mark1 = new MarkAnnotation {TypeFlag = FlagType.Graphics};
             
-            var ac = new AnnotationCollection {label1, mark1};
-            var b1 = new ByteEntry();
+            var ac = new Core.model.byteSources.AnnotationCollection {label1, mark1};
+            var b1 = new Core.model.byteSources.ByteEntry();
             Assert.Throws<InvalidOperationException>(() => b1.ReplaceAnnotationsWith(ac));
 
-            var b2 = new ByteEntry {DontSetParentOnCollectionItems = true};
+            var b2 = new Core.model.byteSources.ByteEntry {DontSetParentOnCollectionItems = true};
             ac.Parent = b2;
             b2.ReplaceAnnotationsWith(ac);
             Assert.Equal(b2, mark1.Parent);
@@ -156,12 +155,12 @@ namespace Diz.Test.tests
         }
         
         [Fact]
-        public void TestParentFixing3()
+        public void TestParentFixing2()
         {
             var label1 = new Label {Name = "test11", Comment = "asdf"};
             var mark1 = new MarkAnnotation {TypeFlag = FlagType.Graphics};
 
-            var b2 = new ByteEntry(new AnnotationCollection {label1, mark1});
+            var b2 = new Core.model.byteSources.ByteEntry(new Core.model.byteSources.AnnotationCollection {label1, mark1});
             Assert.Equal(b2, mark1.Parent);
             Assert.Equal(b2, label1.Parent);
 
@@ -174,14 +173,14 @@ namespace Diz.Test.tests
         [Fact]
         public void TestNoAnnotation()
         {
-            static void TestNullAnnotations(ByteEntry entry)
+            static void TestNullAnnotations(Core.model.byteSources.ByteEntry entry)
             {
                 #if EXPECTING_NULL_ANNOTATIONS
                 Assert.Null(entry.Annotations);
                 #endif    
             }
             
-            var entry = new ByteEntry();
+            var entry = new Core.model.byteSources.ByteEntry();
             TestNullAnnotations(entry);
             var nothing = entry.GetOneAnnotation<Comment>();
             Assert.Null(nothing);
@@ -194,7 +193,7 @@ namespace Diz.Test.tests
         [Fact]
         public void TestVariousPolicyViolations()
         {
-            var entry = new ByteEntry {DataBank = 0x55};
+            var entry = new Core.model.byteSources.ByteEntry {DataBank = 0x55};
             Assert.Single(entry.Annotations);
             Assert.True(entry.Annotations[0].GetType() == typeof(OpcodeAnnotation));
 
@@ -208,7 +207,7 @@ namespace Diz.Test.tests
             
             // replacing the first one with the same type as [1] should violate policy and throw an error
             Assert.Throws<InvalidDataException>(() => entry.Annotations[0] = new Comment());
-            Assert.Equal(2, entry.Annotations.Count);
+            Assert.Equal(2, entry.Annotations.Count); // and we should be unchanged in size after exception
 
             // replacing the first one with an entry of a different type should be ok.
             entry.Annotations[0] = new Label();
@@ -221,7 +220,7 @@ namespace Diz.Test.tests
         [Fact]
         public void TestByteAnnotations()
         {
-            var entry = new ByteEntry {Byte = 0x55};
+            var entry = new Core.model.byteSources.ByteEntry {Byte = 0x55};
             Assert.Single(entry.Annotations);
             Assert.True(entry.Annotations[0].GetType() == typeof(ByteAnnotation));
             Assert.Throws<InvalidDataException>(() => entry.Annotations.Add(new ByteAnnotation()));
@@ -232,7 +231,7 @@ namespace Diz.Test.tests
         [Fact]
         public void TestAddNullAnnotationFails()
         {
-            var entry = new ByteEntry {Byte = 0xFF};
+            var entry = new Core.model.byteSources.ByteEntry {Byte = 0xFF};
             Assert.Throws<InvalidDataException>(() => entry.Annotations.Add(null));
         }
 
@@ -248,54 +247,19 @@ namespace Diz.Test.tests
             Assert.Equal(Cpu65C816.AddressMode.Constant8, mode2);
         }
 
-        [Fact]
-        public static void TestGetFlatByteNonPadded()
-        {
-            // Get a byte from the sample data that is a real (i.e. non-padded) byte
-            
-            var sampleData = SampleRomData.SampleData;
-            const int romOffset = 0x0A;
-            const int snesAddress = 0x808000 + romOffset;
-            
-            var flatByte = ByteGraphUtil.BuildFlatDataFrom(sampleData.SnesAddressSpace, snesAddress);
-            Assert.NotNull(flatByte);
-            Assert.NotNull(flatByte.Byte);
-            Assert.Equal(0xC2, flatByte.Byte.Value);
-        }
-        
-        [Fact]
-        public static void TestGetFlatByteInRange()
-        {
-            // Get a byte from the sample data that is a padded (i.e. for sample ROMs we can create them with a different
-            // size than their source data. in this one, we pad the ROM from a few hundred bytes and add zero'd bytes
-            // until we reach 32k bytes). This test is mostly testing that we built the sample data correctly, in real
-            // world scenarios, this would never fail because we're not doing padding.
-            
-            var sampleData = SampleRomData.SampleData;
-            const int romOffset = 0xEB;
-            const int snesAddress = 0x808000 + romOffset;
-
-            Assert.True(romOffset >= sampleData.OriginalRomSizeBeforePadding);
-            
-            var flatByte = ByteGraphUtil.BuildFlatDataFrom(sampleData.SnesAddressSpace, snesAddress);
-            Assert.NotNull(flatByte);
-            Assert.NotNull(flatByte.Byte);
-            Assert.Equal(0x00, flatByte.Byte.Value);
-        }
 
         [Fact]
-        public void TestEquals()
+        public void TestAnnotationsComparable()
         {
-            static void AssertImplementsComparable<TAnnotation>(AnnotationCollection annotations)
+            static void AssertImplementsComparable<TAnnotation>(Core.model.byteSources.AnnotationCollection annotations)
             {
                 var annotation = (Annotation)annotations.SingleOrDefaultOfType(typeof(TAnnotation));
                 Assert.NotNull(annotation);
                 Assert.True(annotation is IComparable<TAnnotation>);
             }
 
-            var rb1 = SampleRomByte1();
-            var rb2 = SampleRomByte1();
-            
+            var rb1 = SampleByteEntryOldStyle();
+
             foreach (var item in rb1.Annotations)
             {
                 Assert.True(item is IComparable);
@@ -305,8 +269,21 @@ namespace Diz.Test.tests
             AssertImplementsComparable<ByteAnnotation>(rb1.Annotations);
             AssertImplementsComparable<MarkAnnotation>(rb1.Annotations);
             AssertImplementsComparable<BranchAnnotation>(rb1.Annotations);
+        }
 
-            rb1.Annotations.OrderBy(x => x);
+        [Fact]
+        public static void TestSameElementDifferentOrderShouldStillBeEqual()
+        {
+            var rb1 = SampleByteEntryOldStyle();
+            var rb2 = SampleByteEntryOldStyle();
+            
+            var sortedList = rb1.Annotations.OrderBy(x => x.GetType().Name).ToList();
+            rb1.Annotations.Clear();
+            rb1.Annotations.AddRange(sortedList);
+            
+            // make sure it's really sorted.
+            Assert.Equal(typeof(BranchAnnotation), rb1.Annotations[0].GetType());
+            Assert.Equal(typeof(OpcodeAnnotation), rb2.Annotations[0].GetType());
 
             Assert.True(rb1.Annotations.EffectivelyEquals(rb2.Annotations));
 

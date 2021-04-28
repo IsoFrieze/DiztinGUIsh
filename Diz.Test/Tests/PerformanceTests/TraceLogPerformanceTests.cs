@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Diz.Test.tests
+namespace Diz.Test.Tests.PerformanceTests
 {
     public sealed class XOutLogger : ILogger
     {

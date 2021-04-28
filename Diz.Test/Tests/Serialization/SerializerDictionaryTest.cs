@@ -9,7 +9,7 @@ using ExtendedXmlSerializer.Configuration;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Diz.Test.tests
+namespace Diz.Test.Tests.Serialization
 {
     public class SerializerDictionaryTest
     {

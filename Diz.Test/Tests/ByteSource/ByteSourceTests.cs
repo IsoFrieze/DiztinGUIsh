@@ -1,4 +1,4 @@
-﻿namespace Diz.Test.tests.bytesources
+﻿namespace Diz.Test.Tests.ByteSource
 {
     public class ByteSourceTests
     {

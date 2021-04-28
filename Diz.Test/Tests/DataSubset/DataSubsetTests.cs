@@ -4,9 +4,10 @@ using System.Linq;
 using Diz.Core.datasubset;
 using Diz.Core.util;
 using Xunit;
+
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Global
 
-namespace Diz.Test.tests
+namespace Diz.Test.Tests.DataSubset
 {
     public static class DataSubsetTests
     {

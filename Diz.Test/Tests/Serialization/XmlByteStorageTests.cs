@@ -3,11 +3,11 @@ using Diz.Core.model.byteSources;
 using Diz.Test.Utils;
 using Xunit;
 
-namespace Diz.Test.tests
+namespace Diz.Test.Tests.Serialization
 {
     public class XmlByteStorageTests
     {
-        private static ByteEntry CreateSampleEntryX()
+        private static Core.model.byteSources.ByteEntry CreateSampleEntryX()
         {
             return new()
             {
@@ -25,7 +25,7 @@ namespace Diz.Test.tests
 
             XmlTestUtils.RunFullCycle(() =>
             {
-                var sampleEmptyByteSparse = new StorageSparse<ByteEntry>(10) {[1] = CreateSampleEntryX(), [8] = e1};
+                var sampleEmptyByteSparse = new StorageSparse<Core.model.byteSources.ByteEntry>(10) {[1] = CreateSampleEntryX(), [8] = e1};
                 return sampleEmptyByteSparse;
             }, out var unchanged, out var cycled);
             

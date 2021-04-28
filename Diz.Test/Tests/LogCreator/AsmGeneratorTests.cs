@@ -9,7 +9,7 @@ using Diz.Test.Utils;
 using Moq;
 using Xunit;
 
-namespace Diz.Test.tests.assemblygenerators
+namespace Diz.Test.Tests.LogCreator
 {
     public static class AsmGeneratorTests
     {

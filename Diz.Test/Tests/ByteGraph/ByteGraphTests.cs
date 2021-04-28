@@ -1,15 +1,17 @@
 ﻿using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.util;
+using Diz.Test.TestData;
 using Xunit;
 
-namespace Diz.Test.tests
+namespace Diz.Test.Tests.ByteGraph
 {
     public static class ByteGraphTests
     {
         [Fact]
         public static void BuildBasicGraph()
         {
-            var (srcData, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
+            var (srcData, data) = TinyHiRomCreator.CreateSampleRomByteSourceElements();
             
             var snesAddress = data.ConvertPCtoSnes(0);
             var graph = ByteGraphUtil.BuildFullGraph(data.SnesAddressSpace, snesAddress);
@@ -52,7 +54,7 @@ namespace Diz.Test.tests
          [Fact]
         public static void TraverseChildren()
         {
-            var (_, data) = SampleRomCreator1.CreateSampleRomByteSourceElements();
+            var (_, data) = TinyHiRomCreator.CreateSampleRomByteSourceElements();
             
             var snesAddress = data.ConvertPCtoSnes(0);
 
@@ -82,5 +84,39 @@ namespace Diz.Test.tests
             Assert.Equal(opcodeAnnotation.Parent, romByte);
         }
 
+        [Fact]
+        public static void TestGetFlatByteNonPadded()
+        {
+            // Get a byte from the sample data that is a real (i.e. non-padded) byte
+            
+            var sampleData = SampleRomData.SampleData;
+            const int romOffset = 0x0A;
+            const int snesAddress = 0x808000 + romOffset;
+            
+            var flatByte = ByteGraphUtil.BuildFlatDataFrom(sampleData.SnesAddressSpace, snesAddress);
+            Assert.NotNull(flatByte);
+            Assert.NotNull(flatByte.Byte);
+            Assert.Equal(0xC2, flatByte.Byte.Value);
+        }
+        
+        [Fact]
+        public static void TestGetFlatByteInRange()
+        {
+            // Get a byte from the sample data that is a padded (i.e. for sample ROMs we can create them with a different
+            // size than their source data. in this one, we pad the ROM from a few hundred bytes and add zero'd bytes
+            // until we reach 32k bytes). This test is mostly testing that we built the sample data correctly, in real
+            // world scenarios, this would never fail because we're not doing padding.
+            
+            var sampleData = SampleRomData.SampleData;
+            const int romOffset = 0xEB;
+            const int snesAddress = 0x808000 + romOffset;
+
+            Assert.True(romOffset >= sampleData.OriginalRomSizeBeforePadding);
+            
+            var flatByte = ByteGraphUtil.BuildFlatDataFrom(sampleData.SnesAddressSpace, snesAddress);
+            Assert.NotNull(flatByte);
+            Assert.NotNull(flatByte.Byte);
+            Assert.Equal(0x00, flatByte.Byte.Value);
+        }
     }
 }

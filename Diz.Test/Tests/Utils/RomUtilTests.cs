@@ -1,7 +1,7 @@
 ﻿using Diz.Core.util;
 using Xunit;
 
-namespace Diz.Test.tests
+namespace Diz.Test.Tests.Utils
 {
     public static class RomUtilTests
     {

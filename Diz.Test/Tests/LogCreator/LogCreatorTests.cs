@@ -1,79 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
+using Diz.Test.TestData;
 using Diz.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
-namespace Diz.Test.tests
+namespace Diz.Test.Tests.LogCreator
 {
     public sealed class LogCreatorTests
     {
-        private Data CreateInputRom()
-        {
-            var bytes = new List<ByteEntry>
-            {
-                // --------------------------
-                // highlighting a particular section here
-                // we will use this for unit tests as well.
-
-                // SNES address: 808000
-                // instruction: LDA.W Test_Data,X
-                new()
-                {
-                    Byte = 0xBD, TypeFlag = FlagType.Opcode, MFlag = true, Point = InOutPoint.InPoint,
-                    DataBank = 0x80, DirectPage = 0x2100
-                },
-                new() {Byte = 0x5B, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100}, // Test_Data
-                new() {Byte = 0x80, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100}, // Test_Data
-
-                // SNES address: 808003
-                // instruction: STA.W $0100,X
-                new() {Byte = 0x9D, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
-                new() {Byte = 0x00, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-                new() {Byte = 0x01, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-
-                // SNES address: 808006
-                // instruction: DEX
-                new()
-                {
-                    Byte = 0xCA, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100,
-                    Annotations = {new Label {Name = "Test22"}}
-                },
-
-                // SNES address: 808007
-                // instruction: BPL CODE_808000
-                new()
-                {
-                    Byte = 0x10, TypeFlag = FlagType.Opcode, MFlag = true, Point = InOutPoint.OutPoint,
-                    DataBank = 0x80, DirectPage = 0x2100
-                },
-                new() {Byte = 0xF7, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
-            };
-
-            var actualRomBytes = new ByteSource
-            {
-                Name = "Space Cats 2: Rise of Lopsy Dumpwell",
-                Bytes = new StorageList<ByteEntry>(bytes)
-            };
-
-            // var data = new TestData()
-            var data = new Data()
-                .PopulateFromRom(actualRomBytes, RomMapMode.LoRom, RomSpeed.FastRom);
-
-            // another way to add comments, adds it to the SNES address space instead of the ROM.
-            // retrievals should be unaffected.
-            data.Labels.AddLabel(0x808000 + 0x5B, new Label {Name = "Test_Data", Comment = "Pretty cool huh?"});
-
-            return data;
-        }
-
         private readonly ITestOutputHelper debugWriter;
         public LogCreatorTests(ITestOutputHelper debugWriter)
         {
@@ -83,7 +24,7 @@ namespace Diz.Test.tests
         [Fact]
         public void TestLabelShit()
         {
-            var data = CreateInputRom();
+            var data = SpaceCatsRom.CreateInputRom();
             
             void TestIt()
             {
@@ -113,7 +54,7 @@ namespace Diz.Test.tests
         [Fact]
         public void TestAnnotationParentWhenPopulatedFrom()
         {
-            static void TestParents(ByteEntry byteEntry9)
+            static void TestParents(Core.model.byteSources.ByteEntry byteEntry9)
             {
                 var by1 = byteEntry9.Byte;
                 Assert.NotNull(by1);
@@ -129,9 +70,9 @@ namespace Diz.Test.tests
                 }
             }
 
-            var actualRomBytes = new ByteSource
+            var actualRomBytes = new Core.model.byteSources.ByteSource
             {
-                Bytes = new StorageList<ByteEntry>(new List<ByteEntry>
+                Bytes = new StorageList<Core.model.byteSources.ByteEntry>(new List<Core.model.byteSources.ByteEntry>
                 {
                     new()
                     {
@@ -153,7 +94,7 @@ namespace Diz.Test.tests
         [EmbeddedResourceData("Diz.Test/Resources/samplerom-a-few-lines.asm")]
         public void TestAFewLines(string expectedAsm)
         {
-            var data = CreateInputRom();
+            var data = SpaceCatsRom.CreateInputRom();
             var assemblyOutput = LogWriterHelper.ExportAssembly(data, logCreator =>
             {
                 var settings = logCreator.Settings;
@@ -164,13 +105,13 @@ namespace Diz.Test.tests
                 {
                     switch (progressEvent.State)
                     {
-                        case LogCreator.ProgressEvent.Status.StartTemporaryLabelsGenerate:
+                        case Core.export.LogCreator.ProgressEvent.Status.StartTemporaryLabelsGenerate:
                             {
                                 var actualDict = logCreator.Data.Labels.Labels.ToDictionary(p => p.Key);
                                 TestOriginal2Labels(actualDict);
                             }
                             break;
-                        case LogCreator.ProgressEvent.Status.DoneTemporaryLabelsGenerate:
+                        case Core.export.LogCreator.ProgressEvent.Status.DoneTemporaryLabelsGenerate:
                             {
                                 var actualDict = logCreator.Data.Labels.Labels.ToDictionary(p => p.Key);
                                 TestOriginal2Labels(actualDict);
@@ -187,7 +128,7 @@ namespace Diz.Test.tests
         [Fact]
         public void TestLabelTracker()
         {
-            var data = CreateInputRom();
+            var data = SpaceCatsRom.CreateInputRom();
             foreach (var l in data.Labels.Labels)
             {
                 Assert.NotNull(l.Value);
@@ -222,7 +163,7 @@ namespace Diz.Test.tests
         [Fact]
         public void TestParent()
         {
-            var data = CreateInputRom();
+            var data = SpaceCatsRom.CreateInputRom();
 
             var annotations = data.RomByteSource
                 .GetOnlyOwnAnnotations<Label>().ToList();
@@ -239,7 +180,7 @@ namespace Diz.Test.tests
         [Fact]
         public void TestLabelAccess()
         {
-            var data = CreateInputRom();
+            var data = SpaceCatsRom.CreateInputRom();
             
             var actualDict = data.SnesAddressSpace
                 .GetAnnotationsIncludingChildrenEnumerator<Label>()

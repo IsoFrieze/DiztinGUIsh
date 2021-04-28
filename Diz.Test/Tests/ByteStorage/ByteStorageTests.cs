@@ -5,15 +5,15 @@ using Diz.Core.model.byteSources;
 using Diz.Test.Utils;
 using Xunit;
 
-namespace Diz.Test.tests.bytesources
+namespace Diz.Test.Tests.ByteStorage
 {
     public static class ByteStorageTests
     {
-        public static TheoryData<Storage<ByteEntry>> SampleStorages =>
-            new List<Func<Storage<ByteEntry>>> {
+        public static TheoryData<Storage<Core.model.byteSources.ByteEntry>> SampleStorages =>
+            new List<Func<Storage<Core.model.byteSources.ByteEntry>>> {
                 () => 
                 {
-                    var byteStorage = new StorageSparse<ByteEntry>(10)
+                    var byteStorage = new StorageSparse<Core.model.byteSources.ByteEntry>(10)
                     {
                         [1] = new() {Byte = 0xE1}, 
                         [7] = new() {Byte = 0xE7}
@@ -23,10 +23,10 @@ namespace Diz.Test.tests.bytesources
                 () =>
                 {
                     const int count = 10;
-                    var byteStorage = new StorageSparse<ByteEntry>(count);
+                    var byteStorage = new StorageSparse<Core.model.byteSources.ByteEntry>(count);
                     for (var i = 0; i < count; ++i)
                     {
-                        byteStorage[i] = new ByteEntry {Byte = (byte?)(i+0xE0)};
+                        byteStorage[i] = new Core.model.byteSources.ByteEntry {Byte = (byte?)(i+0xE0)};
                     }
                     return byteStorage;
                 },
@@ -34,28 +34,28 @@ namespace Diz.Test.tests.bytesources
                 {
                     const int count = 10;
                     var srcList = Enumerable.Range(0, count)
-                        .Select(i => new ByteEntry {Byte = (byte?)(i+0xE0)}).ToList();
-                    return new StorageSparse<ByteEntry>(srcList);
+                        .Select(i => new Core.model.byteSources.ByteEntry {Byte = (byte?)(i+0xE0)}).ToList();
+                    return new StorageSparse<Core.model.byteSources.ByteEntry>(srcList);
                 },
                 
                 () =>
                 {
                     const int count = 10;
                     var srcList = Enumerable.Range(0, count)
-                        .Select(i => new ByteEntry {Byte = (byte?)(i+0xE0)}).ToList();
-                    return new StorageList<ByteEntry>(srcList);
+                        .Select(i => new Core.model.byteSources.ByteEntry {Byte = (byte?)(i+0xE0)}).ToList();
+                    return new StorageList<Core.model.byteSources.ByteEntry>(srcList);
                 },
             }.CreateTheoryData();
 
         [Theory]
         [MemberData(nameof(SampleStorages))]
-        public static void TestSparseStorageAdd(Storage<ByteEntry> byteStorage)
+        public static void TestSparseStorageAdd(Storage<Core.model.byteSources.ByteEntry> byteStorage)
         {
-            var hasGaps = byteStorage is StorageSparse<ByteEntry> sparse && sparse.ActualCount != byteStorage.Count;
+            var hasGaps = byteStorage is StorageSparse<Core.model.byteSources.ByteEntry> sparse && sparse.ActualCount != byteStorage.Count;
             var shouldBeNonNullOn = new List<int> {1,7};
          
             var i = 0;
-            foreach (ByteEntry b in byteStorage)
+            foreach (Core.model.byteSources.ByteEntry b in byteStorage)
             {
                 if (b != null)
                     Assert.True(b.Byte == 0xE0 + i);
@@ -74,9 +74,9 @@ namespace Diz.Test.tests.bytesources
 
         [Theory]
         [MemberData(nameof(SampleStorages))]
-        public static void TestSparseStorageDict(Storage<ByteEntry> byteStorage)
+        public static void TestSparseStorageDict(Storage<Core.model.byteSources.ByteEntry> byteStorage)
         {
-            var byteStorageSparse = byteStorage as StorageSparse<ByteEntry>;
+            var byteStorageSparse = byteStorage as StorageSparse<Core.model.byteSources.ByteEntry>;
             var hasGaps = byteStorageSparse != null && byteStorageSparse.ActualCount != byteStorage.Count;
             Assert.Equal(10, byteStorage.Count);
 
@@ -115,7 +115,7 @@ namespace Diz.Test.tests.bytesources
 
         [Theory]
         [MemberData(nameof(SampleStorages))]
-        public static void TestSparseStorageRange(Storage<ByteEntry> byteStorage)
+        public static void TestSparseStorageRange(Storage<Core.model.byteSources.ByteEntry> byteStorage)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => byteStorage[-1]);
             Assert.Throws<ArgumentOutOfRangeException>(() => byteStorage[10]);
