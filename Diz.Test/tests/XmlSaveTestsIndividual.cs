@@ -59,7 +59,10 @@ namespace Diz.Test.tests
             () => new ByteSource(),
             () => SampleRomCreator1.CreateBaseRom().RomByteSource.Bytes[0],
             () => SampleRomCreator1.CreateBaseRom().RomByteSource,
-            () => SampleRomCreator1.CreateBaseRom().SnesAddressSpace, // next up, not working yet.
+            
+            // tmp disabled. this WORKS technically but, at current, we generate a gigantic XML file for it so it takes forever
+            // what we need to do instead is to modify the serialization to output the sparse version, then this is fine.
+            // () => SampleRomCreator1.CreateBaseRom().SnesAddressSpace,
         };
         
         public static StorageList<ByteEntry> CreateSampleByteList()
@@ -82,14 +85,14 @@ namespace Diz.Test.tests
         }
 
 
-        /*[Theory]
+        [Theory]
         [MemberData(nameof(SimpleCycleObjects))]
         [MemberData(nameof(MoreComplexCycleObjects))]
         public void XmlFullCycleTwoCopies(Func<object> createFn)
         {
             XmlTestUtils.RunFullCycle(createFn, out var unchanged, out var cycled);
             Assert.Equal(unchanged, cycled);
-        }*/
+        }
 
         [Fact]
         public void XmlFullCycleByteStorage()
