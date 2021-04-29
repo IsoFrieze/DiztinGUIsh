@@ -59,7 +59,7 @@ namespace Diz.Core.model.byteSources
         #region References to parent enclosures
         
         // helper
-        public ByteSource ParentByteSource => Parent?.Parent;
+        // TODO: re-enable (get it working with serialization) public ByteSource ParentByteSource => Parent?.Parent;
 
         // real stuff
         public int ParentIndex  { get; set; }

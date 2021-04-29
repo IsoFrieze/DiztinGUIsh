@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace Diz.Core.model.byteSources
@@ -28,6 +29,8 @@ namespace Diz.Core.model.byteSources
 
         // keeps the keys sorted, which is what we want.
         private SortedDictionary<int, T> bytes;
+
+        public SortedDictionary<int, T> BytesDict => bytes;
         
         // we need to maintain this. it's not the # of bytes we're storing,
         // it's the max size of the sparse container. i.e. this will never change.
@@ -38,7 +41,23 @@ namespace Diz.Core.model.byteSources
         public StorageSparse(IReadOnlyCollection<T> inBytes) : base(inBytes) { }
 
         public StorageSparse(int emptyCreateSize) : base(emptyCreateSize) { }
+        
+        [UsedImplicitly] 
+        // used for serialization. every parameter needs to match each get-only property and this will be called.
+        // for more info, see .EnableParameterizedContent() from ExtendedXmlSerializer, see
+        // https://github.com/ExtendedXmlSerializer/home/wiki/Features#immutable-classes-and-content for the rules.
+        public StorageSparse(int count, SortedDictionary<int, T> bytesDict, int actualCount, bool isReadOnly, bool isSynchronized, object syncRoot)
+        {
+            this.count = count;
+            this.bytes = bytesDict;
 
+            Debug.Assert(bytes.Count == actualCount);
+
+            // the following are ignored: isReadOnly, isSynchronized, syncRoot
+        }
+        
+        // TODO: maybe expose internal dictionary as property and keep it in the parameterized constructor
+        
         private int GetLargestKey()
         {
             if (bytes == null || bytes.Count == 0)

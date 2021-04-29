@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
+using System.Xml.Linq;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -12,6 +14,8 @@ using ExtendedXmlSerializer.ContentModel.Format;
 using ExtendedXmlSerializer.Core;
 using ExtendedXmlSerializer.ExtensionModel;
 using ExtendedXmlSerializer.ExtensionModel.Instances;
+using ExtendedXmlSerializer.ExtensionModel.Xml;
+using ISerializer = ExtendedXmlSerializer.ContentModel.ISerializer;
 
 namespace Diz.Core.serialization.xml_serializer
 {
@@ -34,6 +38,8 @@ namespace Diz.Core.serialization.xml_serializer
             public Contents(IContents previous)
                 : this(previous, 
                     new StorageSparseSerializer(
+                        // the reason this recurses is the .For() which isn't allowed to 
+                        // return the same type of ISerializer<Stor<Byt>>
                         previous.Get(typeof(StorageSparse<ByteEntry>)).For<StorageSparse<ByteEntry>>())
                     ) {}
 
@@ -68,124 +74,6 @@ namespace Diz.Core.serialization.xml_serializer
         }
     }
     
-    /*public sealed class HexIntConverter : IConverter<int>
-    {
-        public static HexIntConverter Default { get; } = new();
-        HexIntConverter() { }
-
-        public bool IsSatisfiedBy(TypeInfo parameter) => typeof(int).GetTypeInfo()
-            .IsAssignableFrom(parameter);
-
-        public int Parse(string data)
-        {
-            return Util.ParseHexOrBase10String(data);
-        }
-
-        public string Format(int instance)
-        {
-            return instance.ToString("X");
-        }
-    }
-
-
-
-    public class HexKVPSerializer : IExtendedXmlCustomSerializer<KeyValuePair<int, string>>, IExtendedXmlCustomSerializer
-    {
-        public void Serializer(XmlWriter xmlWriter, KeyValuePair<int, string> kvp)
-        {
-            var (key, value) = kvp;
-            xmlWriter.WriteElementString("Key", key.ToString("X"));
-            xmlWriter.WriteElementString("Value", value);
-        }
-
-        KeyValuePair<int, string> IExtendedXmlCustomSerializer<KeyValuePair<int, string>>.Deserialize(XElement xElement)
-        {
-            var xElementKey = xElement.Member("Key");
-            var xElementValue = xElement.Member("Value");
-
-            if (xElementKey == null || xElementValue == null)
-                throw new InvalidOperationException("Invalid xml for class TestClassWithSerializer");
-
-            var strValue = xElement.Value;
-
-            var intValue = Util.ParseHexOrBase10String(xElementKey.Value);
-            return new KeyValuePair<int, string>(intValue, strValue);
-        }
-    }*/
-    
-    /*
-    sealed class Monitor : ISerializationMonitor<string>
-    {
-        // readonly List<string> _store;
-
-        // public Monitor(List<string> store) => _store = store;
-
-        public void OnSerializing(IFormatWriter writer, string instance)
-        {
-            Trace.WriteLine(instance);
-        }
-
-        public void OnSerialized(IFormatWriter writer, string instance)
-        {
-            Trace.WriteLine(instance);
-            // _store.Add(instance);
-        }
-
-        public void OnDeserializing(IFormatReader reader, Type instanceType)
-        {
-            Trace.WriteLine(instanceType.ToString());
-        }
-
-        public void OnActivating(IFormatReader reader, Type instanceType)
-        {
-            Trace.WriteLine(instanceType.ToString());
-        }
-
-        public void OnActivated(string instance)
-        {
-            Trace.WriteLine(instance);
-        }
-
-        public void OnDeserialized(IFormatReader reader, string instance)
-        {
-            Trace.WriteLine(instance);
-        }
-    }*/
-    
-    // public class ByteListSerializer : IExtendedXmlCustomSerializer<StorageList<ByteEntry>>
-    //     {
-    //         public void Serializer(XmlWriter xmlWriter, StorageList<ByteEntry> entry)
-    //         {
-    //             if (entry == null)
-    //                 return;
-    //             
-    //             // this.
-    //
-    //             // var (key, value) = kvp;
-    //             // xmlWriter.WriteElementString("Key", key.ToString("X"));
-    //             // xmlWriter.WriteElementString("Value", value);
-    //             throw new NotImplementedException();
-    //         }
-    //
-    //         StorageList<ByteEntry> IExtendedXmlCustomSerializer<StorageList<ByteEntry>>.Deserialize(XElement xElement)
-    //         {
-    //             // var xElementKey = xElement.Member("Key");
-    //             // var xElementValue = xElement.Member("Value");
-    //             //
-    //             // if (xElementKey == null || xElementValue == null)
-    //             //     throw new InvalidOperationException("Invalid xml for class TestClassWithSerializer");
-    //             //
-    //             // var strValue = xElement.Value;
-    //             //
-    //             // var intValue = Util.ParseHexOrBase10String(xElementKey.Value);
-    //             // return new KeyValuePair<int, string>(intValue, strValue);
-    //
-    //             throw new NotImplementedException();
-    //         }
-    //
-    //         public static ByteListSerializer Default => new();
-    //     }
-
     public static class XmlSerializerSupport
     {
         public static IConfigurationContainer GetSerializer()
@@ -285,7 +173,7 @@ namespace Diz.Core.serialization.xml_serializer
                     .Member(x => x.DontSetParentOnCollectionItems).Ignore()
                     .Member(x => x.Parent).Ignore()
                     .Member(x => x.ParentIndex).Ignore()
-                    .Member(x => x.ParentByteSource).Ignore()
+                    // TODO: re-enable // .Member(x => x.ParentByteSource).Ignore()
 
                     .EnableReferences()
                     .UseOptimizedNamespaces()
@@ -332,7 +220,46 @@ namespace Diz.Core.serialization.xml_serializer
                 => parameter.Type<StorageList<ByteEntry>>()
                     .EnableReferences()
                     .Type<StorageSparse<ByteEntry>>()
-                    .WithInterceptor(StorageSparseInterceptor.Default)
+
+
+                    // .Alter(sparse =>
+                    // {
+                    //     return sparse; // NOP
+                    // }, sparse =>
+                    // {
+                    //     return sparse; // NOP
+                    // })
+                    .Register()
+                    .Serializer()
+                    .Of(typeof(StorageSparseSerializer2))
+                    // .Composer()
+                    // WORKS .. // .ByCalling(x => new StorageSparseSerializer2(x))
+                    
+                    
+                    // .Register()
+                    // .Serializer()
+                    // .ByCalling((writer, instance) =>
+                    // {
+                    //     
+                    // }, null)
+                    // this one works // .WithInterceptor(StorageSparseInterceptor.Default)
+                    
+                    // .Member(x => x[]).Ignore()
+                    
+                    .EnableParameterizedContent() // YES!!)
+
+                    // .Member(x => x.Message)
+                    // .Register()
+                    // .Serializer()
+                    // .Of<StorageSparseSerializer2>()
+                    
+                    // .Register()
+                    // .Serializer()
+                    // .Using(typeof(StorageSparseSerializer2))
+                    
+                    //.Register()
+                    //.Serializer().Composer()
+                    //.ByCalling(x => new StorageSparseSerializer2(x))
                     .EnableReferences();
 
             public class StorageSparseInterceptor : SerializationActivator
@@ -423,4 +350,209 @@ namespace Diz.Core.serialization.xml_serializer
             return GetConfig().Create();
         }
     }
+    
+    // class AdornedImageSerializer : ISerializer<StorageSparse<ByteEntry>>
+    // {
+    //     public AdornedImage Get(IFormatReader parameter)
+    //     {
+    //         return new AdornedImage();
+    //     }
+    //
+    //     public void Write(IFormatWriter writer, AdornedImage instance)
+    //     {
+    //
+    //     }
+    // }
+    
+    /*sealed class ActivatedSerializer : ISerializer<string>
+    {
+        readonly ISerializers _serializers;
+
+        public ActivatedSerializer(ISerializers serializers) => _serializers = serializers;
+
+        public string Get(IFormatReader parameter) => "Hello World from ActivatedSerializer";
+
+        public void Write(IFormatWriter writer, string instance)
+        {
+            _serializers.Get(typeof(string))
+                .Write(writer, $"Hello world! {instance}");
+        }
+    }*/
+
+    internal sealed class StorageSparseSerializer2 : ISerializer<StorageSparse<ByteEntry>>
+    {
+        // private readonly ISerializer<StorageSparse<ByteEntry>> existingSerializer;
+        private readonly ISerializers serializers;
+
+        public StorageSparseSerializer2(ISerializers serializers) => this.serializers = serializers;
+
+        // public StorageSparseSerializer2(ISerializer<StorageSparse<ByteEntry>> existingSerializer)
+        // {
+        //     this.existingSerializer = existingSerializer;
+        // }
+
+        public StorageSparse<ByteEntry> Get(IFormatReader parameter)
+        {
+            // var newStorage = new StorageSparse<ByteEntry>();
+            
+            // var t = parameter.GetType();
+            // var serializer = serializers.Get(t);
+            //
+            // return (StorageSparse<ByteEntry>) serializer.Get(parameter);
+            
+            // var x = parameter.Get(parameter.Content());
+            int x = 3;
+
+            return null;
+
+            // var x = parameter.Content();
+            // var y = existingSerializer.Get(parameter);
+            //
+            // return y;
+        }
+
+        public void Write(IFormatWriter writer, StorageSparse<ByteEntry> instance)
+        {
+            serializers.Get(typeof(int)).Write(writer, instance.Count);
+            serializers.Get(typeof(int)).Write(writer, instance.ActualCount);
+            serializers.Get(typeof(SortedDictionary<int, ByteEntry>)).Write(writer, instance.BytesDict);
+            
+            // // existingSerializer.Write(writer, instance); // normal
+            //
+            // var c = writer.Get();
+            // writer.Content(c);
+            //
+            // _serializers.Get(instance.GetType())
+            //     .Write(writer, instance);
+            //
+            // var adapted = existingSerializer.For<int>()
+            // adapted.Write(writer, instance.Count);
+            // adapted.Write(writer, instance.ActualCount);
+            // adapted.Write(writer, instance.BytesDict);
+        }
+    }
 }
+
+
+// junk below
+
+
+
+    /*public sealed class HexIntConverter : IConverter<int>
+    {
+        public static HexIntConverter Default { get; } = new();
+        HexIntConverter() { }
+
+        public bool IsSatisfiedBy(TypeInfo parameter) => typeof(int).GetTypeInfo()
+            .IsAssignableFrom(parameter);
+
+        public int Parse(string data)
+        {
+            return Util.ParseHexOrBase10String(data);
+        }
+
+        public string Format(int instance)
+        {
+            return instance.ToString("X");
+        }
+    }
+
+
+
+    public class HexKVPSerializer : IExtendedXmlCustomSerializer<KeyValuePair<int, string>>, IExtendedXmlCustomSerializer
+    {
+        public void Serializer(XmlWriter xmlWriter, KeyValuePair<int, string> kvp)
+        {
+            var (key, value) = kvp;
+            xmlWriter.WriteElementString("Key", key.ToString("X"));
+            xmlWriter.WriteElementString("Value", value);
+        }
+
+        KeyValuePair<int, string> IExtendedXmlCustomSerializer<KeyValuePair<int, string>>.Deserialize(XElement xElement)
+        {
+            var xElementKey = xElement.Member("Key");
+            var xElementValue = xElement.Member("Value");
+
+            if (xElementKey == null || xElementValue == null)
+                throw new InvalidOperationException("Invalid xml for class TestClassWithSerializer");
+
+            var strValue = xElement.Value;
+
+            var intValue = Util.ParseHexOrBase10String(xElementKey.Value);
+            return new KeyValuePair<int, string>(intValue, strValue);
+        }
+    }*/
+    
+    /*
+    sealed class Monitor : ISerializationMonitor<string>
+    {
+        // readonly List<string> _store;
+
+        // public Monitor(List<string> store) => _store = store;
+
+        public void OnSerializing(IFormatWriter writer, string instance)
+        {
+            Trace.WriteLine(instance);
+        }
+
+        public void OnSerialized(IFormatWriter writer, string instance)
+        {
+            Trace.WriteLine(instance);
+            // _store.Add(instance);
+        }
+
+        public void OnDeserializing(IFormatReader reader, Type instanceType)
+        {
+            Trace.WriteLine(instanceType.ToString());
+        }
+
+        public void OnActivating(IFormatReader reader, Type instanceType)
+        {
+            Trace.WriteLine(instanceType.ToString());
+        }
+
+        public void OnActivated(string instance)
+        {
+            Trace.WriteLine(instance);
+        }
+
+        public void OnDeserialized(IFormatReader reader, string instance)
+        {
+            Trace.WriteLine(instance);
+        }
+    }*/
+    
+    /* old-style way of doing this
+     public class ByteSparseCustomSerializer3 : IExtendedXmlCustomSerializer<StorageSparse<ByteEntry>>
+        {
+            public void Serializer(XmlWriter xmlWriter, StorageSparse<ByteEntry> entry)
+            {
+                if (entry == null)
+                    return;
+                
+                // this.
+    
+                // var (key, value) = kvp;
+                // xmlWriter.WriteElementString("Key", key.ToString("X"));
+                // xmlWriter.WriteElementString("Value", value);
+                
+            }
+    
+            StorageSparse<ByteEntry> IExtendedXmlCustomSerializer<StorageSparse<ByteEntry>>.Deserialize(XElement xElement)
+            {
+                // var xElementKey = xElement.Member("Key");
+                // var xElementValue = xElement.Member("Value");
+                //
+                // if (xElementKey == null || xElementValue == null)
+                //     throw new InvalidOperationException("Invalid xml for class TestClassWithSerializer");
+                //
+                // var strValue = xElement.Value;
+                //
+                // var intValue = Util.ParseHexOrBase10String(xElementKey.Value);
+                // return new KeyValuePair<int, string>(intValue, strValue);
+    
+                
+            }
+    
+            // public static ByteListSerializer Default => new();
+        }*/

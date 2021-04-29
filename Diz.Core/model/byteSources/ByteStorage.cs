@@ -70,7 +70,12 @@ namespace Diz.Core.model.byteSources
         // it is unrelated to the items that WE hold, nor the fact that THEY also track
         // a parent (which their parent is US).
         // TODO: change to TParent if we can
-        public ByteSource Parent { get; set; } // (in Diz, this is ByteSource, which holds a Storage<ByteEntry>)
+        // TODO: disabled for serialization initial support. re-enable if we need it // public ByteSource Parent { get; } // (in Diz, this is ByteSource, which holds a Storage<ByteEntry>)
+        public abstract int Count { get; }
+        
+        public bool IsReadOnly => false;
+        public bool IsSynchronized => false;
+        public object SyncRoot => default;
 
         public abstract T this[int index] { get; set; }
 
@@ -80,11 +85,6 @@ namespace Diz.Core.model.byteSources
         public abstract void CopyTo(T[] array, int arrayIndex);
         public abstract bool Remove(T item);
         public abstract void CopyTo(Array array, int index);
-        public abstract int Count { get; }
-        
-        public bool IsReadOnly => false;
-        public bool IsSynchronized => false;
-        public object SyncRoot => default;
 
         protected Storage()
         {
