@@ -201,20 +201,20 @@ namespace DiztinGUIsh.util
             // NOTE: if any properties under ByteOffset change, make sure the names update here
             switch (e.PropertyName)
             {
-                case nameof(Diz.Core.model.byteSources.ByteEntry.Byte):
+                case nameof(ByteEntry.Byte):
                     OnPropertyChanged(nameof(AsciiCharRep));
                     OnPropertyChanged(nameof(NumericRep));
                     OnInstructionRelatedChanged();
                     break;
-                case nameof(Diz.Core.model.byteSources.ByteEntry.Arch):
+                case nameof(ByteEntry.Arch):
                     OnInstructionRelatedChanged();
                     break;
-                case nameof(Diz.Core.model.byteSources.ByteEntry.DataBank):
-                case nameof(Diz.Core.model.byteSources.ByteEntry.DirectPage):
-                case nameof(Diz.Core.model.byteSources.ByteEntry.XFlag):
-                case nameof(Diz.Core.model.byteSources.ByteEntry.MFlag):
-                case nameof(Diz.Core.model.byteSources.ByteEntry.TypeFlag):
-                case nameof(Diz.Core.model.byteSources.ByteEntry.Point):
+                case nameof(ByteEntry.DataBank):
+                case nameof(ByteEntry.DirectPage):
+                case nameof(ByteEntry.XFlag):
+                case nameof(ByteEntry.MFlag):
+                case nameof(ByteEntry.TypeFlag):
+                case nameof(ByteEntry.Point):
                     OnPropertyChanged(e.PropertyName);
                     break;
             }

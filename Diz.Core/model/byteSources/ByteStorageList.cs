@@ -32,12 +32,12 @@ namespace Diz.Core.model.byteSources
 
         public override bool Contains(T item) => bytes?.Contains(item) ?? false;
         public override void CopyTo(T[] array, int arrayIndex) => bytes.CopyTo(array, arrayIndex);
-        public override bool Remove(T item)
+        public override bool Remove(T val)
         {
-            if (bytes == null || !bytes.Remove(item))
+            if (bytes == null || !bytes.Remove(val))
                 return false;
 
-            OnRemoved(item);
+            OnRemoved(val);
             return true;
         }
         

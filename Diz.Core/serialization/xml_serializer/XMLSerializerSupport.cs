@@ -15,6 +15,7 @@ using ExtendedXmlSerializer.Core;
 using ExtendedXmlSerializer.ExtensionModel;
 using ExtendedXmlSerializer.ExtensionModel.Instances;
 using ExtendedXmlSerializer.ExtensionModel.Xml;
+using JetBrains.Annotations;
 using ISerializer = ExtendedXmlSerializer.ContentModel.ISerializer;
 
 namespace Diz.Core.serialization.xml_serializer
@@ -210,57 +211,100 @@ namespace Diz.Core.serialization.xml_serializer
                     .UseAutoFormatting();
         }
 
-        private sealed class ByteStorageProfile : IConfigurationProfile
+        private class ByteStorageProfileRead : ByteStorageProfileBase
         {
-            public static ByteStorageProfile Default { get; } = new();
+            public static ByteStorageProfileRead Default { get; } = new();
 
-            private ByteStorageProfile() {}
+            private ByteStorageProfileRead() : base(forReading: true) {}
+        }
+        
+        private class ByteStorageProfileWrite : ByteStorageProfileBase
+        {
+            public static ByteStorageProfileWrite Default { get; } = new();
+
+            private ByteStorageProfileWrite() : base(forReading: false) {}
+        }
+
+        private abstract class ByteStorageProfileBase : IConfigurationProfile
+        {
+            private readonly bool forReading;
+            protected ByteStorageProfileBase(bool forReading)
+            {
+                this.forReading = forReading;
+            }
 
             public IConfigurationContainer Get(IConfigurationContainer parameter)
-                => parameter.Type<StorageList<ByteEntry>>()
-                    .EnableReferences()
+            {
+                // clunk city. this probably doesn't have to be this complex, surely doing something wrong.
+                var typeConfiguration =
+                #if CRAZYWAY
+                    !forReading
+                    ? parameter
+                        .Type<StorageSparse<ByteEntry>>()
+                        .Register()
+                        .Serializer()
+                        .Of(typeof(StorageSparseSerializerWrite))
+                    : parameter
+                        .Type<StorageSparse<ByteEntry>>()
+                        .Register()
+                        .Serializer()
+                        .Composer()
+                        .ByCalling(x => new StorageSparseSerializerRead(x));
+                #else
+                    parameter;
+                #endif
+                
+                return typeConfiguration
                     .Type<StorageSparse<ByteEntry>>()
+                    
+                    // .Member(, bool isReadOnly, bool isSynchronized, object syncRoot)
+                    .Member(x => x.IsReadOnly).Ignore()
+                    .Member(x => x.IsSynchronized).Ignore()
+                    .Member(x => x.SyncRoot).Ignore()
 
+                    /*.Alter(sparse =>
+                    {
+                         return sparse; // NOP
+                    }, sparse =>
+                    {
+                        return sparse; // NOP
+                    })*/
+                    
+                    .EnableParameterizedContent() // YES!! this is good.
+                    .EnableReferences()
 
-                    // .Alter(sparse =>
-                    // {
-                    //     return sparse; // NOP
-                    // }, sparse =>
-                    // {
-                    //     return sparse; // NOP
-                    // })
-                    .Register()
-                    .Serializer()
-                    .Of(typeof(StorageSparseSerializer2))
-                    // .Composer()
-                    // WORKS .. // .ByCalling(x => new StorageSparseSerializer2(x))
-                    
-                    
-                    // .Register()
-                    // .Serializer()
-                    // .ByCalling((writer, instance) =>
-                    // {
-                    //     
-                    // }, null)
-                    // this one works // .WithInterceptor(StorageSparseInterceptor.Default)
-                    
-                    // .Member(x => x[]).Ignore()
-                    
-                    .EnableParameterizedContent() // YES!!)
-
-                    // .Member(x => x.Message)
-                    // .Register()
-                    // .Serializer()
-                    // .Of<StorageSparseSerializer2>()
-                    
-                    // .Register()
-                    // .Serializer()
-                    // .Using(typeof(StorageSparseSerializer2))
-                    
-                    //.Register()
-                    //.Serializer().Composer()
-                    //.ByCalling(x => new StorageSparseSerializer2(x))
+                    .Type<StorageList<ByteEntry>>()
                     .EnableReferences();
+                
+                // .Alter(sparse =>
+                // {
+                //     return sparse; // NOP
+                // }, sparse =>
+                // {
+                //     return sparse; // NOP
+                // })
+                    
+                // .Register()
+                // .Serializer()
+                // .ByCalling((writer, instance) =>
+                // {
+                //     
+                // }, null)
+                // this one works // .WithInterceptor(StorageSparseInterceptor.Default)
+                
+                // .Member(x => x.Message)
+                // .Register()
+                // .Serializer()
+                // .Of<StorageSparseSerializer2>()
+
+                // .Register()
+                // .Serializer()
+                // .Using(typeof(StorageSparseSerializer2))
+
+                //.Register()
+                //.Serializer().Composer()
+                //.ByCalling(x => new StorageSparseSerializer2(x))
+            }
 
             public class StorageSparseInterceptor : SerializationActivator
             {
@@ -283,39 +327,57 @@ namespace Diz.Core.serialization.xml_serializer
             }
         }
         
-        public sealed class MainProfile : CompositeConfigurationProfile
+        public abstract class MainProfile : CompositeConfigurationProfile
         {
-            public static MainProfile Default { get; } = new();
-
-            private MainProfile() : 
+            protected MainProfile(bool forReading) : 
                 base(
                     AnnotationProfile.Default, 
-                    ByteStorageProfile.Default, 
+                    forReading ? ByteStorageProfileRead.Default : ByteStorageProfileWrite.Default, 
                     AnnotationCollectionProfile.Default, 
                     ByteEntryProfile.Default) 
             {}
         }
-        
-        
-        public static IConfigurationContainer GetConfig()
+
+        // this is clunky.
+        [UsedImplicitly]
+        public class MainProfileRead : MainProfile
         {
-            var container = ConfiguredContainer.New<MainProfile>();
+            public static MainProfileRead Default { get; } = new();
+            private MainProfileRead() : base(forReading: true) {}
+        }
+
+        [UsedImplicitly]
+        public class MainProfileWrite : MainProfile
+        {
+            public static MainProfileWrite Default { get; } = new();
+            private MainProfileWrite() : base(forReading: false) {}
+        }
+
+
+        public static IConfigurationContainer GetConfig(bool forReading)
+        {
+            var container = forReading 
+                ? ConfiguredContainer.New<MainProfileRead>() 
+                : ConfiguredContainer.New<MainProfileWrite>();
 
             return container
                 .UseOptimizedNamespaces()
                 .UseAutoFormatting()
-                .EnableImplicitTyping(typeof(ByteEntry))
-                .EnableImplicitTyping(typeof(ByteSource))
-                .EnableImplicitTyping(typeof(Storage<ByteEntry>))
-                .EnableImplicitTyping(typeof(StorageList<ByteEntry>))
-                .EnableImplicitTyping(typeof(StorageSparse<ByteEntry>))
-                .EnableImplicitTyping(typeof(AnnotationCollection))
-                .EnableImplicitTyping(typeof(Label))
-                .EnableImplicitTyping(typeof(Comment))
-                .EnableImplicitTyping(typeof(BranchAnnotation))
-                .EnableImplicitTyping(typeof(ByteAnnotation))
-                .EnableImplicitTyping(typeof(MarkAnnotation))
-                .EnableImplicitTyping(typeof(OpcodeAnnotation))
+                .EnableImplicitTyping(
+                    typeof(OpcodeAnnotation), 
+                    typeof(MarkAnnotation), 
+                    typeof(ByteAnnotation), 
+                    typeof(BranchAnnotation),
+                    typeof(Comment),
+                    typeof(Label),
+                    typeof(ByteEntry),
+                    typeof(ByteSource),
+                    typeof(Storage<ByteEntry>),
+                    typeof(StorageList<ByteEntry>),
+                    typeof(StorageSparse<ByteEntry>),
+                    typeof(AnnotationCollection)
+                    )
+                .EnableImplicitTyping()
                 .Type<ByteSource>()
                 // .EnableReferences()
                 //.Type<Storage<ByteEntry>>()
@@ -332,7 +394,8 @@ namespace Diz.Core.serialization.xml_serializer
         
         public static string Serialize(object toSerialize)
         {
-            var config = CreateConfig();
+            var config = GetConfig(forReading: false)
+                .Create();
             
             return config.Serialize(
                 new XmlWriterSettings {OmitXmlDeclaration = false, Indent = true, NewLineChars = "\r\n"},
@@ -341,13 +404,8 @@ namespace Diz.Core.serialization.xml_serializer
         
         public static T Deserialize<T>(string input)
         {
-            var config = CreateConfig();
+            var config = GetConfig(forReading: true).Create();
             return config.Deserialize<T>(input);
-        }
-
-        public static IExtendedXmlSerializer CreateConfig()
-        {
-            return GetConfig().Create();
         }
     }
     
@@ -379,56 +437,63 @@ namespace Diz.Core.serialization.xml_serializer
         }
     }*/
 
-    internal sealed class StorageSparseSerializer2 : ISerializer<StorageSparse<ByteEntry>>
+    internal sealed class StorageSparseSerializerWrite : ISerializer<StorageSparse<ByteEntry>>
     {
-        // private readonly ISerializer<StorageSparse<ByteEntry>> existingSerializer;
         private readonly ISerializers serializers;
 
-        public StorageSparseSerializer2(ISerializers serializers) => this.serializers = serializers;
-
-        // public StorageSparseSerializer2(ISerializer<StorageSparse<ByteEntry>> existingSerializer)
-        // {
-        //     this.existingSerializer = existingSerializer;
-        // }
+        public StorageSparseSerializerWrite(ISerializers serializers)
+        {
+            this.serializers = serializers;
+        }
 
         public StorageSparse<ByteEntry> Get(IFormatReader parameter)
         {
-            // var newStorage = new StorageSparse<ByteEntry>();
-            
-            // var t = parameter.GetType();
-            // var serializer = serializers.Get(t);
-            //
-            // return (StorageSparse<ByteEntry>) serializer.Get(parameter);
-            
-            // var x = parameter.Get(parameter.Content());
-            int x = 3;
-
-            return null;
-
-            // var x = parameter.Content();
-            // var y = existingSerializer.Get(parameter);
-            //
-            // return y;
+            // there's probably some way to make both read and write work in the same class....
+            throw new InvalidOperationException("this serializer only supports reading");
         }
 
         public void Write(IFormatWriter writer, StorageSparse<ByteEntry> instance)
         {
-            serializers.Get(typeof(int)).Write(writer, instance.Count);
-            serializers.Get(typeof(int)).Write(writer, instance.ActualCount);
-            serializers.Get(typeof(SortedDictionary<int, ByteEntry>)).Write(writer, instance.BytesDict);
+            // TODO: I give up.... :) definitely doing this wrong.
+            // these DO write into the XMl but, only as isolated elements. we need to turn them into 
+            // attributes instead.
+            // however, I think it'll just be easier to do this via an interface now.
             
-            // // existingSerializer.Write(writer, instance); // normal
+            serializers.Get(instance.GetType()).Write(writer, instance);
+            
+            // actually ok but, doesn't output as attributes, so doesn't really fulfill what we need.
+            // serializers.Get(typeof(int)).Write(writer, instance.Count);
+            // serializers.Get(typeof(int)).Write(writer, instance.ActualCount);
+            // serializers.Get(typeof(SortedDictionary<int, ByteEntry>)).Write(writer, instance.BytesDict);
+        }
+    }
+    
+    internal sealed class StorageSparseSerializerRead : ISerializer<StorageSparse<ByteEntry>>
+    {
+        private readonly ISerializer<StorageSparse<ByteEntry>> existingSerializer;
+
+        public StorageSparseSerializerRead(ISerializer<StorageSparse<ByteEntry>> existingSerializer)
+        {
+            this.existingSerializer = existingSerializer;
+        }
+
+        public StorageSparse<ByteEntry> Get(IFormatReader parameter)
+        {
+            // var newStorage = new StorageSparse<ByteEntry>();
+            // var t = parameter.GetType();
+            // var serializer = serializers.Get(t);
             //
-            // var c = writer.Get();
-            // writer.Content(c);
-            //
-            // _serializers.Get(instance.GetType())
-            //     .Write(writer, instance);
-            //
-            // var adapted = existingSerializer.For<int>()
-            // adapted.Write(writer, instance.Count);
-            // adapted.Write(writer, instance.ActualCount);
-            // adapted.Write(writer, instance.BytesDict);
+            // return (StorageSparse<ByteEntry>) serializer.Get(parameter);
+            // var x = parameter.Get(parameter.Content());
+            // var x = parameter.Content();
+            var y = existingSerializer.Get(parameter);
+            return y;
+        }
+
+        public void Write(IFormatWriter writer, StorageSparse<ByteEntry> instance)
+        {
+            // there's probably some way to make both read and write work in the same class....
+            throw new InvalidOperationException("this serializer only supports reading");
         }
     }
 }

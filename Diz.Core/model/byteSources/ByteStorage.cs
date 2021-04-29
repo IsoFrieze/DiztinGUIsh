@@ -83,7 +83,7 @@ namespace Diz.Core.model.byteSources
         public abstract void Clear();
         public abstract bool Contains(T item);
         public abstract void CopyTo(T[] array, int arrayIndex);
-        public abstract bool Remove(T item);
+        public abstract bool Remove(T val);
         public abstract void CopyTo(Array array, int index);
 
         protected Storage()
