@@ -2,10 +2,12 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Serialization;
 using Diz.Core.arch;
 using Diz.Core.export;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model.snes
 {
@@ -16,34 +18,47 @@ namespace Diz.Core.model.snes
     // Data is the bridge between the old and new.
     public class Data : ILogCreatorDataSource, ICpuOperableByteSource
     {
+        // the parent of all our data, the SNES address space
+        public ByteSource SnesAddressSpace { get; }
+        
         // TODO: gotta carefully think about the serialization here. we need to not output bytes from the ROM itself.
         // everything else is fine.
         
-        public ILabelProvider Labels { get; protected init; }
-        IReadOnlyLabelProvider IReadOnlySnesRom.Labels => Labels;
-        ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => Labels;
+        #region Helper Access (Don't serialize)
         
-        // the parent of all our data, the SNES address space
-        public ByteSource SnesAddressSpace { get; internal set; }
-        
+        [XmlIgnore] public ILabelProvider Labels { get; protected init; }
+        [XmlIgnore] IReadOnlyLabelProvider IReadOnlySnesRom.Labels => Labels;
+        [XmlIgnore] ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => Labels;
+
         // cached access to stuff that livers in SnesAddressSpace. convenience only.
-        public ByteSource RomByteSource => 
+        [XmlIgnore] public ByteSource RomByteSource => 
             RomByteSourceMapping?.ByteSource;
-        public RegionMappingSnesRom RomMapping => 
+        [XmlIgnore] public RegionMappingSnesRom RomMapping => 
             (RegionMappingSnesRom) RomByteSourceMapping?.RegionMapping;
-        public ByteSourceMapping RomByteSourceMapping =>
+        [XmlIgnore] public ByteSourceMapping RomByteSourceMapping =>
             SnesAddressSpace?.ChildSources
                 ?.SingleOrDefault(map => 
                     map?.RegionMapping?.GetType() == typeof(RegionMappingSnesRom));
-
-        // private bool SendNotificationChangedEvents { get; set; } = true;
-
-        public RomMapMode RomMapMode => RomMapping?.RomMapMode ?? default;
-        public RomSpeed RomSpeed => RomMapping?.RomSpeed ?? default;
-
-        #region Initialization Helpers
-
+        
+        [XmlIgnore] public RomMapMode RomMapMode => RomMapping?.RomMapMode ?? default;
+        [XmlIgnore] public RomSpeed RomSpeed => RomMapping?.RomSpeed ?? default;
+        
+        // [XmlIgnore] private bool SendNotificationChangedEvents { get; set; } = true;
+        
         #endregion
+
+        public Data()
+        {
+            SnesAddressSpace = RomUtil.CreateSnesAddressSpace();
+            Labels = new LabelProvider(this);
+        }
+
+        // NOTE: specially named parameterized constructor for XML serializer
+        [UsedImplicitly] 
+        public Data(ByteSource snesAddressSpace)
+        {
+            SnesAddressSpace = snesAddressSpace;
+        }
         
         private byte[] GetRomBytes(int snesOffset, int count)
         {
@@ -80,13 +95,6 @@ namespace Diz.Core.model.snes
         {
             var snesAddress = ConvertPCtoSnes(pcOffset);
             return SnesAddressSpace.GetOneAnnotation<T>(snesAddress);
-        }
-
-        public Data()
-        {
-            SnesAddressSpace = RomUtil.CreateSnesAddressSpace();
-            
-            Labels = new LabelProvider(this);
         }
 
         public T GetOrCreateAnnotationAtPc<T>(int pcOffset) where T : Annotation, new()

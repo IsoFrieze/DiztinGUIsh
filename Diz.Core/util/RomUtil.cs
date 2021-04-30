@@ -440,7 +440,7 @@ namespace Diz.Core.util
 
         public static LogCreatorOutput.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
         {
-            var sampleRomData = SampleRomData.SampleData;
+            var sampleRomData = SampleRomData.Default();
 
             sampleSettings.Structure = LogWriterSettings.FormatStructure.SingleFile;
             sampleSettings.FileOrFolderOutPath = "";
@@ -450,7 +450,7 @@ namespace Diz.Core.util
             var lc = new LogCreator()
             {
                 Settings = sampleSettings,
-                Data = sampleRomData,
+                Data = sampleRomData.Data,
             };
             
             return lc.CreateLog();

@@ -26,18 +26,8 @@ namespace Diz.Core.serialization.xml_serializer
                 //.Type<ByteSource>()
                 //.Register().Serializer().Using(RomBytesSerializer.Default)
 
-                .Type<Data>()
-                // tmp. eventually, we do need to serialize this stuff.
-                .Member(x => x.SnesAddressSpace).Ignore()
-                .Member(x => x.RomByteSource).Ignore()
-                // .Member(x => x.RomBytes).Ignore()
-
-                // .AddMigration(new DizProjectMigrations())
-
                 .UseOptimizedNamespaces()
-                .UseAutoFormatting()
-
-                .EnableImplicitTyping(typeof(Data), typeof(Label));
+                .UseAutoFormatting();
         }
     }
     
@@ -65,7 +55,7 @@ namespace Diz.Core.serialization.xml_serializer
                     .Member(x=>x.DirectPage).Name("DP").EmitWhen(dp => dp != default)
                     .Member(x=>x.XFlag).Name("X").EmitWhen(flag=> flag != default)
                     .Member(x=>x.MFlag).Name("M").EmitWhen(flag=> flag != default)
-                    .EnableImplicitTyping()
+                    .EnableImplicitTyping(typeof(OpcodeAnnotation))
                     
                     .Type<MarkAnnotation>()
                     .Name("M")
@@ -131,11 +121,26 @@ namespace Diz.Core.serialization.xml_serializer
                     .EnableReferences();
             }
         }
+        
+        private sealed class DataProfile : IConfigurationProfile
+        {
+            public static DataProfile Default { get; } = new();
+            private DataProfile() {}
+            public IConfigurationContainer Get(IConfigurationContainer parameter)
+                => parameter.Type<Data>()
+                    .EnableParameterizedContent() // IMPORTANT
+                    .UseOptimizedNamespaces()
+                    .UseAutoFormatting()
+                    .EnableReferences();
+            
+            // .AddMigration(new DizProjectMigrations())
+        }
 
         public class MainProfile : CompositeConfigurationProfile
         {
             public static MainProfile Default { get; } = new();
             private MainProfile() : base(
+                    DataProfile.Default,
                     AnnotationProfile.Default, 
                     ByteStorageProfile.Default, 
                     AnnotationCollectionProfile.Default, 
@@ -164,8 +169,11 @@ namespace Diz.Core.serialization.xml_serializer
                 )
                 .EnableImplicitTyping()
                 .Type<ByteSource>()
+                .EnableReferences()
                 .Type<RegionMapping>()
-                .Type<ByteSourceMapping>();
+                .EnableReferences()
+                .Type<ByteSourceMapping>()
+                .EnableReferences();
 
         public static string Serialize(object toSerialize)
         {

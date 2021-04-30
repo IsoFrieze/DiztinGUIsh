@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Core.util;
 using Diz.Test.TestData;
 using Diz.Test.Utils;
 using Xunit;
@@ -54,10 +55,13 @@ namespace Diz.Test.Tests.SerializationTests
             () => new ByteSource(),
             () => TinyHiRomCreator.CreateBaseRom().RomByteSource.Bytes[0],
             () => TinyHiRomCreator.CreateBaseRom().RomByteSource,
-
-            // tmp disabled. this WORKS technically but, at current, we generate a gigantic XML file for it so it takes forever
-            // what we need to do instead is to modify the serialization to output the sparse version, then this is fine.
             () => TinyHiRomCreator.CreateBaseRom().SnesAddressSpace,
+            TinyHiRomCreator.CreateBaseRom,
+        };
+        
+        public static TheoryData<Func<object>> ThisIsJustGettingRidiculousNow => new()
+        {
+            () => SampleRomData.Default().Data
         };
         
         [Fact]
@@ -74,6 +78,10 @@ namespace Diz.Test.Tests.SerializationTests
         [Theory]
         [MemberData(nameof(MoreComplexCycleObjects))]
         public void XmlFullCycleTwoCopiesComplex(Func<object> createFn) => XmlTestUtils.RunFullCycle(createFn);
+        
+        [Theory]
+        [MemberData(nameof(ThisIsJustGettingRidiculousNow))]
+        public void XmlFullCycleTwoCopiesMadness(Func<object> createFn) => XmlTestUtils.RunFullCycle(createFn);
 
         [Fact]
         public void XmlFullCycleByteStorage()

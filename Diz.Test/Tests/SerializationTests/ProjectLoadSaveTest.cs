@@ -16,7 +16,7 @@ namespace Diz.Test.Tests.SerializationTests
         private void FullSerializeAndDeserialize()
         {
             // use the sample data to fake a project
-            var sampleProject = new Core.model.Project {Data = SampleRomData.SampleData};
+            var sampleProject = new Core.model.Project {Data = SampleRomData.Default().Data};
             
             // extract the bytes that would normally be in the SMC file (they only exist in code for this sample data)
             var romFileBytes = sampleProject.Data.RomByteSource.Bytes.Select(b =>

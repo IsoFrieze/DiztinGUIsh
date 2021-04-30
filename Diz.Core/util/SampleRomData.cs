@@ -6,17 +6,29 @@ using Diz.Core.model.snes;
 
 namespace Diz.Core.util
 {
-    public class SampleRomData : Data
+    public class SampleRomData
     {
+        public int OriginalRomSizeBeforePadding { get; set; }
+        public Data Data { get; } = new();
+
+        public static SampleRomData Default()
+        {
+            return SampleRomDataCreator.SampleData;
+        }
+    }
+
+    internal static class SampleRomDataCreator {
         public static SampleRomData SampleData
         {
             get
             {
+                // TODO: replace this with Lazy<T> probably.
+                
                 // one-time: take our sample data from below and bolt some extra stuff on top of it.
                 // then, cache all this in a static read-only property
 
-                if (_finalSampleData != null)
-                    return _finalSampleData;
+                if (_cachedSampleData != null)
+                    return _cachedSampleData;
 
                 // tricky: this sample data can be used to populate the "sample assembly output"
                 // window to demo some features. One thing we'd like to demo is showing generated
@@ -27,18 +39,16 @@ namespace Diz.Core.util
                 // only assembling bytes up to BaseSampleData.SizeOverride.
                 var sampleData = CreateBaseSampleData();
                 
-                sampleData.OriginalRomSizeBeforePadding = sampleData.RomByteSource.Bytes.Count;
-                while (sampleData.RomByteSource.Bytes.Count < 0x8000)
-                    sampleData.RomByteSource.AddByte(new ByteEntry {Byte = 0x00});
+                sampleData.OriginalRomSizeBeforePadding = sampleData.Data.RomByteSource.Bytes.Count;
+                while (sampleData.Data.RomByteSource.Bytes.Count < 0x8000)
+                    sampleData.Data.RomByteSource.AddByte(new ByteEntry {Byte = 0x00});
 
-                _finalSampleData = sampleData;
+                _cachedSampleData = sampleData;
                 return sampleData;
             }
         }
 
-        public int OriginalRomSizeBeforePadding { get; set; }
-
-        private static SampleRomData _finalSampleData;
+        private static SampleRomData _cachedSampleData;
 
         // random sample code I made up; hopefully it shows a little bit of
         // everything so you can see how the settings will effect the output
@@ -243,8 +253,7 @@ namespace Diz.Core.util
             };
 
             var sampleData = new SampleRomData();
-
-            sampleData.PopulateFromRom(romByteSource, RomMapMode.LoRom, RomSpeed.FastRom);
+            sampleData.Data.PopulateFromRom(romByteSource, RomMapMode.LoRom, RomSpeed.FastRom);
 
             // one way to add comments/labels shown below.
             // you can also directly add them to Bytes above as annotations.
@@ -257,7 +266,7 @@ namespace Diz.Core.util
                     {0x808000 + 0x44, "this routine copies Test_Data to $7E0100"}
                 }
                 .ForEach(kvp =>
-                    sampleData.AddComment(kvp.Key, kvp.Value)
+                    sampleData.Data.AddComment(kvp.Key, kvp.Value)
                 );
 
             new Dictionary<int, Label>
@@ -270,7 +279,7 @@ namespace Diz.Core.util
                     {0x808000 + 0x5B, new Label {Name = "Test_Data", Comment = "Pretty cool huh?"}}
                 }
                 .ForEach(kvp =>
-                    sampleData.Labels.AddLabel(kvp.Key, kvp.Value)
+                    sampleData.Data.Labels.AddLabel(kvp.Key, kvp.Value)
                 );
 
             return sampleData;

@@ -70,7 +70,7 @@ namespace DiztinGUIsh.controller
                 return base.ReadProject(filename);
 
             return new Project {
-                Data = SampleRomData.SampleData,
+                Data = SampleRomData.Default().Data,
                 ProjectFileName = SampleProjectName
             };
         }
