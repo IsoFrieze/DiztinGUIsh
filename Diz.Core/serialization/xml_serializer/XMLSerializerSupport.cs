@@ -50,15 +50,44 @@ namespace Diz.Core.serialization.xml_serializer
 
             private ByteEntryProfile() {}
 
+            // use some really short names and don't output defaults, these are going to be output a LOT in the XML file
             public IConfigurationContainer Get(IConfigurationContainer parameter)
                 => parameter
                     .Type<ByteEntry>()
-                    
-                    // use some really short names, these are going to be output a LOT.
                     .Name("B")
                     .Member(x=>x.Annotations)
                     .Name("A")
                     
+                    .Type<OpcodeAnnotation>()
+                    .Name("O")
+                    .Member(x=>x.Arch).EmitWhen(arch => arch != default)
+                    .Member(x=>x.DataBank).Name("DB").EmitWhen(db => db != default)
+                    .Member(x=>x.DirectPage).Name("DP").EmitWhen(dp => dp != default)
+                    .Member(x=>x.XFlag).Name("X").EmitWhen(flag=> flag != default)
+                    .Member(x=>x.MFlag).Name("M").EmitWhen(flag=> flag != default)
+                    .EnableImplicitTyping()
+                    
+                    .Type<MarkAnnotation>()
+                    .Name("M")
+                    .Member(x=>x.TypeFlag).Name("V").EmitWhen(typeFlag => typeFlag != default)
+                    .EnableImplicitTyping()
+                    
+                    .Type<ByteAnnotation>()
+                    .Name("B")
+                    .Member(x=>x.Val).Name("V").EmitWhen(db => db != default)
+                    .EnableImplicitTyping()
+                    
+                    .Type<Comment>()
+                    .Name("C")
+                    .Member(x=>x.Text).Name("V").EmitWhen(text => !string.IsNullOrEmpty(text))
+                    .EnableImplicitTyping()
+                    
+                    .Type<Label>()
+                    .Name("L")
+                    .Member(x=>x.Comment).Name("Cmt").EmitWhen(text => !string.IsNullOrEmpty(text))
+                    .Member(x=>x.Name).Name("V").EmitWhen(text => !string.IsNullOrEmpty(text))
+                    .EnableImplicitTyping()
+
                     .EnableReferences()
                     .UseOptimizedNamespaces()
                     .UseAutoFormatting();

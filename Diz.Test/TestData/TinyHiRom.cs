@@ -35,7 +35,7 @@ namespace Diz.Test.TestData
                 // sidenote: demonstrates another way to create Byte's, identical to above
                 new(new AnnotationCollection {
                     new MarkAnnotation {TypeFlag = FlagType.Operand},
-                    new ByteAnnotation {Byte = 0x21}
+                    new ByteAnnotation {Val = 0x21}
                 })
             };
 

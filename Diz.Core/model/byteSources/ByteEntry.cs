@@ -34,13 +34,13 @@ namespace Diz.Core.model.byteSources
         [XmlIgnore]
         public byte? Byte
         {
-            get => GetOneAnnotation<ByteAnnotation>()?.Byte;
+            get => GetOneAnnotation<ByteAnnotation>()?.Val;
             set
             {
                 if (value == null)
                     RemoveOneAnnotationIfExists<ByteAnnotation>();
                 else
-                    GetOrCreateAnnotation<ByteAnnotation>().Byte = (byte)value;
+                    GetOrCreateAnnotation<ByteAnnotation>().Val = (byte)value;
             }
         }
 

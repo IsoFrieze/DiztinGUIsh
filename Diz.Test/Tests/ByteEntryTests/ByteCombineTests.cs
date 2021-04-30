@@ -66,8 +66,8 @@ namespace Diz.Test.Tests.ByteEntryTests
         [Fact]
         public static void TestByteAnnotationCombine()
         {
-            var byteEntry1 = CreateByteOneAnnotation(new ByteAnnotation {Byte = 0xEE}, true);
-            var byteEntry2 = CreateByteOneAnnotation(new ByteAnnotation {Byte = 0xFF});
+            var byteEntry1 = CreateByteOneAnnotation(new ByteAnnotation {Val = 0xEE}, true);
+            var byteEntry2 = CreateByteOneAnnotation(new ByteAnnotation {Val = 0xFF});
             Assert.True(byteEntry1.DontSetParentOnCollectionItems);
             Assert.Single(byteEntry1.Annotations);
 
@@ -77,7 +77,7 @@ namespace Diz.Test.Tests.ByteEntryTests
             // EXCEPT ByteAnnotation.  with ByteAnnotation, if there are two, it'll pick only the one from the container
             // being used as the combination base.
             Assert.Single(byteEntry1.Annotations);
-            Assert.Equal(0xEE, byteEntry1.GetOneAnnotation<ByteAnnotation>().Byte);
+            Assert.Equal(0xEE, byteEntry1.GetOneAnnotation<ByteAnnotation>().Val);
         }
 
         [Fact]

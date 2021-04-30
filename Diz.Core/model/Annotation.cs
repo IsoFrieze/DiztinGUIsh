@@ -69,7 +69,7 @@ namespace Diz.Core.model
 
     public class ByteAnnotation : Annotation, IComparable<ByteAnnotation>, IComparable
     {
-        public byte Byte
+        public byte Val
         {
             get => dataByte;
             set => this.SetField(ref dataByte, value);
