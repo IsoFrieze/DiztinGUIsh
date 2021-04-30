@@ -36,8 +36,6 @@ namespace Diz.Core.model.byteSources
         // 1) (probably) iterating in order a lot
         // 2) need to compute the value of the largest key pretty often
         private SortedDictionary<int, T> bytes;
-
-        // public SortedDictionary<int, T> BytesDict => bytes;
         
         // we need to maintain this. it's not the # of bytes we're storing,
         // it's the max size of the sparse container. i.e. this will never change.
