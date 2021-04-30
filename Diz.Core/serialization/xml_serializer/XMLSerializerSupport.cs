@@ -79,8 +79,6 @@ namespace Diz.Core.serialization.xml_serializer
             private AnnotationCollectionProfile() {}
             public IConfigurationContainer Get(IConfigurationContainer parameter)
                 => parameter.Type<AnnotationCollection>()
-                    .Member(x=>x.DontSetParentOnCollectionItems).Ignore()
-                    .Member(x=>x.EnforcePolicy).Ignore()
                     .Member(x=>x.Parent).Ignore()
                     .UseOptimizedNamespaces()
                     .UseAutoFormatting();

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Xml.Serialization;
 
 // TODO: we can probably simplify most of this by replacing the parent class with ParentAwareCollection<ByteSource, ByteEntry>
 
@@ -73,9 +74,9 @@ namespace Diz.Core.model.byteSources
         // TODO: disabled for serialization initial support. re-enable if we need it // public ByteSource Parent { get; } // (in Diz, this is ByteSource, which holds a Storage<ByteEntry>)
         public abstract int Count { get; }
         
-        public bool IsReadOnly => false;
-        public bool IsSynchronized => false;
-        public object SyncRoot => default;
+        [XmlIgnore] public bool IsReadOnly => false;
+        [XmlIgnore] public bool IsSynchronized => false;
+        [XmlIgnore] public object SyncRoot => default;
 
         public abstract T this[int index] { get; set; }
 
@@ -179,35 +180,6 @@ namespace Diz.Core.model.byteSources
         protected void OnPreClear() => UpdateAllParentInfo(shouldUnsetAll: true);
     }
     
-    // iterate through a sparse Storage<ByteEntry> class, if we encounter any gaps in the sequence,
-    // fill them in 
-    public class GapFillingEnumerator<T> : IEnumerator<T>
-    {
-        public IShouldReallyBeAListButIAmLazy<T> Collection { get; protected set; }
-        public int Position { get; set; } = -1;
-
-        public GapFillingEnumerator(IShouldReallyBeAListButIAmLazy<T> collection)
-        {
-            Debug.Assert(collection != null);
-            Collection = collection;
-        }
-        public bool MoveNext()
-        {
-            Position++;
-            return Position < Collection.Count;
-        }
-
-        public void Reset()
-        {
-            Position = -1;
-        }
-
-        T IEnumerator<T>.Current => Collection[Position];
-        public object Current => Collection[Position];
-        public void Dispose()
-        {
-            Position = -1;
-            Collection = null;
-        }
-    }
+    // iterate sequentially through a range in an IEnumerable<T> class like StorageSparse<ByteEntry>
+    // if we encounter any gaps in the sequence fill them in with null. 
 }

@@ -4,34 +4,24 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using JetBrains.Annotations;
 
 namespace Diz.Core.model.byteSources
 {
-    public interface IStorageSparse<T> : IDictionary<int, T>, IDictionary
-    {
-        // public int Count { get; }
-    }
-    
     /// <summary>
     /// Sparse version of Storage which only stores bytes as they are created.
     /// Slower for indexed access, but, much better when you have a huge and mostly empty list
     /// i.e. great for stuff like emulator adress spaces which are huge and basically empty except
     /// for a few key areas.
     /// </summary>
-    public class StorageSparse<T> : Storage<T>, IStorageSparse<T>
+    public class StorageSparse<T> : Storage<T>, IDictionary<int, T>, IDictionary
         where T : IParentReferenceTo<Storage<T>>
     {
         public override int Count => count;
         
-        public int ActualCount => bytes.Count;
-
-        private bool allowExpanding;
-        public void SetAllowExpanding(bool val)
-        {
-            allowExpanding = true;
-        }
-
+        [XmlIgnore] public int ActualCount => bytes.Count;
+        
         // keeps the keys sorted, which is important for us since we're
         // 1) (probably) iterating in order a lot
         // 2) need to compute the value of the largest key pretty often
@@ -45,22 +35,15 @@ namespace Diz.Core.model.byteSources
 
         public StorageSparse(IReadOnlyCollection<T> inBytes) : base(inBytes) { }
 
-        public StorageSparse(int emptyCreateSize) : base(emptyCreateSize) { }
-        
-        [UsedImplicitly] 
-        // used for serialization. every parameter needs to match each get-only property and this will be called.
+        // WARNING! parameterized constructor for ExtendedXmlSerializer.
+        // number and naming of arguments here must match public get-only properties.
+        // if they don't, things will go haywire. always run the unit tests when making changes
+        // to any public properties/etc.
         // for more info, see .EnableParameterizedContent() from ExtendedXmlSerializer, see
-        // https://github.com/ExtendedXmlSerializer/home/wiki/Features#immutable-classes-and-content for the rules.
-        public StorageSparse(int count /*SortedDictionary<int, T> bytesDict, */, int actualCount) 
-            : this(count) // technically weird but...
-        {
-            Debug.Assert(this.count == count);
-            
-            // right now we don't actually need 'actualCount' but, can't remove it or else 
-        }
-        
-        // TODO: maybe expose internal dictionary as property and keep it in the parameterized constructor
-        
+        // // https://github.com/ExtendedXmlSerializer/home/wiki/Features#immutable-classes-and-content for the rules.
+        [UsedImplicitly]
+        public StorageSparse(int count) : base(count) { }
+
         private int GetLargestKey()
         {
             if (bytes == null || bytes.Count == 0)
@@ -85,7 +68,7 @@ namespace Diz.Core.model.byteSources
             set => SetByte(index, value);
         }
 
-        public object? this[object key]
+        public object this[object key]
         {
             get => GetByte((int)key);
             set => SetByte((int)key, (T)value);
@@ -244,20 +227,17 @@ namespace Diz.Core.model.byteSources
         public void Add(int key, T value)
         {
             this[key] = value;
-            // bytes.Add(key, value);
         }
         
         public void Add(KeyValuePair<int, T> item)
         {
             var (key, value) = item;
             this[key] = value;
-            // bytes.Add(key, value);
         }
 
-        public void Add(object key, object? value)
+        public void Add(object key, object value)
         {
             this[key] = value;
-            // ((IDictionary) bytes).Add(key, value);
         }
 
         protected override void FillEmptyContainerWithBytesFrom(IReadOnlyCollection<T> inBytes)
@@ -308,26 +288,12 @@ namespace Diz.Core.model.byteSources
 
         private int ComputeNewIndexForAdd()
         {
-            int indexThisWillBeAddedTo; // go one higher than our biggest
-            if (!allowExpanding)
-            {
-                // normal: find the largest key already set, and add one to it. use that as the new key.
-                var largestKey = GetLargestKey();
-                indexThisWillBeAddedTo = largestKey + 1;
-                
-                ValidateIndex(indexThisWillBeAddedTo);
-            }
-            else
-            {
-                // expansion mode (used during deserialization)
-                // in this mode, 'count' is not prefilled so will tick up even for null entries. use it
-                // as the new index.
-                //
-                // NOTE: this will probably go away and can be re-unified once we get better serialization.
-                // this is a little wacky.
-                indexThisWillBeAddedTo = count;
-            }
-            
+            // find the largest key already set, and add one to it. use that as the new key.
+            var largestKey = GetLargestKey();
+            var indexThisWillBeAddedTo = largestKey + 1;
+
+            ValidateIndex(indexThisWillBeAddedTo);
+
             return indexThisWillBeAddedTo;
         }
 
@@ -369,7 +335,7 @@ namespace Diz.Core.model.byteSources
             return bytes.GetEnumerator();
         }
 
-        public IEnumerator<KeyValuePair<int, T>> GetEnumerator()
+        public new IEnumerator<KeyValuePair<int, T>> GetEnumerator()
         {
             return bytes.GetEnumerator();
         }

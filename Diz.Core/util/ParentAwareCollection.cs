@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Xml.Serialization;
 using JetBrains.Annotations;
 
 namespace Diz.Core.util
@@ -16,9 +17,11 @@ namespace Diz.Core.util
         where TItem : IParentAware<TParent>
     {
         private TParent parent;
+        [XmlIgnore] 
         public bool DontSetParentOnCollectionItems { get; set; }
 
         [PublicAPI]
+        [XmlIgnore] 
         public TParent Parent
         {
             get => parent;

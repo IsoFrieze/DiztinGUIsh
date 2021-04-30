@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using Diz.Core.util;
 
 namespace Diz.Core.model.byteSources
 {
     public class AnnotationCollection : ParentAwareCollection<ByteEntry, Annotation>
     {
-        public bool EnforcePolicy { get; set; } = true;
+        [XmlIgnore] public bool EnforcePolicy { get; set; } = true;
         
         public T GetOne<T>() where T : Annotation
         {
