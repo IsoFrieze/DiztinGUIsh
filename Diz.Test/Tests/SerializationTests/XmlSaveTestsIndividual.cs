@@ -57,7 +57,7 @@ namespace Diz.Test.Tests.SerializationTests
 
             // tmp disabled. this WORKS technically but, at current, we generate a gigantic XML file for it so it takes forever
             // what we need to do instead is to modify the serialization to output the sparse version, then this is fine.
-            // () => SampleRomCreator1.CreateBaseRom().SnesAddressSpace,
+            () => TinyHiRomCreator.CreateBaseRom().SnesAddressSpace,
         };
         
         [Fact]

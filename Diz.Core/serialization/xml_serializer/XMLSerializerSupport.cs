@@ -129,17 +129,8 @@ namespace Diz.Core.serialization.xml_serializer
                 )
                 .EnableImplicitTyping()
                 .Type<ByteSource>()
-                // .EnableReferences()
-                //.Type<Storage<ByteEntry>>()
-//                .EnableReferences()
-                //.Type<ByteStorageList>()
-//                .EnableReferences()
-                //.Type<StorageSparse<ByteEntry>>()
-//                .EnableReferences()
                 .Type<RegionMapping>()
-//                .EnableReferences()
                 .Type<ByteSourceMapping>();
-//                .EnableReferences();
 
         public static string Serialize(object toSerialize)
         {
