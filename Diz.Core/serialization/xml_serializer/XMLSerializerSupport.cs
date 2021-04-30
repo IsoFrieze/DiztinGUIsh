@@ -21,8 +21,6 @@ namespace Diz.Core.serialization.xml_serializer
 
                 .Type<Project>()
                 // .WithMonitor(new Monitor())
-                .Member(x => x.UnsavedChanges).Ignore()
-                .Member(x => x.ProjectFileName).Ignore()
 
                 // TODO: we will need this. it's not quite on ByteSource. and just for reading. and just during migration
                 //.Type<ByteSource>()
@@ -79,7 +77,6 @@ namespace Diz.Core.serialization.xml_serializer
             private AnnotationCollectionProfile() {}
             public IConfigurationContainer Get(IConfigurationContainer parameter)
                 => parameter.Type<AnnotationCollection>()
-                    .Member(x=>x.Parent).Ignore()
                     .UseOptimizedNamespaces()
                     .UseAutoFormatting();
         }
@@ -92,17 +89,10 @@ namespace Diz.Core.serialization.xml_serializer
             {
                 return parameter
                     .Type<StorageSparse<ByteEntry>>()
-                    .Member(x => x.IsReadOnly).Ignore()
-                    .Member(x => x.IsSynchronized).Ignore()
-                    .Member(x => x.SyncRoot).Ignore()
-                    // TODO: add this eventually: .Member(x => x.ActualCount).Ignore() // because it's always just equal to# elements in the dict 
-                    .EnableParameterizedContent() // IMPORTANT
+                    .EnableParameterizedContent() // IMPORTANT! TAKE NOTE!
                     .EnableReferences()
 
                     .Type<StorageList<ByteEntry>>()
-                    // .Member(x => x.IsReadOnly).Ignore()
-                    // .Member(x => x.IsSynchronized).Ignore()
-                    // .Member(x => x.SyncRoot).Ignore()
                     .EnableReferences();
             }
         }

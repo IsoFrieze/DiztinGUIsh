@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Xml.Serialization;
 using Diz.Core.export;
 using Diz.Core.model.snes;
 using Diz.Core.util;
@@ -15,6 +16,7 @@ namespace Diz.Core.model
 
         // NOT saved in XML, just a cache of the last filename this project was saved as.
         // (This field may require some rework for GUI multi-project support)
+        [XmlIgnore] 
         public string ProjectFileName
         {
             get => projectFileName;
@@ -56,7 +58,7 @@ namespace Diz.Core.model
         // NOT saved in XML
         // (would be cool to make this more automatic. probably hook into SetField()
         // for a lot of it)
-        public bool UnsavedChanges
+        [XmlIgnore] public bool UnsavedChanges
         {
             get => unsavedChanges;
             set => this.SetField(PropertyChanged, ref unsavedChanges, value);
