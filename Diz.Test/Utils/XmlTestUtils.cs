@@ -1,12 +1,15 @@
 ﻿using System;
 using Diz.Core.serialization.xml_serializer;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Diz.Test.Utils
 {
-    public static class XmlTestUtils
+    public class XmlTestUtils
     {
-        public static void RunFullCycle<T>(Func<T> createFn, out T expectedCopy, out T deserializedObj)
+        public ITestOutputHelper Output { get; set; }
+        
+        public void RunFullCycle<T>(Func<T> createFn, out T expectedCopy, out T deserializedObj)
         {
             RunFullCycleObj(() => createFn(), out var expectedObjCopy, out var deserializedObjCopy);
 
@@ -14,7 +17,7 @@ namespace Diz.Test.Utils
             deserializedObj = (T) deserializedObjCopy;
         }
 
-        public static void RunFullCycleObj(Func<object> createFn, out object expectedCopy, out object deserializedObj)
+        public void RunFullCycleObj(Func<object> createFn, out object expectedCopy, out object deserializedObj)
         {
             var objToCycle = createFn();
             expectedCopy = createFn();
@@ -22,14 +25,15 @@ namespace Diz.Test.Utils
             deserializedObj = XmlFullCycle(objToCycle);
         }
         
-        public static T XmlFullCycle<T>(T objToCycle)
+        public T XmlFullCycle<T>(T objToCycle)
         {
             var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
+            Output?.WriteLine(xmlToCycle);
             var deserialized = XmlSerializationSupportNew.Deserialize<T>(xmlToCycle);
             return deserialized;
         }
         
-        public static void RunFullCycle(Func<object> createFn)
+        public void RunFullCycle(Func<object> createFn)
         {
             RunFullCycle(createFn, out var unchanged, out var cycled);
             Assert.Equal(unchanged, cycled);

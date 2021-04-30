@@ -1,11 +1,11 @@
 ﻿using Diz.Core.model;
 using Diz.Core.model.byteSources;
-using Diz.Test.Utils;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Diz.Test.Tests.SerializationTests
 {
-    public class XmlByteStorageTests
+    public class XmlByteStorageTests : XmlTestUtilBase
     {
         private static ByteEntry CreateSampleEntryX()
         {
@@ -15,7 +15,7 @@ namespace Diz.Test.Tests.SerializationTests
                 Annotations = {new Label {Name = "SomeLabel"}, new Comment {Text = "This is a comment"}}
             };
         }
-        
+
         [Fact]
         public void XmlFullCycleByteStorageSparse()
         {
@@ -30,6 +30,10 @@ namespace Diz.Test.Tests.SerializationTests
             }, out var unchanged, out var cycled);
             
             Assert.Equal(unchanged, cycled);
+        }
+
+        public XmlByteStorageTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        {
         }
     }
 }

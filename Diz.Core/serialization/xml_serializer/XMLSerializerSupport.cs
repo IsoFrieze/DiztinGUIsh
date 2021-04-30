@@ -1,16 +1,9 @@
-﻿using System.Reflection;
-using System.Xml;
+﻿using System.Xml;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
-using ExtendedXmlSerializer.ContentModel;
-using ExtendedXmlSerializer.ContentModel.Content;
-using ExtendedXmlSerializer.ContentModel.Format;
-using ExtendedXmlSerializer.Core;
-using ExtendedXmlSerializer.ExtensionModel;
-using ISerializer = ExtendedXmlSerializer.ContentModel.ISerializer;
 using JetBrains.Annotations;
 
 namespace Diz.Core.serialization.xml_serializer
@@ -32,8 +25,8 @@ namespace Diz.Core.serialization.xml_serializer
                 .Member(x => x.ProjectFileName).Ignore()
 
                 // TODO: we will need this. it's not quite on ByteSource. and just for reading. and just during migration
-                .Type<ByteSource>()
-                .Register().Serializer().Using(RomBytesSerializer.Default)
+                //.Type<ByteSource>()
+                //.Register().Serializer().Using(RomBytesSerializer.Default)
 
                 .Type<Data>()
                 // tmp. eventually, we do need to serialize this stuff.
@@ -42,38 +35,17 @@ namespace Diz.Core.serialization.xml_serializer
                 // .Member(x => x.RomBytes).Ignore()
 
                 // .AddMigration(new DizProjectMigrations())
-                
+
                 .UseOptimizedNamespaces()
                 .UseAutoFormatting()
 
-                .EnableImplicitTyping(typeof(Data))
-                .EnableImplicitTyping(typeof(Label));
+                .EnableImplicitTyping(typeof(Data), typeof(Label));
         }
     }
     
     // WIP
     public class XmlSerializationSupportNew
     {
-        // .Type<Project>()
-        // .Member(x => x.UnsavedChanges).Ignore()
-        // .Member(x => x.ProjectFileName).Ignore()
-        //
-        // .Type<ByteSource>()
-        // .Register().Serializer().Using(RomBytesSerializer.Default)
-        //
-        // .Type<Data>()
-        // // tmp. eventually, we do need to serialize this stuff.
-        // .Member(x => x.SnesAddressSpace).Ignore()
-        // .Member(x => x.RomByteSource).Ignore()
-        // // .Member(x => x.RomBytes).Ignore()
-        //
-        // // .Member(x=>x.Comments)
-        // // TODO: trying to get a converter up and running. not working yet....
-        // // .Register().Converter(HexIntConverter.Default)
-        // // .Member(x => x.Comments.Keys).Register().Converter().)
-        // // .CustomSerializer(new HexKVPSerializer())// cant get it working!!!
-        // // .AddMigration(new DizProjectMigrations())
-
         private sealed class ByteEntryProfile : IConfigurationProfile
         {
             public static ByteEntryProfile Default { get; } = new();

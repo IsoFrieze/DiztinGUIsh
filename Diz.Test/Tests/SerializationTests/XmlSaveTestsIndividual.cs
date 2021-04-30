@@ -5,12 +5,13 @@ using Diz.Core.model.byteSources;
 using Diz.Test.TestData;
 using Diz.Test.Utils;
 using Xunit;
+using Xunit.Abstractions;
 
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace Diz.Test.Tests.SerializationTests
 {
-    public static class XmlSampleData
+    public class XmlSampleData
     {
         public static ByteEntry CreateSampleEntry()
         {
@@ -35,7 +36,7 @@ namespace Diz.Test.Tests.SerializationTests
         public static StorageSparse<ByteEntry> CreateSampleEmptyByteSparse() => new();
     }
     
-    public class XmlSaveTestsIndividual
+    public class XmlSaveTestsIndividual : XmlTestUtilBase
     {
         
         public static TheoryData<Func<object>> SimpleCycleObjects => new()
@@ -82,5 +83,7 @@ namespace Diz.Test.Tests.SerializationTests
             Assert.Equal(unchanged.Count, cycled.Count);
             Assert.Equal(unchanged, cycled);
         }
+
+        public XmlSaveTestsIndividual(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }
     }
 }
