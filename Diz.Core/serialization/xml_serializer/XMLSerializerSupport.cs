@@ -53,6 +53,12 @@ namespace Diz.Core.serialization.xml_serializer
             public IConfigurationContainer Get(IConfigurationContainer parameter)
                 => parameter
                     .Type<ByteEntry>()
+                    
+                    // use some really short names, these are going to be output a LOT.
+                    .Name("B")
+                    .Member(x=>x.Annotations)
+                    .Name("A")
+                    
                     .EnableReferences()
                     .UseOptimizedNamespaces()
                     .UseAutoFormatting();
