@@ -55,36 +55,6 @@ namespace Diz.Core.serialization.xml_serializer
             public IConfigurationContainer Get(IConfigurationContainer parameter)
                 => parameter
                     .Type<ByteEntry>()
-                    
-                    // this class has a ton of helper properties that access stuff in .Annotations. ignore all of that
-                    // this class has a bunch of stuff about where it lives in parents, bytesources, etc. we don't need
-                    // to serialize it, it should be recreated when 
-                    
-                    // this should work in place of all the .Ignore() stuff below... but it doesn't yet.
-                    // sigh.
-                    // .Member(x => x.Annotations).Include()
-                    // .EmitWhenInstance()
-                    
-                    // set to include (whitelist) ONLY the stuff configured with .Member() above
-                    // .IncludeConfiguredMembers()
-                    
-                    // ignore all helper stuff, this'll be in the Annotations list
-                    // try using [XmlIgnoreAttribute]
-                    .Member(x => x.Arch).Ignore()
-                    .Member(x => x.Byte).Ignore()
-                    .Member(x => x.Point).Ignore()
-                    .Member(x => x.DataBank).Ignore()
-                    .Member(x => x.DirectPage).Ignore()
-                    .Member(x => x.MFlag).Ignore()
-                    .Member(x => x.XFlag).Ignore()
-                    .Member(x => x.TypeFlag).Ignore()
-                    
-                    // ignore anything about our parent references, that'll be re-created
-                    .Member(x => x.DontSetParentOnCollectionItems).Ignore()
-                    .Member(x => x.Parent).Ignore()
-                    .Member(x => x.ParentIndex).Ignore()
-                    // TODO: re-enable // .Member(x => x.ParentByteSource).Ignore()
-
                     .EnableReferences()
                     .UseOptimizedNamespaces()
                     .UseAutoFormatting();

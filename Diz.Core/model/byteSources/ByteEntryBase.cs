@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Xml.Serialization;
 using JetBrains.Annotations;
 
 namespace Diz.Core.model.byteSources
@@ -17,6 +18,7 @@ namespace Diz.Core.model.byteSources
             AppendAnnotationsFrom(annotationsToAppend, true);
         }
 
+        [XmlIgnore]
         public bool DontSetParentOnCollectionItems
         {
             get => dontSetParentOnCollectionItems;
@@ -59,11 +61,12 @@ namespace Diz.Core.model.byteSources
         #region References to parent enclosures
         
         // helper
-        // TODO: re-enable (get it working with serialization) public ByteSource ParentByteSource => Parent?.Parent;
+        // TODO: re-enable (get it working with serialization)
+        // [XmlIgnore] public ByteSource ParentByteSource => Parent?.Parent;
 
         // real stuff
-        public int ParentIndex  { get; set; }
-        public Storage<ByteEntry> Parent { get; set; }
+        [XmlIgnore] public int ParentIndex  { get; set; }
+        [XmlIgnore] public Storage<ByteEntry> Parent { get; set; }
 
         #endregion
 
