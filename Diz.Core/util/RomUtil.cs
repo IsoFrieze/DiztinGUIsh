@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using Diz.Core.export;
 using Diz.Core.model;
 
@@ -82,9 +83,12 @@ namespace Diz.Core.util
 
         public static string GetRomTitleName(byte[] rom, int romSettingOffset)
         {
+            // Cart names use "shift-JIS" encoding, which is ASCII with extra japanese chars
+            var shiftJisEncoding = Encoding.GetEncoding(932); 
+            
             var offsetOfGameTitle = romSettingOffset - LengthOfTitleName;
-            var internalGameNameToVerify = ReadStringFromByteArray(rom, LengthOfTitleName, offsetOfGameTitle);
-            return internalGameNameToVerify;
+            var cartName = ReadStringFromByteArray(rom, LengthOfTitleName, offsetOfGameTitle, shiftJisEncoding);
+            return cartName;
         }
 
         public static int ConvertSnesToPc(int address, RomMapMode mode, int size)
@@ -322,14 +326,18 @@ namespace Diz.Core.util
             return b ? "8" : "16";
         }
 
-        // read a fixed length string from an array of bytes. does not check for null termination
-        public static string ReadStringFromByteArray(byte[] bytes, int count, int offset)
+        // read a fixed length string from an array of bytes. does not check for null termination.
+        // allows using a non-UTF8 encoding
+        public static string ReadStringFromByteArray(byte[] bytes, int count, int index, Encoding encoding = null)
         {
-            var myName = "";
-            for (var i = 0; i < count; i++)
-                myName += (char)bytes[offset + i];
-
-            return myName;
+            var utfBytes = Encoding.Convert(
+                encoding ?? Encoding.UTF8, 
+                Encoding.UTF8, 
+                bytes, 
+                index, 
+                count);
+            
+            return Encoding.UTF8.GetString(utfBytes);
         }
 
         public static byte[] ReadAllRomBytesFromFile(string filename)

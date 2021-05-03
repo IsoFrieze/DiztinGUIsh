@@ -3,6 +3,8 @@ using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
+using Diz.Core.util;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -13,8 +15,14 @@ namespace Diz.Test
         [Fact]
         private void FullSerializeAndDeserialize()
         {
+            var cartName = "-ｪ-ﾗ-ｽ TEST123".PadRight(RomUtil.LengthOfTitleName);
+            
             // use the sample data to fake a project
-            var sampleProject = new Project {Data = SampleRomData.SampleData};
+            var sampleProject = new Project
+            {
+                Data = SampleRomData.SampleData,
+                InternalRomGameName = cartName
+            };
             
             // extract the bytes that would normally be in the SMC file (they only exist in code for this sample data)
             var romFileBytes = sampleProject.Data.GetFileBytes();
@@ -33,6 +41,10 @@ namespace Diz.Test
             // serialization and deserialization
             Assert.True(warning == "");
             Assert.True(sampleProject.Equals(deserializedProject));
+
+            deserializedProject.InternalRomGameName.Should().Be(cartName);
+            deserializedProject.Data.Comments.Count.Should().BeGreaterThan(0);
+            deserializedProject.Data.Labels.Count.Should().BeGreaterThan(0);
         }
         
         private readonly ITestOutputHelper output;
