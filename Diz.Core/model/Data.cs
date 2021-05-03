@@ -46,19 +46,26 @@ namespace Diz.Core.model
         {
             var output = new byte[count];
             for (var i = 0; i < output.Length; i++)
-                output[i] = (byte)GetRomByte(ConvertSnesToPc(pcOffset + i));
+                output[i] = (byte)GetRomByte(pcOffset+ i);
 
             return output;
         }
 
         public string GetRomNameFromRomBytes()
         {
-            return Encoding.UTF8.GetString(GetRomBytes(0xFFC0, 21));
+            // TODO: not working in all scenarios right now (import, load, save) investigate why
+            var romSettingsOffset = RomUtil.GetRomSettingOffset(RomMapMode);
+            var offsetOfGameTitle = romSettingsOffset - RomUtil.LengthOfTitleName;
+            var bytes = GetRomBytes(offsetOfGameTitle, RomUtil.LengthOfTitleName);
+            return RomUtil.GetRomTitleName(bytes, romSettingsOffset);
         }
 
         public int GetRomCheckSumsFromRomBytes()
         {
-            return ByteUtil.ByteArrayToInt32(GetRomBytes(0xFFDC, 4));
+            // TODO: not working in all scenarios right now (import, load, save) investigate why
+            var romSettingsOffset = RomUtil.GetRomSettingOffset(RomMapMode);
+            var checksumOffset = romSettingsOffset + 0x07;
+            return ByteUtil.ByteArrayToInt32(GetRomBytes(checksumOffset, 4));
         }
 
         public void CopyRomDataIn(IEnumerable<byte> trueRomBytes)

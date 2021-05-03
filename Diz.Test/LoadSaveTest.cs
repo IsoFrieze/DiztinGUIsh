@@ -45,6 +45,8 @@ namespace Diz.Test
             deserializedProject.InternalRomGameName.Should().Be(cartName);
             deserializedProject.Data.Comments.Count.Should().BeGreaterThan(0);
             deserializedProject.Data.Labels.Count.Should().BeGreaterThan(0);
+
+            deserializedProject.Data.GetRomNameFromRomBytes().Should().Be(cartName);
         }
         
         private readonly ITestOutputHelper output;
