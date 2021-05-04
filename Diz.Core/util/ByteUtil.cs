@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 
 namespace Diz.Core.util
 {
@@ -116,10 +117,10 @@ namespace Diz.Core.util
                 (data[offset + 1] << 8);
         }
 
-        public static byte[] StringToByteArray(string s)
+        public static byte[] StringToNullTermByteArray(string s)
         {
-            byte[] array = new byte[s.Length + 1];
-            for (int i = 0; i < s.Length; i++) array[i] = (byte)s[i];
+            var array = new byte[s.Length + 1];
+            for (var i = 0; i < s.Length; i++) array[i] = (byte)s[i];
             array[s.Length] = 0;
             return array;
         }
@@ -196,6 +197,39 @@ namespace Diz.Core.util
             }
 
             return result;
+        }
+        
+        // Cart names in the ROM use "shift-JIS" encoding, which is ASCII with extra japanese chars.
+        // SNES games use it for their text fields in the header, particularly the cartridge title.
+        // This needs to be parsed carefully.
+        public static Encoding ShiftJisEncoding => Encoding.GetEncoding(932);
+        
+        public static string ReadShiftJisEncodedString(byte[] buffer, int index, int count) => 
+            ReadStringFromByteArray(buffer, index, count, ShiftJisEncoding);
+        
+        public static byte[] ConvertUtf8ToShiftJisEncodedBytes(string str) => 
+            Encoding.Convert(Encoding.UTF8, ShiftJisEncoding, Encoding.UTF8.GetBytes(str));
+        
+        public static byte[] GetRawShiftJisBytesFromStr(string utf8CartridgeTitle)
+        {
+            var shiftJisEncodedBytes = ConvertUtf8ToShiftJisEncodedBytes(utf8CartridgeTitle);
+            var shiftJisStr = ShiftJisEncoding.GetString(shiftJisEncodedBytes);
+            var rawShiftJisBytes = ShiftJisEncoding.GetBytes(shiftJisStr);
+            return rawShiftJisBytes;
+        }
+
+        // read a fixed length string from an array of bytes. does not check for null termination.
+        // allows using a non-UTF8 encoding
+        public static string ReadStringFromByteArray(byte[] bytes, int index, int count, Encoding srcEncoding = null)
+        {
+            var utfBytes = Encoding.Convert(
+                srcEncoding ?? Encoding.UTF8, 
+                Encoding.UTF8, 
+                bytes, 
+                index, 
+                count);
+            
+            return Encoding.UTF8.GetString(utfBytes);
         }
     }
 }

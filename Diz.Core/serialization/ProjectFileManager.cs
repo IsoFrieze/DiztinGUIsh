@@ -130,7 +130,6 @@ namespace Diz.Core.serialization
             var project = new Project
             {
                 AttachedRomFilename = importSettings.RomFilename,
-                UnsavedChanges = false,
                 ProjectFileName = null,
                 Data = new Data()
             };
@@ -145,11 +144,7 @@ namespace Diz.Core.serialization
             foreach (var pair in importSettings.InitialHeaderFlags)
                 project.Data.SetFlag(pair.Key, pair.Value);
 
-            // Save a copy of these identifying ROM bytes with the project file itself.
-            // When we reload, we will make sure the linked ROM still matches them.
-            project.InternalCheckSum = project.Data.GetRomCheckSumsFromRomBytes();
-            project.InternalRomGameName = project.Data.GetRomNameFromRomBytes();
-
+            project.CacheVerificationInfo();
             project.UnsavedChanges = true;
 
             return project;

@@ -29,7 +29,7 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             var everything = new byte[HeaderSize + data.Length];
             everything[0] = versionToSave;
-            ByteUtil.StringToByteArray(Watermark).CopyTo(everything, 1);
+            ByteUtil.StringToNullTermByteArray(Watermark).CopyTo(everything, 1);
             data.CopyTo(everything, HeaderSize);
 
             return data;
@@ -60,7 +60,7 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             // read internal title
             var pointer = HeaderSize + 6;
-            project.InternalRomGameName = RomUtil.ReadStringFromByteArray(data, RomUtil.LengthOfTitleName, pointer);
+            project.InternalRomGameName = ByteUtil.ReadStringFromByteArray(data, pointer, RomUtil.LengthOfTitleName);
             pointer += RomUtil.LengthOfTitleName;
 
             // read checksums
@@ -124,10 +124,10 @@ namespace Diz.Core.serialization.binary_serializer_old
             // save the size, 4 bytes
             ByteUtil.IntegerIntoByteArray(size, romSettings, 2);
 
-            var romName = project.Data.GetRomNameFromRomBytes();
+            var romName = project.Data.CartridgeTitleName;
             romName.ToCharArray().CopyTo(romSettings, 6);
 
-            var romChecksum = project.Data.GetRomCheckSumsFromRomBytes();
+            var romChecksum = project.Data.RomCheckSumsFromRomBytes;
             BitConverter.GetBytes(romChecksum).CopyTo(romSettings, 27);
 
             // TODO put selected offset in save file
@@ -157,7 +157,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             }
 
             // save current Rom full path - "c:\whatever\someRom.sfc"
-            var romLocation = ByteUtil.StringToByteArray(project.AttachedRomFilename);
+            var romLocation = ByteUtil.StringToNullTermByteArray(project.AttachedRomFilename);
 
             var data = new byte[romSettings.Length + romLocation.Length + 8 * size + label.Count + comment.Count];
             romSettings.CopyTo(data, 0);

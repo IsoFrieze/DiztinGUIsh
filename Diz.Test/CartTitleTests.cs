@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
@@ -64,7 +65,7 @@ namespace Diz.Test
                 .ToArray();
 
             RomUtil
-                .GetRomTitleName(
+                .GetCartridgeTitleFromRom(
                     fakeRom,
                     RomUtil.GetRomSettingOffset(RomMapMode.LoRom)
                 ).Should().Be(ExpectedTitleStr);
@@ -91,6 +92,30 @@ namespace Diz.Test
             xmlStr.Should().Contain($"CartTitle=\"{ExpectedTitleStr}\"");
 
             restoredRoot.CartTitle.Should().Be(ExpectedTitleStr);
+        }
+
+        [Fact]
+        public static void CartNameInHeader()
+        {
+            // use the sample data to fake a project
+            var srcProject = LoadSaveTest.BuildSampleProject2();
+            
+            var expectedTitle = SampleRomData.GetSampleUtf8CartridgeTitle();
+
+            TestRomCartTitle(srcProject, expectedTitle);
+        }
+
+        public static void TestRomCartTitle(Project project, string expectedTitle)
+        {
+            ByteUtil.ConvertUtf8ToShiftJisEncodedBytes(project.InternalRomGameName)
+                .Should().HaveCount(RomUtil.LengthOfTitleName,
+                    "SNES cart name in header must be exactly this many bytes");
+
+            project.Data.CartridgeTitleName
+                .Should().Be(project.InternalRomGameName, "it should be identical to the cached name");
+
+            var trimmedTitle = project.InternalRomGameName.TrimEnd(' ');
+            trimmedTitle.Should().Be(expectedTitle, "SNES headers are padded with spaces at the end to a fixed size");
         }
     }
 }

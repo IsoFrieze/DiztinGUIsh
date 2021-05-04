@@ -46,27 +46,22 @@ namespace Diz.Core.model
         {
             var output = new byte[count];
             for (var i = 0; i < output.Length; i++)
-                output[i] = (byte)GetRomByte(pcOffset+ i);
+                output[i] = (byte)GetRomByte(pcOffset + i);
 
             return output;
         }
+        
+        public int RomSettingsOffset => RomUtil.GetRomSettingOffset(RomMapMode);
+        public int RomChecksumOffset => RomSettingsOffset + 0x07;
+        public int CartridgeTitleStartingOffset => 
+            RomUtil.GetCartridgeTitleStartingRomOffset(RomSettingsOffset);
 
-        public string GetRomNameFromRomBytes()
-        {
-            // TODO: not working in all scenarios right now (import, load, save) investigate why
-            var romSettingsOffset = RomUtil.GetRomSettingOffset(RomMapMode);
-            var offsetOfGameTitle = romSettingsOffset - RomUtil.LengthOfTitleName;
-            var bytes = GetRomBytes(offsetOfGameTitle, RomUtil.LengthOfTitleName);
-            return RomUtil.GetRomTitleName(bytes, romSettingsOffset);
-        }
+        public string CartridgeTitleName =>
+            RomUtil.GetCartridgeTitleFromBuffer(
+                GetRomBytes(CartridgeTitleStartingOffset, RomUtil.LengthOfTitleName)
+            );
 
-        public int GetRomCheckSumsFromRomBytes()
-        {
-            // TODO: not working in all scenarios right now (import, load, save) investigate why
-            var romSettingsOffset = RomUtil.GetRomSettingOffset(RomMapMode);
-            var checksumOffset = romSettingsOffset + 0x07;
-            return ByteUtil.ByteArrayToInt32(GetRomBytes(checksumOffset, 4));
-        }
+        public int RomCheckSumsFromRomBytes => ByteUtil.ByteArrayToInt32(GetRomBytes(RomChecksumOffset, 4));
 
         public void CopyRomDataIn(IEnumerable<byte> trueRomBytes)
         {

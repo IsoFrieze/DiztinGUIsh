@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.serialization;
@@ -15,21 +16,20 @@ namespace Diz.Test
         [Fact]
         private void FullSerializeAndDeserialize()
         {
-            var cartName = "-ｪ-ﾗ-ｽ TEST123".PadRight(RomUtil.LengthOfTitleName);
-            
             // use the sample data to fake a project
-            var sampleProject = new Project
-            {
-                Data = SampleRomData.SampleData,
-                InternalRomGameName = cartName
-            };
+            var srcProject = BuildSampleProject2();
             
+            var expectedTitle = SampleRomData.GetSampleUtf8CartridgeTitle();
+
+            srcProject.Data.Comments.Count.Should().BeGreaterThan(0);
+            srcProject.Data.Labels.Count.Should().BeGreaterThan(0);
+
             // extract the bytes that would normally be in the SMC file (they only exist in code for this sample data)
-            var romFileBytes = sampleProject.Data.GetFileBytes();
+            var romFileBytes = srcProject.Data.GetFileBytes().ToList();
 
             // save it to create an output byte stream, we'd normally write this to the disk
             var serializer = new ProjectXmlSerializer();
-            var outputBytes = serializer.Save(sampleProject);
+            var outputBytes = serializer.Save(srcProject);
 
             // now do the reverse and load our output back as the input
             var (deserializedProject, warning) = serializer.Load(outputBytes);
@@ -40,15 +40,26 @@ namespace Diz.Test
             // now we can do a full compare between the original project, and the project which has been cycled through
             // serialization and deserialization
             Assert.True(warning == "");
-            Assert.True(sampleProject.Equals(deserializedProject));
-
-            deserializedProject.InternalRomGameName.Should().Be(cartName);
+            Assert.True(srcProject.Equals(deserializedProject));
+            
             deserializedProject.Data.Comments.Count.Should().BeGreaterThan(0);
             deserializedProject.Data.Labels.Count.Should().BeGreaterThan(0);
 
-            deserializedProject.Data.GetRomNameFromRomBytes().Should().Be(cartName);
+            CartNameTests.TestRomCartTitle(deserializedProject, expectedTitle);
         }
-        
+
+        public static Project BuildSampleProject2()
+        {
+            var project2 = new Project
+            {
+                Data = SampleRomData.SampleData,
+            };
+            
+            project2.CacheVerificationInfo();
+            
+            return project2;
+        }
+
         private readonly ITestOutputHelper output;
 
         public LoadSaveTest(ITestOutputHelper output)

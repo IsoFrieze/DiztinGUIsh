@@ -116,6 +116,16 @@ namespace Diz.Core.model
 
         private string IsThisRomIsIdenticalToUs(byte[] romBytes) => 
             RomUtil.IsThisRomIsIdenticalToUs(romBytes, Data.RomMapMode, InternalRomGameName, InternalCheckSum);
+        
+        public void CacheVerificationInfo()
+        {
+            // Save a copy of these identifying ROM bytes with the project file itself, so they'll
+            // be serialized to disk on project save. When we reload, we verify the recreated ROM data still matches both
+            // of these. If either are wrong, then the ROM on disk could be different from the one associated with the 
+            // project.
+            InternalCheckSum = Data.RomCheckSumsFromRomBytes;
+            InternalRomGameName = Data.CartridgeTitleName;
+        }
 
         #region Equality
         protected bool Equals(Project other)

@@ -1,4 +1,8 @@
-﻿using Diz.Core.model;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using Diz.Core.model;
 using Diz.Core.util;
 using IX.Observable;
 
@@ -6,6 +10,8 @@ namespace Diz.Core
 {
     public class SampleRomData : Data
     {
+        public static string GetSampleUtf8CartridgeTitle() => "｢ﾎ｣ abcｦｧｨ TEST123"; // don't pad here
+        
         public static SampleRomData SampleData
         {
             get
@@ -26,10 +32,38 @@ namespace Diz.Core
                 BaseSampleData.OriginalRomSizeBeforePadding = BaseSampleData.RomBytes.Count;
                 while (BaseSampleData.RomBytes.Count < 0x8000)
                     BaseSampleData.RomBytes.Add(new RomByte());
+                
+                // inject the game name into the bytes
+                // This is a UTF8 string that needs to be converted to ShiftJIS (Ascii w/some japanese chars) encoding.
+                SetCartridgeTitle(GetSampleUtf8CartridgeTitle());
 
                 _finalSampleData = BaseSampleData;
                 return BaseSampleData;
             }
+        }
+
+        // input can be any length, and will be padded, using spaces, to the right size for SNES header
+        private static void SetCartridgeTitle(string utf8CartridgeTitle)
+        {
+            var rawShiftJisBytes = ByteUtil.GetRawShiftJisBytesFromStr(utf8CartridgeTitle);
+
+            Debug.Assert(rawShiftJisBytes.Length <= RomUtil.LengthOfTitleName);
+            
+            // now, we need to pad rawShiftJisBytes up to 21 bytes using the space (0x20) character
+            var numPadBytesNeeded = RomUtil.LengthOfTitleName - rawShiftJisBytes.Length;
+            var paddedShiftJisBytes = rawShiftJisBytes
+                .Concat(
+                    Enumerable.Repeat(
+                        (byte) 0x20, 
+                        numPadBytesNeeded
+                        )
+                    )
+                .ToArray();
+            
+            // the BYTES are 21 in length, not the string length (which can be different)
+            Debug.Assert(paddedShiftJisBytes.Length == RomUtil.LengthOfTitleName);
+            
+            BaseSampleData.RomBytes.SetBytesFrom(paddedShiftJisBytes, BaseSampleData.CartridgeTitleStartingOffset);
         }
 
         public int OriginalRomSizeBeforePadding { get; set; }

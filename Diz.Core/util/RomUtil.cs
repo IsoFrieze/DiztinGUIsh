@@ -67,7 +67,7 @@ namespace Diz.Core.util
             if (rom.Length <= romSettingsOffset + 10)
                 return "The linked ROM is too small. It can't be opened.";
 
-            var internalGameNameToVerify = GetRomTitleName(rom, romSettingsOffset);
+            var internalGameNameToVerify = GetCartridgeTitleFromRom(rom, romSettingsOffset);
             var checksumToVerify = ByteUtil.ByteArrayToInt32(rom, romSettingsOffset + 7);
 
             if (internalGameNameToVerify != requiredGameNameMatch)
@@ -81,15 +81,27 @@ namespace Diz.Core.util
             return null;
         }
 
-        public static string GetRomTitleName(byte[] rom, int romSettingOffset)
-        {
-            // Cart names use "shift-JIS" encoding, which is ASCII with extra japanese chars
-            var shiftJisEncoding = Encoding.GetEncoding(932); 
-            
-            var offsetOfGameTitle = romSettingOffset - LengthOfTitleName;
-            var cartName = ReadStringFromByteArray(rom, LengthOfTitleName, offsetOfGameTitle, shiftJisEncoding);
-            return cartName;
-        }
+        /// <summary>
+        /// Return the "title" information (i.e. the name of the game) from the SNES ROM header
+        /// </summary>
+        /// <param name="allRomBytes">All the bytes in a ROM</param>
+        /// <param name="romSettingOffset">Offset of the start of the SNES header section (title info is before this)</param>
+        /// <returns>UTF8 string of the title, padded with spaces</returns>
+        public static string GetCartridgeTitleFromRom(byte[] allRomBytes, int romSettingOffset) => 
+            GetCartridgeTitleFromBuffer(allRomBytes, GetCartridgeTitleStartingRomOffset(romSettingOffset));
+
+        // input: ROM offset (not SNES address)
+        public static int GetCartridgeTitleStartingRomOffset(int romSettingOffset) => 
+            romSettingOffset - LengthOfTitleName;
+
+        /// <summary>
+        /// Return the "title" information (i.e. the name of the game) from an arbitrary buffer
+        /// </summary>
+        /// <param name="buffer">Array of bytes</param>
+        /// <param name="index">Index into the array to start with</param>
+        /// <returns>UTF8 string of the title, padded with spaces</returns>
+        public static string GetCartridgeTitleFromBuffer(byte[] buffer, int index = 0) => 
+            ByteUtil.ReadShiftJisEncodedString(buffer, index, LengthOfTitleName);
 
         public static int ConvertSnesToPc(int address, RomMapMode mode, int size)
         {
@@ -324,20 +336,6 @@ namespace Diz.Core.util
         public static string BoolToSize(bool b)
         {
             return b ? "8" : "16";
-        }
-
-        // read a fixed length string from an array of bytes. does not check for null termination.
-        // allows using a non-UTF8 encoding
-        public static string ReadStringFromByteArray(byte[] bytes, int count, int index, Encoding encoding = null)
-        {
-            var utfBytes = Encoding.Convert(
-                encoding ?? Encoding.UTF8, 
-                Encoding.UTF8, 
-                bytes, 
-                index, 
-                count);
-            
-            return Encoding.UTF8.GetString(utfBytes);
         }
 
         public static byte[] ReadAllRomBytesFromFile(string filename)
