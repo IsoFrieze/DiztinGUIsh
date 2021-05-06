@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -61,14 +62,14 @@ namespace Diz.Core.util
         // verify the data in the provided ROM bytes matches the data we expect it to have.
         // returns error message if it's not identical, or null if everything is OK.
         public static string IsThisRomIsIdenticalToUs(byte[] rom,
-            RomMapMode mode, string requiredGameNameMatch, int requiredRomChecksumMatch)
+            RomMapMode mode, string requiredGameNameMatch, uint requiredRomChecksumMatch)
         {
             var romSettingsOffset = GetRomSettingOffset(mode);
             if (rom.Length <= romSettingsOffset + 10)
                 return "The linked ROM is too small. It can't be opened.";
 
             var internalGameNameToVerify = GetCartridgeTitleFromRom(rom, romSettingsOffset);
-            var checksumToVerify = ByteUtil.ByteArrayToInt32(rom, romSettingsOffset + 7);
+            var checksumToVerify = ByteUtil.ConvertByteArrayToInt32(rom, romSettingsOffset + 7);
 
             if (internalGameNameToVerify != requiredGameNameMatch)
                 return $"The linked ROM's internal name '{internalGameNameToVerify}' doesn't " +
@@ -90,7 +91,7 @@ namespace Diz.Core.util
         public static string GetCartridgeTitleFromRom(byte[] allRomBytes, int romSettingOffset) => 
             GetCartridgeTitleFromBuffer(allRomBytes, GetCartridgeTitleStartingRomOffset(romSettingOffset));
 
-        // input: ROM offset (not SNES address)
+        // input: ROM setting offset (pcOffset, NOT snes address)
         public static int GetCartridgeTitleStartingRomOffset(int romSettingOffset) => 
             romSettingOffset - LengthOfTitleName;
 
@@ -358,8 +359,10 @@ namespace Diz.Core.util
             return rom;
         }
 
-        public static void GenerateHeaderFlags(int romSettingsOffset, IDictionary<int, Data.FlagType> flags, byte[] romBytes)
+        public static Dictionary<int, Data.FlagType> GenerateHeaderFlags(int romSettingsOffset, byte[] romBytes)
         {
+            var flags = new Dictionary<int, Data.FlagType>();
+            
             for (int i = 0; i < LengthOfTitleName; i++)
                 flags.Add(romSettingsOffset - LengthOfTitleName + i, Data.FlagType.Text);
             
@@ -387,6 +390,8 @@ namespace Diz.Core.util
                 for (int i = 0; i < 10; i++) 
                     flags.Add(romSettingsOffset - 0x1F + i, Data.FlagType.Data8Bit);
             }
+
+            return flags;
         }
 
 

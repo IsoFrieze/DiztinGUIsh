@@ -143,7 +143,9 @@
     <Compile Include="serialization\xml_serializer\RepeaterCompression.cs" />
     <Compile Include="serialization\xml_serializer\RomByteEncoding.cs" />
     <Compile Include="serialization\xml_serializer\SubstitutionCompression.cs" />
+    <Compile Include="util\ChecksumUtil.cs" />
     <Compile Include="util\Fake64Encoding.cs" />
+    <Compile Include="util\ImportUtils.cs" />
     <Compile Include="util\RomVisual.cs" />
     <Compile Include="util\WorkerTaskManager.cs" />
     <Compile Include="model\Data.cs" />

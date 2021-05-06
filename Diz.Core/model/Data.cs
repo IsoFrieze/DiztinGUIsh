@@ -50,9 +50,12 @@ namespace Diz.Core.model
 
             return output;
         }
-        
+
         public int RomSettingsOffset => RomUtil.GetRomSettingOffset(RomMapMode);
-        public int RomChecksumOffset => RomSettingsOffset + 0x07;
+        
+        public int RomComplementOffset => RomSettingsOffset + 0x07; // 2 bytes - complement
+        public int RomChecksumOffset => RomComplementOffset + 2; // 2 bytes - checksum
+        
         public int CartridgeTitleStartingOffset => 
             RomUtil.GetCartridgeTitleStartingRomOffset(RomSettingsOffset);
 
@@ -61,7 +64,9 @@ namespace Diz.Core.model
                 GetRomBytes(CartridgeTitleStartingOffset, RomUtil.LengthOfTitleName)
             );
 
-        public int RomCheckSumsFromRomBytes => ByteUtil.ByteArrayToInt32(GetRomBytes(RomChecksumOffset, 4));
+        public uint RomComplement => (uint) GetRomWord(RomComplementOffset);
+        public uint RomChecksum => (uint) GetRomWord(RomChecksumOffset);
+        public uint RomCheckSumsFromRomBytes => (RomChecksum << 16) | RomComplement;
 
         public void CopyRomDataIn(IEnumerable<byte> trueRomBytes)
         {
@@ -78,6 +83,28 @@ namespace Diz.Core.model
 
             RomBytes.SendNotificationChangedEvents = previousNotificationState;
         }
+        
+        // recalculates the checksum and then modifies the internal bytes in the ROM so it contains
+        // the valid checksum in the ROM header.
+        //
+        // NOTE: this new checksum is [currently] never saved with the project file / serialized (since we don't
+        // store the potentially copyrighted ROM bytes in the project file). it should just be used for
+        // testing/verification purposes. (that is why this is protected, it's not part of the normal API)
+        public void FixChecksum()
+        {
+            var rawRomBytesCopy = CreateListRawRomBytes();
+            ChecksumUtil.UpdateRomChecksum(rawRomBytesCopy, RomMapMode, GetRomSize());
+            RomBytes.SetBytesFrom(rawRomBytesCopy, 0);
+        }
+        
+        // expensive and ineffecient
+        private List<byte> CreateListRawRomBytes() => RomBytes.Select(rb => rb.Rom).ToList();
+
+        // looks at the actual bytes present in the ROM and calculates their checksum
+        // this is unrelated to any stored/cached checksums in the Project file. 
+        public ushort ComputeChecksum() => (ushort) ChecksumUtil.ComputeChecksumFromRom(CreateListRawRomBytes());
+        public bool ComputeIsChecksumValid() =>
+            ChecksumUtil.IsRomChecksumValid(CreateListRawRomBytes(), RomMapMode, GetRomSize());
 
         public int GetRomSize() => RomBytes?.Count ?? 0;
         public FlagType GetFlag(int i) => RomBytes[i].TypeFlag;

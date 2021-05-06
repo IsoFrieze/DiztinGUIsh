@@ -8,7 +8,7 @@ namespace Diz.Core.util
 {
     public static class ByteUtil
     {
-        // take input addresses that be in any formats that look like this, and convert to an int.
+        // take input addresses that can be in any formats that look like this, and convert to an int.
         // This is useful if pasting addresses from other editors/tools/asm/etc trying to get a clean address.
         // C0FFFF
         // $C0FFFF
@@ -39,12 +39,12 @@ namespace Diz.Core.util
             var strings = new List<string>();
 
             var pos = startingIndex;
-            var numTableEntries = ByteArrayToInt32(bytes, pos);
+            var numTableEntries = ConvertByteArrayToInt32(bytes, pos);
             pos += 4;
 
             for (var entry = 0; entry < numTableEntries; ++entry)
             {
-                var offset = converter(ByteArrayToInt32(bytes, pos));
+                var offset = converter(ConvertByteArrayToInt32(bytes, pos));
                 pos += 4;
 
                 strings.Clear();
@@ -69,59 +69,71 @@ namespace Diz.Core.util
             return pos - startingOffset;
         }
 
-        public static byte[] IntegerToByteArray(int a)
+        public static byte[] IntegerToByteArray(uint val)
         {
-            return new byte[]
+            return new[]
             {
-                (byte)a,
-                (byte)(a >> 8),
-                (byte)(a >> 16),
-                (byte)(a >> 24)
+                (byte)val,
+                (byte)(val >> 8),
+                (byte)(val >> 16),
+                (byte)(val >> 24)
             };
         }
 
-        public static void IntegerIntoByteArray(int a, byte[] data, int offset)
+        public static void IntegerIntoByteArray(uint src, IList<byte> dst, int dstStartingOffset)
         {
-            byte[] arr = IntegerToByteArray(a);
-            for (int i = 0; i < arr.Length; i++) data[offset + i] = arr[i];
+            var arr = IntegerToByteArray(src);
+            for (var i = 0; i < arr.Length; i++) 
+                dst[dstStartingOffset + i] = arr[i];
         }
 
-        public static void IntegerIntoByteList(int a, List<byte> list)
+        public static void AppendIntegerToByteList(uint src, IList<byte> dst)
         {
-            byte[] arr = IntegerToByteArray(a);
+            var arr = IntegerToByteArray(src);
             foreach (var t in arr)
-                list.Add(t);
+                dst.Add(t);
         }
-
-        public static int ByteArrayToInt32(byte[] data, int offset = 0)
+        
+        public static uint ConvertByteArrayToUInt32(IReadOnlyList<byte> src, int srcStartingOffset = 0)
         {
             return
-                data[offset] |
-                (data[offset + 1] << 8) |
-                (data[offset + 2] << 16) |
-                (data[offset + 3] << 24);
+                src[srcStartingOffset] |
+                ((uint)src[srcStartingOffset + 1] << 8) |
+                ((uint)src[srcStartingOffset + 2] << 16) |
+                ((uint)src[srcStartingOffset + 3] << 24);
         }
 
-        public static int ByteArrayToInt24(byte[] data, int offset = 0)
+        public static int ConvertByteArrayToInt32(IReadOnlyList<byte> src, int srcStartingOffset = 0)
         {
             return
-                data[offset] |
-                (data[offset + 1] << 8) |
-                (data[offset + 2] << 16);
+                src[srcStartingOffset] |
+                (src[srcStartingOffset + 1] << 8) |
+                (src[srcStartingOffset + 2] << 16) |
+                (src[srcStartingOffset + 3] << 24);
         }
 
-        public static int ByteArrayToInt16(byte[] data, int offset = 0)
+        public static int ByteArrayToInt24(IReadOnlyList<byte> src, int srcStartingOffset = 0)
         {
             return
-                data[offset] |
-                (data[offset + 1] << 8);
+                src[srcStartingOffset] |
+                (src[srcStartingOffset + 1] << 8) |
+                (src[srcStartingOffset + 2] << 16);
         }
 
-        public static byte[] StringToNullTermByteArray(string s)
+        public static int ByteArrayToInt16(IReadOnlyList<byte> src, int srcStartingOffset = 0)
         {
-            var array = new byte[s.Length + 1];
-            for (var i = 0; i < s.Length; i++) array[i] = (byte)s[i];
-            array[s.Length] = 0;
+            return
+                src[srcStartingOffset] |
+                (src[srcStartingOffset + 1] << 8);
+        }
+
+        public static byte[] StringToNullTermByteArray(string src)
+        {
+            var array = new byte[src.Length + 1];
+            for (var i = 0; i < src.Length; i++) 
+                array[i] = (byte)src[i];
+            
+            array[src.Length] = 0;
             return array;
         }
         
@@ -131,7 +143,7 @@ namespace Diz.Core.util
         // 
         // this is less flexible but way faster, crucial for fast sections of our code. 
         // idea credit: Daniel-Lemire
-        public static readonly int[] HexAsciiToDigit = {
+        private static readonly int[] HexAsciiToDigit = {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,
@@ -145,7 +157,8 @@ namespace Diz.Core.util
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1};
+            -1, -1, -1, -1, -1, -1, -1, -1, -1
+        };
 
         // 4bit value
         public static byte ByteParseHex1(char hexChar)
@@ -173,10 +186,11 @@ namespace Diz.Core.util
                 ByteParseHex1(hexChar4);
         }
 
-        // note: likely isn't quite as fast, use one of the other ByteParseHex1/2/3/4() functions directly
-        // if you have to care about performance.
+        // note: this helper isn't quite as fast, use one of the other ByteParseHex1/2/3/4() functions directly
+        // if you need the best performance.
         //
-        // this function is a faster but more specific version of: Convert.ToInt32(line.Substring(startIndex, length), 16);
+        // this function is a faster but more specific implementation of:
+        // Convert.ToInt32(line.Substring(startIndex, length), 16);
         public static uint ByteParseHex(string str, int strStartIndex, int numHexDigits)
         {
             if (numHexDigits <= 0 || numHexDigits > 8)

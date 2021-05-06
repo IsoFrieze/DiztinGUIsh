@@ -56,7 +56,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             // read mode, speed, size
             project.Data.RomMapMode = (RomMapMode)data[HeaderSize];
             project.Data.RomSpeed = (RomSpeed)data[HeaderSize + 1];
-            var size = ByteUtil.ByteArrayToInt32(data, HeaderSize + 2);
+            var size = ByteUtil.ConvertByteArrayToInt32(data, HeaderSize + 2);
 
             // read internal title
             var pointer = HeaderSize + 6;
@@ -64,7 +64,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             pointer += RomUtil.LengthOfTitleName;
 
             // read checksums
-            project.InternalCheckSum = ByteUtil.ByteArrayToInt32(data, pointer);
+            project.InternalCheckSum = ByteUtil.ConvertByteArrayToUInt32(data, pointer);
             pointer += 4;
 
             // read full filepath to the ROM .sfc file
@@ -122,7 +122,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             romSettings[1] = (byte)project.Data.RomSpeed;
 
             // save the size, 4 bytes
-            ByteUtil.IntegerIntoByteArray(size, romSettings, 2);
+            ByteUtil.IntegerIntoByteArray((uint)size, romSettings, 2);
 
             var romName = project.Data.CartridgeTitleName;
             romName.ToCharArray().CopyTo(romSettings, 6);
@@ -137,10 +137,10 @@ namespace Diz.Core.serialization.binary_serializer_old
             var allLabels = project.Data.Labels;
             var allComments = project.Data.Comments;
 
-            ByteUtil.IntegerIntoByteList(allLabels.Count, label);
+            ByteUtil.AppendIntegerToByteList((uint)allLabels.Count, label);
             foreach (var pair in allLabels)
             {
-                ByteUtil.IntegerIntoByteList(pair.Key, label);
+                ByteUtil.AppendIntegerToByteList((uint)pair.Key, label);
 
                 SaveStringToBytes(pair.Value.Name, label);
                 if (version >= 2)
@@ -149,10 +149,10 @@ namespace Diz.Core.serialization.binary_serializer_old
                 }
             }
 
-            ByteUtil.IntegerIntoByteList(allComments.Count, comment);
+            ByteUtil.AppendIntegerToByteList((uint)allComments.Count, comment);
             foreach (KeyValuePair<int, string> pair in allComments)
             {
-                ByteUtil.IntegerIntoByteList(pair.Key, comment);
+                ByteUtil.AppendIntegerToByteList((uint)pair.Key, comment);
                 SaveStringToBytes(pair.Value, comment);
             }
 

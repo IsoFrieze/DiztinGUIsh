@@ -8,6 +8,7 @@ using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
 using Diz.Core.serialization;
+using Diz.Core.util;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
 
@@ -153,23 +154,32 @@ namespace DiztinGUIsh.controller
 
         public bool ImportRomAndCreateNewProject(string romFilename)
         {
-            // let the user select settings on the GUI
-            var importController = new ImportRomDialogController {View = ProjectView.GetImportView()};
-            importController.View.Controller = importController;
-            var importSettings = importController.PromptUserForRomSettings(romFilename);
-            if (importSettings == null)
-                return false;
-            
-            CloseProject();
+            var importController = SetupImportController(ProjectView);
 
-            // actually do the import
-            ImportRomAndCreateNewProject(importSettings);
-            return true;
+            var importSettings = importController.PromptUserForImportOptions(romFilename);
+            if (importSettings != null)
+            {
+                CloseProject();
+
+                // actually do the import
+                ImportRomAndCreateNewProject(importSettings);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static ImportRomDialogController SetupImportController(IProjectView projectView)
+        {
+            // let the user select settings on the GUI
+            var importController = new ImportRomDialogController {View = projectView.GetImportView()};
+            importController.View.Controller = importController;
+            return importController;
         }
 
         public void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
         {
-            var project = BaseProjectFileManager.ImportRomAndCreateNewProject(importSettings);
+            var project = ImportUtils.ImportRomAndCreateNewProject(importSettings);
             OnProjectOpenSuccess(project.ProjectFileName, project);
         }
 

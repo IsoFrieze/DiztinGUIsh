@@ -11,6 +11,17 @@ namespace Diz.Core.serialization
     public class ProjectFileManager : BaseProjectFileManager
     {
         public Func<string, string> RomPromptFn { get; set; }
+
+        // helper version that throws exceptions if any issue present.
+        // if you handle this yourself, you can usually survive the warnings.
+        public static Project Load(string romFilename)
+        {
+            var (project, warning) = new ProjectFileManager().Open(romFilename);
+            if (!string.IsNullOrEmpty(warning))
+                throw new InvalidDataException($"failed opening project:\n{warning}");
+
+            return project;
+        }
         
         // TODO: move romPromptFn to be a field instead of a param passed around.
         protected override byte[] ReadFromOriginalRom(Project project)
@@ -123,31 +134,6 @@ namespace Diz.Core.serialization
                 data = Util.TryZip(data);
 
             return data;
-        }
-
-        public static Project ImportRomAndCreateNewProject(ImportRomSettings importSettings)
-        {
-            var project = new Project
-            {
-                AttachedRomFilename = importSettings.RomFilename,
-                ProjectFileName = null,
-                Data = new Data()
-            };
-
-            project.Data.RomMapMode = importSettings.RomMapMode;
-            project.Data.RomSpeed = importSettings.RomSpeed;
-            project.Data.CreateRomBytesFromRom(importSettings.RomBytes);
-
-            foreach (var pair in importSettings.InitialLabels)
-                project.Data.AddLabel(pair.Key, pair.Value, true);
-
-            foreach (var pair in importSettings.InitialHeaderFlags)
-                project.Data.SetFlag(pair.Key, pair.Value);
-
-            project.CacheVerificationInfo();
-            project.UnsavedChanges = true;
-
-            return project;
         }
 
         protected abstract byte[] ReadFromOriginalRom(Project project);

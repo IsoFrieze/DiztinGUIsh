@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -36,6 +37,7 @@ namespace Diz.Core
                 // inject the game name into the bytes
                 // This is a UTF8 string that needs to be converted to ShiftJIS (Ascii w/some japanese chars) encoding.
                 SetCartridgeTitle(GetSampleUtf8CartridgeTitle());
+                BaseSampleData.FixChecksum();
 
                 _finalSampleData = BaseSampleData;
                 return BaseSampleData;

@@ -51,7 +51,7 @@ namespace Diz.Core.model
             set => SetField(ref internalRomGameName, value);
         }
 
-        public int InternalCheckSum
+        public uint InternalCheckSum
         {
             get => internalCheckSum;
             set => SetField(ref internalCheckSum, value);
@@ -90,7 +90,7 @@ namespace Diz.Core.model
         private string attachedRomFilename;
         private bool unsavedChanges;
         private string internalRomGameName;
-        private int internalCheckSum = -1;
+        private uint internalCheckSum;
         private Data data;
         private LogWriterSettings logWriterSettings;
 
@@ -149,7 +149,7 @@ namespace Diz.Core.model
                 hashCode = (hashCode * 397) ^ (AttachedRomFilename != null ? AttachedRomFilename.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (InternalRomGameName != null ? InternalRomGameName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ InternalCheckSum;
+                hashCode = (int) ((hashCode * 397) ^ InternalCheckSum);
                 return hashCode;
             }
         }
