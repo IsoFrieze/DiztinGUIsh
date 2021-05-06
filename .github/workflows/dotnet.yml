@@ -1,0 +1,20 @@
+name: NetFrameWork.Legacy.CI
+
+on: 
+- push
+- pull_request
+
+ 
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup Nuget.exe
+      uses: warrenbuckley/Setup-Nuget@v1
+    - name: Restore packages
+      run: nuget restore DiztinGUIsh.sln
+    - name: Setup MSBuild.exe
+      uses: warrenbuckley/Setup-MSBuild@v1
+    - name: Build with MSBuild
+      run: msbuild DiztinGUIsh.sln -p:Configuration=Release
