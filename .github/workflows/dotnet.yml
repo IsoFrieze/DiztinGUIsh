@@ -4,7 +4,6 @@ on:
 - push
 - pull_request
 
- 
 jobs:
   build:
     runs-on: windows-latest
@@ -19,3 +18,7 @@ jobs:
       uses: microsoft/setup-msbuild@v1
     - name: Build with MSBuild
       run: msbuild DiztinGUIsh.sln -p:Configuration=Release
+    - uses: actions/upload-artifact@v2
+      with:
+        name: DiztinGUIsh
+        path: DiztinGUIsh/bin/Release/
