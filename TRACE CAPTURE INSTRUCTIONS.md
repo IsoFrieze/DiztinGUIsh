@@ -3,7 +3,8 @@ To use this to do live tracelog capture from BSNES-plus:
 
 # Install
 1. Get latest pre-release zip of DiztinGUIsh from https://github.com/Dotsarecool/DiztinGUIsh/releases/ (grab >= v2.0-beta008 that is marked 'stable')
-3. Download a special patched version of BSNES-Plus from here: https://github.com/binary1230/bsnes-plus/releases (you must use this fork, the upstream version doesn't support capture yet)
+2. Download a special patched version of BSNES-Plus from here: https://github.com/binary1230/bsnes-plus/releases (you must use this fork, the upstream version doesn't support capture yet).  Alternative link: [bsnes-plus-v05.1-master.zip](https://github.com/Dotsarecool/DiztinGUIsh/files/6432652/bsnes-plus-v05.1-master.zip)
+3. Optional for this: there's a fix for Asar for relative addressing on branches that's needed for some ROMS. [asar-domfix--github-issue-170--05-06-2021.zip](https://github.com/Dotsarecool/DiztinGUIsh/files/6432707/asar-domfix--github-issue-170--05-06-2021.zip)
 
 # Run
 1. Open BSNES, Tools -> Debugger, check the 'Trace' box. 
