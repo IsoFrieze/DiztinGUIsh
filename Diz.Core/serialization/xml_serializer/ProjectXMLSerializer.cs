@@ -1,7 +1,9 @@
 ﻿using System.IO;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using Diz.Core.model;
+using Diz.Core.util;
 using ExtendedXmlSerializer;
 
 namespace Diz.Core.serialization.xml_serializer
@@ -9,15 +11,19 @@ namespace Diz.Core.serialization.xml_serializer
     public class ProjectXmlSerializer : ProjectSerializer
     {
         // NEVER CHANGE THIS ONE.
-        private const int FirstSaveFormatVersion = 100;
+        public const int FirstSaveFormatVersion = 100;
 
         // increment this if you change the XML file format
-        private const int CurrentSaveFormatVersion = FirstSaveFormatVersion;
+        // history:
+        // - 100: original XML version for Diz 2.0
+        // - 101: no structure changes but, japanese chars in SNES header cartridge title were being saved
+        //        incorrectly, so, allow project XMLs to load IF 
+        public const int CurrentSaveFormatVersion = 101;
 
         // update this if we are dropped support for really old save formats.
-        private const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
+        public const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
 
-        private class Root
+        public class Root
         {
             // XML serializer specific metadata, top-level deserializer.
             // This is unique to JUST the XML serializer, doesn't affect any other types of serializers.
@@ -38,12 +44,14 @@ namespace Diz.Core.serialization.xml_serializer
         {
             // Wrap the project in a top-level root element with some info about the XML file
             // format version. Note that each serializer has its own implementation of storing this metadata
-            var rootElement = new Root()
+            var rootElement = new Root
             {
                 SaveVersion = CurrentSaveFormatVersion,
-                Watermark = ProjectSerializer.Watermark,
+                Watermark = Watermark,
                 Project = project,
             };
+
+            BeforeSerialize?.Invoke(this, rootElement);
 
             var xmlStr = XmlSerializerSupport.GetSerializer().Create().Serialize(
                 new XmlWriterSettings {Indent = true},
@@ -58,18 +66,22 @@ namespace Diz.Core.serialization.xml_serializer
             return finalBytes;
         }
 
+        public delegate void SerializeEvent(ProjectXmlSerializer projectXmlSerializer, Root rootElement);
+        public event SerializeEvent BeforeSerialize;
+        public event SerializeEvent AfterDeserialize;
+
         // just for debugging purposes, compare two projects together to make sure they serialize/deserialize
         // correctly.
-        private void DebugVerifyProjectEquality(Project originalProjectWeJustSaved, byte[] projectBytesWeJustSerialized)
+        private void DebugVerifyProjectEquality(Root originalProjectWeJustSaved, byte[] projectBytesWeJustSerialized)
         {
-            var result = Load(projectBytesWeJustSerialized);
-            var project2 = result.project;
+            var (xmlRoot, _) = Load(projectBytesWeJustSerialized);
+            var project2 = xmlRoot.Project;
 
-            new ProjectFileManager().PostSerialize(project2);
-            DebugVerifyProjectEquality(originalProjectWeJustSaved, project2);
+            new ProjectFileManager().PostSerialize(xmlRoot);
+            DebugVerifyProjectEquality(originalProjectWeJustSaved.Project, project2);
         }
 
-        public override (Project project, string warning) Load(byte[] data)
+        public override (Root xmlRoot, string warning) Load(byte[] rawBytes)
         {
             // TODO: it would be much more user-friendly/reliable if we could deserialize the
             // Root element ALONE first, check for valid version/watermark, and only then try
@@ -77,31 +89,69 @@ namespace Diz.Core.serialization.xml_serializer
             //
             // Also, we can do data migrations based on versioning, and ExtendedXmlSerializer
 
-            var text = Encoding.UTF8.GetString(data);
-            var root = XmlSerializerSupport.GetSerializer().Create().Deserialize<Root>(text);
+            var xmlStr = Encoding.UTF8.GetString(rawBytes);
+            RunIntegrityChecks(xmlStr);
+            var root = XmlSerializerSupport.GetSerializer().Create().Deserialize<Root>(xmlStr);
+            AfterDeserialize?.Invoke(this, root);
+            RunIntegrityChecks(root.SaveVersion, root.Watermark);
 
-            if (root.Watermark != Watermark)
+            var warning = "";
+
+            return (root, warning);
+        }
+
+        private static void RunIntegrityChecks(string rawXml)
+        {
+            // run this check before opening with our real serializer. read a minimal part of the XML
+            // manually to verify the root element looks sane.
+            var xDoc = XDocument.Parse(rawXml);
+            var xRoot = xDoc.Root;
+            
+            var saveVersionStr = xRoot?.Attribute("SaveVersion")?.Value;
+            var waterMarkStr = xRoot?.Attribute("Watermark")?.Value;
+            
+            if (string.IsNullOrEmpty(saveVersionStr))
+                throw new InvalidDataException("SaveVersion attribute missing on root element");
+
+            var saveVersion = int.Parse(saveVersionStr);
+
+            RunIntegrityChecks(saveVersion, waterMarkStr);
+        }
+
+        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
+        private static void RunIntegrityChecks(int saveVersion, string watermark)
+        {
+            if (watermark != Watermark)
                 throw new InvalidDataException(
                     "This file doesn't appear to be a valid DiztinGUIsh XML file (missing/invalid watermark element in XML)");
-
-            if (root.SaveVersion > CurrentSaveFormatVersion)
+            
+            if (saveVersion > CurrentSaveFormatVersion)
                 throw new InvalidDataException(
-                    $"Save file version is newer than this version of DiztinGUIsh, likely can't be opened safely. This save file version = '{root.SaveVersion}', our highest supported version is {CurrentSaveFormatVersion}");
+                    $"The save file version '{saveVersion}' is newer than is supported in this version of DiztinGUIsh"+
+                    $", cancelling project open. (we only support save versions <= {CurrentSaveFormatVersion})."+
+                    " Please check if there is an update for DiztinGUIsh in order to open this file.");
 
             // Apply any migrations here for older save file formats. Right now,
             // there aren't any because we're on the first revision.
             // The XML serialization might be fairly forgiving of most kinds of changes,
             // so you may not have to write migrations unless properties are renamed or deleted.
-            if (root.SaveVersion < CurrentSaveFormatVersion)
+            if (saveVersion < EarliestSupportedSaveFormatVersion)
             {
                 throw new InvalidDataException(
-                    $"Save file version is newer than this version of DiztinGUIsh, likely can't be opened safely. This save file version = '{root.SaveVersion}', our highest supported version is {CurrentSaveFormatVersion}");
+                    $"The save file version is from an older version of DiztinGUIsh and can't be imported with this newer version. Try using an older version to bring it up to date and re-import here again." +
+                    "Please check for an upgraded release of DiztinGUIsh, it should be able to open this file."+
+                    $"(Save file version of loaded project: '{saveVersion}', we are expecting version {CurrentSaveFormatVersion}.)");
             }
+        }
 
-            var project = root.Project;
-            var warning = "";
+        public static void OnBeforeAddLinkedRom(ref AddRomDataCommand romAddCmd)
+        {
+            PostSerializeMigrations.Run(ref romAddCmd, true);
+        }
 
-            return (project, warning);
+        public static void OnAfterAddLinkedRom(ref AddRomDataCommand romAddCmd)
+        {
+            PostSerializeMigrations.Run(ref romAddCmd, false);
         }
     }
 }

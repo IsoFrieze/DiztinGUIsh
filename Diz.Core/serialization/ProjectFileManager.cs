@@ -8,12 +8,11 @@ using Diz.Core.util;
 
 namespace Diz.Core.serialization
 {
-    public class ProjectFileManager : BaseProjectFileManager
+    public class ProjectFileManager
     {
         public Func<string, string> RomPromptFn { get; set; }
 
-        // helper version that throws exceptions if any issue present.
-        // if you handle this yourself, you can usually survive the warnings.
+        // helper version that throws exceptions if any issue present, including warnings. use mostly for testing or automation
         public static Project Load(string romFilename)
         {
             var (project, warning) = new ProjectFileManager().Open(romFilename);
@@ -22,58 +21,31 @@ namespace Diz.Core.serialization
 
             return project;
         }
-        
-        // TODO: move romPromptFn to be a field instead of a param passed around.
-        protected override byte[] ReadFromOriginalRom(Project project)
-        {
-            string firstRomFileWeTried;
-            var nextFileToTry = firstRomFileWeTried = project.AttachedRomFilename;
-            byte[] rom;
 
-            // try to open a ROM that matches us, if not, ask the user until they give up
-            do
-            {
-                var error = project.ReadRomIfMatchesProject(nextFileToTry, out rom);
-                if (error == null)
-                    break;
-
-                nextFileToTry = RomPromptFn(error);
-                if (nextFileToTry == null)
-                    return null;
-            } while (true);
-
-            project.AttachedRomFilename = nextFileToTry;
-
-            if (project.AttachedRomFilename != firstRomFileWeTried)
-                project.UnsavedChanges = true;
-
-            return rom;
-        }
-    }
-    
-    public abstract class BaseProjectFileManager
-    {
         public (Project project, string warning) Open(string filename)
         {
             Trace.WriteLine("Opening Project START");
 
-            var data = File.ReadAllBytes(filename);
-
-            if (!IsUncompressedProject(filename))
-                data = Util.TryUnzip(data);
-
-            var serializer = GetSerializerForFormat(data);
-            var result = serializer.Load(data);
-
-            result.project.ProjectFileName = filename;
-
-            PostSerialize(result.project);
+            var (xmlRoot, warning) = DoOpen(filename);
+            xmlRoot.Project.ProjectFileName = filename;
+            PostSerialize(xmlRoot);
 
             Trace.WriteLine("Opening Project END");
-            return result;
+            return (xmlRoot.Project, warning);
         }
 
-        public bool PostSerialize(Project project)
+        private (ProjectXmlSerializer.Root xmlRoot, string warning) DoOpen(string projectFilename)
+        {
+            var rawBytes = ReadAllBytes(projectFilename);
+
+            if (!GuessIfIsUncompressedProject(projectFilename))
+                rawBytes = Util.TryUnzip(rawBytes);
+
+            var serializer = GetSerializerForFormat(rawBytes);
+            return DeserializeWith(serializer, rawBytes);
+        }
+
+        public bool PostSerialize(ProjectXmlSerializer.Root xmlRoot)
         {
             // at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
             // It would be easy to store the ROM bytes in the save file, but, for copyright reasons,
@@ -82,28 +54,30 @@ namespace Diz.Core.serialization
             // So now, with all our metadata loaded successfully, we now open the .smc file on disk
             // and marry the original rom's bytes with all of our metadata loaded from the project file.
 
-            var data = project.Data;
+            Debug.Assert(xmlRoot.Project.Data.Labels != null && xmlRoot.Project.Data.Comments != null);
+            Debug.Assert(xmlRoot.Project.Data.RomBytes != null && xmlRoot.Project.Data.RomBytes.Count > 0);
 
-            Debug.Assert(data.Labels != null && data.Comments != null);
-            Debug.Assert(data.RomBytes != null && data.RomBytes.Count > 0);
-
-            var rom = ReadFromOriginalRom(project);
-            if (rom == null)
-                return false;
-
-            data.CopyRomDataIn(rom);
-            return true;
+            var romAddCmd = new AddRomDataCommand
+            {
+                Root = xmlRoot,
+                GetNextRomFileToTry = RomPromptFn,
+            };
+            
+            ProjectXmlSerializer.OnBeforeAddLinkedRom(ref romAddCmd);
+            var result = romAddCmd.TryReadAttachedProjectRom();
+            ProjectXmlSerializer.OnAfterAddLinkedRom(ref romAddCmd);
+            return result;
         }
 
         private static ProjectSerializer GetSerializerForFormat(byte[] data)
         {
             if (BinarySerializer.IsBinaryFileFormat(data))
                 return new BinarySerializer();
-            
+
             return new ProjectXmlSerializer();
         }
 
-        private static bool IsUncompressedProject(string filename)
+        private static bool GuessIfIsUncompressedProject(string filename)
         {
             return Path.GetExtension(filename).Equals(".dizraw", StringComparison.InvariantCultureIgnoreCase);
         }
@@ -113,7 +87,6 @@ namespace Diz.Core.serialization
             // Everything saves in XML format from here on out.
             // Binary format is deprecated.
             ProjectSerializer defaultSerializer = new ProjectXmlSerializer();
-
             Save(project, filename, defaultSerializer);
         }
 
@@ -121,21 +94,34 @@ namespace Diz.Core.serialization
         {
             var data = DoSave(project, filename, serializer);
 
-            File.WriteAllBytes(filename, data);
+            WriteBytes(filename, data);
             project.UnsavedChanges = false;
             project.ProjectFileName = filename;
         }
 
-        private byte[] DoSave(Project project, string filename, ProjectSerializer serializer)
+        public byte[] DoSave(Project project, string filename, ProjectSerializer serializer)
         {
-            var data = serializer.Save(project);
+            var data = SerializeWith(project, serializer);
 
-            if (!IsUncompressedProject(filename))
+            if (!GuessIfIsUncompressedProject(filename))
                 data = Util.TryZip(data);
 
             return data;
         }
 
-        protected abstract byte[] ReadFromOriginalRom(Project project);
+        #region Hooks
+        protected virtual (ProjectXmlSerializer.Root xmlRoot, string warning) DeserializeWith(ProjectSerializer serializer, byte[] rawBytes) => 
+            serializer.Load(rawBytes);
+
+        protected virtual byte[] SerializeWith(Project project, ProjectSerializer serializer) => 
+            serializer.Save(project);
+
+        protected virtual byte[] ReadAllBytes(string filename) => 
+            File.ReadAllBytes(filename);
+
+        protected virtual void WriteBytes(string filename, byte[] data) => 
+            File.WriteAllBytes(filename, data);
+
+        #endregion
     }
 }

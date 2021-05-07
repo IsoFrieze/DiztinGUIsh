@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using Diz.Core.export;
 using Diz.Core.model;
+using JetBrains.Annotations;
 
 namespace Diz.Core.util
 {
@@ -59,28 +60,6 @@ namespace Diz.Core.util
                 ? (romBytes[offset] & 0x10) != 0 ? RomSpeed.FastRom : RomSpeed.SlowRom
                 : RomSpeed.Unknown;
 
-        // verify the data in the provided ROM bytes matches the data we expect it to have.
-        // returns error message if it's not identical, or null if everything is OK.
-        public static string IsThisRomIsIdenticalToUs(byte[] rom,
-            RomMapMode mode, string requiredGameNameMatch, uint requiredRomChecksumMatch)
-        {
-            var romSettingsOffset = GetRomSettingOffset(mode);
-            if (rom.Length <= romSettingsOffset + 10)
-                return "The linked ROM is too small. It can't be opened.";
-
-            var internalGameNameToVerify = GetCartridgeTitleFromRom(rom, romSettingsOffset);
-            var checksumToVerify = ByteUtil.ConvertByteArrayToInt32(rom, romSettingsOffset + 7);
-
-            if (internalGameNameToVerify != requiredGameNameMatch)
-                return $"The linked ROM's internal name '{internalGameNameToVerify}' doesn't " +
-                       $"match the project's internal name of '{requiredGameNameMatch}'.";
-
-            if (checksumToVerify != requiredRomChecksumMatch)
-                return $"The linked ROM's checksums '{checksumToVerify:X8}' " +
-                       $"don't match the project's checksums of '{requiredRomChecksumMatch:X8}'.";
-
-            return null;
-        }
 
         /// <summary>
         /// Return the "title" information (i.e. the name of the game) from the SNES ROM header
@@ -436,7 +415,7 @@ namespace Diz.Core.util
 
         public static LogCreator.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
         {
-            var sampleRomData = SampleRomData.SampleData;
+            var sampleRomData = SampleRomData.CreateSampleData();
             sampleSettings.Structure = LogCreator.FormatStructure.SingleFile;
             sampleSettings.FileOrFolderOutPath = "";
             sampleSettings.OutputToString = true;

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using Diz.Core.model;
+using Diz.Core.serialization.xml_serializer;
 
 namespace Diz.Core.serialization
 {
@@ -9,14 +10,14 @@ namespace Diz.Core.serialization
         public const string Watermark = "DiztinGUIsh";
 
         public abstract byte[] Save(Project project);
-        public abstract (Project project, string warning) Load(byte[] data);
+        public abstract (ProjectXmlSerializer.Root xmlRoot, string warning) Load(byte[] rawBytes);
 
         public void SaveToFile(Project project, string filename)
         {
             File.WriteAllBytes(filename, Save(project));
         }
         
-        public (Project project, string warning) LoadFromFile(string filename)
+        public (ProjectXmlSerializer.Root xmlRoot, string warning) LoadFromFile(string filename)
         {
             return Load(File.ReadAllBytes(filename));
         }

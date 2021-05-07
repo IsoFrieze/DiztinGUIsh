@@ -2,6 +2,7 @@
 using Diz.Core.export;
 using Diz.Core.util;
 using DiztinGUIsh;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
@@ -22,7 +23,13 @@ namespace Diz.Core.model
         public string AttachedRomFilename
         {
             get => attachedRomFilename;
-            set => SetField(ref attachedRomFilename, value);
+            set
+            {
+                if (attachedRomFilename != value)
+                    UnsavedChanges = true;
+                
+                SetField(ref attachedRomFilename, value);
+            }
         }
 
         // would be cool to make this more automatic. probably hook into SetField()
@@ -44,7 +51,7 @@ namespace Diz.Core.model
         //
         // If we load a ROM, and then its checksum and name don't match what we have stored,
         // then we have an issue (i.e. not the same ROM, or it was modified, or missing, etc).
-        // The user must either provide the correct ROM, or abort loading the project.
+        // The user must either provide a ROM matching these criteria, or abort loading the project.
         public string InternalRomGameName
         {
             get => internalRomGameName;
@@ -94,29 +101,6 @@ namespace Diz.Core.model
         private Data data;
         private LogWriterSettings logWriterSettings;
 
-        public string ReadRomIfMatchesProject(string filename, out byte[] romBytes)
-        {
-            string errorMsg = null;
-
-            try {
-                romBytes = RomUtil.ReadAllRomBytesFromFile(filename);
-                if (romBytes != null)
-                {
-                    errorMsg = IsThisRomIsIdenticalToUs(romBytes);
-                    if (errorMsg == null)
-                        return null;
-                }
-            } catch (Exception ex) {
-                errorMsg = ex.Message;
-            }
-
-            romBytes = null;
-            return errorMsg;
-        }
-
-        private string IsThisRomIsIdenticalToUs(byte[] romBytes) => 
-            RomUtil.IsThisRomIsIdenticalToUs(romBytes, Data.RomMapMode, InternalRomGameName, InternalCheckSum);
-        
         public void CacheVerificationInfo()
         {
             // Save a copy of these identifying ROM bytes with the project file itself, so they'll

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Diz.Core.util
@@ -218,7 +219,7 @@ namespace Diz.Core.util
         // This needs to be parsed carefully.
         public static Encoding ShiftJisEncoding => Encoding.GetEncoding(932);
         
-        public static string ReadShiftJisEncodedString(byte[] buffer, int index, int count) => 
+        public static string ReadShiftJisEncodedString(byte[] buffer, int index = 0, int count = -1) => 
             ReadStringFromByteArray(buffer, index, count, ShiftJisEncoding);
         
         public static byte[] ConvertUtf8ToShiftJisEncodedBytes(string str) => 
@@ -231,17 +232,24 @@ namespace Diz.Core.util
             var rawShiftJisBytes = ShiftJisEncoding.GetBytes(shiftJisStr);
             return rawShiftJisBytes;
         }
+        
+        // pad any empty space (for a total of 21 bytes) using the space (0x20) character
+        public static byte[] PadCartridgeTitleBytes(byte[] srcBytes) => 
+            PadBytes(srcBytes, RomUtil.LengthOfTitleName - srcBytes.Length);
+
+        private static byte[] PadBytes(IEnumerable<byte> srcBytes, int numPadBytesNeeded) => 
+            srcBytes.Concat(Enumerable.Repeat((byte) 0x20, numPadBytesNeeded)).ToArray();
 
         // read a fixed length string from an array of bytes. does not check for null termination.
         // allows using a non-UTF8 encoding
-        public static string ReadStringFromByteArray(byte[] bytes, int index, int count, Encoding srcEncoding = null)
+        public static string ReadStringFromByteArray(byte[] bytes, int index = 0, int count = -1, Encoding srcEncoding = null)
         {
             var utfBytes = Encoding.Convert(
                 srcEncoding ?? Encoding.UTF8, 
                 Encoding.UTF8, 
                 bytes, 
                 index, 
-                count);
+                count != -1 ? count : bytes.Length);
             
             return Encoding.UTF8.GetString(utfBytes);
         }

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Diz.Core.model;
+using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 
 namespace Diz.Core.serialization.binary_serializer_old
@@ -35,12 +36,28 @@ namespace Diz.Core.serialization.binary_serializer_old
             return data;
         }
 
-        public override (Project project, string warning) Load(byte[] data)
+        public override (ProjectXmlSerializer.Root xmlRoot, string warning) Load(byte[] rawBytes)
+        {
+            var (project, warning, version) = LoadProject(rawBytes);
+
+            // the binary serializer versions start at "1" and go up to a max of 99.
+            // XML serializers pick up at 100 and go upwards from there.
+            Debug.Assert(version < ProjectXmlSerializer.FirstSaveFormatVersion);
+            
+            // have to pack this into the new XML root structure.
+            return (new ProjectXmlSerializer.Root
+            {
+                Project = project,
+                SaveVersion = version,
+                Watermark = Watermark,
+            }, warning);
+        }
+        private (Project project, string warning, byte version) LoadProject(byte[] data)
         {
             if (!IsBinaryFileFormat(data))
                 throw new InvalidDataException($"This is not a binary serialized project file!");
 
-            byte version = data[0];
+            var version = data[0];
             ValidateProjectFileVersion(version);
 
             var project = new Project
@@ -96,7 +113,7 @@ namespace Diz.Core.serialization.binary_serializer_old
                               "The project file will be untouched until it is saved again.";
             }
 
-            return (project, warning);
+            return (project, warning, version);
         }
 
         private static void SaveStringToBytes(string str, ICollection<byte> bytes)

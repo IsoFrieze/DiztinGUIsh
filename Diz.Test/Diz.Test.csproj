@@ -331,6 +331,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="bugs\Bug050_JapaneseText.cs" />
     <Compile Include="CartTitleTests.cs" />
     <Compile Include="CompressionTest.cs" />
     <Compile Include="CpuTests.cs" />

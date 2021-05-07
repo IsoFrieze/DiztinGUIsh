@@ -98,7 +98,7 @@ namespace Diz.Core.model
         }
         
         // expensive and ineffecient
-        private List<byte> CreateListRawRomBytes() => RomBytes.Select(rb => rb.Rom).ToList();
+        protected virtual List<byte> CreateListRawRomBytes() => RomBytes.Select(rb => rb.Rom).ToList();
 
         // looks at the actual bytes present in the ROM and calculates their checksum
         // this is unrelated to any stored/cached checksums in the Project file. 
@@ -586,6 +586,11 @@ namespace Diz.Core.model
         public IEnumerable<byte> GetFileBytes()
         {
             return RomBytes.Select(b => b.Rom);
+        }
+        
+        public virtual byte[]? GetOverriddenRomBytes()
+        {
+            return null; // NOP
         }
     }
 }

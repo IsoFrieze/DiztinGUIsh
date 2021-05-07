@@ -35,24 +35,24 @@ namespace Diz.Test
             var (deserializedProject, warning) = serializer.Load(outputBytes);
             
             // final step, the loading process doesn't save the actual SMC file bytes, so we do it ourselves here
-            deserializedProject.Data.CopyRomDataIn(romFileBytes);
+            deserializedProject.Project.Data.CopyRomDataIn(romFileBytes);
 
             // now we can do a full compare between the original project, and the project which has been cycled through
             // serialization and deserialization
             Assert.True(warning == "");
-            Assert.True(srcProject.Equals(deserializedProject));
+            Assert.True(srcProject.Equals(deserializedProject.Project));
             
-            deserializedProject.Data.Comments.Count.Should().BeGreaterThan(0);
-            deserializedProject.Data.Labels.Count.Should().BeGreaterThan(0);
+            deserializedProject.Project.Data.Comments.Count.Should().BeGreaterThan(0);
+            deserializedProject.Project.Data.Labels.Count.Should().BeGreaterThan(0);
 
-            CartNameTests.TestRomCartTitle(deserializedProject, expectedTitle);
+            CartNameTests.TestRomCartTitle(deserializedProject.Project, expectedTitle);
         }
 
         public static Project BuildSampleProject2()
         {
             var project2 = new Project
             {
-                Data = SampleRomData.SampleData,
+                Data = SampleRomData.CreateSampleData(),
             };
             
             project2.CacheVerificationInfo();
@@ -67,7 +67,7 @@ namespace Diz.Test
             this.output = output;
         }
         
-        private static Project OpenProject(string openFile)
+        public static Project OpenProject(string openFile)
         {
             var projectFileManager = new ProjectFileManager();
             var (project, warning) = projectFileManager.Open(openFile);
