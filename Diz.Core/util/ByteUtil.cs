@@ -225,9 +225,9 @@ namespace Diz.Core.util
         public static byte[] ConvertUtf8ToShiftJisEncodedBytes(string str) => 
             Encoding.Convert(Encoding.UTF8, ShiftJisEncoding, Encoding.UTF8.GetBytes(str));
         
-        public static byte[] GetRawShiftJisBytesFromStr(string utf8CartridgeTitle)
+        public static byte[] GetRawShiftJisBytesFromStr(string inputStr)
         {
-            var shiftJisEncodedBytes = ConvertUtf8ToShiftJisEncodedBytes(utf8CartridgeTitle);
+            var shiftJisEncodedBytes = ConvertUtf8ToShiftJisEncodedBytes(inputStr);
             var shiftJisStr = ShiftJisEncoding.GetString(shiftJisEncodedBytes);
             var rawShiftJisBytes = ShiftJisEncoding.GetBytes(shiftJisStr);
             return rawShiftJisBytes;
