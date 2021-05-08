@@ -17,7 +17,7 @@ namespace Diz.Core.serialization.xml_serializer
             public Data.FlagType F;
         };
 
-        private static readonly List<FlagEncodeEntry> FlagEncodeTable = new List<FlagEncodeEntry> {
+        private static readonly IReadOnlyCollection<FlagEncodeEntry> FlagEncodeTable = new List<FlagEncodeEntry> {
             new FlagEncodeEntry() {F = Data.FlagType.Unreached, C = 'U'},
 
             new FlagEncodeEntry() {F = Data.FlagType.Opcode, C = '+'},

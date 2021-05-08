@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
@@ -210,5 +211,34 @@ namespace Diz.Core.util
 
             return color;
         }
+        
+        
+        public static (string stdout, string stderr) RunCommandGetOutput(string cmdExePath, string args)
+        {
+            var process = new Process
+            {
+                StartInfo =
+                {
+                    FileName = cmdExePath,
+                    Arguments = args,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                }
+            };
+            process.Start();
+            
+            var output = process.StandardOutput.ReadToEnd();
+            Console.WriteLine(output);
+            
+            var err = process.StandardError.ReadToEnd();
+            Console.WriteLine(err);
+            
+            process.WaitForExit();
+
+            return (output, err);
+        }
     }
+    
+    
 }

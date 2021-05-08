@@ -2,12 +2,13 @@ this temporary documentation describes how to install a custom patch of BSNES-pl
 To use this to do live tracelog capture from BSNES-plus:
 
 # Install
-1. Get latest pre-release zip of DiztinGUIsh from https://github.com/binary1230/DiztinGUIsh/releases (anything newer than v2.0-beta6 is OK)
-2. Download a special patched version of BSNES-Plus from here: https://github.com/binary1230/bsnes-plus/releases (you must use this fork, the upstream version doesn't support capture yet)
+1. Get latest pre-release zip of DiztinGUIsh from https://github.com/Dotsarecool/DiztinGUIsh/releases/ (grab >= v2.0-beta008 that is marked 'stable')
+2. Download a special patched version of BSNES-Plus from here: https://github.com/binary1230/bsnes-plus/releases (you must use this fork, the upstream version doesn't support capture yet).  Alternative link: [bsnes-plus-v05.1-master.zip](https://github.com/Dotsarecool/DiztinGUIsh/files/6432652/bsnes-plus-v05.1-master.zip)
+3. Optional for this: there's a fix for Asar for relative addressing on branches that's needed for some ROMS. [asar-domfix--github-issue-170--05-06-2021.zip](https://github.com/Dotsarecool/DiztinGUIsh/files/6432707/asar-domfix--github-issue-170--05-06-2021.zip)
 
 # Run
 1. Open BSNES, Tools -> Debugger, check the 'Trace' box. 
-2. BSNES will start listening on port 27015 and appear to freeze (this is normal, though, crappy) until Diztinguish connects.
+2. BSNES will start listening on port 27015 and appear to freeze (this is normal, though, crappy- sorry) until Diztinguish connects.
 2. In Diztinguish, either open an existing project or import the same ROM file, and save your project before continuing.
 3. Click Tools -> Live Capture -> BSNESPlus Trace Logging
 4. In the dialog that pops up, click connect and BSNES will unfreeze
@@ -45,7 +46,16 @@ Try also using BSNES-plus's 'usage map' feature, which is complementary to captu
 In https://bsnes.revenant1.net/documentation.html look up the section about "Cache memory usage table to disk"
 Diztinguish can take this file (a .bin file) and import it via File -> Import -> BSNES Usage Map
 
+# Bonus tip: how to share / merge / diff Diz project files via git
+
+By default, Diz will output a ```.diz``` file, which under the hood is an ```.xml.gz``` file.  That's fine, but if you are trying to collaborate on a disasembly project with other folks, it is helpful to work without the compression in the underlying XML-based format.  Diz's XML format was explicitly designed for ease of merging/diff while still maintaining a compact file size.
+
+To work this way, simply save your project in Diz with the extension ```.dizraw```, and it will write your project in plain text/XML automatically.
+
+You can check that project file into a git repository and collaborate with others.
+
 # thanks 
 @gocha for the initial work on this awesome trace system! @dotsarecool for the awesome tool
 
-Any questions, come to the RGMX Discord https://discord.me/rgmechex, in the #your-tech-projects channel.
+Any questions, come to the #diztinguish channel in the SNESLab Discord,
+or also the Retro Game Mechanics Explained Discord https://discord.me/rgmechex, in the #your-tech-projects channel.

@@ -50,6 +50,12 @@ namespace Diz.Core.model
                 romBytes[i].SetCachedOffset(i);
             }
         }
+        
+        public void SetBytesFrom(IReadOnlyList<byte> copyFrom, int dstStartingOffset)
+        {
+            for (var i = 0; i < copyFrom.Count; ++i) 
+                this[i + dstStartingOffset].Rom = copyFrom[i];
+        }
 
         public int Count => Bytes.Count;
         public bool SendNotificationChangedEvents { get; set; } = true;

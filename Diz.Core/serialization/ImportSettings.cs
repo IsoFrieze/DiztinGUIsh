@@ -17,12 +17,10 @@ namespace Diz.Core.serialization
             get => mode;
             set => SetField(ref mode, value);
         }
+        
+        public int RomSettingsOffset => RomUtil.GetRomSettingOffset(RomMapMode);
 
-        public RomSpeed RomSpeed
-        {
-            get => romSpeed;
-            set => SetField(ref romSpeed, value);
-        }
+        public RomSpeed RomSpeed => RomBytes != null ? RomUtil.GetRomSpeed(RomSettingsOffset, RomBytes) : default;
 
         // todo: add INotify stuff if we care. probably dont need to.
         public Dictionary<int, Label> InitialLabels { get; set; }

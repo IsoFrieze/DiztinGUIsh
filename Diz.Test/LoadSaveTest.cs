@@ -1,8 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
+using Diz.Core.util;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,27 +17,49 @@ namespace Diz.Test
         private void FullSerializeAndDeserialize()
         {
             // use the sample data to fake a project
-            var sampleProject = new Project {Data = SampleRomData.SampleData};
+            var srcProject = BuildSampleProject2();
             
+            var expectedTitle = SampleRomData.GetSampleUtf8CartridgeTitle();
+
+            srcProject.Data.Comments.Count.Should().BeGreaterThan(0);
+            srcProject.Data.Labels.Count.Should().BeGreaterThan(0);
+
             // extract the bytes that would normally be in the SMC file (they only exist in code for this sample data)
-            var romFileBytes = sampleProject.Data.GetFileBytes();
+            var romFileBytes = srcProject.Data.GetFileBytes().ToList();
 
             // save it to create an output byte stream, we'd normally write this to the disk
             var serializer = new ProjectXmlSerializer();
-            var outputBytes = serializer.Save(sampleProject);
+            var outputBytes = serializer.Save(srcProject);
 
             // now do the reverse and load our output back as the input
             var (deserializedProject, warning) = serializer.Load(outputBytes);
             
             // final step, the loading process doesn't save the actual SMC file bytes, so we do it ourselves here
-            deserializedProject.Data.CopyRomDataIn(romFileBytes);
+            deserializedProject.Project.Data.CopyRomDataIn(romFileBytes);
 
             // now we can do a full compare between the original project, and the project which has been cycled through
             // serialization and deserialization
             Assert.True(warning == "");
-            Assert.True(sampleProject.Equals(deserializedProject));
+            Assert.True(srcProject.Equals(deserializedProject.Project));
+            
+            deserializedProject.Project.Data.Comments.Count.Should().BeGreaterThan(0);
+            deserializedProject.Project.Data.Labels.Count.Should().BeGreaterThan(0);
+
+            CartNameTests.TestRomCartTitle(deserializedProject.Project, expectedTitle);
         }
-        
+
+        public static Project BuildSampleProject2()
+        {
+            var project2 = new Project
+            {
+                Data = SampleRomData.CreateSampleData(),
+            };
+            
+            project2.CacheVerificationInfo();
+            
+            return project2;
+        }
+
         private readonly ITestOutputHelper output;
 
         public LoadSaveTest(ITestOutputHelper output)
@@ -42,7 +67,7 @@ namespace Diz.Test
             this.output = output;
         }
         
-        private static Project OpenProject(string openFile)
+        public static Project OpenProject(string openFile)
         {
             var projectFileManager = new ProjectFileManager();
             var (project, warning) = projectFileManager.Open(openFile);
