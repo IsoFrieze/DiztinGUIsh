@@ -2,6 +2,7 @@
 using Diz.Core.export;
 using Diz.Core.util;
 using DiztinGUIsh;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
@@ -22,7 +23,13 @@ namespace Diz.Core.model
         public string AttachedRomFilename
         {
             get => attachedRomFilename;
-            set => SetField(ref attachedRomFilename, value);
+            set
+            {
+                if (attachedRomFilename != value)
+                    UnsavedChanges = true;
+                
+                SetField(ref attachedRomFilename, value);
+            }
         }
 
         // would be cool to make this more automatic. probably hook into SetField()
@@ -44,14 +51,14 @@ namespace Diz.Core.model
         //
         // If we load a ROM, and then its checksum and name don't match what we have stored,
         // then we have an issue (i.e. not the same ROM, or it was modified, or missing, etc).
-        // The user must either provide the correct ROM, or abort loading the project.
+        // The user must either provide a ROM matching these criteria, or abort loading the project.
         public string InternalRomGameName
         {
             get => internalRomGameName;
             set => SetField(ref internalRomGameName, value);
         }
 
-        public int InternalCheckSum
+        public uint InternalCheckSum
         {
             get => internalCheckSum;
             set => SetField(ref internalCheckSum, value);
@@ -90,32 +97,19 @@ namespace Diz.Core.model
         private string attachedRomFilename;
         private bool unsavedChanges;
         private string internalRomGameName;
-        private int internalCheckSum = -1;
+        private uint internalCheckSum;
         private Data data;
         private LogWriterSettings logWriterSettings;
 
-        public string ReadRomIfMatchesProject(string filename, out byte[] romBytes)
+        public void CacheVerificationInfo()
         {
-            string errorMsg = null;
-
-            try {
-                romBytes = RomUtil.ReadAllRomBytesFromFile(filename);
-                if (romBytes != null)
-                {
-                    errorMsg = IsThisRomIsIdenticalToUs(romBytes);
-                    if (errorMsg == null)
-                        return null;
-                }
-            } catch (Exception ex) {
-                errorMsg = ex.Message;
-            }
-
-            romBytes = null;
-            return errorMsg;
+            // Save a copy of these identifying ROM bytes with the project file itself, so they'll
+            // be serialized to disk on project save. When we reload, we verify the recreated ROM data still matches both
+            // of these. If either are wrong, then the ROM on disk could be different from the one associated with the 
+            // project.
+            InternalCheckSum = Data.RomCheckSumsFromRomBytes;
+            InternalRomGameName = Data.CartridgeTitleName;
         }
-
-        private string IsThisRomIsIdenticalToUs(byte[] romBytes) => 
-            RomUtil.IsThisRomIsIdenticalToUs(romBytes, Data.RomMapMode, InternalRomGameName, InternalCheckSum);
 
         #region Equality
         protected bool Equals(Project other)
@@ -139,7 +133,7 @@ namespace Diz.Core.model
                 hashCode = (hashCode * 397) ^ (AttachedRomFilename != null ? AttachedRomFilename.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (InternalRomGameName != null ? InternalRomGameName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ InternalCheckSum;
+                hashCode = (int) ((hashCode * 397) ^ InternalCheckSum);
                 return hashCode;
             }
         }

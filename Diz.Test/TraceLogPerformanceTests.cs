@@ -102,7 +102,7 @@ namespace Diz.Test
             }
         }
 
-        [Fact]
+        [Fact(Skip="skipping b/c external dependency")]
         public void TestTraceLogPerformance()
         {
             var test = new ImportTraceLogStreamTestHarness(output);

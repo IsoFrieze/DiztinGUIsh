@@ -76,6 +76,7 @@ namespace Diz.Core.model
             ReadPoint = 0x08
         }
         
+        // ROM offsets
         public const int LoromSettingOffset = 0x7FD5;
         public const int HiromSettingOffset = 0xFFD5;
         public const int ExhiromSettingOffset = 0x40FFD5;

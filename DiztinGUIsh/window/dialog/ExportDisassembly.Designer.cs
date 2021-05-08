@@ -30,7 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ExportDisassembly));
             this.cancel = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
+            this.disassembleButton = new System.Windows.Forms.Button();
             this.textFormat = new System.Windows.Forms.TextBox();
             this.textSample = new System.Windows.Forms.TextBox();
             this.comboStructure = new System.Windows.Forms.ComboBox();
@@ -63,13 +63,13 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(487, 491);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(113, 23);
-            this.button2.TabIndex = 11;
-            this.button2.Text = "Disassemble";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.disassembleButton.Location = new System.Drawing.Point(487, 491);
+            this.disassembleButton.Name = "disassembleButton";
+            this.disassembleButton.Size = new System.Drawing.Size(113, 23);
+            this.disassembleButton.TabIndex = 11;
+            this.disassembleButton.Text = "Disassemble";
+            this.disassembleButton.UseVisualStyleBackColor = true;
+            this.disassembleButton.Click += new System.EventHandler(this.disassembleButton_Click);
             // 
             // textFormat
             // 
@@ -224,7 +224,7 @@
             // 
             // ExportDisassembly
             // 
-            this.AcceptButton = this.button2;
+            this.AcceptButton = this.disassembleButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
@@ -241,7 +241,7 @@
             this.Controls.Add(this.comboStructure);
             this.Controls.Add(this.textSample);
             this.Controls.Add(this.textFormat);
-            this.Controls.Add(this.button2);
+            this.Controls.Add(this.disassembleButton);
             this.Controls.Add(this.cancel);
             this.Controls.Add(this.label6);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
@@ -258,7 +258,7 @@
         #endregion
 
         private System.Windows.Forms.Button cancel;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button disassembleButton;
         private System.Windows.Forms.TextBox textFormat;
         private System.Windows.Forms.TextBox textSample;
         private System.Windows.Forms.ComboBox comboStructure;
