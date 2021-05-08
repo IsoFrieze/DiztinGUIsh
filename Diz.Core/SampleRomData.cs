@@ -24,10 +24,11 @@ namespace Diz.Core
             
             RomBytes.SetBytesFrom(paddedShiftJisBytes, CartridgeTitleStartingOffset);
         }
-        
-        // protected override List<byte> CreateListRawRomBytes() => RomBytes.ToList();
-        
-        // used only for loading.
+
+        // debug only: use this for the sample rom data to populate it's own bytes.
+        // NORMALLY on a project deserialized, we'd open the ROM file on disk and pt the bytes in RomBytes.
+        // for this, there is no ROM on disk, so we cheat and load our own bytes back in there.
+        // this method is super-wasteful and inefficient but it's ok because it's only for testing.
         public override byte[]? GetOverriddenRomBytes() => 
             CreateSampleData().RomBytes.Select(rb =>
             {
@@ -36,8 +37,6 @@ namespace Diz.Core
             }).ToArray();
 
         public int OriginalRomSizeBeforePadding { get; set; }
-
-        // private static SampleRomData _finalSampleData;
 
         public static SampleRomData CreateSampleData()
         {
