@@ -335,6 +335,7 @@
     <Compile Include="CartTitleTests.cs" />
     <Compile Include="CompressionTest.cs" />
     <Compile Include="CpuTests.cs" />
+    <Compile Include="MigrationTests.cs" />
     <Compile Include="MiscTests.cs" />
     <Compile Include="LogCreator.cs" />
     <Compile Include="RomByteTests.cs" />

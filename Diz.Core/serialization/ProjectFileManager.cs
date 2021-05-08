@@ -12,16 +12,6 @@ namespace Diz.Core.serialization
     {
         public Func<string, string> RomPromptFn { get; set; }
 
-        // helper version that throws exceptions if any issue present, including warnings. use mostly for testing or automation
-        public static Project Load(string romFilename)
-        {
-            var (project, warning) = new ProjectFileManager().Open(romFilename);
-            if (!string.IsNullOrEmpty(warning))
-                throw new InvalidDataException($"failed opening project:\n{warning}");
-
-            return project;
-        }
-
         public (Project project, string warning) Open(string filename)
         {
             Trace.WriteLine("Opening Project START");
