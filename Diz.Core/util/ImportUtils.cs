@@ -24,9 +24,9 @@ namespace Diz.Core.util
             ImportSettings = new ImportRomSettings
             {
                 RomFilename = romFilename,
-                RomBytes = RomUtil.ReadAllRomBytesFromFile(romFilename),
+                RomBytes = RomUtil.ReadRomFileBytes(romFilename),
                 RomMapMode =
-                    RomUtil.DetectRomMapMode(RomUtil.ReadAllRomBytesFromFile(romFilename), out var detectedMapModeSuccess)
+                    RomUtil.DetectRomMapMode(RomUtil.ReadRomFileBytes(romFilename), out var detectedMapModeSuccess)
             };
 
             if (detectedMapModeSuccess)

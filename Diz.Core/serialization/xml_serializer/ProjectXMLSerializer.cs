@@ -3,24 +3,22 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Diz.Core.model;
-using Diz.Core.util;
 using ExtendedXmlSerializer;
 
 namespace Diz.Core.serialization.xml_serializer
 {
     public class ProjectXmlSerializer : ProjectSerializer
     {
-        // NEVER CHANGE THIS ONE.
-        public const int FirstSaveFormatVersion = 100;
+        public const int FirstSaveFormatVersion = 100;   // NEVER CHANGE THIS ONE.
 
         // increment this if you change the XML file format
         // history:
         // - 100: original XML version for Diz 2.0
         // - 101: no structure changes but, japanese chars in SNES header cartridge title were being saved
-        //        incorrectly, so, allow project XMLs to load IF 
+        //        incorrectly, so, allow project XMLs to load IF we can fix up the bad data. 
         public const int CurrentSaveFormatVersion = 101;
 
-        // update this if we are dropped support for really old save formats.
+        // update this if we are dropping support for really old save formats.
         public const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
 
         public class Root
@@ -47,7 +45,7 @@ namespace Diz.Core.serialization.xml_serializer
             var rootElement = new Root
             {
                 SaveVersion = CurrentSaveFormatVersion,
-                Watermark = Watermark,
+                Watermark = ProjectSerializer.Watermark,
                 Project = project,
             };
 
@@ -70,20 +68,26 @@ namespace Diz.Core.serialization.xml_serializer
             // if we need it, put it in a new MigrationRunner.SetupMigrateXml() or similar.
 
             var xmlStr = Encoding.UTF8.GetString(projectFileRawXmlBytes);
-            var versionNumOfData = RunIntegrityChecks(xmlStr);
-            MigrationRunner.StartingSaveVersion = versionNumOfData;
-            MigrationRunner.TargetSaveVersion = CurrentSaveFormatVersion;
-
-            var root = XmlSerializerSupport.GetSerializer().Create().Deserialize<Root>(xmlStr);
-            AfterDeserialize?.Invoke(this, root);
+            var versionNumOfData = RunPreDeserializeIntegrityChecks(xmlStr);
             
+            var migrationRunner = MigrationRunner;
+            migrationRunner.StartingSaveVersion = versionNumOfData;
+            migrationRunner.TargetSaveVersion = CurrentSaveFormatVersion;
+
+            var root = DeserializeProjectXml(xmlStr);
             RunIntegrityChecks(root.SaveVersion, root.Watermark);
+            
+            AfterDeserialize?.Invoke(this, root);
 
             return (root, "");
         }
 
+        // finally. this is the real deal.
+        private static Root DeserializeProjectXml(string xmlStr) => 
+            XmlSerializerSupport.GetSerializer().Create().Deserialize<Root>(xmlStr);
+
         // return the save file version# detected in the raw data
-        private static int RunIntegrityChecks(string rawXml)
+        private static int RunPreDeserializeIntegrityChecks(string rawXml)
         {
             // run this check before opening with our real serializer. read a minimal part of the XML
             // manually to verify the root element looks sane.

@@ -152,6 +152,11 @@
     <Compile Include="import\BsnesTraceLogImporter.Util.cs" />
     <Compile Include="model\Data.Constants.cs" />
     <Compile Include="model\Data.Properties.cs" />
+    <Compile Include="model\project\AddRomDataCommandValidator.cs" />
+    <Compile Include="model\project\LinkedRomBytesFileSearchProvider.cs" />
+    <Compile Include="model\project\ProjectRomBytesInit.cs" />
+    <Compile Include="serialization\xml_serializer\MigrationBugfix050JapaneseText.cs" />
+    <Compile Include="serialization\xml_serializer\MigrationRunner.cs" />
     <Compile Include="serialization\xml_serializer\PostSerializeMigrations.cs" />
     <Compile Include="serialization\xml_serializer\RepeaterCompression.cs" />
     <Compile Include="serialization\xml_serializer\RomByteEncoding.cs" />
@@ -159,7 +164,6 @@
     <Compile Include="util\ChecksumUtil.cs" />
     <Compile Include="util\Fake64Encoding.cs" />
     <Compile Include="util\ImportUtils.cs" />
-    <Compile Include="util\RomValidation.cs" />
     <Compile Include="util\RomVisual.cs" />
     <Compile Include="util\WorkerTaskManager.cs" />
     <Compile Include="model\Data.cs" />

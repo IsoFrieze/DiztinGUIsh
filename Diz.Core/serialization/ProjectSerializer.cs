@@ -37,13 +37,17 @@ namespace Diz.Core.serialization
             }
             Debug.Assert(project1.Equals(project2));
         }
+
+        private MigrationRunner migrationRunner;
         
-        public MigrationRunner MigrationRunner = new MigrationRunner
-        {
-            Migrations =
+        // caution: don't cache, these may not be reliable for resetting themselves each time they run.
+        public MigrationRunner MigrationRunner =>
+            migrationRunner ??= new MigrationRunner
             {
-                new MigrationBugfix050JapaneseText()
-            }
-        };
+                Migrations =
+                {
+                    new MigrationBugfix050JapaneseText()
+                }
+            };
     }
 }

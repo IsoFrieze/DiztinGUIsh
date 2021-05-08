@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using Diz.Core.model;
+using Diz.Core.model.project;
 using Diz.Core.serialization.binary_serializer_old;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
@@ -21,7 +22,6 @@ namespace Diz.Core.serialization
             PostSerialize(filename, xmlRoot, serializer);
 
             Trace.WriteLine("Opening Project END");
-            
             return (xmlRoot.Project, warning);
         }
 
@@ -36,15 +36,13 @@ namespace Diz.Core.serialization
             // So now, with all our metadata loaded successfully, we now open the .smc file on disk
             // and marry the original rom's bytes with all of our metadata loaded from the project file.
 
-            var romAddCmd = new AddRomDataCommand
+            var romAddCmd = new AddRomDataCommand(xmlRoot)
             {
-                Root = xmlRoot,
                 GetNextRomFileToTry = RomPromptFn,
                 MigrationRunner = serializer.MigrationRunner,
             };
 
-            if (!romAddCmd.TryReadAttachedProjectRom())
-                throw new InvalidDataException("Failed to read Rom Bytes from a linked ROM file, aborting load.");
+            romAddCmd.TryReadAttachedProjectRom();
         }
 
         private static void VerifyIntegrityDeserialized(ProjectXmlSerializer.Root xmlRoot)
@@ -71,11 +69,6 @@ namespace Diz.Core.serialization
             
             return projectFileBytes;
         }
-
-        // public bool PostSerialize(ProjectXmlSerializer.Root xmlRoot)
-        // {
-        //     
-        // }
 
         private ProjectSerializer GetSerializerForFormat(byte[] data)
         {
@@ -121,9 +114,9 @@ namespace Diz.Core.serialization
         }
 
         #region Hooks
-        protected virtual (ProjectXmlSerializer.Root xmlRoot, string warning) 
-            DeserializeWith(ProjectSerializer serializer, byte[] rawBytes) => 
-            serializer.Load(rawBytes);
+        protected virtual (ProjectXmlSerializer.Root xmlRoot, string warning) DeserializeWith(
+            ProjectSerializer serializer, byte[] rawBytes
+            ) => serializer.Load(rawBytes);
 
         protected virtual byte[] SerializeWith(Project project, ProjectSerializer serializer) => 
             serializer.Save(project);

@@ -318,7 +318,7 @@ namespace Diz.Core.util
             return b ? "8" : "16";
         }
 
-        public static byte[] ReadAllRomBytesFromFile(string filename)
+        public static byte[] ReadRomFileBytes(string filename)
         {
             var smc = File.ReadAllBytes(filename);
             var rom = new byte[smc.Length & 0x7FFFFC00];

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -132,20 +133,29 @@ namespace Diz.Test.bugs
                 if (!string.IsNullOrEmpty(badGameName))
                     root.Project.InternalRomGameName.Should().Be(badGameName, "Migrations to fix the bug haven't run yet.");
             };
-            
-            var (deserializedProject, _) = projectFileManager.Open("IGNORED");
 
-            if (harness.ExpectedMitigationApplied)
+            Project deserializedProject = null;
+            var runDeserializer = new Action(() =>
             {
-                deserializedProject.InternalRomGameName.Should().NotBe(badGameName, 
-                    "Migrations should have fixed this");
-                deserializedProject.InternalRomGameName.Should().Be(originalGoodGameName,
-                    "the automatic fix should have set this name back to the correct one");
+                (deserializedProject, _) = projectFileManager.Open("IGNORED");
+            });
+
+            if (!harness.ExpectedMitigationApplied)
+            {
+                // this is what the original bug would do
+                runDeserializer.Invoking(a => a()).Should().Throw<InvalidDataException>()
+                    .WithMessage(
+                        "Verification check: The project file requires the linked ROM's SNES header to have a cartridge title name*this doesn't match the title in the ROM file,*");
             }
             else
             {
-                deserializedProject.InternalRomGameName.Should().Be(badGameName,
-                    "it should be the unfixed version");
+                // this is what it looks like when the bug is it's fixed
+                runDeserializer();
+                deserializedProject.Should().NotBeNull("it shold have deserialized correctly.");
+                deserializedProject.InternalRomGameName.Should().NotBe(badGameName,
+                    "Migrations should have fixed this");
+                deserializedProject.InternalRomGameName.Should().Be(originalGoodGameName,
+                    "the automatic fix should have set this name back to the correct one");
             }
         }
     }
