@@ -32,7 +32,7 @@ namespace Diz.Test
         [Fact]
         public static void TestWhenNoIAPresent()
         {
-            var sampleData = SampleRomData.SampleData;
+            var sampleData = SampleRomData.CreateSampleData();
             const int offset = 0x1C1F;
             var result = sampleData.GetIntermediateAddressOrPointer(offset);
             Assert.Equal(result, -1);
@@ -41,7 +41,7 @@ namespace Diz.Test
         [Fact]
         public static void TestGetAddressMode()
         {
-            var sampleData = SampleRomData.SampleData;
+            var sampleData = SampleRomData.CreateSampleData();
             const int romOffset1 = 0xEB;
             var mode1 = Cpu65C816.GetAddressMode(sampleData, romOffset1);
             Assert.Equal(Cpu65C816.AddressMode.Constant8, mode1);
