@@ -1,10 +1,14 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using FluentAssertions;
+using JetBrains.Annotations;
+using Moq;
 using Xunit;
 
 namespace Diz.Test.bugs
@@ -39,37 +43,75 @@ namespace Diz.Test.bugs
                 
                 return base.SerializeWith(project, serializer);
             }
+
+            protected override ProjectXmlSerializer CreateProjectXmlSerializer()
+            {
+                return new ProjectXmlSerializer_Bug50();
+            }
+
+            public class ProjectXmlSerializer_Bug50 : ProjectXmlSerializer
+            {
+                
+            }
+        }
+
+        public class Harness
+        {
+            public bool ExpectedMitigationApplied = true;
+            public Project Project = LoadSaveTest.BuildSampleProject2();
+            [CanBeNull] public string OverrideGameName = null;
+            public bool ForceOlderSaveVersionWhichShouldFix = true;
         }
         
-        [Fact]
-        public static void Test()
+        public static IEnumerable<object[]> Harnesses => new List<Harness>
         {
-            var project = LoadSaveTest.BuildSampleProject2();
+            // we should see the mitigation code fix this scenario up correctly
+            new Harness {
+                ExpectedMitigationApplied = true,
+                OverrideGameName = "BAD",
+            },
+            
+            // in a newer save format, there shouldn't be a bug anyomre,
+            // so we don't expect the mitigation code to run.
+            new Harness {
+                ExpectedMitigationApplied = false,
+                OverrideGameName = "BAD",
+                ForceOlderSaveVersionWhichShouldFix = false,
+            },
+        }.Select(x=>new []{x});
+        
+        [Theory]
+        [MemberData(nameof(Harnesses))]
+        public static void TestMitigation(Harness harness)
+        {
+            var project = harness.Project;
             var originalGoodGameName = project.InternalRomGameName;
+            var badGameName = harness.OverrideGameName == null ? null : 
+                ByteUtil.ReadShiftJisEncodedString(
+                ByteUtil.PadCartridgeTitleBytes(
+                    ByteUtil.ConvertUtf8ToShiftJisEncodedBytes(harness.OverrideGameName)
+                )
+            );
+            var saveVersionToUse = harness.ForceOlderSaveVersionWhichShouldFix ? 100 : 101;
 
             var projectFileManager = new Bug50ProjectFileManager
             {
                 RomPromptFn = s => 
                     throw new InvalidDataException("We should not hit this for this test, if it worked.")
             };
-            
-            var badGameName = ByteUtil.ReadShiftJisEncodedString(
-                ByteUtil.PadCartridgeTitleBytes(
-                    ByteUtil.ConvertUtf8ToShiftJisEncodedBytes("BAD")
-                )
-            );
 
             projectFileManager.BeforeSerialize += (serializer, rootElement) =>
             {
                 // doctor some data before we serialize, in order to trigger the bug and the workaround
                 
                 // we want to invoke the migration functions because this is an older save
-                rootElement.SaveVersion = 100;
+                rootElement.SaveVersion = saveVersionToUse;
 
                 // we want to trigger the bug which happens if the saved data in the XML doesn't match the ROM.
                 rootElement.Project.InternalRomGameName = badGameName;
                 
-                Assert.NotEqual(rootElement.Project.InternalRomGameName, rootElement.Project.Data.CartridgeTitleName);
+                if (badGameName != null)
+                    Assert.NotEqual(rootElement.Project.InternalRomGameName, rootElement.Project.Data.CartridgeTitleName);
             };
 
             projectFileManager.Save(project, "IGNORED");
@@ -82,17 +124,29 @@ namespace Diz.Test.bugs
 
             projectFileManager.AfterDeserialize += (serializer, root) =>
             {
+                root.SaveVersion.Should().Be(saveVersionToUse, "It was saved with the older file format");
+                
                 // here's the bug: the deserialized data is wrong and needs to be fixed.
                 // this is invoked before the post-serialize migrations run, so will still be wrong.
                 // outside this callback, it should get fixed up automatically by the migration code.
-                root.Project.InternalRomGameName.Should().Be(badGameName, "Migrations to fix the bug haven't run yet.");
-                root.SaveVersion.Should().Be(100, "It was saved with the older file format");
+                if (!string.IsNullOrEmpty(badGameName))
+                    root.Project.InternalRomGameName.Should().Be(badGameName, "Migrations to fix the bug haven't run yet.");
             };
             
-            var result = projectFileManager.Open("IGNORED");
-            
-            result.project.InternalRomGameName.Should().NotBe(badGameName, "Migrations should have fixed this");
-            result.project.InternalRomGameName.Should().Be(originalGoodGameName, "it should be the original cartridge name after the automatic fix");
+            var (deserializedProject, _) = projectFileManager.Open("IGNORED");
+
+            if (harness.ExpectedMitigationApplied)
+            {
+                deserializedProject.InternalRomGameName.Should().NotBe(badGameName, 
+                    "Migrations should have fixed this");
+                deserializedProject.InternalRomGameName.Should().Be(originalGoodGameName,
+                    "the automatic fix should have set this name back to the correct one");
+            }
+            else
+            {
+                deserializedProject.InternalRomGameName.Should().Be(badGameName,
+                    "it should be the unfixed version");
+            }
         }
     }
 }

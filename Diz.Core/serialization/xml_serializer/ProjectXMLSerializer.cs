@@ -57,50 +57,33 @@ namespace Diz.Core.serialization.xml_serializer
                 new XmlWriterSettings {Indent = true},
                 rootElement);
 
-            var finalBytes = Encoding.UTF8.GetBytes(xmlStr);
-
-            // if you want some sanity checking, run this to verify everything saved correctly
-            // DebugVerifyProjectEquality(project, finalBytes);
-            // end debug
-
-            return finalBytes;
+            return Encoding.UTF8.GetBytes(xmlStr);
         }
 
         public delegate void SerializeEvent(ProjectXmlSerializer projectXmlSerializer, Root rootElement);
         public event SerializeEvent BeforeSerialize;
         public event SerializeEvent AfterDeserialize;
 
-        // just for debugging purposes, compare two projects together to make sure they serialize/deserialize
-        // correctly.
-        private void DebugVerifyProjectEquality(Root originalProjectWeJustSaved, byte[] projectBytesWeJustSerialized)
+        public override (Root xmlRoot, string warning) Load(byte[] projectFileRawXmlBytes)
         {
-            var (xmlRoot, _) = Load(projectBytesWeJustSerialized);
-            var project2 = xmlRoot.Project;
+            // Note: Migrations not yet written for XML itself. ExtendedXmlSerializer has support for this
+            // if we need it, put it in a new MigrationRunner.SetupMigrateXml() or similar.
 
-            new ProjectFileManager().PostSerialize(xmlRoot);
-            DebugVerifyProjectEquality(originalProjectWeJustSaved.Project, project2);
-        }
+            var xmlStr = Encoding.UTF8.GetString(projectFileRawXmlBytes);
+            var versionNumOfData = RunIntegrityChecks(xmlStr);
+            MigrationRunner.StartingSaveVersion = versionNumOfData;
+            MigrationRunner.TargetSaveVersion = CurrentSaveFormatVersion;
 
-        public override (Root xmlRoot, string warning) Load(byte[] rawBytes)
-        {
-            // TODO: it would be much more user-friendly/reliable if we could deserialize the
-            // Root element ALONE first, check for valid version/watermark, and only then try
-            // to deserialize the rest of the doc.
-            //
-            // Also, we can do data migrations based on versioning, and ExtendedXmlSerializer
-
-            var xmlStr = Encoding.UTF8.GetString(rawBytes);
-            RunIntegrityChecks(xmlStr);
             var root = XmlSerializerSupport.GetSerializer().Create().Deserialize<Root>(xmlStr);
             AfterDeserialize?.Invoke(this, root);
+            
             RunIntegrityChecks(root.SaveVersion, root.Watermark);
 
-            var warning = "";
-
-            return (root, warning);
+            return (root, "");
         }
 
-        private static void RunIntegrityChecks(string rawXml)
+        // return the save file version# detected in the raw data
+        private static int RunIntegrityChecks(string rawXml)
         {
             // run this check before opening with our real serializer. read a minimal part of the XML
             // manually to verify the root element looks sane.
@@ -116,6 +99,8 @@ namespace Diz.Core.serialization.xml_serializer
             var saveVersion = int.Parse(saveVersionStr);
 
             RunIntegrityChecks(saveVersion, waterMarkStr);
+
+            return saveVersion;
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
@@ -142,16 +127,6 @@ namespace Diz.Core.serialization.xml_serializer
                     "Please check for an upgraded release of DiztinGUIsh, it should be able to open this file."+
                     $"(Save file version of loaded project: '{saveVersion}', we are expecting version {CurrentSaveFormatVersion}.)");
             }
-        }
-
-        public static void OnBeforeAddLinkedRom(ref AddRomDataCommand romAddCmd)
-        {
-            PostSerializeMigrations.Run(ref romAddCmd, true);
-        }
-
-        public static void OnAfterAddLinkedRom(ref AddRomDataCommand romAddCmd)
-        {
-            PostSerializeMigrations.Run(ref romAddCmd, false);
         }
     }
 }

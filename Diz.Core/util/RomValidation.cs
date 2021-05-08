@@ -14,32 +14,51 @@ namespace Diz.Core.util
         public bool ShouldProjectCartTitleMatchRomBytes { get; set; } = true;
         public ProjectXmlSerializer.Root? Root { get; set; }
         public Project? Project => Root?.Project;
-        
         public Func<string, string>? GetNextRomFileToTry { get; set; }
+        public MigrationRunner MigrationRunner { get; set; }
 
-        public bool TryReadAttachedProjectRom()
+        private bool Prep()
         {
             if (Project == null)
                 return false;
 
-            var overrideBytes = Project.Data.GetOverriddenRomBytes();
-            if (overrideBytes != null)
-            {
-                // special case, use mostly for testing
-                RawBytesToAdd = overrideBytes;
-            }
-            else
-            {
-                // normal case: keep asking user for ROMS that meet our criteria, or give up
-                var nextFileToTry = SearchForValidRom();
-                if (nextFileToTry == null) 
-                    return false;
-                
-                Project.AttachedRomFilename = nextFileToTry;
-            }
-
-            Project.Data.CopyRomDataIn(RawBytesToAdd);
+            MigrationRunner?.OnLoadingBeforeAddLinkedRom(this);
             return true;
+        }
+        
+        public bool TryReadAttachedProjectRom()
+        {
+            if (!Prep()) 
+                return false;
+
+            if (!RetrieveBytes()) 
+                return false;
+
+            FinishPopulatingBytes();
+            return true;
+        }
+        
+        private void FinishPopulatingBytes()
+        {
+            Project.Data.CopyRomDataIn(RawBytesToAdd);
+            MigrationRunner?.OnLoadingAfterAddLinkedRom(this);
+        }
+
+        private bool RetrieveBytes()
+        {
+            // special case, use mostly for testing.
+            if (HandleUnusualOverrideBytes()) 
+                return true;
+
+            // normal case: keep asking user for ROMS that meet our criteria, or give up
+            Project.AttachedRomFilename = SearchForValidRom();
+            return Project.AttachedRomFilename != null;
+        }
+
+        private bool HandleUnusualOverrideBytes()
+        {
+            RawBytesToAdd = Project.Data.GetOverriddenRomBytes();
+            return RawBytesToAdd != null;
         }
 
         private string? SearchForValidRom()

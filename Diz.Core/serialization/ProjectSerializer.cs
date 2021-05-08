@@ -2,6 +2,7 @@
 using System.IO;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
+using Diz.Core.util;
 
 namespace Diz.Core.serialization
 {
@@ -36,5 +37,13 @@ namespace Diz.Core.serialization
             }
             Debug.Assert(project1.Equals(project2));
         }
+        
+        public MigrationRunner MigrationRunner = new MigrationRunner
+        {
+            Migrations =
+            {
+                new MigrationBugfix050JapaneseText()
+            }
+        };
     }
 }
