@@ -94,7 +94,7 @@ namespace Diz.Core.util
             foreach (var t in arr)
                 dst.Add(t);
         }
-        
+
         public static uint ConvertByteArrayToUInt32(IReadOnlyList<byte> src, int srcStartingOffset = 0)
         {
             return
@@ -158,8 +158,7 @@ namespace Diz.Core.util
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1
-        };
+            -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
         // 4bit value
         public static byte ByteParseHex1(char hexChar)
@@ -185,6 +184,11 @@ namespace Diz.Core.util
                 ByteParseHex1(hexChar2) * 0x100u +
                 ByteParseHex1(hexChar3) * 0x10u +
                 ByteParseHex1(hexChar4);
+        }
+
+        public static uint ByteParseHex(string str)
+        {
+            return ByteParseHex(str, 0, str.Length);
         }
 
         // note: this helper isn't quite as fast, use one of the other ByteParseHex1/2/3/4() functions directly
