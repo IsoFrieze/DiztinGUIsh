@@ -301,6 +301,32 @@ namespace Diz.Core.util
 
             return color;
         }
+        
+        public static (string stdout, string stderr) RunCommandGetOutput(string cmdExePath, string args)
+        {
+            var process = new Process
+            {
+                StartInfo =
+                {
+                    FileName = cmdExePath,
+                    Arguments = args,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                }
+            };
+            process.Start();
+            
+            var output = process.StandardOutput.ReadToEnd();
+            Console.WriteLine(output);
+            
+            var err = process.StandardError.ReadToEnd();
+            Console.WriteLine(err);
+            
+            process.WaitForExit();
+
+            return (output, err);
+        }
 
         public static void OpenExternalProcess(string args)
         {
