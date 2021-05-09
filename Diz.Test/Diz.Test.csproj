@@ -379,6 +379,10 @@
     <EmbeddedResource Include="Resources\emptyrom.asm" />
     <EmbeddedResource Include="Resources\serialize-dictionary-test.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\ct-binary-tracelog7.758s-60fps-locked.bin" />
+    <Content Include="Resources\samplerom-a-few-lines.asm" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
