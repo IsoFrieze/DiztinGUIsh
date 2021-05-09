@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using Diz.Core.model;
 
@@ -14,6 +15,17 @@ namespace Diz.Core.util
 {
     public static class Util
     {
+        public static string ReadManifestData(Assembly assembly, string resourceName)
+        {
+            resourceName = resourceName.Replace("/", ".");
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            
+            if (stream == null)
+                throw new InvalidOperationException("Could not load manifest resource stream.");
+
+            return new StreamReader(stream).ReadToEnd();
+        }
+        
         public enum NumberBase
         {
             Decimal = 3, Hexadecimal = 2, Binary = 8

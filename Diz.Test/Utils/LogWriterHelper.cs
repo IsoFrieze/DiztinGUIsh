@@ -4,6 +4,7 @@ using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Diz.Test.Utils
 {
@@ -90,8 +91,14 @@ namespace Diz.Test.Utils
                 .Select(line => ParseLine(line.Trim()))
                 .ToList();
 
-        public static void AssertAssemblyOutputEquals(string expectedRaw, LogCreator.OutputResult result)
+        public static void AssertAssemblyOutputEquals(string expectedRaw, LogCreator.OutputResult result, ITestOutputHelper testOutputHelper = null)
         {
+            testOutputHelper?.WriteLine("** EXPECTED **");
+            testOutputHelper?.WriteLine(expectedRaw);
+            
+            testOutputHelper?.WriteLine("** ACTUAL **");
+            testOutputHelper?.WriteLine(result.OutputStr);
+            
             AssertGoodOutput(result);
             
             var expectedOut = ParseAll(expectedRaw);
@@ -99,18 +106,22 @@ namespace Diz.Test.Utils
             AssertAssemblyOutputEqual(result, expectedOut, actualOut);
         }
 
-        public static LogCreator.OutputResult ExportAssembly(Data inputRom)
+        public static LogCreator.OutputResult ExportAssembly(Data inputRom, Action<LogCreator> postInitHook = null)
         {
             var settings = new LogWriterSettings();
             settings.SetDefaults();
             settings.OutputToString = true;
             settings.Structure = LogCreator.FormatStructure.SingleFile;
 
-            return new LogCreator()
+            var logCreator = new LogCreator
             {
                 Data = inputRom,
                 Settings = settings,
-            }.CreateLog();
+            };
+            
+            postInitHook?.Invoke(logCreator);
+
+            return logCreator.CreateLog();
         }
 
         private static void AssertGoodOutput(LogCreator.OutputResult result)

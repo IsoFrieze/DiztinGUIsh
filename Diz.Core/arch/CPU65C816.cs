@@ -85,7 +85,7 @@ namespace Diz.Core.arch
             int bank, directPage, operand, programCounter;
             var opcode = data.GetRomByte(offset);
 
-            var mode = GetAddressMode(offset);
+            var mode = GetAddressMode(data, offset);
             switch (mode)
             {
                 case AddressMode.DirectPage:
@@ -142,7 +142,7 @@ namespace Diz.Core.arch
 
         public string GetInstruction(int offset)
         {
-            AddressMode mode = GetAddressMode(offset);
+            AddressMode mode = GetAddressMode(data, offset);
             string format = GetInstructionFormatString(offset);
             string mnemonic = GetMnemonic(offset);
             string op1, op2 = "";
@@ -171,7 +171,7 @@ namespace Diz.Core.arch
 
         public int GetInstructionLength(int offset)
         {
-            var mode = GetAddressMode(offset);
+            var mode = GetAddressMode(data, offset);
             return InstructionLength(mode);
         }
 
@@ -268,7 +268,7 @@ namespace Diz.Core.arch
             if (!showHint) 
                 return mn;
 
-            var mode = GetAddressMode(offset);
+            var mode = GetAddressMode(data, offset);
             var count = BytesToShow(mode);
 
             if (mode == AddressMode.Constant8 || mode == AddressMode.Relative16 || mode == AddressMode.Relative8) return mn;
@@ -321,7 +321,7 @@ namespace Diz.Core.arch
         // {2} = operand 2 for block move
         private string GetInstructionFormatString(int offset)
         {
-            var mode = GetAddressMode(offset);
+            var mode = GetAddressMode(data, offset);
             switch (mode)
             {
                 case AddressMode.Implied:
@@ -368,15 +368,24 @@ namespace Diz.Core.arch
             return "";
         }
 
-        private AddressMode GetAddressMode(int offset)
+        public static AddressMode GetAddressMode(Data data, int offset)
         {
-            var mode = AddressingModes[data.GetRomByte(offset)];
+            var opcode = data.GetRomByte(offset);
+            var mFlag = data.GetMFlag(offset);
+            var xFlag = data.GetXFlag(offset);
+            
+            return GetAddressMode(opcode, mFlag, xFlag);
+        }
+
+        public static AddressMode GetAddressMode(int opcode, bool mFlag, bool xFlag)
+        {
+            var mode = AddressingModes[opcode];
             return mode switch
             {
-                AddressMode.ImmediateMFlagDependent => data.GetMFlag(offset)
+                AddressMode.ImmediateMFlagDependent => mFlag
                     ? AddressMode.Immediate8
                     : AddressMode.Immediate16,
-                AddressMode.ImmediateXFlagDependent => data.GetXFlag(offset)
+                AddressMode.ImmediateXFlagDependent => xFlag
                     ? AddressMode.Immediate8
                     : AddressMode.Immediate16,
                 _ => mode

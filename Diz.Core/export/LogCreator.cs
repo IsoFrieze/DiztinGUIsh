@@ -336,6 +336,9 @@ namespace Diz.Core.export
 
         protected string GetLine(int offset, string special)
         {
+            if (special == "empty" && !Settings.OutputExtraWhitespace)
+                return "";
+            
             var isSpecial = special != null;
             var line = "";
 
