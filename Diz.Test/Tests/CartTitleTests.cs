@@ -1,21 +1,16 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Xml;
 using Diz.Core;
 using Diz.Core.model;
-using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using Diz.Test.Utils.SuperFamiCheckUtil;
 using ExtendedXmlSerializer;
 using FluentAssertions;
-using FluentAssertions.Formatting;
-using Sprache;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.Tests
 {
     public static class CartNameTests
     {

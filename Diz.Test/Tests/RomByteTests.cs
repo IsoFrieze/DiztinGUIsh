@@ -1,6 +1,7 @@
 ﻿using Diz.Core;
 using Diz.Core.arch;
 using Diz.Core.model;
+using Diz.Core.util;
 using Xunit;
 
 namespace Diz.Test
