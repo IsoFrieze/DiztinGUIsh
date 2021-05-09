@@ -70,5 +70,8 @@
     <None Remove="Resources\test42.asm" />
     <EmbeddedResource Include="Resources\samplerom-a-few-lines.asm" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="TestData" />
+  </ItemGroup>
 
 </Project>
