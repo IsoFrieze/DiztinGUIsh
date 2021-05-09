@@ -57,7 +57,7 @@
             this.label7 = new System.Windows.Forms.Label();
             this.pictureGreenSpinner = new System.Windows.Forms.PictureBox();
             this.button1 = new System.Windows.Forms.Button();
-            this.cartesianChart1 = new LiveCharts.WinForms.CartesianChart();
+            // this.cartesianChart1 = new LiveCharts.WinForms.CartesianChart();
             ((System.ComponentModel.ISupportInitialize) (this.pictureGreenSpinner)).BeginInit();
             this.SuspendLayout();
             // 
@@ -321,18 +321,18 @@
             // 
             // cartesianChart1
             // 
-            this.cartesianChart1.Location = new System.Drawing.Point(12, 255);
+            /*this.cartesianChart1.Location = new System.Drawing.Point(12, 255);
             this.cartesianChart1.Name = "cartesianChart1";
             this.cartesianChart1.Size = new System.Drawing.Size(533, 270);
             this.cartesianChart1.TabIndex = 29;
-            this.cartesianChart1.Text = "cartesianChart1";
+            this.cartesianChart1.Text = "cartesianChart1";*/
             // 
             // BsnesTraceLogBinaryMonitorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(557, 537);
-            this.Controls.Add(this.cartesianChart1);
+            // this.Controls.Add(this.cartesianChart1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.pictureGreenSpinner);
             this.Controls.Add(this.lblResultStatus);
@@ -400,6 +400,6 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.PictureBox pictureGreenSpinner;
         private System.Windows.Forms.Button button1;
-        private LiveCharts.WinForms.CartesianChart cartesianChart1;
+        // private LiveCharts.WinForms.CartesianChart cartesianChart1;
     }
 }

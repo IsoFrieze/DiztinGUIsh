@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Diz.Core.model;
 using Diz.Core.util;
 using IX.Observable;
@@ -197,16 +198,18 @@ namespace Diz.Core.export
                     var colon = split[i].IndexOf(':');
 
                     Tuple<string, int> tuple;
-
                     if (colon < 0)
                     {
                         var s1 = split[i];
-                        var s2 = Parameters[s1].Item2;
-                        tuple = Tuple.Create(s1, s2);
+                        var succeeded = Parameters.TryGetValue(s1, out var x);
+                        Debug.Assert(succeeded);
+                        var s2 = x.Item2;
+                        
+                        tuple = new Tuple<string, int>(s1, s2);
                     }
                     else
                     {
-                        tuple = Tuple.Create(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1)));
+                        tuple = new Tuple<string, int>(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1)));
                     }
 
                     ParseList.Add(tuple);
