@@ -1,5 +1,7 @@
 ﻿using Diz.Core.model.snes;
 
+using Diz.Core.model;
+
 namespace Diz.Test.Utils
 {
     public class AssemblyPipelineTester

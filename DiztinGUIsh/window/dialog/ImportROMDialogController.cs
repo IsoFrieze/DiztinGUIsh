@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Diz.Core.model;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using Diz.Core.serialization;
 using Diz.Core.util;
 
@@ -10,54 +10,53 @@ namespace DiztinGUIsh.window.dialog
         bool PromptToConfirmAction(string msg);
         bool ShowAndWaitForUserToConfirmSettings();
         ImportRomDialogController Controller { get; set; }
+        bool GetVectorValue(int i, int j);
+        void RefreshUi();
     }
 
     public class ImportRomDialogController
     {
         public IImportRomDialogView View { get; set; }
-        public ImportRomSettings ImportSettings { get; protected set; }
-        public RomMapMode? DetectedMapMode { get; protected set; }
-        
-        public int RomSettingsOffset { get; set; }= -1;
-        public bool ShouldCheckHeader { get; set; } = true;
-        public Dictionary<string, bool> VectorTableEntriesEnabled { get; set; } = new Dictionary<string, bool>();
+        public ImportRomSettingsBuilder Builder { get; private set; }
 
         public delegate void SettingsCreatedEvent();
-        public event SettingsCreatedEvent SettingsCreated;
+        public event SettingsCreatedEvent OnBuilderInitialized;
 
-        public ImportRomSettings PromptUserForRomSettings(string romFilename)
+        public ImportRomSettings PromptUserForImportOptions(string romFilename)
         {
-            CreateSettingsFromRom(romFilename);
+            Builder = new ImportRomSettingsBuilder(romFilename);
+            return !PromptUserForOptions()
+                ? null 
+                : Builder.CreateSettings();
+        }
+
+        private bool PromptUserForOptions()
+        {
+            Debug.Assert(Builder != null);
             
-            var shouldContinue = View.ShowAndWaitForUserToConfirmSettings();
-            if (!shouldContinue)
-                return null;
+            OnBuilderInitialized?.Invoke();
+            Builder.ImportSettings.PropertyChanged += ImportSettingsOnPropertyChanged;
+            Refresh();
 
-            ImportSettings.InitialLabels = GenerateVectorLabels();
-            ImportSettings.InitialHeaderFlags = GenerateHeaderFlags();
-
-            return ImportSettings;
+            return View.ShowAndWaitForUserToConfirmSettings();
         }
 
-        public void CreateSettingsFromRom(string filename)
+        private void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            var romBytes = RomUtil.ReadRomFileBytes(filename);
-            ImportSettings = new ImportRomSettings
-            {
-                RomFilename = filename,
-                RomBytes = romBytes,
-                RomMapMode = RomUtil.DetectRomMapMode(romBytes, out var detectedMapModeSuccess)
-            };
-
-            if (detectedMapModeSuccess)
-                DetectedMapMode = ImportSettings.RomMapMode;
-
-            OnSettingsCreated();
+            Refresh();
         }
 
-        protected virtual void OnSettingsCreated()
+        private void Refresh()
         {
-            SettingsCreated?.Invoke();
+            View?.RefreshUi();
+            UpdateVectorsFromView();
+        }
+
+        private void UpdateVectorsFromView()
+        {
+            Builder.VectorTableEntriesEnabled = ImportRomSettingsBuilder.GenerateVectors(
+                (i, j) => View?.GetVectorValue(i, j) ?? true
+            );
         }
 
         private bool Warn(string msg)
@@ -69,32 +68,18 @@ namespace DiztinGUIsh.window.dialog
 
         public bool Submit()
         {
-            if (!DetectedMapMode.HasValue)
+            if (!Builder.DetectedMapMode.HasValue)
             {
                 if (!Warn("ROM Map type couldn't be detected."))
                     return false;
             }
-            else if (DetectedMapMode.Value != ImportSettings.RomMapMode)
+            else if (Builder.DetectedMapMode.Value != Builder.ImportSettings.RomMapMode)
             {
                 if (!Warn("The ROM map type selected is different than what was detected."))
                     return false;
             }
 
             return true;
-        }
-
-        private Dictionary<int, Label> GenerateVectorLabels() =>
-            RomUtil.GenerateVectorLabels(
-                VectorTableEntriesEnabled, RomSettingsOffset, ImportSettings.RomBytes, ImportSettings.RomMapMode);
-
-        public Dictionary<int, FlagType> GenerateHeaderFlags()
-        {
-            var flags = new Dictionary<int, FlagType>();
-
-            if (ShouldCheckHeader)
-                RomUtil.GenerateHeaderFlags(RomSettingsOffset, flags, ImportSettings.RomBytes);
-
-            return flags;
         }
     }
 }

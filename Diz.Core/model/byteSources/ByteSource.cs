@@ -54,9 +54,9 @@ namespace Diz.Core.model.byteSources
         {
             if (!IsValidIndex(index))
                 return;
-            
-            Bytes[index].Annotations?.RemoveAll(match);
-            
+
+            Bytes[index]?.Annotations?.RemoveAll(match);
+
             foreach (var childNodes in ChildSources)
                 childNodes.ByteSource.RemoveAllAnnotations(match);
         }
@@ -183,6 +183,12 @@ namespace Diz.Core.model.byteSources
         {
             for (var i = 0; i < copyFrom.Count; ++i)
                 Bytes[i + dstStartingOffset].Byte = copyFrom[i];
+        }
+
+        // inefficient helper method to get a copy of any ByteAnnotation in this bytesource
+        public IEnumerable<byte> GetRawBytesCopy()
+        {
+            return Bytes.Select(entry => entry?.Byte ?? 0x00);
         }
 
         public int GetAnnotationCountInAllChildren<T>() where T : Annotation => 

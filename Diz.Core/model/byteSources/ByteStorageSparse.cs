@@ -204,6 +204,9 @@ namespace Diz.Core.model.byteSources
             bytes[index] = value;
         }
 
+        // NOTE: "valid index" means is it in range of [0....Count-1]
+        // it does NOT mean there's anything stored in that entry.  access to a valid index
+        // may still return a null ByteEntry.
         private bool ValidIndex(int index) => index >= 0 && index < Count;
 
         private void ValidateIndex(int index)

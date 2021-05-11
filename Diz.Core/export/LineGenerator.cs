@@ -55,22 +55,24 @@ namespace Diz.Core.export
 
         private LogCreatorLineFormatter.ColumnFormat BuildSpecialFormatterFrom(LogCreatorLineFormatter.ColumnFormat originalColumn, string specialModifierStr)
         {
-            var specialNewFormatter = new LogCreatorLineFormatter.ColumnFormat
-            {
-                LengthOverride = GetGeneratorFor(originalColumn.Value).DefaultLength,
-            };
-
+            var ignoreOffset = false;
+            string val;
             if (originalColumn.Value != "code")
             {
-                specialNewFormatter.IgnoreOffset = true;
-                specialNewFormatter.Value = "%empty";
+                ignoreOffset = true;
+                val = "%empty";
             }
             else
             {
-                specialNewFormatter.Value = $"%{specialModifierStr}";
+                val = $"%{specialModifierStr}";
             }
 
-            return specialNewFormatter;
+            return new LogCreatorLineFormatter.ColumnFormat
+            {
+                LengthOverride = GetGeneratorFor(originalColumn.Value).DefaultLength,
+                IgnoreOffset = ignoreOffset,
+                Value = val,
+            };
         }
 
         public AssemblyPartialLineGenerator GetGeneratorFor(string parameter)

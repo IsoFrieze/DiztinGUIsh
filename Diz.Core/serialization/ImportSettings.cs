@@ -11,22 +11,34 @@ namespace Diz.Core.serialization
         private RomSpeed romSpeed;
         private byte[] romBytes;
         private string romFilename;
+        private Dictionary<int, FlagType> initialHeaderFlags = new();
+        private Dictionary<int, Label> initialLabels = new();
 
         public RomMapMode RomMapMode
         {
             get => mode;
             set => this.SetField(PropertyChanged, ref mode, value);
         }
-
+        
+        public int RomSettingsOffset => RomUtil.GetRomSettingOffset(RomMapMode);
+        
         public RomSpeed RomSpeed
         {
             get => romSpeed;
             set => this.SetField(PropertyChanged, ref romSpeed, value);
         }
+        
+        public Dictionary<int, Label> InitialLabels
+        {
+            get => initialLabels;
+            set => this.SetField(PropertyChanged, ref initialLabels, value);
+        }
 
-        // todo: add INotify stuff if we care. probably dont need to.
-        public Dictionary<int, Label> InitialLabels { get; set; }
-        public Dictionary<int, FlagType> InitialHeaderFlags { get; set; }
+        public Dictionary<int, FlagType> InitialHeaderFlags
+        {
+            get => initialHeaderFlags;
+            set => this.SetField(PropertyChanged, ref initialHeaderFlags, value);
+        }
 
         public byte[] RomBytes
         {

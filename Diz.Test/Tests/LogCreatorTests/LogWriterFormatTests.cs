@@ -1,10 +1,15 @@
 ﻿// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
+using System.IO;
 using System.Linq;
 using Diz.Core.export;
 using Diz.Test.Utils;
+using FluentAssertions;
+using Moq;
 using Xunit;
 
 namespace Diz.Test.Tests.LogCreatorTests
@@ -63,13 +68,45 @@ namespace Diz.Test.Tests.LogCreatorTests
                     }
                 }
             };
-
+        
         [Theory]
         [MemberData(nameof(LogWriterGenerators))]
         public static void TestLogWriterFormatStr(LogFormatStrTestHarness harness)
         {
             var formatter = new LogCreatorLineFormatter(harness.FormatStr, harness.Generators);
             TestUtil.AssertCollectionEqual(harness.ExpectedOutput, formatter.ColumnFormats);
+        }
+
+        public static TheoryData<string> BadUnevenPercentageSignStrings => new()
+        {
+            "%",
+            "%asdf",
+            "%asdf%%",
+        };
+            
+        public static TheoryData<string> BadLengthOverride => new() 
+        {
+            "%asdf:%",
+            "%asdf:G%",
+            "%asdf:000A%",
+            "%asdf:--12%",
+        };
+        
+        
+        [Theory]
+        [MemberData(nameof(BadLengthOverride))]
+        public static void TestLogWriterLengthFormatStrInvalid(string invalidParseStr)
+        {
+            Action x = () => new LogCreatorLineFormatter(invalidParseStr, null);
+            x.Should().Throw<InvalidDataException>().WithMessage("*length*");
+        }
+        
+        [Theory]
+        [MemberData(nameof(BadUnevenPercentageSignStrings))]
+        public static void TestLogWriterFormatStrInvalid(string invalidParseStr)
+        {
+            Action x = () => new LogCreatorLineFormatter(invalidParseStr, null);
+            x.Should().Throw<InvalidDataException>().WithMessage("*non-even*");
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Diz.Test.Tests.ByteEntryTests
     public sealed class ByteEntryAnnotationModificationTests
     {
         // old-style init (still valid, just shortcut-y)
-        private static ByteEntry SampleByteEntryOldStyle()
+        internal static ByteEntry SampleByteEntryOldStyle()
         {
             return new() {
                 Arch = Architecture.Apuspc700,

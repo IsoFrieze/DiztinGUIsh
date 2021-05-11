@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Diz.Core.export;
 using Diz.Core.model;
+using JetBrains.Annotations;
 using Diz.Core.model.byteSources;
 
 namespace Diz.Core.util
@@ -86,30 +89,6 @@ namespace Diz.Core.util
         /// <returns>UTF8 string of the title, padded with spaces</returns>
         public static string GetCartridgeTitleFromBuffer(byte[] buffer, int index = 0) => 
             ByteUtil.ReadShiftJisEncodedString(buffer, index, LengthOfTitleName);
-
-
-        // verify the data in the provided ROM bytes matches the data we expect it to have.
-        // returns error message if it's not identical, or null if everything is OK.
-        public static string IsThisRomIsIdenticalToUs(byte[] rom,
-            RomMapMode mode, string requiredGameNameMatch, uint requiredRomChecksumMatch)
-        {
-            var romSettingsOffset = GetRomSettingOffset(mode);
-            if (rom.Length <= romSettingsOffset + 10)
-                return "The linked ROM is too small. It can't be opened.";
-
-            var internalGameNameToVerify = GetCartridgeTitleFromRom(rom, romSettingsOffset);
-            var checksumToVerify = ByteUtil.ConvertByteArrayToInt32(rom, romSettingsOffset + 7);
-
-            if (internalGameNameToVerify != requiredGameNameMatch)
-                return $"The linked ROM's internal name '{internalGameNameToVerify}' doesn't " +
-                       $"match the project's internal name of '{requiredGameNameMatch}'.";
-
-            if (checksumToVerify != requiredRomChecksumMatch)
-                return $"The linked ROM's checksums '{checksumToVerify:X8}' " +
-                       $"don't match the project's checksums of '{requiredRomChecksumMatch:X8}'.";
-
-            return null;
-        }
 
         public static int ConvertSnesToPc(int address, RomMapMode mode, int size)
         {
@@ -383,9 +362,11 @@ namespace Diz.Core.util
 
             return rom;
         }
-
-        public static void GenerateHeaderFlags(int romSettingsOffset, IDictionary<int, FlagType> flags, byte[] romBytes)
+        
+        public static Dictionary<int, FlagType> GenerateHeaderFlags(int romSettingsOffset, byte[] romBytes)
         {
+            var flags = new Dictionary<int, FlagType>();
+            
             for (int i = 0; i < LengthOfTitleName; i++)
                 flags.Add(romSettingsOffset - LengthOfTitleName + i, FlagType.Text);
             
@@ -413,6 +394,8 @@ namespace Diz.Core.util
                 for (int i = 0; i < 10; i++) 
                     flags.Add(romSettingsOffset - 0x1F + i, FlagType.Data8Bit);
             }
+
+            return flags;
         }
 
 

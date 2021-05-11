@@ -222,6 +222,11 @@
     <Compile Update="window\StartForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Remove="window\MainWindow.SimpleUI.cs" />
+    <Compile Remove="window\MainWindow.ReadOnlyHelpers.cs" />
+    <Compile Remove="window\MainWindow.Properties.cs" />
+    <Compile Remove="window\MainWindow.MainTable.cs" />
+    <Compile Remove="window\MainWindow.Actions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dist\" />

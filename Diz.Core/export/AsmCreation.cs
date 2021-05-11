@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Diz.Core.export
+﻿namespace Diz.Core.export
 {
     public interface IAsmCreationStep
     {

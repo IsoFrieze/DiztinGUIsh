@@ -103,7 +103,7 @@ namespace Diz.Core.model
         public IEnumerable<KeyValuePair<int, Label>> Labels => 
             Data.SnesAddressSpace.GetAnnotationsIncludingChildrenEnumerator<Label>();
 
-        private static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
+        public static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
         
         public void DeleteAllLabels()
         {

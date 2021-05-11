@@ -43,6 +43,14 @@ namespace Diz.Core.model.snes
         
         // [XmlIgnore] private bool SendNotificationChangedEvents { get; set; } = true;
         
+        // unsafe/quick helper method only, kind of dumb and will throw an exception if a byte is missing.
+        // if you need to do anything important, use another method with safer access.
+        [XmlIgnore] public byte this[int pcOffset]
+        {
+            get => (byte)RomByteSource.Bytes[pcOffset].Byte;
+            set => RomByteSource.Bytes[pcOffset].Byte = value;
+        }
+
         #endregion
 
         public Data()
@@ -297,8 +305,9 @@ namespace Diz.Core.model.snes
         // returns null if out of bounds
         public byte? GetNextRomByte(int pcOffset)
         {
-            return pcOffset + 1 >= 0 && pcOffset + 1 < RomByteSource.Bytes.Count
-                ? RomByteSource.Bytes[pcOffset + 1].Byte
+            var newOffset = pcOffset + 1;
+            return newOffset >= 0 && newOffset < RomByteSource.Bytes.Count
+                ? RomByteSource.Bytes[newOffset]?.Byte
                 : null;
         }
 
