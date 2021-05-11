@@ -7,7 +7,7 @@ namespace DiztinGUIsh.util
 {
     public class LargeFilesReader : ProgressBarWorker
     {
-        public List<string> Filenames { get; set; }
+        public IReadOnlyCollection<string> Filenames { get; set; }
         public Action<string> LineReadCallback { get; set; }
 
         protected long SumFileLengthsInBytes { get; set; }

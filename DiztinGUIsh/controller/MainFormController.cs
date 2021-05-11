@@ -164,26 +164,35 @@ namespace DiztinGUIsh.controller
                 Project = Project,
             });
         }
-
-        public bool ImportRomAndCreateNewProject(string romFilename)
+        
+        private static ImportRomDialogController SetupImportController(IProjectView projectView)
         {
             // let the user select settings on the GUI
-            var importController = new ImportRomDialogController {View = ProjectView.GetImportView()};
+            var importController = new ImportRomDialogController {View = projectView.GetImportView()};
             importController.View.Controller = importController;
-            var importSettings = importController.PromptUserForRomSettings(romFilename);
-            if (importSettings == null)
-                return false;
-
-            CloseProject();
-
-            // actually do the import
-            ImportRomAndCreateNewProject(importSettings);
-            return true;
+            return importController;
         }
+        
+        public bool ImportRomAndCreateNewProject(string romFilename)
+        {
+            var importController = SetupImportController(ProjectView);
+            var importSettings = importController.PromptUserForImportOptions(romFilename);
+            
+            if (importSettings != null)
+            {
+                CloseProject();
 
+                // actually do the import
+                ImportRomAndCreateNewProject(importSettings);
+                return true;
+            }
+
+            return false;
+        }
+        
         public void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
         {
-            var project = BaseProjectFileManager.ImportRomAndCreateNewProject(importSettings);
+            var project = ImportUtils.ImportRomAndCreateNewProject(importSettings);
             OnProjectOpenSuccess(project.ProjectFileName, project);
         }
 

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.snes;
+using Diz.Core.serialization;
 
 namespace Diz.Core.util
 {
@@ -79,6 +80,43 @@ namespace Diz.Core.util
             sampleData.Data.FixChecksum();
 
             return sampleData;
+        }
+
+        // return a simple, minimal import settings for the Sample rom data, for use
+        // with test methods. does not generate interrupt vector table stuff, nor 
+        // initial labels.
+        public static ImportRomSettings CreateRomImportSettingsForSampleRom()
+        {
+            return new()
+            {
+                RomFilename = "diz-sample-rom.smc", 
+                RomBytes = SampleRomByteSource.CreateJustRawBytes(), 
+                RomMapMode = RomMapMode.LoRom,
+            };
+        }
+
+        // create a super-minimal sample project with our sample ROM loaded into it
+        // there's a bunch of ways to do this now, this is just one.
+        // no interrupt vectors or default labels will be added.
+        public static Project CreateSampleProject()
+        {
+            var settings = CreateRomImportSettingsForSampleRom();
+            
+            var project = new Project
+            {
+                AttachedRomFilename = settings.RomFilename,
+                ProjectFileName = null,
+                Data = new Data()
+            };
+            
+            var mapping = RomUtil.CreateRomMappingFromRomRawBytes(
+                settings.RomBytes,
+                settings.RomMapMode, 
+                settings.RomSpeed);
+            
+            project.Data.SnesAddressSpace.ChildSources.Add(mapping);
+            
+            return project;
         }
     }
 }

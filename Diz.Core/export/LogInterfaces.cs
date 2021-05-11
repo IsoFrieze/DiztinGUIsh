@@ -12,14 +12,16 @@ namespace Diz.Core.export
     {
         // add a temporary label which will be cleared out when we are finished the export
         // this should not add a label if a real label already exists.
-        public void AddTemporaryLabel(int address, Label label);
+        public void AddTemporaryLabel(int snesAddress, Label label);
         public void ClearTemporaryLabels();
     }
     
     public interface ILabelProvider : ITemporaryLabelProvider, IReadOnlyLabelProvider
     {
-        void AddLabel(int offset, Label label, bool overwrite = false);
+        void AddLabel(int snesAddress, Label label, bool overwrite = false);
         void DeleteAllLabels();
-        void RemoveLabel(int result);
+        
+        // if any labels exist at this address, remove them
+        void RemoveLabel(int snesAddress);
     }
 }

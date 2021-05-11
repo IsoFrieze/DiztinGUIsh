@@ -9,7 +9,7 @@ namespace Diz.Core.util
 {
     public static class ByteUtil
     {
-        // take input addresses that be in any formats that look like this, and convert to an int.
+        // take input addresses that can be in any formats that look like this, and convert to an int.
         // This is useful if pasting addresses from other editors/tools/asm/etc trying to get a clean address.
         // C0FFFF
         // $C0FFFF

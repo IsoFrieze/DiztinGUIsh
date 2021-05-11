@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
 using Diz.Core;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
+using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
@@ -16,8 +19,12 @@ using FluentAssertions.Formatting;
 using Sprache;
 using Xunit;
 using LoadSaveTest = Diz.Test.Tests.LoadSaveTest;
+using Diz.Test.Utils.SuperFamiCheckUtil;
+using ExtendedXmlSerializer;
+using FluentAssertions;
+using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.Tests
 {
     public static class CartNameTests
     {
@@ -136,8 +143,7 @@ namespace Diz.Test
             // it's stored in the ROM file like this:
             // 73 87 8C 78
         }
-
-        #if SOON_NOT_YET
+        
         [FactIfFamicheckPresent]
         public static void TestInternalChecksumVsExternal()
         {
@@ -173,20 +179,19 @@ namespace Diz.Test
 
             project.Data.ComputeChecksum().Should().Be((ushort)checksum);
             project.Data.ComputeIsChecksumValid().Should().Be(true);
-            
-            var firstByte = project.Data.RomBytes[0x00].Rom;
-            firstByte.Should().NotBe(0);
-            project.Data.RomBytes[0x00].Rom = 0;
-            project.Data.ComputeIsChecksumValid().Should().Be(false);
-            project.Data.FixChecksum();
-            project.Data.ComputeIsChecksumValid().Should().Be(true);
-            
-            project.Data.RomBytes[0x00].Rom = firstByte;
-            project.Data.ComputeIsChecksumValid().Should().Be(false);
-            project.Data.FixChecksum();
-            project.Data.ComputeIsChecksumValid().Should().Be(true);
-            
 
+            var firstByte = project.Data[0x00];
+            firstByte.Should().NotBe(0);
+            project.Data[0x00] = 0;
+            project.Data.ComputeIsChecksumValid().Should().Be(false);
+            project.Data.FixChecksum();
+            project.Data.ComputeIsChecksumValid().Should().Be(true);
+            
+            project.Data[0x00] = firstByte;
+            project.Data.ComputeIsChecksumValid().Should().Be(false);
+            project.Data.FixChecksum();
+            project.Data.ComputeIsChecksumValid().Should().Be(true);
+            
             // SNES docs dictate:
             // 15. Complement Check (0xFFDC, 0xFFDD)
             // 16. Check Sum (0xFFDE, 0xFFDF)
@@ -195,6 +200,35 @@ namespace Diz.Test
             // complement   checksum
             // 73 87        8C 78
         }
-        #endif
+        
+        [Fact]
+        public static void BugfixRemoveLabelWhenSnesAddressSpaceEmpty2()
+        {
+            TestRemoveLabelFromNullByteIndex(new ByteSource
+            {
+                Bytes = new StorageSparse<ByteEntry>(10)
+            });
+        }
+
+        private static void TestRemoveLabelFromNullByteIndex(ByteSource byteSourceSparse)
+        {
+            byteSourceSparse.IsValidIndex(0).Should().Be(true);
+            byteSourceSparse.Bytes[0].Should().Be(null);
+            byteSourceSparse.Bytes.Should().BeOfType(typeof(StorageSparse<ByteEntry>));
+            byteSourceSparse.Invoking(x => x.RemoveAllAnnotationsAt(0, NormalLabelProvider.IsLabel))
+                .Should().NotThrow<NullReferenceException>();
+        }
+
+        [Fact]
+        public static void BugfixRemoveLabelWhenSnesAddressSpaceEmpty1()
+        {
+            var project = SampleRomData.CreateSampleProject();
+            
+            project.Data.Labels.Invoking(labelProvider=>labelProvider
+                .RemoveLabel(0xFF))
+                .Should().NotThrow<NullReferenceException>();
+
+            TestRemoveLabelFromNullByteIndex(project.Data.SnesAddressSpace);
+        }
     }
 }

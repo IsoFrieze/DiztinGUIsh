@@ -1,21 +1,24 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using Diz.Core.model;
+using Diz.Core.serialization.xml_serializer;
+using Diz.Core.util;
 
 namespace Diz.Core.serialization
 {
     public abstract class ProjectSerializer
     {
-        protected const string DizWatermark = "DiztinGUIsh";
+        public const string DizWatermark = "DiztinGUIsh";
 
         public abstract byte[] Save(Project project);
-        public abstract (Project project, string warning) Load(byte[] data);
+        public abstract (ProjectXmlSerializer.Root xmlRoot, string warning) Load(byte[] rawBytes);
 
         public void SaveToFile(Project project, string filename)
         {
             File.WriteAllBytes(filename, Save(project));
         }
         
-        public (Project project, string warning) LoadFromFile(string filename)
+        public (ProjectXmlSerializer.Root xmlRoot, string warning) LoadFromFile(string filename)
         {
             return Load(File.ReadAllBytes(filename));
         }
@@ -25,20 +28,28 @@ namespace Diz.Core.serialization
         {
             if (deepCut)
             {
-                for (var i = 0; i < project1.Data.RomByteSource?.Bytes.Count; ++i)
+                for (var i = 0; i < project1.Data.RomBytes.Count; ++i)
                 {
-                    // TMP DISABLE // Debug.Assert(project1.Data.RomBytes[i].EqualsButNoRomByte(project2.Data.RomBytes[i]));
+                    Debug.Assert(project1.Data.RomBytes[i].EqualsButNoRomByte(project2.Data.RomBytes[i]));
                 }
 
-                Debug.Assert(
-                    project1.Data.RomByteSource != null && 
-                    project1.Data.RomByteSource.Bytes.Equals(project2.Data.RomByteSource.Bytes)
-                    );
-                
+                Debug.Assert(project1.Data.RomBytes.Equals(project2.Data.RomBytes));
                 Debug.Assert(project1.Data.Equals(project2.Data));
             }
             Debug.Assert(project1.Equals(project2));
         }
         #endif
+
+        private MigrationRunner migrationRunner;
+        
+        // caution: don't cache, these may not be reliable for resetting themselves each time they run.
+        public MigrationRunner MigrationRunner =>
+            migrationRunner ??= new MigrationRunner
+            {
+                Migrations =
+                {
+                    new MigrationBugfix050JapaneseText()
+                }
+            };
     }
 }

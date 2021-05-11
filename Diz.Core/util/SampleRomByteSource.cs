@@ -236,5 +236,9 @@ namespace Diz.Core.util
                 new() {Byte = 0x6D, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100},
             });
         }
+
+        // inefficient
+        public static byte[] CreateJustRawBytes() => 
+            Create().byteSource.GetRawBytesCopy().ToArray();
     }
 }

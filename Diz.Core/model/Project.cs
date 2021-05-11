@@ -5,6 +5,7 @@ using System.Xml.Serialization;
 using Diz.Core.export;
 using Diz.Core.model.snes;
 using Diz.Core.util;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
@@ -41,18 +42,25 @@ namespace Diz.Core.model
             }
         }
 
-        public string ProjectDirectory =>
+        [XmlIgnore] public string ProjectDirectory =>
             Util.GetDirNameOrEmpty(projectFileName);
         
         // RELATIVE PATH from ProjectDirectory to the original ROM file (.smc/.sfc/etc)
         public string AttachedRomFilename
         {
             get => attachedRomFilename;
-            set => this.SetField(PropertyChanged, ref attachedRomFilename, 
-                Util.TryGetRelativePath(value, ProjectDirectory));
+            set
+            {
+                var projectFileRelativePath = Util.TryGetRelativePath(value, ProjectDirectory);
+                
+                if (attachedRomFilename != projectFileRelativePath)
+                    UnsavedChanges = true;
+                
+                this.SetField(PropertyChanged, ref attachedRomFilename, projectFileRelativePath);
+            }
         }
 
-        public string AttachedRomFileFullPath =>
+        [XmlIgnore] public string AttachedRomFileFullPath =>
             Path.Combine(ProjectDirectory, AttachedRomFilename);
 
         // NOT saved in XML
@@ -75,7 +83,7 @@ namespace Diz.Core.model
         //
         // If we load a ROM, and then its checksum and name don't match what we have stored,
         // then we have an issue (i.e. not the same ROM, or it was modified, or missing, etc).
-        // The user must either provide the correct ROM, or abort loading the project.
+        // The user must either provide a ROM matching these criteria, or abort loading the project.
         public string InternalRomGameName
         {
             get => internalRomGameName;
@@ -101,7 +109,7 @@ namespace Diz.Core.model
             get => data;
             set => this.SetField(PropertyChanged, ref data, value);
         }
-        
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public Project()
@@ -110,36 +118,13 @@ namespace Diz.Core.model
         }
 
         // don't access these backing fields directly, instead, always use the properties
-        private string projectFileName;
-        private string attachedRomFilename;
+        private string projectFileName = "";
+        private string attachedRomFilename = "";
         private bool unsavedChanges;
         private string internalRomGameName;
         private uint internalCheckSum;
         private Data data;
         private LogWriterSettings logWriterSettings;
-
-        public string ReadRomIfMatchesProject(string filename, out byte[] romBytes)
-        {
-            string errorMsg = null;
-
-            try {
-                romBytes = RomUtil.ReadRomFileBytes(filename);
-                if (romBytes != null)
-                {
-                    errorMsg = IsThisRomIsIdenticalToUs(romBytes);
-                    if (errorMsg == null)
-                        return null;
-                }
-            } catch (Exception ex) {
-                errorMsg = ex.Message;
-            }
-
-            romBytes = null;
-            return errorMsg;
-        }
-
-        private string IsThisRomIsIdenticalToUs(byte[] romBytes) => 
-            RomUtil.IsThisRomIsIdenticalToUs(romBytes, Data.RomMapMode, InternalRomGameName, InternalCheckSum);
 
         #region Equality
         protected bool Equals(Project other)
