@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// everything here was migrated to AccessTests.cs
+
+using System.Collections.Generic;
 using Diz.Core.model;
 using Diz.Core.util;
 using Diz.Test.Utils;
