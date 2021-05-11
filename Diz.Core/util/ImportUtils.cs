@@ -35,8 +35,9 @@ namespace Diz.Core.util
                 RomFilename = romFilename,
                 RomBytes = rawRomBytes,
                 RomMapMode = RomUtil.DetectRomMapMode(rawRomBytes, out var detectedMapModeSuccess),
-                RomSpeed = RomUtil.GetRomSpeed(ImportSettings.RomSettingsOffset, rawRomBytes)
             };
+
+            ImportSettings.RomSpeed = RomUtil.GetRomSpeed(ImportSettings.RomSettingsOffset, rawRomBytes);
 
             if (detectedMapModeSuccess)
                 DetectedMapMode = ImportSettings.RomMapMode;

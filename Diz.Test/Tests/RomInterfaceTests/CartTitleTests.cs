@@ -1,30 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml;
-using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
-using Diz.Core.model.snes;
-using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
-using Diz.Test.Tests.SerializationTests;
 using Diz.Test.Utils.SuperFamiCheckUtil;
-using ExtendedXmlSerializer;
-using FluentAssertions;
-using FluentAssertions.Formatting;
-using Sprache;
-using Xunit;
-using LoadSaveTest = Diz.Test.Tests.LoadSaveTest;
-using Diz.Test.Utils.SuperFamiCheckUtil;
-using ExtendedXmlSerializer;
 using FluentAssertions;
 using Xunit;
 
-namespace Diz.Test.Tests
+namespace Diz.Test.Tests.RomInterfaceTests
 {
     public static class CartNameTests
     {

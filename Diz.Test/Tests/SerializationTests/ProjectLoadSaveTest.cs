@@ -8,6 +8,7 @@ using Diz.Core.util;
 using FluentAssertions;
 using Diz.Core.util;
 using Diz.Test.Tests;
+using Diz.Test.Tests.RomInterfaceTests;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
