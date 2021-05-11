@@ -61,7 +61,7 @@ namespace Diz.Test.Tests.SerializationTests
         
         public static TheoryData<Func<object>> ThisIsJustGettingRidiculousNow => new()
         {
-            () => SampleRomData.Default().Data
+            () => SampleRomData.CreateSampleData().Data
         };
         
         [Fact]

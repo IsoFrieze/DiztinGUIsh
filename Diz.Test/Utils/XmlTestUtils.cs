@@ -27,9 +27,9 @@ namespace Diz.Test.Utils
         
         public T XmlFullCycle<T>(T objToCycle)
         {
-            var xmlToCycle = XmlSerializationSupportNew.Serialize(objToCycle);
+            var xmlToCycle = XmlSerializationSupport.Serialize(objToCycle);
             Output?.WriteLine(xmlToCycle);
-            var deserialized = XmlSerializationSupportNew.Deserialize<T>(xmlToCycle);
+            var deserialized = XmlSerializationSupport.Deserialize<T>(xmlToCycle);
             return deserialized;
         }
         

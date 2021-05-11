@@ -63,18 +63,42 @@ namespace Diz.Core.util
             offset < romBytes.Count
                 ? (romBytes[offset] & 0x10) != 0 ? RomSpeed.FastRom : RomSpeed.SlowRom
                 : RomSpeed.Unknown;
+        
+        
+        /// <summary>
+        /// Return the "title" information (i.e. the name of the game) from the SNES ROM header
+        /// </summary>
+        /// <param name="allRomBytes">All the bytes in a ROM</param>
+        /// <param name="romSettingOffset">Offset of the start of the SNES header section (title info is before this)</param>
+        /// <returns>UTF8 string of the title, padded with spaces</returns>
+        public static string GetCartridgeTitleFromRom(byte[] allRomBytes, int romSettingOffset) => 
+            GetCartridgeTitleFromBuffer(allRomBytes, GetCartridgeTitleStartingRomOffset(romSettingOffset));
+
+        // input: ROM setting offset (pcOffset, NOT snes address)
+        public static int GetCartridgeTitleStartingRomOffset(int romSettingOffset) => 
+            romSettingOffset - LengthOfTitleName;
+
+        /// <summary>
+        /// Return the "title" information (i.e. the name of the game) from an arbitrary buffer
+        /// </summary>
+        /// <param name="buffer">Array of bytes</param>
+        /// <param name="index">Index into the array to start with</param>
+        /// <returns>UTF8 string of the title, padded with spaces</returns>
+        public static string GetCartridgeTitleFromBuffer(byte[] buffer, int index = 0) => 
+            ByteUtil.ReadShiftJisEncodedString(buffer, index, LengthOfTitleName);
+
 
         // verify the data in the provided ROM bytes matches the data we expect it to have.
         // returns error message if it's not identical, or null if everything is OK.
         public static string IsThisRomIsIdenticalToUs(byte[] rom,
-            RomMapMode mode, string requiredGameNameMatch, int requiredRomChecksumMatch)
+            RomMapMode mode, string requiredGameNameMatch, uint requiredRomChecksumMatch)
         {
             var romSettingsOffset = GetRomSettingOffset(mode);
             if (rom.Length <= romSettingsOffset + 10)
                 return "The linked ROM is too small. It can't be opened.";
 
-            var internalGameNameToVerify = GetRomTitleName(rom, romSettingsOffset);
-            var checksumToVerify = ByteUtil.ByteArrayToInt32(rom, romSettingsOffset + 7);
+            var internalGameNameToVerify = GetCartridgeTitleFromRom(rom, romSettingsOffset);
+            var checksumToVerify = ByteUtil.ConvertByteArrayToInt32(rom, romSettingsOffset + 7);
 
             if (internalGameNameToVerify != requiredGameNameMatch)
                 return $"The linked ROM's internal name '{internalGameNameToVerify}' doesn't " +
@@ -85,13 +109,6 @@ namespace Diz.Core.util
                        $"don't match the project's checksums of '{requiredRomChecksumMatch:X8}'.";
 
             return null;
-        }
-
-        public static string GetRomTitleName(byte[] rom, int romSettingOffset)
-        {
-            var offsetOfGameTitle = romSettingOffset - LengthOfTitleName;
-            var internalGameNameToVerify = ReadStringFromByteArray(rom, LengthOfTitleName, offsetOfGameTitle);
-            return internalGameNameToVerify;
         }
 
         public static int ConvertSnesToPc(int address, RomMapMode mode, int size)
@@ -347,7 +364,7 @@ namespace Diz.Core.util
             return myName;
         }
 
-        public static byte[] ReadAllRomBytesFromFile(string filename)
+        public static byte[] ReadRomFileBytes(string filename)
         {
             var smc = File.ReadAllBytes(filename);
             var rom = new byte[smc.Length & 0x7FFFFC00];
@@ -440,7 +457,7 @@ namespace Diz.Core.util
 
         public static LogCreatorOutput.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
         {
-            var sampleRomData = SampleRomData.Default();
+            var sampleRomData = SampleRomData.CreateSampleData();
 
             sampleSettings.Structure = LogWriterSettings.FormatStructure.SingleFile;
             sampleSettings.FileOrFolderOutPath = "";

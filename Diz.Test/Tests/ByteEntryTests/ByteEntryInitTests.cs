@@ -239,7 +239,7 @@ namespace Diz.Test.Tests.ByteEntryTests
         [Fact]
         public static void TestGetAddressMode()
         {
-            var sampleData = SampleRomData.Default();
+            var sampleData = SampleRomData.CreateSampleData();
             const int romOffset1 = 0xEB;
             var mode1 = Cpu65C816.GetAddressMode(sampleData.Data, romOffset1);
             Assert.Equal(Cpu65C816.AddressMode.Constant8, mode1);

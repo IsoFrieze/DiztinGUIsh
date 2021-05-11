@@ -158,11 +158,8 @@ namespace Diz.Core.serialization
             foreach (var (offset, flagType) in importSettings.InitialHeaderFlags)
                 project.Data.SetFlag(offset, flagType);
 
-            // Save a copy of these identifying ROM bytes with the project file itself.
-            // When we reload, we will make sure the linked ROM still matches them.
-            project.InternalCheckSum = project.Data.GetRomCheckSumsFromRomBytes();
-            project.InternalRomGameName = project.Data.GetRomNameFromRomBytes();
-
+            project.CacheVerificationInfo();
+            
             project.UnsavedChanges = true;
 
             return project;

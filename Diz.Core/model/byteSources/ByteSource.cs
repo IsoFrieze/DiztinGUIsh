@@ -38,11 +38,6 @@ namespace Diz.Core.model.byteSources
             return ByteGraphUtil.BuildFlatDataFrom(this, index);
         }
 
-        public void AddByte(ByteEntry byteOffset)
-        {
-            Bytes.Add(byteOffset);
-        }
-
         public bool IsValidIndex(int index)
         {
             return index >= 0 && index < Bytes?.Count;
@@ -183,7 +178,16 @@ namespace Diz.Core.model.byteSources
             
             return endingIndex;
         }
+        
+        public void SetBytesFrom(IReadOnlyList<byte> copyFrom, int dstStartingOffset = 0)
+        {
+            for (var i = 0; i < copyFrom.Count; ++i)
+                Bytes[i + dstStartingOffset].Byte = copyFrom[i];
+        }
 
+        public int GetAnnotationCountInAllChildren<T>() where T : Annotation => 
+            GetEveryAnnotationEnumerator<T>().Select(t => t.Value).Count();
+        
         #region Equality
 
         protected bool Equals(ByteSource other)

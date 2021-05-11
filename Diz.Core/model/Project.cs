@@ -82,7 +82,7 @@ namespace Diz.Core.model
             set => this.SetField(PropertyChanged, ref internalRomGameName, value);
         }
 
-        public int InternalCheckSum
+        public uint InternalCheckSum
         {
             get => internalCheckSum;
             set => this.SetField(PropertyChanged, ref internalCheckSum, value);
@@ -114,7 +114,7 @@ namespace Diz.Core.model
         private string attachedRomFilename;
         private bool unsavedChanges;
         private string internalRomGameName;
-        private int internalCheckSum = -1;
+        private uint internalCheckSum;
         private Data data;
         private LogWriterSettings logWriterSettings;
 
@@ -123,7 +123,7 @@ namespace Diz.Core.model
             string errorMsg = null;
 
             try {
-                romBytes = RomUtil.ReadAllRomBytesFromFile(filename);
+                romBytes = RomUtil.ReadRomFileBytes(filename);
                 if (romBytes != null)
                 {
                     errorMsg = IsThisRomIsIdenticalToUs(romBytes);
@@ -163,10 +163,20 @@ namespace Diz.Core.model
                 hashCode = (hashCode * 397) ^ (AttachedRomFilename != null ? AttachedRomFilename.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (InternalRomGameName != null ? InternalRomGameName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ InternalCheckSum;
+                hashCode = (int) ((hashCode * 397) ^ InternalCheckSum);
                 return hashCode;
             }
         }
         #endregion
+
+        public void CacheVerificationInfo()
+        {
+            // Save a copy of these identifying ROM bytes with the project file itself, so they'll
+            // be serialized to disk on project save. When we reload, we verify the recreated ROM data still matches both
+            // of these. If either are wrong, then the ROM on disk could be different from the one associated with the 
+            // project.
+            InternalCheckSum = Data.RomCheckSumsFromRomBytes;
+            InternalRomGameName = Data.CartridgeTitleName;
+        }
     }
 }

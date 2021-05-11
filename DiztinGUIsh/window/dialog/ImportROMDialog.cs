@@ -177,7 +177,7 @@ namespace DiztinGUIsh.window.dialog
                 }
             }
             var romSpeedStr = Util.GetEnumDescription(ImportSettings.RomSpeed);
-            var romTitleName = RomUtil.GetRomTitleName(ImportSettings.RomBytes, Controller.RomSettingsOffset);
+            var romTitleName = RomUtil.GetCartridgeTitleFromRom(ImportSettings.RomBytes, Controller.RomSettingsOffset);
 
             romspeed.Text = romSpeedStr;
             romtitle.Text = romTitleName;

@@ -48,10 +48,7 @@ namespace Diz.Core.serialization.xml_serializer
                 Project = project,
             };
 
-            var xmlStr = XmlSerializerSupport.GetSerializer().Create().Serialize(
-                new XmlWriterSettings {Indent = true},
-                rootElement);
-
+            var xmlStr = XmlSerializationSupport.Serialize(rootElement);
             var finalBytes = Encoding.UTF8.GetBytes(xmlStr);
 
             // if you want some sanity checking, run this to verify everything saved correctly
@@ -84,7 +81,7 @@ namespace Diz.Core.serialization.xml_serializer
             // Also, we can do data migrations based on versioning, and ExtendedXmlSerializer
 
             var text = Encoding.UTF8.GetString(data);
-            var root = XmlSerializerSupport.GetSerializer().Create().Deserialize<Root>(text);
+            var root = XmlSerializationSupport.Deserialize<Root>(text);
 
             if (root.Watermark != DizWatermark)
                 throw new InvalidDataException(

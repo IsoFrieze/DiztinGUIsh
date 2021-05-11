@@ -51,11 +51,9 @@ namespace Diz.Test.Tests.SerializationTests
             #endregion
         }
 
-        private static IConfigurationContainer GetSerializer()
-        {
-            return XmlSerializerSupport.GetSerializer()
+        private static IConfigurationContainer GetSerializer() =>
+            XmlSerializationSupport.GetConfig()
                 .EnableImplicitTyping(typeof(TestRoot));
-        }
 
         private static TestRoot GetSerializeData()
         {
@@ -79,14 +77,13 @@ namespace Diz.Test.Tests.SerializationTests
         private void Serializer(string expectedXml)
         {
             var expectedCleanedXml = SortaCleanupXml(expectedXml);
-            
-            var serializer = GetSerializer().Create();
             var toSerialize = GetSerializeData();
 
-            var xmlStr = serializer.Serialize(
-                new XmlWriterSettings(),
-                toSerialize);
-
+            var config = GetSerializer().Create();
+            // var config = XmlSerializationSupport.GetConfig().Create();
+            var serializedXmlRaw = config.Serialize(new XmlWriterSettings(), toSerialize);
+            
+            var xmlStr = SortaCleanupXml(serializedXmlRaw);
             testOutputHelper.WriteLine(xmlStr);
 
             Assert.Equal(expectedCleanedXml, xmlStr);
@@ -104,9 +101,10 @@ namespace Diz.Test.Tests.SerializationTests
             var inputCleanedXml = SortaCleanupXml(inputXml);
 
             var expectedObj = GetSerializeData();
-
-            var serializer = GetSerializer().Create();
-            var actuallyDeserialized = serializer.Deserialize<TestRoot>(inputCleanedXml);
+ 
+            var config = GetSerializer().Create();
+            var actuallyDeserialized = config.Deserialize<TestRoot>(inputCleanedXml);
+            // var actuallyDeserialized = XmlSerializationSupport.Deserialize<TestRoot>(inputCleanedXml);
 
             Assert.Equal(expectedObj, actuallyDeserialized);
         }

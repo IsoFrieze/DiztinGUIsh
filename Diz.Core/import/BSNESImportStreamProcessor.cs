@@ -144,8 +144,8 @@ namespace Diz.Core.import
             if (item.Header[0] != 'Z')
                 throw new InvalidDataException($"expected header byte of 'Z', got {item.Header[0]} instead.");
 
-            item.UncompressedSize = ByteUtil.ByteArrayToInt32(item.Header, 1);
-            item.CompressedSize = ByteUtil.ByteArrayToInt32(item.Header, 5);
+            item.UncompressedSize = ByteUtil.ConvertByteArrayToInt32(item.Header, 1);
+            item.CompressedSize = ByteUtil.ConvertByteArrayToInt32(item.Header, 5);
 
             // allocation pool.  if we need to allocate for compressed data, let's go slightly higher so that
             // we have a chance of re-using this buffer without needing to re-allocate.

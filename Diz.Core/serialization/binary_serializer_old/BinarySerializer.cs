@@ -63,7 +63,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             // read mode, speed, size
             var mode = (RomMapMode)data[HeaderSize];
             var speed = (RomSpeed)data[HeaderSize + 1];
-            var size = ByteUtil.ByteArrayToInt32(data, HeaderSize + 2);
+            var size = ByteUtil.ConvertByteArrayToInt32(data, HeaderSize + 2);
 
             // read internal title
             var pointer = HeaderSize + 6;
@@ -71,7 +71,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             pointer += RomUtil.LengthOfTitleName;
 
             // read checksums
-            project.InternalCheckSum = ByteUtil.ByteArrayToInt32(data, pointer);
+            project.InternalCheckSum = ByteUtil.ConvertByteArrayToUInt32(data, pointer);
             pointer += 4;
 
             // read full filepath to the ROM .sfc file

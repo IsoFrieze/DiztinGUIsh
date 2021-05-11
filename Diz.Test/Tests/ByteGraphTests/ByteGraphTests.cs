@@ -89,7 +89,7 @@ namespace Diz.Test.Tests.ByteGraphTests
         {
             // Get a byte from the sample data that is a real (i.e. non-padded) byte
             
-            var sampleData = SampleRomData.Default();
+            var sampleData = SampleRomData.CreateSampleData();
             const int romOffset = 0x0A;
             const int snesAddress = 0x808000 + romOffset;
             
@@ -107,7 +107,7 @@ namespace Diz.Test.Tests.ByteGraphTests
             // until we reach 32k bytes). This test is mostly testing that we built the sample data correctly, in real
             // world scenarios, this would never fail because we're not doing padding.
             
-            var sampleData = SampleRomData.Default();
+            var sampleData = SampleRomData.CreateSampleData();
             const int romOffset = 0xEB;
             const int snesAddress = 0x808000 + romOffset;
 

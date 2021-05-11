@@ -130,7 +130,7 @@ namespace Diz.Test.Tests.RomInterfaceTests
         [Fact]
         public static void TestWhenNoIaPresent()
         {
-            var sampleData = SampleRomData.Default();
+            var sampleData = SampleRomData.CreateSampleData();
             const int offset = 0x1C1F;
             var result = sampleData.Data.GetIntermediateAddressOrPointer(offset);
             Assert.Equal(result, -1);

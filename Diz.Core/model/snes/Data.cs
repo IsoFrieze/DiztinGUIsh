@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,10 +21,7 @@ namespace Diz.Core.model.snes
     {
         // the parent of all our data, the SNES address space
         public ByteSource SnesAddressSpace { get; }
-        
-        // TODO: gotta carefully think about the serialization here. we need to not output bytes from the ROM itself.
-        // everything else is fine.
-        
+
         #region Helper Access (Don't serialize)
         
         [XmlIgnore] public ILabelProvider Labels { get; protected init; }
@@ -59,31 +57,54 @@ namespace Diz.Core.model.snes
         {
             SnesAddressSpace = snesAddressSpace;
         }
-        
-        private byte[] GetRomBytes(int snesOffset, int count)
+
+        private byte[] GetRomBytes(int pcOffset, int count)
         {
             var output = new byte[count];
             for (var i = 0; i < output.Length; i++)
-            {
-                var snesAddress = snesOffset + i;
-                output[i] = GetSnesByte(snesAddress) 
-                            ?? throw new InvalidDataException($"No data at SNES offset {snesAddress:X}");
-            }
+                output[i] = (byte)GetRomByte(pcOffset + i);
 
             return output;
         }
 
-        // TODO: offset isn't snes it's rom? how is this still able to work? figure it out and fix variable naming
-        public string GetRomNameFromRomBytes() => GetFixedLengthStr(0xFFC0, 21);
+        public int RomSettingsOffset => RomUtil.GetRomSettingOffset(RomMapMode);
+        public int RomComplementOffset => RomSettingsOffset + 0x07; // 2 bytes - complement
+        public int RomChecksumOffset => RomComplementOffset + 2; // 2 bytes - checksum
+        
+        public int CartridgeTitleStartingOffset => 
+            RomUtil.GetCartridgeTitleStartingRomOffset(RomSettingsOffset);
 
-        private string GetFixedLengthStr(int snesOffset, int count)
+        public string CartridgeTitleName =>
+            RomUtil.GetCartridgeTitleFromBuffer(
+                GetRomBytes(CartridgeTitleStartingOffset, RomUtil.LengthOfTitleName)
+            );
+
+        public uint RomComplement => (uint) GetRomWord(RomComplementOffset);
+        public uint RomChecksum => (uint) GetRomWord(RomChecksumOffset);
+        public uint RomCheckSumsFromRomBytes => (RomChecksum << 16) | RomComplement;
+        
+        // recalculates the checksum and then modifies the internal bytes in the ROM so it contains
+        // the valid checksum in the ROM header.
+        //
+        // NOTE: this new checksum is [currently] never saved with the project file / serialized (since we don't
+        // store the potentially copyrighted ROM bytes in the project file). it should just be used for
+        // testing/verification purposes. (that is why this is protected, it's not part of the normal API)
+        public void FixChecksum()
         {
-            return Encoding.UTF8.GetString(GetRomBytes(snesOffset, count));
+            var rawRomBytesCopy = CreateListRawRomBytes();
+            ChecksumUtil.UpdateRomChecksum(rawRomBytesCopy, RomMapMode, GetRomSize());
+            RomByteSource.SetBytesFrom(rawRomBytesCopy);
         }
 
-        // TODO: offset isn't snes it's rom? how is this still able to work? figure it out and fix variable naming
-        // TODO: replace with GetRomDoubleWord()
-        public int GetRomCheckSumsFromRomBytes() => ByteUtil.ByteArrayToInt32(GetRomBytes(0xFFDC, 4));
+        // expensive and inefficient
+        protected List<byte> CreateListRawRomBytes() =>
+            RomByteSource.Bytes.Select(entry => entry?.Byte ?? 0).ToList();
+        
+        // looks at the actual bytes present in the ROM and calculates their checksum
+        // this is unrelated to any stored/cached checksums in the Project file. 
+        public ushort ComputeChecksum() => (ushort) ChecksumUtil.ComputeChecksumFromRom(CreateListRawRomBytes());
+        public bool ComputeIsChecksumValid() =>
+            ChecksumUtil.IsRomChecksumValid(CreateListRawRomBytes(), RomMapMode, GetRomSize());
 
         public int GetRomSize() => RomByteSource?.Bytes?.Count ?? 0;
         
@@ -467,5 +488,13 @@ namespace Diz.Core.model.snes
 
         public int AutoStep(int offset, bool harsh, int count) => 
             CpuAt(offset).AutoStep(this, offset, harsh, count);
+        
+        // TODO: this needs to go. used for tests to load in fake byte data
+        // instead of reading from disk. we need to change this to just intercept somewhere
+        // in the loading pipeline instead of here.
+        public virtual byte[]? GetOverriddenRomBytes()
+        {
+            return null; // NOP
+        }
     }
 }

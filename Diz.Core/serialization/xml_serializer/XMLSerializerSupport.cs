@@ -8,31 +8,8 @@ using JetBrains.Annotations;
 
 namespace Diz.Core.serialization.xml_serializer
 {
-    public static class XmlSerializerSupport
-    {
-        public static IConfigurationContainer GetSerializer()
-        {
-            // This configuration changes how parts of the data structures are serialized back/forth to XML.
-            // This is using the ExtendedXmlSerializer library, which has a zillion config options and is 
-            // awesome.
-            //
-            // TODO: would be cool if these were stored as attributes on the classes themselves
-            return new ConfigurationContainer()
-
-                .Type<Project>()
-                // .WithMonitor(new Monitor())
-
-                // TODO: we will need this. it's not quite on ByteSource. and just for reading. and just during migration
-                //.Type<ByteSource>()
-                //.Register().Serializer().Using(RomBytesSerializer.Default)
-
-                .UseOptimizedNamespaces()
-                .UseAutoFormatting();
-        }
-    }
-    
     // WIP
-    public class XmlSerializationSupportNew
+    public class XmlSerializationSupport
     {
         private sealed class ByteEntryProfile : IConfigurationProfile
         {
@@ -43,6 +20,8 @@ namespace Diz.Core.serialization.xml_serializer
             // use some really short names and don't output defaults, these are going to be output a LOT in the XML file
             public IConfigurationContainer Get(IConfigurationContainer parameter)
                 => parameter
+                    .Type<Project>()
+
                     .Type<ByteEntry>()
                     .Name("B")
                     .Member(x=>x.Annotations)

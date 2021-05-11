@@ -41,7 +41,7 @@ namespace DiztinGUIsh.window.dialog
 
         public void CreateSettingsFromRom(string filename)
         {
-            var romBytes = RomUtil.ReadAllRomBytesFromFile(filename);
+            var romBytes = RomUtil.ReadRomFileBytes(filename);
             ImportSettings = new ImportRomSettings
             {
                 RomFilename = filename,
