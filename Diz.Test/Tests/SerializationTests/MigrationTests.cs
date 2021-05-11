@@ -36,7 +36,7 @@ namespace Diz.Test
                 .Should().Throw<InvalidDataException>().WithMessage("*starting migration version is greater than target version*");
 
         #region HarnessData
-        public static TheoryData<Harness> Harnesses => new TheoryData<Harness>
+        public static TheoryData<Harness> Harnesses => new()
         {
             new Harness
             {
