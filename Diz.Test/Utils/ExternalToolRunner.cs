@@ -1,7 +1,7 @@
 ﻿using System;
 using Diz.Core.util;
 
-namespace Diz.Test.Utils.SuperFamiCheckUtil
+namespace Diz.Test.Utils
 {
     public class ExternalToolRunner
     {

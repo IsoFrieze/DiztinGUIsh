@@ -1,13 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Diz.Core.model;
-using Diz.Core.util;
 using IX.Observable;
 
-namespace Diz.Core
+namespace Diz.Core.util
 {
     public class SampleRomData : Data
     {

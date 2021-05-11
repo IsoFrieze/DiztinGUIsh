@@ -132,12 +132,12 @@ namespace DiztinGUIsh.window
         {
             var destination = markProperty switch
             {
-                0 => Project.Data.MarkTypeFlag(markStart, (Data.FlagType) markValue, markCount),
+                0 => Project.Data.MarkTypeFlag(markStart, (FlagType) markValue, markCount),
                 1 => Project.Data.MarkDataBank(markStart, (int) markValue, markCount),
                 2 => Project.Data.MarkDirectPage(markStart, (int) markValue, markCount),
                 3 => Project.Data.MarkMFlag(markStart, (bool) markValue, markCount),
                 4 => Project.Data.MarkXFlag(markStart, (bool) markValue, markCount),
-                5 => Project.Data.MarkArchitecture(markStart, (Data.Architecture) markValue, markCount),
+                5 => Project.Data.MarkArchitecture(markStart, (Architecture) markValue, markCount),
                 _ => 0
             };
 
@@ -215,7 +215,7 @@ namespace DiztinGUIsh.window
             AliasList.Show();
         }
 
-        private void SetMarkerLabel(Data.FlagType flagType)
+        private void SetMarkerLabel(FlagType flagType)
         {
             markFlag = flagType;
             UpdateMarkerLabel();

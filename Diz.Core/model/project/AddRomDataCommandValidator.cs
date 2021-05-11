@@ -1,4 +1,5 @@
 ﻿#nullable enable
+
 using System;
 using Diz.Core.util;
 using FluentValidation;

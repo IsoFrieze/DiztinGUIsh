@@ -24,7 +24,7 @@ namespace Diz.Core.serialization
 
         // todo: add INotify stuff if we care. probably dont need to.
         public Dictionary<int, Label> InitialLabels { get; set; }
-        public Dictionary<int, Data.FlagType> InitialHeaderFlags { get; set; }
+        public Dictionary<int, FlagType> InitialHeaderFlags { get; set; }
 
         public byte[] RomBytes
         {

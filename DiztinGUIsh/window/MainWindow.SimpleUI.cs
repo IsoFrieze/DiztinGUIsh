@@ -65,41 +65,41 @@ namespace DiztinGUIsh.window
         private void addCommentToolStripMenuItem_Click(object sender, EventArgs e) => BeginEditingComment();
 
         private void unreachedToolStripMenuItem_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Unreached);
+            SetMarkerLabel(FlagType.Unreached);
 
-        private void opcodeToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(Data.FlagType.Opcode);
+        private void opcodeToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Opcode);
 
         private void operandToolStripMenuItem_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Operand);
+            SetMarkerLabel(FlagType.Operand);
 
         private void bitDataToolStripMenuItem_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Data8Bit);
+            SetMarkerLabel(FlagType.Data8Bit);
 
         private void graphicsToolStripMenuItem_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Graphics);
+            SetMarkerLabel(FlagType.Graphics);
 
-        private void musicToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(Data.FlagType.Music);
-        private void emptyToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(Data.FlagType.Empty);
+        private void musicToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Music);
+        private void emptyToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Empty);
 
         private void bitDataToolStripMenuItem1_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Data16Bit);
+            SetMarkerLabel(FlagType.Data16Bit);
 
         private void wordPointerToolStripMenuItem_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Pointer16Bit);
+            SetMarkerLabel(FlagType.Pointer16Bit);
 
         private void bitDataToolStripMenuItem2_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Data24Bit);
+            SetMarkerLabel(FlagType.Data24Bit);
 
         private void longPointerToolStripMenuItem_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Pointer24Bit);
+            SetMarkerLabel(FlagType.Pointer24Bit);
 
         private void bitDataToolStripMenuItem3_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Data32Bit);
+            SetMarkerLabel(FlagType.Data32Bit);
 
         private void dWordPointerToolStripMenuItem_Click(object sender, EventArgs e) =>
-            SetMarkerLabel(Data.FlagType.Pointer32Bit);
+            SetMarkerLabel(FlagType.Pointer32Bit);
 
-        private void textToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(Data.FlagType.Text);
+        private void textToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Text);
 
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e) =>
             FixMisalignedInstructions();

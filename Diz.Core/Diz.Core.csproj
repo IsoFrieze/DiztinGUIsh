@@ -1,196 +1,34 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{50646B00-03D8-4CEC-9ED1-3EF4CB199E8B}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>false</UseWindowsForms>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>Diz.Core</RootNamespace>
     <AssemblyName>Diz.Core</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ExtendedXmlSerializer, Version=3.4.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ExtendedXmlSerializer.3.4.1\lib\net452\ExtendedXmlSerializer.dll</HintPath>
-    </Reference>
-    <Reference Include="FastBitmapLib, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\FastBitmapLib.2.0.0\lib\net452\FastBitmapLib.dll</HintPath>
-    </Reference>
-    <Reference Include="FluentValidation, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0">
-      <HintPath>..\packages\FluentValidation.10.1.0\lib\netstandard2.0\FluentValidation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=1.3.0.8, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpZipLib.1.3.0\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.Abstractions, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Abstractions.0.5.3\lib\net472\IX.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.Abstractions.Collections, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Abstractions.Collections.0.5.3\lib\net472\IX.Abstractions.Collections.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.Abstractions.Threading, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Abstractions.Threading.0.5.3\lib\net472\IX.Abstractions.Threading.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.Observable, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Observable.0.5.3\lib\net472\IX.Observable.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.StandardExtensions, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.StandardExtensions.0.5.3\lib\net472\IX.StandardExtensions.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.StandardExtensions.ComponentModel, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.StandardExtensions.ComponentModel.0.5.3\lib\net472\IX.StandardExtensions.ComponentModel.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.StandardExtensions.Threading, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.StandardExtensions.Threading.0.5.3\lib\net472\IX.StandardExtensions.Threading.dll</HintPath>
-    </Reference>
-    <Reference Include="IX.Undoable, Version=0.5.3.0, Culture=neutral, PublicKeyToken=029c2b9bf120ba32, processorArchitecture=MSIL">
-      <HintPath>..\packages\IX.Undoable.0.5.3\lib\net472\IX.Undoable.dll</HintPath>
-    </Reference>
-    <Reference Include="JetBrains.Annotations, Version=2020.1.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
-      <HintPath>..\packages\JetBrains.Annotations.2020.1.0\lib\net20\JetBrains.Annotations.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="LightInject, Version=6.4.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\LightInject.6.4.0\lib\net46\LightInject.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.ConcurrencyVisualizer.Markers">
-      <HintPath>c:\program files (x86)\microsoft visual studio\2019\community\common7\ide\extensions\jcn3iwfw.vp2\SDK\Managed\4.0\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.ObjectPool, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
-      <HintPath>..\packages\Microsoft.Extensions.ObjectPool.5.0.0\lib\net461\Microsoft.Extensions.ObjectPool.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NReco.LambdaParser, Version=1.0.11.0, Culture=neutral, PublicKeyToken=50b5ad72a1d364c6, processorArchitecture=MSIL">
-      <HintPath>..\packages\NReco.LambdaParser.1.0.12\lib\net45\NReco.LambdaParser.dll</HintPath>
-    </Reference>
-    <Reference Include="Sprache, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Sprache.2.3.1\lib\net45\Sprache.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Interactive, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Interactive.4.1.1\lib\net45\System.Interactive.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO" />
-    <Reference Include="System.Linq.Expressions" />
-    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Threading.Tasks" />
-    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-    <Reference Include="xunit.abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
-      <HintPath>..\packages\xunit.abstractions.2.0.3\lib\net35\xunit.abstractions.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="xunit.core, Version=2.4.1.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
-      <HintPath>..\packages\xunit.extensibility.core.2.4.1\lib\net452\xunit.core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="arch\CPU65C816.cs" />
-    <Compile Include="export\LogCreator.ErrorChecking.cs" />
-    <Compile Include="export\LogCreator.Setup.cs" />
-    <Compile Include="export\LogOutput.cs" />
-    <Compile Include="export\LogWriterSettings.cs" />
-    <Compile Include="import\BSNESImportStreamProcessor.cs" />
-    <Compile Include="import\BSNESTraceLogCapture.cs" />
-    <Compile Include="import\BsnesTraceLogImporter.Caching.cs" />
-    <Compile Include="import\BSNESTraceLogImporter.cs" />
-    <Compile Include="import\BsnesTraceLogImporter.ModificationsList.cs" />
-    <Compile Include="import\BsnesTraceLogImporter.Parsers.cs" />
-    <Compile Include="import\BsnesTraceLogImporter.Stats.cs" />
-    <Compile Include="import\BsnesTraceLogImporter.Util.cs" />
-    <Compile Include="model\Data.Constants.cs" />
-    <Compile Include="model\Data.Properties.cs" />
-    <Compile Include="model\project\AddRomDataCommandValidator.cs" />
-    <Compile Include="model\project\LinkedRomBytesFileSearchProvider.cs" />
-    <Compile Include="model\project\ProjectRomBytesInit.cs" />
-    <Compile Include="serialization\xml_serializer\MigrationBugfix050JapaneseText.cs" />
-    <Compile Include="serialization\xml_serializer\MigrationRunner.cs" />
-    <Compile Include="serialization\xml_serializer\PostSerializeMigrations.cs" />
-    <Compile Include="serialization\xml_serializer\RepeaterCompression.cs" />
-    <Compile Include="serialization\xml_serializer\RomByteEncoding.cs" />
-    <Compile Include="serialization\xml_serializer\SubstitutionCompression.cs" />
-    <Compile Include="util\ChecksumUtil.cs" />
-    <Compile Include="util\Fake64Encoding.cs" />
-    <Compile Include="util\ImportUtils.cs" />
-    <Compile Include="util\RomVisual.cs" />
-    <Compile Include="util\WorkerTaskManager.cs" />
-    <Compile Include="model\Data.cs" />
-    <Compile Include="import\BizHawkCdlImporter.cs" />
-    <Compile Include="import\BSNESUsageMapImporter.cs" />
-    <Compile Include="SampleRomData.cs" />
-    <Compile Include="model\Label.cs" />
-    <Compile Include="export\LogCreator.cs" />
-    <Compile Include="model\Project.cs" />
-    <Compile Include="model\RomBytes.cs" />
-    <Compile Include="util\ByteUtil.cs" />
-    <Compile Include="util\RomUtil.cs" />
-    <Compile Include="util\Util.cs" />
-    <Compile Include="serialization\binary_serializer_old\BinarySerializer.cs" />
-    <Compile Include="serialization\ImportSettings.cs" />
-    <Compile Include="serialization\ProjectFileManager.cs" />
-    <Compile Include="serialization\ProjectSerializer.cs" />
-    <Compile Include="serialization\xml_serializer\ProjectXMLSerializer.cs" />
-    <Compile Include="serialization\xml_serializer\RomBytesXMLSerializer.cs" />
-    <Compile Include="serialization\xml_serializer\XMLSerializerSupport.cs" />
-    <Compile Include="model\Model.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="model\ROMByte.cs" />
+    <PackageReference Include="ExtendedXmlSerializer">
+      <Version>3.7.0</Version>
+    </PackageReference>
+    <PackageReference Include="IX.Observable">
+      <Version>0.7.3</Version>
+    </PackageReference>
+    <PackageReference Include="JetBrains.Annotations">
+      <Version>2021.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="JetBrains.Profiler.SelfApi" Version="2.1.1" />
+    <PackageReference Include="SharpZipLib">
+      <Version>1.3.2</Version>
+    </PackageReference>
+    <PackageReference Include="System.Diagnostics.Tracing">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="FluentValidation">
+      <Version>10.1.0</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

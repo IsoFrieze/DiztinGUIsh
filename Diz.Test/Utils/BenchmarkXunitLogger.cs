@@ -6,7 +6,7 @@ namespace Diz.Test.Utils
 {
     public static class XunitBenchmark
     {
-        public static void Run<T>(ITestOutputHelper xUnitOutput, bool debugOK=false)
+        public static void Run<T>(ITestOutputHelper xUnitOutput, bool debugOk=false)
         {
             var logger = new XOutLogger(xUnitOutput);
             var config = ManualConfig.Create(DefaultConfig.Instance);
@@ -14,7 +14,7 @@ namespace Diz.Test.Utils
 
             // don't use this for capturing performance info. just for debugging harnesses.
             // always run benchmarks in release mode.
-            if (debugOK)
+            if (debugOk)
                 config.Options &= ConfigOptions.DisableOptimizationsValidator;
 
             BenchmarkRunner.Run<T>(config);

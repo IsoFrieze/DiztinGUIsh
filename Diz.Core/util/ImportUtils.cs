@@ -43,7 +43,7 @@ namespace Diz.Core.util
 
             ImportSettings.InitialHeaderFlags =
                 !ShouldCheckHeader
-                    ? new Dictionary<int, Data.FlagType>()
+                    ? new Dictionary<int, FlagType>()
                     : RomUtil.GenerateHeaderFlags(ImportSettings.RomSettingsOffset, ImportSettings.RomBytes);
 
             return ImportSettings;

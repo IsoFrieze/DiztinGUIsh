@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Diz.Core.model;
 using Diz.Core.util;
 using IX.Observable;
@@ -197,16 +198,18 @@ namespace Diz.Core.export
                     var colon = split[i].IndexOf(':');
 
                     Tuple<string, int> tuple;
-
                     if (colon < 0)
                     {
                         var s1 = split[i];
-                        var s2 = Parameters[s1].Item2;
-                        tuple = Tuple.Create(s1, s2);
+                        var succeeded = Parameters.TryGetValue(s1, out var x);
+                        Debug.Assert(succeeded);
+                        var s2 = x.Item2;
+                        
+                        tuple = new Tuple<string, int>(s1, s2);
                     }
                     else
                     {
-                        tuple = Tuple.Create(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1)));
+                        tuple = new Tuple<string, int>(split[i].Substring(0, colon), int.Parse(split[i].Substring(colon + 1)));
                     }
 
                     ParseList.Add(tuple);
@@ -232,13 +235,13 @@ namespace Diz.Core.export
 
         private void WriteBlankLineIfEndPoint(int pointer)
         {
-            if ((Data.GetInOutPoint(pointer) & Data.InOutPoint.EndPoint) != 0)
+            if ((Data.GetInOutPoint(pointer) & InOutPoint.EndPoint) != 0)
                 Output.WriteLine(GetLine(pointer, "empty"));
         }
 
         private void WriteBlankLineIfStartingNewParagraph(int pointer)
         {
-            var isLocationAReadPoint = (Data.GetInOutPoint(pointer) & Data.InOutPoint.ReadPoint) != 0;
+            var isLocationAReadPoint = (Data.GetInOutPoint(pointer) & InOutPoint.ReadPoint) != 0;
             var anyLabelsPresent = Data.Labels.TryGetValue(pointer, out var label) && label.Name.Length > 0;
 
             if (isLocationAReadPoint || anyLabelsPresent)
@@ -373,11 +376,11 @@ namespace Diz.Core.export
             ErrorIfBranchToNonInstruction(offset);
         }
 
-        private Data.FlagType GetFlagButSwapOpcodeForOperand(int offset)
+        private FlagType GetFlagButSwapOpcodeForOperand(int offset)
         {
             var flag = Data.GetFlag(offset);
-            if (flag == Data.FlagType.Opcode)
-                return Data.FlagType.Operand;
+            if (flag == FlagType.Opcode)
+                return FlagType.Operand;
 
             return flag;
         }
@@ -389,40 +392,40 @@ namespace Diz.Core.export
 
             switch (Data.GetFlag(offset))
             {
-                case Data.FlagType.Opcode:
+                case FlagType.Opcode:
                     return Data.OpcodeByteLength(offset);
-                case Data.FlagType.Unreached:
-                case Data.FlagType.Operand:
-                case Data.FlagType.Data8Bit:
-                case Data.FlagType.Graphics:
-                case Data.FlagType.Music:
-                case Data.FlagType.Empty:
+                case FlagType.Unreached:
+                case FlagType.Operand:
+                case FlagType.Data8Bit:
+                case FlagType.Graphics:
+                case FlagType.Music:
+                case FlagType.Empty:
                     max = Settings.DataPerLine;
                     break;
-                case Data.FlagType.Text:
+                case FlagType.Text:
                     max = 21;
                     break;
-                case Data.FlagType.Data16Bit:
+                case FlagType.Data16Bit:
                     step = 2;
                     max = Settings.DataPerLine;
                     break;
-                case Data.FlagType.Data24Bit:
+                case FlagType.Data24Bit:
                     step = 3;
                     max = Settings.DataPerLine;
                     break;
-                case Data.FlagType.Data32Bit:
+                case FlagType.Data32Bit:
                     step = 4;
                     max = Settings.DataPerLine;
                     break;
-                case Data.FlagType.Pointer16Bit:
+                case FlagType.Pointer16Bit:
                     step = 2;
                     max = 2;
                     break;
-                case Data.FlagType.Pointer24Bit:
+                case FlagType.Pointer24Bit:
                     step = 3;
                     max = 3;
                     break;
-                case Data.FlagType.Pointer32Bit:
+                case FlagType.Pointer32Bit:
                     step = 4;
                     max = 4;
                     break;
@@ -487,36 +490,36 @@ namespace Diz.Core.export
 
             switch (Data.GetFlag(offset))
             {
-                case Data.FlagType.Opcode:
+                case FlagType.Opcode:
                     code = Data.GetInstruction(offset);
                     break;
-                case Data.FlagType.Unreached:
-                case Data.FlagType.Operand:
-                case Data.FlagType.Data8Bit:
-                case Data.FlagType.Graphics:
-                case Data.FlagType.Music:
-                case Data.FlagType.Empty:
+                case FlagType.Unreached:
+                case FlagType.Operand:
+                case FlagType.Data8Bit:
+                case FlagType.Graphics:
+                case FlagType.Music:
+                case FlagType.Empty:
                     code = Data.GetFormattedBytes(offset, 1, bytes);
                     break;
-                case Data.FlagType.Data16Bit:
+                case FlagType.Data16Bit:
                     code = Data.GetFormattedBytes(offset, 2, bytes);
                     break;
-                case Data.FlagType.Data24Bit:
+                case FlagType.Data24Bit:
                     code = Data.GetFormattedBytes(offset, 3, bytes);
                     break;
-                case Data.FlagType.Data32Bit:
+                case FlagType.Data32Bit:
                     code = Data.GetFormattedBytes(offset, 4, bytes);
                     break;
-                case Data.FlagType.Pointer16Bit:
+                case FlagType.Pointer16Bit:
                     code = Data.GetPointer(offset, 2);
                     break;
-                case Data.FlagType.Pointer24Bit:
+                case FlagType.Pointer24Bit:
                     code = Data.GetPointer(offset, 3);
                     break;
-                case Data.FlagType.Pointer32Bit:
+                case FlagType.Pointer32Bit:
                     code = Data.GetPointer(offset, 4);
                     break;
-                case Data.FlagType.Text:
+                case FlagType.Text:
                     code = Data.GetFormattedText(offset, bytes);
                     break;
             }
@@ -595,7 +598,7 @@ namespace Diz.Core.export
         protected string GetRawBytes(int offset, int length)
         {
             string bytes = "";
-            if (Data.GetFlag(offset) == Data.FlagType.Opcode)
+            if (Data.GetFlag(offset) == FlagType.Opcode)
             {
                 for (var i = 0; i < Data.GetInstructionLength(offset); i++)
                 {

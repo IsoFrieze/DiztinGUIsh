@@ -16,13 +16,13 @@ namespace Diz.Core.export
 
         private void ErrorIfOperand(int offset)
         {
-            if (Data.GetFlag(offset) == Data.FlagType.Operand)
+            if (Data.GetFlag(offset) == FlagType.Operand)
                 ReportError(offset, "Bytes marked as operands formatted as Data.");
         }
 
         private void ErrorIfAdjacentOperandsSeemWrong(int offset)
         {
-            if (Data.GetFlag(offset) != Data.FlagType.Operand)
+            if (Data.GetFlag(offset) != FlagType.Operand)
                 return;
 
             var byteLengthFollowing = GetByteLengthFollowing(offset);
@@ -55,7 +55,7 @@ namespace Diz.Core.export
             return false;
         }
 
-        private bool ErrorIfUnexpectedFlagAt(int nextOffset, Data.FlagType expectedFlag)
+        private bool ErrorIfUnexpectedFlagAt(int nextOffset, FlagType expectedFlag)
         {
             if (!IsOffsetInRange(nextOffset))
                 return false;
@@ -72,13 +72,13 @@ namespace Diz.Core.export
 
         private bool DoesIndirectAddressPointToOpcode(int ia)
         {
-            return Data.GetFlag(Data.ConvertSnesToPc(ia)) == Data.FlagType.Opcode;
+            return Data.GetFlag(Data.ConvertSnesToPc(ia)) == FlagType.Opcode;
         }
 
         private bool IsOpcodeOutboundJump(int offset)
         {
-            return Data.GetFlag(offset) == Data.FlagType.Opcode &&
-                   Data.GetInOutPoint(offset) == Data.InOutPoint.OutPoint;
+            return Data.GetFlag(offset) == FlagType.Opcode &&
+                   Data.GetInOutPoint(offset) == InOutPoint.OutPoint;
         }
 
         private bool IsOffsetInRange(int offset)
@@ -89,7 +89,7 @@ namespace Diz.Core.export
         private int GetByteLengthFollowing(int offset)
         {
             var flag = Data.GetFlag(offset);
-            return flag == Data.FlagType.Opcode ? GetLineByteLength(offset) : RomUtil.GetByteLengthForFlag(flag);
+            return flag == FlagType.Opcode ? GetLineByteLength(offset) : RomUtil.GetByteLengthForFlag(flag);
         }
     }
 }

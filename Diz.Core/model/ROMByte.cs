@@ -13,9 +13,9 @@ namespace Diz.Core.model
         private int directPage;
         private bool xFlag;
         private bool mFlag;
-        private Data.FlagType typeFlag = Data.FlagType.Unreached;
-        private Data.Architecture arch = Data.Architecture.Cpu65C816;
-        private Data.InOutPoint point = 0;
+        private FlagType typeFlag = FlagType.Unreached;
+        private Architecture arch = Architecture.Cpu65C816;
+        private InOutPoint point = 0;
 
         // holds the original byte from the source ROM
         public byte Rom
@@ -49,19 +49,19 @@ namespace Diz.Core.model
             set => SetField(ref mFlag, value);
         }
 
-        public Data.FlagType TypeFlag
+        public FlagType TypeFlag
         {
             get => typeFlag;
             set => SetField(ref typeFlag, value);
         }
 
-        public Data.Architecture Arch
+        public Architecture Arch
         {
             get => arch;
             set => SetField(ref arch, value);
         }
 
-        public Data.InOutPoint Point
+        public InOutPoint Point
         {
             get => point;
             set => SetField(ref point, value);

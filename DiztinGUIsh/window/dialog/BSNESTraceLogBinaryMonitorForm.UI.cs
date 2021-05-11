@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Windows.Forms;
-using System.Windows.Media;
+// using System.Windows.Media;
 using ByteSizeLib;
 using Diz.Core.import;
-using LiveCharts;
-using LiveCharts.Wpf;
+//using LiveCharts;
+//using LiveCharts.Wpf;
 using Color = System.Drawing.Color;
+
+// NOTE: upgrading .net versions, lots of this is temporarily disabled. re-enable it
 
 namespace DiztinGUIsh.window.dialog
 {
     public partial class BsnesTraceLogBinaryMonitorForm
     {
         private bool initializedChart;
-        private readonly ChartValues<long> chartValuesBytesModified = new ChartValues<long>();
+        // private readonly ChartValues<long> chartValuesBytesModified = new ChartValues<long>();
         private long chartValueBytesModified_previous = 0;
 
         private const int refreshGraphEveryNDataPoints = 100;
@@ -30,7 +32,7 @@ namespace DiztinGUIsh.window.dialog
 
             var diffBytes = currentStats.stats.NumRomBytesModified - chartValueBytesModified_previous;
             chartValueBytesModified_previous = currentStats.stats.NumRomBytesModified;
-            chartValuesBytesModified.Add(diffBytes);
+            //chartValuesBytesModified.Add(diffBytes);
         }
 
         private void InitChart()
@@ -38,7 +40,7 @@ namespace DiztinGUIsh.window.dialog
             if (initializedChart)
                 return;
 
-            cartesianChart1.Series = new SeriesCollection
+            /*cartesianChart1.Series = new SeriesCollection
             {
                 new LineSeries
                 {
@@ -48,7 +50,7 @@ namespace DiztinGUIsh.window.dialog
                 },
             };
 
-            cartesianChart1.DisableAnimations = true;
+            cartesianChart1.DisableAnimations = true;*/
 
             initializedChart = true;
         }

@@ -7,7 +7,7 @@ namespace Diz.Test.Utils
 {
     public static class AsarRunner
     {
-        private const string pathToAsar = @"D:\projects\cthack\src\rom\bin\asar-domfix.exe";
+        private const string PathToAsar = @"D:\projects\cthack\src\rom\bin\asar-domfix.exe";
 
         //  --no-title-check
         
@@ -22,12 +22,13 @@ namespace Diz.Test.Utils
             swAsm.Write(assemblyCode);
 
             swAsm.Close(); swAsm.Dispose();
-            
-            var psi = new ProcessStartInfo();
-            psi.FileName = Path.GetFileName(pathToAsar);
-            psi.WorkingDirectory = Path.GetDirectoryName(pathToAsar);
-            psi.Arguments = $"\"{tmpOutputAsm}\" \"{tmpOutputRom}\"";
-            Process.Start(psi).WaitForExit(20000);
+
+            var psi = new ProcessStartInfo(PathToAsar)
+            {
+                WorkingDirectory = Path.GetDirectoryName(PathToAsar) ?? "",
+                Arguments = $"\"{tmpOutputAsm}\" \"{tmpOutputRom}\""
+            };
+            Process.Start(psi)?.WaitForExit(20000);
 
             return File.ReadAllBytes(tmpOutputRom);
         }

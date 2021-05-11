@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
@@ -21,7 +22,7 @@ namespace Diz.Test.Utils
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((ParsedOutput) obj);
             }
 
@@ -101,9 +102,14 @@ namespace Diz.Test.Utils
             
             AssertGoodOutput(result);
             
+            // parse the output so we can better pinpoint where errors are
             var expectedOut = ParseAll(expectedRaw);
             var actualOut = ParseAll(result.OutputStr);
-            AssertAssemblyOutputEqual(result, expectedOut, actualOut);
+            AssertAssemblyOutputEqual(expectedOut, actualOut);
+            
+            // now that the parsed version passed, compare the raw strings
+            // if you hit this and not the above section, your whitespace might be off.
+            Assert.Equal(expectedRaw, result.OutputStr);
         }
 
         public static LogCreator.OutputResult ExportAssembly(Data inputRom, Action<LogCreator> postInitHook = null)
@@ -124,6 +130,7 @@ namespace Diz.Test.Utils
             return logCreator.CreateLog();
         }
 
+        [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
         private static void AssertGoodOutput(LogCreator.OutputResult result)
         {
             Assert.True(result.LogCreator != null);
@@ -131,15 +138,9 @@ namespace Diz.Test.Utils
             Assert.True(result.ErrorCount == 0);
         }
 
-        private static void AssertAssemblyOutputEqual(LogCreator.OutputResult result, List<LogWriterHelper.ParsedOutput> expectedOut, List<LogWriterHelper.ParsedOutput> actualOut)
+        private static void AssertAssemblyOutputEqual(IReadOnlyList<ParsedOutput> expectedOut, IReadOnlyList<ParsedOutput> actualOut)
         {
-            Assert.Equal(expectedOut.Count, actualOut.Count);
-
-            for (var i = 0; i < expectedOut.Count; ++i) {
-                Assert.Equal(expectedOut[i], actualOut[i]);
-            }
-
-            Assert.True(expectedOut.SequenceEqual(actualOut));
+            TestUtil.AssertCollectionEqual(expectedOut, actualOut);
         }
     }
 }

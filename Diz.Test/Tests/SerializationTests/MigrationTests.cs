@@ -126,8 +126,8 @@ namespace Diz.Test
             return new MigrationMock
             {
                 Mock = mock,
-                Verify = mock => {
-                    mock.Verify(
+                Verify = m => {
+                    m.Verify(
                         migration => migration.OnLoadingAfterAddLinkedRom(null), 
                         Times.Exactly(shouldHaveRun ? 1 : 0));
                 }

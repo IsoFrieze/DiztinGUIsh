@@ -17,9 +17,9 @@ namespace Diz.Core.import
             return RomUtil.CalculateSnesOffsetWithWrap(modDataSnesAddress, 1);
         }
 
-        private static Data.FlagType GetFlagForInstructionPosition(int currentIndex)
+        private static FlagType GetFlagForInstructionPosition(int currentIndex)
         {
-            return currentIndex == 0 ? Data.FlagType.Opcode : Data.FlagType.Operand;
+            return currentIndex == 0 ? FlagType.Opcode : FlagType.Operand;
         }
 
         private void UpdatePCAddress(ModificationData modData)

@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Diz.Test
 {
-    public static class MiscTests
+    public static class OptimizedHexConversionTests
     {
         [Fact]
         public static void TestHex1()
