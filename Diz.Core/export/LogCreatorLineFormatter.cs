@@ -6,30 +6,12 @@ namespace Diz.Core.export
 {
     public class LogCreatorLineFormatter
     {
-        public class ColumnFormat
+        public record ColumnFormat
         {
-            public string Value { get; set; }
-            public int? LengthOverride { get; set; }
-            public bool IsLiteral { get; set; }
-            public bool IgnoreOffset { get; set; }
-
-            protected bool Equals(ColumnFormat other)
-            {
-                return Value == other.Value && LengthOverride == other.LengthOverride && IsLiteral == other.IsLiteral && IgnoreOffset == other.IgnoreOffset;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
-                return Equals((ColumnFormat) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(Value, LengthOverride, IsLiteral, IgnoreOffset);
-            }
+            public string Value { get; init; }
+            public int? LengthOverride { get; init; }
+            public bool IsLiteral { get; init; }
+            public bool IgnoreOffset { get; init; }
 
             public int? SanitizeOffset(int offset)
             {
@@ -89,47 +71,69 @@ namespace Diz.Core.export
 
         private void ParseOneItem(bool isLiteral, ICollection<ColumnFormat> output, string token)
         {
-            var newItem = isLiteral 
-                ? ParseStringLiteral(token) 
-                : ParseFormatItem(token);
-            
-            if (newItem != null)
-                output.Add(newItem);
+            try
+            {
+                var newItem = isLiteral
+                    ? ParseStringLiteral(token)
+                    : ParseFormatItem(token);
+                
+                if (newItem != null)
+                    output.Add(newItem);
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add("LineFormatterToken", token);
+                throw;
+            }
         }
         
         private ColumnFormat ParseFormatItem(string token)
         {
-            var item = new ColumnFormat();
-
-            string overrideLenStr = null;
-            var indexColon = token.IndexOf(':');
-            if (indexColon < 0)
-            {
-                // default, length comes from the attribute, generator not involved
-                // example: "%label%"
-                item.Value = token;
-            }
-            else
-            {
-                // override, length comes from the format string
-                // example: for token "%label:-22%", length would be "-22"
-                item.Value = token.Substring(0, indexColon);
-                overrideLenStr = token.Substring(indexColon + 1);
-            }
+            var (itemValue, overrideLenStr) = ParseItemValue(token);
+            var lengthOverride = GetLengthOverride(overrideLenStr);
             
-            var validGenerator = generators.TryGetValue(item.Value, out _);
-            if (!validGenerator)
-                throw new InvalidDataException($"Can't find handler for item '{item.Value}'");
+            EnsureValidGeneratorExistsFor(itemValue);
 
-            if (overrideLenStr != null)
+            return new ColumnFormat
             {
-                if (!int.TryParse(overrideLenStr, out var lengthOverride))
-                    throw new InvalidDataException($"Invalid length specified for '{item.Value}'");
+                Value = itemValue,
+                LengthOverride = lengthOverride,
+            };
+        }
 
-                item.LengthOverride = lengthOverride;
-            }
+        private static (string val, string overrideLen) ParseItemValue(string token)
+        {
+            var indexOfColon = token.IndexOf(':');
+            
+            // default, length comes from the attribute, generator not involved
+            // example: "%label%"
+            if (indexOfColon < 0)
+                return (token, null);
 
-            return item;
+            // override, length comes from the format string
+            // example: for token "%label:-22%", length would be "-22"
+            return (
+                token.Substring(0, indexOfColon), 
+                token.Substring(indexOfColon + 1)
+                );
+        }
+
+        private static int? GetLengthOverride(string overrideLenStr)
+        {
+            if (overrideLenStr == null) 
+                return null;
+
+            if (!int.TryParse(overrideLenStr, out var lenOverride))
+                throw new InvalidDataException($"Invalid length");
+
+            return lenOverride;
+        }
+
+        private void EnsureValidGeneratorExistsFor(string itemValue)
+        {
+            var validGenerator = generators.TryGetValue(itemValue, out _);
+            if (!validGenerator)
+                throw new InvalidDataException($"Can't find assembly generator");
         }
 
         private static ColumnFormat ParseStringLiteral(string token)
