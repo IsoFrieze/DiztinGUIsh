@@ -74,7 +74,7 @@ namespace DiztinGUIsh.window
 
             int totalUnreached = 0, size = Project.Data.GetRomSize();
             for (int i = 0; i < size; i++)
-                if (Project.Data.GetFlag(i) == Data.FlagType.Unreached)
+                if (Project.Data.GetFlag(i) == FlagType.Unreached)
                     totalUnreached++;
             int reached = size - totalUnreached;
             percentComplete.Text = $"{reached * 100.0 / size:N3}% ({reached:D}/{size:D})";

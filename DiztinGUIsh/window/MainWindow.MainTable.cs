@@ -232,20 +232,20 @@ namespace DiztinGUIsh.window
 
             switch (Project.Data.GetFlag(offset))
             {
-                case Data.FlagType.Unreached:
+                case FlagType.Unreached:
                     style.BackColor = Color.LightGray;
                     style.ForeColor = Color.DarkSlateGray;
                     break;
-                case Data.FlagType.Opcode:
+                case FlagType.Opcode:
                     int opcode = Project.Data.GetRomByte(offset);
                     switch (column)
                     {
                         case 4: // <*>
-                            Data.InOutPoint point = Project.Data.GetInOutPoint(offset);
+                            InOutPoint point = Project.Data.GetInOutPoint(offset);
                             int r = 255, g = 255, b = 255;
-                            if ((point & (Data.InOutPoint.EndPoint | Data.InOutPoint.OutPoint)) != 0) g -= 50;
-                            if ((point & (Data.InOutPoint.InPoint)) != 0) r -= 50;
-                            if ((point & (Data.InOutPoint.ReadPoint)) != 0) b -= 50;
+                            if ((point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) g -= 50;
+                            if ((point & (InOutPoint.InPoint)) != 0) r -= 50;
+                            if ((point & (InOutPoint.ReadPoint)) != 0) b -= 50;
                             style.BackColor = Color.FromArgb(r, g, b);
                             break;
                         case 5: // Instruction
@@ -276,30 +276,30 @@ namespace DiztinGUIsh.window
                             break;
                     }
                     break;
-                case Data.FlagType.Operand:
+                case FlagType.Operand:
                     style.ForeColor = Color.LightGray;
                     break;
-                case Data.FlagType.Graphics:
+                case FlagType.Graphics:
                     style.BackColor = Color.LightPink;
                     break;
-                case Data.FlagType.Music:
+                case FlagType.Music:
                     style.BackColor = Color.PowderBlue;
                     break;
-                case Data.FlagType.Data8Bit:
-                case Data.FlagType.Data16Bit:
-                case Data.FlagType.Data24Bit:
-                case Data.FlagType.Data32Bit:
+                case FlagType.Data8Bit:
+                case FlagType.Data16Bit:
+                case FlagType.Data24Bit:
+                case FlagType.Data32Bit:
                     style.BackColor = Color.NavajoWhite;
                     break;
-                case Data.FlagType.Pointer16Bit:
-                case Data.FlagType.Pointer24Bit:
-                case Data.FlagType.Pointer32Bit:
+                case FlagType.Pointer16Bit:
+                case FlagType.Pointer24Bit:
+                case FlagType.Pointer32Bit:
                     style.BackColor = Color.Orchid;
                     break;
-                case Data.FlagType.Text:
+                case FlagType.Text:
                     style.BackColor = Color.Aquamarine;
                     break;
-                case Data.FlagType.Empty:
+                case FlagType.Empty:
                     style.BackColor = Color.DarkSlateGray;
                     style.ForeColor = Color.LightGray;
                     break;

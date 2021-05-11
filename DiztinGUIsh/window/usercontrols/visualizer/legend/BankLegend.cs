@@ -23,7 +23,7 @@ namespace DiztinGUIsh.window.usercontrols
 
         private void BankLegend_Load(object sender, System.EventArgs e)
         {
-            var enums = Util.GetEnumColorDescriptions<Data.FlagType>();
+            var enums = Util.GetEnumColorDescriptions<FlagType>();
             foreach (var en in enums)
             {
                 AddControl(en.Key.ToString(), Util.GetColorFromFlag(en.Key));

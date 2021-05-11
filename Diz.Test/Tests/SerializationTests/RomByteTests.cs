@@ -11,13 +11,13 @@ namespace Diz.Test
         private static RomByte SampleRomByte1()
         {
             return new RomByte() {
-                Arch = Data.Architecture.Apuspc700,
+                Arch = Architecture.Apuspc700,
                 DataBank = 90,
                 DirectPage = 3,
                 MFlag = true,
                 XFlag = false,
-                TypeFlag = Data.FlagType.Graphics,
-                Point = Data.InOutPoint.InPoint | Data.InOutPoint.ReadPoint,
+                TypeFlag = FlagType.Graphics,
+                Point = InOutPoint.InPoint | InOutPoint.ReadPoint,
                 Rom = 0x78,
             };
         }
@@ -62,7 +62,7 @@ namespace Diz.Test
             Assert.True(rb1.EqualsButNoRomByte(rb2));
             Assert.False(rb1.Equals(rb2));
 
-            rb1.Point = Data.InOutPoint.EndPoint;
+            rb1.Point = InOutPoint.EndPoint;
             Assert.False(rb1.EqualsButNoRomByte(rb2));
             Assert.False(rb1.Equals(rb2));
         }

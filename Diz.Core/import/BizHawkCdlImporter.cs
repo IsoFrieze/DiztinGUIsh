@@ -78,22 +78,22 @@ namespace Diz.Core.import
                 if (cdlFlag == BizHawkCdlImporter.Flag.None)
                     continue;
 
-                var type = Data.FlagType.Unreached;
+                var type = FlagType.Unreached;
                 if ((cdlFlag & BizHawkCdlImporter.Flag.ExecFirst) != 0)
                 {
-                    type = Data.FlagType.Opcode;
+                    type = FlagType.Opcode;
                     m = (cdlFlag & BizHawkCdlImporter.Flag.CpumFlag) != 0;
                     x = (cdlFlag & BizHawkCdlImporter.Flag.CpuxFlag) != 0;
                 }
                 else if ((cdlFlag & BizHawkCdlImporter.Flag.ExecOperand) != 0)
-                    type = Data.FlagType.Operand;
+                    type = FlagType.Operand;
                 else if ((cdlFlag & BizHawkCdlImporter.Flag.CpuData) != 0)
-                    type = Data.FlagType.Data8Bit;
+                    type = FlagType.Data8Bit;
                 else if ((cdlFlag & BizHawkCdlImporter.Flag.DmaData) != 0)
-                    type = Data.FlagType.Data8Bit;
+                    type = FlagType.Data8Bit;
                 data.MarkTypeFlag(offset, type, 1);
 
-                if (type != Data.FlagType.Opcode && type != Data.FlagType.Operand) 
+                if (type != FlagType.Opcode && type != FlagType.Operand) 
                     continue;
 
                 // Operand reuses the last M and X flag values used in Opcode,

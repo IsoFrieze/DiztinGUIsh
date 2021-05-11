@@ -42,6 +42,6 @@ namespace DiztinGUIsh.window
         private bool importerMenuItemsEnabled;
 
         private Util.NumberBase displayBase = Util.NumberBase.Hexadecimal;
-        private Data.FlagType markFlag = Data.FlagType.Data8Bit;
+        private FlagType markFlag = FlagType.Data8Bit;
     }
 }

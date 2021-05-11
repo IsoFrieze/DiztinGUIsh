@@ -47,12 +47,12 @@ namespace DiztinGUIsh.window
 
         private bool IsReached(int offset)
         {
-            return Project.Data.GetFlag(offset) != Data.FlagType.Unreached;
+            return Project.Data.GetFlag(offset) != FlagType.Unreached;
         }
 
         private bool IsUnreached(int offset)
         {
-            return Project.Data.GetFlag(offset) == Data.FlagType.Unreached;
+            return Project.Data.GetFlag(offset) == FlagType.Unreached;
         }
 
         private bool RomDataPresent()

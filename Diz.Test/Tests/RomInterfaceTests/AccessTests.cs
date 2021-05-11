@@ -23,11 +23,11 @@ namespace Diz.Test
                 // STA.W $2116
                 new RomByte
                 {
-                    Rom = 0x8D, TypeFlag = Data.FlagType.Opcode, MFlag = true, XFlag = true, DataBank = 0x00,
+                    Rom = 0x8D, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, DataBank = 0x00,
                     DirectPage = 0,
                 },
-                new RomByte {Rom = 0x16, TypeFlag = Data.FlagType.Operand},
-                new RomByte {Rom = 0x21, TypeFlag = Data.FlagType.Operand},
+                new RomByte {Rom = 0x16, TypeFlag = FlagType.Operand},
+                new RomByte {Rom = 0x21, TypeFlag = FlagType.Operand},
             },
             Comments = new ObservableDictionary<int, string>()
             {

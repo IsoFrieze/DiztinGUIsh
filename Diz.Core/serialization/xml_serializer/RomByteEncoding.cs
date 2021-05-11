@@ -14,28 +14,28 @@ namespace Diz.Core.serialization.xml_serializer
         public class FlagEncodeEntry
         {
             public char C;
-            public Data.FlagType F;
+            public FlagType F;
         };
 
         private static readonly IReadOnlyCollection<FlagEncodeEntry> FlagEncodeTable = new List<FlagEncodeEntry> {
-            new FlagEncodeEntry() {F = Data.FlagType.Unreached, C = 'U'},
+            new FlagEncodeEntry() {F = FlagType.Unreached, C = 'U'},
 
-            new FlagEncodeEntry() {F = Data.FlagType.Opcode, C = '+'},
-            new FlagEncodeEntry() {F = Data.FlagType.Operand, C = '.'},
+            new FlagEncodeEntry() {F = FlagType.Opcode, C = '+'},
+            new FlagEncodeEntry() {F = FlagType.Operand, C = '.'},
 
-            new FlagEncodeEntry() {F = Data.FlagType.Graphics, C = 'G'},
-            new FlagEncodeEntry() {F = Data.FlagType.Music, C = 'M'},
-            new FlagEncodeEntry() {F = Data.FlagType.Empty, C = 'X'},
-            new FlagEncodeEntry() {F = Data.FlagType.Text, C = 'T'},
+            new FlagEncodeEntry() {F = FlagType.Graphics, C = 'G'},
+            new FlagEncodeEntry() {F = FlagType.Music, C = 'M'},
+            new FlagEncodeEntry() {F = FlagType.Empty, C = 'X'},
+            new FlagEncodeEntry() {F = FlagType.Text, C = 'T'},
 
-            new FlagEncodeEntry() {F = Data.FlagType.Data8Bit, C = 'A'},
-            new FlagEncodeEntry() {F = Data.FlagType.Data16Bit, C = 'B'},
-            new FlagEncodeEntry() {F = Data.FlagType.Data24Bit, C = 'C'},
-            new FlagEncodeEntry() {F = Data.FlagType.Data32Bit, C = 'D'},
+            new FlagEncodeEntry() {F = FlagType.Data8Bit, C = 'A'},
+            new FlagEncodeEntry() {F = FlagType.Data16Bit, C = 'B'},
+            new FlagEncodeEntry() {F = FlagType.Data24Bit, C = 'C'},
+            new FlagEncodeEntry() {F = FlagType.Data32Bit, C = 'D'},
 
-            new FlagEncodeEntry() {F = Data.FlagType.Pointer16Bit, C = 'E'},
-            new FlagEncodeEntry() {F = Data.FlagType.Pointer24Bit, C = 'F'},
-            new FlagEncodeEntry() {F = Data.FlagType.Pointer32Bit, C = 'G'},
+            new FlagEncodeEntry() {F = FlagType.Pointer16Bit, C = 'E'},
+            new FlagEncodeEntry() {F = FlagType.Pointer24Bit, C = 'F'},
+            new FlagEncodeEntry() {F = FlagType.Pointer32Bit, C = 'G'},
         };
 
         private readonly StringBuilder cachedPadSb = new StringBuilder(LineMaxLen);
@@ -53,7 +53,7 @@ namespace Diz.Core.serialization.xml_serializer
             var otherFlags1 = Fake64Encoding.DecodeHackyBase64(input[1]);
             newByte.DataBank = ByteUtil.ByteParseHex2(input[2], input[3]);
             newByte.DirectPage = (int)ByteUtil.ByteParseHex4(input[4], input[5], input[6], input[7]);
-            newByte.Arch = (Data.Architecture)(ByteUtil.ByteParseHex1(input[8]) & 0x3);
+            newByte.Arch = (Architecture)(ByteUtil.ByteParseHex1(input[8]) & 0x3);
 
             #if EXTRA_DEBUG_CHECKS
             Debug.Assert(Fake64Encoding.EncodeHackyBase64(otherFlags1) == o1_str);
@@ -61,7 +61,7 @@ namespace Diz.Core.serialization.xml_serializer
 
             newByte.XFlag = ((otherFlags1 >> 2) & 0x1) != 0;
             newByte.MFlag = ((otherFlags1 >> 3) & 0x1) != 0;
-            newByte.Point = (Data.InOutPoint)((otherFlags1 >> 4) & 0xF);
+            newByte.Point = (InOutPoint)((otherFlags1 >> 4) & 0xF);
 
             var found = false;
             foreach (var e in FlagEncodeTable)
