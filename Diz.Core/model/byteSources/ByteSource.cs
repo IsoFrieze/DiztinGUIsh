@@ -198,9 +198,31 @@ namespace Diz.Core.model.byteSources
 
         protected bool Equals(ByteSource other)
         {
+            var bothEmptyOrEqual = 
+                Util.BothListsNullOrContainNoItems(Bytes, other.Bytes) || 
+                EqualsInternal(other);
+
             return Name == other.Name 
-                   && Util.CollectionsBothEmptyOrEqual(Bytes, other.Bytes) 
+                   && bothEmptyOrEqual 
                    && ChildSources.SequenceEqual(other.ChildSources);
+        }
+        
+        private bool EqualsInternal(ByteSource other)
+        {
+            // this method is for these specific conditions:
+            Debug.Assert(Bytes != null && other?.Bytes != null);
+            Debug.Assert(Bytes.Count == other.Bytes.Count);
+
+            // do a special case if it's two particular types we know about
+            // (TODO: see if we can get this to happen without having to do it specifically here)
+            if (Bytes is StorageSparse<ByteEntry> sparse1 && other.Bytes is StorageSparse<ByteEntry> sparse2)
+            {
+                return sparse1.Equals(sparse2);
+            }
+            
+            // fallback: original version. this works but, it uses the dumber enumerator
+            // which some storage types potentially do lots of extra enumeration.
+            return Bytes.SequenceEqual(other.Bytes);
         }
 
         public override bool Equals(object obj)

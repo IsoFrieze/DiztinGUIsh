@@ -342,5 +342,45 @@ namespace Diz.Core.model.byteSources
         {
             return bytes.GetEnumerator();
         }
+
+        protected bool Equals(StorageSparse<T> other)
+        {
+            if (count != other.count || bytes.Count != other.bytes.Count)
+                return false;
+            
+            foreach(var (key, value) in other.bytes)
+            {
+                if(!bytes.TryGetValue(key, out var cmpValue) || !value.Equals(cmpValue))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((StorageSparse<T>) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (bytes.GetHashCode() * 397) ^ count;
+            }
+        }
+
+        public static bool operator ==(StorageSparse<T> left, StorageSparse<T> right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(StorageSparse<T> left, StorageSparse<T> right)
+        {
+            return !Equals(left, right);
+        }
     }
 }

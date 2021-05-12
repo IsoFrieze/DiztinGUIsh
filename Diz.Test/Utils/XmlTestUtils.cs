@@ -1,5 +1,6 @@
 ﻿using System;
 using Diz.Core.serialization.xml_serializer;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -36,7 +37,7 @@ namespace Diz.Test.Utils
         public void RunFullCycle(Func<object> createFn)
         {
             RunFullCycle(createFn, out var unchanged, out var cycled);
-            Assert.Equal(unchanged, cycled);
+            cycled.Should().Be(unchanged);
         }
     }
 }

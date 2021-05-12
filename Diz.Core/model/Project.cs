@@ -108,7 +108,7 @@ namespace Diz.Core.model
         
         // don't access these backing fields directly, always use the properties
         private string attachedRomFilename = "";
-        private string? internalRomGameName;
+        private string? internalRomGameName = "";
         private uint internalCheckSum;
         private LogWriterSettings logWriterSettings;
         private Data? data;
@@ -194,9 +194,9 @@ namespace Diz.Core.model
         {
             unchecked
             {
-                var hashCode = AttachedRomFilename.GetHashCode();
+                var hashCode = AttachedRomFilename?.GetHashCode() ?? 0;
                 hashCode = (hashCode * 397) ^ (Data != null ? Data.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ InternalRomGameName.GetHashCode();
+                hashCode = (hashCode * 397) ^ InternalRomGameName?.GetHashCode() ?? 0;
                 hashCode = (int) ((hashCode * 397) ^ InternalCheckSum);
                 return hashCode;
             }

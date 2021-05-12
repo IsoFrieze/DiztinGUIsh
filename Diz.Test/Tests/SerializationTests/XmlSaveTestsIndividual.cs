@@ -93,6 +93,28 @@ namespace Diz.Test.Tests.SerializationTests
             Assert.Equal(unchanged.Count, cycled.Count);
             Assert.Equal(unchanged, cycled);
         }
+
+        [Fact]
+        private void XmlFullCycleAnnotationCollectionSimple2()
+        {
+            Func<AnnotationCollection> fnCreate = () => new AnnotationCollection
+            {
+                new MarkAnnotation {TypeFlag = FlagType.Graphics}, new Comment {Text = "asdf"}
+            };
+
+            {
+                var ac1 = fnCreate();
+                var ac2 = fnCreate();
+                Assert.Equal(ac1, ac2);
+                ac1.Should().Equal(ac2);
+            }
+
+            {
+                var ac1 = new AnnotationCollection();
+                var ac2 = new AnnotationCollection();
+                ((object) ac1).Should().Be(ac2);
+            }
+        }
         
         [Fact]
         public void XmlFullCycleProject()
