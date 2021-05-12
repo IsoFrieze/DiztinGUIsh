@@ -6,6 +6,7 @@ using Diz.Core.model.byteSources;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using Diz.Test.Tests.SerializationTests;
+using Diz.Test.Utils;
 using Diz.Test.Utils.SuperFamiCheckUtil;
 using FluentAssertions;
 using Xunit;
@@ -117,9 +118,11 @@ namespace Diz.Test.Tests.RomInterfaceTests
                 "checksum bytes in the ROM should match the computed checksum");
         }
 
-        const string RomFileName = @"D:\roms\SNES\Chrono Trigger (U) [!].smc";
-
-        [FactIfFamicheckPresent]
+        // note: you need to put this on your local system for it to work.
+        // gotta figure out how to make this portable without running into weirdness.
+        const string RomFileName = @"D:\roms\SNES\ct (U) [!].smc";
+        
+        [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
         public static void TestFamicheckTool()
         {
             var result = SuperFamiCheckTool.Run(RomFileName);
@@ -130,7 +133,7 @@ namespace Diz.Test.Tests.RomInterfaceTests
             // 73 87 8C 78
         }
         
-        [FactIfFamicheckPresent]
+        [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
         public static void TestInternalChecksumVsExternal()
         {
             var result = SuperFamiCheckTool.Run(RomFileName);
