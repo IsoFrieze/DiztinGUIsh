@@ -241,7 +241,7 @@
     <Folder Include="Properties\DataSources\" />
   </ItemGroup>
   <ItemGroup>
-    <-- WIP packaging scripts, TODO: re-enable them.
+    <!-- WIP packaging scripts, TODO: re-enable them.
     <None Include="build\FinalizeBuildDirectory.targets" />
     -->
   </ItemGroup>
