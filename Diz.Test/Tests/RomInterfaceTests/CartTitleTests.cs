@@ -34,7 +34,7 @@ namespace Diz.Test.Tests.RomInterfaceTests
             RawRomBytes.Length.Should().Be(RomUtil.LengthOfTitleName);
 
             // convert to UTF8 bytes
-            var shiftJisEncoding = Encoding.GetEncoding(932);
+            var shiftJisEncoding = ByteUtil.ShiftJisEncoding;
             var utfBytes = Encoding.Convert(shiftJisEncoding, Encoding.UTF8, RawRomBytes);
             utfBytes.Length.Should().Be(35);
 
