@@ -3,149 +3,99 @@ using System.IO;
 using System.Windows.Forms;
 using Diz.Core.export;
 using Diz.Core.model;
-using Diz.Core.util;
+using Diz.LogWriter;
+using Diz.LogWriter.util;
+using JetBrains.Annotations;
 
 namespace DiztinGUIsh.window.dialog
 {
-    // consider renaming? this class is mostly about editing settings, with a 'save' button at the
-    // end.
+    // TODO: rename? this class is mostly about editing settings, with a 'save' button at the end.
     public partial class ExportDisassembly : Form
     {
-        private readonly Project project;
-
+        #region Data
         // Our copy. At the end, if everything is correct, we'll return this.
-        private LogWriterSettings settings;
-
-        // shows the UI and returns non-null settings if everything went OK in the
-        // setup process.
-        public static LogWriterSettings? ConfirmSettingsAndAskToStart(Project project)
+        public LogWriterSettings ProposedSettings
         {
-            var export = new ExportDisassembly(project);
-            if (export.ShowDialog() != DialogResult.OK)
-                return null;
-
-            return export.settings;
+            get => proposedSettings;
+            private set
+            {
+                proposedSettings = value;
+                UpdateDirectoryPaths();
+                RegenerateSampleOutput();
+            }
         }
+        
+        public string InitialDirForOutput { get; set; }
+        public string KeepPathsRelativeToThisPath { get; set; }
+        
+        private LogWriterSettings proposedSettings = new();
+        #endregion
 
-        public ExportDisassembly(Project project)
+        public ExportDisassembly([CanBeNull] LogWriterSettings startingSettings = null)
         {
-            this.project = project;
-            settings = project.LogWriterSettings; // copy
-
-            if (settings.Validate() != null)
-                settings.SetDefaults();
-
+            ProposedSettings = startingSettings;
+            UseDefaultsIfInvalidSettings();
+            
             InitializeComponent();
             UpdateUiFromProjectSettings();
             RegenerateSampleOutput();
         }
 
+        private void UseDefaultsIfInvalidSettings() => 
+            ProposedSettings = ProposedSettings.GetDefaultsIfInvalid();
+        
+        private bool ValidateFormat() => LogCreatorLineFormatter.Validate(textFormat.Text);
+
         public void UpdateUiFromProjectSettings()
         {
             // TODO: in the future, replace this with databinding so we don't have to do it manually
-            numData.Value = settings.DataPerLine;
-            textFormat.Text = settings.Format;
-            comboUnlabeled.SelectedIndex = (int)settings.Unlabeled;
-            comboStructure.SelectedIndex = (int)settings.Structure;
-            chkIncludeUnusedLabels.Checked = settings.IncludeUnusedLabels;
-            chkPrintLabelSpecificComments.Checked = settings.PrintLabelSpecificComments;
-        }
-
-        private void cancel_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        private void disassembleButton_Click(object sender, EventArgs e)
-        {
-            if (!PromptForPath())
-                return;
-
-            DialogResult = DialogResult.OK;
-        }
-
-        // Prompt user for either a filename to save, or a folder location
-        private string PromptForLogPathFromFileOrFolderDialog(bool askForFile)
-        {
-            return askForFile ? PromptSaveLogFile() : PromptSaveLogPath();
-        }
-
-        private string PromptSaveLogPath()
-        {
-            chooseLogFolder.SelectedPath = Path.GetDirectoryName(project?.Session?.ProjectFileName);
-            return chooseLogFolder.ShowDialog() == DialogResult.OK && chooseLogFolder.SelectedPath != ""
-                ? chooseLogFolder.SelectedPath : null;
-        }
-
-        private string PromptSaveLogFile()
-        {
-            saveLogSingleFile.InitialDirectory = project?.Session?.ProjectFileName;
-            return saveLogSingleFile.ShowDialog() == DialogResult.OK && saveLogSingleFile.FileName != ""
-                ? saveLogSingleFile.FileName : null;
-        }
-
-        private bool PromptForPath()
-        {
-            var singleFile = settings.Structure == LogWriterSettings.FormatStructure.SingleFile;
-            var fileOrFolderPath = PromptForLogPathFromFileOrFolderDialog(singleFile);
-
-            if (string.IsNullOrEmpty(fileOrFolderPath))
-                return false;
-            
-            settings.SetFileOrFolderOutputPathRelativeToDir(fileOrFolderPath, project?.Session?.ProjectDirectory);
-
-            return true;
-        }
-
-        private void textFormat_TextChanged(object sender, EventArgs e)
-        {
-            if (ValidateFormat())
-            {
-                settings.Format = textFormat.Text.ToLower();
-                RegenerateSampleOutput();
-                disassembleButton.Enabled = true;
-            } else {
-                textSample.Text = "Invalid format!";
-                disassembleButton.Enabled = false;
-            }
-        }
-
-        private void numData_ValueChanged(object sender, EventArgs e)
-        {
-            settings.DataPerLine = (int)numData.Value;
-            RegenerateSampleOutput();
-        }
-
-        private void comboUnlabeled_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            settings.Unlabeled = (LogWriterSettings.FormatUnlabeled)comboUnlabeled.SelectedIndex;
-            RegenerateSampleOutput();
-        }
-
-        private void comboStructure_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            settings.Structure = (LogWriterSettings.FormatStructure)comboStructure.SelectedIndex;
-        }
-
-        private bool ValidateFormat()
-        {
-            return LogCreatorLineFormatter.Validate(textFormat.Text);
+            numData.Value = ProposedSettings.DataPerLine;
+            textFormat.Text = ProposedSettings.Format;
+            comboUnlabeled.SelectedIndex = (int)ProposedSettings.Unlabeled;
+            comboStructure.SelectedIndex = (int)ProposedSettings.Structure;
+            chkIncludeUnusedLabels.Checked = ProposedSettings.IncludeUnusedLabels;
+            chkPrintLabelSpecificComments.Checked = ProposedSettings.PrintLabelSpecificComments;
         }
 
         private void RegenerateSampleOutput()
         {
-            var result = RomUtil.GetSampleAssemblyOutput(settings);
-            textSample.Text = result.OutputStr;
+            if (textSample == null || ProposedSettings == null)
+                return;
+
+            textSample.Text = LogUtil.GetSampleAssemblyOutput(ProposedSettings).OutputStr;
+        }
+        
+        private string PromptForLogPathFromFileOrFolderDialog(bool askForFile) => 
+            askForFile ? PromptSaveLogFile() : PromptSaveLogPath();
+
+        private void UpdateDirectoryPaths() => 
+            InitialDirForOutput = ProposedSettings.FileOrFolderOutPath;
+
+        private string PromptSaveLogPath()
+        {
+            chooseLogFolder.SelectedPath = InitialDirForOutput;
+            return chooseLogFolder.ShowDialog() == DialogResult.OK && 
+                   chooseLogFolder.SelectedPath != "" ? chooseLogFolder.SelectedPath : null;
         }
 
-        private void chkPrintLabelSpecificComments_CheckedChanged(object sender, EventArgs e)
+        private string PromptSaveLogFile()
         {
-            settings.PrintLabelSpecificComments = chkPrintLabelSpecificComments.Checked;
+            saveLogSingleFile.InitialDirectory = InitialDirForOutput;
+            return saveLogSingleFile.ShowDialog() == DialogResult.OK && 
+                   saveLogSingleFile.FileName != "" ? saveLogSingleFile.FileName : null;
         }
 
-        private void chkIncludeUnusedLabels_CheckedChanged(object sender, EventArgs e)
+        private bool PromptForPath()
         {
-            settings.IncludeUnusedLabels = chkIncludeUnusedLabels.Checked;
+            var askForFile = ProposedSettings.Structure == LogWriterSettings.FormatStructure.SingleFile;
+            var selectedFileOrFolderOutPath = PromptForLogPathFromFileOrFolderDialog(askForFile);
+
+            if (string.IsNullOrEmpty(selectedFileOrFolderOutPath))
+                return false;
+
+            ProposedSettings = ProposedSettings.WithPathRelativeTo(selectedFileOrFolderOutPath, KeepPathsRelativeToThisPath);
+
+            return true;
         }
 
         public static void ShowExportResults(LogCreatorOutput.OutputResult result)
@@ -157,5 +107,47 @@ namespace DiztinGUIsh.window.dialog
                 MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK,
                     MessageBoxIcon.Asterisk);
         }
+        
+        private void cancel_Click(object sender, EventArgs e) => Close();
+
+        private void disassembleButton_Click(object sender, EventArgs e)
+        {
+            if (!PromptForPath())
+                return;
+
+            DialogResult = DialogResult.OK;
+        }
+
+        private void textFormat_TextChanged(object sender, EventArgs e)
+        {
+            if (ValidateFormat())
+            {
+                ProposedSettings = ProposedSettings with {Format = textFormat.Text.ToLower()};
+                disassembleButton.Enabled = true;
+            } else {
+                textSample.Text = "Invalid format!";
+                disassembleButton.Enabled = false;
+            }
+        }
+
+        private void numData_ValueChanged(object sender, EventArgs e) => 
+            ProposedSettings = ProposedSettings with {DataPerLine = (int)numData.Value};
+
+        private void comboUnlabeled_SelectedIndexChanged(object sender, EventArgs e) => 
+            ProposedSettings = ProposedSettings with {Unlabeled = UnlabeledFormat};
+
+        private void comboStructure_SelectedIndexChanged(object sender, EventArgs e) =>
+            ProposedSettings = ProposedSettings with {Structure = StructureFormat};
+        
+        private void chkPrintLabelSpecificComments_CheckedChanged(object sender, EventArgs e) => 
+            ProposedSettings = ProposedSettings with {PrintLabelSpecificComments = chkPrintLabelSpecificComments.Checked};
+
+        private void chkIncludeUnusedLabels_CheckedChanged(object sender, EventArgs e) => 
+            ProposedSettings = ProposedSettings with {IncludeUnusedLabels = chkIncludeUnusedLabels.Checked};
+
+        private LogWriterSettings.FormatUnlabeled UnlabeledFormat => 
+            (LogWriterSettings.FormatUnlabeled)comboUnlabeled.SelectedIndex;
+        private LogWriterSettings.FormatStructure StructureFormat => 
+            (LogWriterSettings.FormatStructure)comboStructure.SelectedIndex;
     }
 }

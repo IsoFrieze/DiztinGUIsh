@@ -4,6 +4,7 @@ using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
+using Diz.LogWriter;
 using Diz.Test.TestData;
 using Diz.Test.Utils;
 using Xunit;
@@ -16,6 +17,8 @@ namespace Diz.Test.Tests.LogCreatorTests
     public sealed class LogCreatorTests
     {
         private readonly ITestOutputHelper debugWriter;
+        private readonly LogSettingsValidationTests logSettingsValidationTests;
+
         public LogCreatorTests(ITestOutputHelper debugWriter)
         {
             this.debugWriter = debugWriter;
@@ -97,21 +100,19 @@ namespace Diz.Test.Tests.LogCreatorTests
             var data = SpaceCatsRom.CreateInputRom();
             var assemblyOutput = LogWriterHelper.ExportAssembly(data, logCreator =>
             {
-                var settings = logCreator.Settings;
-                settings.OutputExtraWhitespace = false;
-                logCreator.Settings = settings;
+                logCreator.Settings = logCreator.Settings with {OutputExtraWhitespace = false};
                 
                 logCreator.ProgressChanged += (_, progressEvent) =>
                 {
                     switch (progressEvent.State)
                     {
-                        case Core.export.LogCreator.ProgressEvent.Status.StartTemporaryLabelsGenerate:
+                        case LogCreator.ProgressEvent.Status.StartTemporaryLabelsGenerate:
                             {
                                 var actualDict = logCreator.Data.Labels.Labels.ToDictionary(p => p.Key);
                                 TestOriginal2Labels(actualDict);
                             }
                             break;
-                        case Core.export.LogCreator.ProgressEvent.Status.DoneTemporaryLabelsGenerate:
+                        case LogCreator.ProgressEvent.Status.DoneTemporaryLabelsGenerate:
                             {
                                 var actualDict = logCreator.Data.Labels.Labels.ToDictionary(p => p.Key);
                                 TestOriginal2Labels(actualDict);

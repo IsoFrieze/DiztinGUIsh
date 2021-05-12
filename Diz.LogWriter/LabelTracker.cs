@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using Diz.Core.export;
 using Diz.Core.model;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public class LabelTracker
     {

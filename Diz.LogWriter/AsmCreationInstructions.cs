@@ -1,6 +1,6 @@
 ﻿using Diz.Core.util;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     // this class outputs the meat of the assembly generation process, it prints the actual assembler instructions
     public class AsmCreationInstructions : AsmCreationBase

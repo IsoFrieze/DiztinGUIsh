@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Diz.Core.export.assemblyGenerators;
+using Diz.LogWriter.assemblyGenerators;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public static class AssemblyGeneratorRegistration
     {

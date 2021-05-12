@@ -1,5 +1,5 @@
 ﻿<Project>
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk"/>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -10,10 +10,11 @@
     <AssemblyName>DiztinGUIsh</AssemblyName>
   </PropertyGroup>
   
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk"/>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+    <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Diz.Core.export;
+using Diz.LogWriter;
 using Diz.Test.Utils;
 using FluentAssertions;
 using Xunit;

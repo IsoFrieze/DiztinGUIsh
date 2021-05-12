@@ -4,6 +4,7 @@ using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
+using Diz.LogWriter;
 using Diz.Test.TestData;
 using Diz.Test.Utils;
 using FluentAssertions;

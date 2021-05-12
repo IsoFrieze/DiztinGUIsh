@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using Diz.Core.export;
+
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Global
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public interface IAssemblyPartialGenerator
     {

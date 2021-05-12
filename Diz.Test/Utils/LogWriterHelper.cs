@@ -4,12 +4,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model.snes;
+using Diz.LogWriter;
+using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Diz.Test.Utils
 {
-    public class LogWriterHelper
+    public static class LogWriterHelper
     {
         public class ParsedOutput
         {
@@ -114,15 +116,13 @@ namespace Diz.Test.Utils
 
         public static LogCreatorOutput.OutputResult ExportAssembly(Data inputRom, Action<LogCreator> postInitHook = null)
         {
-            var settings = new LogWriterSettings();
-            settings.SetDefaults();
-            settings.OutputToString = true;
-            settings.Structure = LogWriterSettings.FormatStructure.SingleFile;
-
             var logCreator = new LogCreator
             {
                 Data = inputRom,
-                Settings = settings,
+                Settings = new LogWriterSettings {
+                    OutputToString = true,
+                    Structure = LogWriterSettings.FormatStructure.SingleFile
+                }
             };
             
             postInitHook?.Invoke(logCreator);

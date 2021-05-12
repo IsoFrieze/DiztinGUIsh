@@ -1,6 +1,7 @@
-﻿using Diz.Core.util;
+﻿using Diz.Core.export;
+using Diz.Core.util;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public class AsmCreationBankManager
     {

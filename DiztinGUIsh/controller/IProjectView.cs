@@ -1,5 +1,6 @@
 ﻿using System;
 using Diz.Core.export;
+using Diz.LogWriter;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.controller

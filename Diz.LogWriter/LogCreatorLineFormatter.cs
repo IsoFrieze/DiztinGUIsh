@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public class LogCreatorLineFormatter
     {

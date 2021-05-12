@@ -435,24 +435,6 @@ namespace Diz.Core.util
 
         public const int LengthOfTitleName = 0x15;
 
-        public static LogCreatorOutput.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
-        {
-            var sampleRomData = SampleRomData.CreateSampleData();
-
-            sampleSettings.Structure = LogWriterSettings.FormatStructure.SingleFile;
-            sampleSettings.FileOrFolderOutPath = "";
-            sampleSettings.OutputToString = true;
-            sampleSettings.RomSizeOverride = sampleRomData.OriginalRomSizeBeforePadding;
-            
-            var lc = new LogCreator()
-            {
-                Settings = sampleSettings,
-                Data = sampleRomData.Data,
-            };
-            
-            return lc.CreateLog();
-        }
-        
         public static ByteSourceMapping CreateRomMappingFromRomByteSource(ByteSource romByteSource, RomMapMode romMapMode, RomSpeed romSpeed)
         {
             return new()
@@ -498,6 +480,5 @@ namespace Diz.Core.util
         
         public static bool IsLocationAReadPoint(this ILogCreatorDataSource data, int pointer) => 
             IsLocationPoint(data, pointer, InOutPoint.ReadPoint);
-
     }
 }

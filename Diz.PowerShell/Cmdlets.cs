@@ -2,10 +2,10 @@
 using System.Management.Automation;
 using Diz.Core.export;
 using Diz.Core.serialization;
+using Diz.LogWriter;
 
 namespace Diz.PowerShell
 {
-
     [Cmdlet(VerbsLifecycle.Build, "AssemblyFiles")]
     public class BuildAssemblyFilesCmdlet : PSCmdlet
     {

@@ -1,8 +1,9 @@
 ﻿using System;
+using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.util;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public class DataErrorChecking
     {

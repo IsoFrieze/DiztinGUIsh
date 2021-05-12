@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public class LineGenerator
     {

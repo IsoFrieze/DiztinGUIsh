@@ -2,9 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Diz.Core.export;
 using Diz.Core.util;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public abstract class LogCreatorOutput
     {

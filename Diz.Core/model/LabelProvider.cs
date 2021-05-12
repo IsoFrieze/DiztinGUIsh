@@ -6,7 +6,6 @@ using Diz.Core.model.snes;
 
 namespace Diz.Core.model
 {
-
     // this system could probably use a redesign.
     // the entire point of this class is to route all read/writes for Label class
     // through one point.  then, we can augment the real labels (user-created)

@@ -10,6 +10,7 @@ using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.util;
+using Diz.LogWriter;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
@@ -218,12 +219,8 @@ namespace DiztinGUIsh.controller
             ProjectView.OnExportFinished(result);
         }
 
-        public void UpdateExportSettings(LogWriterSettings selectedSettings)
-        {
-            // TODO: ref readonly or similar here, to save us an extra copy of the struct?
-
+        public void UpdateExportSettings(LogWriterSettings selectedSettings) =>
             Project.LogWriterSettings = selectedSettings;
-        }
 
         public void MarkProjectAsUnsaved()
         {

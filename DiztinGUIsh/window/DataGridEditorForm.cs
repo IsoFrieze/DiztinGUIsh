@@ -6,6 +6,7 @@ using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
+using Diz.LogWriter;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 using DiztinGUIsh.util;
@@ -114,21 +115,35 @@ namespace DiztinGUIsh.window
             ExportDisassembly.ShowExportResults(result);
         }
         
-        private LogWriterSettings? PromptForExportSettingsAndConfirmation()
+        /// <summary>
+        /// shows the assembly export settings editor UI 
+        /// </summary>
+        /// <returns>non-null and valid settings object if all user selections are valid</returns>
+        private bool PromptForExportSettingsAndConfirmation()
         {
-            // TODO: use the controller to update the project settings from a new one we build
-            // don't update directly.
-            // probably make our Project property be fully readonly/const/whatever [ReadOnly] attribute
+            if (Project == null)
+                return false;
+            
+            // might want to rethink the directory data being passed around, flow is kinda awkward,
+            // can surely be simplified.
+            var initialPath = Project?.Session?.ProjectDirectory ?? "";
+            var exportDialog = new ExportDisassembly(Project.LogWriterSettings)
+            {
+                InitialDirForOutput = initialPath,
+                KeepPathsRelativeToThisPath = initialPath,
+            };
+            
+            var newValidatedSettings = GetExportSettingsFromDialog(exportDialog);
+            if (newValidatedSettings == null) 
+                return false;
+            
+            MainFormController.UpdateExportSettings(newValidatedSettings);
+            return true;
+        }
 
-            var selectedSettings = ExportDisassembly.ConfirmSettingsAndAskToStart(Project);
-            if (selectedSettings == null)
-                return null;
-
-            var settings = selectedSettings.Value;
-
-            MainFormController.UpdateExportSettings(selectedSettings.Value);
-
-            return settings;
+        private static LogWriterSettings GetExportSettingsFromDialog(ExportDisassembly export)
+        {
+            return export.ShowDialog() != DialogResult.OK ? null : export.ProposedSettings;
         }
 
         private void Project_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -200,11 +215,9 @@ namespace DiztinGUIsh.window
         
         private void ExportAssembly()
         {
-            var adjustedSettings = PromptForExportSettingsAndConfirmation();
-            if (!adjustedSettings.HasValue)
+            if (!PromptForExportSettingsAndConfirmation())
                 return;
-
-            MainFormController.UpdateExportSettings(adjustedSettings.Value);
+            
             MainFormController.WriteAssemblyOutput();
         }
 

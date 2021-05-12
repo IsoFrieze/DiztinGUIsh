@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Diz.Core.export;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public class LogCreator : ILogCreatorForGenerator
     {

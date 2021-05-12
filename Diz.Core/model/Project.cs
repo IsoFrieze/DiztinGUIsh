@@ -118,7 +118,7 @@ namespace Diz.Core.model
 
         public Project()
         {
-            LogWriterSettings.SetDefaults();
+            LogWriterSettings = new LogWriterSettings();
             PropertyChanged += ProjectPropertyChanged;
         }
 

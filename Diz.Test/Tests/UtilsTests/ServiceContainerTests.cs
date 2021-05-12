@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using Diz.Core.export;
-using Diz.Core.export.assemblyGenerators;
 using Diz.Core.util;
+using Diz.LogWriter;
+using Diz.LogWriter.assemblyGenerators;
 using LightInject;
 using Xunit;
 

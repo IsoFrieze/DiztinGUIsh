@@ -1,7 +1,8 @@
-﻿using Diz.Core.model;
+﻿using Diz.Core.export;
+using Diz.Core.model;
 using Diz.Core.util;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     // Generate labels like "CODE_856469" and "DATA_763525"
     // These will be combined with the original labels to produce our final assembly

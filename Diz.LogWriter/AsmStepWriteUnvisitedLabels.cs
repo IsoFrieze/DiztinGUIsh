@@ -1,4 +1,4 @@
-﻿namespace Diz.Core.export
+﻿namespace Diz.LogWriter
 {
     public abstract class AsmStepExtraLabelOutputBase : AsmCreationBase
     {

@@ -1,7 +1,7 @@
 ﻿using Diz.Core.model;
 using Diz.Core.util;
 
-namespace Diz.Core.export.assemblyGenerators
+namespace Diz.LogWriter.assemblyGenerators
 {
     public class AssemblyGeneratePercent : AssemblyPartialLineGenerator
     {

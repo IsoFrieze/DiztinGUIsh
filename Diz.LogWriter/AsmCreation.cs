@@ -1,4 +1,6 @@
-﻿namespace Diz.Core.export
+﻿using Diz.Core.export;
+
+namespace Diz.LogWriter
 {
     public interface IAsmCreationStep
     {

@@ -5,6 +5,7 @@ using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
+using Diz.LogWriter;
 
 // NOTE: lots of these interfaces were created temporarily for major refactoring.
 // when that process is finished, we should probably take a pass here to simplify anything
