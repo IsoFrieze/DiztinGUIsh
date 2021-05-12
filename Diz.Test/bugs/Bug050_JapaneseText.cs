@@ -8,6 +8,7 @@ using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using Diz.Test.Tests;
+using Diz.Test.Tests.SerializationTests;
 using FluentAssertions;
 using JetBrains.Annotations;
 using Moq;

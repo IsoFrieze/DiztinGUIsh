@@ -5,6 +5,7 @@ using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
+using Diz.Test.Tests.SerializationTests;
 using Diz.Test.Utils.SuperFamiCheckUtil;
 using FluentAssertions;
 using Xunit;
@@ -93,8 +94,8 @@ namespace Diz.Test.Tests.RomInterfaceTests
             var expectedTitle = SampleRomData.GetSampleUtf8CartridgeTitle();
             TestRomCartTitle(srcProject, expectedTitle);
         }
-
-        public static void TestRomCartTitle(Project project, string expectedTitle)
+        
+        internal static void TestRomCartTitle(Project project, string expectedTitle)
         {
             ByteUtil.ConvertUtf8ToShiftJisEncodedBytes(project.InternalRomGameName)
                 .Should().HaveCount(RomUtil.LengthOfTitleName,
