@@ -97,8 +97,13 @@ namespace Diz.Core.util
             var project = new Project
             {
                 AttachedRomFilename = importSettings.RomFilename,
-                ProjectFileName = null,
                 Data = new Data()
+            };
+
+            project.Session = new ProjectSession(project)
+            {
+                ProjectFileName = "",
+                UnsavedChanges = true,
             };
             
             project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
@@ -110,7 +115,6 @@ namespace Diz.Core.util
                 project.Data.SetFlag(offset, flagType);
 
             project.CacheVerificationInfo();
-            project.UnsavedChanges = true;
 
             return project;
         }

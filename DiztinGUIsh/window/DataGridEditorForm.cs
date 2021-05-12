@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using Diz.Core.export;
@@ -133,11 +134,15 @@ namespace DiztinGUIsh.window
 
         private void Project_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Project.UnsavedChanges) || 
-                e.PropertyName == nameof(Project.ProjectFileName)) {
+            if (Project.Session == null)
+                return;
+            
+            if (e.PropertyName == nameof(IProjectSession.UnsavedChanges) || 
+                e.PropertyName == nameof(IProjectSession.ProjectFileName)) 
+            {
                 Text =
-                    (Project.UnsavedChanges ? "*" : "") +
-                    (Project.ProjectFileName ?? "New Project") +
+                    (Project.Session.UnsavedChanges ? "*" : "") +
+                    (Project.Session.ProjectFileName ?? "New Project") +
                     " - DiztinGUIsh";
             }
         }
@@ -230,7 +235,7 @@ namespace DiztinGUIsh.window
 
         private void SaveProject()
         {
-            MainFormController.SaveProject(Project.ProjectFileName);
+            MainFormController.SaveProject(Project?.Session?.ProjectFileName);
         }
 
         private void ShowVisualizerForm()
@@ -543,7 +548,7 @@ namespace DiztinGUIsh.window
         #region Prompts
         private bool PromptContinueEvenIfUnsavedChanges()
         {
-            if (Project == null || !Project.UnsavedChanges)
+            if (Project == null || !(Project?.Session?.UnsavedChanges ?? false))
                 return true;
 
             return DialogResult.OK == MessageBox.Show(
@@ -554,13 +559,13 @@ namespace DiztinGUIsh.window
         private string PromptForOpenFilename()
         {
             // TODO: combine with another function here that does similar
-            openFileDialog.InitialDirectory = Project?.ProjectFileName ?? "";
+            openFileDialog.InitialDirectory = Project?.Session?.ProjectFileName ?? "";
             return openFileDialog.ShowDialog() == DialogResult.OK ? openFileDialog.FileName : "";
         }
 
         private void PromptForFilenameToSave()
         {
-            saveProjectFile.InitialDirectory = Project?.ProjectFileName ?? "";
+            saveProjectFile.InitialDirectory = Project?.Session?.ProjectFileName ?? "";
             if (saveProjectFile.ShowDialog() == DialogResult.OK && saveProjectFile.FileName != "")
             {
                 MainFormController.SaveProject(saveProjectFile.FileName);
@@ -572,14 +577,14 @@ namespace DiztinGUIsh.window
             if (!PromptContinueEvenIfUnsavedChanges())
                 return false;
 
-            openProjectFile.InitialDirectory = Project?.ProjectFileName;
+            openProjectFile.InitialDirectory = Project?.Session?.ProjectFileName;
             return openProjectFile.ShowDialog() == DialogResult.OK;
         }
 
         // ReSharper disable once InconsistentNaming
         private string PromptOpenBizhawkCDLFile()
         {
-            openCDLDialog.InitialDirectory = Project.ProjectFileName;
+            openCDLDialog.InitialDirectory = Project?.Session?.ProjectFileName;
             if (openCDLDialog.ShowDialog() != DialogResult.OK)
                 return "";
 

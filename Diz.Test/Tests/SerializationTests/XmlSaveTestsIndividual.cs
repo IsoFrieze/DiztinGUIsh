@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using Diz.Test.TestData;
 using Diz.Test.Utils;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -90,6 +92,39 @@ namespace Diz.Test.Tests.SerializationTests
             
             Assert.Equal(unchanged.Count, cycled.Count);
             Assert.Equal(unchanged, cycled);
+        }
+        
+        [Fact]
+        public void XmlFullCycleProject()
+        {
+            XmlTestUtils.RunFullCycle(CreateMostlyEmptyProject, out var unchanged, out var cycled);
+            cycled.Should().Be(unchanged);
+
+            unchanged?.Session?.UnsavedChanges
+                .Should().BeTrue("we set it that way");
+
+            cycled?.Session?.UnsavedChanges
+                .Should().BeFalse("we marked this as ignored for XML serialization");
+        }
+
+        private static Project CreateMostlyEmptyProject()
+        {
+            var project = new Project
+            {
+                Data = null, // let's test everything except Data
+                AttachedRomFilename = "dac.smc",
+                InternalCheckSum = 0x4242FFFF,
+                InternalRomGameName = "Cyber Space Bros 2",
+                LogWriterSettings = new LogWriterSettings(),
+            };
+
+            project.Session = new ProjectSession(project)
+            {
+                UnsavedChanges = true,
+                ProjectFileName = "sega_genesis___wait_hang_on.diz",
+            };
+            
+            return project;
         }
 
         public XmlSaveTestsIndividual(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }

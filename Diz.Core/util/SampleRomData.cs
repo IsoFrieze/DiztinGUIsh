@@ -105,8 +105,7 @@ namespace Diz.Core.util
             var project = new Project
             {
                 AttachedRomFilename = settings.RomFilename,
-                ProjectFileName = null,
-                Data = new Data()
+                Data = new Data(),
             };
             
             var mapping = RomUtil.CreateRomMappingFromRomRawBytes(

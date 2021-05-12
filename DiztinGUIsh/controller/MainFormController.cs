@@ -189,11 +189,11 @@ namespace DiztinGUIsh.controller
 
             return false;
         }
-        
-        public void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
+
+        private void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
         {
             var project = ImportUtils.ImportRomAndCreateNewProject(importSettings);
-            OnProjectOpenSuccess(project.ProjectFileName, project);
+            OnProjectOpenSuccess(project.Session?.ProjectFileName, project);
         }
 
         public void WriteAssemblyOutput()
@@ -227,9 +227,10 @@ namespace DiztinGUIsh.controller
 
         public void MarkProjectAsUnsaved()
         {
-            // eventually set this via INotifyPropertyChanged or similar, instead of having to do it
-            // manually
-            Project.UnsavedChanges = true;
+            // eventually set this via INotifyPropertyChanged or similar,
+            // instead of having to do it manually
+            if (Project?.Session != null)
+                Project.Session.UnsavedChanges = true;
         }
 
         public long ImportBsnesUsageMap(string fileName)

@@ -72,14 +72,14 @@ namespace DiztinGUIsh.window.dialog
 
         private string PromptSaveLogPath()
         {
-            chooseLogFolder.SelectedPath = Path.GetDirectoryName(project.ProjectFileName);
+            chooseLogFolder.SelectedPath = Path.GetDirectoryName(project?.Session?.ProjectFileName);
             return chooseLogFolder.ShowDialog() == DialogResult.OK && chooseLogFolder.SelectedPath != ""
                 ? chooseLogFolder.SelectedPath : null;
         }
 
         private string PromptSaveLogFile()
         {
-            saveLogSingleFile.InitialDirectory = project.ProjectFileName;
+            saveLogSingleFile.InitialDirectory = project?.Session?.ProjectFileName;
             return saveLogSingleFile.ShowDialog() == DialogResult.OK && saveLogSingleFile.FileName != ""
                 ? saveLogSingleFile.FileName : null;
         }
@@ -92,7 +92,7 @@ namespace DiztinGUIsh.window.dialog
             if (string.IsNullOrEmpty(fileOrFolderPath))
                 return false;
             
-            settings.SetFileOrFolderOutputPathRelativeToDir(fileOrFolderPath, project.ProjectDirectory);
+            settings.SetFileOrFolderOutputPathRelativeToDir(fileOrFolderPath, project?.Session?.ProjectDirectory);
 
             return true;
         }

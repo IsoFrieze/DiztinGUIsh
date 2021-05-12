@@ -31,7 +31,14 @@ namespace Diz.Core.serialization
 
         private void PostSerialize(string filename, ProjectXmlSerializer.Root xmlRoot, ProjectSerializer serializer)
         {
-            xmlRoot.Project.ProjectFileName = filename;
+            Debug.Assert(xmlRoot != null);
+            Debug.Assert(xmlRoot.Project != null);
+            Debug.Assert(xmlRoot.Project.Session == null);
+
+            xmlRoot.Project.Session = new ProjectSession(xmlRoot.Project)
+            {
+                ProjectFileName = filename
+            };
 
             // at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
             // It would be easy to store the ROM bytes in the save file, but, for copyright reasons,
@@ -103,8 +110,12 @@ namespace Diz.Core.serialization
             var data = DoSave(project, filename, serializer);
 
             WriteBytes(filename, data);
-            project.UnsavedChanges = false;
-            project.ProjectFileName = filename;
+            
+            if (project.Session != null)
+            {
+                project.Session.UnsavedChanges = false;
+                project.Session.ProjectFileName = filename;
+            }
         }
 
         private byte[] DoSave(Project project, string filename, ProjectSerializer serializer)

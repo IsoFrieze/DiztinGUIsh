@@ -67,9 +67,13 @@ namespace Diz.Core.serialization.binary_serializer_old
             var version = data[0];
             ValidateProjectFileVersion(version);
 
-            var project = new Project
-            {
+            var project = new Project {
                 Data = new Data()
+            };
+
+            project.Session = new ProjectSession(project)
+            {
+                UnsavedChanges = false
             };
 
             // version 0 needs to convert PC to SNES for some addresses
@@ -78,8 +82,8 @@ namespace Diz.Core.serialization.binary_serializer_old
                 converter = project.Data.ConvertPCtoSnes;
 
             // read mode, speed, size
-            var mode = (RomMapMode)data[HeaderSize];
-            var speed = (RomSpeed)data[HeaderSize + 1];
+            var mode = (RomMapMode) data[HeaderSize];
+            var speed = (RomSpeed) data[HeaderSize + 1];
             var size = ByteUtil.ConvertByteArrayToInt32(data, HeaderSize + 2);
 
             // read internal title
@@ -93,24 +97,24 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             // read full filepath to the ROM .sfc file
             while (data[pointer] != 0)
-                project.AttachedRomFilename += (char)data[pointer++];
+                project.AttachedRomFilename += (char) data[pointer++];
             pointer++;
-            
+
             project.Data.InitializeEmptyRomMapping(size, mode, speed);
 
             for (int i = 0; i < size; i++) project.Data.SetDataBank(i, data[pointer + i]);
-            for (int i = 0; i < size; i++) project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
+            for (int i = 0; i < size; i++)
+                project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
             for (int i = 0; i < size; i++) project.Data.SetXFlag(i, data[pointer + 3 * size + i] != 0);
             for (int i = 0; i < size; i++) project.Data.SetMFlag(i, data[pointer + 4 * size + i] != 0);
-            for (int i = 0; i < size; i++) project.Data.SetFlag(i, (FlagType)data[pointer + 5 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetArchitecture(i, (Architecture)data[pointer + 6 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (InOutPoint)data[pointer + 7 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetFlag(i, (FlagType) data[pointer + 5 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetArchitecture(i, (Architecture) data[pointer + 6 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (InOutPoint) data[pointer + 7 * size + i]);
             pointer += 8 * size;
 
             ReadLabels(project, data, ref pointer, converter, version >= 2);
             ReadComments(project, data, ref pointer, converter);
 
-            project.UnsavedChanges = false;
 
             var warning = "";
             if (version != LatestFileFormatVersion)

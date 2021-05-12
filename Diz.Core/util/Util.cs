@@ -413,7 +413,10 @@ namespace Diz.Core.util
     
     public static class NotifyPropertyChangedExtensions
     {
-        // returns true if we set property to a new value
+        /// <summary>
+        /// Set a field, and if changed, dispatch any events associated with it
+        /// </summary>
+        /// <returns>true if we set property to a new value and dispatched events</returns>
         public static bool SetField<T>(this INotifyPropertyChanged sender, PropertyChangedEventHandler handler, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
             if (FieldIsEqual(field, value, compareRefOnly)) 
@@ -425,7 +428,10 @@ namespace Diz.Core.util
             return true;
         }
         
-        // returns true if we set property to a new value
+        /// <summary>
+        /// Set a field, and if changed, dispatch any events associated with it
+        /// </summary>
+        /// <returns>true if we set property to a new value and dispatched events</returns>
         public static bool SetField<T>(this INotifyPropertyChangedExt sender, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
             if (FieldIsEqual(field, value, compareRefOnly)) 
@@ -437,6 +443,10 @@ namespace Diz.Core.util
             return true;
         }
 
+        /// <summary>
+        /// Test if one field is equal to another
+        /// </summary>
+        /// <returns>true if we equal</returns>
         public static bool FieldIsEqual<T>(T field, T value, bool compareRefOnly = false)
         {
             if (compareRefOnly)

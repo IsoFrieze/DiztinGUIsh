@@ -69,10 +69,16 @@ namespace DiztinGUIsh.controller
             if (filename != SampleProjectName) 
                 return base.ReadProject(filename);
 
-            return new Project {
+            var project = new Project {
                 Data = SampleRomData.CreateSampleData().Data,
-                ProjectFileName = SampleProjectName
             };
+
+            project.Session = new ProjectSession(project)
+            {
+                ProjectFileName = SampleProjectName,
+            };
+
+            return project;
         }
     }
 }
