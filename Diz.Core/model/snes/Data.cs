@@ -153,6 +153,7 @@ namespace Diz.Core.model.snes
         public void SetArchitecture(int i, Architecture arch) => 
             GetOrCreateAnnotationAtPc<OpcodeAnnotation>(i).Arch = arch;
         
+        // TODO: check all GetOneAnnotationAtPc() for null before use.
         public InOutPoint GetInOutPoint(int i) => GetOneAnnotationAtPc<BranchAnnotation>(i)?.Point ?? default;
         public void SetInOutPoint(int i, InOutPoint point) => GetOrCreateAnnotationAtPc<BranchAnnotation>(i).Point |= point;
         public void ClearInOutPoint(int i) => GetOneAnnotationAtPc<BranchAnnotation>(i).Point = 0;
