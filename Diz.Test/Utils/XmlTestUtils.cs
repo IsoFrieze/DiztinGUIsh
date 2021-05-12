@@ -1,7 +1,6 @@
 ﻿using System;
 using Diz.Core.serialization.xml_serializer;
 using FluentAssertions;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Diz.Test.Utils

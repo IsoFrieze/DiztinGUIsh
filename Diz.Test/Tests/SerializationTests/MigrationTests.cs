@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Diz.Core.model.project;
@@ -8,11 +9,10 @@ using FluentAssertions;
 using Moq;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.Tests.SerializationTests
 {
     public class MigrationTests
     {
-        
         [Theory]
         [MemberData(nameof(Harnesses))]
         public void TestMigrationFailsIfOutsideBounds(Harness harness)
@@ -36,6 +36,7 @@ namespace Diz.Test
                 .Should().Throw<InvalidDataException>().WithMessage("*starting migration version is greater than target version*");
 
         #region HarnessData
+        [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
         public static TheoryData<Harness> Harnesses => new()
         {
             new Harness
@@ -138,8 +139,8 @@ namespace Diz.Test
         {
             public int RunnerStart;
             public int RunnerTarget;
-            public string ExpectedException = null;
-            public readonly List<MigrationMock> Migrations = new List<MigrationMock>();
+            public string ExpectedException;
+            public readonly List<MigrationMock> Migrations = new();
 
             public List<IMigration> MigrationObjs => Migrations.Select(mock => mock.Mock.Object).ToList();
             

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using Diz.Core.export;
@@ -142,7 +141,7 @@ namespace DiztinGUIsh.window
             {
                 Text =
                     (Project.Session.UnsavedChanges ? "*" : "") +
-                    (Project.Session.ProjectFileName ?? "New Project") +
+                    (Project.Session.ProjectFileName == "" ? "New Project" : Project.Session.ProjectFileName) +
                     " - DiztinGUIsh";
             }
         }

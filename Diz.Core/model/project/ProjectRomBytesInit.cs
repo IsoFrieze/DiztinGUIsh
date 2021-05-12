@@ -53,7 +53,7 @@ namespace Diz.Core.model.project
             // TODO: move this to an override that overrides Populate()
             // then, don't call the base method, fail if this doesn't work.
             
-            var bytes = Project.Data.GetOverriddenRomBytes();
+            var bytes = Project.Data?.GetOverriddenRomBytes();
             if (bytes == null)
                 return false;
             
@@ -77,7 +77,7 @@ namespace Diz.Core.model.project
         private (string filename, byte[] romBytes)? SearchForValidRom()
         {
             var searchProvider = GetLinkedRomProvider();
-            searchProvider.EnsureCompatible = (romFilename, romBytes) => EnsureProjectCompatibleWithRom(romBytes);
+            searchProvider.EnsureCompatible = (_, romBytes) => EnsureProjectCompatibleWithRom(romBytes);
             searchProvider.GetNextFilename = reasonWhyLastFileNotCompatible => 
                 GetNextRomFileToTry?.Invoke(reasonWhyLastFileNotCompatible) ?? null;
 

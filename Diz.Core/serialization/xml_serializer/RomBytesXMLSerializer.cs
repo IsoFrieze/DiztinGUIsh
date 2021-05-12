@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -170,6 +171,7 @@ namespace Diz.Core.serialization.xml_serializer
             }
         }
 
+        [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalse")]
         public void Write(IFormatWriter writer, ByteSource instance)
         {
             var options = new List<string>

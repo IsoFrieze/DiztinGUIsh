@@ -4,6 +4,7 @@ using Diz.Core.model;
 using Diz.Test.Utils;
 using Diz.Core.model.byteSources;
 using Xunit;
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace Diz.Test.Tests.AnnotationCollectionTests
 {

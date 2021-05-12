@@ -60,8 +60,8 @@ namespace DiztinGUIsh.util
         // show the byte two different ways: ascii and numeric
         [DisplayName("@")]
         [ReadOnly(true)]
-        public char AsciiCharRep =>
-            (char) ByteEntry.Byte;
+        public char AsciiCharRep => 
+            ByteEntry?.Byte == null ? ' ' : ByteEntry.Byte.ToString()[0];
 
         [DisplayName("#")]
         [ReadOnly(true)]

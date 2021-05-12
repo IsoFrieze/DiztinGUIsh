@@ -465,12 +465,14 @@ namespace Diz.Core.util
 
     public static class ContentUtils
     {
-        public static Dictionary<int, Label> ReadLabelsFromCsv(string importFilename, ref int errLine)
+        public static Dictionary<int, Label> ReadLabelsFromCsv(string importFilename, out int errLine)
         {
             var newValues = new Dictionary<int, Label>();
             var lines = Util.ReadLines(importFilename).ToArray();
 
             var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
+
+            errLine = 0;
 
             // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
             // section. replace with something better
@@ -498,7 +500,7 @@ namespace Diz.Core.util
         
         public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, ref int errLine)
         {
-            var labelsFromCsv = ReadLabelsFromCsv(importFilename, ref errLine);
+            var labelsFromCsv = ReadLabelsFromCsv(importFilename, out errLine);
             
             if (replaceAll)
                 labelProvider.DeleteAllLabels();

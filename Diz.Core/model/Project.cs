@@ -6,7 +6,6 @@ using System.Xml.Serialization;
 using Diz.Core.export;
 using Diz.Core.model.snes;
 using Diz.Core.util;
-using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
@@ -108,7 +107,7 @@ namespace Diz.Core.model
         
         // don't access these backing fields directly, always use the properties
         private string attachedRomFilename = "";
-        private string? internalRomGameName = "";
+        private string internalRomGameName = "";
         private uint internalCheckSum;
         private LogWriterSettings logWriterSettings;
         private Data? data;
@@ -146,7 +145,7 @@ namespace Diz.Core.model
         private string GetAbsolutePathToRomFile()
         {
             var pathToProjectFile = GetFullBasePathToRomFile(session?.ProjectFileName ?? "");
-            var attachedRomFileNoPath = Path.GetFileName(AttachedRomFilename) ?? "";
+            var attachedRomFileNoPath = Path.GetFileName(AttachedRomFilename);
             return Path.Combine(pathToProjectFile, attachedRomFileNoPath);
         }
         

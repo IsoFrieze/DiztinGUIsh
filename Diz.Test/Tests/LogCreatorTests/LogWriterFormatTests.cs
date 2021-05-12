@@ -3,13 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using Diz.Core.export;
 using Diz.Test.Utils;
 using FluentAssertions;
-using Moq;
 using Xunit;
 
 namespace Diz.Test.Tests.LogCreatorTests
@@ -97,7 +95,7 @@ namespace Diz.Test.Tests.LogCreatorTests
         [MemberData(nameof(BadLengthOverride))]
         public static void TestLogWriterLengthFormatStrInvalid(string invalidParseStr)
         {
-            Action x = () => new LogCreatorLineFormatter(invalidParseStr, null);
+            var x = GetLogCreatorAction(invalidParseStr);
             x.Should().Throw<InvalidDataException>().WithMessage("*length*");
         }
         
@@ -105,8 +103,17 @@ namespace Diz.Test.Tests.LogCreatorTests
         [MemberData(nameof(BadUnevenPercentageSignStrings))]
         public static void TestLogWriterFormatStrInvalid(string invalidParseStr)
         {
-            Action x = () => new LogCreatorLineFormatter(invalidParseStr, null);
+
+            var x = GetLogCreatorAction(invalidParseStr);
             x.Should().Throw<InvalidDataException>().WithMessage("*non-even*");
+        }
+
+        private static Action GetLogCreatorAction(string invalidParseStr)
+        {
+            // ReSharper disable once ObjectCreationAsStatement
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
+            // ReSharper disable once CA1806
+            return () => new LogCreatorLineFormatter(invalidParseStr, null);
         }
     }
 }

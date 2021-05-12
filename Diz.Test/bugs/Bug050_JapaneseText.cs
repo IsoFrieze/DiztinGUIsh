@@ -2,22 +2,19 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
-using Diz.Test.Tests;
 using Diz.Test.Tests.SerializationTests;
 using FluentAssertions;
 using JetBrains.Annotations;
-using Moq;
 using Xunit;
 
 namespace Diz.Test.bugs
 {
     // https://github.com/Dotsarecool/DiztinGUIsh/issues/50
-    public static class Bug050_JapaneseText
+    public static class Bug050JapaneseText
     {
         public class MemoryProjectFileManager : ProjectFileManager
         {
@@ -49,10 +46,10 @@ namespace Diz.Test.bugs
 
             protected override ProjectXmlSerializer CreateProjectXmlSerializer()
             {
-                return new ProjectXmlSerializer_Bug50();
+                return new ProjectXmlSerializerBug50();
             }
 
-            public class ProjectXmlSerializer_Bug50 : ProjectXmlSerializer
+            public class ProjectXmlSerializerBug50 : ProjectXmlSerializer
             {
                 
             }
@@ -62,7 +59,7 @@ namespace Diz.Test.bugs
         {
             public bool ExpectedMitigationApplied = true;
             public Project Project = LoadSaveTest.BuildSampleProject2();
-            [CanBeNull] public string OverrideGameName = null;
+            [CanBeNull] public string OverrideGameName;
             public bool ForceOlderSaveVersionWhichShouldFix = true;
         }
         
@@ -101,11 +98,11 @@ namespace Diz.Test.bugs
 
             var projectFileManager = new Bug50ProjectFileManager
             {
-                RomPromptFn = s => 
+                RomPromptFn = _ => 
                     throw new InvalidDataException("UNIT TEST SHOULD NOT HIT GET HERE.")
             };
 
-            projectFileManager.BeforeSerialize += (serializer, rootElement) =>
+            projectFileManager.BeforeSerialize += (_, rootElement) =>
             {
                 // doctor some data before we serialize, in order to trigger the bug and the workaround
                 
@@ -127,7 +124,7 @@ namespace Diz.Test.bugs
             // Save is done! now reload it.
             // ----------
 
-            projectFileManager.AfterDeserialize += (serializer, root) =>
+            projectFileManager.AfterDeserialize += (_, root) =>
             {
                 root.SaveVersion.Should().Be(saveVersionToUse, "It was saved with the older file format");
                 

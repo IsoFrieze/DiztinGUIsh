@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 using Diz.Core.model;
-using ExtendedXmlSerializer;
 
 namespace Diz.Core.serialization.xml_serializer
 {

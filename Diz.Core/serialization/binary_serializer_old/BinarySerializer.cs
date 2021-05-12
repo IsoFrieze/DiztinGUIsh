@@ -272,10 +272,10 @@ namespace Diz.Core.serialization.binary_serializer_old
             const int stringsPerEntry = 1;
             pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter, 
                 (offset, strings) =>
-            {
-                Debug.Assert(strings.Length == 1);
-                project.Data.AddComment(offset, strings[0], true);
-            });
+                {
+                    Debug.Assert(strings.Length == 1);
+                    project.Data?.AddComment(offset, strings[0], true);
+                });
         }
 
         private void ReadLabels(Project project, byte[] bytes, ref int pointer, ByteUtil.AddressConverter converter, bool readAliasComments)

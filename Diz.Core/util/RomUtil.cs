@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Diz.Core.export;
 using Diz.Core.model;
-using JetBrains.Annotations;
 using Diz.Core.model.byteSources;
 
 namespace Diz.Core.util

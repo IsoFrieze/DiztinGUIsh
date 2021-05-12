@@ -174,6 +174,7 @@ namespace Diz.Test.Tests.ByteEntryTests
         [Fact]
         public void TestNoAnnotation()
         {
+            // ReSharper disable once UnusedParameter.Local
             static void TestNullAnnotations(ByteEntry entry)
             {
                 #if EXPECTING_NULL_ANNOTATIONS

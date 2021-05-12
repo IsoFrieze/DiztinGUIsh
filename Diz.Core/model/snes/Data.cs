@@ -499,7 +499,7 @@ namespace Diz.Core.model.snes
         // TODO: this needs to go. used for tests to load in fake byte data
         // instead of reading from disk. we need to change this to just intercept somewhere
         // in the loading pipeline instead of here.
-        public virtual byte[]? GetOverriddenRomBytes()
+        public virtual byte[] GetOverriddenRomBytes()
         {
             return null; // NOP
         }

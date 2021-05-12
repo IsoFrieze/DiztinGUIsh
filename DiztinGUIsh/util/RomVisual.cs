@@ -35,8 +35,9 @@ namespace DiztinGUIsh.util
             bitmap = null;
 
             project = value;
-            if (project?.Data == null) 
-                return;
+            
+            //if (project?.Data == null) 
+            //    return;
 
             // TODO. DO THIS ON THE ADDRESS SPACE COMBINED STUFF.
             //project.Data.RomBytes += RomBytes_PropertyChanged;
@@ -70,7 +71,7 @@ namespace DiztinGUIsh.util
             get => romStartingOffset;
             set
             {
-                if (value < 0 || value >= project.Data.RomByteSource?.Bytes.Count)
+                if (value < 0 || value >= project?.Data?.RomByteSource?.Bytes.Count)
                     throw new ArgumentOutOfRangeException();
 
                 romStartingOffset = value;
@@ -82,7 +83,7 @@ namespace DiztinGUIsh.util
             get => lengthOverride;
             set
             {
-                if (value != -1 && (value == 0 || RomStartingOffset + value > project.Data.RomByteSource?.Bytes.Count))
+                if (value != -1 && (value == 0 || RomStartingOffset + value > project?.Data?.RomByteSource?.Bytes.Count))
                     throw new ArgumentOutOfRangeException();
 
                 lengthOverride = value;
@@ -121,8 +122,8 @@ namespace DiztinGUIsh.util
         private readonly object dirtyLock = new();
         private readonly Dictionary<int, MarkAnnotation> dirtyRomBytes = new();
 
-        private void RomBytes_CollectionChanged(object sender,
-            System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        // ReSharper disable once UnusedParameter.Local
+        private void RomBytes_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             AllDirty = true;
         }

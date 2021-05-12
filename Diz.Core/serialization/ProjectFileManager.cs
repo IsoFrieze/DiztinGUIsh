@@ -22,7 +22,7 @@ namespace Diz.Core.serialization
             #endif
 
             var (serializer, xmlRoot, warning) = Deserialize(filename);
-            VerifyIntegrityDeserialized(xmlRoot);
+            // VerifyIntegrityDeserialized(xmlRoot); // enable for extra checking
             PostSerialize(filename, xmlRoot, serializer);
 
             Trace.WriteLine("Opening Project END");
@@ -56,12 +56,12 @@ namespace Diz.Core.serialization
             romAddCmd.TryReadAttachedProjectRom();
         }
 
-        private static void VerifyIntegrityDeserialized(ProjectXmlSerializer.Root xmlRoot)
-        {
-            var data = xmlRoot.Project.Data;
-            // Debug.Assert(data.Labels != null && data.Comments != null);
-            // Debug.Assert(data.RomBytes != null && data.RomBytes.Count > 0);
-        }
+        // private static void VerifyIntegrityDeserialized(ProjectXmlSerializer.Root xmlRoot)
+        // {
+        //     // var data = xmlRoot.Project.Data;
+        //     // Debug.Assert(data.Labels != null && data.Comments != null);
+        //     // Debug.Assert(data.RomBytes != null && data.RomBytes.Count > 0);
+        // }
 
         private (ProjectSerializer serializer, ProjectXmlSerializer.Root xmlRoot, string warning) Deserialize(string filename)
         {

@@ -1,5 +1,6 @@
 ﻿using Diz.Core.model;
 using Diz.Core.model.byteSources;
+using Diz.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;
 

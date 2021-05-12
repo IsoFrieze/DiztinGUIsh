@@ -306,7 +306,7 @@ namespace DiztinGUIsh.controller
 
         public int MarkMany(int markProperty, int markStart, object markValue, int markCount)
         {
-            if (!RomDataPresent())
+            if (!RomDataPresent() || Project?.Data == null)
                 return 0;
             
             var destination = markProperty switch
@@ -347,7 +347,7 @@ namespace DiztinGUIsh.controller
 
         private int Step(int offset, bool branch)
         {
-            return Project.Data.Step(offset, branch, false, offset - 1);
+            return Project?.Data?.Step(offset, branch, false, offset - 1) ?? 0;
         }
 
         public void AutoStepSafe(int offset)
@@ -381,7 +381,7 @@ namespace DiztinGUIsh.controller
 
         private int DoAutoStep(int newOffset, bool harsh, int count)
         {
-            return Project.Data.AutoStep(newOffset, harsh, count);
+            return Project?.Data?.AutoStep(newOffset, harsh, count) ?? 0;
         }
 
         public void Mark(int offset)
@@ -390,14 +390,16 @@ namespace DiztinGUIsh.controller
                 return;
             
             MarkProjectAsUnsaved();
-            var newOffset = Project.Data.MarkTypeFlag(offset, CurrentMarkFlag, RomUtil.GetByteLengthForFlag(CurrentMarkFlag));
+            var newOffset = Project?.Data?.MarkTypeFlag(
+                offset, CurrentMarkFlag, RomUtil.GetByteLengthForFlag(CurrentMarkFlag)) ?? -1;
             
-            SelectedSnesOffset = newOffset;
+            if (newOffset != -1)
+                SelectedSnesOffset = newOffset;
         }
         
         private int FindIntermediateAddress(int offset)
         {
-            if (!RomDataPresent())
+            if (!RomDataPresent() || Project?.Data == null)
                 return -1;
 
             var ia = Project.Data.GetIntermediateAddressOrPointer(offset);
@@ -410,7 +412,7 @@ namespace DiztinGUIsh.controller
         private bool FindUnreached(int offset, bool end, bool direction, out int unreached)
         {
             unreached = -1;
-            if (!RomDataPresent())
+            if (!RomDataPresent() || Project?.Data == null)
                 return false;
             
             var size = Project.Data.GetRomSize();
@@ -442,12 +444,12 @@ namespace DiztinGUIsh.controller
 
         private bool IsReached(int offset)
         {
-            return Project.Data.GetFlag(offset) != FlagType.Unreached;
+            return Project?.Data?.GetFlag(offset) != FlagType.Unreached;
         }
 
         private bool IsUnreached(int offset)
         {
-            return Project.Data.GetFlag(offset) == FlagType.Unreached;
+            return Project?.Data?.GetFlag(offset) == FlagType.Unreached;
         }
 
         public void MarkMany(int offset, int whichIndex)
@@ -488,7 +490,7 @@ namespace DiztinGUIsh.controller
             if (!RomDataPresent())
                 return false;
             
-            return offset >= 0 && offset < Project.Data.GetRomSize();
+            return offset >= 0 && offset < Project?.Data?.GetRomSize();
         }
 
         public void GoTo(int offset)

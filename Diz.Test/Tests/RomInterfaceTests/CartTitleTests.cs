@@ -57,7 +57,7 @@ namespace Diz.Test.Tests.RomInterfaceTests
         {
             var fakeRom = Enumerable
                 .Range(0, 0x7FC0)
-                .Select(x => (byte) 0x00)
+                .Select(_ => (byte) 0x00)
                 .Concat(RawRomBytes)
                 .ToArray();
 
