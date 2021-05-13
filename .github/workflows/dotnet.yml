@@ -42,9 +42,12 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build --verbosity normal --configuration Release
+        
+      - name: Publish
+        run: dotnet publish --no-build --verbosity normal -c Release /p:PublishProfile=FolderProfile .\DiztinGUIsh\
 
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.ver.outputs.ver }}
-          path: DiztinGUIsh\bin\Release\net5.0-windows
+          path: DiztinGUIsh\bin\Release\net5.0-windows\publish\

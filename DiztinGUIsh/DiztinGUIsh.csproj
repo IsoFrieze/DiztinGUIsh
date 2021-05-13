@@ -10,6 +10,7 @@
     <AssemblyName>DiztinGUIsh</AssemblyName>
   </PropertyGroup>
   
+  <!-- import to do this so our custom targets work -->
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   
   <ItemGroup>
@@ -216,7 +217,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="build\FinalizeBuildDirectory.targets" />
+    <None Include="build\TidyPublishDir.targets" />
     <Compile Update="window\usercontrols\DataGridEditorControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -242,8 +243,18 @@
     <Folder Include="Properties\DataSources\" />
   </ItemGroup>
   <ItemGroup>
-    <!-- WIP packaging scripts, TODO: re-enable them.
-    <None Include="build\FinalizeBuildDirectory.targets" />
+    
+    <!-- remove this.
+    <None Update="dist\docs\Library Licenses.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="dist\help.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="dist\internal\hardware_registers.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     -->
   </ItemGroup>
+  <Import Project="build/TidyPublishDir.targets" />
 </Project>

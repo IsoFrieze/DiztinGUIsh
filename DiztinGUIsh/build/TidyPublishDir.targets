@@ -1,0 +1,56 @@
+<!-- 
+This file is invoked for publish targets 
+On publish, move some files around to make the distribution distro look nicer.
+
+reference info:
+https://docs.microsoft.com/en-us/visualstudio/msbuild/how-to-extend-the-visual-studio-build-process?view=vs-2019
+https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/visual-studio-publish-profiles?view=aspnetcore-5.0
+-->
+<Project>
+    <Target Name="TidyPublishDir" AfterTargets="Publish">
+        <!--<Message Text="xxxxxxxx Custom target after publish $(PublishDir) ****************" Importance="high" />-->
+        
+        <Error Condition="'$(PublishDir)' == ''" Text="PublishDir variable not set, can't continue."/>
+
+        <!-- where we're going to move DLLs and other root-level things we don't want in the root dir anymore -->
+        <PropertyGroup>
+            <LibOutDir>$(PublishDir)lib\</LibOutDir>
+        </PropertyGroup>
+
+        <!-- list of *static* files to copy into the root dir -->
+        <ItemGroup>
+            <ExtraStaticFiles Include="dist\**\*.*"/>
+            <ExtraStaticFiles Include="..\README.md"/>
+            <ExtraStaticFiles Include="..\LICENSE.md"/>
+        </ItemGroup>
+
+        <!-- create a list of files we want to move in the output lib folder -->
+        <ItemGroup>
+            <LibFiles Include="$(PublishDir)**\*.dll"/>
+            <LibFiles Include="$(PublishDir)**\*.xml"/>
+            <LibFiles Include="$(PublishDir)**\*.pdb"/>
+            <LibFiles Include="$(PublishDir)**\*.config"/>
+            <LibFiles Remove="$(LibOutDir)\**\*.*"/>
+            <LibFiles Remove="$(PublishDir)$(ProjectName)*"/>
+            <LibFiles Remove="$(PublishDir)$(ProjectName).exe"/>
+        </ItemGroup>
+
+        <!-- move file to lib/ dir -->
+        <!-- note: THIS <Move> works, but, we need to modify our manifests to search this new folder.
+                   for now, disable it.
+        <Move SourceFiles="%(LibFiles.Identity)" DestinationFolder="$(LibOutDir)%(LibFiles.RecursiveDir)"/>
+        -->
+
+        <!-- copy any static files to the root dir, keep the same folder structure -->
+        <Copy SourceFiles="%(ExtraStaticFiles.Identity)" DestinationFolder="$(PublishDir)%(ExtraStaticFiles.RecursiveDir)"/>
+
+        <!-- done moving stuff. remove any directories that are now-empty left -->
+        <ItemGroup>
+            <Directories Include="$([System.IO.Directory]::GetDirectories('$(PublishDir)', '*', System.IO.SearchOption.AllDirectories))"/>
+            <Directories>
+                <Files>$([System.IO.Directory]::GetFiles("%(Directories.Identity)", "*", System.IO.SearchOption.AllDirectories).get_Length())</Files>
+            </Directories>
+        </ItemGroup>
+        <RemoveDir Directories="@(Directories)" Condition="%(Files)=='0'"/>
+    </Target>
+</Project>
