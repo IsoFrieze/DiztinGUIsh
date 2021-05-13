@@ -31,9 +31,9 @@ namespace Diz.Core.serialization
 
         private void PostSerialize(string filename, ProjectXmlSerializer.Root xmlRoot, ProjectSerializer serializer)
         {
-            Debug.Assert(xmlRoot != null);
-            Debug.Assert(xmlRoot.Project != null);
-            Debug.Assert(xmlRoot.Project.Session == null);
+            if (xmlRoot?.Project?.Data?.SnesAddressSpace != null || xmlRoot?.Project?.Session == null)
+                throw new InvalidDataException(
+                    "Internal error with deserialized data, either Project, Data, Session, or SnesAddressSpace failed to load correctly.");
 
             xmlRoot.Project.Session = new ProjectSession(xmlRoot.Project)
             {
