@@ -17,7 +17,6 @@ namespace Diz.Test.Tests.LogCreatorTests
     public sealed class LogCreatorTests
     {
         private readonly ITestOutputHelper debugWriter;
-        private readonly LogSettingsValidationTests logSettingsValidationTests;
 
         public LogCreatorTests(ITestOutputHelper debugWriter)
         {
