@@ -8,6 +8,11 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>DiztinGUIsh</RootNamespace>
     <AssemblyName>DiztinGUIsh</AssemblyName>
+    <ApplicationIcon>diz-icon2-magenta-med32x32.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   
   <!-- import to do this so our custom targets work -->

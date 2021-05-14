@@ -35,13 +35,18 @@ namespace DiztinGUIsh.controller
             );
         }
 
-        public static Project OpenProjectWithGui(string filename, bool showMessageBoxOnSuccess = true) => 
-            new ProjectOpenerGuiController
+        public static Project OpenProjectWithGui(string filename, bool showMessageBoxOnSuccess = true)
+        {
+            if (!GuiUtil.PromptScaryUnstableBetaAreYouSure())
+                return null;
+            
+            return new ProjectOpenerGuiController
             {
                 Handler = new ProjectOpenerHandlerGenericHandler
                 {
                     MessageboxShowOnProjectOpenSuccess = showMessageBoxOnSuccess
                 }
             }.OpenProject(filename);
+        }
     }
 }

@@ -49,6 +49,10 @@ namespace DiztinGUIsh.util
             return dialogResult == DialogResult.Yes ? confirmAction() : default;
         }
 
+        const string scaryWarning = "BETA: Save/load in this version of Diz is unstable right now. \nDO NOT save over anything you care about without a backup.\nLoading an existing project file from previous versions of Diz is not guaranteed to work yet, it may silently fail to import data.\n\n\nEXPERTS ONLY. CONFIRM OPENING A PROJECT FILE?\n(If looking to mess around, do File -> Import ROM, much more stable for now)";
+        public static bool PromptScaryUnstableBetaAreYouSure() => PromptToConfirmAction("IMPORTANT", scaryWarning, () => true);
+
+
         /// <summary>
         /// Generate data bindings so that a combobox control will populate from an enum list
         /// Shortcut for doing these actions manually.

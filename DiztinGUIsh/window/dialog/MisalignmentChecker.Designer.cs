@@ -38,9 +38,10 @@
             // 
             // buttonScan
             // 
-            this.buttonScan.Location = new System.Drawing.Point(93, 279);
+            this.buttonScan.Location = new System.Drawing.Point(108, 322);
+            this.buttonScan.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.buttonScan.Name = "buttonScan";
-            this.buttonScan.Size = new System.Drawing.Size(75, 23);
+            this.buttonScan.Size = new System.Drawing.Size(88, 27);
             this.buttonScan.TabIndex = 2;
             this.buttonScan.Text = "Scan";
             this.buttonScan.UseVisualStyleBackColor = true;
@@ -48,9 +49,10 @@
             // 
             // buttonFix
             // 
-            this.buttonFix.Location = new System.Drawing.Point(174, 279);
+            this.buttonFix.Location = new System.Drawing.Point(203, 322);
+            this.buttonFix.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.buttonFix.Name = "buttonFix";
-            this.buttonFix.Size = new System.Drawing.Size(75, 23);
+            this.buttonFix.Size = new System.Drawing.Size(88, 27);
             this.buttonFix.TabIndex = 3;
             this.buttonFix.Text = "Fix";
             this.buttonFix.UseVisualStyleBackColor = true;
@@ -59,18 +61,20 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(10, 11);
+            this.label1.Location = new System.Drawing.Point(12, 13);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(244, 91);
+            this.label1.Size = new System.Drawing.Size(272, 105);
             this.label1.TabIndex = 0;
             this.label1.Text = resources.GetString("label1.Text");
             // 
             // cancel
             // 
             this.cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancel.Location = new System.Drawing.Point(12, 279);
+            this.cancel.Location = new System.Drawing.Point(14, 322);
+            this.cancel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.cancel.Name = "cancel";
-            this.cancel.Size = new System.Drawing.Size(75, 23);
+            this.cancel.Size = new System.Drawing.Size(88, 27);
             this.cancel.TabIndex = 4;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
@@ -78,27 +82,30 @@
             // 
             // textLog
             // 
-            this.textLog.Location = new System.Drawing.Point(12, 112);
+            this.textLog.Location = new System.Drawing.Point(14, 129);
+            this.textLog.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.textLog.Multiline = true;
             this.textLog.Name = "textLog";
             this.textLog.ReadOnly = true;
             this.textLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textLog.Size = new System.Drawing.Size(237, 157);
+            this.textLog.Size = new System.Drawing.Size(276, 181);
             this.textLog.TabIndex = 1;
             this.textLog.TabStop = false;
             // 
             // MisalignmentChecker
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
-            this.ClientSize = new System.Drawing.Size(261, 313);
+            this.ClientSize = new System.Drawing.Size(304, 361);
             this.Controls.Add(this.textLog);
             this.Controls.Add(this.cancel);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.buttonFix);
             this.Controls.Add(this.buttonScan);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "MisalignmentChecker";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

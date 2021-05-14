@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GotoDialog));
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.textROM = new System.Windows.Forms.TextBox();
@@ -42,27 +43,30 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(25, 15);
+            this.label1.Location = new System.Drawing.Point(29, 17);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(76, 13);
+            this.label1.Size = new System.Drawing.Size(82, 15);
             this.label1.TabIndex = 0;
             this.label1.Text = "ROM Address:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(46, 41);
+            this.label2.Location = new System.Drawing.Point(54, 47);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(55, 13);
+            this.label2.Size = new System.Drawing.Size(60, 15);
             this.label2.TabIndex = 2;
             this.label2.Text = "PC Offset:";
             // 
             // textROM
             // 
-            this.textROM.Location = new System.Drawing.Point(103, 12);
+            this.textROM.Location = new System.Drawing.Point(120, 14);
+            this.textROM.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.textROM.MaxLength = 8;
             this.textROM.Name = "textROM";
-            this.textROM.Size = new System.Drawing.Size(46, 20);
+            this.textROM.Size = new System.Drawing.Size(53, 23);
             this.textROM.TabIndex = 1;
             this.textROM.Text = "000000";
             this.textROM.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -71,10 +75,11 @@
             // 
             // textPC
             // 
-            this.textPC.Location = new System.Drawing.Point(103, 38);
+            this.textPC.Location = new System.Drawing.Point(120, 44);
+            this.textPC.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.textPC.MaxLength = 8;
             this.textPC.Name = "textPC";
-            this.textPC.Size = new System.Drawing.Size(46, 20);
+            this.textPC.Size = new System.Drawing.Size(53, 23);
             this.textPC.TabIndex = 3;
             this.textPC.Text = "00000";
             this.textPC.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -85,9 +90,10 @@
             // 
             this.radioHex.AutoSize = true;
             this.radioHex.Checked = true;
-            this.radioHex.Location = new System.Drawing.Point(43, 70);
+            this.radioHex.Location = new System.Drawing.Point(50, 81);
+            this.radioHex.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.radioHex.Name = "radioHex";
-            this.radioHex.Size = new System.Drawing.Size(44, 17);
+            this.radioHex.Size = new System.Drawing.Size(46, 19);
             this.radioHex.TabIndex = 4;
             this.radioHex.TabStop = true;
             this.radioHex.Text = "Hex";
@@ -97,9 +103,10 @@
             // radioDec
             // 
             this.radioDec.AutoSize = true;
-            this.radioDec.Location = new System.Drawing.Point(93, 70);
+            this.radioDec.Location = new System.Drawing.Point(108, 81);
+            this.radioDec.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.radioDec.Name = "radioDec";
-            this.radioDec.Size = new System.Drawing.Size(45, 17);
+            this.radioDec.Size = new System.Drawing.Size(45, 19);
             this.radioDec.TabIndex = 5;
             this.radioDec.Text = "Dec";
             this.radioDec.UseVisualStyleBackColor = true;
@@ -107,9 +114,10 @@
             // cancel
             // 
             this.cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancel.Location = new System.Drawing.Point(12, 121);
+            this.cancel.Location = new System.Drawing.Point(14, 140);
+            this.cancel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.cancel.Name = "cancel";
-            this.cancel.Size = new System.Drawing.Size(75, 23);
+            this.cancel.Size = new System.Drawing.Size(88, 27);
             this.cancel.TabIndex = 7;
             this.cancel.TabStop = false;
             this.cancel.Text = "Cancel";
@@ -118,9 +126,10 @@
             // 
             // go
             // 
-            this.go.Location = new System.Drawing.Point(93, 121);
+            this.go.Location = new System.Drawing.Point(108, 140);
+            this.go.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.go.Name = "go";
-            this.go.Size = new System.Drawing.Size(75, 23);
+            this.go.Size = new System.Drawing.Size(88, 27);
             this.go.TabIndex = 6;
             this.go.Text = "Go";
             this.go.UseVisualStyleBackColor = true;
@@ -130,19 +139,20 @@
             // 
             this.lblError.AutoSize = true;
             this.lblError.ForeColor = System.Drawing.Color.Red;
-            this.lblError.Location = new System.Drawing.Point(12, 102);
+            this.lblError.Location = new System.Drawing.Point(14, 118);
+            this.lblError.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblError.Name = "lblError";
-            this.lblError.Size = new System.Drawing.Size(39, 13);
+            this.lblError.Size = new System.Drawing.Size(45, 15);
             this.lblError.TabIndex = 8;
             this.lblError.Text = "lblError";
             // 
             // GotoDialog
             // 
             this.AcceptButton = this.go;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
-            this.ClientSize = new System.Drawing.Size(180, 153);
+            this.ClientSize = new System.Drawing.Size(210, 177);
             this.Controls.Add(this.lblError);
             this.Controls.Add(this.go);
             this.Controls.Add(this.cancel);
@@ -153,6 +163,8 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "GotoDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
