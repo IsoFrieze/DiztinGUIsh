@@ -3,7 +3,7 @@ using System.Diagnostics;
 using Diz.Core.serialization;
 using Diz.Core.util;
 
-namespace DiztinGUIsh.window.dialog
+namespace DiztinGUIsh.controller
 {
     public interface IImportRomDialogView
     {
