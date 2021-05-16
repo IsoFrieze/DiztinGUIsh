@@ -4,6 +4,7 @@ using System.Reflection;
 using Diz.Core.util;
 using Diz.LogWriter;
 using Diz.LogWriter.assemblyGenerators;
+using FluentAssertions;
 using LightInject;
 using Xunit;
 
@@ -48,22 +49,16 @@ namespace Diz.Test.Tests.UtilsTests
         [Fact]
         public static void TestServiceContainer()
         {
-            Service.Register(
-                typeof(AssemblyPartialLineGenerator),
-                typeof(IAssemblyPartialGenerator));
-
-            var container = Service.Container;
+            var container = new ServiceContainer();
+            container.Register<IAssemblyPartialGenerator, AssemblyPartialLineGenerator>();
+            
             container.Register<ILogCreator, FakeLogCreator>();
             var tag = typeof(Asm1).GetCustomAttribute<AsmGeneratorTypeAttribute>()?.Tag;
             if (tag != null)
                 container.Register<IAsm, Asm1>(tag);
 
             var foo = (Asm1) container.GetInstance<IAsm>("%map");
-            Assert.NotNull(foo.LogCreator);
-
-            Assert.True(Service.Container.AvailableServices
-                .FirstOrDefault(s =>
-                    s.ImplementingType == typeof(AssemblyGenerateComment)) != null);
+            foo.LogCreator.Should().NotBeNull();
         }
     }
 }
