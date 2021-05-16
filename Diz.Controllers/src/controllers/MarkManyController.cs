@@ -10,26 +10,29 @@ namespace Diz.Controllers.controllers
     public class MarkManyController : IMarkManyController
     {
         public IDataRange DataRange { get; } = new CorrectingRange();
-        public IViewer View => MarkManyView;
-        public IMarkManyView MarkManyView { get; set; }
-        
+        public IMarkManyView MarkManyView { get; }
         public IReadOnlySnesRom Data { get; }
-        public MarkManyController(int offset, int column, IReadOnlySnesRom data)
+        public int DesiredStartingCount { get; set; } = 0x10;
+
+        public MarkManyController(int offset, int whichIndex, IReadOnlySnesRom data, IMarkManyView view)
         {
             Data = data;
-            const int desiredStartingCount = 0x10;
-            SetRangeDefaults(offset, desiredStartingCount);
-
-            // this view can allow edits for different column types on the grid.
-            // set which one we want here. (TODO: this is all index-based and should be made
-            // more flexible and less hardcoded)
-            MarkManyView.Column = column;
+            MarkManyView = view;
+            MarkManyView.Controller = this;
+            
+            SetOffset(offset);
+            
+            MarkManyView.Column = whichIndex;
         }
 
-        private void SetRangeDefaults(int startingRomOffset, int desiredStartingCount)
+        private void SetOffset(int offset)
         {
+            var desiredStartingCount = DesiredStartingCount;
+            if (desiredStartingCount == -1)
+                desiredStartingCount = DesiredStartingCount;
+            
             DataRange.MaxCount = Data.GetRomSize();
-            DataRange.StartIndex = startingRomOffset;
+            DataRange.StartIndex = offset;
             var actualAmountAvailable = DataRange.MaxCount - DataRange.StartIndex;
             DataRange.RangeCount = Math.Min(desiredStartingCount, actualAmountAvailable);
         }

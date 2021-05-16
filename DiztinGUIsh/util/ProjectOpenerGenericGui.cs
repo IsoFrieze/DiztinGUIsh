@@ -7,7 +7,7 @@ namespace DiztinGUIsh.util
 {
     public class ProjectOpenerHandlerGenericHandler : IProjectOpenerHandler
     {
-        public bool MessageboxShowOnProjectOpenSuccess { get; init; }= true;
+        public bool MessageboxShowOnProjectOpenSuccess { get; init; }
         
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
             ProgressBarJob.RunAndWaitForCompletion;
@@ -36,22 +36,13 @@ namespace DiztinGUIsh.util
             );
         }
 
-        public Project OpenProject(string filename, bool showMessageBoxOnSuccess)
-        {
-            return OpenProjectWithGui(filename, showMessageBoxOnSuccess: false);
-        }
-
-        public static Project OpenProjectWithGui(string filename, bool showMessageBoxOnSuccess = true)
+        public Project OpenProject(string filename, bool showPopupAlertOnLoaded = false)
         {
             if (!GuiUtil.PromptScaryUnstableBetaAreYouSure())
                 return null;
             
-            return new ProjectOpenerGuiController
-            {
-                Handler = new ProjectOpenerHandlerGenericHandler
-                {
-                    MessageboxShowOnProjectOpenSuccess = showMessageBoxOnSuccess
-                }
+            return new ProjectOpenerGuiController {
+                Handler = new ProjectOpenerHandlerGenericHandler()
             }.OpenProject(filename);
         }
     }

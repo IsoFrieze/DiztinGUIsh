@@ -12,8 +12,11 @@ namespace Diz.Core.util
 
         private static ServiceContainer CreateServiceContainer()
         {
-            ServiceContainer serviceContainer = new();
-            return serviceContainer;
+            return new(
+                new ContainerOptions
+                {
+                    EnablePropertyInjection = false
+                });
         }
         
         // dont use this anymore

@@ -17,7 +17,7 @@ namespace Diz.Controllers.interfaces
 {
     public interface IController
     {
-        IViewer View { get; }
+        
     }
 
     public interface ICloseHandler
@@ -25,9 +25,9 @@ namespace Diz.Controllers.interfaces
         public event EventHandler Closed;
     }
 
-    public interface IFormController : IController, ICloseHandler
+    public interface IFormController : IController, ICloseHandler, IShowable
     {
-        IFormViewer FormView { get; set; }
+        
     }
 
     public interface IDataController : IController
@@ -42,9 +42,9 @@ namespace Diz.Controllers.interfaces
         void MatchCachedRowsToView();
     }
 
-    public interface IStartFormController : IFormController, IProjectOpener
+    public interface IStartFormController : IFormController
     {
-        
+        public IStartFormViewer View { get; }
     }
 
     public interface IProjectOpener
@@ -93,7 +93,7 @@ namespace Diz.Controllers.interfaces
         public void OnProjectOpenFail(string fatalError);
         public string AskToSelectNewRomFilename(string error);
         
-        Project OpenProject(string filename, bool showMessageBoxOnSuccess);
+        Project OpenProject(string filename, bool showPopupAlertOnLoaded);
     }
 
     public interface I65816CpuOperations
@@ -156,13 +156,13 @@ namespace Diz.Controllers.interfaces
         ILabelImporter
     {
         public FlagType CurrentMarkFlag { get; set; }
-        
         public bool MoveWithStep { get; set; }
+        
+        void SetProject(string filename, Project project);
     }
 
     public interface IMarkManyController : IController
     {
-        IMarkManyView MarkManyView { get; }
         IDataRange DataRange { get; }
         IReadOnlySnesRom Data { get; }
 

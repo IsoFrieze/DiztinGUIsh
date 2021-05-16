@@ -9,6 +9,7 @@ namespace DiztinGUIsh.window.dialog
 {
     public partial class MarkManyView : Form, IMarkManyView
     {
+        public IMarkManyController Controller { get; set; }
         private IReadOnlySnesRom Data => Controller.Data;
         public int Property => property.SelectedIndex;
         private int PropertyMaxVal => Property == 1 ? 0x100 : 0x10000;
@@ -22,8 +23,6 @@ namespace DiztinGUIsh.window.dialog
                 UpdateTextUi();
             }
         }
-        
-        public IMarkManyController Controller { get; init; }
         private Util.NumberBase NoBase => 
             radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
         private int DigitCount => NoBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;

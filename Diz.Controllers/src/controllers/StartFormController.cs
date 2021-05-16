@@ -1,41 +1,26 @@
 ﻿using System;
+using System.Diagnostics;
 using Diz.Controllers.interfaces;
-using Diz.Core;
-using Diz.Core.util;
-using LightInject;
 
 namespace Diz.Controllers.controllers
 {
     public class StartFormController : IStartFormController
     {
-        private IFormViewer view;
+        public IStartFormViewer View { get; }
 
-        public IFormViewer FormView
+
+        public StartFormController(IStartFormViewer view)
         {
-            get => view;
-            set
-            {
-                view = value;
-                view.Closed += ViewOnClosed;
-            }
+            Debug.Assert(view != null);
+            View = view;
+            View.Closed += ViewOnClosed;
         }
 
-        IViewer IController.View => FormView;
-
-        private void ViewOnClosed(object sender, EventArgs e) => Closed?.Invoke(this, e);
-
+        public void Show() => View.Show();
+        
+        [Obsolete]
         public event EventHandler Closed;
-
-        public void OpenFileWithNewView(string filename)
-        {
-            var app = Service.Container.GetInstance<IDizApplication>();
-            app.OpenProjectFileWithNewView(filename);
-        }
-
-        public void OpenNewViewOfLastLoadedProject()
-        {
-            var app = Service.Container.GetInstance<IDizApplication>();
-            app.OpenNewViewOfLastLoadedProject();
-        }
+        
+        private void ViewOnClosed(object sender, EventArgs e) => Closed?.Invoke(this, e);
     }
 }

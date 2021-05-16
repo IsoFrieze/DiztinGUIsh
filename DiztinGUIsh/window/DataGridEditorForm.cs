@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
+using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.export;
 using Diz.Core.model;
@@ -13,12 +14,13 @@ using Diz.LogWriter;
 using DiztinGUIsh.Properties;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
+using LightInject;
 
 namespace DiztinGUIsh.window
 {
     public partial class DataGridEditorForm : Form, IDataGridEditorForm
     {
-        // sub windows
+        // sub windows (we should break these out / decouple more from this class)
         public AliasList AliasList { get; protected set; }
         public VisualizerForm VisualForm { get; protected set; }
         
@@ -88,7 +90,7 @@ namespace DiztinGUIsh.window
                     break;
                 case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Opened:
                     UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
-                    ProjectsController.LastOpenedProjectFilename = e.Filename; // do this last.
+                    ProjectsManager.LastOpenedProjectFilename = e.Filename; // do this last.
                     break;
                 case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported:
                     OnImportedProjectSuccess();
@@ -103,7 +105,7 @@ namespace DiztinGUIsh.window
 
         public void OnProjectOpenFail(string errorMsg)
         {
-            ProjectsController.LastOpenedProjectFilename = "";
+            ProjectsManager.LastOpenedProjectFilename = "";
             ShowError(errorMsg, "Error opening project");
         }
         
@@ -194,14 +196,14 @@ namespace DiztinGUIsh.window
         #region Actions
         private void OpenLastProject()
         {
-            if (ProjectsController.LastOpenedProjectFilename == "")
+            if (ProjectsManager.LastOpenedProjectFilename == "")
                 return;
 
             // safeguard: if we crash opening this project,
             // then next time we load make sure we don't try it again.
             // this will be reset later
-            var projectToOpen = ProjectsController.LastOpenedProjectFilename;
-            ProjectsController.LastOpenedProjectFilename = "";
+            var projectToOpen = ProjectsManager.LastOpenedProjectFilename;
+            ProjectsManager.LastOpenedProjectFilename = "";
             MainFormController.OpenProject(projectToOpen);
         }
 
@@ -664,15 +666,9 @@ namespace DiztinGUIsh.window
 
         public MarkCommand PromptMarkMany(int offset, int whichIndex)
         {
-            var markManyController = CreateMarkManyControllerAndView(offset, whichIndex);
-            return markManyController.PromptForCommand();
-        }
-
-        private MarkManyController CreateMarkManyControllerAndView(int offset, int whichIndex)
-        {
-            var markManyController = new MarkManyController(offset, whichIndex, Project.Data);
-            markManyController.MarkManyView = new MarkManyView {Controller = markManyController};
-            return markManyController;
+            var markManyControllerFactory = Service.Container.GetInstance<Func<int, int, IReadOnlySnesRom, IMarkManyController>>();
+            var controller = markManyControllerFactory(offset, whichIndex, Project.Data);
+            return controller.CreateCommandFromView();
         }
 
         void IProjectView.ShowOffsetOutOfRangeMsg() => ShowOffsetOutOfRangeMsg();

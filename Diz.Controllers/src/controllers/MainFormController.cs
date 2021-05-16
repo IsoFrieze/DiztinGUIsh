@@ -20,9 +20,10 @@ namespace Diz.Controllers.controllers
     {
         private FlagType currentMarkFlag = FlagType.Data8Bit;
         private int selectedSnesOffset;
-        private IDataGridEditorForm dataGridEditorForm;
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler => ProgressBarJob.RunAndWaitForCompletion;
 
+        public event EventHandler Closed;
+        
         public int SelectedSnesOffset
         {
             get => selectedSnesOffset;
@@ -38,36 +39,20 @@ namespace Diz.Controllers.controllers
 
         public event IProjectController.ProjectChangedEvent ProjectChanged;
 
-        public IDataGridEditorForm DataGridEditorForm
+        private readonly IDataGridEditorForm dataGridEditorForm;
+
+        public MainFormController(IDataGridEditorForm view)
         {
-            get => dataGridEditorForm;
-            set
-            {
-                if (dataGridEditorForm != null)
-                    dataGridEditorForm.Closed -= OnClosed;
-                
-                dataGridEditorForm = value;
-
-                if (dataGridEditorForm != null)
-                    dataGridEditorForm.Closed += OnClosed;
-            }
+            Debug.Assert(view != null);
+            dataGridEditorForm = view;
+            
+            dataGridEditorForm.MainFormController = this;
+            dataGridEditorForm.Closed += OnClosed;
         }
-
-        private void OnClosed(object sender, EventArgs e)
-        {
-            Closed?.Invoke(this, e);
-        }
-
-        public IProjectView ProjectView => DataGridEditorForm;
-        public IFormViewer FormView
-        {
-            get => DataGridEditorForm;
-            // TODO: revisit this casting, probably indicates a data structure issue.
-            set => DataGridEditorForm = value as IDataGridEditorForm;
-        }
-
-        public IViewer View => DataGridEditorForm;
-        public event EventHandler Closed;
+        
+        private void OnClosed(object sender, EventArgs e) => Closed?.Invoke(this, e);
+        
+        public void Show() => dataGridEditorForm.Show();
 
         public Project Project { get; set; }
 
@@ -87,8 +72,8 @@ namespace Diz.Controllers.controllers
         // so we can flip up a progress bar and remove it.
         public void DoLongRunningTask(Action task, string description = null)
         {
-            if (ProjectView.TaskHandler != null)
-                ProjectView.TaskHandler(task, description);
+            if (dataGridEditorForm.TaskHandler != null)
+                dataGridEditorForm.TaskHandler(task, description);
             else
                 task();
         }
@@ -118,15 +103,15 @@ namespace Diz.Controllers.controllers
         }
 
         public void OnProjectOpenWarning(string warnings) => 
-            ProjectView.OnProjectOpenWarning(warnings);
+            dataGridEditorForm.OnProjectOpenWarning(warnings);
 
         public void OnProjectOpenFail(string fatalError) => 
-            ProjectView.OnProjectOpenFail(fatalError);
+            dataGridEditorForm.OnProjectOpenFail(fatalError);
 
         public string AskToSelectNewRomFilename(string error) => 
-            ProjectView.AskToSelectNewRomFilename("Error", $"{error} Link a new ROM now?");
+            dataGridEditorForm.AskToSelectNewRomFilename("Error", $"{error} Link a new ROM now?");
 
-        public Project OpenProject(string filename, bool showMessageBoxOnSuccess)
+        public Project OpenProject(string filename, bool showPopupAlertOnLoaded)
         {
             return new ProjectOpenerGuiController { Handler = this }
                 .OpenProject(filename);
@@ -166,7 +151,7 @@ namespace Diz.Controllers.controllers
         
         public bool ImportRomAndCreateNewProject(string romFilename)
         {
-            var importController = SetupImportController(ProjectView);
+            var importController = SetupImportController(dataGridEditorForm);
             var importSettings = importController.PromptUserForImportOptions(romFilename);
             
             if (importSettings != null)
@@ -206,7 +191,7 @@ namespace Diz.Controllers.controllers
             LogCreatorOutput.OutputResult result = null;
             DoLongRunningTask(delegate { result = lc.CreateLog(); }, "Exporting assembly source code...");
 
-            ProjectView.OnExportFinished(result);
+            dataGridEditorForm.OnExportFinished(result);
         }
 
         public void UpdateExportSettings(LogWriterSettings selectedSettings) =>
@@ -355,7 +340,7 @@ namespace Diz.Controllers.controllers
             if (!RomDataPresent()) 
                 return;
             
-            if (!ProjectView.PromptHarshAutoStep(offset, out var newOffset, out var count))
+            if (!dataGridEditorForm.PromptHarshAutoStep(offset, out var newOffset, out var count))
                 return;
 
             MarkProjectAsUnsaved();
@@ -444,7 +429,7 @@ namespace Diz.Controllers.controllers
             if (!RomDataPresent()) 
                 return;
             
-            var markCmd = ProjectView.PromptMarkMany(offset, whichIndex);
+            var markCmd = dataGridEditorForm.PromptMarkMany(offset, whichIndex);
             if (markCmd == null)
                 return;
 
@@ -485,7 +470,7 @@ namespace Diz.Controllers.controllers
             if (IsOffsetInRange(offset))
                 SelectedSnesOffset = offset;
             else
-                ProjectView.ShowOffsetOutOfRangeMsg();
+                dataGridEditorForm.ShowOffsetOutOfRangeMsg();
         }
 
         public void GoToUnreached(bool end, bool direction)

@@ -1,17 +1,16 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows.Forms;
-using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 
 namespace DiztinGUIsh.window
 {
-    public partial class StartForm : Form, IFormViewer
+    public partial class StartForm : Form, IStartFormViewer
     {
-        public IStartFormController Controller { get; set; }
-        
         public StartForm()
         {
             InitializeComponent();
+
             // TODO
             /*var projectsBs = new BindingSource(ProjectsController.)
             GuiUtil.BindListControl(comboBox1, DizApplication.App.ProjectsController, nameof(ProjectsController.Projects), bs));
@@ -27,18 +26,24 @@ namespace DiztinGUIsh.window
             return openProjectFile.ShowDialog() != DialogResult.OK ? "" : openProjectFile.FileName;
         }
 
+        public event EventHandler<ProjectOpenEventArgs> ProjectOpenRequested;
+
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var filename = PromptForOpenFile();
             if (string.IsNullOrEmpty(filename))
                 return;
 
-            Controller.OpenFileWithNewView(filename);
+            ProjectOpenRequested?.Invoke(this, new ProjectOpenEventArgs {
+                Filename = filename,
+            });
         }
 
         private void newViewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Controller.OpenNewViewOfLastLoadedProject();
+            ProjectOpenRequested?.Invoke(this, new ProjectOpenEventArgs {
+                OpenLast = true
+            });
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -53,7 +58,6 @@ namespace DiztinGUIsh.window
 
         private void StartForm_Load(object sender, EventArgs e)
         {
-
         }
     }
 }

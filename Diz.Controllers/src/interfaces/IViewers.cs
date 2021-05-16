@@ -10,9 +10,30 @@ namespace Diz.Controllers.interfaces
 
     }
 
-    public interface IFormViewer : IViewer, ICloseHandler
+    public interface IFormViewer : IViewer, ICloseHandler, IShowable
     {
+        
+    }
 
+    public interface IShowable
+    {
+        void Show();
+    }
+
+    public interface IStartFormViewer : IProjectOpenRequester, IFormViewer
+    {
+        
+    }
+
+    public record ProjectOpenEventArgs
+    {
+        public string Filename { get; init; }
+        public bool OpenLast { get; init; }
+    }
+    
+    public interface IProjectOpenRequester
+    {
+        public event EventHandler<ProjectOpenEventArgs> ProjectOpenRequested;
     }
 
     public interface ICloseable
@@ -47,6 +68,7 @@ namespace Diz.Controllers.interfaces
     {
         int Property { get; }
         int Column { set; } // TODO: make enum with different types supported.
+        IMarkManyController Controller { get; set; }
         object GetFinalValue();
     }
 
@@ -94,6 +116,6 @@ namespace Diz.Controllers.interfaces
     
     public interface IDataGridEditorForm : IFormViewer, IProjectView
     {
-        
+        IMainFormController MainFormController { get; set; }
     }
 }
