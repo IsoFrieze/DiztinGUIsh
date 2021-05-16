@@ -59,7 +59,13 @@ namespace Diz.Controllers.controllers
         }
 
         public IProjectView ProjectView => DataGridEditorForm;
-        public IFormViewer FormView => DataGridEditorForm;
+        public IFormViewer FormView
+        {
+            get => DataGridEditorForm;
+            // TODO: revisit this casting, probably indicates a data structure issue.
+            set => DataGridEditorForm = value as IDataGridEditorForm;
+        }
+
         public IViewer View => DataGridEditorForm;
         public event EventHandler Closed;
 

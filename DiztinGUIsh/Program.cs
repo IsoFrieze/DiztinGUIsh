@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
-using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.util;
 using DiztinGUIsh.util;
@@ -48,7 +46,7 @@ namespace DiztinGUIsh
             // ICompositionRoot in each assembly scanned.
             //
             // Plugins will need to explicitly register themselves with the container on startup
-            Service.Container.RegisterAssembly(typeof(RegisterTypesDiztinGuIsh).Assembly);
+            Service.Container.RegisterAssembly(typeof(Program).Assembly);
         }
     }
 }

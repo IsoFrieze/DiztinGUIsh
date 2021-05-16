@@ -27,7 +27,7 @@ namespace Diz.Controllers.interfaces
 
     public interface IFormController : IController, ICloseHandler
     {
-        IFormViewer FormView { get; }
+        IFormViewer FormView { get; set; }
     }
 
     public interface IDataController : IController
@@ -40,6 +40,17 @@ namespace Diz.Controllers.interfaces
         IBytesGridViewer<TItem> ViewGrid { get; set; } 
         DataSubsetWithSelection<TRow, TItem> DataSubset { get; }
         void MatchCachedRowsToView();
+    }
+
+    public interface IStartFormController : IFormController, IProjectOpener
+    {
+        
+    }
+
+    public interface IProjectOpener
+    {
+        public void OpenFileWithNewView(string filename);
+        public void OpenNewViewOfLastLoadedProject();
     }
     
     public interface IProjectController

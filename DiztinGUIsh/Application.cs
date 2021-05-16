@@ -13,7 +13,6 @@ namespace DiztinGUIsh
 {
     public class DizApplicationContext : ApplicationContext
     {
-        
         public DizApplicationContext(IDizApplication.Args args)
         {
             var app = Service.Container.GetInstance<IDizApplication>();
@@ -52,10 +51,8 @@ namespace DiztinGUIsh
         private void ShowNewStartForm()
         {
             var form = new StartForm();
-            var controller = new StartFormController
-            {
-                FormView = form,
-            };
+            var controller = Service.Container.GetInstance<IStartFormController>();
+            controller.FormView = form;
             form.Controller = controller;
 
             OnCreated(controller, form);

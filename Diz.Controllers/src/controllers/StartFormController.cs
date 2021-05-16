@@ -6,7 +6,7 @@ using LightInject;
 
 namespace Diz.Controllers.controllers
 {
-    public class StartFormController : IFormController
+    public class StartFormController : IStartFormController
     {
         private IFormViewer view;
 

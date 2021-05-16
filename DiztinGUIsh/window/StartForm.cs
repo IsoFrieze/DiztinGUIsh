@@ -7,7 +7,7 @@ namespace DiztinGUIsh.window
 {
     public partial class StartForm : Form, IFormViewer
     {
-        public StartFormController Controller { get; set; }
+        public IStartFormController Controller { get; set; }
         
         public StartForm()
         {
