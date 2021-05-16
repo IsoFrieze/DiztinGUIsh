@@ -3,22 +3,22 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Diz.Controllers.interfaces;
 using Diz.Core.datasubset;
-using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
-using DiztinGUIsh.util;
 using JetBrains.Annotations;
+using LightInject;
 
 // this class and structure is a mess because it was just enough refactoring to 
 // get a lot of this logic out of the implementation classes.  it needs further iteration and simplification
 //
 // 1) TODO: need to catch notifychanged from labels and comments or else updates won't propagate
 
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.controllers
 {
-    public class RomByteDataBindingGridController : RomByteDataBindingController
+    public class RomByteDataBindingGridController : RomByteDataBindingController<IDataGridRow>
     {
         public void BeginEditingLabel()
         {
@@ -31,8 +31,9 @@ namespace DiztinGUIsh.controller
         }
     }
 
-    public class RomByteDataBindingController : 
-        ByteViewerDataBindingGridController<RomByteDataGridRow, ByteEntry>
+    public class RomByteDataBindingController<TRow> : ByteDataBindingGridController<TRow, ByteEntry> 
+        where 
+        TRow : class, IGridRow<ByteEntry>
     {
         protected override IEnumerable<ByteEntry> GetByteItems()
         {
@@ -68,19 +69,17 @@ namespace DiztinGUIsh.controller
                 ViewGrid.DataSource.Filter = new PredicateItemFilter<RomByteDataGridRow>(IsRomByteOpcode);*/
         }
         
-        private static bool IsRomByteOpcode(RomByteDataGridRow romByteRow)
-        {
-            return romByteRow.ByteEntry.TypeFlag == FlagType.Opcode;
-        }
+        // private static bool IsRomByteOpcode(IDataGridRow romByteRow)
+        // {
+        //     return romByteRow.ByteEntry.TypeFlag == FlagType.Opcode;
+        // }
         
         #endregion
     }
-    
-    // -----------------------------
-    
-    public abstract class ByteViewerDataBindingGridController<TRow, TItem> : 
+
+    public abstract class ByteDataBindingGridController<TRow, TItem> : 
         DataBindingController, 
-        IBytesGridViewerDataController<TRow, TItem>,
+        IBytesGridDataController<TRow, TItem>,
         INotifyPropertyChangedExt
     
         // TODO: eventually, we should try and get rid of "ByteOffsetData" here to make this more generic.
@@ -123,6 +122,21 @@ namespace DiztinGUIsh.controller
             DataSubset?.SelectRow(e.RowIndex);
         }
 
+        protected void CreateDataSubset(List<TItem> dataBindSource)
+        {
+            // TODO: create our class via container and use property-based dependency injection
+            var rowLoader = Service.Container.GetInstance<IDataSubsetRomByteDataGridLoader<TRow, TItem>>();
+
+            rowLoader.Data = Data;
+            rowLoader.View = ViewGrid;
+
+            DataSubset = new()
+            {
+                Items = dataBindSource,
+                RowLoader = rowLoader
+            };
+        }
+
         protected override void DataBind()
         {
             if (ViewGrid == null || Data == null)
@@ -132,16 +146,8 @@ namespace DiztinGUIsh.controller
                 DataSubset.PropertyChanged -= RowsOnPropertyChanged;
 
             var dataBindSource = GetDataSourceForBind();
-
-            DataSubset = new()
-            {
-                Items = dataBindSource,
-                RowLoader = new DataSubsetRomByteDataGridLoader<TRow, TItem>
-                {
-                    View = ViewGrid,
-                    Data = Data,
-                }
-            };
+            
+            CreateDataSubset(dataBindSource);
 
             DataSubset.PropertyChanged += RowsOnPropertyChanged;
             

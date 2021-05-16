@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
+using Diz.Controllers.interfaces;
 using Diz.Core.model;
-using DiztinGUIsh.controller;
 
 namespace DiztinGUIsh.window
 {

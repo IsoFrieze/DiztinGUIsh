@@ -1,23 +1,28 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
-using DiztinGUIsh.window.dialog;
+using Diz.Controllers.interfaces;
+using Diz.Core.util;
+using ExtendedXmlSerializer.Configuration;
+using LightInject;
 
-namespace DiztinGUIsh.util
+namespace Diz.Controllers.controllers
 {
     // TODO: replace this with Task and async/await. don't use threads directly.
     public abstract class ProgressBarWorker
     {
-        private ProgressDialog dialog;
+        public IProgressView View { get; set; }
+        public bool IsMarquee { get; init; }
+        public string TextOverride { get; init; }
+        
         private bool isRunning;
         private Thread backgroundThread;
-        public bool IsMarquee { get; set; }
-        public string TextOverride { get; set; }
 
         protected void UpdateProgress(int i)
         {
-            // i must be in range of 0 to 100
-            dialog.UpdateProgress(i);
+            Debug.Assert(i >= 0 && i <= 100);
+            View?.Report(i);
         }
 
         protected abstract void Thread_DoWork();
@@ -43,12 +48,17 @@ namespace DiztinGUIsh.util
 
             isRunning = true;
 
-            dialog = new ProgressDialog(IsMarquee, TextOverride);
+            Debug.Assert(View != null);
+            
+            
+            View.IsMarquee = IsMarquee;
+            View.TextOverride = TextOverride;
 
             // setup, but don't start, the new thread
             backgroundThread = new Thread(Thread_Main);
 
-            // honestly, not sure about this. works around some Invoke() stuff
+            // honestly, not sure about this. works around some weird Invoke() stuff
+            // this all needs to be ripped out. there's another branch with the WIP version of that.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 backgroundThread.SetApartmentState(ApartmentState.STA);
@@ -59,7 +69,7 @@ namespace DiztinGUIsh.util
         private void WaitForJobToFinish()
         {
             // blocks til worker thread closes this dialog box
-            dialog.ShowDialog();
+            View.PromptDialog();
         }
 
         // called from a new worker thread
@@ -69,7 +79,7 @@ namespace DiztinGUIsh.util
             {
                 // BAD APPROACH. we should instead get an event
                 // I'm too lazy right now. TODO FIXME
-                while (!dialog.Visible)
+                while (!View.Visible)
                     Thread.Sleep(50);
 
                 Thread_DoWork();
@@ -84,7 +94,7 @@ namespace DiztinGUIsh.util
         private void SignalJobIsDone()
         {
             // unblock the main thread from ShowDialog()
-            dialog?.BeginInvoke(new Action(() => dialog.Close()));
+            View?.SignalJobIsDone();
         }
     }
 
@@ -94,12 +104,16 @@ namespace DiztinGUIsh.util
         // a version that keeps calling 'callback' until it returns -1
         public static void Loop(long maxProgress, NextAction callback, string overrideTxt = null)
         {
+            var view = Service.Container.GetInstance<IProgressView>();
+            Debug.Assert(view != null);
+            
             var j = new ProgressBarJob
             {
                 MaxProgress = maxProgress,
                 Callback = callback,
                 IsMarquee = maxProgress == -1,
                 TextOverride = overrideTxt,
+                View = view,
             };
             j.Run();
         }

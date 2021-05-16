@@ -1,9 +1,9 @@
 ﻿using System;
-using Diz.Core.export;
+using Diz.Controllers.interfaces;
+using Diz.Core.commands;
 using Diz.LogWriter;
-using DiztinGUIsh.window.dialog;
 
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.controllers
 {
     public interface ILongRunningTaskHandler
     {
@@ -21,7 +21,7 @@ namespace DiztinGUIsh.controller
         IImportRomDialogView GetImportView();
 
         bool PromptHarshAutoStep(int offset, out int newOffset, out int count);
-        MarkManyDialog PromptMarkMany(int offset, int whichIndex);
+        MarkCommand PromptMarkMany(int offset, int whichIndex);
         void ShowOffsetOutOfRangeMsg();
     }
 }

@@ -48,11 +48,11 @@ namespace Diz.Test.Tests.UtilsTests
         [Fact]
         public static void TestServiceContainer()
         {
-            ServiceProvider.Register(
-                typeof(AssemblyPartialLineGenerator).Assembly,
+            Service.Register(
+                typeof(AssemblyPartialLineGenerator),
                 typeof(IAssemblyPartialGenerator));
 
-            var container = ServiceProvider.ServiceContainer;
+            var container = Service.Container;
             container.Register<ILogCreator, FakeLogCreator>();
             var tag = typeof(Asm1).GetCustomAttribute<AsmGeneratorTypeAttribute>()?.Tag;
             if (tag != null)
@@ -61,7 +61,7 @@ namespace Diz.Test.Tests.UtilsTests
             var foo = (Asm1) container.GetInstance<IAsm>("%map");
             Assert.NotNull(foo.LogCreator);
 
-            Assert.True(ServiceProvider.ServiceContainer.AvailableServices
+            Assert.True(Service.Container.AvailableServices
                 .FirstOrDefault(s =>
                     s.ImplementingType == typeof(AssemblyGenerateComment)) != null);
         }

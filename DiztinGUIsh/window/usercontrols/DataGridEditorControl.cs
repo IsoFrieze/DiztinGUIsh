@@ -4,11 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
+using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.datasubset;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
 using DiztinGUIsh.util;
 using UserControl = System.Windows.Forms.UserControl;
 
@@ -24,10 +26,9 @@ namespace DiztinGUIsh.window.usercontrols
         #region Properties
 
         public Util.NumberBase NumberBaseToShow { get; set; } = Util.NumberBase.Hexadecimal;
-
-        private IBytesGridViewerDataController<RomByteDataGridRow, ByteEntry> dataController;
-
-        public IBytesGridViewerDataController<RomByteDataGridRow, ByteEntry> DataController
+        
+        private RomByteDataBindingGridController dataController;
+        public RomByteDataBindingGridController DataController
         {
             get => dataController;
             set
@@ -57,7 +58,7 @@ namespace DiztinGUIsh.window.usercontrols
 
                 case nameof(DataSubsetWithSelection<object, object>.StartingRowLargeIndex):
                 case nameof(DataSubsetWithSelection<object, object>.RowCount):
-                case nameof(ByteViewerDataBindingGridController<RomByteDataGridRow, ByteEntry>.DataSubset):
+                case nameof(ByteDataBindingGridController<RomByteDataGridRow, ByteEntry>.DataSubset):
                     rowsChanged = true;
                     break;
             }
@@ -202,7 +203,10 @@ namespace DiztinGUIsh.window.usercontrols
             if (outputRows == null || outputRows.Count == 0 || row < 0 || row >= outputRows.Count)
                 throw new IndexOutOfRangeException("GetRowValue() row out of range, or no cached outputrows ready");
 
-            return outputRows[row];
+            // TODO: this cast probably means our data model is broken somewhere.
+            var valueAtRowIndex = (RomByteDataGridRow)outputRows[row];
+
+            return valueAtRowIndex;
         }
 
         // this should go somewhere else, outside this grid class.
@@ -538,14 +542,19 @@ namespace DiztinGUIsh.window.usercontrols
         private object GetPropertyAtColumn(RomByteDataGridRow romByteGridRow, int colIndex)
         {
             var headerName = GetColumnHeaderDataProperty(colIndex);
-            var propertyValue = typeof(RomByteDataGridRow).GetProperty(headerName)?.GetValue(romByteGridRow);
+            var propertyValue = GetGridProperty(headerName)?.GetValue(romByteGridRow);
             return propertyValue;
+        }
+
+        private static PropertyInfo GetGridProperty(string headerName)
+        {
+            return typeof(RomByteDataGridRow).GetProperty(headerName);
         }
 
         private void SetPropertyAtColumn(RomByteDataGridRow romByteGridRow, int colIndex, object value)
         {
             var headerName = GetColumnHeaderDataProperty(colIndex);
-            typeof(RomByteDataGridRow).GetProperty(headerName)?.SetValue(romByteGridRow, value);
+            GetGridProperty(headerName)?.SetValue(romByteGridRow, value);
         }
 
         private void table_CellValuePushed(object sender, DataGridViewCellValueEventArgs e)

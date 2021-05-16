@@ -1,6 +1,10 @@
 ﻿using System;
+using Diz.Controllers.interfaces;
+using Diz.Core;
+using Diz.Core.util;
+using LightInject;
 
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.controllers
 {
     public class StartFormController : IFormController
     {
@@ -24,12 +28,14 @@ namespace DiztinGUIsh.controller
 
         public void OpenFileWithNewView(string filename)
         {
-            DizApplication.App.OpenProjectFileWithNewView(filename);
+            var app = Service.Container.GetInstance<IDizApplication>();
+            app.OpenProjectFileWithNewView(filename);
         }
 
         public void OpenNewViewOfLastLoadedProject()
         {
-            DizApplication.App.OpenNewViewOfLastLoadedProject();
+            var app = Service.Container.GetInstance<IDizApplication>();
+            app.OpenNewViewOfLastLoadedProject();
         }
     }
 }

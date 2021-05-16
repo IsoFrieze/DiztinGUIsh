@@ -82,8 +82,7 @@ namespace Diz.Test.Tests.SerializationTests
         private void OpenFilePerformanceTest()
         {
             var s = Stopwatch.StartNew();
-            s.Start();
-            
+
             var openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST.dizraw";
             var project = OpenProject(openFile);
 
@@ -100,7 +99,6 @@ namespace Diz.Test.Tests.SerializationTests
             var project = OpenProject(openFile);
             
             var s = Stopwatch.StartNew();
-            s.Start();
 
             var data = new ProjectXmlSerializer().Save(project);
 

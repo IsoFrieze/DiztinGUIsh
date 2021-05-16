@@ -156,7 +156,13 @@ namespace Diz.Core.model.snes
         // TODO: check all GetOneAnnotationAtPc() for null before use.
         public InOutPoint GetInOutPoint(int i) => GetOneAnnotationAtPc<BranchAnnotation>(i)?.Point ?? default;
         public void SetInOutPoint(int i, InOutPoint point) => GetOrCreateAnnotationAtPc<BranchAnnotation>(i).Point |= point;
-        public void ClearInOutPoint(int i) => GetOneAnnotationAtPc<BranchAnnotation>(i).Point = 0;
+        public void ClearInOutPoint(int i)
+        {
+            var branchAnnotation = GetOneAnnotationAtPc<BranchAnnotation>(i);
+            if (branchAnnotation != null)
+                branchAnnotation.Point = 0;
+        }
+
         public int GetDataBank(int i) => GetOneAnnotationAtPc<OpcodeAnnotation>(i)?.DataBank ?? default;
         public void SetDataBank(int i, int dBank) => GetOrCreateAnnotationAtPc<OpcodeAnnotation>(i).DataBank = (byte)dBank;
         public int GetDirectPage(int i) => GetOneAnnotationAtPc<OpcodeAnnotation>(i)?.DirectPage ?? default;

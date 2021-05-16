@@ -1,19 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using Diz.Controllers.interfaces;
 using Diz.Core.serialization;
 using Diz.Core.util;
 
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.controllers
 {
-    public interface IImportRomDialogView
-    {
-        bool PromptToConfirmAction(string msg);
-        bool ShowAndWaitForUserToConfirmSettings();
-        ImportRomDialogController Controller { get; set; }
-        bool GetVectorValue(int i, int j);
-        void RefreshUi();
-    }
-
     public class ImportRomDialogController
     {
         public IImportRomDialogView View { get; set; }
@@ -38,7 +30,12 @@ namespace DiztinGUIsh.controller
             Builder.ImportSettings.PropertyChanged += ImportSettingsOnPropertyChanged;
             Refresh();
 
-            return View.ShowAndWaitForUserToConfirmSettings();
+            var result = View.ShowAndWaitForUserToConfirmSettings();
+            
+            Builder.ImportSettings.PropertyChanged -= ImportSettingsOnPropertyChanged;
+            View = null;
+            
+            return result;
         }
 
         private void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e)

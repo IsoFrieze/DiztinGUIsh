@@ -97,7 +97,7 @@ namespace Diz.Core.datasubset
                 : GetLargeIndexClampedToVisibleRows(largeIndex);
 
         public int GetLargeIndexClampedToVisibleRows(int largeIndexToClamp) => 
-            Util.ClampIndex(largeIndexToClamp, StartingRowLargeIndex, EndingRowLargeIndex);
+            Util.Clamp(largeIndexToClamp, StartingRowLargeIndex, EndingRowLargeIndex);
 
         public void SelectRow(int rowIndex) => 
             SelectedLargeIndex = GetLargeOffsetFromRowOffset(rowIndex);

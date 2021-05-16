@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using LightInject;
 
 namespace Diz.Core.util
 {
-    public static class ServiceProvider
+    public static class Service
     {
         private static ServiceContainer _serviceContainerInst; 
-        public static ServiceContainer ServiceContainer => 
+        public static ServiceContainer Container => 
             _serviceContainerInst ??= CreateServiceContainer();
 
         private static ServiceContainer CreateServiceContainer()
@@ -17,12 +16,14 @@ namespace Diz.Core.util
             return serviceContainer;
         }
         
-        // THIS WORKS
-        public static void Register(Assembly assembly, Type implementingInterface)
+        // dont use this anymore
+        [Obsolete]
+        public static void Register(Type klass, Type iface)
         {
-            ServiceContainer.RegisterAssembly(assembly, 
+            // this may not be the most safe implementation. ok for now.
+            Container.RegisterAssembly(klass.Assembly, 
                 (serviceType, implementingType) => 
-                    !serviceType.IsClass && implementingType.GetInterfaces().Contains(implementingInterface));   
+                    !serviceType.IsClass && implementingType.GetInterfaces().Contains(iface));   
         }
     }
 }

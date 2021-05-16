@@ -1,8 +1,9 @@
 ﻿using System.Windows.Forms;
+using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.model;
-using DiztinGUIsh.util;
 
-namespace DiztinGUIsh.controller
+namespace DiztinGUIsh.util
 {
     public class ProjectOpenerHandlerGenericHandler : IProjectOpenerHandler
     {
@@ -33,6 +34,11 @@ namespace DiztinGUIsh.controller
             return GuiUtil.PromptToConfirmAction("Error", $"{error} Link a new ROM now?", 
                 () => GuiUtil.PromptToSelectFile(initialDir)
             );
+        }
+
+        public Project OpenProject(string filename, bool showMessageBoxOnSuccess)
+        {
+            return OpenProjectWithGui(filename, showMessageBoxOnSuccess: false);
         }
 
         public static Project OpenProjectWithGui(string filename, bool showMessageBoxOnSuccess = true)

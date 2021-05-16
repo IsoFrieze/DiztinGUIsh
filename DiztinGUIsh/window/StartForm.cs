@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
-using DiztinGUIsh.controller;
+using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 
 namespace DiztinGUIsh.window
 {
@@ -11,11 +12,6 @@ namespace DiztinGUIsh.window
         public StartForm()
         {
             InitializeComponent();
-
-            // HACK. open last file.
-            //if (!string.IsNullOrEmpty(Settings.Default.LastOpenedFile))
-            //    Controller.OpenFileWithNewView(Settings.Default.LastOpenedFile);
-
             // TODO
             /*var projectsBs = new BindingSource(ProjectsController.)
             GuiUtil.BindListControl(comboBox1, DizApplication.App.ProjectsController, nameof(ProjectsController.Projects), bs));

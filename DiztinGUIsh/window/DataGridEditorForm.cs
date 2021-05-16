@@ -2,23 +2,20 @@
 using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
+using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
+using Diz.Core.commands;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using Diz.LogWriter;
-using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
 {
-    public interface IDataGridEditorForm : IFormViewer, IProjectView
-    {
-        
-    }
-    
     public partial class DataGridEditorForm : Form, IDataGridEditorForm
     {
         // sub windows
@@ -70,7 +67,7 @@ namespace DiztinGUIsh.window
             
             UpdateUiFromSettings();
 
-            if (Settings.Default.OpenLastFileAutomatically)
+            if (Settings.Default.OpenLastFileAutomatically && Project == null)
                 OpenLastProject();
         }
 
@@ -108,6 +105,21 @@ namespace DiztinGUIsh.window
         {
             ProjectsController.LastOpenedProjectFilename = "";
             ShowError(errorMsg, "Error opening project");
+        }
+        
+        // TODO: make this a list of last N projects opened
+        // This property is intended to persist beyond application restart, so you can 
+        // open the last filename you were working on.
+        // TODO: store this in the controller, it's only here to access 'Settings'
+        // which is a bad reason.
+        public static string LastOpenedProjectFilename
+        {
+            get => Settings.Default.LastOpenedFile;
+            set
+            {
+                Settings.Default.LastOpenedFile = value;
+                Settings.Default.Save();
+            }
         }
 
         public void OnExportFinished(LogCreatorOutput.OutputResult result)
@@ -650,10 +662,17 @@ namespace DiztinGUIsh.window
             return true;
         }
 
-        public MarkManyDialog PromptMarkMany(int offset, int whichIndex)
+        public MarkCommand PromptMarkMany(int offset, int whichIndex)
         {
-            var mark = new MarkManyDialog(offset, whichIndex, Project.Data);
-            return mark.ShowDialog() == DialogResult.OK ? mark : null;
+            var markManyController = CreateMarkManyControllerAndView(offset, whichIndex);
+            return markManyController.PromptForCommand();
+        }
+
+        private MarkManyController CreateMarkManyControllerAndView(int offset, int whichIndex)
+        {
+            var markManyController = new MarkManyController(offset, whichIndex, Project.Data);
+            markManyController.MarkManyView = new MarkManyView {Controller = markManyController};
+            return markManyController;
         }
 
         void IProjectView.ShowOffsetOutOfRangeMsg() => ShowOffsetOutOfRangeMsg();

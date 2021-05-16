@@ -2,33 +2,29 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
-using DiztinGUIsh.controller;
+using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
+using Diz.Core;
+using Diz.Core.util;
 using DiztinGUIsh.window;
+using LightInject;
 
 namespace DiztinGUIsh
 {
     public class DizApplicationContext : ApplicationContext
     {
-        public class DizApplicationArgs
-        {
-            public string FileToOpen { get; set; }
-        }
         
-        public DizApplicationContext(DizApplicationArgs args)
+        public DizApplicationContext(IDizApplication.Args args)
         {
-            DizApplication.App.Run(args);
+            var app = Service.Container.GetInstance<IDizApplication>();
+            app.Run(args);
         }
     }
-    
-    public class DizApplication
+
+    public class DizApplication : IDizApplication
     {
         public GlobalViewControllers GlobalViewControllers { get; } = new ();
         public ProjectsController ProjectsController { get; } = new SampleRomHackProjectsController();
-        
-        private static DizApplication _appInstance;
-
-        public static DizApplication App => 
-            _appInstance ??= new DizApplication();
 
         public void OpenProjectFileWithNewView(string filename)
         {
@@ -39,11 +35,10 @@ namespace DiztinGUIsh
             if (project == null)
                 return;
 
-            var controller = ShowNewProjectEditorForm();
-            controller.SetProject(filename, project);
+            ShowNewProjectEditorForm(controller => controller.SetProject(filename, project));
         }
 
-        public void Run(DizApplicationContext.DizApplicationArgs args)
+        public void Run(IDizApplication.Args args)
         {
             Application.ApplicationExit += OnApplicationExit;
             GlobalViewControllers.AllFormsClosed += (_, _) => Application.Exit();
@@ -65,8 +60,8 @@ namespace DiztinGUIsh
 
             OnCreated(controller, form);
         }
-
-        private MainFormController ShowNewProjectEditorForm()
+        
+        private MainFormController ShowNewProjectEditorForm(Action<MainFormController> beforeShow = null)
         {
             var form = new DataGridEditorForm();
             var controller = new MainFormController
@@ -74,7 +69,8 @@ namespace DiztinGUIsh
                 DataGridEditorForm = form,
             };
             form.MainFormController = controller;
-
+            
+            beforeShow?.Invoke(controller);
             OnCreated(controller, form);
 
             return controller;
@@ -98,8 +94,7 @@ namespace DiztinGUIsh
                 return;
             }
             
-            var controller = ShowNewProjectEditorForm();
-            controller.SetProject("", openProject);
+            ShowNewProjectEditorForm(controller => controller.SetProject("", openProject));
         }
 
         private void OnApplicationExit(object sender, EventArgs e)

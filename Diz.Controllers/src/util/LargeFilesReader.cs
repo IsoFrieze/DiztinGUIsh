@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Diz.Controllers.controllers;
 using Diz.Core.util;
 
-namespace DiztinGUIsh.util
+namespace Diz.Controllers.util
 {
     public class LargeFilesReader : ProgressBarWorker
     {

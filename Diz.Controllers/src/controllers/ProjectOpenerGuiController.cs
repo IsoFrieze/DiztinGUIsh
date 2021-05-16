@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.Core.serialization;
 
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.controllers
 {
     public class ProjectOpenerGuiController
     {

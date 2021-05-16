@@ -56,7 +56,6 @@ namespace Diz.Test.Tests.PerformanceTests
         /*private void RunPrintTiming(Action item)
         {
             var s = Stopwatch.StartNew();
-            s.Start();
                 
             item.Invoke();
                 

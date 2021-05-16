@@ -49,7 +49,6 @@
             this.lblStatusStatic.Size = new System.Drawing.Size(42, 15);
             this.lblStatusStatic.TabIndex = 0;
             this.lblStatusStatic.Text = "Status:";
-            this.lblStatusStatic.Click += new System.EventHandler(this.label1_Click);
             // 
             // lblStatusText
             // 

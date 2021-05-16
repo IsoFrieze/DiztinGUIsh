@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.Properties;
 
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.controllers
 {
     public class ProjectsController
     {
+        private IProjectOpenerHandler ProjectOpenerView { get; set; }
         public Dictionary<string, Project> Projects { get; } = new();
+        public static string LastOpenedProjectFilename { get; set; }
 
         public Project OpenProject(string filename)
         {
@@ -24,20 +26,7 @@ namespace DiztinGUIsh.controller
         }
 
         protected virtual Project ReadProject(string filename) => 
-            ProjectOpenerHandlerGenericHandler.OpenProjectWithGui(filename, showMessageBoxOnSuccess: false);
-        
-        // TODO: make this a list of last N projects opened
-        // This property is intended to persist beyond application restart, so you can 
-        // open the last filename you were working on.
-        public static string LastOpenedProjectFilename
-        {
-            get => Settings.Default.LastOpenedFile;
-            set
-            {
-                Settings.Default.LastOpenedFile = value;
-                Settings.Default.Save();
-            }
-        }
+            ProjectOpenerView.OpenProject(filename, showMessageBoxOnSuccess: false);
     }
 
     public class GlobalViewControllers

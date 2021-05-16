@@ -1,17 +1,19 @@
 ﻿using System;
 using System.ComponentModel;
+using Diz.Controllers.controllers;
+using Diz.Core;
+using Diz.Core.commands;
 using Diz.Core.datasubset;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
-using Diz.LogWriter;
 
 // NOTE: lots of these interfaces were created temporarily for major refactoring.
 // when that process is finished, we should probably take a pass here to simplify anything
 // that ended up being unnecessary or over-complicated
 
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.interfaces
 {
     public interface IController
     {
@@ -33,7 +35,7 @@ namespace DiztinGUIsh.controller
         Data Data { get; }
     }
     
-    public interface IBytesGridViewerDataController<TRow, TItem> : IDataController, INotifyPropertyChanged
+    public interface IBytesGridDataController<TRow, TItem> : IDataController, INotifyPropertyChanged
     {
         IBytesGridViewer<TItem> ViewGrid { get; set; } 
         DataSubsetWithSelection<TRow, TItem> DataSubset { get; }
@@ -79,6 +81,8 @@ namespace DiztinGUIsh.controller
         public void OnProjectOpenWarning(string warnings);
         public void OnProjectOpenFail(string fatalError);
         public string AskToSelectNewRomFilename(string error);
+        
+        Project OpenProject(string filename, bool showMessageBoxOnSuccess);
     }
 
     public interface I65816CpuOperations
@@ -119,7 +123,7 @@ namespace DiztinGUIsh.controller
         void OnUserChangedSelection(ByteEntry newSelection);
     }
 
-    public interface ILabelController
+    public interface ILabelImporter
     {
         void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
     }
@@ -138,10 +142,19 @@ namespace DiztinGUIsh.controller
         IProjectOpenerHandler, 
         ITraceLogImporters, 
         IProjectNavigation,
-        ILabelController
+        ILabelImporter
     {
         public FlagType CurrentMarkFlag { get; set; }
         
         public bool MoveWithStep { get; set; }
+    }
+
+    public interface IMarkManyController : IController
+    {
+        IMarkManyView MarkManyView { get; }
+        IDataRange DataRange { get; }
+        IReadOnlySnesRom Data { get; }
+
+        MarkCommand CreateCommandFromView();
     }
 }

@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="../common/CommonSettings.targets" />
   <PropertyGroup>
     <UseWindowsForms>false</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -8,6 +8,7 @@
     <AssemblyName>Diz.Test</AssemblyName>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet">
       <Version>0.12.1</Version>
@@ -17,6 +18,11 @@
     </PackageReference>
     <PackageReference Include="FluentAssertions">
       <Version>5.10.3</Version>
+    </PackageReference>
+    <PackageReference Include="GitInfo">
+      <Version>2.1.2</Version>
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="JetBrains.Annotations">
       <Version>2021.1.0</Version>

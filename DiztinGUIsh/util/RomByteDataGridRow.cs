@@ -7,23 +7,17 @@ using System.Drawing;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+using Diz.Controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
 using JetBrains.Annotations;
 using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.util
 {
-    public interface IGridRow<TItem>
-    {
-        IBytesGridViewer<TItem> ParentView { get; init; }
-        Data Data { get; init; }
-        ByteEntry ByteEntry { get; init; }
-    }
-    
     /*[AttributeUsage(AttributeTargets.Property)]
     public class CellStyleFormatter : Attribute
     {
@@ -35,8 +29,10 @@ namespace DiztinGUIsh.util
         }
     }*/
 
+
+
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    public class RomByteDataGridRow : INotifyPropertyChanged, IGridRow<ByteEntry>
+    public class RomByteDataGridRow : IDataGridRow
     {
         [DisplayName("Label")]
         [Editable(true)]

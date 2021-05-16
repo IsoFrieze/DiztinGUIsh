@@ -31,7 +31,7 @@ namespace Diz.Core.import
         private int Run()
         {
             prevFlags = 0;
-
+            
             var modified = 0;
             for (var snesOffset = 0; snesOffset <= 0xFFFFFF; snesOffset++)
             {

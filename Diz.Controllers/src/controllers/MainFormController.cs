@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using Diz.Controllers.interfaces;
+using Diz.Controllers.util;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
@@ -11,32 +13,8 @@ using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using Diz.LogWriter;
-using DiztinGUIsh.util;
-using DiztinGUIsh.window;
-using DiztinGUIsh.window.dialog;
 
-// Model-View-Controller architecture.
-// goal: while this class's purpose is to be the middleman between dumb GUI elements and 
-// our underlying data, we should strive to keep all direct GUI stuff out of this class.
-// i.e. it's OK for this class to deal with confirming the user wants to do something,
-// but not OK to directly use GUI functions to show a form. instead, it should reach
-// out to the view classes and ask them to do things like popup dialog boxes/change form elements/etc.
-//
-// The idea here is that because there's no direct GUI stuff going on, we can run automation
-// and unit testing on this class, and eventually add undo/redo support
-//
-// Where possible, let the GUI elements (forms) subscribe to data notifications on our model
-// instead of trying to middleman everything.
-//
-// This separation of concerns isn't perfect yet, but, keep it in mind as you add functionality.
-//
-// example:
-//   ProjectView -> A form that displays an opened project to the user
-//   MainFormController -> When the form needs to change any state, it talks to MainFormController
-//                        i.e. when user clicks "Open Project", it sends the filename to us for handling
-//   Project -> The actual data, the model. It knows nothing about GUI, just is the low-level business logic
-
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.controllers
 {
     public class MainFormController : IMainFormController
     {
@@ -141,6 +119,12 @@ namespace DiztinGUIsh.controller
 
         public string AskToSelectNewRomFilename(string error) => 
             ProjectView.AskToSelectNewRomFilename("Error", $"{error} Link a new ROM now?");
+
+        public Project OpenProject(string filename, bool showMessageBoxOnSuccess)
+        {
+            return new ProjectOpenerGuiController { Handler = this }
+                .OpenProject(filename);
+        }
 
         private void Project_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -454,11 +438,11 @@ namespace DiztinGUIsh.controller
             if (!RomDataPresent()) 
                 return;
             
-            var mark = ProjectView.PromptMarkMany(offset, whichIndex);
-            if (mark == null)
+            var markCmd = ProjectView.PromptMarkMany(offset, whichIndex);
+            if (markCmd == null)
                 return;
 
-            var destination = MarkMany(mark.Property, mark.Start, mark.Value, mark.Count);
+            var destination = MarkMany(markCmd.Property, markCmd.Start, markCmd.Value, markCmd.Count);
 
             if (MoveWithStep)
                 SelectedSnesOffset = destination;

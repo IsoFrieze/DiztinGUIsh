@@ -130,7 +130,7 @@ namespace Diz.Test.Tests.DataSubsetTests
         public static void TestClampMinMax()
         {
             void TestClamp(int input, int expected, int minIndex, int maxIndex) => 
-                Assert.Equal(expected, Util.ClampIndex(input, minIndex, maxIndex));
+                Assert.Equal(expected, Util.Clamp(input, minIndex, maxIndex));
 
             TestClamp(input: -1, expected: 0, minIndex: 0, maxIndex: 9);
             TestClamp(input: 0, expected: 0, minIndex: 0, maxIndex: 9);
