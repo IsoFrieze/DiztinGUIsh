@@ -3,13 +3,11 @@ using System.Diagnostics;
 
 namespace Diz.Core.util
 {
-    // TODO: unit tests
-    
     // when any parameter is set, the others will adjust to be in range (if possible)
     // i.e. if you set a starting index, the count will adjust itself to make sure the invariant holds
     public class CorrectingRange : IDataRange
     {
-        public int MaxCount { get; set; }
+        public int MaxCount { get; init; }
         
         private int rangeStartIndex;
         private int rangeCount;
@@ -66,7 +64,7 @@ namespace Diz.Core.util
         
         private int ClampIndex(int index)
         {
-            var clampedIndex = Util.ClampIndex(index, MaxCount - 1);
+            var clampedIndex = Util.ClampIndex(index, MaxCount);
             if (!IsValidIndex(clampedIndex))
                 throw new ArgumentOutOfRangeException(nameof(index));
             

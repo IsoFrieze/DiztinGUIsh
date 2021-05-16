@@ -19,6 +19,12 @@
     <PackageReference Include="FluentAssertions">
       <Version>5.10.3</Version>
     </PackageReference>
+    <PackageReference Include="FluentAssertions.Analyzers">
+      <Version>0.11.4</Version>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions.ArgumentMatchers.Moq">
+      <Version>0.1.3</Version>
+    </PackageReference>
     <PackageReference Include="GitInfo">
       <Version>2.1.2</Version>
       <PrivateAssets>all</PrivateAssets>

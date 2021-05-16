@@ -9,7 +9,7 @@ namespace Diz.Controllers.controllers
 {
     public class MarkManyController : IMarkManyController
     {
-        public IDataRange DataRange { get; } = new CorrectingRange();
+        public IDataRange DataRange { get; }
         public IMarkManyView MarkManyView { get; }
         public IReadOnlySnesRom Data { get; }
         public int DesiredStartingCount { get; set; } = 0x10;
@@ -20,21 +20,18 @@ namespace Diz.Controllers.controllers
             MarkManyView = view;
             MarkManyView.Controller = this;
             
-            SetOffset(offset);
+            DataRange = new CorrectingRange
+            {
+                MaxCount = Data.GetRomSize()
+            };
+            
+            DataRange.StartIndex = offset;
+            DataRange.RangeCount = Math.Min(
+                DesiredStartingCount, 
+                DataRange.MaxCount - DataRange.StartIndex
+            );
             
             MarkManyView.Column = whichIndex;
-        }
-
-        private void SetOffset(int offset)
-        {
-            var desiredStartingCount = DesiredStartingCount;
-            if (desiredStartingCount == -1)
-                desiredStartingCount = DesiredStartingCount;
-            
-            DataRange.MaxCount = Data.GetRomSize();
-            DataRange.StartIndex = offset;
-            var actualAmountAvailable = DataRange.MaxCount - DataRange.StartIndex;
-            DataRange.RangeCount = Math.Min(desiredStartingCount, actualAmountAvailable);
         }
 
         public MarkCommand CreateCommandFromView() =>
