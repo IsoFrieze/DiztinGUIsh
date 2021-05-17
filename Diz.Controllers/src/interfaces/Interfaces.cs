@@ -17,11 +17,10 @@ namespace Diz.Controllers.interfaces
         void Run(Args args);
     }
 
-    public interface IGridRow<TItem>
+    public interface IGridRow<out TItem>
     {
-        IBytesGridViewer<TItem> ParentView { get; init; }
         Data Data { get; init; }
-        ByteEntry ByteEntry { get; init; }
+        TItem Item { get; }
     }
     
     public interface IDataGridRow : IGridRow<ByteEntry>, INotifyPropertyChanged

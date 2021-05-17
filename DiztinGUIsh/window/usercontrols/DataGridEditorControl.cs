@@ -195,7 +195,7 @@ namespace DiztinGUIsh.window.usercontrols
 
         #region RowColumnAccess
 
-        public ByteEntry SelectedByteOffset => DataController?.DataSubset?.SelectedRow?.ByteEntry;
+        public ByteEntry SelectedByteOffset => DataController?.DataSubset?.SelectedRow?.Item;
 
         private RomByteDataGridRow GetValueAtRowIndex(int row)
         {
