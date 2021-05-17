@@ -2,7 +2,7 @@
 {
     public interface IDataRange
     {
-        public int MaxCount { get; init; }
+        public int MaxCount { get; }
         
         public int StartIndex { get; set; }
         public int EndIndex { get; set; }

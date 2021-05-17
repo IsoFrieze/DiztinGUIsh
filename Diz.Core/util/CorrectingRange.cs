@@ -7,15 +7,22 @@ namespace Diz.Core.util
     // i.e. if you set a starting index, the count will adjust itself to make sure the invariant holds
     public class CorrectingRange : IDataRange
     {
-        public int MaxCount { get; init; }
-        
+        public int MaxCount { get; }
+
         private int rangeStartIndex;
         private int rangeCount;
+
+        public CorrectingRange(int maxCount)
+        {
+            MaxCount = maxCount;
+        }
 
         public int EndIndex
         {
             // EndIndex is just a convenience helper, we'll route everything through StartIndex
-            get => StartIndex + RangeCount - 1;
+            get => RangeCount == 0 
+                ? -1 
+                : StartIndex + RangeCount - 1;
             set => StartIndex = value - RangeCount + 1;
         }
 
@@ -78,8 +85,16 @@ namespace Diz.Core.util
             
             Debug.Assert(rangeCount >= 0);
             Debug.Assert(rangeStartIndex >= 0);
-            Debug.Assert(EndIndex >= 0);
-            
+
+            if (rangeCount == 0)
+            {
+                Debug.Assert(EndIndex == -1);
+            }
+            else
+            {
+                Debug.Assert(EndIndex >= 0);
+            }
+
             Debug.Assert(rangeCount <= MaxCount);
             Debug.Assert(rangeStartIndex < MaxCount);
             Debug.Assert(EndIndex < MaxCount);

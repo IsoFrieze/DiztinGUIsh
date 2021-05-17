@@ -19,12 +19,9 @@ namespace Diz.Controllers.controllers
             Data = data;
             MarkManyView = view;
             MarkManyView.Controller = this;
-            
-            DataRange = new CorrectingRange
-            {
-                MaxCount = Data.GetRomSize()
-            };
-            
+
+            DataRange = new CorrectingRange(Data.GetRomSize());
+
             DataRange.StartIndex = offset;
             DataRange.RangeCount = Math.Min(
                 DesiredStartingCount, 

@@ -1,5 +1,6 @@
 ﻿using Diz.Core.util;
 using FluentAssertions;
+using Moq;
 using Xunit;
 
 namespace Diz.Test.Tests.UtilsTests
@@ -9,7 +10,7 @@ namespace Diz.Test.Tests.UtilsTests
         [Fact]
         public void TestSomeBasics()
         {
-            var range = new CorrectingRange {MaxCount = 100, StartIndex = 2, RangeCount = 10};
+            var range = new CorrectingRange(100) {StartIndex = 2, RangeCount = 10};
             range.EndIndex.Should().Be(11);
 
             range.EndIndex = 11;
@@ -28,6 +29,33 @@ namespace Diz.Test.Tests.UtilsTests
             
             range.StartIndex = 101;
             range.StartIndex.Should().Be(99);
+        }
+
+        [Fact]
+        public void TestInvalid()
+        {
+            var range = new CorrectingRange(100);
+            range.EndIndex.Should().Be(-1);
+            range.RangeCount.Should().Be(0);
+            range.StartIndex.Should().Be(0);
+
+            range.RangeCount = 1;
+            range.EndIndex.Should().Be(0);
+            range.RangeCount.Should().Be(1);
+            range.StartIndex.Should().Be(0);
+            
+            range.RangeCount = 10;
+            range.EndIndex.Should().Be(9);
+            range.RangeCount.Should().Be(10);
+            range.StartIndex.Should().Be(0);
+        }
+
+        [Fact]
+        public void TestCombos()
+        {
+            new CorrectingRange(100) {StartIndex = 2, RangeCount = 10};
+            new CorrectingRange(100) {StartIndex = 2, EndIndex = 20, RangeCount = 10};
+            new CorrectingRange(100) {EndIndex = 20, RangeCount = 10, StartIndex = 2};
         }
     }
 }
