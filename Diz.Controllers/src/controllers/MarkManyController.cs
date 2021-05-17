@@ -31,7 +31,7 @@ namespace Diz.Controllers.controllers
             MarkManyView.Column = whichIndex;
         }
 
-        public MarkCommand CreateCommandFromView() =>
+        private MarkCommand CreateCommandFromView() =>
             new()
             {
                 Start = DataRange.StartIndex,
@@ -40,7 +40,7 @@ namespace Diz.Controllers.controllers
                 Property = MarkManyView.Property,
             };
 
-        public MarkCommand PromptForCommand() => 
+        public MarkCommand GetMarkCommand() => 
             !MarkManyView.PromptDialog() ? null : CreateCommandFromView();
     }
 }

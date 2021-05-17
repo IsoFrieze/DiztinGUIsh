@@ -165,7 +165,6 @@ namespace Diz.Controllers.interfaces
     {
         IDataRange DataRange { get; }
         IReadOnlySnesRom Data { get; }
-
-        MarkCommand CreateCommandFromView();
+        MarkCommand GetMarkCommand();
     }
 }

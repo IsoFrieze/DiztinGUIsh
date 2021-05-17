@@ -664,11 +664,14 @@ namespace DiztinGUIsh.window
             return true;
         }
 
-        public MarkCommand PromptMarkMany(int offset, int whichIndex)
+        public MarkCommand PromptMarkMany(int offset, int whichIndex) => 
+            CreateMarkManyController(offset, whichIndex).GetMarkCommand();
+
+        private IMarkManyController CreateMarkManyController(int offset, int whichIndex)
         {
-            var markManyControllerFactory = Service.Container.GetInstance<Func<int, int, IReadOnlySnesRom, IMarkManyController>>();
-            var controller = markManyControllerFactory(offset, whichIndex, Project.Data);
-            return controller.CreateCommandFromView();
+            var markManyControllerFactory =
+                Service.Container.GetInstance<Func<int, int, IReadOnlySnesRom, IMarkManyController>>();
+            return markManyControllerFactory(offset, whichIndex, Project.Data);
         }
 
         void IProjectView.ShowOffsetOutOfRangeMsg() => ShowOffsetOutOfRangeMsg();

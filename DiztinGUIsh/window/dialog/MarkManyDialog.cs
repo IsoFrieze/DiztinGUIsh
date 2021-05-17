@@ -114,7 +114,7 @@ namespace DiztinGUIsh.window.dialog
             return 0;
         }
 
-        public bool PromptDialog() => ShowDialog() != DialogResult.OK;
+        public bool PromptDialog() => ShowDialog() == DialogResult.OK;
 
         private void UpdateMostUi()
         {
