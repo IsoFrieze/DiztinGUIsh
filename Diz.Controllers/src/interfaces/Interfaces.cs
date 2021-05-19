@@ -37,7 +37,7 @@ namespace Diz.Controllers.interfaces
         public Data Data { get; set; }
     }
     
-    public interface IProjectsManager : IProjects, IProjectLoadListener, ILastProjectLoaded { }
+    public interface IProjectsManager : IProjects, IProjectLoadListener, ISampleProjectLoader, ILastProjectLoaded { }
 
     public interface IProjectLoadListener
     {
@@ -48,6 +48,11 @@ namespace Diz.Controllers.interfaces
     public interface IProjects
     {
         Project GetProject(string filename);
+    }
+
+    public interface ISampleProjectLoader
+    {
+        Project GetSampleProject();
     }
     
     public interface ILastProjectLoaded

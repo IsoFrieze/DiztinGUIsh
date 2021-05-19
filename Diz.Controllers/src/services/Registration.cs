@@ -52,6 +52,8 @@ namespace Diz.Controllers.services
                 typeof(ProjectLoaderWithSampleDataDecorator));
 
             serviceRegistry.Register<IProjectsManager, ProjectsManager>();
+            
+            serviceRegistry.RegisterSingleton<ISampleProjectLoader, ProjectsManager>("SampleProjectLoader");
         }
     }
 }

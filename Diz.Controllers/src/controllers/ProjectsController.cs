@@ -49,6 +49,14 @@ namespace Diz.Controllers.controllers
             return project;
         }
 
+        /// <summary>
+        /// Get a sample project, loaded from hardcoded data inside the app itself. Suitable for testing/demo purposes
+        /// and doesn't need to read anything from the disk.
+        /// </summary>
+        /// <returns>Demo project with demo ROM loaded</returns>
+        public Project GetSampleProject() => 
+            GetProject(ProjectLoaderWithSampleDataDecorator.MagicSampleProjectName);
+
         public Project GetLastOpenedProject()
         {
             // this is kinda messy/dumb, rethink.
