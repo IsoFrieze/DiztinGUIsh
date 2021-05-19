@@ -9,16 +9,15 @@ namespace Diz.Gui.Avalonia {
     // https://reactiveui.net/docs/handbook/when-activated/
     // https://reactiveui.net/docs/handbook/data-binding/avalonia
     // http://avaloniaui.net/docs/reactiveui/activation#activation-example
-    // Note that ISupportsActivation was renamed to IActivatableViewModel
     public class MainViewModel : ReactiveObject, IActivatableViewModel {
         public ViewModelActivator Activator { get; }
 
         // https://reactiveui.net/docs/handbook/view-models/#read-write-properties
         // https://reactiveui.net/docs/handbook/view-models/boilerplate-code
-        private string _greeting;
+        private string greeting;
         public string Greeting {
-            get => _greeting;
-            set => this.RaiseAndSetIfChanged(ref _greeting, value);
+            get => greeting;
+            private set => this.RaiseAndSetIfChanged(ref greeting, value);
         }
 
         public MainViewModel() {
@@ -77,11 +76,11 @@ namespace Diz.Gui.Avalonia {
                 .WhenAnyValue(vm => vm.Greeting)
                 .Skip(1) // ignore the initial NullOrEmpty value of Greeting
                 .Do(
-                    greeting =>
+                    greet =>
                         Console.WriteLine(
                             $"[vm {Thread.CurrentThread.ManagedThreadId}]: " +
                             "WhenAnyValue()   -> " +
-                            $"Greeting value changed to: \"{greeting}\"\n"))
+                            $"Greeting value changed to: \"{greet}\"\n"))
                 .Subscribe();
         }
                                     

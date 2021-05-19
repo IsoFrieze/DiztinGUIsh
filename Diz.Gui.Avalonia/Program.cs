@@ -2,27 +2,31 @@
 using Avalonia.Controls;
 using Avalonia.ReactiveUI;
 
-namespace Diz.Gui.Avalonia {
-
+namespace Diz.Gui.Avalonia
+{
     // You may want to start here:
     // https://reactiveui.net/docs/getting-started/
 
-    class Program {
+    internal static class Program
+    {
         // http://avaloniaui.net/docs/reactiveui/
         // https://github.com/AvaloniaUI/Avalonia/wiki/Application-lifetimes
-        public static AppBuilder BuildAvaloniaApp() {
+        private static AppBuilder BuildAvaloniaApp()
+        {
             return AppBuilder
                 .Configure<App>()
                 .UseReactiveUI()
                 .UsePlatformDetect()
-                .LogToDebug();
+                .LogToTrace();
         }
 
-        private static void AppMain(Application app, string[] args) {
+        private static void AppMain(Application app, string[] args)
+        {
             app.Run(new MainView());
         }
 
-        public static void Main(string[] args) {
+        public static void Main(string[] args)
+        {
             BuildAvaloniaApp().Start(AppMain, args);
         }
     }
