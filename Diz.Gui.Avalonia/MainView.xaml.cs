@@ -35,7 +35,7 @@ namespace Diz.Gui.Avalonia {
 
                         // https://reactiveui.net/docs/handbook/events/#how-do-i-convert-my-own-c-events-into-observables
                         Observable
-                            .FromEventPattern(wndMain, nameof(wndMain.Closing))
+                            .FromEventPattern(WndMain, nameof(WndMain.Closing))
                             .Subscribe(
                                 _ => {
                                     Console.WriteLine(
@@ -46,7 +46,7 @@ namespace Diz.Gui.Avalonia {
 
                         // https://reactiveui.net/docs/handbook/data-binding/
                         this
-                            .OneWayBind(ViewModel, vm => vm.Greeting, v => v.tbGreetingLabel.Text)
+                            .OneWayBind(ViewModel, vm => vm.Greeting, v => v.TbGreetingLabel.Text)
                             .DisposeWith(disposables);
                     });
 
@@ -59,7 +59,7 @@ namespace Diz.Gui.Avalonia {
         }
 
         // https://reactiveui.net/docs/handbook/data-binding/avalonia
-        private TextBlock tbGreetingLabel => this.FindControl<TextBlock>("tbGreetingLabel");
-        private Window wndMain => this.FindControl<Window>("wndMain");
+        private TextBlock TbGreetingLabel => this.FindControl<TextBlock>("TbGreetingLabel");
+        private Window WndMain => this.FindControl<Window>("WndMain");
     }
 }

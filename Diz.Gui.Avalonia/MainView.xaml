@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         x:Class="Diz.Gui.Avalonia.MainView"
         Title="HelloWorld"
-        Name="wndMain"
+        Name="WndMain"
         Width="320"
         Height="200"
         MinWidth="320"
@@ -12,8 +12,8 @@
     <!-- http://avaloniaui.net/docs/reactiveui/activation#activation-example - View.xaml -->
     <!-- https://reactiveui.net/docs/handbook/data-binding/avalonia -->
     <TextBlock
-        Name="tbGreetingLabel"
+        Name="TbGreetingLabel"
         VerticalAlignment="Center"
         HorizontalAlignment="Center"
-        FontSize="16" />
+        FontSize="22" />
 </Window>
