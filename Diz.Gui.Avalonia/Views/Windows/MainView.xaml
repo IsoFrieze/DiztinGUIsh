@@ -3,25 +3,27 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:Diz.Gui.Avalonia.ViewModels"
+        xmlns:uc="clr-namespace:Diz.Gui.Avalonia.Views.UserControls"
         x:Class="Diz.Gui.Avalonia.Views.Windows.MainView"
-        mc:Ignorable="d" 
-        d:DesignWidth="800" 
+        mc:Ignorable="d"
+        d:DesignWidth="800"
         d:DesignHeight="150"
-        
+
         Title="HelloWorld"
         Name="WndMain"
         Width="320"
         Height="200"
         MinWidth="320"
         MinHeight="200">
-    
+
     <Design.DataContext>
-        <viewModels:MainViewModel/>
+        <viewModels:MainViewModel />
     </Design.DataContext>
-    
+
     <StackPanel>
-            <DataGrid AutoGenerateColumns="True" Items="{Binding People}"/>
-        </StackPanel>
+        <uc:MainGridUserControl/>
+        <DataGrid AutoGenerateColumns="True" Items="{Binding People}" />
+    </StackPanel>
 </Window>
 
 <!-- http://avaloniaui.net/docs/reactiveui/activation#activation-example - View.xaml -->

@@ -1,22 +1,16 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.ReactiveUI;
-using Diz.Gui.Avalonia.Views;
 using Diz.Gui.Avalonia.Views.Windows;
 
 namespace Diz.Gui.Avalonia
 {
-    // You may want to start here:
-    // https://reactiveui.net/docs/getting-started/
-
     internal static class Program
     {
-        // http://avaloniaui.net/docs/reactiveui/
-        // https://github.com/AvaloniaUI/Avalonia/wiki/Application-lifetimes
         private static AppBuilder BuildAvaloniaApp()
         {
             return AppBuilder
-                .Configure<App>()
+                .Configure<App.App>()
                 .UseReactiveUI()
                 .UsePlatformDetect()
                 .LogToTrace();
@@ -33,3 +27,8 @@ namespace Diz.Gui.Avalonia
         }
     }
 }
+
+// You may want to start here:
+// https://reactiveui.net/docs/getting-started/
+// http://avaloniaui.net/docs/reactiveui/
+// https://github.com/AvaloniaUI/Avalonia/wiki/Application-lifetimes

@@ -1,89 +1,62 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Diz.Controllers.interfaces;
+using Diz.Controllers.util;
 using Diz.Core.util;
 using Diz.Gui.Avalonia.Models;
+using LightInject;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace Diz.Gui.Avalonia.ViewModels
 {
-    public class MainGridViewModel : ReactiveObject, IActivatableViewModel
+    public class MainGridViewModel : ViewModel
     {
-        public ViewModelActivator Activator { get; }
-        
-        [Reactive] 
-        public ObservableCollection<Person> People { get; set; }
-        
+        [Reactive] public int StartingOffset { get; set; }
+
+        [Reactive] public int Count { get; set; }
+
+        public IEnumerable<ByteEntryDetailsViewModel>? ByteEntries => byteEntries.Value;
+        private readonly ObservableAsPropertyHelper<IEnumerable<ByteEntryDetailsViewModel>?> byteEntries;
+
         public MainGridViewModel()
         {
-            Activator = new ViewModelActivator();
-            
-            People = new ObservableCollection<Person>(GenerateMockPeopleTable());
-            
+            byteEntries = this
+                .WhenAnyValue(x => x.StartingOffset)
+                .Throttle(TimeSpan.FromMilliseconds(800))
+                // .WhenActivated()
+                .DistinctUntilChanged()
+                .Where( x=> x != -1)
+                .SelectMany(GetByteEntries)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .ToProperty(this, x => x.ByteEntries);
+
             this.WhenActivated(
-                 (CompositeDisposable disposables) =>
-                 {
-                     //         Observable
-            //             .Timer(
-            //                 TimeSpan.FromMilliseconds(100), // give the view time to activate
-            //                 TimeSpan.FromMilliseconds(1000),
-            //                 RxApp.MainThreadScheduler)
-            //             .Take(6)
-            //             .Select(x=>(int)x)
-            //             .Do(
-            //                 t =>
-            //                 {
-            //                     People[t];
-            //                 })
-            //             .Subscribe()
-            //             .DisposeWith(disposables);
-            });
+                (CompositeDisposable disposables) => { });
         }
-        
-        private async Task<IEnumerable<ByteEntryDetailsViewModel>?> SearchByteEntries(
-            int startRomOffset, CancellationToken token)
+
+        private async Task<IEnumerable<ByteEntryDetailsViewModel>?> GetByteEntries(int startRomOffset, CancellationToken token)
         {
             var loader = Service.Container.GetInstance<ISampleProjectLoader>("SampleProjectLoader");
             if (loader == null)
                 return null;
-            
+
             var project = await Task.Run(loader.GetSampleProject, token);
             // var (startRomOffset, count) = range;
-            
+
             return project?.Data?.RomByteSource.Bytes
-                .Skip(startRomOffset)
-                .Take(1)
+                //.Skip(startRomOffset)
+                //.Take(1)
                 .Select(x => new RomByteRowBase {ByteEntry = x})
                 .Select(x => new ByteEntryDetailsViewModel(x));
-
         }
-
-
-
-        public class ByteEntryDetailsViewModel : ViewModelBase
-        {
-            private readonly RomByteRowBase byteEntry;
-
-            public ByteEntryDetailsViewModel(RomByteRowBase byteEntry)
-            {
-                this.byteEntry = byteEntry;
-                SetComment = ReactiveCommand.Create((string comment) =>
-                {
-                    this.byteEntry.Comment = comment;
-                });
-            }
-
-            [PublicAPI] public ReactiveCommand<string, Unit> SetComment { get; }
-
-            public string Label => byteEntry.Label;
-            public string Comment => byteEntry.Comment;
-            public string Offset => byteEntry.Offset;
-            public char AsciiCharRep => byteEntry.AsciiCharRep;
-            public string NumericRep => byteEntry.NumericRep;
-            public string Point => byteEntry.Point;
-            public string Instruction => byteEntry.Instruction;
-        }
+    }
 }
