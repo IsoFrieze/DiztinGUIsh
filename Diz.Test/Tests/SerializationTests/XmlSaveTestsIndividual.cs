@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.byteSources;
@@ -118,16 +120,26 @@ namespace Diz.Test.Tests.SerializationTests
         }
         
         [Fact]
+        [SuppressMessage("ReSharper", "UseNullPropagation")]
         public void XmlFullCycleProject()
         {
             XmlTestUtils.RunFullCycle(CreateMostlyEmptyProject, out var unchanged, out var cycled);
             cycled.Should().Be(unchanged);
 
-            unchanged?.Session?.UnsavedChanges
-                .Should().BeTrue("we set it that way");
+            unchanged.Should().NotBeNull();
+            unchanged.Session.Should().NotBeNull();
+            
+            if (unchanged.Session != null)
+                unchanged.Session.UnsavedChanges
+                    .Should().BeTrue("we set it that way");
 
-            cycled?.Session?.UnsavedChanges
-                .Should().BeFalse("we marked this as ignored for XML serialization");
+            cycled.Should().NotBeNull();
+            cycled.Session.Should().BeNull("Sessions should never be deserialized. only created manually");
+
+            // we shouldn't ever get here but
+            if (cycled.Session != null)
+                cycled.Session.UnsavedChanges
+                    .Should().BeFalse("we marked this as ignored for XML serialization");
         }
 
         private static Project CreateMostlyEmptyProject()
