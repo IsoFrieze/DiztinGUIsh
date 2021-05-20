@@ -5,24 +5,27 @@
         xmlns:viewModels="clr-namespace:Diz.Gui.Avalonia.ViewModels"
         xmlns:uc="clr-namespace:Diz.Gui.Avalonia.Views.UserControls"
         x:Class="Diz.Gui.Avalonia.Views.Windows.MainView"
+        Icon="Assets/diz-icon2-magenta-med32x32.ico"
         mc:Ignorable="d"
         d:DesignWidth="800"
         d:DesignHeight="150"
 
-        Title="HelloWorld"
-        Name="WndMain"
-        Width="320"
-        Height="200"
-        MinWidth="320"
-        MinHeight="200">
+        Title="DiztinGUIsh 3.0 (preview)"
+        Name="MainWindow"
+        MinWidth="800"
+        MinHeight="150">
 
     <Design.DataContext>
-        <viewModels:MainViewModel />
+        <viewModels:PeopleViewModel />
     </Design.DataContext>
 
     <StackPanel>
+        <Menu Background="AliceBlue">
+            <MenuItem Header="File"/>
+            <MenuItem Header="Edit"/>
+            <MenuItem Header="Help"/>
+        </Menu>
         <uc:MainGridUserControl/>
-        <DataGrid AutoGenerateColumns="True" Items="{Binding People}" />
     </StackPanel>
 </Window>
 

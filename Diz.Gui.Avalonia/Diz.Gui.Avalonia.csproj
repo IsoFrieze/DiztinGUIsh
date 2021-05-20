@@ -6,6 +6,7 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <AvaloniaResource Include="Views\Windows\Assets\diz-icon2-magenta-med32x32.ico" />
     <Compile Update="**\*.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
     </Compile>
@@ -24,5 +25,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Views\Windows\Assets\**" />
   </ItemGroup>
 </Project>

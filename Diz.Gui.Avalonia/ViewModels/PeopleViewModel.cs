@@ -10,13 +10,13 @@ using ReactiveUI.Fody.Helpers;
 
 namespace Diz.Gui.Avalonia.ViewModels
 {
-    public class MainViewModel : ReactiveObject, IActivatableViewModel
+    public class PeopleViewModel : ReactiveObject, IActivatableViewModel
     {
         public ViewModelActivator Activator { get; }
 
         [Reactive] public ObservableCollection<Person> People { get; set; }
 
-        public MainViewModel()
+        public PeopleViewModel()
         {
             Activator = new ViewModelActivator();
             

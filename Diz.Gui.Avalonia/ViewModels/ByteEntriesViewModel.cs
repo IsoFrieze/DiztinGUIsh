@@ -18,7 +18,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace Diz.Gui.Avalonia.ViewModels
 {
-    public class MainGridViewModel : ViewModel
+    public class ByteEntriesViewModel : ViewModel
     {
         [Reactive] public int StartingOffset { get; set; }
 
@@ -27,7 +27,7 @@ namespace Diz.Gui.Avalonia.ViewModels
         public IEnumerable<ByteEntryDetailsViewModel>? ByteEntries => byteEntries.Value;
         private readonly ObservableAsPropertyHelper<IEnumerable<ByteEntryDetailsViewModel>?> byteEntries;
 
-        public MainGridViewModel()
+        public ByteEntriesViewModel()
         {
             byteEntries = this
                 .WhenAnyValue(x => x.StartingOffset)

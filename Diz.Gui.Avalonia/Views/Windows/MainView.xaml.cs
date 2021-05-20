@@ -6,7 +6,7 @@ using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.Windows
 {
-    public class MainView : ReactiveWindow<MainViewModel>
+    public class MainView : ReactiveWindow<PeopleViewModel>
     {
         public MainView()
         {
@@ -14,7 +14,7 @@ namespace Diz.Gui.Avalonia.Views.Windows
             this.AttachDevTools();
             #endif
             
-            ViewModel = new MainViewModel();
+            ViewModel = new PeopleViewModel();
 
             this
                 .WhenActivated(

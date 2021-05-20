@@ -8,10 +8,12 @@ using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.UserControls
 {
-    public class MainGridUserControl : ReactiveUserControl<MainGridViewModel>
+    public class MainGridUserControl : ReactiveUserControl<PeopleViewModel>
     {
         public MainGridUserControl()
         {
+            ViewModel = new PeopleViewModel();
+            
             this.WhenActivated(disposables =>
             {
                 
