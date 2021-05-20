@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.ReactiveUI;
 using Diz.Gui.Avalonia.Views;
+using Diz.Gui.Avalonia.Views.Windows;
 
 namespace Diz.Gui.Avalonia
 {

@@ -16,8 +16,12 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.10.5" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.5" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.5" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.5" />
     <PackageReference Include="Avalonia.Desktop" Version="0.10.5" />
     <PackageReference Include="ReactiveUI.Fody" Version="13.3.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
   </ItemGroup>
 </Project>

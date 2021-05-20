@@ -1,14 +1,19 @@
+using Avalonia;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using Diz.Gui.Avalonia.ViewModels;
 using ReactiveUI;
 
-namespace Diz.Gui.Avalonia.Views
+namespace Diz.Gui.Avalonia.Views.Windows
 {
     public class MainView : ReactiveWindow<MainViewModel>
     {
         public MainView()
         {
+            #if DEBUG
+            this.AttachDevTools();
+            #endif
+            
             ViewModel = new MainViewModel();
 
             this
