@@ -8,10 +8,10 @@
              x:Class="Diz.Gui.Avalonia.Views.UserControls.MainGridUserControl">
     
     <Design.DataContext>
-        <viewModels:PeopleViewModel />
+        <viewModels:ByteEntriesViewModel />
     </Design.DataContext>
     
     <StackPanel>
-        <DataGrid AutoGenerateColumns="True" Items="{Binding People}" />
+        <DataGrid AutoGenerateColumns="True" Items="{Binding ByteEntries}" />
     </StackPanel>
 </UserControl>

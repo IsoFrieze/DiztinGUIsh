@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Diz.Controllers.controllers;
+using Diz.Controllers.util;
 using Diz.Core.util;
 
 namespace Diz.Controllers.interfaces
@@ -72,11 +73,8 @@ namespace Diz.Controllers.interfaces
         object GetFinalValue();
     }
 
-    public interface IBytesGridViewer<TByteItem> : IViewer
+    public interface IBytesGridViewer<TByteItem> : IRowBaseViewer<TByteItem>, IViewer
     {
-        // get the number base that will be used to display certain items in the grid
-        public Util.NumberBase NumberBaseToShow { get; }
-        TByteItem SelectedByteOffset { get; }
         public List<TByteItem> DataSource { get; set; }
         int TargetNumberOfRowsToShow { get; }
 

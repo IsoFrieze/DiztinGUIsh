@@ -10,37 +10,43 @@ using System.Threading;
 using System.Threading.Tasks;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using Diz.Gui.Avalonia.Models;
+using Diz.Gui.Avalonia.ViewModels;
 using LightInject;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace Diz.Gui.Avalonia.ViewModels
 {
-    public class ByteEntriesViewModel : ViewModel
+    public class ByteEntriesViewModel : ViewModel, IRowBaseViewer<ByteEntry>
     {
+        private ByteEntry selectedByteOffset;
         [Reactive] public int StartingOffset { get; set; }
 
         [Reactive] public int Count { get; set; }
 
-        public IEnumerable<ByteEntryDetailsViewModel>? ByteEntries => byteEntries.Value;
-        private readonly ObservableAsPropertyHelper<IEnumerable<ByteEntryDetailsViewModel>?> byteEntries;
-
+        [Reactive]
+        public IEnumerable<ByteEntryDetailsViewModel>? ByteEntries { get; set; }
+    
         public ByteEntriesViewModel()
         {
-            byteEntries = this
-                .WhenAnyValue(x => x.StartingOffset)
-                .Throttle(TimeSpan.FromMilliseconds(800))
-                // .WhenActivated()
-                .DistinctUntilChanged()
-                .Where( x=> x != -1)
-                .SelectMany(GetByteEntries)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .ToProperty(this, x => x.ByteEntries);
+            // temp hack
+            ByteEntries = GetByteEntriesSync();
+                
+            // byteEntries = this
+            //     .WhenAnyValue(x => x.StartingOffset)
+            //     .Throttle(TimeSpan.FromMilliseconds(800))
+            //     // .WhenActivated()
+            //     .DistinctUntilChanged()
+            //     .Where( x=> x != -1)
+            //     .SelectMany(GetByteEntries)
+            //     .ObserveOn(RxApp.MainThreadScheduler)
+            //     .ToProperty(this, x => x.ByteEntries);
 
             this.WhenActivated(
-                (CompositeDisposable disposables) => { });
+                 (CompositeDisposable disposables) => { });
         }
 
         private async Task<IEnumerable<ByteEntryDetailsViewModel>?> GetByteEntries(int startRomOffset, CancellationToken token)
@@ -50,13 +56,39 @@ namespace Diz.Gui.Avalonia.ViewModels
                 return null;
 
             var project = await Task.Run(loader.GetSampleProject, token);
-            // var (startRomOffset, count) = range;
 
+            // TODO: migrate/unify with GetByteEntriesSync()
             return project?.Data?.RomByteSource.Bytes
                 //.Skip(startRomOffset)
                 //.Take(1)
-                .Select(x => new RomByteRowBase {ByteEntry = x})
+                .Select(x => new RomByteRowBase {ParentView = this, Data=project.Data, ByteEntry = x})
                 .Select(x => new ByteEntryDetailsViewModel(x));
         }
+
+        private IEnumerable<ByteEntryDetailsViewModel>? GetByteEntriesSync()
+        {
+            var loader = Service.Container.GetInstance<ISampleProjectLoader>("SampleProjectLoader");
+
+            // this interface code is screwed up with Diz here, it's just a starting point.
+            
+            var project = loader?.GetSampleProject();
+            if (project?.Data?.RomByteSource.Bytes == null) 
+                return null;
+            
+            return project?.Data?.RomByteSource.Bytes
+                .Skip(0)
+                .Take(20)
+                .Select(x => new ByteEntryDetailsViewModel(
+                    new RomByteRowBase
+                    {
+                        ByteEntry = x,
+                        Data = project.Data,
+                        ParentView = this,
+                    }));
+        }
+
+        public Util.NumberBase NumberBaseToShow => Util.NumberBase.Hexadecimal;
+
+        public ByteEntry SelectedByteOffset => null!;
     }
 }

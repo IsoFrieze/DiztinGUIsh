@@ -8,7 +8,7 @@ namespace Diz.Gui.Avalonia
 
         public ViewModel()
         {
-            
+            Activator = new ViewModelActivator();
         }
     }
 }

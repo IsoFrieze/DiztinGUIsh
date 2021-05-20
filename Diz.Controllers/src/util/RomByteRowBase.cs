@@ -12,7 +12,8 @@ using JetBrains.Annotations;
 
 namespace Diz.Controllers.util
 {
-    public class RomByteRowBase : INotifyPropertyChangedExt {
+    public class RomByteRowBase : INotifyPropertyChangedExt
+    {
         [DisplayName("Label")]
         [Editable(true)]
         // [CellStyleFormatter(GetBackColorInOut)]
@@ -160,8 +161,9 @@ namespace Diz.Controllers.util
         }
 
         [Browsable(false)] public Data Data { get; init; }
-        [Browsable(false)] public IBytesGridViewer<ByteEntry> ParentView { get; init; }
-        [Browsable(false)] private Util.NumberBase NumberBase => ParentView.NumberBaseToShow;
+        [Browsable(false)] public IRowBaseViewer<ByteEntry> ParentView { get; init; }
+        [Browsable(false)] private Util.NumberBase NumberBase => 
+            ParentView?.NumberBaseToShow ?? Util.NumberBase.Hexadecimal;
 
         [Browsable(false)] public event PropertyChangedEventHandler PropertyChanged;
 
@@ -229,4 +231,9 @@ namespace Diz.Controllers.util
         }
     }
 
+    public interface IRowBaseViewer<out TItem>
+    {
+        Util.NumberBase NumberBaseToShow { get; }
+        TItem SelectedByteOffset { get; }
+    }
 }

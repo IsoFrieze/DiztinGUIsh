@@ -8,11 +8,11 @@ using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.UserControls
 {
-    public class MainGridUserControl : ReactiveUserControl<PeopleViewModel>
+    public class MainGridUserControl : ReactiveUserControl<ByteEntriesViewModel>
     {
         public MainGridUserControl()
         {
-            ViewModel = new PeopleViewModel();
+            ViewModel = new ByteEntriesViewModel();
             
             this.WhenActivated(disposables =>
             {
