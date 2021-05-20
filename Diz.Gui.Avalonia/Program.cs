@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.ReactiveUI;
+using Diz.Gui.Avalonia.Views;
 
 namespace Diz.Gui.Avalonia
 {
