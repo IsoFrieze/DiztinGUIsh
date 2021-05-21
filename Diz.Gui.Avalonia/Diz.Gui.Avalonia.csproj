@@ -26,7 +26,4 @@
     <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <AvaloniaResource Include="Views\Windows\Assets\**" />
-  </ItemGroup>
 </Project>
