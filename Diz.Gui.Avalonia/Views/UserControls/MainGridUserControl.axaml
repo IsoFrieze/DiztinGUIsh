@@ -12,6 +12,52 @@
     </Design.DataContext>
     
     <StackPanel>
-        <DataGrid AutoGenerateColumns="True" Items="{Binding ByteEntries}" />
+        <DataGrid
+            GridLinesVisibility="All"
+            x:Name="MainGrid"
+            Items="{Binding ByteEntries}"
+        >
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Label" 
+                                    Binding="{Binding Label}" 
+                                    Width="*" />
+                <DataGridTextColumn Header="PC" 
+                                    Binding="{Binding Offset}" 
+                                    Width=".2*" />
+                <DataGridTextColumn Header="@" 
+                                    Binding="{Binding NumericRep}" 
+                                    Width=".1*" />
+                <DataGridTextColumn Header="#" 
+                                    Binding="{Binding AsciiCharRep}" 
+                                    Width=".1*" />
+                <DataGridTextColumn Header="&lt;*&gt;" 
+                                    Binding="{Binding Point}" 
+                                    Width=".1*" />
+                <DataGridTextColumn Header="Instruction" 
+                                    Binding="{Binding Instruction}" 
+                                    Width="*" />
+                <DataGridTextColumn Header="IA" 
+                                    Binding="{Binding IA}" 
+                                    Width=".2*" />
+                <DataGridTextColumn Header="TypeFlag" 
+                                    Binding="{Binding TypeFlag}" 
+                                    Width=".2*" />
+                <DataGridTextColumn Header="B" 
+                                    Binding="{Binding DataBank}" 
+                                    Width=".1*" />
+                <DataGridTextColumn Header="D" 
+                                    Binding="{Binding DirectPage}" 
+                                    Width=".2*" />
+                <DataGridTextColumn Header="M" 
+                                    Binding="{Binding MFlag}" 
+                                    Width=".1*" />
+                <DataGridTextColumn Header="X" 
+                                    Binding="{Binding XFlag}" 
+                                    Width=".1*" />
+                <DataGridTextColumn Header="Comment" 
+                                    Binding="{Binding Comment}" 
+                                    Width=".5*" />
+            </DataGrid.Columns>
+        </DataGrid>
     </StackPanel>
 </UserControl>

@@ -7,22 +7,27 @@ namespace Diz.Gui.Avalonia.ViewModels
 {
     public class ByteEntryDetailsViewModel : ViewModel
     {
-        private readonly RomByteRowBase byteEntry;
+        public RomByteRowBase ByteEntry { get; init; }
 
-        public ByteEntryDetailsViewModel(RomByteRowBase byteEntry)
+        public ByteEntryDetailsViewModel()
         {
-            this.byteEntry = byteEntry;
-            SetComment = ReactiveCommand.Create((string comment) => { this.byteEntry.Comment = comment; });
+            // SetComment = ReactiveCommand.Create((string comment) => { ByteEntry.Comment = comment; });
         }
 
-        [PublicAPI] public ReactiveCommand<string, Unit> SetComment { get; }
+        // [PublicAPI] public ReactiveCommand<string, Unit> SetComment { get; }
 
-        public string Label => byteEntry.Label;
-        public string Comment => byteEntry.Comment;
-        public string Offset => byteEntry.Offset;
-        public char AsciiCharRep => byteEntry.AsciiCharRep;
-        public string NumericRep => byteEntry.NumericRep;
-        public string Point => byteEntry.Point;
-        public string Instruction => byteEntry.Instruction;
+        public string Label => ByteEntry.Label;
+        public string Comment => ByteEntry.Comment;
+        public string Offset => ByteEntry.Offset;
+        public char AsciiCharRep => ByteEntry.AsciiCharRep;
+        public string NumericRep => ByteEntry.NumericRep;
+        public string Point => ByteEntry.Point;
+        public string Instruction => ByteEntry.Instruction;
+        public string DataBank => ByteEntry.DataBank;
+        public string DirectPage => ByteEntry.DirectPage;
+        public string IA => ByteEntry.IA;
+        public string MFlag => ByteEntry.MFlag;
+        public string XFlag => ByteEntry.XFlag;
+        public string TypeFlag => ByteEntry.TypeFlag;
     }
 }

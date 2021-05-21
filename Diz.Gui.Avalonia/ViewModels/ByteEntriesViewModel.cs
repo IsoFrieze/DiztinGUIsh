@@ -5,15 +5,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
-using Diz.Gui.Avalonia.Models;
-using Diz.Gui.Avalonia.ViewModels;
 using LightInject;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -22,18 +19,17 @@ namespace Diz.Gui.Avalonia.ViewModels
 {
     public class ByteEntriesViewModel : ViewModel, IRowBaseViewer<ByteEntry>
     {
-        private ByteEntry selectedByteOffset;
-        [Reactive] public int StartingOffset { get; set; }
-
-        [Reactive] public int Count { get; set; }
-
-        [Reactive]
-        public IEnumerable<ByteEntryDetailsViewModel>? ByteEntries { get; set; }
+        // [Reactive] public int StartingOffset { get; set; }
+        //
+        // [Reactive] public int Count { get; set; }
+        
+        [Reactive] 
+        public ObservableCollection<ByteEntryDetailsViewModel> ByteEntries { get; set; }
     
         public ByteEntriesViewModel()
         {
             // temp hack
-            ByteEntries = GetByteEntriesSync();
+            ByteEntries = new ObservableCollection<ByteEntryDetailsViewModel>(GetByteEntriesSync() ?? Array.Empty<ByteEntryDetailsViewModel>());
                 
             // byteEntries = this
             //     .WhenAnyValue(x => x.StartingOffset)
@@ -62,33 +58,31 @@ namespace Diz.Gui.Avalonia.ViewModels
                 //.Skip(startRomOffset)
                 //.Take(1)
                 .Select(x => new RomByteRowBase {ParentView = this, Data=project.Data, ByteEntry = x})
-                .Select(x => new ByteEntryDetailsViewModel(x));
+                .Select(x => new ByteEntryDetailsViewModel {ByteEntry = x});
         }
 
         private IEnumerable<ByteEntryDetailsViewModel>? GetByteEntriesSync()
         {
             var loader = Service.Container.GetInstance<ISampleProjectLoader>("SampleProjectLoader");
 
-            // this interface code is screwed up with Diz here, it's just a starting point.
+            // this interface access code is a little screwed up with Diz here, it's just a starting point.
             
             var project = loader?.GetSampleProject();
-            if (project?.Data?.RomByteSource.Bytes == null) 
-                return null;
-            
-            return project?.Data?.RomByteSource.Bytes
-                .Skip(0)
+
+            return project?.Data?.RomByteSource.Bytes?.Skip(0)
                 .Take(20)
-                .Select(x => new ByteEntryDetailsViewModel(
-                    new RomByteRowBase
+                .Select(x => new ByteEntryDetailsViewModel
+                {
+                    ByteEntry = new RomByteRowBase
                     {
                         ByteEntry = x,
                         Data = project.Data,
                         ParentView = this,
-                    }));
+                    }
+                });
         }
 
         public Util.NumberBase NumberBaseToShow => Util.NumberBase.Hexadecimal;
-
         public ByteEntry SelectedByteOffset => null!;
     }
 }

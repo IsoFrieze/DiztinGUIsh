@@ -6,7 +6,8 @@ using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.Windows
 {
-    public class MainView : ReactiveWindow<PeopleViewModel>
+    // TODO: this screen doesn't show ByteEntriesViewModel necessarily
+    public class MainView : ReactiveWindow<ByteEntriesViewModel>
     {
         public MainView()
         {
@@ -14,7 +15,7 @@ namespace Diz.Gui.Avalonia.Views.Windows
             this.AttachDevTools();
             #endif
             
-            ViewModel = new PeopleViewModel();
+            ViewModel = new ByteEntriesViewModel();
 
             this
                 .WhenActivated(
@@ -46,9 +47,11 @@ namespace Diz.Gui.Avalonia.Views.Windows
                         //         })
                         //     .DisposeWith(disposables);
 
-                        // this
-                        //     .OneWayBind(ViewModel, vm => vm.Greeting, v => v.TbGreetingLabel.Text)
-                        //     .DisposeWith(disposables);
+                        /*this
+                            .OneWayBind(ViewModel, 
+                                vm => vm.ByteEntries,
+                                v => v.)
+                            .DisposeWith(disposables);*/
                     });
 
             InitializeComponent();

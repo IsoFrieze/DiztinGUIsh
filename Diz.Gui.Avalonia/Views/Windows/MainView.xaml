@@ -16,7 +16,7 @@
         MinHeight="150">
 
     <Design.DataContext>
-        <viewModels:PeopleViewModel />
+        <viewModels:ByteEntriesViewModel />
     </Design.DataContext>
 
     <StackPanel>
@@ -25,7 +25,7 @@
             <MenuItem Header="Edit"/>
             <MenuItem Header="Help"/>
         </Menu>
-        <uc:MainGridUserControl/>
+        <uc:MainGridUserControl />
     </StackPanel>
 </Window>
 
