@@ -354,8 +354,7 @@ namespace Diz.Core.model.snes
             return offset + i < size ? offset + i : size - 1;
         }
 
-        public int MarkTypeFlag(int offset, FlagType type, int count) => 
-            PerformActionOnRange(i => SetFlag(i, type), offset, count);
+        public int MarkTypeFlag(int offset, FlagType type, int count) => PerformActionOnRange(i => SetFlag(i, type), offset, count);
         public int MarkDataBank(int offset, int db, int count) => 
             PerformActionOnRange(i => SetDataBank(i, db), offset, count);
         public int MarkDirectPage(int offset, int dp, int count) => 
