@@ -1,15 +1,18 @@
+using System.Reactive.Disposables;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using Diz.Gui.Avalonia.ViewModels;
+using Diz.Gui.Avalonia.Views.UserControls;
 using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.Windows
 {
     // TODO: this screen doesn't show ByteEntriesViewModel necessarily
-    public class MainView : ReactiveWindow<ByteEntriesViewModel>
+    public class MainWindow : ReactiveWindow<ByteEntriesViewModel>
     {
-        public MainView()
+        public MainWindow()
         {
             #if DEBUG
             this.AttachDevTools();
@@ -19,8 +22,13 @@ namespace Diz.Gui.Avalonia.Views.Windows
 
             this
                 .WhenActivated(
-                    disposables =>
+                    disposableRegistration =>
                     {
+                        this.OneWayBind(ViewModel, 
+                                viewModel => viewModel.ByteEntries, 
+                                view => view.MainGridUserControl.MainGrid.Items)
+                            .DisposeWith(disposableRegistration); 
+                   
                         // // Jut log the View's activation
                         // Console.WriteLine(
                         //     $"[v  {Thread.CurrentThread.ManagedThreadId}]: " +
@@ -62,8 +70,7 @@ namespace Diz.Gui.Avalonia.Views.Windows
             AvaloniaXamlLoader.Load(this);
         }
 
-        // private TextBlock TbGreetingLabel => this.FindControl<TextBlock>("TbGreetingLabel");
-        // private Window WndMain => this.FindControl<Window>("WndMain");
+        public MainGridUserControl MainGridUserControl => this.FindControl<MainGridUserControl>("MainGridUserControl");
     }
 }
 

@@ -13,6 +13,9 @@
     <AvaloniaResource Include="**\*.xaml">
       <SubType>Designer</SubType>
     </AvaloniaResource>
+    <Compile Update="Views\Windows\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.10.5" />

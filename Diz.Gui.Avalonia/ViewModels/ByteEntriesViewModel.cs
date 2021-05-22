@@ -45,7 +45,7 @@ namespace Diz.Gui.Avalonia.ViewModels
                  (CompositeDisposable disposables) => { });
         }
 
-        private async Task<IEnumerable<ByteEntryDetailsViewModel>?> GetByteEntries(int startRomOffset, CancellationToken token)
+        /*private async Task<IEnumerable<ByteEntryDetailsViewModel>?> GetByteEntries(int startRomOffset, CancellationToken token)
         {
             var loader = Service.Container.GetInstance<ISampleProjectLoader>("SampleProjectLoader");
             if (loader == null)
@@ -59,7 +59,7 @@ namespace Diz.Gui.Avalonia.ViewModels
                 //.Take(1)
                 .Select(x => new RomByteRowBase {ParentView = this, Data=project.Data, ByteEntry = x})
                 .Select(x => new ByteEntryDetailsViewModel {ByteEntry = x});
-        }
+        }*/
 
         private IEnumerable<ByteEntryDetailsViewModel>? GetByteEntriesSync()
         {

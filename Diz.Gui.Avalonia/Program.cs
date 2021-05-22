@@ -18,7 +18,7 @@ namespace Diz.Gui.Avalonia
 
         private static void AppMain(Application app, string[] args)
         {
-            app.Run(new MainView());
+            app.Run(new MainWindow());
         }
 
         public static void Main(string[] args)

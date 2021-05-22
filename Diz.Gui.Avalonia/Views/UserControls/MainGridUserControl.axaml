@@ -1,63 +1,65 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:Diz.Gui.Avalonia.ViewModels"
-             mc:Ignorable="d" 
-             d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Diz.Gui.Avalonia.Views.UserControls.MainGridUserControl">
-    
+﻿<reactiveUi:ReactiveUserControl
+    x:TypeArguments="viewModels:ByteEntriesViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:reactiveUi="http://reactiveui.net"
+    xmlns:viewModels="clr-namespace:Diz.Gui.Avalonia.ViewModels"
+    mc:Ignorable="d"
+    d:DesignWidth="800" d:DesignHeight="450"
+    x:Class="Diz.Gui.Avalonia.Views.UserControls.MainGridUserControl">
+
     <Design.DataContext>
-        <viewModels:ByteEntriesViewModel />
+        <viewModels:ByteEntryDetailsViewModel />
     </Design.DataContext>
-    
+
     <StackPanel>
-        <DataGrid
-            GridLinesVisibility="All"
-            x:Name="MainGrid"
-            Items="{Binding ByteEntries}"
-        >
+        <DataGrid GridLinesVisibility="All"
+                  x:Name="MainGrid">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Label" 
-                                    Binding="{Binding Label}" 
+                <DataGridTextColumn
+                    Header="Label"
+                    Binding="{Binding Label}"
+                    Width="*" />
+                <DataGridTextColumn
+                    Header="PC"
+                    Binding="{Binding Offset}"
+                    Width=".2*" />
+                <DataGridTextColumn Header="@"
+                                    Binding="{Binding NumericRep}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="#"
+                                    Binding="{Binding AsciiCharRep}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="&lt;*&gt;"
+                                    Binding="{Binding Point}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="Instruction"
+                                    Binding="{Binding Instruction}"
                                     Width="*" />
-                <DataGridTextColumn Header="PC" 
-                                    Binding="{Binding Offset}" 
+                <DataGridTextColumn Header="IA"
+                                    Binding="{Binding IA}"
                                     Width=".2*" />
-                <DataGridTextColumn Header="@" 
-                                    Binding="{Binding NumericRep}" 
-                                    Width=".1*" />
-                <DataGridTextColumn Header="#" 
-                                    Binding="{Binding AsciiCharRep}" 
-                                    Width=".1*" />
-                <DataGridTextColumn Header="&lt;*&gt;" 
-                                    Binding="{Binding Point}" 
-                                    Width=".1*" />
-                <DataGridTextColumn Header="Instruction" 
-                                    Binding="{Binding Instruction}" 
-                                    Width="*" />
-                <DataGridTextColumn Header="IA" 
-                                    Binding="{Binding IA}" 
+                <DataGridTextColumn Header="TypeFlag"
+                                    Binding="{Binding TypeFlag}"
                                     Width=".2*" />
-                <DataGridTextColumn Header="TypeFlag" 
-                                    Binding="{Binding TypeFlag}" 
+                <DataGridTextColumn Header="B"
+                                    Binding="{Binding DataBank}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="D"
+                                    Binding="{Binding DirectPage}"
                                     Width=".2*" />
-                <DataGridTextColumn Header="B" 
-                                    Binding="{Binding DataBank}" 
+                <DataGridTextColumn Header="M"
+                                    Binding="{Binding MFlag}"
                                     Width=".1*" />
-                <DataGridTextColumn Header="D" 
-                                    Binding="{Binding DirectPage}" 
-                                    Width=".2*" />
-                <DataGridTextColumn Header="M" 
-                                    Binding="{Binding MFlag}" 
+                <DataGridTextColumn Header="X"
+                                    Binding="{Binding XFlag}"
                                     Width=".1*" />
-                <DataGridTextColumn Header="X" 
-                                    Binding="{Binding XFlag}" 
-                                    Width=".1*" />
-                <DataGridTextColumn Header="Comment" 
-                                    Binding="{Binding Comment}" 
+                <DataGridTextColumn Header="Comment"
+                                    Binding="{Binding Comment}"
                                     Width=".5*" />
             </DataGrid.Columns>
         </DataGrid>
     </StackPanel>
-</UserControl>
+</reactiveUi:ReactiveUserControl>

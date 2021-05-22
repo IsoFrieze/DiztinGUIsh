@@ -1,0 +1,28 @@
+<reactiveUi:ReactiveWindow
+    x:TypeArguments="viewModels:ByteEntriesViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:uc="clr-namespace:Diz.Gui.Avalonia.Views.UserControls"
+    xmlns:reactiveUi="http://reactiveui.net"
+    xmlns:viewModels="clr-namespace:Diz.Gui.Avalonia.ViewModels"
+    x:Class="Diz.Gui.Avalonia.Views.Windows.MainWindow"
+    Icon="Assets/diz-icon2-magenta-med32x32.ico"
+    mc:Ignorable="d"
+    d:DesignWidth="800"
+    d:DesignHeight="150"
+
+    Title="DiztinGUIsh 3.0 (preview)"
+    Name="MainWindow"
+    MinWidth="800"
+    MinHeight="150">
+
+    <StackPanel>
+        <uc:MainMenu  x:Name="MainMenuUserControl" />
+        <uc:MainGridUserControl x:Name="MainGridUserControl" />
+    </StackPanel>
+
+    <!-- http://avaloniaui.net/docs/reactiveui/activation#activation-example - View.xaml -->
+    <!-- https://reactiveui.net/docs/handbook/data-binding/avalonia -->
+</reactiveUi:ReactiveWindow>
