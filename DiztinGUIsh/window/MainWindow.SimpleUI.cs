@@ -40,7 +40,12 @@ namespace DiztinGUIsh.window
         private void stepInToolStripMenuItem_Click(object sender, EventArgs e) => StepIn(SelectedOffset);
         private void autoStepSafeToolStripMenuItem_Click(object sender, EventArgs e) => AutoStepSafe(SelectedOffset);
         private void autoStepHarshToolStripMenuItem_Click(object sender, EventArgs e) => AutoStepHarsh(SelectedOffset);
-        private void gotoToolStripMenuItem_Click(object sender, EventArgs e) => GoTo(PromptForGotoOffset());
+        private void gotoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var gotoOffset = PromptForGotoOffset();
+            if (gotoOffset != -1)
+                GoTo(gotoOffset);
+        }
 
         private void gotoIntermediateAddressToolStripMenuItem_Click(object sender, EventArgs e) =>
             GoToIntermediateAddress(SelectedOffset);
