@@ -23,10 +23,14 @@ namespace Diz.Controllers.util
 
             // todo (validate for valid label characters)
             // (note: validation implemented in Furious's branch, integrate here)
-            set => Data.Labels.AddLabel(
+            set
+            {
+                Data.Labels.AddLabel(
                     Data.ConvertPCtoSnes(ByteEntry.ParentIndex),
                     new Label {Name = value},
                     true);
+                OnPropertyChanged();
+            }
         }
 
         [DisplayName("PC")]
@@ -91,7 +95,7 @@ namespace Diz.Controllers.util
                     return;
 
                 Data.SetDataBank(ByteEntry.ParentIndex, parsed);
-                //OnPropertyChanged();
+                OnPropertyChanged();
             }
         }
 
@@ -106,7 +110,7 @@ namespace Diz.Controllers.util
                     return;
 
                 Data.SetDirectPage(ByteEntry.ParentIndex, parsed);
-                //OnPropertyChanged();
+                OnPropertyChanged();
             }
         }
 
@@ -117,8 +121,8 @@ namespace Diz.Controllers.util
             get => RomUtil.BoolToSize(Data.GetMFlag(ByteEntry.ParentIndex));
             set
             {
-                Data.SetMFlag(ByteEntry.ParentIndex, value == "8" || value == "M");
-                //OnPropertyChanged();
+                Data.SetMFlag(ByteEntry.ParentIndex, value is "8" or "M");
+                OnPropertyChanged();
             }
         }
 
@@ -129,8 +133,8 @@ namespace Diz.Controllers.util
             get => RomUtil.BoolToSize(Data.GetXFlag(ByteEntry.ParentIndex));
             set
             {
-                Data.SetXFlag(ByteEntry.ParentIndex, value == "8" || value == "X");
-                // OnPropertyChanged();
+                Data.SetXFlag(ByteEntry.ParentIndex, value is "8" or "X");
+                OnPropertyChanged();
             }
         }
 
@@ -142,7 +146,7 @@ namespace Diz.Controllers.util
             set
             {
                 Data.AddComment(Data.ConvertPCtoSnes(ByteEntry.ParentIndex), value, true);
-                // OnPropertyChanged();
+                OnPropertyChanged();
             }
         }
         
