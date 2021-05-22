@@ -5,7 +5,7 @@ using Diz.Core.model;
 using Diz.Core.model.byteSources;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
-using Diz.Test.Tests.SerializationTests;
+using Diz.Test.SerializationTests;
 using Diz.Test.Utils;
 using Diz.Test.Utils.SuperFamiCheckUtil;
 using FluentAssertions;

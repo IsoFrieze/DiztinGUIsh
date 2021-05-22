@@ -3,7 +3,7 @@ using System.Linq;
 using Diz.Core.serialization.xml_serializer;
 using Xunit;
 
-namespace Diz.Test.Tests.SerializationTests
+namespace Diz.Test.SerializationTests
 {
     public static class CompressionTest
     {

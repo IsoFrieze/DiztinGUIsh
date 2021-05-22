@@ -4,7 +4,7 @@ using Diz.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Diz.Test.Tests.SerializationTests
+namespace Diz.Test.SerializationTests
 {
     public class XmlByteStorageTests : XmlTestUtilBase
     {

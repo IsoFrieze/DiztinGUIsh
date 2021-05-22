@@ -9,7 +9,7 @@ using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Diz.Test.Tests.SerializationTests
+namespace Diz.Test.SerializationTests
 {
     public class LoadSaveTest
     {

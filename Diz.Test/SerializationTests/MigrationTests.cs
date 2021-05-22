@@ -9,7 +9,7 @@ using FluentAssertions;
 using Moq;
 using Xunit;
 
-namespace Diz.Test.Tests.SerializationTests
+namespace Diz.Test.SerializationTests
 {
     public class MigrationTests
     {
