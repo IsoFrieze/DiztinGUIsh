@@ -1,10 +1,7 @@
-﻿using System;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+﻿using System.Reactive.Disposables;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
-using Avalonia.Utilities;
 using Diz.Gui.Avalonia.ViewModels;
 using ReactiveUI;
 
@@ -21,10 +18,10 @@ namespace Diz.Gui.Avalonia.Views.UserControls
             this.WhenActivated(disposables =>
             {
                 // prob how we should do it with commands to edit
-                // this.OneWayBind(ViewModel,
-                //     viewmodel => viewmodel.ByteEntries,
-                //     view => view.MainGrid.Items
-                // ).DisposeWith(disposables);
+                this.OneWayBind(ViewModel,
+                    viewmodel => viewmodel.ByteEntries,
+                    view => view.MainGrid.Items
+                ).DisposeWith(disposables);
                 //
                 // two way binding (try this?)
                 // this.Bind(ViewModel,

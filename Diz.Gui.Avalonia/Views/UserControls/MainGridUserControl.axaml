@@ -1,24 +1,29 @@
 ﻿<reactiveUi:ReactiveUserControl
-    x:TypeArguments="viewModels:ByteEntriesViewModel"
+    x:TypeArguments="vm:ByteEntriesViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:reactiveUi="http://reactiveui.net"
-    xmlns:viewModels="clr-namespace:Diz.Gui.Avalonia.ViewModels"
+    xmlns:vm="clr-namespace:Diz.Gui.Avalonia.ViewModels"
     mc:Ignorable="d"
     d:DesignWidth="800" d:DesignHeight="450"
     x:Class="Diz.Gui.Avalonia.Views.UserControls.MainGridUserControl">
 
+    <!-- 
+    DataGrid below will have the Items databound from code.
+    Our DataContext might be ... wrong.... or something.
+    This is a view for a ByteEntriesViewModel,
+    but the datagrid is for the items
+    -->
+    
     <Design.DataContext>
-        <viewModels:ByteEntriesViewModel />
+        <vm:ByteEntryDetailsViewModel />
     </Design.DataContext>
 
     <StackPanel>
-        <DataGrid GridLinesVisibility="All"
-                  x:Name="MainGrid"
-                  Items="{Binding ByteEntries}">
-            <DataGrid.Columns>
+        <DataGrid GridLinesVisibility="All" x:Name="MainGrid">
+        <DataGrid.Columns>
                 <DataGridTextColumn Header="Label"
                                     Binding="{Binding ByteEntry.Label}"
                                     Width="*" />
@@ -57,7 +62,6 @@
                                     Width=".1*" />
                 <DataGridTextColumn Header="Comment"
                                     Binding="{Binding ByteEntry.Comment}"
-                                    IsReadOnly="False"
                                     Width=".5*" />
             </DataGrid.Columns>
         </DataGrid>
