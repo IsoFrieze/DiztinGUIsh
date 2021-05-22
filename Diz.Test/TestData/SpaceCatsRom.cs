@@ -28,7 +28,11 @@ namespace Diz.Test.TestData
 
                 // SNES address: 808003
                 // instruction: STA.W $0100,X
-                new() {Byte = 0x9D, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100},
+                new()
+                {
+                    Byte = 0x9D, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100,
+                    Annotations = {new Label {Name = "Fn_go1", Comment = "Store some stuff"}}
+                },
                 new() {Byte = 0x00, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
                 new() {Byte = 0x01, TypeFlag = FlagType.Operand, DataBank = 0x80, DirectPage = 0x2100},
 
@@ -37,7 +41,7 @@ namespace Diz.Test.TestData
                 new()
                 {
                     Byte = 0xCA, TypeFlag = FlagType.Opcode, MFlag = true, DataBank = 0x80, DirectPage = 0x2100,
-                    Annotations = {new Label {Name = "Test22"}}
+                    Annotations = {new Label {Name = "Test22", Comment="LabelComment"}, new Comment {Text = "LineComment"}}
                 },
 
                 // SNES address: 808007
@@ -63,6 +67,7 @@ namespace Diz.Test.TestData
             // another way to add comments, adds it to the SNES address space instead of the ROM.
             // retrievals should be unaffected.
             data.Labels.AddLabel(0x808000 + 0x5B, new Label {Name = "Test_Data", Comment = "Pretty cool huh?"});
+            data.AddComment(0x808000 + 0x5C, "XYZ");
 
             return data;
         }

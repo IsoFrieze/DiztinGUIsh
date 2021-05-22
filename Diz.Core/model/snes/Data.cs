@@ -189,18 +189,20 @@ namespace Diz.Core.model.snes
         
         private static bool IsComment(Annotation annotation) => annotation.GetType() == typeof(Comment);
         
-        public string GetCommentText(int i)
+        public string GetCommentText(int snesAddress)
         {
             // option 1: use the comment text first
-            var comment = GetOneAnnotationAtPc<Comment>(i);
+            var comment = GetComment(snesAddress);
             if (comment != null)
                 return comment.Text;
 
-            // if that doesn't exist, try see if our label itself has a comment attached, display that.
-            return Labels.GetLabelComment(ConvertPCtoSnes(i)) ?? "";
+            // if a real comment doesn't exist, try see if our label itself has a comment attached, display that.
+            // TODO: this is convenient for display but might mess up setting. we probably should do this
+            // only in views, remove from here.
+            return Labels.GetLabelComment(snesAddress) ?? "";
         }
         
-        public Comment GetComment(int i) => GetOneAnnotationAtPc<Comment>(i);
+        public Comment GetComment(int snesAddress) => SnesAddressSpace.GetOneAnnotation<Comment>(snesAddress);
 
         // setting text to null will remove the comment instead of adding anything
         public void AddComment(int snesAddress, string commentTextToAdd, bool overwrite = false)
@@ -212,7 +214,7 @@ namespace Diz.Core.model.snes
                     return;
             }
             
-            var existing = SnesAddressSpace.GetOneAnnotation<Comment>(snesAddress);
+            var existing = GetComment(snesAddress);
             if (existing != null) 
                 return;
             

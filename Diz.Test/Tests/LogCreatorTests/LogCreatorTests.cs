@@ -7,6 +7,7 @@ using Diz.Core.util;
 using Diz.LogWriter;
 using Diz.Test.TestData;
 using Diz.Test.Utils;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -168,7 +169,7 @@ namespace Diz.Test.Tests.LogCreatorTests
             var annotations = data.RomByteSource
                 .GetOnlyOwnAnnotations<Label>().ToList();
 
-            Assert.Single(annotations);
+            annotations.Should().HaveCount(2);
             
             foreach (var item in annotations)
             {
@@ -186,10 +187,42 @@ namespace Diz.Test.Tests.LogCreatorTests
                 .GetAnnotationsIncludingChildrenEnumerator<Label>()
                 .ToDictionary(pair => pair.Key);
 
-            Assert.Equal(2, actualDict.Count);
+            Assert.Equal(3, actualDict.Count);
 
             TestOriginal2Labels(actualDict);
             Assert.Equal(default, actualDict.GetValueOrDefault(0x808008)); // made up address with no label
+        }
+
+        [Fact]
+        public void TestCommentAccess()
+        {
+            var data = SpaceCatsRom.CreateInputRom();
+
+            data.GetCommentText(0x808003).Should().Be("Store some stuff");
+            
+            data.GetCommentText(0x808006).Should().Be("LineComment");
+            data.GetCommentText(0x808006).Should().NotBe("LabelComment");
+            
+            data.GetCommentText(0x808000 + 0x5B).Should().Be("Pretty cool huh?");
+            data.GetCommentText(0x808000 + 0x5C).Should().Be("XYZ");
+        }
+
+        [Fact]
+        public void TestCommentAddRemove()
+        {
+            var data = SpaceCatsRom.CreateInputRom();
+            var newCommentTxt = "WontWork";
+            var snesAddress = 0x808000 + 0x5C;
+            data.AddComment(snesAddress, newCommentTxt);
+            
+            data.GetCommentText(snesAddress).Should().Be("XYZ", "this was set in the ROM initialization");
+            data.GetCommentText(snesAddress).Should().NotBe(newCommentTxt, "AddComment() overwrite was false and a label already existed");
+            
+            data.AddComment(snesAddress, newCommentTxt, overwrite: true);
+            data.GetCommentText(snesAddress).Should().Be(newCommentTxt, "overwrite was set to true");
+            
+            data.AddComment(snesAddress, null);
+            data.GetCommentText(snesAddress).Should().Be("", "AddComment with an empty string should be null");
         }
 
         private static void TestOriginal2Labels(IReadOnlyDictionary<int, KeyValuePair<int, Label>> actualDict)

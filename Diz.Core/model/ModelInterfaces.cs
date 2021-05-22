@@ -33,7 +33,7 @@ namespace Diz.Core.model
         public IReadOnlyLabelProvider Labels { get; }
 
         Comment GetComment(int offset);
-        string GetCommentText(int offset);
+        string GetCommentText(int snesAddress);
 
         int GetRomSize();
         int GetBankSize();
