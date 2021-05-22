@@ -5,8 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
-using System.Threading;
-using System.Threading.Tasks;
+using Avalonia.Controls;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
 using Diz.Core.model.byteSources;
@@ -25,11 +24,30 @@ namespace Diz.Gui.Avalonia.ViewModels
         
         [Reactive] 
         public ObservableCollection<ByteEntryDetailsViewModel> ByteEntries { get; set; }
+        
+        public Util.NumberBase NumberBaseToShow => Util.NumberBase.Hexadecimal;
+        public ByteEntry SelectedByteOffset { get; private set; }
+
+        // public ReactiveCommand<DataGridCellEditEndedEventArgs, Unit> SetSelectedItem { get; }
+
+        private ByteEntryDetailsViewModel _selectedItem;
+
+        public ByteEntryDetailsViewModel SelectedItem
+        {
+            get => _selectedItem;
+            set => this.RaiseAndSetIfChanged(ref _selectedItem, value);
+        }
+        
+
+        // public ReactiveCommand<string, Unit> SetComment { get; }
+        // public ByteEntry SelectedByteOffset;
     
         public ByteEntriesViewModel()
         {
             // temp hack
             ByteEntries = new ObservableCollection<ByteEntryDetailsViewModel>(GetByteEntriesSync() ?? Array.Empty<ByteEntryDetailsViewModel>());
+            
+            // SetSelectedItem = ReactiveCommand.Create<DataGridCellEditEndedEventArgs>(CellEdited);
                 
             // byteEntries = this
             //     .WhenAnyValue(x => x.StartingOffset)
@@ -42,7 +60,21 @@ namespace Diz.Gui.Avalonia.ViewModels
             //     .ToProperty(this, x => x.ByteEntries);
 
             this.WhenActivated(
-                 (CompositeDisposable disposables) => { });
+                (CompositeDisposable disposables) =>
+                {
+                    
+                });
+        }
+
+        private void CellEdited(DataGridCellEditEndedEventArgs args)
+        {
+            if (args.EditAction != DataGridEditAction.Commit)
+                return;
+            
+            if (args.Column.Header.ToString() == "Comment")
+            {
+                
+            }
         }
 
         /*private async Task<IEnumerable<ByteEntryDetailsViewModel>?> GetByteEntries(int startRomOffset, CancellationToken token)
@@ -81,8 +113,5 @@ namespace Diz.Gui.Avalonia.ViewModels
                     }
                 });
         }
-
-        public Util.NumberBase NumberBaseToShow => Util.NumberBase.Hexadecimal;
-        public ByteEntry SelectedByteOffset => null!;
     }
 }

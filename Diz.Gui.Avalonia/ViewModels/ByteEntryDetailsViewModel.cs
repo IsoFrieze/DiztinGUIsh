@@ -11,10 +11,10 @@ namespace Diz.Gui.Avalonia.ViewModels
 
         public ByteEntryDetailsViewModel()
         {
-            // SetComment = ReactiveCommand.Create((string comment) => { ByteEntry.Comment = comment; });
+            SetComment = ReactiveCommand.Create((string comment) => { ByteEntry.Comment = comment; });
         }
 
-        // [PublicAPI] public ReactiveCommand<string, Unit> SetComment { get; }
+        [PublicAPI] public ReactiveCommand<string, Unit> SetComment { get; }
 
         public string Label => ByteEntry.Label;
         public string Comment => ByteEntry.Comment;

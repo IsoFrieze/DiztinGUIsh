@@ -22,7 +22,4 @@
         <uc:MainMenu  x:Name="MainMenuUserControl" />
         <uc:MainGridUserControl x:Name="MainGridUserControl" />
     </StackPanel>
-
-    <!-- http://avaloniaui.net/docs/reactiveui/activation#activation-example - View.xaml -->
-    <!-- https://reactiveui.net/docs/handbook/data-binding/avalonia -->
 </reactiveUi:ReactiveWindow>

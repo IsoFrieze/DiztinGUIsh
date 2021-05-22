@@ -58,6 +58,7 @@
                                     Width=".1*" />
                 <DataGridTextColumn Header="Comment"
                                     Binding="{Binding Comment}"
+                                    IsReadOnly="False"
                                     Width=".5*" />
             </DataGrid.Columns>
         </DataGrid>
