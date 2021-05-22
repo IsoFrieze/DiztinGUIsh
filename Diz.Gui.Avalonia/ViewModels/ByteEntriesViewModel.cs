@@ -26,18 +26,18 @@ namespace Diz.Gui.Avalonia.ViewModels
         public ObservableCollection<ByteEntryDetailsViewModel> ByteEntries { get; set; }
         
         public Util.NumberBase NumberBaseToShow => Util.NumberBase.Hexadecimal;
-        public ByteEntry SelectedByteOffset { get; private set; }
+
+        public ByteEntry SelectedByteOffset => SelectedItem.ByteEntry.ByteEntry;
 
         // public ReactiveCommand<DataGridCellEditEndedEventArgs, Unit> SetSelectedItem { get; }
 
-        private ByteEntryDetailsViewModel _selectedItem;
+        private ByteEntryDetailsViewModel? _selectedItem = null;
 
         public ByteEntryDetailsViewModel SelectedItem
         {
             get => _selectedItem;
             set => this.RaiseAndSetIfChanged(ref _selectedItem, value);
         }
-        
 
         // public ReactiveCommand<string, Unit> SetComment { get; }
         // public ByteEntry SelectedByteOffset;
@@ -46,9 +46,7 @@ namespace Diz.Gui.Avalonia.ViewModels
         {
             // temp hack
             ByteEntries = new ObservableCollection<ByteEntryDetailsViewModel>(GetByteEntriesSync() ?? Array.Empty<ByteEntryDetailsViewModel>());
-            
-            // SetSelectedItem = ReactiveCommand.Create<DataGridCellEditEndedEventArgs>(CellEdited);
-                
+
             // byteEntries = this
             //     .WhenAnyValue(x => x.StartingOffset)
             //     .Throttle(TimeSpan.FromMilliseconds(800))
@@ -62,7 +60,7 @@ namespace Diz.Gui.Avalonia.ViewModels
             this.WhenActivated(
                 (CompositeDisposable disposables) =>
                 {
-                    
+                    // ReactiveCommand.Create<DataGridCellEditEndedEventArgs>(CellEdited);                    
                 });
         }
 

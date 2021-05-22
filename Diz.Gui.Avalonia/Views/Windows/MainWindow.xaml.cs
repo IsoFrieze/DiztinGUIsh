@@ -9,7 +9,7 @@ using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.Windows
 {
-    public class MainWindow : ReactiveWindow<ByteEntriesViewModel>
+    public class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
         public MainWindow()
         {
@@ -17,17 +17,18 @@ namespace Diz.Gui.Avalonia.Views.Windows
             this.AttachDevTools();
             #endif
             
-            ViewModel = new ByteEntriesViewModel();
+            ViewModel = new MainWindowViewModel();
 
             this
                 .WhenActivated(
                     disposableRegistration =>
-                    {
-                        this.OneWayBind(ViewModel, 
-                                viewModel => viewModel.ByteEntries, 
-                                view => view.MainGridUserControl.MainGrid.Items)
-                            .DisposeWith(disposableRegistration);
-                    });
+                     {
+                         this.Bind(ViewModel, 
+                                 vm => vm.ByteEntriesViewModel,
+                                 view => view.MainGridUserControl.ViewModel
+                                 )
+                             .DisposeWith(disposableRegistration);
+                     });
 
             InitializeComponent();
         }
