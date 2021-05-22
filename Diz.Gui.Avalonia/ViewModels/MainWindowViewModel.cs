@@ -1,6 +1,4 @@
-﻿using Diz.Gui.Avalonia.ViewModels;
-
-namespace Diz.Gui.Avalonia
+﻿namespace Diz.Gui.Avalonia.ViewModels
 {
     public class MainWindowViewModel : ViewModel
     {
