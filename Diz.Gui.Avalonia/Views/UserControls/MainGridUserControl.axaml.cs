@@ -21,22 +21,24 @@ namespace Diz.Gui.Avalonia.Views.UserControls
             this.WhenActivated(disposables =>
             {
                 // prob how we should do it with commands to edit
-                this.OneWayBind(ViewModel,
-                    viewmodel => viewmodel.ByteEntries,
-                    view => view.MainGrid.Items
-                ).DisposeWith(disposables);
-                
+                // this.OneWayBind(ViewModel,
+                //     viewmodel => viewmodel.ByteEntries,
+                //     view => view.MainGrid.Items
+                // ).DisposeWith(disposables);
+                //
                 // two way binding (try this?)
                 // this.Bind(ViewModel,
                 //     viewmodel => viewmodel.ByteEntries,
                 //     view => view.MainGrid.Items
                 // ).DisposeWith(disposables);
 
-                this.WhenAnyValue(
-                    x => x.MainGrid.SelectedItem)
+                this.WhenAnyValue(x => x.MainGrid.SelectedItem)
                     .BindTo(this, x => x.ViewModel.SelectedItem);
 
-                this.Bind(ViewModel, vm => vm.SelectedItem, v => v.MainGrid.SelectedItem);
+                this.Bind(ViewModel, 
+                    vm => vm.SelectedItem, 
+                    v => v.MainGrid.SelectedItem
+                    );
                 
                 //
                 // this.
