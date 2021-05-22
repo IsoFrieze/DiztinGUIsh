@@ -465,7 +465,12 @@ namespace DiztinGUIsh.window
         private void stepInToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.StepIn(SelectedSnesOffset);
         private void autoStepSafeToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.AutoStepSafe(SelectedSnesOffset);
         private void autoStepHarshToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.AutoStepHarsh(SelectedSnesOffset);
-        private void gotoToolStripMenuItem_Click(object sender, EventArgs e) => MainFormController.GoTo(PromptForGotoOffset());
+        private void gotoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var offset = PromptForGotoOffset();
+            if (offset != -1)
+                MainFormController.GoTo(offset);
+        }
 
         private void gotoIntermediateAddressToolStripMenuItem_Click(object sender, EventArgs e) =>
             MainFormController.GoToIntermediateAddress(SelectedSnesOffset);
