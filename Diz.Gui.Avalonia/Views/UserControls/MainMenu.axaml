@@ -2,8 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:Diz.Gui.Avalonia.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Diz.Gui.Avalonia.Views.UserControls.MainMenu">
+    
+    <Design.DataContext>
+        <viewModels:MainWindowViewModel />
+    </Design.DataContext>
+    
     <Menu>
         <MenuItem Header="File">
             <MenuItem Header="New Project..."/>
@@ -15,6 +21,7 @@
             <MenuItem Header="Exit" />
         </MenuItem>
         <MenuItem Header="Data">
+            <MenuItem Header="Open new view of this data" Command="{Binding OpenNewWindow}" />
             <MenuItem Header="Import">
                 <MenuItem Header="Import BSNES Tracelog..."/>
                 <MenuItem Header="Import BSNES Usage Map..."/>

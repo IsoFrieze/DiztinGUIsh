@@ -18,15 +18,44 @@
     -->
     
     <Design.DataContext>
-        <vm:ByteEntryDetailsViewModel />
+        <vm:ByteEntriesViewModel />
     </Design.DataContext>
 
+    <!-- <DataGridTextColumn Header="GDP" Binding="{Binding GDP}" Width="3*" CellStyleClasses="gdp" /> -->
+    <!--<UserControl.Styles>
+        ~1~<Style Selector="DataGridCell.gdp">
+            <Setter Property="Background" Value="{Binding Path=GDP, Mode=OneWay, Converter={StaticResource GDPConverter}}" />
+        </Style>@1@
+        ~1~<Style Selector="DataGridCell:current">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+        </Style>
+        <Style Selector="DataGridCell:selected">
+            <Setter Property="Background" Value="Red" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>@1@
+        
+        ~1~<Style Selector="DataGridTextColumn[='Label']">
+            <Setter Property="FontSize" Value="{Binding SelectedFontSize}"/>
+        </Style>@1@
+        ~1~<Style Selector="Button.tabButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource TabButtonHoverBrush}" />
+        </Style>@1@
+        
+        <Style Selector="DataGridTextColumn.dgLabel">
+            <Setter Property="Background" Value="Red" />
+        </Style>
+    </UserControl.Styles>-->
+    
     <StackPanel>
-        <DataGrid GridLinesVisibility="All" x:Name="MainGrid">
-        <DataGrid.Columns>
-                <DataGridTextColumn Header="Label"
-                                    Binding="{Binding ByteEntry.Label}"
-                                    Width="*" />
+        <DataGrid RowBackground="White" AlternatingRowBackground="White" GridLinesVisibility="All" x:Name="MainGrid">
+            
+            <DataGrid.Columns>
+            <DataGridTextColumn Header="Label"
+                                Binding="{Binding ByteEntry.Label}"
+                                Width="*"
+                                CellStyleClasses="dgLabel"
+                                />
                 <DataGridTextColumn Header="PC"
                                     Binding="{Binding ByteEntry.Offset}"
                                     Width=".2*" />

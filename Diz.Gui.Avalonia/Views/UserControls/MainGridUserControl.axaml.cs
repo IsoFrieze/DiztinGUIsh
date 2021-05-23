@@ -1,7 +1,9 @@
 ﻿using System.Reactive.Disposables;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.ReactiveUI;
+using Avalonia.Styling;
 using Diz.Gui.Avalonia.ViewModels;
 using ReactiveUI;
 
@@ -37,6 +39,12 @@ namespace Diz.Gui.Avalonia.Views.UserControls
                     v => v.MainGrid.SelectedItem
                     );
                 
+                // MainGrid.LoadingRow += MainGridOnLoadingRow;
+                
+                // var x = new Style(
+                //     x => x.OfType<DataGridCell>()
+                //         .PropertyEquals(DataGridCell.NameProperty, true));
+
                 //
                 // this.
                 // // Observable.FromEventPattern<DataGridCellEditEndedEventArgs>()
@@ -65,9 +73,27 @@ namespace Diz.Gui.Avalonia.Views.UserControls
             InitializeComponent();
         }
 
+        private void MainGridOnLoadingRow(object? sender, DataGridRowEventArgs e)
+        {
+            if (e.Row.DataContext is not ByteEntryDetailsViewModel byteEntryDetailsViewModel)
+                return;
+            
+            // set colors/etc
+            // better ways to do this. HACK
+
+            // var x = new Setter();
+            // x.
+
+            // dataObject.ByteEntry.
+            // e.Row.Background = Brushes.Red;
+
+
+            // e.Row.Background = new SolidColorBrush(Color)
+        }
+
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
         }
-    }
+        }
 }

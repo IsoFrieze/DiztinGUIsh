@@ -1,5 +1,8 @@
-﻿using Avalonia.Controls;
+﻿using System.Reactive;
+using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Diz.Gui.Avalonia.Views.Windows;
+using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.UserControls
 {
