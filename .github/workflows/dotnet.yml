@@ -8,17 +8,39 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+    - name: Inject slug/short variables
+      uses: rlespinasse/github-slug-action@v3.x
+
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+    - name: Set version string
+      id: ver
+      run: echo "::set-output name=ver::DiztinGUIsh-${{ steps.date.outputs.date }}--${{ env.GITHUB_REF_SLUG }}-${{ env.GITHUB_SHA_SHORT }} ${{env.GITHUB_REPOSITORY_OWNER_PART_SLUG != 'Dotsarecool' && env.GITHUB_REPOSITORY_OWNER_PART_SLUG || ''}}"
+
+    - name: Print version
+      run: echo "version ${{ steps.ver.outputs.ver }}"
+      
     - uses: actions/checkout@v1
+    
     - uses: nuget/setup-nuget@v1
       with:
         nuget-version: '4.x'
     - name: Restore packages
       run: nuget restore DiztinGUIsh.sln
+      
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v1
+      
     - name: Build with MSBuild
       run: msbuild DiztinGUIsh.sln -p:Configuration=Release
-    - uses: actions/upload-artifact@v2
+
+    - name: Publish
+      run: dotnet publish --no-build --verbosity normal -c Release /p:PublishProfile=FolderProfile .\DiztinGUIsh\
+
+    - name: Upload
+      uses: actions/upload-artifact@v2
       with:
-        name: DiztinGUIsh
+        name: ${{ steps.ver.outputs.ver }}
         path: DiztinGUIsh/bin/Release/

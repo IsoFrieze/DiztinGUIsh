@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../common/CommonSettings.targets" />
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <UseWindowsForms>false</UseWindowsForms>
@@ -6,6 +7,7 @@
     <RootNamespace>Diz.Core</RootNamespace>
     <AssemblyName>Diz.Core</AssemblyName>
     <LangVersion>8.0</LangVersion>
+    <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ExtendedXmlSerializer">
