@@ -1,4 +1,5 @@
-﻿using Diz.Controllers.util;
+﻿using System.Reactive.Disposables;
+using Diz.Controllers.util;
 using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.ViewModels
@@ -9,6 +10,11 @@ namespace Diz.Gui.Avalonia.ViewModels
 
         public ByteEntryDetailsViewModel()
         {
+            this.WhenActivated(
+                (CompositeDisposable disposables) =>
+                {
+                    
+                });
         }
     }
 }
