@@ -43,4 +43,10 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: ${{ steps.ver.outputs.ver }}
-        path: DiztinGUIsh/bin/Release/
+        path: DiztinGUIsh/bin/Release/net48/publish
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
