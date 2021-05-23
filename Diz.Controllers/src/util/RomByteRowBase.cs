@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Drawing;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Diz.Controllers.interfaces;
@@ -9,6 +10,7 @@ using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 using JetBrains.Annotations;
+using LightInject;
 
 namespace Diz.Controllers.util
 {
@@ -233,6 +235,101 @@ namespace Diz.Controllers.util
         {
             return Util.GetPropertyAttribute(getValueFn, typeof(RomByteRowBase), memberName);
         }
+        
+        #region Formatting
+        protected Color? GetBackgroundColorForMarkedAsOpcode(string colPropName)
+        {
+            // TODO: eventually, don't match strings here.
+            // instead, look for the appropriate attribute attached to romByteRow and let that 
+            // attribute hook in here.
+            return colPropName switch
+            {
+                nameof(Point) => GetBackColorInOut(),
+                nameof(Instruction) => GetInstructionBackgroundColor(),
+                nameof(DataBank) => GetDataBankColor(),
+                nameof(DirectPage) => GetDirectPageColor(),
+                nameof(MFlag) => GetMFlagColor(),
+                nameof(XFlag) => GetXFlagColor(),
+                _ => null
+            };
+        }
+
+        private Color? GetBackColorInOut()
+        {
+            int r = 255, g = 255, b = 255;
+            if ((ByteEntry.Point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) g -= 50;
+            if ((ByteEntry.Point & InOutPoint.InPoint) != 0) r -= 50;
+            if ((ByteEntry.Point & InOutPoint.ReadPoint) != 0) b -= 50;
+            return Color.FromArgb(r, g, b);
+        }
+
+        private Color? GetInstructionBackgroundColor()
+        {
+            var opcode = ByteEntry.Byte;
+            var isWeirdInstruction =
+                    opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 || // RTI WAI STP SED
+                    opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42 // XCE BRK COP WDM
+                ;
+            return isWeirdInstruction ? Color.Yellow : null;
+        }
+
+        private Color? GetDataBankColor()
+        {
+            switch (ByteEntry.Byte)
+            {
+                // PLB MVP MVN
+                case 0xAB:
+                case 0x44:
+                case 0x54:
+                    return Color.OrangeRed;
+                // PHB
+                case 0x8B:
+                    return Color.Yellow;
+                default:
+                    return null;
+            }
+        }
+
+        private Color? GetDirectPageColor()
+        {
+            switch (ByteEntry.Byte)
+            {
+                // PLD TCD
+                case 0x2B:
+                case 0x5B:
+                    return Color.OrangeRed;
+
+                // PHD TDC
+                case 0x0B:
+                case 0x7B:
+                    return Color.Yellow;
+
+                default:
+                    return null;
+            }
+        }
+
+        public Color? GetMFlagColor() => GetMxFlagColor(0x20);
+        public Color? GetXFlagColor() => GetMxFlagColor(0x10);
+
+        private Color? GetMxFlagColor(int nextByteMask)
+        {
+            var nextByte = Data.GetNextRomByte(ByteEntry.ParentIndex) ?? 0;
+            switch (ByteEntry.Byte)
+            {
+                // PLP
+                // SEP REP, *iff* relevant bit is set on next byte
+                case 0x28:
+                case 0xC2 or 0xE2 when (nextByte & nextByteMask) != 0:
+                    return Color.OrangeRed;
+                case 0x08: // PHP
+                    return Color.Yellow;
+                default:
+                    return null;
+            }
+        }
+        
+        #endregion
     }
 
     public interface IRowBaseViewer<out TItem>
