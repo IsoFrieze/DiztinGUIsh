@@ -31,7 +31,7 @@ namespace Diz.Core.model.project
         {
             if (project == null) throw new ArgumentNullException(nameof(project));
             var checksumToVerify =
-                ByteUtil.ConvertByteArrayToInt32(container.RomBytes, project.Data.RomComplementOffset);
+                ByteUtil.ConvertByteArrayToUInt32(container.RomBytes, project.Data.RomComplementOffset);
             
             if (checksumToVerify == project.InternalCheckSum)
                 return true;
