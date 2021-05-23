@@ -55,7 +55,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(29, 15);
+            this.label1.Location = new System.Drawing.Point(14, 15);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(99, 15);
@@ -74,7 +74,7 @@
             this.property.Location = new System.Drawing.Point(134, 12);
             this.property.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.property.Name = "property";
-            this.property.Size = new System.Drawing.Size(140, 23);
+            this.property.Size = new System.Drawing.Size(288, 23);
             this.property.TabIndex = 1;
             this.property.SelectedIndexChanged += new System.EventHandler(this.property_SelectedIndexChanged);
             // 
@@ -136,7 +136,7 @@
             // 
             // okay
             // 
-            this.okay.Location = new System.Drawing.Point(248, 198);
+            this.okay.Location = new System.Drawing.Point(334, 194);
             this.okay.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.okay.Name = "okay";
             this.okay.Size = new System.Drawing.Size(88, 27);
@@ -158,22 +158,22 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(28, 85);
+            this.label3.Location = new System.Drawing.Point(3, 85);
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(84, 15);
+            this.label3.Size = new System.Drawing.Size(115, 15);
             this.label3.TabIndex = 9;
-            this.label3.Text = "Up to Address:";
+            this.label3.Text = "Up to and including:";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(15, 113);
+            this.label4.Location = new System.Drawing.Point(6, 113);
             this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(99, 15);
+            this.label4.Size = new System.Drawing.Size(48, 15);
             this.label4.TabIndex = 11;
-            this.label4.Text = "Number of Bytes:";
+            this.label4.Text = "# Bytes:";
             // 
             // textEnd
             // 
@@ -204,7 +204,7 @@
             this.group.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.group.Name = "group";
             this.group.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.group.Size = new System.Drawing.Size(321, 148);
+            this.group.Size = new System.Drawing.Size(408, 148);
             this.group.TabIndex = 2;
             this.group.TabStop = false;
             this.group.Text = "Mark Bytes";
@@ -212,7 +212,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(19, 58);
+            this.label5.Location = new System.Drawing.Point(4, 57);
             this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(92, 15);
@@ -283,7 +283,7 @@
             // 
             this.radioHex.AutoSize = true;
             this.radioHex.Checked = true;
-            this.radioHex.Location = new System.Drawing.Point(121, 202);
+            this.radioHex.Location = new System.Drawing.Point(163, 202);
             this.radioHex.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.radioHex.Name = "radioHex";
             this.radioHex.Size = new System.Drawing.Size(46, 19);
@@ -296,7 +296,7 @@
             // radioDec
             // 
             this.radioDec.AutoSize = true;
-            this.radioDec.Location = new System.Drawing.Point(177, 202);
+            this.radioDec.Location = new System.Drawing.Point(229, 202);
             this.radioDec.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.radioDec.Name = "radioDec";
             this.radioDec.Size = new System.Drawing.Size(45, 19);
@@ -304,13 +304,13 @@
             this.radioDec.Text = "Dec";
             this.radioDec.UseVisualStyleBackColor = true;
             // 
-            // MarkManyDialog
+            // MarkManyView
             // 
             this.AcceptButton = this.okay;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
-            this.ClientSize = new System.Drawing.Size(349, 238);
+            this.ClientSize = new System.Drawing.Size(435, 238);
             this.Controls.Add(this.radioDec);
             this.Controls.Add(this.radioHex);
             this.Controls.Add(this.group);

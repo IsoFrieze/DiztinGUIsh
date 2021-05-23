@@ -23,27 +23,51 @@ namespace Diz.Core.model
         int? GetRomDoubleWord(int offset);
     }
 
-    public interface IReadOnlySnesRom : IReadOnlyByteSource
+    public interface ICommentProvider
+    {
+        Comment GetComment(int offset);
+        string GetCommentText(int snesAddress);
+    }
+
+    public interface IRomMapProvider
     {
         RomMapMode RomMapMode { get; }
         RomSpeed RomSpeed { get; }
+    }
 
-        public T GetOneAnnotationAtPc<T>(int pcOffset) where T : Annotation, new();
-        
+    public interface IAnnotationProvider
+    {
+        public T GetOneAnnotationAtPc<T>(int pcOffset) where T : Annotation, new();   
+    }
+
+    public interface IByteGraphProvider
+    {
+        ByteEntry BuildFlatByteEntryForSnes(int snesAddress);
+        ByteEntry BuildFlatByteEntryForRom(int snesAddress);
+    }
+
+    public interface IReadOnlyLabels
+    {
         public IReadOnlyLabelProvider Labels { get; }
+    }
 
-        Comment GetComment(int offset);
-        string GetCommentText(int snesAddress);
+    public interface IReadOnlySnesRom : 
+        IReadOnlyByteSource,
+        ISnesAddressConverter, 
+        ICommentProvider,
+        IRomMapProvider,
+        IAnnotationProvider,
+        IByteGraphProvider,
+        IReadOnlyLabels,
+        IReadOnlySnesRomBase
+    {
+    }
 
+    public interface IReadOnlySnesRomBase
+    {
         int GetRomSize();
         int GetBankSize();
 
-        ByteEntry BuildFlatByteEntryForSnes(int snesAddress);
-        ByteEntry BuildFlatByteEntryForRom(int snesAddress);
-
-        int ConvertPCtoSnes(int offset);
-        int ConvertSnesToPc(int offset);
-        
         bool GetMFlag(int offset);
         bool GetXFlag(int offset);
         InOutPoint GetInOutPoint(int offset);
@@ -54,7 +78,13 @@ namespace Diz.Core.model
         FlagType GetFlag(int offset);
         
         int GetIntermediateAddressOrPointer(int offset);
-        int GetIntermediateAddress(int offset, bool resolve = false);
+        int GetIntermediateAddress(int offset, bool resolve = false);   
+    }
+
+    public interface ISnesAddressConverter
+    {
+        int ConvertPCtoSnes(int offset);
+        int ConvertSnesToPc(int offset);
     }
     
     public interface IDataManager : INotifyPropertyChanged
