@@ -62,8 +62,8 @@ namespace Diz.Core.model
         IReadOnlySnesRomBase
     {
     }
-
-    public interface IReadOnlySnesRomBase
+    
+    public interface IReadOnlySnesRomBase : ISnesAddressConverter
     {
         int GetRomSize();
         int GetBankSize();
@@ -80,13 +80,13 @@ namespace Diz.Core.model
         int GetIntermediateAddressOrPointer(int offset);
         int GetIntermediateAddress(int offset, bool resolve = false);   
     }
-
+    
     public interface ISnesAddressConverter
     {
         int ConvertPCtoSnes(int offset);
         int ConvertSnesToPc(int offset);
     }
-    
+
     public interface IDataManager : INotifyPropertyChanged
     {
         

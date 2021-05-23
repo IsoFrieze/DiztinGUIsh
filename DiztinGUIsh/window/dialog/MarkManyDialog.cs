@@ -10,7 +10,7 @@ namespace DiztinGUIsh.window.dialog
     public partial class MarkManyView : Form, IMarkManyView
     {
         public IMarkManyController Controller { get; set; }
-        private IReadOnlySnesRom Data => Controller.Data;
+        private IReadOnlySnesRomBase Data => Controller.Data;
         public int Property => property.SelectedIndex;
         private int PropertyMaxVal => Property == 1 ? 0x100 : 0x10000;
 
