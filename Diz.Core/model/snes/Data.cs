@@ -10,7 +10,7 @@ using IX.Observable;
 
 namespace Diz.Core.model
 {
-    public partial class Data : DizDataModel
+    public partial class Data : DizDataModel, IReadOnlySnesRomBase
     {
         // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something that operates on Data
         private readonly Cpu65C816 cpu65C816;

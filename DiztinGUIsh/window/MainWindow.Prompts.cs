@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
+using Diz.Controllers.controllers;
+using Diz.Core.commands;
 using Diz.Core.export;
+using DiztinGUIsh.controller;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
@@ -128,10 +131,16 @@ namespace DiztinGUIsh.window
             return true;
         }
 
-        private MarkManyDialog PromptMarkMany(int offset, int column)
+        public MarkCommand PromptMarkMany(int offset, int whichIndex) => 
+            CreateMarkManyController(offset, whichIndex).GetMarkCommand();
+        
+        private IMarkManyController CreateMarkManyController(int offset, int whichIndex)
         {
-            var mark = new MarkManyDialog(offset, column, Project.Data);
-            return mark.ShowDialog() == DialogResult.OK ? mark : null;
+            // NOTE: in upstream 3.0 branch, replace this with dependency injection
+            var view = new MarkManyView();
+            var markManyController = new MarkManyController(offset, whichIndex, Project.Data, view);
+            markManyController.MarkManyView.Controller = markManyController;
+            return markManyController;
         }
 
         private bool PromptForMisalignmentCheck()

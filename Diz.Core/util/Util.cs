@@ -336,20 +336,23 @@ namespace Diz.Core.util
 
         // clamp index so index >= 0 and index < size
         // for arrays
-        public static int ClampIndex(int index, int size) => ClampIndex(index, 0, size - 1);
+        public static int ClampIndex(int index, int size) => Clamp(index, 0, size - 1);
         
-        // clamp index so index >= minIndex and index <= maxIndex
-        public static int ClampIndex(int index, int minIndex, int maxIndex)
+        // returns i if i >= min and index <= max, otherwise returns min or max
+        public static int Clamp(int i, int min, int max)
         {
-            if (minIndex < 0 || minIndex > maxIndex)
+            if (min < 0 || min > max)
                 throw new IndexOutOfRangeException("ClampIndex params not in range");
             
-            return index > maxIndex
-                ? maxIndex
-                : index < minIndex
-                    ? minIndex
-                    : index;
+            return i > max 
+                ? max
+                : i < min
+                    ? min
+                    : i;
         }
+        
+        public static bool IsBetween(int i, int max) => i >= 0 && i <= max;
+        public static bool IsBetween(int i, int min, int max) => i >= min && i <= max;
 
         public static void SplitOnFirstComma(string instr, out string firstPart, out string remainder)
         {

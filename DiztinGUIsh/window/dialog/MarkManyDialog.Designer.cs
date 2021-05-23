@@ -1,6 +1,6 @@
 ﻿namespace DiztinGUIsh.window.dialog
 {
-    partial class MarkManyDialog
+    partial class MarkManyView
     {
         /// <summary>
         /// Required designer variable.
@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MarkManyView));
             this.label1 = new System.Windows.Forms.Label();
             this.property = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -54,9 +55,10 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(25, 13);
+            this.label1.Location = new System.Drawing.Point(14, 15);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(88, 13);
+            this.label1.Size = new System.Drawing.Size(99, 15);
             this.label1.TabIndex = 0;
             this.label1.Text = "Property to Mark:";
             // 
@@ -69,18 +71,20 @@
             "Direct Page",
             "M Flag",
             "X Flag"});
-            this.property.Location = new System.Drawing.Point(115, 10);
+            this.property.Location = new System.Drawing.Point(134, 12);
+            this.property.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.property.Name = "property";
-            this.property.Size = new System.Drawing.Size(121, 21);
+            this.property.Size = new System.Drawing.Size(288, 23);
             this.property.TabIndex = 1;
             this.property.SelectedIndexChanged += new System.EventHandler(this.property_SelectedIndexChanged);
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(64, 25);
+            this.label2.Location = new System.Drawing.Point(75, 29);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(37, 13);
+            this.label2.Size = new System.Drawing.Size(38, 15);
             this.label2.TabIndex = 0;
             this.label2.Text = "Value:";
             // 
@@ -102,25 +106,28 @@
             "Data (32-Bit)",
             "Pointer (32-Bit)",
             "Text"});
-            this.flagCombo.Location = new System.Drawing.Point(103, 22);
+            this.flagCombo.Location = new System.Drawing.Point(120, 25);
+            this.flagCombo.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.flagCombo.Name = "flagCombo";
-            this.flagCombo.Size = new System.Drawing.Size(121, 21);
+            this.flagCombo.Size = new System.Drawing.Size(140, 23);
             this.flagCombo.TabIndex = 4;
             // 
             // regValue
             // 
-            this.regValue.Location = new System.Drawing.Point(103, 23);
+            this.regValue.Location = new System.Drawing.Point(120, 27);
+            this.regValue.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.regValue.MaxLength = 5;
             this.regValue.Name = "regValue";
-            this.regValue.Size = new System.Drawing.Size(61, 20);
+            this.regValue.Size = new System.Drawing.Size(70, 23);
             this.regValue.TabIndex = 3;
             this.regValue.TextChanged += new System.EventHandler(this.regValue_TextChanged);
             // 
             // cancel
             // 
-            this.cancel.Location = new System.Drawing.Point(11, 172);
+            this.cancel.Location = new System.Drawing.Point(13, 198);
+            this.cancel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.cancel.Name = "cancel";
-            this.cancel.Size = new System.Drawing.Size(75, 23);
+            this.cancel.Size = new System.Drawing.Size(88, 27);
             this.cancel.TabIndex = 6;
             this.cancel.TabStop = false;
             this.cancel.Text = "Cancel";
@@ -129,9 +136,10 @@
             // 
             // okay
             // 
-            this.okay.Location = new System.Drawing.Point(213, 172);
+            this.okay.Location = new System.Drawing.Point(334, 194);
+            this.okay.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.okay.Name = "okay";
-            this.okay.Size = new System.Drawing.Size(75, 23);
+            this.okay.Size = new System.Drawing.Size(88, 27);
             this.okay.TabIndex = 3;
             this.okay.Text = "OK";
             this.okay.UseVisualStyleBackColor = true;
@@ -139,37 +147,41 @@
             // 
             // textCount
             // 
-            this.textCount.Location = new System.Drawing.Point(103, 95);
+            this.textCount.Location = new System.Drawing.Point(120, 110);
+            this.textCount.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.textCount.MaxLength = 6;
             this.textCount.Name = "textCount";
-            this.textCount.Size = new System.Drawing.Size(61, 20);
+            this.textCount.Size = new System.Drawing.Size(70, 23);
             this.textCount.TabIndex = 12;
             this.textCount.TextChanged += new System.EventHandler(this.textCount_TextChanged);
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(24, 74);
+            this.label3.Location = new System.Drawing.Point(3, 85);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(77, 13);
+            this.label3.Size = new System.Drawing.Size(115, 15);
             this.label3.TabIndex = 9;
-            this.label3.Text = "Up to Address:";
+            this.label3.Text = "Up to and including:";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(13, 98);
+            this.label4.Location = new System.Drawing.Point(6, 113);
+            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(88, 13);
+            this.label4.Size = new System.Drawing.Size(48, 15);
             this.label4.TabIndex = 11;
-            this.label4.Text = "Number of Bytes:";
+            this.label4.Text = "# Bytes:";
             // 
             // textEnd
             // 
-            this.textEnd.Location = new System.Drawing.Point(103, 71);
+            this.textEnd.Location = new System.Drawing.Point(120, 82);
+            this.textEnd.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.textEnd.MaxLength = 6;
             this.textEnd.Name = "textEnd";
-            this.textEnd.Size = new System.Drawing.Size(61, 20);
+            this.textEnd.Size = new System.Drawing.Size(70, 23);
             this.textEnd.TabIndex = 10;
             this.textEnd.TextChanged += new System.EventHandler(this.textEnd_TextChanged);
             // 
@@ -188,9 +200,11 @@
             this.group.Controls.Add(this.flagCombo);
             this.group.Controls.Add(this.label3);
             this.group.Controls.Add(this.textCount);
-            this.group.Location = new System.Drawing.Point(12, 36);
+            this.group.Location = new System.Drawing.Point(14, 42);
+            this.group.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.group.Name = "group";
-            this.group.Size = new System.Drawing.Size(275, 128);
+            this.group.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.group.Size = new System.Drawing.Size(408, 148);
             this.group.TabIndex = 2;
             this.group.TabStop = false;
             this.group.Text = "Mark Bytes";
@@ -198,18 +212,20 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(16, 50);
+            this.label5.Location = new System.Drawing.Point(4, 57);
+            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(85, 13);
+            this.label5.Size = new System.Drawing.Size(92, 15);
             this.label5.TabIndex = 7;
             this.label5.Text = "Start at Address:";
             // 
             // textStart
             // 
-            this.textStart.Location = new System.Drawing.Point(103, 47);
+            this.textStart.Location = new System.Drawing.Point(120, 54);
+            this.textStart.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.textStart.MaxLength = 6;
             this.textStart.Name = "textStart";
-            this.textStart.Size = new System.Drawing.Size(61, 20);
+            this.textStart.Size = new System.Drawing.Size(70, 23);
             this.textStart.TabIndex = 8;
             this.textStart.TextChanged += new System.EventHandler(this.textStart_TextChanged);
             // 
@@ -219,9 +235,10 @@
             this.mxCombo.Items.AddRange(new object[] {
             "16-Bit",
             "8-Bit"});
-            this.mxCombo.Location = new System.Drawing.Point(103, 22);
+            this.mxCombo.Location = new System.Drawing.Point(120, 25);
+            this.mxCombo.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.mxCombo.Name = "mxCombo";
-            this.mxCombo.Size = new System.Drawing.Size(121, 21);
+            this.mxCombo.Size = new System.Drawing.Size(140, 23);
             this.mxCombo.TabIndex = 1;
             // 
             // archCombo
@@ -231,17 +248,19 @@
             "65C816 (CPU)",
             "SPC700 (APU)",
             "SuperFX (GPU)"});
-            this.archCombo.Location = new System.Drawing.Point(103, 22);
+            this.archCombo.Location = new System.Drawing.Point(120, 25);
+            this.archCombo.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.archCombo.Name = "archCombo";
-            this.archCombo.Size = new System.Drawing.Size(121, 21);
+            this.archCombo.Size = new System.Drawing.Size(140, 23);
             this.archCombo.TabIndex = 2;
             // 
             // radioPC
             // 
             this.radioPC.AutoSize = true;
-            this.radioPC.Location = new System.Drawing.Point(176, 71);
+            this.radioPC.Location = new System.Drawing.Point(205, 82);
+            this.radioPC.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.radioPC.Name = "radioPC";
-            this.radioPC.Size = new System.Drawing.Size(70, 17);
+            this.radioPC.Size = new System.Drawing.Size(75, 19);
             this.radioPC.TabIndex = 6;
             this.radioPC.Text = "PC Offset";
             this.radioPC.UseVisualStyleBackColor = true;
@@ -250,9 +269,10 @@
             // 
             this.radioROM.AutoSize = true;
             this.radioROM.Checked = true;
-            this.radioROM.Location = new System.Drawing.Point(176, 48);
+            this.radioROM.Location = new System.Drawing.Point(205, 55);
+            this.radioROM.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.radioROM.Name = "radioROM";
-            this.radioROM.Size = new System.Drawing.Size(91, 17);
+            this.radioROM.Size = new System.Drawing.Size(97, 19);
             this.radioROM.TabIndex = 5;
             this.radioROM.TabStop = true;
             this.radioROM.Text = "ROM Address";
@@ -263,9 +283,10 @@
             // 
             this.radioHex.AutoSize = true;
             this.radioHex.Checked = true;
-            this.radioHex.Location = new System.Drawing.Point(104, 175);
+            this.radioHex.Location = new System.Drawing.Point(163, 202);
+            this.radioHex.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.radioHex.Name = "radioHex";
-            this.radioHex.Size = new System.Drawing.Size(44, 17);
+            this.radioHex.Size = new System.Drawing.Size(46, 19);
             this.radioHex.TabIndex = 4;
             this.radioHex.TabStop = true;
             this.radioHex.Text = "Hex";
@@ -275,20 +296,21 @@
             // radioDec
             // 
             this.radioDec.AutoSize = true;
-            this.radioDec.Location = new System.Drawing.Point(152, 175);
+            this.radioDec.Location = new System.Drawing.Point(229, 202);
+            this.radioDec.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.radioDec.Name = "radioDec";
-            this.radioDec.Size = new System.Drawing.Size(45, 17);
+            this.radioDec.Size = new System.Drawing.Size(45, 19);
             this.radioDec.TabIndex = 5;
             this.radioDec.Text = "Dec";
             this.radioDec.UseVisualStyleBackColor = true;
             // 
-            // MarkManyDialog
+            // MarkManyView
             // 
             this.AcceptButton = this.okay;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
-            this.ClientSize = new System.Drawing.Size(299, 206);
+            this.ClientSize = new System.Drawing.Size(435, 238);
             this.Controls.Add(this.radioDec);
             this.Controls.Add(this.radioHex);
             this.Controls.Add(this.group);
@@ -297,7 +319,9 @@
             this.Controls.Add(this.property);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Name = "MarkManyDialog";
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.Name = "MarkManyView";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Mark Many";
