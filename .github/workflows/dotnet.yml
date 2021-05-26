@@ -1,4 +1,4 @@
-name: NetFrameWork.Legacy.CI
+name: .NET Windows Desktop
 
 on: 
 - push
@@ -22,26 +22,33 @@ jobs:
     - name: Print version
       run: echo "version ${{ steps.ver.outputs.ver }}"
       
-    - uses: actions/checkout@v1
-    - uses: nuget/setup-nuget@v1
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
       with:
-        nuget-version: '5.x'
-    - uses: actions/cache@v1
+        dotnet-version: 5.0.x
+
+    - name: Nuget (restore from cache)
+      uses: actions/cache@v1
       id: cache
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-    - name: NuGet Restore
+    
+    - name: NuGet (Restore from scratch if needed)
       if: steps.cache.outputs.cache-hit != 'true'
-      run: nuget restore DiztinGUIsh.sln -LockedMode
-      
-    - name: setup-msbuild
-      uses: microsoft/setup-msbuild@v1
-    - name: Build with MSBuild
-      run: msbuild DiztinGUIsh.sln -p:Configuration=Release
+      run: dotnet.exe restore –locked-mode
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test --no-build --configuration Release
 
     - name: Publish
-      run: dotnet publish --no-build --verbosity normal -c Release /p:PublishProfile=FolderProfile .\DiztinGUIsh\
+      run: dotnet publish --no-build -c Release /p:PublishProfile=FolderProfile .\DiztinGUIsh\
 
     - uses: papeloto/action-zip@v1
       with:
@@ -52,7 +59,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: ${{ steps.ver.outputs.ver }}.zip
-        path: DiztinGUIsh/bin/Release/net48/publish
+        path: ${{ steps.ver.outputs.ver }}.zip
         
     - name: Release
       uses: softprops/action-gh-release@v1
