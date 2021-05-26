@@ -11,6 +11,7 @@
     <LangVersion>8.0</LangVersion>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
@@ -31,6 +32,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
   </ItemGroup>
 
 
