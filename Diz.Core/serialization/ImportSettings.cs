@@ -8,7 +8,6 @@ namespace Diz.Core.serialization
     public class ImportRomSettings : PropertyNotifyChanged
     {
         private RomMapMode mode;
-        private RomSpeed romSpeed;
         private byte[] romBytes;
         private string romFilename;
 

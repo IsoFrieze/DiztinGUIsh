@@ -630,7 +630,7 @@ namespace Diz.Core.model
             return RomBytes.Select(b => b.Rom);
         }
         
-        public virtual byte[]? GetOverriddenRomBytes()
+        public virtual byte[] GetOverriddenRomBytes()
         {
             return null; // NOP
         }

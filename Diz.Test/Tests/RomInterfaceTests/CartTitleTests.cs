@@ -100,7 +100,7 @@ namespace Diz.Test.Tests
             TestRomCartTitle(srcProject, expectedTitle);
         }
 
-        public static void TestRomCartTitle(Project project, string expectedTitle)
+        internal static void TestRomCartTitle(Project project, string expectedTitle)
         {
             ByteUtil.ConvertUtf8ToShiftJisEncodedBytes(project.InternalRomGameName)
                 .Should().HaveCount(RomUtil.LengthOfTitleName,
