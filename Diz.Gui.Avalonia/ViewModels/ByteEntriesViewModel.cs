@@ -27,16 +27,16 @@ namespace Diz.Gui.Avalonia.ViewModels
         
         public Util.NumberBase NumberBaseToShow => Util.NumberBase.Hexadecimal;
 
-        public ByteEntry SelectedByteOffset => SelectedItem.ByteEntry.ByteEntry;
+        public ByteEntry SelectedByteOffset => SelectedItem?.ByteEntry?.ByteEntry!;
 
         // public ReactiveCommand<DataGridCellEditEndedEventArgs, Unit> SetSelectedItem { get; }
 
-        private ByteEntryDetailsViewModel? _selectedItem = null;
+        private ByteEntryDetailsViewModel? selectedItem = null;
 
-        public ByteEntryDetailsViewModel SelectedItem
+        public ByteEntryDetailsViewModel? SelectedItem
         {
-            get => _selectedItem;
-            set => this.RaiseAndSetIfChanged(ref _selectedItem, value);
+            get => selectedItem;
+            set => this.RaiseAndSetIfChanged(ref selectedItem, value);
         }
 
         // public ReactiveCommand<string, Unit> SetComment { get; }

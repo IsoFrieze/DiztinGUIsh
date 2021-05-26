@@ -10,7 +10,7 @@
     <RootNamespace>DiztinGUIsh</RootNamespace>
     <AssemblyName>DiztinGUIsh</AssemblyName>
     <ApplicationIcon>diz-icon2-magenta-med32x32.ico</ApplicationIcon>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
@@ -243,11 +243,6 @@
     <Compile Update="window\StartForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Remove="window\MainWindow.SimpleUI.cs" />
-    <Compile Remove="window\MainWindow.ReadOnlyHelpers.cs" />
-    <Compile Remove="window\MainWindow.Properties.cs" />
-    <Compile Remove="window\MainWindow.MainTable.cs" />
-    <Compile Remove="window\MainWindow.Actions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\.github\workflows\dotnet.yml">

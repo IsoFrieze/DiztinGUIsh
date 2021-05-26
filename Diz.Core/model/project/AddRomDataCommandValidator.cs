@@ -30,9 +30,12 @@ namespace Diz.Core.model.project
         private static bool MatchChecksums(RomToProjectAssociation container, Project? project,
             ValidationContext<RomToProjectAssociation> validationContext)
         {
-            Debug.Assert(project.Data != null);
+            if (project?.Data == null)
+                return false;
             
-            if (project == null) throw new ArgumentNullException(nameof(project));
+            if (project == null) 
+                throw new ArgumentNullException(nameof(project));
+            
             var checksumToVerify =
                 ByteUtil.ConvertByteArrayToUInt32(container.RomBytes, project.Data.RomComplementOffset);
             
@@ -49,7 +52,7 @@ namespace Diz.Core.model.project
             if (project == null)
                 return false;
             
-            if (container.RomBytes?.Length > project.Data.RomSettingsOffset + 10)
+            if (container.RomBytes?.Length > project.Data?.RomSettingsOffset + 10)
                 return true;
 
             validationContext.AddFailure("The linked ROM is too small. It can't be opened.");
@@ -59,7 +62,7 @@ namespace Diz.Core.model.project
         private static bool MatchCartTitle(RomToProjectAssociation container, Project? project,
             ValidationContext<RomToProjectAssociation> validationContext)
         {
-            if (project == null)
+            if (project?.Data == null)
                 return false;
             
             var gameNameFromRomBytes = RomUtil.GetCartridgeTitleFromRom(container.RomBytes, project.Data.RomSettingsOffset);

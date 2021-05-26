@@ -73,7 +73,7 @@ namespace Diz.Gui.Avalonia.Views.UserControls
             InitializeComponent();
         }
 
-        private void MainGridOnLoadingRow(object? sender, DataGridRowEventArgs e)
+        private void MainGridOnLoadingRow(object sender, DataGridRowEventArgs e)
         {
             if (e.Row.DataContext is not ByteEntryDetailsViewModel byteEntryDetailsViewModel)
                 return;
