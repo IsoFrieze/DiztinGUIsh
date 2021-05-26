@@ -63,12 +63,12 @@ namespace DiztinGUIsh
             }
         }
 
-        public void OnProjectOpened([CanBeNull] object sender, Project project) => 
+        public void OnProjectOpened([CanBeNull] object? sender, Project project) => 
             ControllersManager.ShowNewProjectEditorForm(project);
 
         private static void OnError(string msg) => MessageBox.Show(msg);
 
-        private void OnApplicationExit(object sender, EventArgs e)
+        private void OnApplicationExit(object? sender, EventArgs e)
         {
             // TODO: cleanup. release Projects, "are you sure you want to exit" etc.
         }
