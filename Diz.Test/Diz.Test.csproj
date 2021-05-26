@@ -9,6 +9,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
   <ItemGroup>

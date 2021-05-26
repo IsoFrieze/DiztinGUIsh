@@ -4,6 +4,9 @@
     <TargetFramework>net5.0</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
+    <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Views\Windows\Assets\diz-icon2-magenta-med32x32.ico" />
