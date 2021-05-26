@@ -1,9 +1,8 @@
-﻿using System;
+﻿#define USING_GITINFO_PACKAGE
+
+using System;
 using System.Reflection;
 using System.Windows.Forms;
-
-// for simplicity, disabled until we finish .net5 porting
-// #define USING_GITINFO_PACKAGE
 
 namespace DiztinGUIsh.window.dialog
 {
@@ -42,12 +41,32 @@ namespace DiztinGUIsh.window.dialog
             }
         }
 
-        private string AssemblyVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+        private string AssemblyVersion =>
+            Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion ?? "";
 
         public string AssemblyDescription
         {
             get
             {
+                var assemblyDescription = Assembly.GetExecutingAssembly()
+                    .GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description ?? "";
+                
+                var description =
+                    $"{assemblyDescription}\r\n\r\nBuild info:\r\n"+
+                    $"Git branch: {ThisAssembly.Git.Branch}\r\n"+
+                    $"Git commit: {ThisAssembly.Git.Commit}\r\n"+
+                    $"Git repo URL: {ThisAssembly.Git.RepositoryUrl}\r\n"+
+                    $"Git tag: {ThisAssembly.Git.Tag}\r\n"+
+                    $"Git last commit date: {ThisAssembly.Git.CommitDate}\r\n"+
+                    $"Git IsDirty: {ThisAssembly.Git.IsDirtyString}\r\n"+
+                    $"Git Commits on top of base: {ThisAssembly.Git.Commits}\r\n"+
+                    "\r\n"+
+                    $"Assembly version: {AssemblyVersion}";
+
+                return description;
+                /*
                 var attributes = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false);
                 var assembly = attributes.Length == 0 
                     ? null 
@@ -55,20 +74,10 @@ namespace DiztinGUIsh.window.dialog
 
                 if (assembly == null)
                     return "";
-
-                #if USING_USING_GITINFO_PACKAGE
-                var description =
-                    assembly.Description + "\r\n" + "\r\n" + "Build info:\r\n" +
-                    "Git branch: " + ThisAssembly.Git.Branch + "\r\n" +
-                    "Git commit: " + ThisAssembly.Git.Commit + "\r\n" +
-                    "Git repo URL: " + ThisAssembly.Git.RepositoryUrl + "\r\n" +
-                    "Git tag: " + ThisAssembly.Git.Tag + "\r\n" +
-                    "Git last commit date: " + ThisAssembly.Git.CommitDate + "\r\n";
-
-                return description;
+                
                 #else
                 return "";
-                #endif
+                #endif*/
             }
         }
 

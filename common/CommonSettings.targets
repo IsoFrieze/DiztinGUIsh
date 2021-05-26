@@ -1,6 +1,6 @@
 ﻿<Project>
     <PropertyGroup>
-        <DefineConstants>$(DefineConstants);ADDMETADATA</DefineConstants>
+        <DefineConstants>$(DefineConstants)</DefineConstants>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DefineConstants>DEBUG;TRACE</DefineConstants>

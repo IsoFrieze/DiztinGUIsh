@@ -1,4 +1,4 @@
-﻿name: .NET 5 Win Desktop
+name: .NET 5 Win Desktop
 
 on: [ push, pull_request ]
 
@@ -9,45 +9,63 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v3.x
+    - name: Inject slug/short variables
+      uses: rlespinasse/github-slug-action@v3.x
 
-      - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
-      - name: Set version string
-        id: ver
-        run: echo "::set-output name=ver::DiztinGUIsh-${{ steps.date.outputs.date }}--${{ env.GITHUB_REF_SLUG }}-${{ env.GITHUB_SHA_SHORT }} ${{env.GITHUB_REPOSITORY_OWNER_PART_SLUG != 'Dotsarecool' && env.GITHUB_REPOSITORY_OWNER_PART_SLUG || ''}}"
+    - name: Set version string
+      id: ver
+      run: echo "::set-output name=ver::DiztinGUIsh-${{ steps.date.outputs.date }}--${{ env.GITHUB_REF_SLUG }}-${{ env.GITHUB_SHA_SHORT }}-${{env.GITHUB_REPOSITORY_OWNER_PART_SLUG != 'dotsarecool' && env.GITHUB_REPOSITORY_OWNER_PART_SLUG || 'official'}}"
 
-      - name: Print version
-        run: echo "version ${{ steps.ver.outputs.ver }}"
+    - name: Print version
+      run: echo "version ${{ steps.ver.outputs.ver }}"
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Nuget (restore from cache)
+      uses: actions/cache@v1
+      id: cache
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+    
+    - name: NuGet (Restore from scratch if needed)
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: dotnet restore --locked-mode
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test --no-build --configuration Release
+
+    - name: Publish
+      run: dotnet publish --no-build -c Release /p:PublishProfile=FolderProfile .\DiztinGUIsh\
+
+    - uses: papeloto/action-zip@v1
+      with:
+        files: DiztinGUIsh\bin\Release\net5.0-windows\publish\
+        dest: ${{ steps.ver.outputs.ver }}.zip
         
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 5.0.x
-
-      - name: Setup Nuget
-        uses: nuget/setup-nuget@v1
-
-      - name: Nuget Dependency Packages Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Test
-        run: dotnet test --no-build --verbosity normal --configuration Release
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ steps.ver.outputs.ver }}.zip
+        path: ${{ steps.ver.outputs.ver }}.zip
         
-      - name: Publish
-        run: dotnet publish --no-build --verbosity normal -c Release /p:PublishProfile=FolderProfile .\DiztinGUIsh\
-
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ steps.ver.outputs.ver }}
-          path: DiztinGUIsh\bin\Release\net5.0-windows\publish\
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: ${{ steps.ver.outputs.ver }}.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

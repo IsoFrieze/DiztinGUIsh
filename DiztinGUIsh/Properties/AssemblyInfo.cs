@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
@@ -20,3 +21,22 @@
 // [assembly: AssemblyVersion("1.0.*")]
 // [assembly: AssemblyVersion("1.0.1.6")]
 // [assembly: AssemblyFileVersion("1.0.1.6")]
+
+[assembly: AssemblyTitle("Diz")]
+[assembly: AssemblyDescription("DiztinGUIsh: SNES Disassembly Tool Suite")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("DiztinGUIsh")]
+[assembly: AssemblyCopyright("(c)2021, GPL licensed")]
+
+[assembly: AssemblyVersion (ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.SemVer.Patch)]
+[assembly: AssemblyInformationalVersion (
+    ThisAssembly.Git.SemVer.Major + "." +
+    ThisAssembly.Git.SemVer.Minor + "." +
+    ThisAssembly.Git.SemVer.Patch + "-" +
+    ThisAssembly.Git.SemVer.Label // + "--" +
+    // ThisAssembly.Git.Branch + "+" +
+    // ThisAssembly.Git.Commit
+    )]
+
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]

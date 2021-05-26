@@ -27,14 +27,14 @@ namespace Diz.Core.model.project
                 RuleFor(x => x.Project).Must(MatchCartTitle!);
         }
         
-        private static bool MatchChecksums(RomToProjectAssociation container, Project project,
+        private static bool MatchChecksums(RomToProjectAssociation container, Project? project,
             ValidationContext<RomToProjectAssociation> validationContext)
         {
             Debug.Assert(project.Data != null);
             
             if (project == null) throw new ArgumentNullException(nameof(project));
             var checksumToVerify =
-                ByteUtil.ConvertByteArrayToInt32(container.RomBytes, project.Data.RomComplementOffset);
+                ByteUtil.ConvertByteArrayToUInt32(container.RomBytes, project.Data.RomComplementOffset);
             
             if (checksumToVerify == project.InternalCheckSum)
                 return true;
@@ -44,9 +44,10 @@ namespace Diz.Core.model.project
             return false;
         }
 
-        private static bool HaveValidRomSize(RomToProjectAssociation container, Project project, ValidationContext<RomToProjectAssociation> validationContext)
+        private static bool HaveValidRomSize(RomToProjectAssociation container, Project? project, ValidationContext<RomToProjectAssociation> validationContext)
         {
-            Debug.Assert(project.Data != null);
+            if (project == null)
+                return false;
             
             if (container.RomBytes?.Length > project.Data.RomSettingsOffset + 10)
                 return true;
@@ -55,10 +56,11 @@ namespace Diz.Core.model.project
             return false;
         }
 
-        private static bool MatchCartTitle(RomToProjectAssociation container, Project project,
+        private static bool MatchCartTitle(RomToProjectAssociation container, Project? project,
             ValidationContext<RomToProjectAssociation> validationContext)
         {
-            Debug.Assert(project.Data != null);
+            if (project == null)
+                return false;
             
             var gameNameFromRomBytes = RomUtil.GetCartridgeTitleFromRom(container.RomBytes, project.Data.RomSettingsOffset);
             var requiredGameNameMatch = project.InternalRomGameName;

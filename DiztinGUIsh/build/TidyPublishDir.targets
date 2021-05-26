@@ -36,8 +36,8 @@ https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/visual-studio-publi
         </ItemGroup>
 
         <!-- move file to lib/ dir -->
-        <!-- note: THIS <Move> works, but, we need to modify our manifests to search this new folder.
-                   for now, disable it.
+        <!-- note: THIS <Move> command is fine, but, we need to modify our manifests to search this new folder.
+            works in net4.8 but not 5.0 yet.
         <Move SourceFiles="%(LibFiles.Identity)" DestinationFolder="$(LibOutDir)%(LibFiles.RecursiveDir)"/>
         -->
 

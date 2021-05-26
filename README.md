@@ -1,4 +1,6 @@
 # DiztinGUIsh ("Diz")
+[![Build Status](https://github.com/Dotsarecool/DiztinGUIsh/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Dotsarecool/DiztinGUIsh/actions/workflows/dotnet.yml)
+
 A Super NES ROM Disassembler and tracelog capture/analysis tool with a focus on collaborative workflow UX. Exports .asm files ready to be compiled back into the original binary. Written in Winforms/C#.
 
 _Diz tools suite:_

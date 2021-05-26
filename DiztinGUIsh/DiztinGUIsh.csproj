@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="../common/CommonSettings.targets" />
 
@@ -10,6 +10,10 @@
     <RootNamespace>DiztinGUIsh</RootNamespace>
     <AssemblyName>DiztinGUIsh</AssemblyName>
     <ApplicationIcon>diz-icon2-magenta-med32x32.ico</ApplicationIcon>
+    <LangVersion>8.0</LangVersion>
+    <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
   
   <!-- import this so our custom targets work -->
@@ -36,6 +40,12 @@
     <PackageReference Include="JetBrains.Annotations">
       <Version>2021.1.0</Version>
     </PackageReference>
+    <PackageReference Include="GitInfo">
+      <Version>2.1.2</Version>
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
   </ItemGroup>
 
 
@@ -249,6 +259,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dist\" />
+    <Folder Include="Properties\DataSources\" />
   </ItemGroup>
   <Import Project="build/TidyPublishDir.targets" />
 </Project>
