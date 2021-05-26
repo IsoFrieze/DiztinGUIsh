@@ -17,34 +17,43 @@ jobs:
 
     - name: Set version string
       id: ver
-      run: echo "::set-output name=ver::DiztinGUIsh-${{ steps.date.outputs.date }}--${{ env.GITHUB_REF_SLUG }}-${{ env.GITHUB_SHA_SHORT }} ${{env.GITHUB_REPOSITORY_OWNER_PART_SLUG != 'Dotsarecool' && env.GITHUB_REPOSITORY_OWNER_PART_SLUG || ''}}"
+      run: echo "::set-output name=ver::DiztinGUIsh-${{ steps.date.outputs.date }}--${{ env.GITHUB_REF_SLUG }}-${{ env.GITHUB_SHA_SHORT }}-${{env.GITHUB_REPOSITORY_OWNER_PART_SLUG != 'dotsarecool' && env.GITHUB_REPOSITORY_OWNER_PART_SLUG || 'official'}}"
 
     - name: Print version
       run: echo "version ${{ steps.ver.outputs.ver }}"
       
     - uses: actions/checkout@v1
-    
     - uses: nuget/setup-nuget@v1
       with:
-        nuget-version: '4.x'
-    - name: Restore packages
-      run: nuget restore DiztinGUIsh.sln
+        nuget-version: '5.x'
+    - uses: actions/cache@v1
+      id: cache
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+    - name: NuGet Restore
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: nuget restore DiztinGUIsh.sln -LockedMode
       
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v1
-      
     - name: Build with MSBuild
       run: msbuild DiztinGUIsh.sln -p:Configuration=Release
 
     - name: Publish
       run: dotnet publish --no-build --verbosity normal -c Release /p:PublishProfile=FolderProfile .\DiztinGUIsh\
 
-    - name: Upload
+    - uses: papeloto/action-zip@v1
+      with:
+        files: DiztinGUIsh/bin/Release/net48/publish
+        dest: ${{ steps.ver.outputs.ver }}.zip
+        
+    - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ steps.ver.outputs.ver }}
+        name: ${{ steps.ver.outputs.ver }}.zip
         path: DiztinGUIsh/bin/Release/net48/publish
-
+        
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
