@@ -57,9 +57,9 @@
       },
       "FluentAssertions.ArgumentMatchers.Moq": {
         "type": "Direct",
-        "requested": "[0.1.3, )",
-        "resolved": "0.1.3",
-        "contentHash": "d0DQbtRGPqHTr4EoBQIjYAk+aJ7eitI6i8M67RAio3AZ3DifXNyLUaGNdgMlqCQWJrbfnb4E46+dkuwmkFU4xQ==",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "vgO07LUp+27O0FndAfJ+vmeobVeSf351VR2AyNxNSGtIj4HwrU5dR4CbghQP3MK9uLVFlZSsJmjeBT+dB++Z6g==",
         "dependencies": {
           "FluentAssertions": "[5.1.1, 6.0.0)",
           "Moq": "[4.7.0, 5.0.0)"

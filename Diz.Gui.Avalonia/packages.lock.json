@@ -65,17 +65,6 @@
           "System.Reactive": "5.0.0"
         }
       },
-      "ReactiveUI.Fody": {
-        "type": "Direct",
-        "requested": "[13.3.2, )",
-        "resolved": "13.3.2",
-        "contentHash": "6Q+El/lnoL/9aZ4uOE0ISb4v3h9YhrhzkkvuX5jfJ1PW5NCXFbiGav6CH51/R9fxXqqAlmerm2fyhsMi/7P3wQ==",
-        "dependencies": {
-          "Fody": "6.5.1",
-          "ReactiveUI": "13.3.2",
-          "System.Reactive": "5.0.0"
-        }
-      },
       "Avalonia.Angle.Windows.Natives": {
         "type": "Transitive",
         "resolved": "2.1.0.2020091801",
@@ -138,8 +127,8 @@
       },
       "DynamicData": {
         "type": "Transitive",
-        "resolved": "7.1.16",
-        "contentHash": "CMXT1lXzKSW3siHty4sNZO5XUHPWMH51aksCwFIW1u3e3Js0zkMSw9DqgNC3eLoIiOKwUO5gPK0YSg96nHl1bQ==",
+        "resolved": "7.1.1",
+        "contentHash": "Pc6J5bFnSxEa64PV2V67FMcLlDdpv6m+zTBKSnRN3aLon/WtWWy8kuDpHFbJlgXHtqc6Nxloj9ItuvDlvKC/8w==",
         "dependencies": {
           "System.Reactive": "5.0.0"
         }
@@ -162,11 +151,6 @@
         "type": "Transitive",
         "resolved": "10.1.0",
         "contentHash": "RxhhfY9IcEY2qUMYjoUxegInbuE5Bwll7dVLsXpiJf25g0ztmzUK+HHqtPcub1caPemhMJsC+NwjHei+NgAkvA=="
-      },
-      "Fody": {
-        "type": "Transitive",
-        "resolved": "6.5.1",
-        "contentHash": "DEw9rPG5vrpaK4vPPze0f4q6Zd0mfzjGNKy49nrmINkftIHpkyf8KH+uC/qF8y6v1askPWu9NbJS9bkmN5wXaA=="
       },
       "HarfBuzzSharp": {
         "type": "Transitive",
@@ -301,11 +285,11 @@
       },
       "ReactiveUI": {
         "type": "Transitive",
-        "resolved": "13.3.2",
-        "contentHash": "+XJGnk+u7ZuYuAaBVfs0X3nLZ6g4ysiZrVou7ndVJYOUFeUW0jyfaMl3TfOqpr/afQNaIw8nY6yOwtI6HGkgsQ==",
+        "resolved": "13.2.10",
+        "contentHash": "fOCbEZ+RsO2Jhv6vB8VX+ZEvczYJaC95atcSG7oXohJeL/sEwbbqvv9k+tbj2l4bRSj2j5CQvhwA3HNLaxlCAg==",
         "dependencies": {
-          "DynamicData": "7.1.16",
-          "Splat": "11.1.1",
+          "DynamicData": "7.1.1",
+          "Splat": "10.0.1",
           "System.Reactive": "5.0.0",
           "System.Runtime.Serialization.Primitives": "4.3.0"
         }
@@ -333,8 +317,8 @@
       },
       "Splat": {
         "type": "Transitive",
-        "resolved": "11.1.1",
-        "contentHash": "qIgixm6tg+6Sztd5BM36Y+sRWdmzlCV2TYnViOSwqvOGAMaYYE9EhIaKHLbZHn6KXWAML8GMGx0kaosUMUA0rA=="
+        "resolved": "10.0.1",
+        "contentHash": "N8BMGVuUBnVLAHSVbna/st8XiLd8ulF3BfkKUSGCPqYpDCis3ELvM+aFaZQLBUIBEcweCYVLq3HFEBqHkCKFyA=="
       },
       "Sprache": {
         "type": "Transitive",

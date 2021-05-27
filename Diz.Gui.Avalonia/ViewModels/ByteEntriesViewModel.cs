@@ -12,7 +12,6 @@ using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using LightInject;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
 
 namespace Diz.Gui.Avalonia.ViewModels
 {
@@ -21,17 +20,22 @@ namespace Diz.Gui.Avalonia.ViewModels
         // [Reactive] public int StartingOffset { get; set; }
         //
         // [Reactive] public int Count { get; set; }
-        
-        [Reactive] 
-        public ObservableCollection<ByteEntryDetailsViewModel> ByteEntries { get; set; }
-        
+
+        // [Reactive] 
+        public ObservableCollection<ByteEntryDetailsViewModel> ByteEntries
+        {
+            get => byteEntries;
+            set => this.RaiseAndSetIfChanged(ref byteEntries, value);
+        }
+
         public Util.NumberBase NumberBaseToShow => Util.NumberBase.Hexadecimal;
 
         public ByteEntry SelectedByteOffset => SelectedItem?.ByteEntry?.ByteEntry!;
 
         // public ReactiveCommand<DataGridCellEditEndedEventArgs, Unit> SetSelectedItem { get; }
 
-        private ByteEntryDetailsViewModel? selectedItem = null;
+        private ByteEntryDetailsViewModel? selectedItem;
+        private ObservableCollection<ByteEntryDetailsViewModel> byteEntries;
 
         public ByteEntryDetailsViewModel? SelectedItem
         {
@@ -45,7 +49,7 @@ namespace Diz.Gui.Avalonia.ViewModels
         public ByteEntriesViewModel()
         {
             // temp hack
-            ByteEntries = new ObservableCollection<ByteEntryDetailsViewModel>(GetByteEntriesSync() ?? Array.Empty<ByteEntryDetailsViewModel>());
+            byteEntries = new ObservableCollection<ByteEntryDetailsViewModel>(GetByteEntriesSync() ?? Array.Empty<ByteEntryDetailsViewModel>());
 
             // byteEntries = this
             //     .WhenAnyValue(x => x.StartingOffset)
