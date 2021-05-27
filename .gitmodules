@@ -1,0 +1,5 @@
+[submodule "Diz.Views.Winforms"]
+	path = Diz.Views.Winforms
+	url = https://github.com/binary1230/Diz.Views.Winforms
+[submodule ".\\Diz.Views.Winforms\\"]
+	branch = main
