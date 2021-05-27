@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net5.0-windows7.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>DiztinGUIsh</RootNamespace>
@@ -14,10 +14,10 @@
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <PackageVersion>3.0.0</PackageVersion>
   </PropertyGroup>
-  
-  <!-- import this so our custom targets work -->
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />  <!-- import this so our custom targets work -->
   
   <ItemGroup>
     <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj" />

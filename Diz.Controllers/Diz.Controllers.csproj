@@ -5,6 +5,7 @@
         <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+        <PackageVersion>3.0.0</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>

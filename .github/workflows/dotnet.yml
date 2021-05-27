@@ -53,7 +53,7 @@ jobs:
 
     - uses: papeloto/action-zip@v1
       with:
-        files: DiztinGUIsh\bin\Release\net5.0-windows\publish\
+        files: DiztinGUIsh\bin\Release\net5.0-windows7.0\publish\
         dest: ${{ steps.ver.outputs.ver }}.zip
         
     - name: Upload Artifact
