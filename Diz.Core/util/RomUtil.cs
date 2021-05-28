@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
+using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model;
-using JetBrains.Annotations;
+using Diz.Core.model.byteSources;
 
 namespace Diz.Core.util
 {
@@ -39,12 +38,17 @@ namespace Diz.Core.util
     
     public static class RomUtil
     {
+        public const int LoromSettingOffset = 0x7FD5;
+        public const int HiromSettingOffset = 0xFFD5;
+        public const int ExhiromSettingOffset = 0x40FFD5;
+        public const int ExloromSettingOffset = 0x407FD5;
+        
         public static int CalculateSnesOffsetWithWrap(int snesAddress, int offset)
         {
             return (GetBankFromSnesAddress(snesAddress) << 16) + ((snesAddress + offset) & 0xFFFF);
         }
 
-        private static int GetBankFromSnesAddress(int snesAddress)
+        public static int GetBankFromSnesAddress(int snesAddress)
         {
             return (snesAddress >> 16) & 0xFF;
         }
@@ -59,8 +63,8 @@ namespace Diz.Core.util
             offset < romBytes.Count
                 ? (romBytes[offset] & 0x10) != 0 ? RomSpeed.FastRom : RomSpeed.SlowRom
                 : RomSpeed.Unknown;
-
-
+        
+        
         /// <summary>
         /// Return the "title" information (i.e. the name of the game) from the SNES ROM header
         /// </summary>
@@ -85,7 +89,13 @@ namespace Diz.Core.util
 
         public static int ConvertSnesToPc(int address, RomMapMode mode, int size)
         {
-            int UnmirroredOffset(int offset) => RomUtil.UnmirroredOffset(offset, size);
+            var index = ConvertSnesToPcRaw(address, mode, size);
+            return index < 0 ? -1 : index;
+        }
+
+        private static int ConvertSnesToPcRaw(int address, RomMapMode mode, int size)
+        {
+            int GetUnmirroredOffset(int offset) => UnmirroredOffset(offset, size);
 
             // WRAM is N/A to PC addressing
             if ((address & 0xFE0000) == 0x7E0000) return -1;
@@ -98,18 +108,18 @@ namespace Diz.Core.util
                 case RomMapMode.LoRom:
                 {
                     // SRAM is N/A to PC addressing
-                    if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) 
+                    if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0))
                         return -1;
 
-                    return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                    return GetUnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                 }
                 case RomMapMode.HiRom:
                 {
-                    return UnmirroredOffset(address & 0x3FFFFF);
+                    return GetUnmirroredOffset(address & 0x3FFFFF);
                 }
                 case RomMapMode.SuperMmc:
                 {
-                    return UnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
+                    return GetUnmirroredOffset(address & 0x3FFFFF); // todo, treated as hirom atm
                 }
                 case RomMapMode.Sa1Rom:
                 case RomMapMode.ExSa1Rom:
@@ -118,43 +128,45 @@ namespace Diz.Core.util
                     if (address >= 0x400000 && address <= 0x7FFFFF) return -1;
 
                     if (address >= 0xC00000)
-                        return mode == RomMapMode.ExSa1Rom ? UnmirroredOffset(address & 0x7FFFFF) : UnmirroredOffset(address & 0x3FFFFF);
+                        return mode == RomMapMode.ExSa1Rom
+                            ? GetUnmirroredOffset(address & 0x7FFFFF)
+                            : GetUnmirroredOffset(address & 0x3FFFFF);
 
                     if (address >= 0x800000) address -= 0x400000;
 
                     // SRAM is N/A to PC addressing
                     if (((address & 0x8000) == 0)) return -1;
 
-                    return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                    return GetUnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
                 }
                 case RomMapMode.SuperFx:
                 {
                     // BW-RAM is N/A to PC addressing
-                    if (address >= 0x600000 && address <= 0x7FFFFF) 
+                    if (address >= 0x600000 && address <= 0x7FFFFF)
                         return -1;
 
                     if (address < 0x400000)
-                        return UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        return GetUnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
 
                     if (address < 0x600000)
-                        return UnmirroredOffset(address & 0x3FFFFF);
+                        return GetUnmirroredOffset(address & 0x3FFFFF);
 
                     if (address < 0xC00000)
-                        return 0x200000 + UnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
+                        return 0x200000 + GetUnmirroredOffset(((address & 0x7F0000) >> 1) | (address & 0x7FFF));
 
-                    return 0x400000 + UnmirroredOffset(address & 0x3FFFFF);
+                    return 0x400000 + GetUnmirroredOffset(address & 0x3FFFFF);
                 }
                 case RomMapMode.ExHiRom:
                 {
-                    return UnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
+                    return GetUnmirroredOffset(((~address & 0x800000) >> 1) | (address & 0x3FFFFF));
                 }
                 case RomMapMode.ExLoRom:
                 {
                     // SRAM is N/A to PC addressing
-                    if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0)) 
+                    if (((address & 0x700000) == 0x700000) && ((address & 0x8000) == 0))
                         return -1;
 
-                    return UnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
+                    return GetUnmirroredOffset((((address ^ 0x800000) & 0xFF0000) >> 1) | (address & 0x7FFF));
                 }
                 default:
                 {
@@ -318,6 +330,16 @@ namespace Diz.Core.util
             return b ? "8" : "16";
         }
 
+        // read a fixed length string from an array of bytes. does not check for null termination
+        public static string ReadStringFromByteArray(byte[] bytes, int count, int offset)
+        {
+            var myName = "";
+            for (var i = 0; i < count; i++)
+                myName += (char)bytes[offset + i];
+
+            return myName;
+        }
+
         public static byte[] ReadRomFileBytes(string filename)
         {
             var smc = File.ReadAllBytes(filename);
@@ -337,7 +359,7 @@ namespace Diz.Core.util
 
             return rom;
         }
-
+        
         public static Dictionary<int, FlagType> GenerateHeaderFlags(int romSettingsOffset, byte[] romBytes)
         {
             var flags = new Dictionary<int, FlagType>();
@@ -413,24 +435,50 @@ namespace Diz.Core.util
 
         public const int LengthOfTitleName = 0x15;
 
-        public static LogCreator.OutputResult GetSampleAssemblyOutput(LogWriterSettings sampleSettings)
+        public static ByteSourceMapping CreateRomMappingFromRomByteSource(ByteSource romByteSource, RomMapMode romMapMode, RomSpeed romSpeed)
         {
-            var sampleRomData = SampleRomData.CreateSampleData();
-            sampleSettings.Structure = LogCreator.FormatStructure.SingleFile;
-            sampleSettings.FileOrFolderOutPath = "";
-            sampleSettings.OutputToString = true;
-            sampleSettings.RomSizeOverride = sampleRomData.OriginalRomSizeBeforePadding;
-            var lc = new LogCreator()
+            return new()
             {
-                Settings = sampleSettings,
-                Data = sampleRomData,
+                ByteSource = romByteSource,
+                RegionMapping = new RegionMappingSnesRom
+                {
+                    RomSpeed = romSpeed,
+                    RomMapMode = romMapMode,
+                }
             };
-            return lc.CreateLog();
         }
 
-        public const int LoromSettingOffset = 0x7FD5;
-        public const int HiromSettingOffset = 0xFFD5;
-        public const int ExhiromSettingOffset = 0x40FFD5;
-        public const int ExloromSettingOffset = 0x407FD5;
+        public static ByteSourceMapping CreateRomMappingFromRomRawBytes(
+            IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
+        {
+            var data = actualRomBytes.Select(b => new ByteEntry() {Byte = b}).ToList();
+
+            var romByteSource = new ByteSource
+            {
+                Bytes = new StorageList<ByteEntry>(data),
+                Name = "Snes ROM"
+            };
+            
+            return CreateRomMappingFromRomByteSource(romByteSource, romMapMode, romSpeed);
+        }
+
+        public static ByteSource CreateSnesAddressSpace()
+        {
+            const int snesAddressableBytes = 0x1000000;
+            return new ByteSource
+            {
+                Bytes = new StorageSparse<ByteEntry>(snesAddressableBytes),
+                Name = "SNES Main Cpu BUS",
+            };
+        }
+        
+        public static bool IsLocationPoint(this ILogCreatorDataSource data, int pointer, InOutPoint mustHaveFlag) =>
+            (data.GetInOutPoint(pointer) & mustHaveFlag) != 0;
+
+        public static bool IsLocationAnEndPoint(this ILogCreatorDataSource data, int pointer) => 
+            IsLocationPoint(data, pointer, InOutPoint.EndPoint);
+        
+        public static bool IsLocationAReadPoint(this ILogCreatorDataSource data, int pointer) => 
+            IsLocationPoint(data, pointer, InOutPoint.ReadPoint);
     }
 }

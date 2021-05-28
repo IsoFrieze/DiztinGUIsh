@@ -1,4 +1,7 @@
-﻿namespace DiztinGUIsh.window
+﻿using DiztinGUIsh.window.usercontrols.visualizer.graphics;
+using DiztinGUIsh.window.usercontrols.visualizer.legend;
+
+namespace DiztinGUIsh.window
 {
     partial class VisualizerForm
     {
@@ -28,11 +31,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VisualizerForm));
             this.panelTop = new System.Windows.Forms.Panel();
             this.panelLegend = new System.Windows.Forms.Panel();
-            this.bankLegend1 = new DiztinGUIsh.window.usercontrols.BankLegend();
+            this.bankLegend1 = new BankLegend();
             this.panelBottom = new System.Windows.Forms.Panel();
-            this.romFullVisualizer1 = new DiztinGUIsh.window.usercontrols.RomFullVisualizer();
+            this.romFullVisualizer1 = new RomFullVisualizer();
             this.panelTop.SuspendLayout();
             this.panelLegend.SuspendLayout();
             this.panelBottom.SuspendLayout();
@@ -44,8 +48,9 @@
             this.panelTop.Controls.Add(this.panelLegend);
             this.panelTop.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelTop.Location = new System.Drawing.Point(0, 0);
+            this.panelTop.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.panelTop.Name = "panelTop";
-            this.panelTop.Size = new System.Drawing.Size(765, 154);
+            this.panelTop.Size = new System.Drawing.Size(892, 177);
             this.panelTop.TabIndex = 1;
             // 
             // panelLegend
@@ -53,8 +58,9 @@
             this.panelLegend.Controls.Add(this.bankLegend1);
             this.panelLegend.Dock = System.Windows.Forms.DockStyle.Left;
             this.panelLegend.Location = new System.Drawing.Point(0, 0);
+            this.panelLegend.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.panelLegend.Name = "panelLegend";
-            this.panelLegend.Size = new System.Drawing.Size(567, 152);
+            this.panelLegend.Size = new System.Drawing.Size(662, 175);
             this.panelLegend.TabIndex = 0;
             // 
             // bankLegend1
@@ -73,9 +79,10 @@
             this.panelBottom.AutoSize = true;
             this.panelBottom.Controls.Add(this.romFullVisualizer1);
             this.panelBottom.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelBottom.Location = new System.Drawing.Point(0, 154);
+            this.panelBottom.Location = new System.Drawing.Point(0, 177);
+            this.panelBottom.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.panelBottom.Name = "panelBottom";
-            this.panelBottom.Size = new System.Drawing.Size(765, 363);
+            this.panelBottom.Size = new System.Drawing.Size(892, 420);
             this.panelBottom.TabIndex = 2;
             // 
             // romFullVisualizer1
@@ -89,13 +96,15 @@
             // 
             // VisualizerForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(765, 517);
+            this.ClientSize = new System.Drawing.Size(892, 597);
             this.Controls.Add(this.panelBottom);
             this.Controls.Add(this.panelTop);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "VisualizerForm";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -115,7 +124,7 @@
         private System.Windows.Forms.Panel panelTop;
         private System.Windows.Forms.Panel panelLegend;
         private System.Windows.Forms.Panel panelBottom;
-        private usercontrols.BankLegend bankLegend1;
-        private usercontrols.RomFullVisualizer romFullVisualizer1;
+        private BankLegend bankLegend1;
+        private RomFullVisualizer romFullVisualizer1;
     }
 }

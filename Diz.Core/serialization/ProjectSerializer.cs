@@ -1,14 +1,12 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
-using Diz.Core.util;
 
 namespace Diz.Core.serialization
 {
     public abstract class ProjectSerializer
     {
-        public const string Watermark = "DiztinGUIsh";
+        public const string DizWatermark = "DiztinGUIsh";
 
         public abstract byte[] Save(Project project);
         public abstract (ProjectXmlSerializer.Root xmlRoot, string warning) Load(byte[] rawBytes);
@@ -23,6 +21,7 @@ namespace Diz.Core.serialization
             return Load(File.ReadAllBytes(filename));
         }
 
+        #if HEAVY_LOADSAVE_VERIFICATION
         protected static void DebugVerifyProjectEquality(Project project1, Project project2, bool deepCut = true)
         {
             if (deepCut)
@@ -37,6 +36,7 @@ namespace Diz.Core.serialization
             }
             Debug.Assert(project1.Equals(project2));
         }
+        #endif
 
         private MigrationRunner migrationRunner;
         

@@ -16,9 +16,13 @@ namespace Diz.Core.serialization
         public (Project project, string warning) Open(string filename)
         {
             Trace.WriteLine("Opening Project START");
+            
+            #if PROFILING
+            using var profilerSnapshot = new ProfilerDotTrace.CaptureSnapshot();
+            #endif
 
             var (serializer, xmlRoot, warning) = Deserialize(filename);
-            VerifyIntegrityDeserialized(xmlRoot);
+            // VerifyIntegrityDeserialized(xmlRoot); // enable for extra checking
             PostSerialize(filename, xmlRoot, serializer);
 
             Trace.WriteLine("Opening Project END");
@@ -27,7 +31,14 @@ namespace Diz.Core.serialization
 
         private void PostSerialize(string filename, ProjectXmlSerializer.Root xmlRoot, ProjectSerializer serializer)
         {
-            xmlRoot.Project.ProjectFileName = filename;
+            if (xmlRoot?.Project?.Data?.SnesAddressSpace != null || xmlRoot?.Project?.Session == null)
+                throw new InvalidDataException(
+                    "Internal error with deserialized data, either Project, Data, Session, or SnesAddressSpace failed to load correctly.");
+
+            xmlRoot.Project.Session = new ProjectSession(xmlRoot.Project)
+            {
+                ProjectFileName = filename
+            };
 
             // at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
             // It would be easy to store the ROM bytes in the save file, but, for copyright reasons,
@@ -45,12 +56,12 @@ namespace Diz.Core.serialization
             romAddCmd.TryReadAttachedProjectRom();
         }
 
-        private static void VerifyIntegrityDeserialized(ProjectXmlSerializer.Root xmlRoot)
-        {
-            var data = xmlRoot.Project.Data;
-            Debug.Assert(data.Labels != null && data.Comments != null);
-            Debug.Assert(data.RomBytes != null && data.RomBytes.Count > 0);
-        }
+        // private static void VerifyIntegrityDeserialized(ProjectXmlSerializer.Root xmlRoot)
+        // {
+        //     // var data = xmlRoot.Project.Data;
+        //     // Debug.Assert(data.Labels != null && data.Comments != null);
+        //     // Debug.Assert(data.RomBytes != null && data.RomBytes.Count > 0);
+        // }
 
         private (ProjectSerializer serializer, ProjectXmlSerializer.Root xmlRoot, string warning) Deserialize(string filename)
         {
@@ -99,8 +110,12 @@ namespace Diz.Core.serialization
             var data = DoSave(project, filename, serializer);
 
             WriteBytes(filename, data);
-            project.UnsavedChanges = false;
-            project.ProjectFileName = filename;
+            
+            if (project.Session != null)
+            {
+                project.Session.UnsavedChanges = false;
+                project.Session.ProjectFileName = filename;
+            }
         }
 
         private byte[] DoSave(Project project, string filename, ProjectSerializer serializer)

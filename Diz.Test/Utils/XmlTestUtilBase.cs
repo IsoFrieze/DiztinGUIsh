@@ -1,7 +1,6 @@
-﻿using Diz.Test.Utils;
-using Xunit.Abstractions;
+﻿using Xunit.Abstractions;
 
-namespace Diz.Test.Tests.SerializationTests
+namespace Diz.Test.Utils
 {
     public abstract class XmlTestUtilBase
     {

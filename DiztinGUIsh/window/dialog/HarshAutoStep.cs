@@ -2,10 +2,10 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Forms;
-using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window.dialog
 {
     public partial class HarshAutoStep : Form
     {
@@ -91,7 +91,7 @@ namespace DiztinGUIsh
             });
         }
 
-        private void OnTextChanged(TextBox textBox, Action<int> OnResult)
+        private void OnTextChanged(TextBox textBox, Action<int> onResult)
         {
             if (updatingText)
                 return;
@@ -100,7 +100,7 @@ namespace DiztinGUIsh
             var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
             if (int.TryParse(textBox.Text, style, null, out var result))
-                OnResult(result);
+                onResult(result);
 
             UpdateText(textBox);
         }

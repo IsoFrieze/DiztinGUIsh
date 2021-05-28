@@ -1,20 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="../common/CommonSettings.targets" />
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net5.0-windows7.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>DiztinGUIsh</RootNamespace>
     <AssemblyName>DiztinGUIsh</AssemblyName>
-    <LangVersion>8.0</LangVersion>
+    <ApplicationIcon>diz-icon2-magenta-med32x32.ico</ApplicationIcon>
+    <LangVersion>latest</LangVersion>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <PackageVersion>3.0.0</PackageVersion>
   </PropertyGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />  <!-- import this so our custom targets work -->
+  
   <ItemGroup>
+    <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+    <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +31,11 @@
     </PackageReference>
     <PackageReference Include="FastBitmapLib">
       <Version>2.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="GitInfo">
+      <Version>2.1.2</Version>
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="JetBrains.Annotations">
       <Version>2021.1.0</Version>
@@ -133,14 +146,9 @@
     <Compile Update="window\DataGridEditorForm.Designer.cs">
       <DependentUpon>DataGridEditorForm.cs</DependentUpon>
     </Compile>
-    <Compile Update="window\dialog\MarkManyDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Update="window\dialog\MarkManyDialog.cs" />
     <Compile Update="window\dialog\MarkManyDialog.Designer.cs">
       <DependentUpon>MarkManyDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Update="window\MainWindow.cs">
-      <SubType>Form</SubType>
     </Compile>
     <Compile Update="window\dialog\MisalignmentChecker.cs">
       <SubType>Form</SubType>
@@ -148,10 +156,6 @@
     <Compile Update="window\dialog\MisalignmentChecker.Designer.cs">
       <DependentUpon>MisalignmentChecker.cs</DependentUpon>
     </Compile>
-
-    <EmbeddedResource Update="window\MainWindow.resx">
-      <DependentUpon>MainWindow.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Update="window\AliasList.resx">
       <DependentUpon>AliasList.cs</DependentUpon>
     </EmbeddedResource>
@@ -217,9 +221,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="..\nuget.config">
-      <Link>diztinguish\nuget.config</Link>
-    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -229,6 +230,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="build\TidyPublishDir.targets" />
     <Compile Update="window\usercontrols\DataGridEditorControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -240,10 +242,16 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="dist\" />
+    <Content Include="..\.github\workflows\dotnet.yml">
+      <Link>diztinguish\.github\workflows\dotnet.yml</Link>
+    </Content>
+    <Content Include="..\common\CommonSettings.targets">
+      <Link>diztinguish\common\CommonSettings.targets</Link>
+    </Content>
   </ItemGroup>
-  <!--custom build targets for packing up final distribution of files-->
+  <ItemGroup>
+    <Folder Include="dist\" />
+    <Folder Include="Properties\DataSources\" />
+  </ItemGroup>
   <Import Project="build/TidyPublishDir.targets" />
-  
-  
 </Project>

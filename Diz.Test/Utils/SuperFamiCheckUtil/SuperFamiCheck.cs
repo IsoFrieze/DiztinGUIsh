@@ -44,6 +44,4 @@ namespace Diz.Test.Utils.SuperFamiCheckUtil
             return RunCommand(escapedFilename).Split('\n').ToList();
         }
     }
-
-    public class FactIfFamicheckPresent : FactIfFilePresent { public FactIfFamicheckPresent() => ExePath = SuperFamiCheckTool.Exe; }
 }

@@ -1,16 +1,17 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
-using System.Xml;
-using Diz.Core;
 using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
+using Diz.Test.SerializationTests;
+using Diz.Test.Utils;
 using Diz.Test.Utils.SuperFamiCheckUtil;
-using ExtendedXmlSerializer;
 using FluentAssertions;
 using Xunit;
 
-namespace Diz.Test.Tests
+namespace Diz.Test.Tests.RomInterfaceTests
 {
     public static class CartNameTests
     {
@@ -34,7 +35,7 @@ namespace Diz.Test.Tests
             RawRomBytes.Length.Should().Be(RomUtil.LengthOfTitleName);
 
             // convert to UTF8 bytes
-            var shiftJisEncoding = Encoding.GetEncoding(932);
+            var shiftJisEncoding = ByteUtil.ShiftJisEncoding;
             var utfBytes = Encoding.Convert(shiftJisEncoding, Encoding.UTF8, RawRomBytes);
             utfBytes.Length.Should().Be(35);
 
@@ -57,7 +58,7 @@ namespace Diz.Test.Tests
         {
             var fakeRom = Enumerable
                 .Range(0, 0x7FC0)
-                .Select(x => (byte) 0x00)
+                .Select(_ => (byte) 0x00)
                 .Concat(RawRomBytes)
                 .ToArray();
 
@@ -78,13 +79,8 @@ namespace Diz.Test.Tests
         [Fact]
         public static void TestXmlCycle3()
         {
-            var serializer = XmlSerializerSupport.GetSerializer().Create();
-
-            var xmlStr = serializer.Serialize(
-                new XmlWriterSettings(),
-                Root
-            );
-            var restoredRoot = serializer.Deserialize<TestRoot>(xmlStr);
+            var xmlStr = XmlSerializationSupport.Serialize(Root);
+            var restoredRoot = XmlSerializationSupport.Deserialize<TestRoot>(xmlStr);
 
             xmlStr.Should().Contain($"CartTitle=\"{ExpectedTitleStr}\"");
 
@@ -99,7 +95,7 @@ namespace Diz.Test.Tests
             var expectedTitle = SampleRomData.GetSampleUtf8CartridgeTitle();
             TestRomCartTitle(srcProject, expectedTitle);
         }
-
+        
         internal static void TestRomCartTitle(Project project, string expectedTitle)
         {
             ByteUtil.ConvertUtf8ToShiftJisEncodedBytes(project.InternalRomGameName)
@@ -122,9 +118,11 @@ namespace Diz.Test.Tests
                 "checksum bytes in the ROM should match the computed checksum");
         }
 
-        const string RomFileName = @"D:\roms\SNES\Chrono Trigger (U) [!].smc";
-
-        [FactIfFamicheckPresent]
+        // note: you need to put this on your local system for it to work.
+        // gotta figure out how to make this portable without running into weirdness.
+        const string RomFileName = @"D:\roms\SNES\ct (U) [!].smc";
+        
+        [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
         public static void TestFamicheckTool()
         {
             var result = SuperFamiCheckTool.Run(RomFileName);
@@ -134,8 +132,8 @@ namespace Diz.Test.Tests
             // it's stored in the ROM file like this:
             // 73 87 8C 78
         }
-
-        [FactIfFamicheckPresent]
+        
+        [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
         public static void TestInternalChecksumVsExternal()
         {
             var result = SuperFamiCheckTool.Run(RomFileName);
@@ -170,20 +168,19 @@ namespace Diz.Test.Tests
 
             project.Data.ComputeChecksum().Should().Be((ushort)checksum);
             project.Data.ComputeIsChecksumValid().Should().Be(true);
-            
-            var firstByte = project.Data.RomBytes[0x00].Rom;
-            firstByte.Should().NotBe(0);
-            project.Data.RomBytes[0x00].Rom = 0;
-            project.Data.ComputeIsChecksumValid().Should().Be(false);
-            project.Data.FixChecksum();
-            project.Data.ComputeIsChecksumValid().Should().Be(true);
-            
-            project.Data.RomBytes[0x00].Rom = firstByte;
-            project.Data.ComputeIsChecksumValid().Should().Be(false);
-            project.Data.FixChecksum();
-            project.Data.ComputeIsChecksumValid().Should().Be(true);
-            
 
+            var firstByte = project.Data[0x00];
+            firstByte.Should().NotBe(0);
+            project.Data[0x00] = 0;
+            project.Data.ComputeIsChecksumValid().Should().Be(false);
+            project.Data.FixChecksum();
+            project.Data.ComputeIsChecksumValid().Should().Be(true);
+            
+            project.Data[0x00] = firstByte;
+            project.Data.ComputeIsChecksumValid().Should().Be(false);
+            project.Data.FixChecksum();
+            project.Data.ComputeIsChecksumValid().Should().Be(true);
+            
             // SNES docs dictate:
             // 15. Complement Check (0xFFDC, 0xFFDD)
             // 16. Check Sum (0xFFDE, 0xFFDF)
@@ -191,6 +188,36 @@ namespace Diz.Test.Tests
             // in the actual ROM file, it appears like this (remember: little endian for SNES)
             // complement   checksum
             // 73 87        8C 78
+        }
+        
+        [Fact]
+        public static void BugfixRemoveLabelWhenSnesAddressSpaceEmpty2()
+        {
+            TestRemoveLabelFromNullByteIndex(new ByteSource
+            {
+                Bytes = new StorageSparse<ByteEntry>(10)
+            });
+        }
+
+        private static void TestRemoveLabelFromNullByteIndex(ByteSource byteSourceSparse)
+        {
+            byteSourceSparse.IsValidIndex(0).Should().Be(true);
+            byteSourceSparse.Bytes[0].Should().Be(null);
+            byteSourceSparse.Bytes.Should().BeOfType(typeof(StorageSparse<ByteEntry>));
+            byteSourceSparse.Invoking(x => x.RemoveAllAnnotationsAt(0, NormalLabelProvider.IsLabel))
+                .Should().NotThrow<NullReferenceException>();
+        }
+
+        [Fact]
+        public static void BugfixRemoveLabelWhenSnesAddressSpaceEmpty1()
+        {
+            var project = SampleRomData.CreateSampleProject();
+            
+            project.Data.Labels.Invoking(labelProvider=>labelProvider
+                .RemoveLabel(0xFF))
+                .Should().NotThrow<NullReferenceException>();
+
+            TestRemoveLabelFromNullByteIndex(project.Data.SnesAddressSpace);
         }
     }
 }

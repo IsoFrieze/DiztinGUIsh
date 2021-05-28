@@ -5,7 +5,7 @@ using Diz.Core.util;
 
 // shows all the legend items in a collection
 
-namespace DiztinGUIsh.window.usercontrols
+namespace DiztinGUIsh.window.usercontrols.visualizer.legend
 {
     public partial class BankLegend : UserControl
     {

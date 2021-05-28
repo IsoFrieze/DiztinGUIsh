@@ -1,43 +1,102 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
-
-namespace DiztinGUIsh
+﻿/*
+namespace Diz.Core.model
 {
-    public class DizDataModel : PropertyNotifyChanged
-    {
 
-    }
-    public class PropertyNotifyChanged : INotifyPropertyChanged
+    /// <summary>
+    ///     This class adds the ability to refresh the list when any property of
+    ///     the objects changes in the list which implements the INotifyPropertyChanged. 
+    /// </summary>
+    public class ItemsChangeObservableCollection<TKey, TValue> :
+        ObservableDictionary<TKey, TValue> where TValue : INotifyPropertyChanged
     {
-        // this stuff lets other parts of code subscribe to events that get fired anytime
-        // properties of our class change.
-        //
-        // Just hook up SetField() to the 'set' param of any property you would like to 
-        // expose to outside classes.
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected bool SetField<T>(ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
+        /*
+        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (compareRefOnly)
+            if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                if (ReferenceEquals(field, value))
-                    return false;
-            } 
-            else if (EqualityComparer<T>.Default.Equals(field, value))
+                RegisterPropertyChanged(e.NewItems);
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
-                return false;
+                UnRegisterPropertyChanged(e.OldItems);
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Replace)
+            {
+                UnRegisterPropertyChanged(e.OldItems);
+                RegisterPropertyChanged(e.NewItems);
             }
 
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
+            base.OnCollectionChanged(e);
         }
 
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected override void ClearItems()
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            UnRegisterPropertyChanged(this);
+            base.ClearItems();
+        }
+
+        private void RegisterPropertyChanged(IList items)
+        {
+            foreach (INotifyPropertyChanged item in items)
+            {
+                if (item != null)
+                {
+                    item.PropertyChanged += new PropertyChangedEventHandler(item_PropertyChanged);
+                }
+            }
+        }
+
+        private void UnRegisterPropertyChanged(IList items)
+        {
+            foreach (INotifyPropertyChanged item in items)
+            {
+                if (item != null)
+                {
+                    item.PropertyChanged -= new PropertyChangedEventHandler(item_PropertyChanged);
+                }
+            }
+        }
+
+        private void item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+        
+    }#1#
+
+    /*public class Watcher<TK, TV> : INotifyPropertyChanged, INotifyCollectionChanged where TV : INotifyPropertyChanged
+    {
+        public ObservableDictionary<TK, TV> Dict { get; init; }
+
+        public Watcher()
+        {
+            Dict.CollectionChanged += DictOnCollectionChanged;
+        }
+
+        public bool SendNotificationChangedEvents { get; set; } = true;
+
+        private void DictOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+                foreach (TV item in e.NewItems)
+                    item.PropertyChanged += IndividualPropChanged;
+
+            if (e.OldItems != null)
+                foreach (TV item in e.OldItems)
+                    item.PropertyChanged -= IndividualPropChanged;
+
+            if (SendNotificationChangedEvents)
+                CollectionChanged?.Invoke(sender, e);
+        }
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void IndividualPropChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (SendNotificationChangedEvents)
+                PropertyChanged?.Invoke(sender, e);
         }
     }
 }
+*/

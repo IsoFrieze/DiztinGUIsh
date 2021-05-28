@@ -1,9 +1,8 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 using Diz.Core.model;
-using ExtendedXmlSerializer;
 
 namespace Diz.Core.serialization.xml_serializer
 {
@@ -19,8 +18,10 @@ namespace Diz.Core.serialization.xml_serializer
         public const int CurrentSaveFormatVersion = 101;
 
         // update this if we are dropping support for really old save formats.
+        // ReSharper disable once UnusedMember.Local
         public const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
 
+        [SuppressMessage("ReSharper", "UnusedMember.Local")]
         public class Root
         {
             // XML serializer specific metadata, top-level deserializer.
@@ -37,7 +38,7 @@ namespace Diz.Core.serialization.xml_serializer
             // The actual project itself. Almost any change you want to make should go in here.
             public Project Project { get; set; }
         };
-
+        
         public override byte[] Save(Project project)
         {
             // Wrap the project in a top-level root element with some info about the XML file
@@ -45,15 +46,13 @@ namespace Diz.Core.serialization.xml_serializer
             var rootElement = new Root
             {
                 SaveVersion = CurrentSaveFormatVersion,
-                Watermark = ProjectSerializer.Watermark,
+                Watermark = ProjectSerializer.DizWatermark,
                 Project = project,
             };
 
             BeforeSerialize?.Invoke(this, rootElement);
 
-            var xmlStr = XmlSerializerSupport.GetSerializer().Create().Serialize(
-                new XmlWriterSettings {Indent = true},
-                rootElement);
+            var xmlStr = XmlSerializationSupport.Serialize(rootElement);
 
             return Encoding.UTF8.GetBytes(xmlStr);
         }
@@ -84,7 +83,7 @@ namespace Diz.Core.serialization.xml_serializer
 
         // finally. this is the real deal.
         private static Root DeserializeProjectXml(string xmlStr) => 
-            XmlSerializerSupport.GetSerializer().Create().Deserialize<Root>(xmlStr);
+            XmlSerializationSupport.Deserialize<Root>(xmlStr);
 
         // return the save file version# detected in the raw data
         private static int RunPreDeserializeIntegrityChecks(string rawXml)
@@ -110,7 +109,7 @@ namespace Diz.Core.serialization.xml_serializer
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private static void RunIntegrityChecks(int saveVersion, string watermark)
         {
-            if (watermark != Watermark)
+            if (watermark != DizWatermark)
                 throw new InvalidDataException(
                     "This file doesn't appear to be a valid DiztinGUIsh XML file (missing/invalid watermark element in XML)");
             

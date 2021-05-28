@@ -22,7 +22,7 @@ namespace Diz.Core.util
             if (string.IsNullOrEmpty(addressTxt))
                 return false;
 
-            var inputText = new string(Array.FindAll<char>(addressTxt.ToCharArray(), (c =>
+            var inputText = new string(Array.FindAll(addressTxt.ToCharArray(), (c =>
                     (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
                 )));
 
@@ -221,8 +221,21 @@ namespace Diz.Core.util
         // Cart names in the ROM use "shift-JIS" encoding, which is ASCII with extra japanese chars.
         // SNES games use it for their text fields in the header, particularly the cartridge title.
         // This needs to be parsed carefully.
-        public static Encoding ShiftJisEncoding => Encoding.GetEncoding(932);
-        
+        private static bool _registeredEncoding;
+        public static Encoding ShiftJisEncoding
+        {
+            get
+            {
+                if (!_registeredEncoding)
+                {
+                    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                    _registeredEncoding = true;
+                }
+
+                return Encoding.GetEncoding(932);
+            }
+        }
+
         public static string ReadShiftJisEncodedString(byte[] buffer, int index = 0, int count = -1) => 
             ReadStringFromByteArray(buffer, index, count, ShiftJisEncoding);
         

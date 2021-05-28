@@ -1,0 +1,98 @@
+﻿<reactiveUi:ReactiveUserControl
+    x:TypeArguments="viewModels:ByteEntriesViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:reactiveUi="http://reactiveui.net"
+    xmlns:viewModels="clr-namespace:Diz.ViewModels;assembly=Diz.ViewModels"
+    mc:Ignorable="d"
+    d:DesignWidth="800" d:DesignHeight="450"
+    x:Class="Diz.Gui.Avalonia.Views.UserControls.MainGridUserControl">
+
+    <!-- 
+    DataGrid below will have the Items databound from code.
+    Our DataContext might be ... wrong.... or something.
+    This is a view for a ByteEntriesViewModel,
+    but the datagrid is for the items
+    -->
+    
+    <Design.DataContext>
+        <viewModels:ByteEntriesViewModel />
+    </Design.DataContext>
+
+    <!-- <DataGridTextColumn Header="GDP" Binding="{Binding GDP}" Width="3*" CellStyleClasses="gdp" /> -->
+    <!--<UserControl.Styles>
+        ~1~<Style Selector="DataGridCell.gdp">
+            <Setter Property="Background" Value="{Binding Path=GDP, Mode=OneWay, Converter={StaticResource GDPConverter}}" />
+        </Style>@1@
+        ~1~<Style Selector="DataGridCell:current">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+        </Style>
+        <Style Selector="DataGridCell:selected">
+            <Setter Property="Background" Value="Red" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>@1@
+        
+        ~1~<Style Selector="DataGridTextColumn[='Label']">
+            <Setter Property="FontSize" Value="{Binding SelectedFontSize}"/>
+        </Style>@1@
+        ~1~<Style Selector="Button.tabButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource TabButtonHoverBrush}" />
+        </Style>@1@
+        
+        <Style Selector="DataGridTextColumn.dgLabel">
+            <Setter Property="Background" Value="Red" />
+        </Style>
+    </UserControl.Styles>-->
+    
+    <StackPanel>
+        <DataGrid RowBackground="White" AlternatingRowBackground="White" GridLinesVisibility="All" x:Name="MainGrid">
+            
+            <DataGrid.Columns>
+            <DataGridTextColumn Header="Label"
+                                Binding="{Binding ByteEntry.Label}"
+                                Width="*"
+                                CellStyleClasses="dgLabel"
+                                />
+                <DataGridTextColumn Header="PC"
+                                    Binding="{Binding ByteEntry.Offset}"
+                                    Width=".2*" />
+                <DataGridTextColumn Header="@"
+                                    Binding="{Binding ByteEntry.NumericRep}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="#"
+                                    Binding="{Binding ByteEntry.AsciiCharRep}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="&lt;*&gt;"
+                                    Binding="{Binding ByteEntry.Point}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="Instruction"
+                                    Binding="{Binding ByteEntry.Instruction}"
+                                    Width="*" />
+                <DataGridTextColumn Header="IA"
+                                    Binding="{Binding ByteEntry.IA}"
+                                    Width=".2*" />
+                <DataGridTextColumn Header="TypeFlag"
+                                    Binding="{Binding ByteEntry.TypeFlag}"
+                                    Width=".2*" />
+                <DataGridTextColumn Header="B"
+                                    Binding="{Binding ByteEntry.DataBank}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="D"
+                                    Binding="{Binding ByteEntry.DirectPage}"
+                                    Width=".2*" />
+                <DataGridTextColumn Header="M"
+                                    Binding="{Binding ByteEntry.MFlag}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="X"
+                                    Binding="{Binding ByteEntry.XFlag}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="Comment"
+                                    Binding="{Binding ByteEntry.Comment}"
+                                    Width=".5*" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </StackPanel>
+</reactiveUi:ReactiveUserControl>

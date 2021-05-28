@@ -12,7 +12,7 @@ namespace Diz.Core.import
             return RomUtil.ConvertSnesToPc(modDataSnesAddress, romMapModeCached, romSizeCached);
         }
 
-        private static int GetNextSNESAddress(int modDataSnesAddress)
+        private static int GetNextSnesAddress(int modDataSnesAddress)
         {
             return RomUtil.CalculateSnesOffsetWithWrap(modDataSnesAddress, 1);
         }
@@ -22,7 +22,7 @@ namespace Diz.Core.import
             return currentIndex == 0 ? FlagType.Opcode : FlagType.Operand;
         }
 
-        private void UpdatePCAddress(ModificationData modData)
+        private void UpdatePcAddress(ModificationData modData)
         {
             modData.Pc = ConvertSnesToPc(modData.SnesAddress);
         }

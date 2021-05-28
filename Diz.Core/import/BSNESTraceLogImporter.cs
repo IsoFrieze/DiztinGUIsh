@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 
 namespace Diz.Core.import
@@ -23,8 +24,8 @@ namespace Diz.Core.import
             InitObjectPool();
         }
 
-        // Mark collected trace data for a RomByte (which should be an opcode) AND any of the operands that follow us.
-        private void SetOpcodeAndOperandsFromTraceData(ModificationData modData, int instructionByteLen = -1) 
+        // Mark collected trace data for a ByteOffset (which should be an opcode) AND any of the operands that follow us.
+        private void SetOpcodeAndOperandsFromTraceData(ModificationData modDataIn, int instructionByteLen = -1) 
         {
             // extremely performance-intensive function. be really careful when adding stuff
             var currentOffset = 0;
@@ -33,7 +34,7 @@ namespace Diz.Core.import
             bool Prep(ModificationData modData)
             {
                 numBytesAnalyzed++;
-                UpdatePCAddress(modData);
+                UpdatePcAddress(modData);
                 if (!IsOkToSetThisRomByte(modData.Pc, instructionByteLen, currentOffset)) 
                     return false;
                 
@@ -41,15 +42,15 @@ namespace Diz.Core.import
                 return true;
             }
 
-            while (Prep(modData))
+            while (Prep(modDataIn))
             {
-                ApplyModification(modData);
+                ApplyModification(modDataIn);
 
-                modData.SnesAddress = GetNextSNESAddress(modData.SnesAddress);
+                modDataIn.SnesAddress = GetNextSnesAddress(modDataIn.SnesAddress);
                 currentOffset++;
             }
             
-            FreeModificationData(ref modData); // sets to Null after called
+            FreeModificationData(ref modDataIn); // sets to Null after called
 
             currentStats.NumRomBytesAnalyzed += numBytesAnalyzed;
         }
@@ -91,14 +92,14 @@ namespace Diz.Core.import
 
         private FlagType GetFlag(int pc)
         {
-            data.RomBytes[pc].Lock.EnterReadLock();
+            data.RomByteSource?.Bytes[pc].Lock.EnterReadLock();
             try
             {
                 return data.GetFlag(pc);
             }
             finally
             {
-                data.RomBytes[pc].Lock.ExitReadLock();       
+                data.RomByteSource?.Bytes[pc].Lock.ExitReadLock();       
             }
         }
 

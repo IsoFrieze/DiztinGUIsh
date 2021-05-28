@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Diz.Core.model.project;
 
 namespace Diz.Core.serialization.xml_serializer

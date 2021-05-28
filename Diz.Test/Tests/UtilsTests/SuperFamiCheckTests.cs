@@ -4,7 +4,7 @@ using FluentAssertions;
 using Sprache;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.Tests.UtilsTests
 {
     public class SuperFamiCheckTests
     {
@@ -49,11 +49,10 @@ namespace Diz.Test
         public static void TestOneLine()
         {
             const string input = "         Checksum    0x788c            ";
-            
-            var output = 
-                DizSuperFamiCheckParse.ParseKvpLine(input)
-                    .Should()
-                    .Be(("Checksum", 0x788c));
+
+            DizSuperFamiCheckParse.ParseKvpLine(input)
+                .Should()
+                .Be(("Checksum", 0x788c));
         }
     }
 }

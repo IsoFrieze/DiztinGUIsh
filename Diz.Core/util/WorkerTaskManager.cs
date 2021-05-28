@@ -12,14 +12,14 @@ namespace Diz.Core.util
         private readonly object taskLock = new object();
 
         private readonly ManualResetEvent notFinishing = new ManualResetEvent(false);
-        private volatile bool finished = false;
+        private volatile bool finished;
         private Timer timer;
         private object timerLock = new object();
 
         public WorkerTaskManager()
         {
             var oneSecond = TimeSpan.FromSeconds(1);
-            timer = new Timer(state => Update(), null, oneSecond, oneSecond);
+            timer = new Timer(_ => Update(), null, oneSecond, oneSecond);
         }
 
         public void StartFinishing()

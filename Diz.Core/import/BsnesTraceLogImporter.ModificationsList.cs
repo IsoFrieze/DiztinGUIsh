@@ -1,4 +1,5 @@
 ﻿using Diz.Core.model;
+using Diz.Core.model.byteSources;
 
 namespace Diz.Core.import
 {
@@ -24,51 +25,51 @@ namespace Diz.Core.import
             public bool MFlagSet;
 
             // we will set these if any of the above field were modified
-            public bool changed;
-            public bool mDb, mMarks, mDp, mX, mM;
+            public bool Changed;
+            public bool MDb, MMarks, MDp, Mx, Mm;
 
             // precondition: rombyte (minimum of) read lock already acquired
-            private void CompareToExisting(RomByteData romByte)
+            private void CompareToExisting(ByteEntry romByte)
             {
-                mDb = romByte.DataBank != DataBank;
-                mMarks = romByte.TypeFlag != FlagType;
-                mDp = romByte.DirectPage != DirectPage;
-                mX = romByte.XFlag != XFlagSet;
-                mM = romByte.MFlag != MFlagSet;
+                MDb = romByte.DataBank != DataBank;
+                MMarks = romByte.TypeFlag != FlagType;
+                MDp = romByte.DirectPage != DirectPage;
+                Mx = romByte.XFlag != XFlagSet;
+                Mm = romByte.MFlag != MFlagSet;
 
-                changed = mMarks || mDb || mDp || mX || mM;
+                Changed = MMarks || MDb || MDp || Mx || Mm;
             }
 
-            // precondition: rombyte (minimum of) read lock already acquired
-            private void ApplyModification(RomByte romByte)
+            // precondition: ByteEntry (minimum of) read lock already acquired
+            private void ApplyModification(ByteEntry byteOffset)
             {
-                romByte.Lock.EnterWriteLock();
+                byteOffset.Lock.EnterWriteLock();
                 try
                 {
-                    romByte.TypeFlag = FlagType;
-                    romByte.DataBank = (byte) DataBank;
-                    romByte.DirectPage = 0xFFFF & DirectPage;
-                    romByte.XFlag = XFlagSet;
-                    romByte.MFlag = MFlagSet;
+                    byteOffset.TypeFlag = FlagType;
+                    byteOffset.DataBank = (byte) DataBank;
+                    byteOffset.DirectPage = 0xFFFF & DirectPage;
+                    byteOffset.XFlag = XFlagSet;
+                    byteOffset.MFlag = MFlagSet;
                 }
                 finally
                 {
-                    romByte.Lock.ExitWriteLock();
+                    byteOffset.Lock.ExitWriteLock();
                 }
             }
 
-            public void ApplyModificationIfNeeded(RomByte romByte)
+            public void ApplyModificationIfNeeded(ByteEntry byteOffset)
             {
-                romByte.Lock.EnterUpgradeableReadLock();
+                byteOffset.Lock.EnterUpgradeableReadLock();
                 try
                 {
-                    CompareToExisting(romByte);
-                    if (changed)
-                        ApplyModification(romByte);
+                    CompareToExisting(byteOffset);
+                    if (Changed)
+                        ApplyModification(byteOffset);
                 }
                 finally
                 {
-                    romByte.Lock.ExitUpgradeableReadLock();
+                    byteOffset.Lock.ExitUpgradeableReadLock();
                 }
             }
         }
@@ -90,13 +91,13 @@ namespace Diz.Core.import
 
         private void ApplyModificationIfNeeded(ModificationData modData)
         {
-            var romByte = data.RomBytes[modData.Pc];
+            var romByte = data.RomByteSource?.Bytes[modData.Pc];
             modData.ApplyModificationIfNeeded(romByte);
         }
 
         private void UpdateStats(ModificationData modData)
         {
-            if (!modData.changed)
+            if (!modData.Changed)
                 return;
 
             statsLock.EnterWriteLock();
@@ -104,11 +105,11 @@ namespace Diz.Core.import
             {
                 currentStats.NumRomBytesModified++;
 
-                currentStats.NumMarksModified += modData.mMarks ? 1 : 0;
-                currentStats.NumDbModified += modData.mDb ? 1 : 0;
-                currentStats.NumDpModified += modData.mDp ? 1 : 0;
-                currentStats.NumXFlagsModified += modData.mX ? 1 : 0;
-                currentStats.NumMFlagsModified += modData.mM ? 1 : 0;
+                currentStats.NumMarksModified += modData.MMarks ? 1 : 0;
+                currentStats.NumDbModified += modData.MDb ? 1 : 0;
+                currentStats.NumDpModified += modData.MDp ? 1 : 0;
+                currentStats.NumXFlagsModified += modData.Mx ? 1 : 0;
+                currentStats.NumMFlagsModified += modData.Mm ? 1 : 0;
             }
             finally
             {

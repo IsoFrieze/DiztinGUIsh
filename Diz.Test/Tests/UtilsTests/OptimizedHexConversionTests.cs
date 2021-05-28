@@ -1,18 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using Diz.Core.model;
-using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
-using FluentAssertions;
-using IX.StandardExtensions;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.Tests.UtilsTests
 {
     public static class OptimizedHexConversionTests
     {
@@ -22,14 +13,14 @@ namespace Diz.Test
             Assert.Equal(0xF, ByteUtil.ByteParseHex1('F'));
         }
 
-        private const string validHexChars = "0123456789ABCDEF";
+        private const string ValidHexChars = "0123456789ABCDEF";
         
         [Fact]
         public static void TestHexRange()
         {
             for (var c = '\0'; c < 255; ++c)
             {
-                if (validHexChars.Contains(char.ToUpper(c)))
+                if (ValidHexChars.Contains(char.ToUpper(c)))
                 {
                     Assert.Equal(Convert.ToInt32(c.ToString(), 16), ByteUtil.ByteParseHex1(c));
                 }

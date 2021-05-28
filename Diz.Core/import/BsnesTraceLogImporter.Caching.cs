@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
-using System.IO;
 
 namespace Diz.Core.import
 {
@@ -33,14 +31,14 @@ namespace Diz.Core.import
                 D,
                 Db,
                 Flags,
-                FN,
-                FV,
-                FM,
-                FX,
-                FD,
-                FI,
-                FZ,
-                FC;
+                Fn,
+                Fv,
+                Fm,
+                Fx,
+                Fd,
+                Fi,
+                Fz,
+                Fc;
 
             public int LastLineLength { get; set; } = -1;
 
@@ -59,14 +57,14 @@ namespace Diz.Core.import
                 Flags = Db + 3;
 
                 // flags: nvmxdizc
-                FN = Flags + 0;
-                FV = Flags + 1;
-                FM = Flags + 2;
-                FX = Flags + 3;
-                FD = Flags + 4;
-                FI = Flags + 5;
-                FZ = Flags + 6;
-                FC = Flags + 7;
+                Fn = Flags + 0;
+                Fv = Flags + 1;
+                Fm = Flags + 2;
+                Fx = Flags + 3;
+                Fd = Flags + 4;
+                Fi = Flags + 5;
+                Fz = Flags + 6;
+                Fc = Flags + 7;
             }
         }
     }

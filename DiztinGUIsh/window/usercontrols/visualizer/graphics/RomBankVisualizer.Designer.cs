@@ -1,4 +1,4 @@
-﻿namespace DiztinGUIsh.window.usercontrols
+﻿namespace DiztinGUIsh.window.usercontrols.visualizer.graphics
 {
     partial class RomBankVisualizer
     {
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.lblBankName = new System.Windows.Forms.Label();
-            this.romImage1 = new DiztinGUIsh.window.usercontrols.RomImage();
+            this.romImage1 = new RomImage();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -37,11 +37,12 @@
             // lblBankName
             // 
             this.lblBankName.AutoSize = true;
-            this.lblBankName.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblBankName.Location = new System.Drawing.Point(3, 0);
-            this.lblBankName.MinimumSize = new System.Drawing.Size(60, 0);
+            this.lblBankName.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.lblBankName.Location = new System.Drawing.Point(4, 0);
+            this.lblBankName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblBankName.MinimumSize = new System.Drawing.Size(70, 0);
             this.lblBankName.Name = "lblBankName";
-            this.lblBankName.Size = new System.Drawing.Size(60, 31);
+            this.lblBankName.Size = new System.Drawing.Size(70, 31);
             this.lblBankName.TabIndex = 0;
             this.lblBankName.Text = "C0";
             // 
@@ -49,12 +50,12 @@
             // 
             this.romImage1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.romImage1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
-            this.romImage1.Location = new System.Drawing.Point(66, 0);
+            this.romImage1.Location = new System.Drawing.Point(0, 0);
             this.romImage1.Margin = new System.Windows.Forms.Padding(0);
-            this.romImage1.MinimumSize = new System.Drawing.Size(400, 10);
+            this.romImage1.MinimumSize = new System.Drawing.Size(467, 12);
             this.romImage1.Name = "romImage1";
             this.romImage1.Project = null;
-            this.romImage1.Size = new System.Drawing.Size(400, 42);
+            this.romImage1.Size = new System.Drawing.Size(1024, 48);
             this.romImage1.TabIndex = 1;
             // 
             // flowLayoutPanel1
@@ -67,20 +68,21 @@
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(466, 42);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(0, 0);
             this.flowLayoutPanel1.TabIndex = 2;
             // 
             // RomBankVisualizer
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.Controls.Add(this.flowLayoutPanel1);
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "RomBankVisualizer";
-            this.Size = new System.Drawing.Size(466, 42);
+            this.Size = new System.Drawing.Size(0, 0);
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);

@@ -2,8 +2,11 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Forms;
+using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.serialization;
 using Diz.Core.util;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog
 {
@@ -67,7 +70,8 @@ namespace DiztinGUIsh.window.dialog
 
         public bool ShowAndWaitForUserToConfirmSettings()
         {
-            return ShowDialog() == DialogResult.OK;
+            var result = ShowDialog() == DialogResult.OK;
+            return result;
         }
 
         private void ControllerOnBuilderInitialized()
@@ -76,7 +80,8 @@ namespace DiztinGUIsh.window.dialog
             RefreshUi();
         }
 
-        public void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e) => RefreshUi();
+        public void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e) => 
+            RefreshUi();
 
         public void RefreshUi()
         {
@@ -183,6 +188,9 @@ namespace DiztinGUIsh.window.dialog
         private void checkHeader_CheckedChanged(object sender, EventArgs e) => 
             Controller.Builder.ShouldCheckHeader = checkHeader.Checked;
 
-        private void ImportRomDialog_FormClosing(object sender, FormClosingEventArgs e) => Controller = null;
+        private void ImportRomDialog_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Controller = null;
+        }
     }
 }

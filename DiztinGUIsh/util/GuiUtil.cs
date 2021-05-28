@@ -1,12 +1,26 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Diz.Core.util;
 
-namespace DiztinGUIsh.window
+namespace DiztinGUIsh.util
 {
     public static class GuiUtil
     {
+        public static void OpenExternalProcess(string argsToLaunch)
+        {
+            try
+            {
+                Util.OpenExternalProcess(argsToLaunch);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show($"Can't launch '{argsToLaunch}', ignoring.", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
         public static void InvokeIfRequired(this ISynchronizeInvoke obj, MethodInvoker action)
         {
             if (obj.InvokeRequired)
@@ -35,6 +49,10 @@ namespace DiztinGUIsh.window
             return dialogResult == DialogResult.Yes ? confirmAction() : default;
         }
 
+        const string scaryWarning = "BETA: Save/load in this version of Diz is unstable right now. \nDO NOT save over anything you care about without a backup.\nLoading an existing project file from previous versions of Diz is not guaranteed to work yet, it may silently fail to import data.\n\n\nEXPERTS ONLY. CONFIRM OPENING A PROJECT FILE?\n(If looking to mess around, do File -> Import ROM, much more stable for now)";
+        public static bool PromptScaryUnstableBetaAreYouSure() => PromptToConfirmAction("IMPORTANT", scaryWarning, () => true);
+
+
         /// <summary>
         /// Generate data bindings so that a combobox control will populate from an enum list
         /// Shortcut for doing these actions manually.
@@ -52,11 +70,10 @@ namespace DiztinGUIsh.window
             var enumValuesAndDescriptionsKvp = Util.GetEnumDescriptions<TEnum>();
             var bs = new BindingSource(enumValuesAndDescriptionsKvp, null);
 
-            BindListControlToEnum(cb, boundObject, propertyName, bs);
+            BindListControl(cb, boundObject, propertyName, bs);
         }
 
-        private static void BindListControlToEnum(ComboBox cb, object boundObject, string propertyName,
-            BindingSource bs)
+        public static void BindListControl(ComboBox cb, object boundObject, string propertyName, BindingSource bs)
         {
             cb.DataBindings.Add(new Binding(
                 "SelectedValue", boundObject,
@@ -67,5 +84,43 @@ namespace DiztinGUIsh.window
             cb.DisplayMember = "Value";
             cb.ValueMember = "Key";
         }
+
+        [DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
+
+        // call before you start any forms
+        public static void SetupDpiStuff()
+        {
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                SetProcessDPIAware();
+            }
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+        }
+
+        public static void EnableDoubleBuffering(Type type, Control obj)
+        {
+            // https://stackoverflow.com/a/1506066
+
+            // Double buffering can make DGV slow in remote desktop, skip here.
+            if (SystemInformation.TerminalServerSession)
+                return;
+
+            type.InvokeMember(
+                "DoubleBuffered",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.SetProperty,
+                null,
+                obj,
+                new object[] {true});
+        }
+
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, Int32 wMsg, bool wParam, Int32 lParam);
+
+        // ReSharper disable once InconsistentNaming
+        public const int WM_SETREDRAW = 11;
     }
 }

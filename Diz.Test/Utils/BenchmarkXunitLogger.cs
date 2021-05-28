@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
+using Diz.Test.Tests.PerformanceTests;
 using Xunit.Abstractions;
 
 namespace Diz.Test.Utils

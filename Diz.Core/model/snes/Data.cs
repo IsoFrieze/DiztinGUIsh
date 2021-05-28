@@ -1,87 +1,67 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
+using System.Xml.Serialization;
 using Diz.Core.arch;
+using Diz.Core.export;
+using Diz.Core.model.byteSources;
 using Diz.Core.util;
-using DiztinGUIsh;
-using IX.Observable;
+using JetBrains.Annotations;
 
-namespace Diz.Core.model
+namespace Diz.Core.model.snes
 {
-    public partial class Data : DizDataModel, IReadOnlySnesRomBase
+    // old-style data container to phase out eventually.
+    // right now this supports just 1 ByteSource that is a SNES address space with an attached Rom
+    //
+    // the underlying new ByteSource stuff it uses supports more, but right now, the rest of the app doesn't.
+    // Data is the bridge between the old and new.
+    public class Data : ILogCreatorDataSource, ICpuOperableByteSource
     {
-        // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something that operates on Data
-        private readonly Cpu65C816 cpu65C816;
-        // don't modify these directly, always go through the public properties so
-        // other objects can subscribe to modification notifications
-        private RomMapMode romMapMode;
-        private RomSpeed romSpeed = RomSpeed.Unknown;
-        private ObservableDictionary<int, string> comments;
-        private ObservableDictionary<int, Label> labels;
-        private RomBytes romBytes;
+        // the parent of all our data, the SNES address space
+        public ByteSource SnesAddressSpace { get; }
 
-        // Note: order of these public properties matters for the load/save process. Keep 'RomBytes' LAST
-        // TODO: should be a way in the XML serializer to control the order, remove this comment
-        // when we figure it out.
-        public RomMapMode RomMapMode
+        #region Helper Access (Don't serialize)
+        
+        [XmlIgnore] public ILabelProvider Labels { get; protected init; }
+        [XmlIgnore] IReadOnlyLabelProvider IReadOnlyLabels.Labels => Labels;
+        [XmlIgnore] ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => Labels;
+
+        // cached access to stuff that livers in SnesAddressSpace. convenience only.
+        [XmlIgnore] public ByteSource RomByteSource => 
+            RomByteSourceMapping?.ByteSource;
+        [XmlIgnore] public RegionMappingSnesRom RomMapping => 
+            (RegionMappingSnesRom) RomByteSourceMapping?.RegionMapping;
+        [XmlIgnore] public ByteSourceMapping RomByteSourceMapping =>
+            SnesAddressSpace?.ChildSources
+                ?.SingleOrDefault(map => 
+                    map?.RegionMapping?.GetType() == typeof(RegionMappingSnesRom));
+        
+        [XmlIgnore] public RomMapMode RomMapMode => RomMapping?.RomMapMode ?? default;
+        [XmlIgnore] public RomSpeed RomSpeed => RomMapping?.RomSpeed ?? default;
+        
+        // [XmlIgnore] private bool SendNotificationChangedEvents { get; set; } = true;
+        
+        // unsafe/quick helper method only, kind of dumb and will throw an exception if a byte is missing.
+        // if you need to do anything important, use another method with safer access.
+        [XmlIgnore] public byte this[int pcOffset]
         {
-            get => romMapMode;
-            set => SetField(ref romMapMode, value);
+            get => (byte)RomByteSource.Bytes[pcOffset].Byte;
+            set => RomByteSource.Bytes[pcOffset].Byte = value;
         }
 
-        public RomSpeed RomSpeed
-        {
-            get => romSpeed;
-            set => SetField(ref romSpeed, value);
-        }
-
-        // next 2 dictionaries store in SNES address format (since memory labels can't be represented as a PC address)
-        public ObservableDictionary<int, string> Comments
-        {
-            get => comments;
-            set => SetField(ref comments, value);
-        }
-
-        public ObservableDictionary<int, Label> Labels
-        {
-            get => labels;
-            set => SetField(ref labels, value);
-        }
-
-        // RomBytes stored as PC file offset addresses (since ROM will always be mapped to disk)
-        public RomBytes RomBytes
-        {
-            get => romBytes;
-            set => SetField(ref romBytes, value);
-        }
+        #endregion
 
         public Data()
         {
-            comments = new ObservableDictionary<int, string>();
-            labels = new ObservableDictionary<int, Label>();
-            romBytes = new RomBytes();
-            cpu65C816 = new Cpu65C816(this);
+            SnesAddressSpace = RomUtil.CreateSnesAddressSpace();
+            Labels = new LabelProvider(this);
         }
 
-        public void CreateRomBytesFromRom(IEnumerable<byte> actualRomBytes)
+        // NOTE: specially named parameterized constructor for XML serializer
+        [UsedImplicitly] 
+        public Data(ByteSource snesAddressSpace)
         {
-            Debug.Assert(RomBytes.Count == 0);
-            
-            var previousNotificationState = RomBytes.SendNotificationChangedEvents;
-            RomBytes.SendNotificationChangedEvents = false;
-
-            RomBytes.Clear();
-            foreach (var fileByte in actualRomBytes)
-            {
-                RomBytes.Add(new RomByte
-                {
-                    Rom = fileByte,
-                });
-            }
-
-            RomBytes.SendNotificationChangedEvents = previousNotificationState;
+            SnesAddressSpace = snesAddressSpace;
         }
 
         private byte[] GetRomBytes(int pcOffset, int count)
@@ -94,7 +74,6 @@ namespace Diz.Core.model
         }
 
         public int RomSettingsOffset => RomUtil.GetRomSettingOffset(RomMapMode);
-        
         public int RomComplementOffset => RomSettingsOffset + 0x07; // 2 bytes - complement
         public int RomChecksumOffset => RomComplementOffset + 2; // 2 bytes - checksum
         
@@ -109,22 +88,6 @@ namespace Diz.Core.model
         public uint RomComplement => (uint) GetRomWord(RomComplementOffset);
         public uint RomChecksum => (uint) GetRomWord(RomChecksumOffset);
         public uint RomCheckSumsFromRomBytes => (RomChecksum << 16) | RomComplement;
-
-        public void CopyRomDataIn(IEnumerable<byte> trueRomBytes)
-        {
-            var previousNotificationState = RomBytes.SendNotificationChangedEvents;
-            RomBytes.SendNotificationChangedEvents = false;
-            
-            var i = 0;
-            foreach (var b in trueRomBytes)
-            {
-                RomBytes[i].Rom = b;
-                ++i;
-            }
-            Debug.Assert(RomBytes.Count == i);
-
-            RomBytes.SendNotificationChangedEvents = previousNotificationState;
-        }
         
         // recalculates the checksum and then modifies the internal bytes in the ROM so it contains
         // the valid checksum in the ROM header.
@@ -136,130 +99,187 @@ namespace Diz.Core.model
         {
             var rawRomBytesCopy = CreateListRawRomBytes();
             ChecksumUtil.UpdateRomChecksum(rawRomBytesCopy, RomMapMode, GetRomSize());
-            RomBytes.SetBytesFrom(rawRomBytesCopy, 0);
+            RomByteSource.SetBytesFrom(rawRomBytesCopy);
         }
-        
-        // expensive and ineffecient
-        protected virtual List<byte> CreateListRawRomBytes() => RomBytes.Select(rb => rb.Rom).ToList();
 
+        // expensive and inefficient
+        protected List<byte> CreateListRawRomBytes() =>
+            RomByteSource.Bytes.Select(entry => entry?.Byte ?? 0).ToList();
+        
         // looks at the actual bytes present in the ROM and calculates their checksum
         // this is unrelated to any stored/cached checksums in the Project file. 
         public ushort ComputeChecksum() => (ushort) ChecksumUtil.ComputeChecksumFromRom(CreateListRawRomBytes());
         public bool ComputeIsChecksumValid() =>
             ChecksumUtil.IsRomChecksumValid(CreateListRawRomBytes(), RomMapMode, GetRomSize());
 
-        public int GetRomSize() => RomBytes?.Count ?? 0;
-        public FlagType GetFlag(int i) => RomBytes[i].TypeFlag;
-        public void SetFlag(int i, FlagType flag) => RomBytes[i].TypeFlag = flag;
-        public Architecture GetArchitecture(int i) => RomBytes[i].Arch;
-        public void SetArchitecture(int i, Architecture arch) => RomBytes[i].Arch = arch;
-        public InOutPoint GetInOutPoint(int i) => RomBytes[i].Point;
-        public void SetInOutPoint(int i, InOutPoint point) => RomBytes[i].Point |= point;
-        public void ClearInOutPoint(int i) => RomBytes[i].Point = 0;
-        public int GetDataBank(int i) => RomBytes[i].DataBank;
-        public void SetDataBank(int i, int dBank) => RomBytes[i].DataBank = (byte)dBank;
-        public int GetDirectPage(int i) => RomBytes[i].DirectPage;
-        public void SetDirectPage(int i, int dPage) => RomBytes[i].DirectPage = 0xFFFF & dPage;
-        public bool GetXFlag(int i) => RomBytes[i].XFlag;
-        public void SetXFlag(int i, bool x) => RomBytes[i].XFlag = x;
-        public bool GetMFlag(int i) => RomBytes[i].MFlag;
-        public void SetMFlag(int i, bool m) => RomBytes[i].MFlag = m;
+        public int GetRomSize() => RomByteSource?.Bytes?.Count ?? 0;
+        
+        // -------------
+        // probably can move some of this annotation stuff into ByteSource
+        // -------------
+        
+        public T GetOneAnnotationAtPc<T>(int pcOffset) where T : Annotation, new()
+        {
+            var snesAddress = ConvertPCtoSnes(pcOffset);
+            return SnesAddressSpace.GetOneAnnotation<T>(snesAddress);
+        }
+
+        public T GetOrCreateAnnotationAtPc<T>(int pcOffset) where T : Annotation, new()
+        {
+            var snesOffset = ConvertPCtoSnes(pcOffset);
+            return _GetOrCreateAnnotation<T>(snesOffset).annotation;
+        }
+        
+        private (T annotation, bool wasExisting) _GetOrCreateAnnotation<T>(int snesOffset) where T : Annotation, new()
+        {
+            var existing = SnesAddressSpace.GetOneAnnotation<T>(snesOffset);
+            if (existing != null)
+                return (existing, true);
+
+            var newAnnotation = new T();
+
+            // NOTE: for now, we add all annotations on the Snes Address space itself.
+            // in the future, we might want to push them further down into nested ByteSource's like the 
+            // ROM itself, or, the WRAM.  Especially useful because pushing something into a mirror WRAM region
+            // will make the mirroring automagically work out nicely.
+            SnesAddressSpace.AddAnnotation(snesOffset, newAnnotation);
+            
+            return (newAnnotation, false);
+        }
+
+        public FlagType GetFlag(int i) => GetOneAnnotationAtPc<MarkAnnotation>(i)?.TypeFlag ?? default;
+        public void SetFlag(int i, FlagType flag) => GetOrCreateAnnotationAtPc<MarkAnnotation>(i).TypeFlag = flag;
+        public Architecture GetArchitecture(int i) => GetOneAnnotationAtPc<OpcodeAnnotation>(i)?.Arch ?? default;
+        public void SetArchitecture(int i, Architecture arch) => 
+            GetOrCreateAnnotationAtPc<OpcodeAnnotation>(i).Arch = arch;
+        
+        // TODO: check all GetOneAnnotationAtPc() for null before use.
+        public InOutPoint GetInOutPoint(int i) => GetOneAnnotationAtPc<BranchAnnotation>(i)?.Point ?? default;
+        public void SetInOutPoint(int i, InOutPoint point) => GetOrCreateAnnotationAtPc<BranchAnnotation>(i).Point |= point;
+        public void ClearInOutPoint(int i)
+        {
+            var branchAnnotation = GetOneAnnotationAtPc<BranchAnnotation>(i);
+            if (branchAnnotation != null)
+                branchAnnotation.Point = 0;
+        }
+
+        public int GetDataBank(int i) => GetOneAnnotationAtPc<OpcodeAnnotation>(i)?.DataBank ?? default;
+        public void SetDataBank(int i, int dBank) => GetOrCreateAnnotationAtPc<OpcodeAnnotation>(i).DataBank = (byte)dBank;
+        public int GetDirectPage(int i) => GetOneAnnotationAtPc<OpcodeAnnotation>(i)?.DirectPage ?? default;
+        public void SetDirectPage(int i, int dPage) => GetOrCreateAnnotationAtPc<OpcodeAnnotation>(i).DirectPage = 0xFFFF & dPage;
+        public bool GetXFlag(int i) => GetOneAnnotationAtPc<OpcodeAnnotation>(i)?.XFlag ?? default;
+        public void SetXFlag(int i, bool x) => GetOrCreateAnnotationAtPc<OpcodeAnnotation>(i).XFlag = x;
+        public bool GetMFlag(int i) => GetOneAnnotationAtPc<OpcodeAnnotation>(i)?.MFlag ?? default;
+
+        public void SetMFlag(int i, bool m) => GetOrCreateAnnotationAtPc<OpcodeAnnotation>(i).MFlag = m;
         public int GetMxFlags(int i)
         {
-            return (RomBytes[i].MFlag ? 0x20 : 0) | (RomBytes[i].XFlag ? 0x10 : 0);
+            var opcodeAnnotation = GetOneAnnotationAtPc<OpcodeAnnotation>(i);
+            if (opcodeAnnotation == null)
+                return 0;
+            
+            return (opcodeAnnotation.MFlag ? 0x20 : 0) | (opcodeAnnotation.XFlag ? 0x10 : 0);
         }
         public void SetMxFlags(int i, int mx)
         {
-            RomBytes[i].MFlag = ((mx & 0x20) != 0);
-            RomBytes[i].XFlag = ((mx & 0x10) != 0);
+            var opcodeAnnotation = GetOrCreateAnnotationAtPc<OpcodeAnnotation>(i);
+            opcodeAnnotation.MFlag = (mx & 0x20) != 0;
+            opcodeAnnotation.XFlag = (mx & 0x10) != 0;
         }
-        public string GetLabelName(int i)
+        
+        private static bool IsComment(Annotation annotation) => annotation.GetType() == typeof(Comment);
+        
+        public string GetCommentText(int snesAddress)
         {
-            if (Labels.TryGetValue(i, out var val)) 
-                return val?.Name ?? "";
+            // option 1: use the comment text first
+            var comment = GetComment(snesAddress);
+            if (comment != null)
+                return comment.Text;
 
-            return "";
+            // if a real comment doesn't exist, try see if our label itself has a comment attached, display that.
+            // TODO: this is convenient for display but might mess up setting. we probably should do this
+            // only in views, remove from here.
+            return Labels.GetLabelComment(snesAddress) ?? "";
         }
-        public string GetLabelComment(int i)
-        {
-            if (Labels.TryGetValue(i, out var val)) 
-                return val?.Comment ?? "";
+        
+        public Comment GetComment(int snesAddress) => SnesAddressSpace.GetOneAnnotation<Comment>(snesAddress);
 
-            return "";
-        }
-
-        public void DeleteAllLabels()
+        // setting text to null will remove the comment instead of adding anything
+        public void AddComment(int snesAddress, string commentTextToAdd, bool overwrite = false)
         {
-            Labels.Clear();
-        }
-
-        public void AddLabel(int offset, Label label, bool overwrite)
-        {
-            // adding null label removes it
-            if (label == null)
+            if (commentTextToAdd == null || overwrite)
             {
-                if (Labels.ContainsKey(offset))
-                    Labels.Remove(offset);
-
+                SnesAddressSpace.RemoveAllAnnotationsAt(snesAddress, IsComment);
+                if (commentTextToAdd == null)
+                    return;
+            }
+            
+            var existing = GetComment(snesAddress);
+            if (existing != null) 
                 return;
-            }
-
-            if (overwrite)
-            {
-                if (Labels.ContainsKey(offset))
-                    Labels.Remove(offset);
-            }
-
-            if (!Labels.ContainsKey(offset))
-            {
-                label.CleanUp();
-                Labels.Add(offset, label);
-            }
+            
+            SnesAddressSpace.AddAnnotation(snesAddress, new Comment {Text = commentTextToAdd});
         }
 
-        public string GetComment(int i)
+        // get the value of the byte at ROM index i
+        // throws an exception if no byte present at that address
+        public ByteEntry BuildFlatByteEntryForRom(int romOffset)
         {
-            if (Comments.TryGetValue(i, out var val))
-                return val;
-
-            return GetLabelComment(i) ?? "";
+            var snesAddress = ConvertPCtoSnes(romOffset);
+            return SnesAddressSpace.BuildFlatByteEntryFor(snesAddress);
         }
 
-        public void AddComment(int i, string v, bool overwrite)
+        public byte? GetRomByte(int pcOffset)
         {
-            if (v == null)
-            {
-                if (Comments.ContainsKey(i)) Comments.Remove(i);
-            } else
-            {
-                if (Comments.ContainsKey(i) && overwrite) Comments.Remove(i);
-                if (!Comments.ContainsKey(i)) Comments.Add(i, v);
-            }
+            // weird thing: even though we're asking for a byte from the ROM,
+            // we should always access it via the top-level ByteSource which is the SNES address space.
+            // so, convert to that, and access via that.
+            return GetSnesByte(ConvertPCtoSnes(pcOffset));
+        }
+        
+        public byte? GetSnesByte(int snesAddress)
+        {
+            return SnesAddressSpace.BuildFlatByteEntryFor(snesAddress)?.Byte;
         }
 
-        public int ConvertPCtoSnes(int offset)
+        public int? GetRomWord(int offset)
         {
-            return RomUtil.ConvertPCtoSnes(offset, RomMapMode, RomSpeed);
+            if (offset + 1 >= GetRomSize())
+                return null;
+
+            var rb1Null = GetRomByte(offset);
+            var rb2Null = GetRomByte(offset + 1);
+            if (!rb1Null.HasValue || !rb2Null.HasValue)
+                return null;
+
+            return rb1Null + (rb2Null << 8);
         }
-        public int GetRomByte(int i) => RomBytes[i].Rom;
-        public int GetRomWord(int offset)
+        public int? GetRomLong(int offset)
         {
-            if (offset + 1 < GetRomSize())
-                return GetRomByte(offset) + (GetRomByte(offset + 1) << 8);
-            return -1;
+            if (offset + 2 >= GetRomSize()) 
+                return null;
+
+            var romWord = GetRomWord(offset);
+            var rb3Null = GetRomByte(offset + 2);
+            if (!romWord.HasValue || !rb3Null.HasValue)
+                return null;
+            
+            return romWord + (rb3Null << 16);
         }
-        public int GetRomLong(int offset)
+        
+        public int? GetRomDoubleWord(int offset)
         {
-            if (offset + 2 < GetRomSize())
-                return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16);
-            return -1;
+            if (offset + 3 >= GetRomSize())
+                return null;
+
+            var romLong = GetRomLong(offset);
+            var rb4Null = GetRomByte(offset + 3);
+            if (!romLong.HasValue || !rb4Null.HasValue)
+                return null;
+            
+            return romLong + (rb4Null << 24);
         }
-        public int GetRomDoubleWord(int offset)
-        {
-            if (offset + 3 < GetRomSize())
-                return GetRomByte(offset) + (GetRomByte(offset + 1) << 8) + (GetRomByte(offset + 2) << 16) + (GetRomByte(offset + 3) << 24);
-            return -1;
-        }
+        
         public int GetIntermediateAddressOrPointer(int offset)
         {
             switch (GetFlag(offset))
@@ -269,12 +289,33 @@ namespace Diz.Core.model
                     return GetIntermediateAddress(offset, true);
                 case FlagType.Pointer16Bit:
                     int bank = GetDataBank(offset);
-                    return (bank << 16) | GetRomWord(offset);
+                    var romWord = GetRomWord(offset);
+                    if (!romWord.HasValue)
+                        return -1;
+                    
+                    return (bank << 16) | (int)romWord;
                 case FlagType.Pointer24Bit:
                 case FlagType.Pointer32Bit:
-                    return GetRomLong(offset);
+                    var romLong = GetRomLong(offset);
+                    if (!romLong.HasValue)
+                        return -1;
+                    
+                    return (int)romLong;
             }
             return -1;
+        }
+        
+        // NOTE: technically not always correct. banks wrap around so, theoretically we should check what operation
+        // we're doing and wrap to the beginning of the bank. for now.... just glossing over it, bigger fish to fry.
+        // "past me" apologizes to 'future you' for this if you got hung up here.
+        //
+        // returns null if out of bounds
+        public byte? GetNextRomByte(int pcOffset)
+        {
+            var newOffset = pcOffset + 1;
+            return newOffset >= 0 && newOffset < RomByteSource.Bytes.Count
+                ? RomByteSource.Bytes[newOffset]?.Byte
+                : null;
         }
 
         public int GetBankSize()
@@ -282,235 +323,51 @@ namespace Diz.Core.model
             return RomUtil.GetBankSize(RomMapMode);
         }
 
-        public int OpcodeByteLength(int offset)
+        public ByteEntry BuildFlatByteEntryForSnes(int snesAddress)
         {
-            return GetArchitecture(offset) switch
-            {
-                Architecture.Cpu65C816 => cpu65C816.GetInstructionLength(offset),
-                Architecture.Apuspc700 => 1,
-                Architecture.GpuSuperFx => 1,
-                _ => 1
-            };
+            return SnesAddressSpace?.BuildFlatByteEntryFor(snesAddress);
         }
 
-        private int UnmirroredOffset(int offset)
+        public int ConvertSnesToPc(int snesAddress)
         {
-            return RomUtil.UnmirroredOffset(offset, GetRomSize());
+            return RomUtil.ConvertSnesToPc(snesAddress, RomMapMode, GetRomSize());
+        }
+        
+        public int ConvertPCtoSnes(int pcOffset)
+        {
+            return RomUtil.ConvertPCtoSnes(pcOffset, RomMapMode, RomSpeed);
         }
 
-        public string GetFormattedBytes(int offset, int step, int bytes)
-        {
-            var res = step switch
-            {
-                1 => "db ",
-                2 => "dw ",
-                3 => "dl ",
-                4 => "dd ",
-                _ => ""
-            };
-
-            for (var i = 0; i < bytes; i += step)
-            {
-                if (i > 0) res += ",";
-
-                switch (step)
-                {
-                    case 1: res += Util.NumberToBaseString(GetRomByte(offset + i), Util.NumberBase.Hexadecimal, 2, true); break;
-                    case 2: res += Util.NumberToBaseString(GetRomWord(offset + i), Util.NumberBase.Hexadecimal, 4, true); break;
-                    case 3: res += Util.NumberToBaseString(GetRomLong(offset + i), Util.NumberBase.Hexadecimal, 6, true); break;
-                    case 4: res += Util.NumberToBaseString(GetRomDoubleWord(offset + i), Util.NumberBase.Hexadecimal, 8, true); break;
-                }
-            }
-
-            return res;
-        }
-
-        public int ConvertSnesToPc(int address)
-        {
-            return RomUtil.ConvertSnesToPc(address, RomMapMode, GetRomSize());
-        }
-
-        public string GetPointer(int offset, int bytes)
-        {
-            var ia = -1;
-            string format = "", param = "";
-            switch (bytes)
-            {
-                case 2:
-                    ia = (GetDataBank(offset) << 16) | GetRomWord(offset);
-                    format = "dw {0}";
-                    param = Util.NumberToBaseString(GetRomWord(offset), Util.NumberBase.Hexadecimal, 4, true);
-                    break;
-                case 3:
-                    ia = GetRomLong(offset);
-                    format = "dl {0}";
-                    param = Util.NumberToBaseString(GetRomLong(offset), Util.NumberBase.Hexadecimal, 6, true);
-                    break;
-                case 4:
-                    ia = GetRomLong(offset);
-                    format = "dl {0}" +
-                             $" : db {Util.NumberToBaseString(GetRomByte(offset + 3), Util.NumberBase.Hexadecimal, 2, true)}";
-                    param = Util.NumberToBaseString(GetRomLong(offset), Util.NumberBase.Hexadecimal, 6, true);
-                    break;
-            }
-
-            var pc = ConvertSnesToPc(ia);
-            if (pc >= 0 && GetLabelName(ia) != "") param = GetLabelName(ia);
-            return string.Format(format, param);
-        }
-
-        public string GetFormattedText(int offset, int bytes)
-        {
-            var text = "db \"";
-            for (var i = 0; i < bytes; i++) text += (char)GetRomByte(offset + i);
-            return text + "\"";
-        }
-
-        public string GetDefaultLabel(int snes)
-        {
-            var pcoffset = ConvertSnesToPc(snes);
-            var prefix = RomUtil.TypeToLabel(GetFlag(pcoffset));
-            var labelAddress = Util.NumberToBaseString(snes, Util.NumberBase.Hexadecimal, 6);
-            return $"{prefix}_{labelAddress}";
-        }
+        private Cpu CpuAt(int offset) => new CpuDispatcher().Cpu(this, offset); 
 
         public int Step(int offset, bool branch, bool force, int prevOffset)
         {
-            return GetArchitecture(offset) switch
-            {
-                Architecture.Cpu65C816 => cpu65C816.Step(offset, branch, force, prevOffset),
-                Architecture.Apuspc700 => offset,
-                Architecture.GpuSuperFx => offset,
-                _ => offset
-            };
+            return CpuAt(offset).Step(this, offset, branch, force, prevOffset);
         }
 
-        public int AutoStep(int offset, bool harsh, int amount)
-        {
-            int newOffset = offset, prevOffset = offset - 1, nextOffset;
-            if (harsh)
-            {
-                while (newOffset < offset + amount)
-                {
-                    nextOffset = Step(newOffset, false, true, prevOffset);
-                    prevOffset = newOffset;
-                    newOffset = nextOffset;
-                }
-            }
-            else
-            {
-                var stack = new Stack<int>();
-                var seenBranches = new List<int>();
-                var keepGoing = true;
-
-                while (keepGoing)
-                {
-                    switch (GetArchitecture(newOffset))
-                    {
-                        case Architecture.Cpu65C816:
-                            if (seenBranches.Contains(newOffset))
-                            {
-                                keepGoing = false;
-                                break;
-                            }
-
-                            var opcode = GetRomByte(newOffset);
-
-                            nextOffset = Step(newOffset, false, false, prevOffset);
-                            var jumpOffset = Step(newOffset, true, false, prevOffset);
-
-                            if (opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 // RTI WAI STP SED
-                                || opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42 // XCE BRK COP WDM
-                                || opcode == 0x6C || opcode == 0x7C || opcode == 0xDC || opcode == 0xFC // JMP JMP JML JSR
-                            ) keepGoing = false;
-
-                            if (opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
-                                || opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70 // BPL BMI BVC BVS
-                                || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0 // BCC BCS BNE BEQ
-                            ) seenBranches.Add(newOffset);
-
-                            if (opcode == 0x08) // PHP
-                            {
-                                stack.Push(GetMxFlags(newOffset));
-                            }
-                            else if (opcode == 0x28) // PLP
-                            {
-                                if (stack.Count == 0)
-                                {
-                                    keepGoing = false; break;
-                                }
-                                else
-                                {
-                                    SetMxFlags(newOffset, stack.Pop());
-                                }
-                            }
-
-                            if (opcode == 0x60 || opcode == 0x6B) // RTS RTL
-                            {
-                                if (stack.Count == 0)
-                                {
-                                    keepGoing = false;
-                                    break;
-                                }
-                                else
-                                {
-                                    prevOffset = newOffset;
-                                    newOffset = stack.Pop();
-                                }
-                            }
-                            else if (opcode == 0x20 || opcode == 0x22) // JSR JSL
-                            {
-                                stack.Push(nextOffset);
-                                prevOffset = newOffset;
-                                newOffset = jumpOffset;
-                            }
-                            else
-                            {
-                                prevOffset = newOffset;
-                                newOffset = nextOffset;
-                            }
-                            break;
-                        case Architecture.Apuspc700:
-                        case Architecture.GpuSuperFx:
-                            nextOffset = Step(newOffset, false, true, prevOffset);
-                            prevOffset = newOffset;
-                            newOffset = nextOffset;
-                            break;
-                    }
-
-                    var flag = GetFlag(newOffset);
-                    if (!(flag == FlagType.Unreached || flag == FlagType.Opcode || flag == FlagType.Operand)) keepGoing = false;
-                }
-            }
-            return newOffset;
-        }
-
-        public int Mark(Action<int> MarkAction, int offset, int count)
+        public int PerformActionOnRange(Action<int> markAction, int offset, int count)
         {
             int i, size = GetRomSize();
             for (i = 0; i < count && offset + i < size; i++) 
-                MarkAction(offset + i);
+                markAction(offset + i);
             
             return offset + i < size ? offset + i : size - 1;
         }
 
-        public int MarkTypeFlag(int offset, FlagType type, int count) => Mark(i => SetFlag(i, type), offset, count);
-        public int MarkDataBank(int offset, int db, int count) => Mark(i => SetDataBank(i, db), offset, count);
-        public int MarkDirectPage(int offset, int dp, int count) => Mark(i => SetDirectPage(i, dp), offset, count);
-        public int MarkXFlag(int offset, bool x, int count) => Mark(i => SetXFlag(i, x), offset, count);
-        public int MarkMFlag(int offset, bool m, int count) => Mark(i => SetMFlag(i, m), offset, count);
-        public int MarkArchitecture(int offset, Architecture arch, int count) => Mark(i => SetArchitecture(i, arch), offset, count);
+        public int MarkTypeFlag(int offset, FlagType type, int count) => PerformActionOnRange(i => SetFlag(i, type), offset, count);
+        public int MarkDataBank(int offset, int db, int count) => 
+            PerformActionOnRange(i => SetDataBank(i, db), offset, count);
+        public int MarkDirectPage(int offset, int dp, int count) => 
+            PerformActionOnRange(i => SetDirectPage(i, dp), offset, count);
+        public int MarkXFlag(int offset, bool x, int count) => 
+            PerformActionOnRange(i => SetXFlag(i, x), offset, count);
+        public int MarkMFlag(int offset, bool m, int count) => 
+            PerformActionOnRange(i => SetMFlag(i, m), offset, count);
+        public int MarkArchitecture(int offset, Architecture arch, int count) => 
+            PerformActionOnRange(i => SetArchitecture(i, arch), offset, count);
 
-        public int GetInstructionLength(int offset)
-        {
-            return GetArchitecture(offset) switch
-            {
-                Architecture.Cpu65C816 => cpu65C816.GetInstructionLength(offset),
-                Architecture.Apuspc700 => 1,
-                Architecture.GpuSuperFx => 1,
-                _ => 1
-            };
-        }
+        public int GetInstructionLength(int offset) => 
+            CpuAt(offset).GetInstructionLength(this, offset);
 
         public int FixMisalignedFlags()
         {
@@ -566,18 +423,14 @@ namespace Diz.Core.model
 
         public void RescanInOutPoints()
         {
-            for (var i = 0; i < GetRomSize(); i++) ClearInOutPoint(i);
+            for (var i = 0; i < GetRomSize(); i++) 
+                ClearInOutPoint(i);
 
             for (var i = 0; i < GetRomSize(); i++)
             {
                 if (GetFlag(i) == FlagType.Opcode)
                 {
-                    switch (GetArchitecture(i))
-                    {
-                        case Architecture.Cpu65C816: cpu65C816.MarkInOutPoints(i); break;
-                        case Architecture.Apuspc700: break;
-                        case Architecture.GpuSuperFx: break;
-                    }
+                    CpuAt(i).MarkInOutPoints(this, i);
                 }
             }
         }
@@ -585,29 +438,17 @@ namespace Diz.Core.model
         public int GetIntermediateAddress(int offset, bool resolve = false)
         {
             // FIX ME: log and generation of dp opcodes. search references
-            return GetArchitecture(offset) switch
-            {
-                Architecture.Cpu65C816 => cpu65C816.GetIntermediateAddress(offset, resolve),
-                Architecture.Apuspc700 => -1,
-                Architecture.GpuSuperFx => -1,
-                _ => -1
-            };
+            return CpuAt(offset).GetIntermediateAddress(this, offset, resolve);
         }
 
         public string GetInstruction(int offset)
         {
-            return GetArchitecture(offset) switch
-            {
-                Architecture.Cpu65C816 => cpu65C816.GetInstruction(offset),
-                Architecture.Apuspc700 => "",
-                Architecture.GpuSuperFx => "",
-                _ => ""
-            };
+            return CpuAt(offset).GetInstruction(this, offset);
         }
 
         public int GetNumberOfBanks()
         {
-            return RomBytes.Count / GetBankSize();
+            return RomByteSource.Bytes.Count / GetBankSize();
         }
 
         public string GetBankName(int bankIndex)
@@ -623,43 +464,52 @@ namespace Diz.Core.model
             return bankSnesNumber;
         }
 
-        // get the actual ROM file bytes (i.e. the contents of the SMC file on the disk)
-        // note: don't save these anywhere permanent because ROM data is usually copyrighted.
-        public IEnumerable<byte> GetFileBytes()
+        public bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch)
         {
-            return RomBytes.Select(b => b.Rom);
+            var intermediateAddressOrPointer = GetIntermediateAddressOrPointer(intermediateAddress);
+            var destinationOfIa = ConvertSnesToPc(intermediateAddressOrPointer);
+
+            return destinationOfIa == addressToMatch;
         }
-        
-        public virtual byte[] GetOverriddenRomBytes()
-        {
-            return null; // NOP
-        }
-        
+
+        // public event PropertyChangedEventHandler? PropertyChanged;
+
         #region Equality
         protected bool Equals(Data other)
         {
-            return Labels.SequenceEqual(other.Labels) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
+            return RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && SnesAddressSpace.Equals(other.SnesAddressSpace);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((Data)obj);
+            return obj.GetType() == GetType() && Equals((Data)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                var hashCode = Labels.GetHashCode();
-                hashCode = (hashCode * 397) ^ (int)RomMapMode;
+                var hashCode = (397) ^ (int)RomMapMode;
                 hashCode = (hashCode * 397) ^ (int)RomSpeed;
-                hashCode = (hashCode * 397) ^ Comments.GetHashCode();
-                hashCode = (hashCode * 397) ^ RomBytes.GetHashCode();
+                
+                // TODO: udpate this.?
+                
                 return hashCode;
             }
         }
         #endregion
+
+        public int AutoStep(int offset, bool harsh, int count) => 
+            CpuAt(offset).AutoStep(this, offset, harsh, count);
+        
+        // TODO: this needs to go. used for tests to load in fake byte data
+        // instead of reading from disk. we need to change this to just intercept somewhere
+        // in the loading pipeline instead of here.
+        public virtual byte[] GetOverriddenRomBytes()
+        {
+            return null; // NOP
+        }
     }
 }

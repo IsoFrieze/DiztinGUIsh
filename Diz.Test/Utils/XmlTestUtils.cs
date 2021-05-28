@@ -1,7 +1,6 @@
 ﻿using System;
 using Diz.Core.serialization.xml_serializer;
-using ExtendedXmlSerializer;
-using Xunit;
+using FluentAssertions;
 using Xunit.Abstractions;
 
 namespace Diz.Test.Utils
@@ -28,16 +27,16 @@ namespace Diz.Test.Utils
         
         public T XmlFullCycle<T>(T objToCycle)
         {
-            var xmlToCycle = XmlSerializerSupport.GetSerializer().Create().Serialize(objToCycle);
+            var xmlToCycle = XmlSerializationSupport.Serialize(objToCycle);
             Output?.WriteLine(xmlToCycle);
-            var deserialized = XmlSerializerSupport.GetSerializer().Create().Deserialize<T>(xmlToCycle);
+            var deserialized = XmlSerializationSupport.Deserialize<T>(xmlToCycle);
             return deserialized;
         }
         
         public void RunFullCycle(Func<object> createFn)
         {
             RunFullCycle(createFn, out var unchanged, out var cycled);
-            Assert.Equal(unchanged, cycled);
+            cycled.Should().Be(unchanged);
         }
     }
 }

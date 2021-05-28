@@ -1,24 +1,19 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
-using BenchmarkDotNet.Analysers;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Loggers;
-using BenchmarkDotNet.Running;
 using Diz.Core.import;
-using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
-using Diz.Test.Utils;
+using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Diz.Test
+namespace Diz.Test.Tests.PerformanceTests
 {
     public sealed class XOutLogger : ILogger
     {
+        // ReSharper disable once InconsistentNaming
         private readonly ITestOutputHelper _helper;
 
         public XOutLogger(ITestOutputHelper helper)
@@ -46,7 +41,7 @@ namespace Diz.Test
         }
 
         public string Id { get; } = "xunitLogger";
-        public int Priority { get; }
+        [UsedImplicitly] public int Priority { get; }
     }
 
     public class TraceLogPerformanceTests
@@ -58,31 +53,31 @@ namespace Diz.Test
             this.output = output;
         }
 
-        private void RunPrintTiming(Action item)
+        /*private void RunPrintTiming(Action item)
         {
             var s = Stopwatch.StartNew();
-            s.Start();
                 
             item.Invoke();
                 
             s.Stop();
             output.WriteLine($"runtime: {s.ElapsedMilliseconds:N0}ms");
-        }
+        }*/
 
         public class ImportTraceLogStreamTestHarness
         {
-            const string datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
-            readonly Data Data = new EmptyRom();
+            private const string Datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
+            Data Data => new Data().InitializeEmptyRomMapping(0xFFFF * 64, RomMapMode.LoRom, RomSpeed.FastRom);
+
             private readonly BsnesTraceLogDebugBenchmarkFileCapture capturing;
-            private readonly Stopwatch stopWatch = new Stopwatch();
-            private readonly ITestOutputHelper output;
+            private readonly Stopwatch stopWatch = new();
+            [UsedImplicitly] private readonly ITestOutputHelper output;
 
             public ImportTraceLogStreamTestHarness(ITestOutputHelper output)
             {
                 this.output = output;
 
                 var cwd = Directory.GetCurrentDirectory();
-                var fullPath = Path.Combine(cwd, datafile);
+                var fullPath = Path.Combine(cwd, Datafile);
 
                 capturing = new BsnesTraceLogDebugBenchmarkFileCapture(fullPath, 1)
                 {
@@ -102,7 +97,7 @@ namespace Diz.Test
             }
         }
 
-        [Fact(Skip="skipping b/c external dependency")]
+        [Fact(Skip = "disabled, hard to run without specific stuff installed.")]
         public void TestTraceLogPerformance()
         {
             var test = new ImportTraceLogStreamTestHarness(output);

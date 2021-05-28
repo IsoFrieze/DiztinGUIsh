@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Windows.Forms;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window.dialog
 {
     public partial class MisalignmentChecker : Form
     {
@@ -16,7 +17,7 @@ namespace DiztinGUIsh
 
         private void cancel_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void buttonScan_Click(object sender, EventArgs e)
@@ -53,7 +54,7 @@ namespace DiztinGUIsh
 
         private void buttonFix_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.OK;
+            DialogResult = DialogResult.OK;
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh.window.dialog
 {
     public partial class InOutPointChecker : Form
     {
@@ -12,12 +12,12 @@ namespace DiztinGUIsh
 
         private void cancel_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void rescan_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.OK;
+            DialogResult = DialogResult.OK;
         }
     }
 }

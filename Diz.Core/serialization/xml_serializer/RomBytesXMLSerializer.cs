@@ -4,10 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Diz.Core.model;
+using Diz.Core.model.byteSources;
 using ExtendedXmlSerializer.ContentModel;
 using ExtendedXmlSerializer.ContentModel.Format;
 
@@ -27,38 +28,41 @@ using ExtendedXmlSerializer.ContentModel.Format;
 // It's not.. super-pretty code, but it compresses well.
 namespace Diz.Core.serialization.xml_serializer
 {
-    sealed class RomBytesSerializer : ISerializer<RomBytes>
+    sealed class RomBytesSerializer : ISerializer<ByteSource>
     {
         // let the outer XML class do the heavy lifting on versioning.
         // but, let's add one here just because this specific class is complex.
         private const int CurrentDataFormatVersion = 200;
 
-        public static RomBytesSerializer Default { get; } = new RomBytesSerializer();
+        public static RomBytesSerializer Default { get; } = new();
 
         private const bool CompressGroupBlock = true;
         private const bool CompressUsingTable1 = true;
-        public int numTasksToUse = 5; // seems like the sweet spot
+        private const int NumTasksToUse = 5; // seems like the sweet spot
 
-        public RomBytes Get(IFormatReader parameter)
+        public ByteSource Get(IFormatReader parameter)
         {
             var allLines = ReadMainDataRaw(parameter.Content());
             var romBytes = DecodeAllBytes(allLines);
             return FinishRead(romBytes);
         }
 
-        private RomByte[] DecodeAllBytes(List<string> allLines)
+        private static ByteEntry[] DecodeAllBytes(List<string> allLines)
         {
-            if (numTasksToUse == 1)
-                return DecodeRomBytes(allLines, 0, allLines.Count);
+            // TODO: probably should use parallel LINQ here instead?
+            
+            #if NO_PARALLEL
+            return DecodeRomBytes(allLines, 0, allLines.Count);
+            #endif
 
-            var tasks = new List<Task<RomByte[]>>(numTasksToUse);
+            var tasks = new List<Task<ByteEntry[]>>(NumTasksToUse);
 
             var nextIndex = 0;
-            var workListCount = allLines.Count / numTasksToUse;
+            var workListCount = allLines.Count / NumTasksToUse;
 
-            for (var t = 0; t < numTasksToUse; ++t)
+            for (var t = 0; t < NumTasksToUse; ++t)
             {
-                if (t == numTasksToUse - 1)
+                if (t == NumTasksToUse - 1)
                     workListCount = allLines.Count - nextIndex;
 
                 tasks.Add(CreateDecodeRomBytesTask(allLines, nextIndex, workListCount));
@@ -71,16 +75,17 @@ namespace Diz.Core.serialization.xml_serializer
             return continuation.Result.SelectMany(i => i).ToArray();
         }
 
-        private static Task<RomByte[]> CreateDecodeRomBytesTask(List<string> allLines, int nextIndex, int workListCount)
+        private static Task<ByteEntry[]> CreateDecodeRomBytesTask(List<string> allLines, int nextIndex, int workListCount)
         {
             // ReSharper disable once AccessToStaticMemberViaDerivedType
-            return Task<RomByte[]>.Run(() => DecodeRomBytes(allLines, nextIndex, workListCount));
+            return Task<ByteEntry[]>.Run(() => DecodeRomBytes(allLines, nextIndex, workListCount));
         }
 
-        private static RomByte[] DecodeRomBytes(IReadOnlyList<string> allLines, int startIndex, int count)
+        // NOTE: runs in its own thread, a few times in parallel
+        private static ByteEntry[] DecodeRomBytes(IReadOnlyList<string> allLines, int startIndex, int count)
         {
             // perf: allocate all at once, don't use List.Add() one at a time
-            var romBytes = new RomByte[count];
+            var romBytes = new ByteEntry[count];
             var romByteEncoding = new RomByteEncoding();
             var i = 0;
 
@@ -102,12 +107,11 @@ namespace Diz.Core.serialization.xml_serializer
             return romBytes;
         }
 
-        private static RomBytes FinishRead(RomByte[] romBytes)
-        {
-            var romBytesOut = new RomBytes();
-            romBytesOut.SetFrom(romBytes);
-            return romBytesOut;
-        }
+        private static ByteSource FinishRead(IReadOnlyCollection<ByteEntry> romBytes) =>
+            new()
+            {
+                Bytes = new StorageList<ByteEntry>(romBytes)
+            };
 
         private static List<string> ReadMainDataRaw(string allLines)
         {
@@ -126,9 +130,9 @@ namespace Diz.Core.serialization.xml_serializer
 
         private static (List<string> lines, List<string> options) ReadHeader(string allLines)
         {
-            var lines = allLines.Split(new char[] {'\n'}, 3).ToList();
-            var options = lines[1].Split(new char[] {','}).ToList();
-            lines = lines[2].Split(new char[] {'\n'}).ToList();
+            var lines = allLines.Split(new[] {'\n'}, 3).ToList();
+            var options = lines[1].Split(new[] {','}).ToList();
+            lines = lines[2].Split(new[] {'\n'}).ToList();
             if (lines[lines.Count - 1] == "")
                 lines.RemoveAt(lines.Count - 1);
             return (lines, options);
@@ -167,7 +171,8 @@ namespace Diz.Core.serialization.xml_serializer
             }
         }
 
-        public void Write(IFormatWriter writer, RomBytes instance)
+        [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalse")]
+        public void Write(IFormatWriter writer, ByteSource instance)
         {
             var options = new List<string>
             {
@@ -177,7 +182,7 @@ namespace Diz.Core.serialization.xml_serializer
             var romByteEncoding = new RomByteEncoding();
 
             var lines = new List<string>();
-            foreach (var rb in instance)
+            foreach (ByteEntry rb in instance.Bytes)
             {
                 var encodedTxt = romByteEncoding.EncodeByte(rb);
                 lines.Add(encodedTxt);

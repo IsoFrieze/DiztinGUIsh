@@ -1,13 +1,11 @@
-﻿
-
-using Diz.Core.model;
+﻿using Diz.Core.model.snes;
 
 namespace Diz.Test.Utils
 {
     public class AssemblyPipelineTester
     {
-        public Data Source { get; set; }
-        public string ExpectedAsmOutput { get; set; }
+        public Data Source { get; init; }
+        public string ExpectedAsmOutput { get; init; }
 
         public virtual void Test()
         {

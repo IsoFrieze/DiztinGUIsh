@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using Diz.Core.model.snes;
 using Diz.Core.serialization.xml_serializer;
 
 namespace Diz.Core.model.project
@@ -52,12 +53,12 @@ namespace Diz.Core.model.project
             // TODO: move this to an override that overrides Populate()
             // then, don't call the base method, fail if this doesn't work.
             
-            var bytes = Project.Data.GetOverriddenRomBytes();
+            var bytes = Project.Data?.GetOverriddenRomBytes();
             if (bytes == null)
                 return false;
             
             EnsureProjectCompatibleWithRom(bytes);
-            Project.Data.CopyRomDataIn(bytes);
+            Project.Data.PopulateFrom(bytes);
             return true;
         }
 
@@ -68,7 +69,7 @@ namespace Diz.Core.model.project
                 throw new InvalidOperationException("Search failed, couldn't find compatible ROM to link");
 
             Project.AttachedRomFilename = result.Value.filename;
-            Project.Data.CopyRomDataIn(result.Value.romBytes);
+            Project.Data.PopulateFrom(result.Value.romBytes);
         }
 
         private static ILinkedRomBytesProvider GetLinkedRomProvider() => new LinkedRomBytesFileSearchProvider();
@@ -76,7 +77,7 @@ namespace Diz.Core.model.project
         private (string filename, byte[] romBytes)? SearchForValidRom()
         {
             var searchProvider = GetLinkedRomProvider();
-            searchProvider.EnsureCompatible = (romFilename, romBytes) => EnsureProjectCompatibleWithRom(romBytes);
+            searchProvider.EnsureCompatible = (_, romBytes) => EnsureProjectCompatibleWithRom(romBytes);
             searchProvider.GetNextFilename = reasonWhyLastFileNotCompatible => 
                 GetNextRomFileToTry?.Invoke(reasonWhyLastFileNotCompatible) ?? null;
 
