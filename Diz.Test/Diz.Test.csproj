@@ -69,8 +69,10 @@
     <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
     <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
+    <ProjectReference Include="..\Diz.ViewModels\Diz.ViewModels.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Resources\asartestrun.asm" />

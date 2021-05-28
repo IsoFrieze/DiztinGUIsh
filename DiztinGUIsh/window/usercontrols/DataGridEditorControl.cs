@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
+using Diz.Controllers.util;
 using Diz.Core.datasubset;
 using Diz.Core.model.byteSources;
 using Diz.Core.util;
@@ -358,15 +359,15 @@ namespace DiztinGUIsh.window.usercontrols
 
             foreach (var property in typeof(RomByteDataGridRow).GetProperties())
             {
-                if (!RomByteDataGridRow.IsPropertyBrowsable(property.Name))
+                if (!RomByteRowAttributes.IsPropertyBrowsable(property.Name))
                     continue;
 
                 var newCol = new DataGridViewTextBoxColumn()
                 {
                     DataPropertyName = property.Name,
                     Resizable = DataGridViewTriState.False,
-                    HeaderText = RomByteDataGridRow.GetColumnDisplayName(property.Name),
-                    ReadOnly = RomByteDataGridRow.GetColumnIsReadOnly(property.Name),
+                    HeaderText = RomByteRowAttributes.GetColumnDisplayName(property.Name),
+                    ReadOnly = RomByteRowAttributes.GetColumnIsReadOnly(property.Name),
 
                     // PERF: if enabled, during load, resizing will be super-slow
                     // this can be re-enabled after load.

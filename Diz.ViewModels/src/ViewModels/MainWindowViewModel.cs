@@ -1,6 +1,4 @@
-﻿using Diz.Controllers.interfaces;
-
-namespace Diz.ViewModels
+﻿namespace Diz.ViewModels
 {
     public abstract class MainWindowViewModelBase : ViewModel
     {

@@ -203,37 +203,8 @@ namespace Diz.Controllers.util
         }
 
         [NotifyPropertyChangedInvocator]
-        public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
+        public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) => 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public static bool IsColumnEditable(string propertyName)
-        {
-            return TestAttribute((EditableAttribute attr) => attr?.AllowEdit ?? false, propertyName);
-        }
-
-        public static string GetColumnDisplayName(string propertyName)
-        {
-            return TestAttribute((DisplayNameAttribute attr) => attr?.DisplayName, propertyName);
-        }
-        
-        public static bool GetColumnIsReadOnly(string propertyName)
-        {
-            return TestAttribute((ReadOnlyAttribute attr) => attr?.IsReadOnly ?? false, propertyName);
-        }
-        
-        public static bool IsPropertyBrowsable(string propertyName)
-        {
-            return TestAttribute((BrowsableAttribute attr) => attr?.Browsable ?? true, propertyName);
-        }
-
-        private static TResult TestAttribute<TAttribute, TResult>(
-            Func<TAttribute, TResult> getValueFn, string memberName)
-            where TAttribute : Attribute
-        {
-            return Util.GetPropertyAttribute(getValueFn, typeof(RomByteRowBase), memberName);
-        }
         
         #region Formatting
         protected Color? GetBackgroundColorForMarkedAsOpcode(string colPropName)
@@ -329,6 +300,24 @@ namespace Diz.Controllers.util
         }
         
         #endregion
+    }
+
+    public static class RomByteRowAttributes
+    {
+        public static bool IsColumnEditable(string propertyName) => TestAttribute((EditableAttribute attr) => attr?.AllowEdit ?? false, propertyName);
+
+        public static string GetColumnDisplayName(string propertyName) => TestAttribute((DisplayNameAttribute attr) => attr?.DisplayName, propertyName);
+
+        public static bool GetColumnIsReadOnly(string propertyName) => TestAttribute((ReadOnlyAttribute attr) => attr?.IsReadOnly ?? false, propertyName);
+
+        public static bool IsPropertyBrowsable(string propertyName) => TestAttribute((BrowsableAttribute attr) => attr?.Browsable ?? true, propertyName);
+
+        private static TResult TestAttribute<TAttribute, TResult>(
+            Func<TAttribute, TResult> getValueFn, string memberName)
+            where TAttribute : Attribute
+        {
+            return Util.GetPropertyAttribute(getValueFn, typeof(RomByteRowBase), memberName);
+        }
     }
 
     public interface IRowBaseViewer<out TItem>

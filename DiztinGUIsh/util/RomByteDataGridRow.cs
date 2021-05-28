@@ -40,7 +40,7 @@ namespace DiztinGUIsh.util
         /// <param name="style">Out param, modify this to set the style</param>
         public void SetStyleForCell(string colPropName, DataGridViewCellStyle style)
         {
-            if (IsColumnEditable(colPropName))
+            if (RomByteRowAttributes.IsColumnEditable(colPropName))
                 style.SelectionBackColor = Color.Chartreuse;
 
             // all cells in a row get this treatment

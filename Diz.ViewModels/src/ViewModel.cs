@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
 
-namespace Diz
+namespace Diz.ViewModels
 {
     public class ViewModel : ReactiveObject, IActivatableViewModel
     {

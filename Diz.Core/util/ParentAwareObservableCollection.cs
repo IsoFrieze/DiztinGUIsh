@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
@@ -10,9 +11,9 @@ namespace Diz.Core.util
         public void OnParentChanged(TParent parent);
     }
 
-    public class ParentAwareCollection<TParent, TItem> : Collection<TItem>
+    public class ParentAwareObservableCollection<TParent, TItem> : ObservableCollection<TItem>
         where TParent : class
-        where TItem : IParentAware<TParent>
+        where TItem : IParentAware<TParent>, INotifyPropertyChanged
     {
         private TParent parent;
         [XmlIgnore] 
@@ -49,12 +50,24 @@ namespace Diz.Core.util
         protected override void ClearItems()
         {
             SetAllItemParentsTo(null);
+            foreach (var item in this)
+            {
+                if (item != null)
+                    item.PropertyChanged -= ItemOnPropertyChanged;
+            }
             base.ClearItems();
+        }
+
+        private void ItemOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            
         }
 
         protected override void InsertItem(int index, TItem item)
         {
             base.InsertItem(index, item);
+            if (item != null)
+                item.PropertyChanged += ItemOnPropertyChanged;
             SetItemParent(item, Parent);
         }
 
@@ -62,16 +75,28 @@ namespace Diz.Core.util
         {
             var item = Items[index];
             SetItemParent(item, null);
+            if (item != null)
+                item.PropertyChanged -= ItemOnPropertyChanged;
+            
             base.RemoveItem(index);
         }
 
         protected override void SetItem(int index, TItem item)
         {
+            {
+                var existing = Items[index];
+                if (existing != null)
+                    existing.PropertyChanged -= ItemOnPropertyChanged;
+            }
+
             base.SetItem(index, item);
+            if (item != null)
+                item.PropertyChanged += ItemOnPropertyChanged;
+            
             SetItemParent(item, Parent);
         }
 
-        protected virtual bool Equals(ParentAwareCollection<TParent, TItem> other)
+        protected virtual bool Equals(ParentAwareObservableCollection<TParent, TItem> other)
         {
             // might not be a great idea to override Equals() in list.
             // for now, try it.
@@ -90,7 +115,7 @@ namespace Diz.Core.util
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((ParentAwareCollection<TParent, TItem>) obj);
+            return Equals((ParentAwareObservableCollection<TParent, TItem>) obj);
         }
 
         public override int GetHashCode()
@@ -105,12 +130,12 @@ namespace Diz.Core.util
             return hashCode;
         }
 
-        public static bool operator ==(ParentAwareCollection<TParent, TItem> left, ParentAwareCollection<TParent, TItem> right)
+        public static bool operator ==(ParentAwareObservableCollection<TParent, TItem> left, ParentAwareObservableCollection<TParent, TItem> right)
         {
             return Equals(left, right);
         }
 
-        public static bool operator !=(ParentAwareCollection<TParent, TItem> left, ParentAwareCollection<TParent, TItem> right)
+        public static bool operator !=(ParentAwareObservableCollection<TParent, TItem> left, ParentAwareObservableCollection<TParent, TItem> right)
         {
             return !Equals(left, right);
         }
