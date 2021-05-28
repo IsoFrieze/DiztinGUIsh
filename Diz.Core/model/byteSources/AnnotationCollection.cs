@@ -97,53 +97,11 @@ namespace Diz.Core.model.byteSources
             if (newItem == null) 
                 return false;
             
-            return !EnforcePolicy || ComputeAppendPolicyFor_(copyOfExistingToAddTo, newItem);
-        }
-        
-        public enum AnnotationAppendPolicy
-        {
-            Allowed,
-            ShouldIgnore,
-            NotAllowed,
-        } 
-
-        private static bool ComputeAppendPolicyFor_(IEnumerable<Annotation> copyOfExistingToAddTo, Annotation newItem)
-        {
-            return ComputeAppendPolicyFor(copyOfExistingToAddTo, newItem) switch
-            {
-                AnnotationAppendPolicy.Allowed => true,
-                AnnotationAppendPolicy.ShouldIgnore => false,
-                AnnotationAppendPolicy.NotAllowed => throw new InvalidDataException(
-                    "Found multiple annotations of same type when we required to find exactly 0 or 1"),
-                _ => throw new InvalidDataException("Unknown append policy")
-            };
+            return !EnforcePolicy || AnnotationCollectionPolicy.IsAppendAllowed(copyOfExistingToAddTo, newItem);
         }
 
-        private static AnnotationAppendPolicy ComputeAppendPolicyFor(IEnumerable<Annotation> copyOfExistingToAddTo, Annotation newAnnotation)
-        {
-            var existing = (Annotation)copyOfExistingToAddTo?.SingleOrDefaultOfType(newAnnotation.GetType());
-            return existing == null ? AnnotationAppendPolicy.Allowed : GetPolicyIfExisting(newAnnotation, existing);
-        }
-        
-        private static AnnotationAppendPolicy GetPolicyIfExisting(Annotation wantToAddAnnotation, Annotation alreadyExisting)
-        {
-            Debug.Assert(wantToAddAnnotation.GetType() == alreadyExisting.GetType());
-            
-            // if our existing annotation list contains a ByteAnnotation already,
-            // it's not an error BUT we will ignore this candidate byte
-            if (wantToAddAnnotation is ByteAnnotation && alreadyExisting is ByteAnnotation)
-                return AnnotationAppendPolicy.ShouldIgnore;
-
-            // any other type of duplicate? right now, don't allow it.
-            // (in the future, we could do smarter things or allow multiples of certain types/etc.
-            //  for now, we disallow it)
-            return AnnotationAppendPolicy.NotAllowed;
-        }
-
-        public bool VerifyAllowedToAppend(Annotation newItem)
-        {
-            return ComputeAppendPolicyFor_(this, newItem);
-        }
+        public bool VerifyAllowedToAppend(Annotation newItem) => 
+            AnnotationCollectionPolicy.IsAppendAllowed(this, newItem);
 
         private void ThrowIfNotAllowedToAppend(IEnumerable<Annotation> copyOfExistingToAddTo, Annotation newItem)
         {
@@ -173,6 +131,51 @@ namespace Diz.Core.model.byteSources
             var itemsCopy = Items.ToList();
             itemsCopy.RemoveAt(index);
             ThrowIfNotAllowedToAppend(itemsCopy, item);
+        }
+    }
+
+    public static class AnnotationCollectionPolicy
+    {
+        public enum AnnotationAppendPolicy
+        {
+            Allowed,
+            ShouldIgnore,
+            NotAllowed,
+        }
+
+        public static bool IsAppendAllowed(IEnumerable<Annotation> copyOfExistingToAddTo, Annotation newItem)
+        {
+            // someday, this should go in an external class and be able to be messed with.
+            
+            return ComputeAppendPolicyFor(copyOfExistingToAddTo, newItem) switch
+            {
+                AnnotationAppendPolicy.Allowed => true,
+                AnnotationAppendPolicy.ShouldIgnore => false,
+                AnnotationAppendPolicy.NotAllowed => throw new InvalidDataException(
+                    "Found multiple annotations of same type when we required to find exactly 0 or 1"),
+                _ => throw new InvalidDataException("Unknown append policy")
+            };
+        }
+
+        private static AnnotationAppendPolicy ComputeAppendPolicyFor(IEnumerable<Annotation> copyOfExistingToAddTo, Annotation newAnnotation)
+        {
+            var existing = (Annotation)copyOfExistingToAddTo?.SingleOrDefaultOfType(newAnnotation.GetType());
+            return existing == null ? AnnotationAppendPolicy.Allowed : GetPolicyIfExisting(newAnnotation, existing);
+        }
+        
+        private static AnnotationAppendPolicy GetPolicyIfExisting(Annotation wantToAddAnnotation, Annotation alreadyExisting)
+        {
+            Debug.Assert(wantToAddAnnotation.GetType() == alreadyExisting.GetType());
+            
+            // if our existing annotation list contains a ByteAnnotation already,
+            // it's not an error BUT we will ignore this candidate byte
+            if (wantToAddAnnotation is ByteAnnotation && alreadyExisting is ByteAnnotation)
+                return AnnotationAppendPolicy.ShouldIgnore;
+
+            // any other type of duplicate? right now, don't allow it.
+            // (in the future, we could do smarter things or allow multiples of certain types/etc.
+            //  for now, we disallow it)
+            return AnnotationAppendPolicy.NotAllowed;
         }
     }
 }
