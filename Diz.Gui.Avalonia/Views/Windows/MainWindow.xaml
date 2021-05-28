@@ -1,12 +1,13 @@
 <reactiveUi:ReactiveWindow
-    x:TypeArguments="viewModels:MainWindowViewModel"
+    x:TypeArguments="views:MainWindowViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:uc="clr-namespace:Diz.Gui.Avalonia.Views.UserControls"
     xmlns:reactiveUi="http://reactiveui.net"
-    xmlns:viewModels="clr-namespace:Diz.Gui.Avalonia.ViewModels"
+    xmlns:viewModels1="clr-namespace:Diz.ViewModels;assembly=Diz.ViewModels"
+    xmlns:views="clr-namespace:Diz.Gui.Avalonia.Views"
     x:Class="Diz.Gui.Avalonia.Views.Windows.MainWindow"
     Icon="Assets/diz-icon2-magenta-med32x32.ico"
     mc:Ignorable="d"
@@ -18,7 +19,7 @@
     MinHeight="150">
     
     <Design.DataContext>
-        <viewModels:MainWindowViewModel />
+        <views:MainWindowViewModel />
     </Design.DataContext>
     
     <StackPanel>

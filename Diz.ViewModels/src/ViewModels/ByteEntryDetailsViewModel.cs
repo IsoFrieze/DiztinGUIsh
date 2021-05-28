@@ -2,7 +2,7 @@
 using Diz.Controllers.util;
 using ReactiveUI;
 
-namespace Diz.Gui.Avalonia.ViewModels
+namespace Diz.ViewModels
 {
     public class ByteEntryDetailsViewModel : ViewModel
     {

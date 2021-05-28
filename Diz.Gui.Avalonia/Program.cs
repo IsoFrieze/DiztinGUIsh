@@ -27,8 +27,3 @@ namespace Diz.Gui.Avalonia
         }
     }
 }
-
-// You may want to start here:
-// https://reactiveui.net/docs/getting-started/
-// http://avaloniaui.net/docs/reactiveui/
-// https://github.com/AvaloniaUI/Avalonia/wiki/Application-lifetimes

@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
 
-namespace Diz.Gui.Avalonia
+namespace Diz
 {
     public class ViewModel : ReactiveObject, IActivatableViewModel
     {

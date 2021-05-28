@@ -1,11 +1,11 @@
 ﻿<reactiveUi:ReactiveUserControl
-    x:TypeArguments="vm:ByteEntriesViewModel"
+    x:TypeArguments="viewModels:ByteEntriesViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:reactiveUi="http://reactiveui.net"
-    xmlns:vm="clr-namespace:Diz.Gui.Avalonia.ViewModels"
+    xmlns:viewModels="clr-namespace:Diz.ViewModels;assembly=Diz.ViewModels"
     mc:Ignorable="d"
     d:DesignWidth="800" d:DesignHeight="450"
     x:Class="Diz.Gui.Avalonia.Views.UserControls.MainGridUserControl">
@@ -18,7 +18,7 @@
     -->
     
     <Design.DataContext>
-        <vm:ByteEntriesViewModel />
+        <viewModels:ByteEntriesViewModel />
     </Design.DataContext>
 
     <!-- <DataGridTextColumn Header="GDP" Binding="{Binding GDP}" Width="3*" CellStyleClasses="gdp" /> -->

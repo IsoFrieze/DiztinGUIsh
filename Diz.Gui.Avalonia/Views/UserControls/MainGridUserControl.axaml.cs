@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.ReactiveUI;
 using Avalonia.Styling;
-using Diz.Gui.Avalonia.ViewModels;
+using Diz.ViewModels;
 using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.UserControls

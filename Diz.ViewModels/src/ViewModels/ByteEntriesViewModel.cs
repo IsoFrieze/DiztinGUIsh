@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
-using Avalonia.Controls;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
 using Diz.Core.model.byteSources;
@@ -13,7 +12,7 @@ using Diz.Core.util;
 using LightInject;
 using ReactiveUI;
 
-namespace Diz.Gui.Avalonia.ViewModels
+namespace Diz.ViewModels
 {
     public class ByteEntriesViewModel : ViewModel, IRowBaseViewer<ByteEntry>
     {
@@ -68,7 +67,7 @@ namespace Diz.Gui.Avalonia.ViewModels
                 });
         }
 
-        private void CellEdited(DataGridCellEditEndedEventArgs args)
+        /*private void CellEdited(DataGridCellEditEndedEventArgs args)
         {
             if (args.EditAction != DataGridEditAction.Commit)
                 return;
@@ -77,7 +76,7 @@ namespace Diz.Gui.Avalonia.ViewModels
             {
                 
             }
-        }
+        }*/
 
         /*private async Task<IEnumerable<ByteEntryDetailsViewModel>?> GetByteEntries(int startRomOffset, CancellationToken token)
         {

@@ -3,13 +3,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
-using Diz.Gui.Avalonia.ViewModels;
 using Diz.Gui.Avalonia.Views.UserControls;
+using Diz.ViewModels;
 using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.Windows
 {
-    public class MainWindow : ReactiveWindow<MainWindowViewModel>
+    public class MainWindow : ReactiveWindow<MainWindowViewModel>, IMainWindowView
     {
         public MainWindow()
         {
