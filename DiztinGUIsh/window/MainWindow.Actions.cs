@@ -114,30 +114,36 @@ namespace DiztinGUIsh.window
             UpdateUI_Tmp3();
         }
 
+        private int _lastMarkPropertyIndex = -1;
+
         private void MarkMany(int offset, int column)
         {
             if (!RomDataPresent()) 
                 return;
             
-            var mark = PromptMarkMany(offset, column);
+            var mark = PromptMarkMany(offset, column, _lastMarkPropertyIndex);
             if (mark == null)
                 return;
 
-            MarkMany(mark.Property, mark.Start, mark.Value, mark.Count);
+            MarkMany(mark.PropertyIndex, mark.Start, mark.Value, mark.Count);
+            _lastMarkPropertyIndex = mark.PropertyIndex;
 
             UpdateSomeUI2();
         }
 
-        private void MarkMany(int markProperty, int markStart, object markValue, int markCount)
+        private void MarkMany(int markProperty, int markStart, object markAs, int markCount)
         {
+            // need to rework markAs and markProperty, this works but it's view-dependent
+            // and fragile as hell.
+            
             var destination = markProperty switch
             {
-                0 => Project.Data.MarkTypeFlag(markStart, (FlagType) markValue, markCount),
-                1 => Project.Data.MarkDataBank(markStart, (int) markValue, markCount),
-                2 => Project.Data.MarkDirectPage(markStart, (int) markValue, markCount),
-                3 => Project.Data.MarkMFlag(markStart, (bool) markValue, markCount),
-                4 => Project.Data.MarkXFlag(markStart, (bool) markValue, markCount),
-                5 => Project.Data.MarkArchitecture(markStart, (Architecture) markValue, markCount),
+                0 => Project.Data.MarkTypeFlag(markStart, (FlagType) markAs, markCount),
+                1 => Project.Data.MarkDataBank(markStart, (int) markAs, markCount),
+                2 => Project.Data.MarkDirectPage(markStart, (int) markAs, markCount),
+                3 => Project.Data.MarkMFlag(markStart, (bool) markAs, markCount),
+                4 => Project.Data.MarkXFlag(markStart, (bool) markAs, markCount),
+                5 => Project.Data.MarkArchitecture(markStart, (Architecture) markAs, markCount),
                 _ => 0
             };
 

@@ -131,14 +131,14 @@ namespace DiztinGUIsh.window
             return true;
         }
 
-        public MarkCommand PromptMarkMany(int offset, int whichIndex) => 
-            CreateMarkManyController(offset, whichIndex).GetMarkCommand();
+        public MarkCommand PromptMarkMany(int offset, int whichIndex, int lastMarkPropertyIndex) => 
+            CreateMarkManyController(offset, whichIndex, lastMarkPropertyIndex).GetMarkCommand();
         
-        private IMarkManyController CreateMarkManyController(int offset, int whichIndex)
+        private IMarkManyController CreateMarkManyController(int offset, int whichIndex, int lastMarkPropertyIndex)
         {
             // NOTE: in upstream 3.0 branch, replace this with dependency injection
             var view = new MarkManyView();
-            var markManyController = new MarkManyController(offset, whichIndex, Project.Data, view);
+            var markManyController = new MarkManyController(offset, whichIndex, Project.Data, view, lastMarkPropertyIndex);
             markManyController.MarkManyView.Controller = markManyController;
             return markManyController;
         }

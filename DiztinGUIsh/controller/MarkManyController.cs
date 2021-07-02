@@ -14,7 +14,8 @@ namespace Diz.Controllers.controllers
         public IReadOnlySnesRomBase Data { get; }
         public int DesiredStartingCount { get; set; } = 0x10;
 
-        public MarkManyController(int offset, int whichIndex, IReadOnlySnesRomBase data, IMarkManyView view)
+        public MarkManyController(int offset, int whichIndex, IReadOnlySnesRomBase data, IMarkManyView view,
+            int lastMarkPropertyIndex = -1)
         {
             Data = data;
             MarkManyView = view;
@@ -29,6 +30,9 @@ namespace Diz.Controllers.controllers
             );
             
             MarkManyView.Column = whichIndex;
+
+            if (lastMarkPropertyIndex != -1)
+                MarkManyView.Property = lastMarkPropertyIndex;
         }
 
         private MarkCommand CreateCommandFromView() =>
@@ -37,7 +41,7 @@ namespace Diz.Controllers.controllers
                 Start = DataRange.StartIndex,
                 Count = DataRange.RangeCount,
                 Value = MarkManyView.GetFinalValue(),
-                Property = MarkManyView.Property,
+                PropertyIndex = MarkManyView.Property,
             };
 
         public MarkCommand GetMarkCommand() => 

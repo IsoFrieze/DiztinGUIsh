@@ -10,50 +10,56 @@ namespace Diz.Core.util
         public int MaxCount { get; }
 
         private int rangeStartIndex;
-        private int rangeCount;
+        private int rangeEndIndex;
 
         public CorrectingRange(int maxCount)
         {
             MaxCount = maxCount;
         }
-
-        public int EndIndex
-        {
-            // EndIndex is just a convenience helper, we'll route everything through StartIndex
-            get => RangeCount == 0 
-                ? -1 
-                : StartIndex + RangeCount - 1;
-            set => StartIndex = value - RangeCount + 1;
-        }
-
+        
         public int StartIndex
         {
             get => rangeStartIndex;
             set
             {
+                var existingCount = RangeCount;
                 rangeStartIndex = ClampIndex(value);
-                OnStartIndexChanged();
+                rangeEndIndex = ClampIndex(StartIndex + existingCount - 1);
                 AssertValid();
             }
         }
         
-        public int RangeCount
+        public int EndIndex
         {
-            get => rangeCount;
+            get => rangeEndIndex;
             set
             {
-                rangeCount = ClampCount(value);
-                OnRangeCountChanged();
+                var existingCount = RangeCount;
+                rangeEndIndex = ClampIndex(value);
+                rangeStartIndex = ClampIndex(rangeEndIndex + 1 - existingCount);
                 AssertValid();
             }
         }
 
-        private void OnStartIndexChanged() => UpdateRangeCountToBounds();
-        private void OnRangeCountChanged() => UpdateStartIndexToBounds();
+        public bool ChangeRangeCountShouldChangeEnd { get; set; } = true;
+        
+        public int RangeCount
+        {
+            get => EndIndex + 1 - StartIndex;
+            set
+            {
+                if (ChangeRangeCountShouldChangeEnd)
+                {
+                    EndIndex = StartIndex + value - 1;
+                }
+                else
+                {
+                    StartIndex = EndIndex + 1 - value;
+                }
+            }
+        }
 
-        private void UpdateRangeCountToBounds() => rangeCount = ClampCount(rangeCount);
-        private void UpdateStartIndexToBounds() => rangeStartIndex = ClampIndex(rangeStartIndex);
-
+        /*
         private int ClampCount(int count)
         { 
             if (count <= 0)
@@ -65,6 +71,7 @@ namespace Diz.Core.util
             Debug.Assert(Util.IsBetween(count, MaxCount));
             return count;
         }
+        */
 
         private bool IsValidIndex(int index) =>
             index >= 0 && index < MaxCount;
@@ -83,10 +90,10 @@ namespace Diz.Core.util
         {
             Debug.Assert(MaxCount >= 0);
             
-            Debug.Assert(rangeCount >= 0);
+            Debug.Assert(RangeCount >= 0);
             Debug.Assert(rangeStartIndex >= 0);
 
-            if (rangeCount == 0)
+            if (RangeCount == 0)
             {
                 Debug.Assert(EndIndex == -1);
             }
@@ -95,7 +102,7 @@ namespace Diz.Core.util
                 Debug.Assert(EndIndex >= 0);
             }
 
-            Debug.Assert(rangeCount <= MaxCount);
+            Debug.Assert(RangeCount <= MaxCount);
             Debug.Assert(rangeStartIndex < MaxCount);
             Debug.Assert(EndIndex < MaxCount);
         }

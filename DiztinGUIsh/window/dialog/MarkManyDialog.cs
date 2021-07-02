@@ -11,7 +11,12 @@ namespace DiztinGUIsh.window.dialog
     {
         public IMarkManyController Controller { get; set; }
         private IReadOnlySnesRomBase Data => Controller.Data;
-        public int Property => property.SelectedIndex;
+        public int Property
+        {
+            get => property.SelectedIndex;
+            set => property.SelectedIndex = value;
+        }
+
         private int PropertyMaxVal => Property == 1 ? 0x100 : 0x10000;
 
         public int Column

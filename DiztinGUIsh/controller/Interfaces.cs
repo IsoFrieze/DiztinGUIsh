@@ -30,7 +30,7 @@ namespace DiztinGUIsh.controller
     
     public interface IMarkManyView : IViewer, IModalDialog
     {
-        int Property { get; }
+        int Property { get; set; }
         int Column { set; } // TODO: make enum with different types supported.
         IMarkManyController Controller { get; set; }
         object GetFinalValue();
