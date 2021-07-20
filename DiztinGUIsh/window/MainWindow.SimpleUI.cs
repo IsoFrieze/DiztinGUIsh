@@ -138,5 +138,21 @@ namespace DiztinGUIsh.window
         private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e) => RescanForInOut();
         private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => ImportBSNESUsageMap();
         private void table_MouseWheel(object sender, MouseEventArgs e) => ScrollTableBy(e.Delta);
+
+        public NavigationForm NavigationForm { get; }
+
+        private void showHistoryToolStripMenuItem_Click(object sender, System.EventArgs e)
+        {
+            if (!NavigationForm.Visible)
+                NavigationForm.Show();
+            else
+                NavigationForm.BringToFront();
+        }
+
+        private void goBackToolStripMenuItem_Click(object sender, System.EventArgs e) => 
+            NavigationForm.Navigate(forwardDirection: false);
+
+        private void goForwardToolStripMenuItem_Click(object sender, System.EventArgs e) => 
+            NavigationForm.Navigate(forwardDirection: true);
     }
 }

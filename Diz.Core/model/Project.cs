@@ -1,8 +1,5 @@
-﻿using System;
-using Diz.Core.export;
-using Diz.Core.util;
+﻿using Diz.Core.export;
 using DiztinGUIsh;
-using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {

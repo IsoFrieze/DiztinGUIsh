@@ -17,6 +17,12 @@ namespace DiztinGUIsh.window
             Document.PropertyChanged += Document_PropertyChanged;
             ProjectController.ProjectChanged += ProjectController_ProjectChanged;
 
+            NavigationForm = new NavigationForm
+            {
+                Document = Document,
+                SnesNavigation = this,
+            };
+
             InitializeComponent();
         }
         
@@ -113,6 +119,34 @@ namespace DiztinGUIsh.window
             ProjectController.UpdateExportSettings(selectedSettings.Value);
 
             return settings;
+        }
+
+        private void RememberNavigationPoint(int pcOffset)
+        {
+            var snesAddress = Project.Data.ConvertPCtoSnes(pcOffset);
+            var history = Document.NavigationHistory;
+            
+            // if our last remembered offset IS the new offset, don't record it again
+            // (prevent duplication)
+            if (history.Count > 0 && history[history.Count-1].SnesOffset == snesAddress)
+                return;
+
+            history.Add(
+                new NavigationEntry(
+                    snesAddress, 
+                    NavigationEntry.NavigationType.NextInstruction, 
+                    Project.Data
+                    )
+                );
+        }
+
+        private void timer1_Tick(object sender, System.EventArgs e)
+        {
+            if (_cooldownForPercentUpdate == -1)
+                return;
+
+            if (--_cooldownForPercentUpdate == -1)
+                UpdatePercent(forceRecalculate: true);
         }
     }
 }

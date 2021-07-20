@@ -55,6 +55,16 @@ namespace DiztinGUIsh.window
             InvalidateTable();
         }
 
+        private void table_SelectionChanged(object sender, System.EventArgs e)
+        {
+            SelectOffset(SelectedOffset);
+        }
+
+        private void table_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
         private void table_KeyDown(object sender, KeyEventArgs e)
         {
             if (Project?.Data == null || Project.Data.GetRomSize() <= 0) return;
@@ -326,25 +336,33 @@ namespace DiztinGUIsh.window
             PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + ViewOffset);
         }
 
-        public void SelectOffset(int offset, int column = -1)
+        public void SelectOffset(int pcOffset, int column = -1, bool saveHistory = false)
         {
+            if (saveHistory)
+                RememberNavigationPoint(SelectedOffset); // save old position
+            
             var col = column == -1 ? table.CurrentCell.ColumnIndex : column;
-            if (offset < ViewOffset)
+            if (pcOffset < ViewOffset)
             {
-                ViewOffset = offset;
+                ViewOffset = pcOffset;
                 UpdateDataGridView();
                 table.CurrentCell = table.Rows[0].Cells[col];
             }
-            else if (offset >= ViewOffset + rowsToShow)
+            else if (pcOffset >= ViewOffset + rowsToShow)
             {
-                ViewOffset = offset - rowsToShow + 1;
+                ViewOffset = pcOffset - rowsToShow + 1;
                 UpdateDataGridView();
                 table.CurrentCell = table.Rows[rowsToShow - 1].Cells[col];
             }
             else
             {
-                table.CurrentCell = table.Rows[offset - ViewOffset].Cells[col];
+                table.CurrentCell = table.Rows[pcOffset - ViewOffset].Cells[col];
             }
+
+            if (saveHistory)
+                RememberNavigationPoint(pcOffset); // save new position
+            
+            InvalidateTable();
         }
 
         private void InitMainTable()

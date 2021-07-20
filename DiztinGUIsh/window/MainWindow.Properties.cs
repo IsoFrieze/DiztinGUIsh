@@ -36,7 +36,10 @@ namespace DiztinGUIsh.window
         private int ViewOffset
         {
             get => Project?.CurrentViewOffset ?? 0;
-            set => Project.CurrentViewOffset = value;
+            set
+            {
+                Project.CurrentViewOffset = value;
+            }
         }
 
         private bool importerMenuItemsEnabled;

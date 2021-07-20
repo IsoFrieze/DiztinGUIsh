@@ -57,8 +57,9 @@ namespace DiztinGUIsh.window
                 return;
             
             ProjectController.MarkChanged();
-            SelectOffset(Project.Data.Step(offset, false, false, offset - 1));
-            UpdateUI_Tmp3();
+            var newOffset = Project.Data.Step(offset, false, false, offset - 1);
+            SelectOffset(newOffset, saveHistory: true);
+            UpdateUi_TimerAndPercent();
         }
 
         private void StepIn(int offset)
@@ -67,8 +68,9 @@ namespace DiztinGUIsh.window
                 return;
             
             ProjectController.MarkChanged();
-            SelectOffset(Project.Data.Step(offset, true, false, offset - 1));
-            UpdateUI_Tmp3();
+            var newOffset = Project.Data.Step(offset, true, false, offset - 1);
+            SelectOffset(newOffset, saveHistory: true);
+            UpdateUi_TimerAndPercent();
         }
 
         private void AutoStepSafe(int offset)
@@ -79,9 +81,9 @@ namespace DiztinGUIsh.window
             ProjectController.MarkChanged();
             var destination = Project.Data.AutoStep(offset, false, 0);
             if (moveWithStep) 
-                SelectOffset(destination);
+                SelectOffset(destination, saveHistory: true);
             
-            UpdateUI_Tmp3();
+            UpdateUi_TimerAndPercent();
         }
 
         private void AutoStepHarsh(int offset)
@@ -96,9 +98,9 @@ namespace DiztinGUIsh.window
             var destination = Project.Data.AutoStep(newOffset, true, count);
             
             if (moveWithStep) 
-                SelectOffset(destination);
+                SelectOffset(destination, saveHistory: true);
 
-            UpdateUI_Tmp3();
+            UpdateUi_TimerAndPercent();
         }
 
         private void Mark(int offset)
@@ -111,7 +113,7 @@ namespace DiztinGUIsh.window
             
             SelectOffset(newOffset);
             
-            UpdateUI_Tmp3();
+            UpdateUi_TimerAndPercent();
         }
 
         private void MarkMany(int offset, int column)
@@ -144,7 +146,7 @@ namespace DiztinGUIsh.window
             ProjectController.MarkChanged();
 
             if (moveWithStep)
-                SelectOffset(destination);
+                SelectOffset(destination, saveHistory: true);
         }
 
         private void GoToIntermediateAddress(int offset)
@@ -153,13 +155,13 @@ namespace DiztinGUIsh.window
             if (snesOffset == -1)
                 return;
             
-            SelectOffset(snesOffset, 1);
+            SelectOffset(snesOffset, 1, saveHistory: true);
         }
 
-        private void GoTo(int offset)
+        public void GoTo(int offset)
         {
             if (IsOffsetInRange(offset))
-                SelectOffset(offset);
+                SelectOffset(offset, saveHistory: true);
             else
                 ShowOffsetOutOfRangeMsg();
         }
@@ -169,7 +171,7 @@ namespace DiztinGUIsh.window
             if (!FindUnreached(SelectedOffset, end, direction, out var unreached))
                 return;
             
-            SelectOffset(unreached, 1);
+            SelectOffset(unreached, 1, saveHistory: true);
         }
 
 

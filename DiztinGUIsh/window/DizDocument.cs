@@ -1,4 +1,8 @@
-﻿using Diz.Core.model;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using Diz.Core.model;
+using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window
@@ -11,8 +15,6 @@ namespace DiztinGUIsh.window
     // Don't save anything important here though.
     public class DizDocument : DizDataModel
     {
-        private Project project;
-
         public Project Project
         {
             get => project;
@@ -32,5 +34,21 @@ namespace DiztinGUIsh.window
                 Settings.Default.Save();
             }
         }
+
+        public BindingList<NavigationEntry> NavigationHistory
+        {
+            get => navigationHistory;
+            set => SetField(ref navigationHistory, value);
+        }
+        
+        private Project project;
+
+        private BindingList<NavigationEntry> navigationHistory = new BindingList<NavigationEntry>
+        {
+            RaiseListChangedEvents = true,
+            AllowNew = false,
+            AllowRemove = false,
+            AllowEdit = false,
+        };
     }
 }

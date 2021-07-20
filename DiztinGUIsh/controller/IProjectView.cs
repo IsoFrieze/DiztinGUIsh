@@ -5,7 +5,7 @@ using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.controller
 {
-    public interface IProjectView
+    public interface IProjectView : ISnesNavigation
     {
         Project Project { get; set; }
         void OnProjectOpenFail(string errorMsg);
@@ -14,9 +14,13 @@ namespace DiztinGUIsh.controller
 
         public delegate void LongRunningTaskHandler(Action task, string description = null);
         LongRunningTaskHandler TaskHandler { get; }
-        void SelectOffset(int offset, int column=-1);
         string AskToSelectNewRomFilename(string promptSubject, string promptText);
         IImportRomDialogView GetImportView();
         void OnProjectOpenWarning(string warningMsg);
+    }
+
+    public interface ISnesNavigation
+    {
+        void SelectOffset(int pcOffset, int column=-1, bool saveHistory = false);
     }
 }

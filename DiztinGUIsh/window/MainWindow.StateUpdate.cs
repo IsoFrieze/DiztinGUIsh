@@ -53,7 +53,7 @@ namespace DiztinGUIsh.window
             importCDLToolStripMenuItem.Enabled = true;
             UpdateWindowTitle();
             UpdateDataGridView();
-            UpdatePercent();
+            ScheduleUpdatePercentageUncovered();
             table.Invalidate();
             EnableSubWindows();
         }
@@ -67,17 +67,40 @@ namespace DiztinGUIsh.window
             InvalidateTable();
         }
 
-        public void UpdatePercent()
+        public void UpdatePercent(bool forceRecalculate = false)
         {
             if (Project?.Data == null || Project.Data.GetRomSize() <= 0)
                 return;
 
+            var size = Project.Data.GetRomSize();
+            var shouldRecalcNow = forceRecalculate || _cachedReached == -1; 
+            var reached = shouldRecalcNow ? CalculateTotalBytesReached() : _cachedReached;
+            var recalculatingInProgress = _cooldownForPercentUpdate != -1;
+
+            var reCalcMsg  = recalculatingInProgress ? "[recalculating...]" : "";
+            if (reached == -1)
+            {
+                percentComplete.Text = reCalcMsg;
+            }
+            else
+            {
+                percentComplete.Text = $"{reached * 100.0 / size:N3}% ({reached:D}/{size:D}) {reCalcMsg}";
+            }
+
+            _cachedReached = reached;
+        }
+
+        private int _cachedReached = -1;
+
+        // CAUTION: very expensive method. be careful using in UI performance-critical places
+        private int CalculateTotalBytesReached()
+        {
             int totalUnreached = 0, size = Project.Data.GetRomSize();
             for (int i = 0; i < size; i++)
                 if (Project.Data.GetFlag(i) == FlagType.Unreached)
                     totalUnreached++;
             int reached = size - totalUnreached;
-            percentComplete.Text = $"{reached * 100.0 / size:N3}% ({reached:D}/{size:D})";
+            return reached;
         }
 
         public void UpdateMarkerLabel()
@@ -132,14 +155,22 @@ namespace DiztinGUIsh.window
         private void UpdateSomeUI2()
         {
             // refactor this somewhere else
-            UpdateUI_Tmp3();
+            UpdateUi_TimerAndPercent();
             InvalidateTable();
         }
 
-        private void UpdateUI_Tmp3()
+        public int _cooldownForPercentUpdate = 0;
+
+        private void ScheduleUpdatePercentageUncovered()
         {
-            // refactor this somewhere else
-            UpdatePercent();
+            // UpdatePercent() with a force refresh is very expensive so only do it when we're idle for a bit.
+            _cooldownForPercentUpdate = 3; // 3 times x 2 seconds = 6 seconds.
+            UpdatePercent(); // less expensive invocation that just updates UI 
+        }
+
+        private void UpdateUi_TimerAndPercent()
+        {
+            ScheduleUpdatePercentageUncovered();
             UpdateWindowTitle();
         }
     }
