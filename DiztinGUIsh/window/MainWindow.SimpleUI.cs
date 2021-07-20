@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.window.dialog;
@@ -59,15 +60,26 @@ namespace DiztinGUIsh.window
         private void gotoNextUnreachedToolStripMenuItem_Click(object sender, EventArgs e) => 
             GoToUnreached(false, true);
         
-        private void markOneToolStripMenuItem_Click(object sender, EventArgs e) => Mark(SelectedOffset);
-        private void markManyToolStripMenuItem_Click(object sender, EventArgs e) => MarkMany(SelectedOffset, 7);
-        private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e) => MarkMany(SelectedOffset, 8);
-        private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e) => MarkMany(SelectedOffset, 9);
+        private void markOneToolStripMenuItem_Click(object sender, EventArgs e) => 
+            Mark(SelectedOffset);
+        
+        private void markManyToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MarkMany(SelectedOffset, MarkCommand.MarkManyProperty.Flag);
+        
+        private void setDataBankToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MarkMany(SelectedOffset, MarkCommand.MarkManyProperty.DataBank);
+        
+        private void setDirectPageToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MarkMany(SelectedOffset, MarkCommand.MarkManyProperty.DirectPage);
 
-        private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e) => MarkMany(SelectedOffset, 10);
+        private void toggleAccumulatorSizeMToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MarkMany(SelectedOffset, MarkCommand.MarkManyProperty.MFlag);
 
-        private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e) => MarkMany(SelectedOffset, 11);
-        private void addCommentToolStripMenuItem_Click(object sender, EventArgs e) => BeginEditingComment();
+        private void toggleIndexSizeToolStripMenuItem_Click(object sender, EventArgs e) => 
+            MarkMany(SelectedOffset, MarkCommand.MarkManyProperty.XFlag);
+        
+        private void addCommentToolStripMenuItem_Click(object sender, EventArgs e) => 
+            BeginEditingComment();
 
         private void unreachedToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Unreached);

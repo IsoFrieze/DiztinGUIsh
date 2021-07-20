@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
@@ -131,14 +132,27 @@ namespace DiztinGUIsh.window
             return true;
         }
 
-        public MarkCommand PromptMarkMany(int offset, int whichIndex) => 
-            CreateMarkManyController(offset, whichIndex).GetMarkCommand();
+        public MarkCommand PromptMarkMany(int offset, MarkCommand.MarkManyProperty property)
+        {
+            var markManyController = CreateMarkManyController(offset, property);
+            var markCommand = markManyController.GetMarkCommand();
+
+            if (markCommand != null) 
+                SavedMarkManySettings = markManyController.Settings;
+
+            return markCommand;
+        }
+
+        private Dictionary<MarkCommand.MarkManyProperty, object> SavedMarkManySettings { get; set; } = new Dictionary<MarkCommand.MarkManyProperty, object>();
         
-        private IMarkManyController CreateMarkManyController(int offset, int whichIndex)
+        private IMarkManyController CreateMarkManyController(int offset, MarkCommand.MarkManyProperty property)
         {
             // NOTE: in upstream 3.0 branch, replace this with dependency injection
             var view = new MarkManyView();
-            var markManyController = new MarkManyController(offset, whichIndex, Project.Data, view);
+            var markManyController = new MarkManyController(offset, property, Project.Data, view)
+            {
+                Settings = SavedMarkManySettings
+            };
             markManyController.MarkManyView.Controller = markManyController;
             return markManyController;
         }

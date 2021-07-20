@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Forms;
 using Diz.Core;
+using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
+
+// be careful modifying anything in this class, it's extremely fragile and hardcoded.
 
 namespace DiztinGUIsh.window.dialog
 {
@@ -13,29 +17,33 @@ namespace DiztinGUIsh.window.dialog
     {
         public IMarkManyController Controller { get; set; }
         private IReadOnlySnesRomBase Data => Controller.Data;
-        public int Property => property.SelectedIndex;
-        private int PropertyMaxVal => Property == 1 ? 0x100 : 0x10000;
+        
+        private int PropertyMaxIntVal => Property == MarkCommand.MarkManyProperty.DataBank 
+            ? 0x100 
+            : 0x10000;
 
-        public int Column
+        public MarkCommand.MarkManyProperty Property
         {
+            get => (MarkCommand.MarkManyProperty) comboPropertyType.SelectedIndex;
             set
             {
                 UpdatePropertyIndex(value);
-                UpdateMostUi();
+                UpdateVisibility();
                 UpdateTextUi();
             }
         }
+        
         private Util.NumberBase NoBase => 
             radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
         private int DigitCount => NoBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
         
-        private int PropertyValue => 
-            property.SelectedIndex == 1 ? 
+        private int PropertyValueAsInt => 
+            comboPropertyType.SelectedIndex == 1 ? 
                 Data.GetDataBank(Controller.DataRange.StartIndex) : 
                 Data.GetDirectPage(Controller.DataRange.StartIndex);
         
-        private int propertyValue;
-        private bool updatingText;
+        private int propertyValueIntDpOrD;
+        private bool isUpdatingText;
 
         /// <summary>
         /// Dialog that lets us mark many of a particular column on the data grid form
@@ -54,95 +62,199 @@ namespace DiztinGUIsh.window.dialog
             archCombo.SelectedIndex = 0;
             mxCombo.SelectedIndex = 0;
         }
-
-        private void UpdatePropertyIndex(int column)
+        
+        private void UpdatePropertyIndex(MarkCommand.MarkManyProperty eProperty)
         {
-            // TODO: woof. fixme :)
-            property.SelectedIndex = column switch
-            {
-                8 => 1,
-                9 => 2,
-                10 => 3,
-                11 => 4,
-                _ => 0
-            };
+            // TODO: woof. fixme :) very, very hardcoded
+            comboPropertyType.SelectedIndex = (int) eProperty;
         }
         
         private void ClampPropertyValue() => 
-            propertyValue = Util.ClampIndex(propertyValue, PropertyMaxVal);
+            propertyValueIntDpOrD = Util.ClampIndex(propertyValueIntDpOrD, PropertyMaxIntVal);
 
-        public object GetFinalValue() {
-            switch (property.SelectedIndex)
+        public FlagType GetFlagTypeFromComboBox() =>
+            flagCombo.SelectedIndex switch
             {
-                case 0:
-                    switch (flagCombo.SelectedIndex)
-                    {
-                        case 0: return FlagType.Unreached;
-                        case 1: return FlagType.Opcode;
-                        case 2: return FlagType.Operand;
-                        case 3: return FlagType.Data8Bit;
-                        case 4: return FlagType.Graphics;
-                        case 5: return FlagType.Music;
-                        case 6: return FlagType.Empty;
-                        case 7: return FlagType.Data16Bit;
-                        case 8: return FlagType.Pointer16Bit;
-                        case 9: return FlagType.Data24Bit;
-                        case 10: return FlagType.Pointer24Bit;
-                        case 11: return FlagType.Data32Bit;
-                        case 12: return FlagType.Pointer32Bit;
-                        case 13: return FlagType.Text;
-                    }
+                0 => FlagType.Unreached,
+                1 => FlagType.Opcode,
+                2 => FlagType.Operand,
+                3 => FlagType.Data8Bit,
+                4 => FlagType.Graphics,
+                5 => FlagType.Music,
+                6 => FlagType.Empty,
+                7 => FlagType.Data16Bit,
+                8 => FlagType.Pointer16Bit,
+                9 => FlagType.Data24Bit,
+                10 => FlagType.Pointer24Bit,
+                11 => FlagType.Data32Bit,
+                12 => FlagType.Pointer32Bit,
+                13 => FlagType.Text,
+                _ => 0
+            };
+        
+        public int GetComboxBoxIndexFromFlagType(FlagType flagType) =>
+            flagType switch
+            {
+                FlagType.Unreached => 0,
+                FlagType.Opcode => 1,
+                FlagType.Operand => 2,
+                FlagType.Data8Bit => 3,
+                FlagType.Graphics => 4,
+                FlagType.Music => 5,
+                FlagType.Empty => 6,
+                FlagType.Data16Bit => 7,
+                FlagType.Pointer16Bit => 8,
+                FlagType.Data24Bit => 9,
+                FlagType.Pointer24Bit => 10,
+                FlagType.Data32Bit => 11,
+                FlagType.Pointer32Bit => 12,
+                FlagType.Text => 13,
+                _ => 0
+            };
 
-                    break;
-                case 1:
-                case 2:
-                    return propertyValue;
-                case 3:
-                case 4:
-                    return mxCombo.SelectedIndex != 0;
-                case 5:
-                    switch (archCombo.SelectedIndex)
-                    {
-                        case 0: return Architecture.Cpu65C816;
-                        case 1: return Architecture.Apuspc700;
-                        case 2: return Architecture.GpuSuperFx;
-                    }
+        public Architecture GetCpuArchFromComboBox() =>
+            archCombo.SelectedIndex switch
+            {
+                0 => Architecture.Cpu65C816,
+                1 => Architecture.Apuspc700,
+                2 => Architecture.GpuSuperFx,
+                _ => 0
+            };
+        
+        public int GetComboBoxFromCpuArch(Architecture arch) =>
+            arch switch
+            {
+                Architecture.Cpu65C816 => 0,
+                Architecture.Apuspc700 => 1,
+                Architecture.GpuSuperFx => 2,
+                _ => 0
+            };
+        
+        private int GetPropertyValueRaw() => 
+            propertyValueIntDpOrD;
 
-                    break;
-                default:
-                    return 0;
+        private bool GetMorXFromComboBox() => mxCombo.SelectedIndex != 0;
+        private int GetComboBoxFromMorX(bool flag) => flag ? 1 : 0;
+
+        // this.... sucks. woof. need to rewrite
+        public object GetPropertyValue() => 
+            GetPropertyValue(comboPropertyType.SelectedIndex);
+
+        private object GetPropertyValue(int whichProperty)
+        {
+            // ReSharper disable once HeapView.BoxingAllocation
+            return whichProperty switch
+            {
+                0 => GetFlagTypeFromComboBox(),
+                1 => GetPropertyValueRaw(),
+                2 => GetPropertyValueRaw(),
+                3 => GetMorXFromComboBox(),
+                4 => GetMorXFromComboBox(),
+                5 => GetCpuArchFromComboBox(),
+                _ => 0
+            };
+        }
+
+        public void AttemptSetSettings(MarkCommand.MarkManyProperty markProperty, object markValue)
+        {
+            if (markValue == null)
+                return;
+
+            // wooooooofffffffff..... fixme. jank as hell.
+            try
+            {
+                switch (markProperty)
+                {
+                    case MarkCommand.MarkManyProperty.Flag:
+                        flagCombo.SelectedIndex = GetComboxBoxIndexFromFlagType((FlagType) markValue);
+                        break;
+                    case MarkCommand.MarkManyProperty.DataBank:
+                    case MarkCommand.MarkManyProperty.DirectPage:
+                        propertyValueIntDpOrD = (int) markValue;
+                        break;
+                    case MarkCommand.MarkManyProperty.MFlag:
+                    case MarkCommand.MarkManyProperty.XFlag:
+                        mxCombo.SelectedIndex = GetComboBoxFromMorX((bool) markValue);
+                        break;
+                    case MarkCommand.MarkManyProperty.CpuArch:
+                        archCombo.SelectedIndex = GetComboBoxFromCpuArch((Architecture) markValue);
+                        break;
+                }
             }
+            catch (Exception)
+            {
+                // NOP
+            }
+        }
+
+        public void AttemptSetSettings(Dictionary<MarkCommand.MarkManyProperty, object> settings)
+        {
+            // TODO: this doesn't work yet for the properties that are shared like D and DP.
+            // we need to make the UI read from these settings instead of stuffing their values into them
+            // one-time. For now, it's still a decent way to go.
             
-            return 0;
+            foreach (var kvp in settings)
+            {
+                var settingsProperty = kvp.Key;
+                var settingsValue = kvp.Value;
+
+                AttemptSetSettings(settingsProperty, settingsValue);
+            }
+        }
+
+        public Dictionary<MarkCommand.MarkManyProperty, object> SaveCurrentSettings()
+        {
+            var outputSettings = new Dictionary<MarkCommand.MarkManyProperty, object>();
+            
+            for (var i = 0; i < comboPropertyType.Items.Count; ++i)
+            {
+                var val = GetPropertyValue(i);
+                outputSettings.Add((MarkCommand.MarkManyProperty) i, val);
+            }
+
+            return outputSettings;
         }
 
         public bool PromptDialog() => ShowDialog() == DialogResult.OK;
 
-        private void UpdateMostUi()
+        private void UpdateVisibility()
         {
-            flagCombo.Visible = property.SelectedIndex == 0;
-            regValue.Visible = property.SelectedIndex == 1 || property.SelectedIndex == 2;
-            mxCombo.Visible = property.SelectedIndex == 3 || property.SelectedIndex == 4;
-            archCombo.Visible = property.SelectedIndex == 5;
+            var property = Property;
             
-            propertyValue = PropertyValue;
-            regValue.MaxLength = property.SelectedIndex == 1 ? 3 : 5;
+            flagCombo.Visible = 
+                property == MarkCommand.MarkManyProperty.Flag;
+            
+            regValue.Visible = 
+                property == MarkCommand.MarkManyProperty.DataBank || 
+                property == MarkCommand.MarkManyProperty.DirectPage;
+            
+            mxCombo.Visible = 
+                property == MarkCommand.MarkManyProperty.MFlag || 
+                property == MarkCommand.MarkManyProperty.XFlag;
+            
+            archCombo.Visible = 
+                property == MarkCommand.MarkManyProperty.CpuArch;
+
+            regValue.MaxLength = 
+                property == MarkCommand.MarkManyProperty.DataBank ? 3 : 5;
+            
+            propertyValueIntDpOrD = PropertyValueAsInt;
         }
 
         private void UpdateTextUi(TextBox selected = null)
         {
             ClampPropertyValue();
             
-            updatingText = true;
+            isUpdatingText = true;
             if (selected != textStart) UpdateStartText();
             if (selected != textEnd) UpdateEndText();
             if (selected != textCount) UpdateCountText();
             if (selected != regValue) UpdateRegValueText();
-            updatingText = false;
+            isUpdatingText = false;
         }
 
         private void UpdateRegValueText() => 
-            regValue.Text = Util.NumberToBaseString(propertyValue, NoBase, 0);
+            regValue.Text = Util.NumberToBaseString(propertyValueIntDpOrD, NoBase, 0);
 
         private void UpdateCountText() => 
             textCount.Text = Util.NumberToBaseString(Controller.DataRange.RangeCount, NoBase, 0);
@@ -154,7 +266,7 @@ namespace DiztinGUIsh.window.dialog
             textStart.Text =
                 Util.NumberToBaseString(radioROM.Checked ? Data.ConvertPCtoSnes(Controller.DataRange.StartIndex) : Controller.DataRange.StartIndex, NoBase, DigitCount);
 
-        private void property_SelectedIndexChanged(object sender, EventArgs e) => UpdateMostUi();
+        private void property_SelectedIndexChanged(object sender, EventArgs e) => UpdateVisibility();
 
         private bool IsRomAddress => radioROM.Checked;
         private int ConvertToRomOffsetIfNeeded(int v) => IsRomAddress ? Data.ConvertSnesToPc(v) : v;
@@ -166,15 +278,15 @@ namespace DiztinGUIsh.window.dialog
             if (!int.TryParse(regValue.Text, style, null, out var result)) 
                 return;
             
-            propertyValue = result;
+            propertyValueIntDpOrD = result;
         }
         
         private void OnTextChanged(TextBox textBox, Action<int> onResult)
         {        
-            if (updatingText)
+            if (isUpdatingText)
                 return;
 
-            updatingText = true;
+            isUpdatingText = true;
             var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
 
             if (int.TryParse(textBox.Text, style, null, out var result))

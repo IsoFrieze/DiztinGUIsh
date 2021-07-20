@@ -1,4 +1,6 @@
-﻿using Diz.Core.model;
+﻿using System.Collections.Generic;
+using Diz.Core.commands;
+using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
@@ -117,12 +119,12 @@ namespace DiztinGUIsh.window
             UpdateUi_TimerAndPercent();
         }
 
-        private void MarkMany(int offset, int column)
+        private void MarkMany(int offset, MarkCommand.MarkManyProperty property)
         {
             if (!RomDataPresent()) 
                 return;
-            
-            var mark = PromptMarkMany(offset, column);
+
+            var mark = PromptMarkMany(offset, property);
             if (mark == null)
                 return;
 
@@ -131,23 +133,23 @@ namespace DiztinGUIsh.window
             UpdateSomeUI2();
         }
 
-        private void MarkMany(int markProperty, int markStart, object markValue, int markCount)
+        private void MarkMany(MarkCommand.MarkManyProperty markProperty, int markStart, object markValue, int markCount)
         {
-            var destination = markProperty switch
+            var newNavigatedOffset = markProperty switch
             {
-                0 => Project.Data.MarkTypeFlag(markStart, (FlagType) markValue, markCount),
-                1 => Project.Data.MarkDataBank(markStart, (int) markValue, markCount),
-                2 => Project.Data.MarkDirectPage(markStart, (int) markValue, markCount),
-                3 => Project.Data.MarkMFlag(markStart, (bool) markValue, markCount),
-                4 => Project.Data.MarkXFlag(markStart, (bool) markValue, markCount),
-                5 => Project.Data.MarkArchitecture(markStart, (Architecture) markValue, markCount),
-                _ => 0
+                MarkCommand.MarkManyProperty.Flag => Project.Data.MarkTypeFlag(markStart, (FlagType) markValue, markCount),
+                MarkCommand.MarkManyProperty.DataBank => Project.Data.MarkDataBank(markStart, (int) markValue, markCount),
+                MarkCommand.MarkManyProperty.DirectPage => Project.Data.MarkDirectPage(markStart, (int) markValue, markCount),
+                MarkCommand.MarkManyProperty.MFlag => Project.Data.MarkMFlag(markStart, (bool) markValue, markCount),
+                MarkCommand.MarkManyProperty.XFlag => Project.Data.MarkXFlag(markStart, (bool) markValue, markCount),
+                MarkCommand.MarkManyProperty.CpuArch => Project.Data.MarkArchitecture(markStart, (Architecture) markValue, markCount),
+                _ => -1
             };
 
             ProjectController.MarkChanged();
 
-            if (moveWithStep)
-                SelectOffset(destination, new ISnesNavigation.HistoryArgs {Description = "Mark (multi)"});
+            if (moveWithStep && newNavigatedOffset != -1)
+                SelectOffset(newNavigatedOffset, new ISnesNavigation.HistoryArgs {Description = "Mark (multi)"});
         }
 
         private void GoToIntermediateAddress(int offset)

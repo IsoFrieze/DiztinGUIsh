@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.model;
@@ -14,7 +15,7 @@ namespace Diz.Controllers.controllers
         public IReadOnlySnesRomBase Data { get; }
         public int DesiredStartingCount { get; set; } = 0x10;
 
-        public MarkManyController(int offset, int whichIndex, IReadOnlySnesRomBase data, IMarkManyView view)
+        public MarkManyController(int offset, MarkCommand.MarkManyProperty initialProperty, IReadOnlySnesRomBase data, IMarkManyView view)
         {
             Data = data;
             MarkManyView = view;
@@ -27,8 +28,8 @@ namespace Diz.Controllers.controllers
                 DesiredStartingCount, 
                 DataRange.MaxCount - DataRange.StartIndex
             );
-            
-            MarkManyView.Column = whichIndex;
+
+            MarkManyView.Property = initialProperty;
         }
 
         private MarkCommand CreateCommandFromView() =>
@@ -36,11 +37,19 @@ namespace Diz.Controllers.controllers
             {
                 Start = DataRange.StartIndex,
                 Count = DataRange.RangeCount,
-                Value = MarkManyView.GetFinalValue(),
+                Value = MarkManyView.GetPropertyValue(),
                 Property = MarkManyView.Property,
             };
 
-        public MarkCommand GetMarkCommand() => 
-            !MarkManyView.PromptDialog() ? null : CreateCommandFromView();
+        public MarkCommand GetMarkCommand()
+        {
+            // attempt to set to previous values from last run, if they are compatible
+            MarkManyView.AttemptSetSettings(Settings);
+            var command = !MarkManyView.PromptDialog() ? null : CreateCommandFromView();
+            Settings = MarkManyView.SaveCurrentSettings();
+            return command;
+        }
+
+        public Dictionary<MarkCommand.MarkManyProperty, object> Settings { get; set; } = new Dictionary<MarkCommand.MarkManyProperty, object>();
     }
 }

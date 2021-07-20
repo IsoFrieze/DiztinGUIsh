@@ -30,7 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MarkManyView));
             this.label1 = new System.Windows.Forms.Label();
-            this.property = new System.Windows.Forms.ComboBox();
+            this.comboPropertyType = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.flagCombo = new System.Windows.Forms.ComboBox();
             this.regValue = new System.Windows.Forms.TextBox();
@@ -64,19 +64,19 @@
             // 
             // property
             // 
-            this.property.FormattingEnabled = true;
-            this.property.Items.AddRange(new object[] {
+            this.comboPropertyType.FormattingEnabled = true;
+            this.comboPropertyType.Items.AddRange(new object[] {
             "Flag",
             "Data Bank",
             "Direct Page",
             "M Flag",
             "X Flag"});
-            this.property.Location = new System.Drawing.Point(134, 12);
-            this.property.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.property.Name = "property";
-            this.property.Size = new System.Drawing.Size(288, 23);
-            this.property.TabIndex = 1;
-            this.property.SelectedIndexChanged += new System.EventHandler(this.property_SelectedIndexChanged);
+            this.comboPropertyType.Location = new System.Drawing.Point(134, 12);
+            this.comboPropertyType.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.comboPropertyType.Name = "comboPropertyType";
+            this.comboPropertyType.Size = new System.Drawing.Size(288, 23);
+            this.comboPropertyType.TabIndex = 1;
+            this.comboPropertyType.SelectedIndexChanged += new System.EventHandler(this.property_SelectedIndexChanged);
             // 
             // label2
             // 
@@ -316,7 +316,7 @@
             this.Controls.Add(this.group);
             this.Controls.Add(this.okay);
             this.Controls.Add(this.cancel);
-            this.Controls.Add(this.property);
+            this.Controls.Add(this.comboPropertyType);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -335,7 +335,7 @@
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox property;
+        private System.Windows.Forms.ComboBox comboPropertyType;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox flagCombo;
         private System.Windows.Forms.TextBox regValue;

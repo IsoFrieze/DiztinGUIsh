@@ -1,4 +1,5 @@
-﻿using Diz.Core;
+﻿using System.Collections.Generic;
+using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.model;
 
@@ -14,6 +15,7 @@ namespace DiztinGUIsh.controller
         IDataRange DataRange { get; }
         IReadOnlySnesRomBase Data { get; }
         MarkCommand GetMarkCommand();
+        public Dictionary<MarkCommand.MarkManyProperty, object> Settings { get; set; }
     }
     
     public interface IViewer {}
@@ -30,9 +32,11 @@ namespace DiztinGUIsh.controller
     
     public interface IMarkManyView : IViewer, IModalDialog
     {
-        int Property { get; }
-        int Column { set; } // TODO: make enum with different types supported.
+        MarkCommand.MarkManyProperty Property { get; set; }
+        object GetPropertyValue();
         IMarkManyController Controller { get; set; }
-        object GetFinalValue();
+
+        void AttemptSetSettings(Dictionary<MarkCommand.MarkManyProperty, object> settings);
+        Dictionary<MarkCommand.MarkManyProperty, object> SaveCurrentSettings();
     }
 }
