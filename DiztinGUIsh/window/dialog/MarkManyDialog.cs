@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Forms;
+using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
@@ -180,22 +182,82 @@ namespace DiztinGUIsh.window.dialog
             
             UpdateTextUi(textBox);
         }
-
-        private void textCount_TextChanged(object sender, EventArgs e) => 
-            OnTextChanged(textCount, v => Controller.DataRange.RangeCount = v);
-
-        private void textEnd_TextChanged(object sender, EventArgs e) =>
-            OnTextChanged(textEnd, v => 
-                Controller.DataRange.EndIndex = ConvertToRomOffsetIfNeeded(v));
-
-        private void textStart_TextChanged(object sender, EventArgs e) => 
-            OnTextChanged(textStart, v => 
-                Controller.DataRange.StartIndex = ConvertToRomOffsetIfNeeded(v));
-
+        
+        
         private void radioHex_CheckedChanged(object sender, EventArgs e) => UpdateTextUi();
         private void radioROM_CheckedChanged(object sender, EventArgs e) => UpdateTextUi();
 
         private void okay_Click(object sender, EventArgs e) => DialogResult = DialogResult.OK;
         private void cancel_Click(object sender, EventArgs e) => Close();
+
+        
+        #region Range Actual Updates
+
+        private void textCount_TextChanged(object sender, EventArgs e) => 
+            OnTextChanged(textCount, newCount =>
+            {
+                SetRangeValuesManually(Controller.DataRange, 
+                    -1, -1, newCount);
+            });
+
+        private void textEnd_TextChanged(object sender, EventArgs e) =>
+            OnTextChanged(textEnd, newEndIndex =>
+            {
+                SetRangeValuesManually(Controller.DataRange, 
+                    -1, ConvertToRomOffsetIfNeeded(newEndIndex), -1);
+            });
+
+        private void textStart_TextChanged(object sender, EventArgs e) => 
+            OnTextChanged(textStart, newStartIndex =>
+            {
+                SetRangeValuesManually(Controller.DataRange, 
+                    ConvertToRomOffsetIfNeeded(newStartIndex), -1, -1);
+            });
+
+        public static void SetRangeValuesManually(IDataRange dataRange, int newStartIndex = -1, int newEndIndex = -1, int newCount = -1)
+        {
+            if (dataRange == null)
+                return;
+            
+            // info: "DataRange" has a start, end, and a count. if you change one,
+            // the other 2 reflect that change. neat. however, the implementation ends up
+            // not being the most UX friendly so, we're going to control it more directly here.
+            //
+            // let's do everything in terms of the StartIndex
+
+            var oldEndIndex = dataRange.EndIndex;
+            var oldStartIndex = dataRange.StartIndex;
+
+            if (newStartIndex != -1)
+            {
+                Debug.Assert(newEndIndex == -1 && newCount == -1);
+
+                // if changing START.  leave END, change # of bytes.
+                var updatedCount = oldEndIndex - newStartIndex + 1;
+                if (updatedCount < 0)
+                    updatedCount = 1;
+
+                dataRange.ManualUpdate(newStartIndex, updatedCount);
+            } 
+            else if (newEndIndex != -1)
+            {
+                //if changing END, leave START, change # of bytes.
+                Debug.Assert(newCount == -1);
+                
+                var updatedCount = newEndIndex - oldStartIndex + 1;
+                if (updatedCount < 0)
+                    updatedCount = 1;
+                
+                dataRange.ManualUpdate(oldStartIndex, updatedCount);
+            }
+            else if (newCount != -1)
+            {
+                // if changing # bytes, leave START, change END
+                // var updatedEndIndex = oldStartIndex + (newCount - 1);
+
+                dataRange.ManualUpdate(oldStartIndex, newCount);
+            }
+        }
+        #endregion
     }
 }
