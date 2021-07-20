@@ -38,7 +38,7 @@ namespace DiztinGUIsh.window
             this.navigationCtrl.Document = null;
             this.navigationCtrl.Location = new System.Drawing.Point(0, 0);
             this.navigationCtrl.Name = "navigationCtrl";
-            this.navigationCtrl.Size = new System.Drawing.Size(291, 450);
+            this.navigationCtrl.Size = new System.Drawing.Size(404, 450);
             this.navigationCtrl.SnesNavigation = null;
             this.navigationCtrl.TabIndex = 0;
             this.navigationCtrl.Load += new System.EventHandler(this.navigationCtrl_Load);
@@ -47,7 +47,7 @@ namespace DiztinGUIsh.window
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(291, 450);
+            this.ClientSize = new System.Drawing.Size(404, 450);
             this.Controls.Add(this.navigationCtrl);
             this.Name = "NavigationForm";
             this.Text = "Navigation";

@@ -21,6 +21,17 @@ namespace DiztinGUIsh.controller
 
     public interface ISnesNavigation
     {
-        void SelectOffset(int pcOffset, int column=-1, bool saveHistory = false);
+        public class HistoryArgs
+        {
+            public string Description { get; set; }
+            public string Position { get; set; }
+        }
+        
+        /// <summary>
+        /// Select a PC offset
+        /// </summary>
+        /// <param name="pcOffset">PC [not SNES] offset</param>
+        /// <param name="historyArgs">if non-null, record this event in the project history</param>
+        void SelectOffset(int pcOffset, HistoryArgs historyArgs = null);
     }
 }

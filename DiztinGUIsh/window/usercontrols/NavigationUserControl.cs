@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
@@ -17,10 +18,18 @@ namespace DiztinGUIsh.window.usercontrols
             {
                 document = value;
                 navigationEntryBindingSource.DataSource = Document?.NavigationHistory;
-                
+
                 if (navigationEntryBindingSource.DataSource != null)
+                {
                     navigationEntryBindingSource.ListChanged += NavigationEntryBindingSourceOnListChanged;
+                    navigationEntryBindingSource.PositionChanged += NavigationEntryBindingSourceOnPositionChanged;
+                }
             }
+        }
+
+        private void NavigationEntryBindingSourceOnPositionChanged(object sender, EventArgs e)
+        {
+            
         }
 
         private void NavigationEntryBindingSourceOnListChanged(object sender, ListChangedEventArgs e)
@@ -52,19 +61,41 @@ namespace DiztinGUIsh.window.usercontrols
 
         public void Navigate(bool forwardDirection)
         {
-            if (navigationEntryBindingSource.Count == 0)
+            if (navigationEntryBindingSource == null || navigationEntryBindingSource.Count == 0)
                 return;
             
-            var indexToUse = 
+            var navigationEntryToUse = 
                 Util.ClampIndex(SelectedIndex + (forwardDirection ? 1 : -1),
                 navigationEntryBindingSource.Count);
 
-            var newSnesAddress = ((NavigationEntry) navigationEntryBindingSource[indexToUse]).SnesOffset;
+            NavigateToEntry(navigationEntryToUse);
+            SelectDataGridRow(navigationEntryToUse);
+        }
 
-            var pcOffset = Document.Project.Data.ConvertSnesToPc(newSnesAddress);
-            SnesNavigation.SelectOffset(pcOffset);
+        private void NavigateToEntry(int indexToUse)
+        {
+            NavigateToEntry(GetNavigationEntry(indexToUse));
+        }
+
+        private void NavigateToEntry(NavigationEntry navigationEntry)
+        {
+            var newSnesAddress = navigationEntry?.SnesOffset ?? -1;
+            if (newSnesAddress == -1)
+                return;
             
-            SelectDataGridRow(indexToUse);
+            var pcOffset = Document.Project.Data.ConvertSnesToPc(newSnesAddress);
+            if (pcOffset == -1) 
+                return;
+            
+            SnesNavigation.SelectOffset(pcOffset);
+        }
+
+        private NavigationEntry GetNavigationEntry(int index)
+        {
+            if (index < 0 || index >= navigationEntryBindingSource.Count)
+                return null;
+            
+            return (NavigationEntry) navigationEntryBindingSource[index];
         }
 
         private void SelectDataGridRow(int index)
@@ -75,9 +106,20 @@ namespace DiztinGUIsh.window.usercontrols
             navigationEntryBindingSource.Position = index;
         }
 
-        private void navigationEntryBindingSource_CurrentChanged(object sender, System.EventArgs e)
-        {
+        private void navigationEntryBindingSource_CurrentChanged(object sender, System.EventArgs e) => 
+            NavigateToCurrentNavigationEntry();
 
+        private void dataGridView1_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e) => 
+            NavigateToCurrentNavigationEntry();
+
+        private void NavigateToCurrentNavigationEntry()
+        {
+            if (navigationEntryBindingSource != null)
+                NavigateToEntry(navigationEntryBindingSource.Position);
         }
+
+        private void btnBack_Click(object sender, EventArgs e) => Navigate(false);
+        private void btnForward_Click(object sender, EventArgs e) => Navigate(true);
+        private void btnClearHistory_Click(object sender, EventArgs e) => navigationEntryBindingSource?.Clear();
     }
 }

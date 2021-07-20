@@ -16,14 +16,14 @@ namespace DiztinGUIsh.window
             return Project.Data.ConvertSnesToPc(ia);
         }
 
-        private bool FindUnreached(int offset, bool end, bool direction, out int unreached)
+        private bool FindUnreached(int offset, bool fromEnd, bool direction, out int unreached)
         {
             var size = Project.Data.GetRomSize();
-            unreached = end ? (direction ? 0 : size - 1) : offset;
+            unreached = fromEnd ? (direction ? 0 : size - 1) : offset;
 
             if (direction)
             {
-                if (!end)
+                if (!fromEnd)
                     while (unreached < size - 1 && IsUnreached(unreached))
                         unreached++;
                 

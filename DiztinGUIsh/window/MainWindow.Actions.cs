@@ -1,5 +1,6 @@
 ﻿using Diz.Core.model;
 using Diz.Core.util;
+using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window
@@ -58,7 +59,7 @@ namespace DiztinGUIsh.window
             
             ProjectController.MarkChanged();
             var newOffset = Project.Data.Step(offset, false, false, offset - 1);
-            SelectOffset(newOffset, saveHistory: true);
+            SelectOffset(newOffset, new ISnesNavigation.HistoryArgs {Description = "Step Over"});
             UpdateUi_TimerAndPercent();
         }
 
@@ -69,7 +70,7 @@ namespace DiztinGUIsh.window
             
             ProjectController.MarkChanged();
             var newOffset = Project.Data.Step(offset, true, false, offset - 1);
-            SelectOffset(newOffset, saveHistory: true);
+            SelectOffset(newOffset, new ISnesNavigation.HistoryArgs {Description = "Step Into"});
             UpdateUi_TimerAndPercent();
         }
 
@@ -81,7 +82,7 @@ namespace DiztinGUIsh.window
             ProjectController.MarkChanged();
             var destination = Project.Data.AutoStep(offset, false, 0);
             if (moveWithStep) 
-                SelectOffset(destination, saveHistory: true);
+                SelectOffset(destination, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Safe)"});
             
             UpdateUi_TimerAndPercent();
         }
@@ -98,7 +99,7 @@ namespace DiztinGUIsh.window
             var destination = Project.Data.AutoStep(newOffset, true, count);
             
             if (moveWithStep) 
-                SelectOffset(destination, saveHistory: true);
+                SelectOffset(destination, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Harsh)"});
 
             UpdateUi_TimerAndPercent();
         }
@@ -111,7 +112,7 @@ namespace DiztinGUIsh.window
             ProjectController.MarkChanged();
             var newOffset = Project.Data.MarkTypeFlag(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag));
             
-            SelectOffset(newOffset);
+            SelectOffset(newOffset, new ISnesNavigation.HistoryArgs {Description = "Mark (single)"});
             
             UpdateUi_TimerAndPercent();
         }
@@ -146,7 +147,7 @@ namespace DiztinGUIsh.window
             ProjectController.MarkChanged();
 
             if (moveWithStep)
-                SelectOffset(destination, saveHistory: true);
+                SelectOffset(destination, new ISnesNavigation.HistoryArgs {Description = "Mark (multi)"});
         }
 
         private void GoToIntermediateAddress(int offset)
@@ -155,23 +156,42 @@ namespace DiztinGUIsh.window
             if (snesOffset == -1)
                 return;
             
-            SelectOffset(snesOffset, 1, saveHistory: true);
+            SelectOffset(snesOffset, 1, new ISnesNavigation.HistoryArgs {Description = "GoTo Intermediate Addr"});
         }
 
         public void GoTo(int offset)
         {
             if (IsOffsetInRange(offset))
-                SelectOffset(offset, saveHistory: true);
+                SelectOffset(offset, new ISnesNavigation.HistoryArgs {Description = "Goto"});
             else
                 ShowOffsetOutOfRangeMsg();
         }
 
-        private void GoToUnreached(bool end, bool direction)
+        /// <summary>
+        /// Navigate to unreached (unmarked) regions of the ROM
+        /// </summary>
+        /// <param name="fromStartOrEnd">If false, use current offset as starting point. If true, start at beginning (for forward) or end (for backwards) of ROM instead</param>
+        /// <param name="forwardDirection">True to search forward, false to search backwards</param>
+        private void GoToUnreached(bool fromStartOrEnd, bool forwardDirection)
         {
-            if (!FindUnreached(SelectedOffset, end, direction, out var unreached))
+            if (!FindUnreached(SelectedOffset, fromStartOrEnd, forwardDirection, out var unreached))
                 return;
+
+            SelectOffset(unreached, 1, BuildUnreachedHistoryArgs(fromStartOrEnd, forwardDirection));
+        }
+
+        private static ISnesNavigation.HistoryArgs BuildUnreachedHistoryArgs(bool fromStartOrEnd, bool forwardDirection)
+        {
+            var dirStr = forwardDirection ? "Forward" : "Previous";
+            var endStr = !fromStartOrEnd ? "" 
+                : forwardDirection 
+                    ? " (From ROM start)" 
+                    : " (From ROM end)";
             
-            SelectOffset(unreached, 1, saveHistory: true);
+            return new ISnesNavigation.HistoryArgs
+            {
+                Description = $"GoTo Unreached: {dirStr} {endStr}"
+            };
         }
 
 

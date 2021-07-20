@@ -72,7 +72,8 @@ namespace DiztinGUIsh.window
         private void unreachedToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Unreached);
 
-        private void opcodeToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Opcode);
+        private void opcodeToolStripMenuItem_Click(object sender, EventArgs e) => 
+            SetMarkerLabel(FlagType.Opcode);
 
         private void operandToolStripMenuItem_Click(object sender, EventArgs e) =>
             SetMarkerLabel(FlagType.Operand);
@@ -141,7 +142,7 @@ namespace DiztinGUIsh.window
 
         public NavigationForm NavigationForm { get; }
 
-        private void showHistoryToolStripMenuItem_Click(object sender, System.EventArgs e)
+        private void showHistoryToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!NavigationForm.Visible)
                 NavigationForm.Show();
@@ -149,10 +150,10 @@ namespace DiztinGUIsh.window
                 NavigationForm.BringToFront();
         }
 
-        private void goBackToolStripMenuItem_Click(object sender, System.EventArgs e) => 
+        private void goBackToolStripMenuItem_Click(object sender, EventArgs e) => 
             NavigationForm.Navigate(forwardDirection: false);
 
-        private void goForwardToolStripMenuItem_Click(object sender, System.EventArgs e) => 
+        private void goForwardToolStripMenuItem_Click(object sender, EventArgs e) => 
             NavigationForm.Navigate(forwardDirection: true);
     }
 }

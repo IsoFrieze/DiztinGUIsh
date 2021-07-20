@@ -82,27 +82,6 @@
             this.autoStepSafeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoStepHarshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.gotoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.gotoIntermediateAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.gotoFirstUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.gotoNearUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.gotoNextUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.selectMarkerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.unreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.opcodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.operandToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bitDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.graphicsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.musicToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.emptyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bitDataToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.wordPointerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bitDataToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.longPointerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bitDataToolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
-            this.dWordPointerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.textToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.markOneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.markManyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
@@ -148,6 +127,28 @@
             this.openTraceLogDialog = new System.Windows.Forms.OpenFileDialog();
             this.openCDLDialog = new System.Windows.Forms.OpenFileDialog();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.selectMarkerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.unreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.opcodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.operandToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bitDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.graphicsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.musicToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.emptyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bitDataToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.wordPointerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bitDataToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.longPointerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bitDataToolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.dWordPointerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.textToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gotoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gotoIntermediateAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gotoFirstUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gotoNearUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gotoNextUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -370,6 +371,7 @@
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
             this.navigateToolStripMenuItem,
+            this.selectMarkerToolStripMenuItem,
             this.viewToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
@@ -523,13 +525,6 @@
             this.autoStepSafeToolStripMenuItem,
             this.autoStepHarshToolStripMenuItem,
             this.toolStripSeparator3,
-            this.gotoToolStripMenuItem,
-            this.gotoIntermediateAddressToolStripMenuItem,
-            this.gotoFirstUnreachedToolStripMenuItem,
-            this.gotoNearUnreachedToolStripMenuItem,
-            this.gotoNextUnreachedToolStripMenuItem,
-            this.toolStripSeparator4,
-            this.selectMarkerToolStripMenuItem,
             this.markOneToolStripMenuItem,
             this.markManyToolStripMenuItem,
             this.toolStripSeparator5,
@@ -587,184 +582,6 @@
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
             this.toolStripSeparator3.Size = new System.Drawing.Size(250, 6);
-            // 
-            // gotoToolStripMenuItem
-            // 
-            this.gotoToolStripMenuItem.Name = "gotoToolStripMenuItem";
-            this.gotoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.G)));
-            this.gotoToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.gotoToolStripMenuItem.Text = "Goto...";
-            this.gotoToolStripMenuItem.Click += new System.EventHandler(this.gotoToolStripMenuItem_Click);
-            // 
-            // gotoIntermediateAddressToolStripMenuItem
-            // 
-            this.gotoIntermediateAddressToolStripMenuItem.Name = "gotoIntermediateAddressToolStripMenuItem";
-            this.gotoIntermediateAddressToolStripMenuItem.ShortcutKeyDisplayString = "T";
-            this.gotoIntermediateAddressToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.gotoIntermediateAddressToolStripMenuItem.Text = "Goto In&termediate Address";
-            this.gotoIntermediateAddressToolStripMenuItem.Click += new System.EventHandler(this.gotoIntermediateAddressToolStripMenuItem_Click);
-            // 
-            // gotoFirstUnreachedToolStripMenuItem
-            // 
-            this.gotoFirstUnreachedToolStripMenuItem.Name = "gotoFirstUnreachedToolStripMenuItem";
-            this.gotoFirstUnreachedToolStripMenuItem.ShortcutKeyDisplayString = "U";
-            this.gotoFirstUnreachedToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.gotoFirstUnreachedToolStripMenuItem.Text = "Goto First &Unreached";
-            this.gotoFirstUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoFirstUnreachedToolStripMenuItem_Click);
-            // 
-            // gotoNearUnreachedToolStripMenuItem
-            // 
-            this.gotoNearUnreachedToolStripMenuItem.Name = "gotoNearUnreachedToolStripMenuItem";
-            this.gotoNearUnreachedToolStripMenuItem.ShortcutKeyDisplayString = "H";
-            this.gotoNearUnreachedToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.gotoNearUnreachedToolStripMenuItem.Text = "Goto Previous Unreac&hed";
-            this.gotoNearUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNearUnreachedToolStripMenuItem_Click);
-            // 
-            // gotoNextUnreachedToolStripMenuItem
-            // 
-            this.gotoNextUnreachedToolStripMenuItem.Name = "gotoNextUnreachedToolStripMenuItem";
-            this.gotoNextUnreachedToolStripMenuItem.ShortcutKeyDisplayString = "N";
-            this.gotoNextUnreachedToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.gotoNextUnreachedToolStripMenuItem.Text = "Goto &Next Unreached";
-            this.gotoNextUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNextUnreachedToolStripMenuItem_Click);
-            // 
-            // toolStripSeparator4
-            // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(250, 6);
-            // 
-            // selectMarkerToolStripMenuItem
-            // 
-            this.selectMarkerToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.unreachedToolStripMenuItem,
-            this.opcodeToolStripMenuItem,
-            this.operandToolStripMenuItem,
-            this.bitDataToolStripMenuItem,
-            this.graphicsToolStripMenuItem,
-            this.musicToolStripMenuItem,
-            this.emptyToolStripMenuItem,
-            this.bitDataToolStripMenuItem1,
-            this.wordPointerToolStripMenuItem,
-            this.bitDataToolStripMenuItem2,
-            this.longPointerToolStripMenuItem,
-            this.bitDataToolStripMenuItem3,
-            this.dWordPointerToolStripMenuItem,
-            this.textToolStripMenuItem});
-            this.selectMarkerToolStripMenuItem.Name = "selectMarkerToolStripMenuItem";
-            this.selectMarkerToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
-            this.selectMarkerToolStripMenuItem.Text = "Select Marker";
-            // 
-            // unreachedToolStripMenuItem
-            // 
-            this.unreachedToolStripMenuItem.Name = "unreachedToolStripMenuItem";
-            this.unreachedToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.U)));
-            this.unreachedToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.unreachedToolStripMenuItem.Text = "Unreached";
-            this.unreachedToolStripMenuItem.Click += new System.EventHandler(this.unreachedToolStripMenuItem_Click);
-            // 
-            // opcodeToolStripMenuItem
-            // 
-            this.opcodeToolStripMenuItem.Name = "opcodeToolStripMenuItem";
-            this.opcodeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.O)));
-            this.opcodeToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.opcodeToolStripMenuItem.Text = "Opcode";
-            this.opcodeToolStripMenuItem.Click += new System.EventHandler(this.opcodeToolStripMenuItem_Click);
-            // 
-            // operandToolStripMenuItem
-            // 
-            this.operandToolStripMenuItem.Name = "operandToolStripMenuItem";
-            this.operandToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.P)));
-            this.operandToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.operandToolStripMenuItem.Text = "Operand";
-            this.operandToolStripMenuItem.Click += new System.EventHandler(this.operandToolStripMenuItem_Click);
-            // 
-            // bitDataToolStripMenuItem
-            // 
-            this.bitDataToolStripMenuItem.Name = "bitDataToolStripMenuItem";
-            this.bitDataToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D1)));
-            this.bitDataToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.bitDataToolStripMenuItem.Text = "8-Bit Data";
-            this.bitDataToolStripMenuItem.Click += new System.EventHandler(this.bitDataToolStripMenuItem_Click);
-            // 
-            // graphicsToolStripMenuItem
-            // 
-            this.graphicsToolStripMenuItem.Name = "graphicsToolStripMenuItem";
-            this.graphicsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.G)));
-            this.graphicsToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.graphicsToolStripMenuItem.Text = "     Graphics";
-            this.graphicsToolStripMenuItem.Click += new System.EventHandler(this.graphicsToolStripMenuItem_Click);
-            // 
-            // musicToolStripMenuItem
-            // 
-            this.musicToolStripMenuItem.Name = "musicToolStripMenuItem";
-            this.musicToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.M)));
-            this.musicToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.musicToolStripMenuItem.Text = "     Music";
-            this.musicToolStripMenuItem.Click += new System.EventHandler(this.musicToolStripMenuItem_Click);
-            // 
-            // emptyToolStripMenuItem
-            // 
-            this.emptyToolStripMenuItem.Name = "emptyToolStripMenuItem";
-            this.emptyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.E)));
-            this.emptyToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.emptyToolStripMenuItem.Text = "     Empty";
-            this.emptyToolStripMenuItem.Click += new System.EventHandler(this.emptyToolStripMenuItem_Click);
-            // 
-            // bitDataToolStripMenuItem1
-            // 
-            this.bitDataToolStripMenuItem1.Name = "bitDataToolStripMenuItem1";
-            this.bitDataToolStripMenuItem1.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D2)));
-            this.bitDataToolStripMenuItem1.Size = new System.Drawing.Size(205, 22);
-            this.bitDataToolStripMenuItem1.Text = "16-Bit Data";
-            this.bitDataToolStripMenuItem1.Click += new System.EventHandler(this.bitDataToolStripMenuItem1_Click);
-            // 
-            // wordPointerToolStripMenuItem
-            // 
-            this.wordPointerToolStripMenuItem.Name = "wordPointerToolStripMenuItem";
-            this.wordPointerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.W)));
-            this.wordPointerToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.wordPointerToolStripMenuItem.Text = "     Word Pointer";
-            this.wordPointerToolStripMenuItem.Click += new System.EventHandler(this.wordPointerToolStripMenuItem_Click);
-            // 
-            // bitDataToolStripMenuItem2
-            // 
-            this.bitDataToolStripMenuItem2.Name = "bitDataToolStripMenuItem2";
-            this.bitDataToolStripMenuItem2.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D3)));
-            this.bitDataToolStripMenuItem2.Size = new System.Drawing.Size(205, 22);
-            this.bitDataToolStripMenuItem2.Text = "24-Bit Data";
-            this.bitDataToolStripMenuItem2.Click += new System.EventHandler(this.bitDataToolStripMenuItem2_Click);
-            // 
-            // longPointerToolStripMenuItem
-            // 
-            this.longPointerToolStripMenuItem.Name = "longPointerToolStripMenuItem";
-            this.longPointerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.L)));
-            this.longPointerToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.longPointerToolStripMenuItem.Text = "     Long Pointer";
-            this.longPointerToolStripMenuItem.Click += new System.EventHandler(this.longPointerToolStripMenuItem_Click);
-            // 
-            // bitDataToolStripMenuItem3
-            // 
-            this.bitDataToolStripMenuItem3.Name = "bitDataToolStripMenuItem3";
-            this.bitDataToolStripMenuItem3.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D4)));
-            this.bitDataToolStripMenuItem3.Size = new System.Drawing.Size(205, 22);
-            this.bitDataToolStripMenuItem3.Text = "32-Bit Data";
-            this.bitDataToolStripMenuItem3.Click += new System.EventHandler(this.bitDataToolStripMenuItem3_Click);
-            // 
-            // dWordPointerToolStripMenuItem
-            // 
-            this.dWordPointerToolStripMenuItem.Name = "dWordPointerToolStripMenuItem";
-            this.dWordPointerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D)));
-            this.dWordPointerToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.dWordPointerToolStripMenuItem.Text = "     DWord Pointer";
-            this.dWordPointerToolStripMenuItem.Click += new System.EventHandler(this.dWordPointerToolStripMenuItem_Click);
-            // 
-            // textToolStripMenuItem
-            // 
-            this.textToolStripMenuItem.Name = "textToolStripMenuItem";
-            this.textToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.T)));
-            this.textToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
-            this.textToolStripMenuItem.Text = "Text";
-            this.textToolStripMenuItem.Click += new System.EventHandler(this.textToolStripMenuItem_Click);
             // 
             // markOneToolStripMenuItem
             // 
@@ -860,18 +677,25 @@
             // 
             this.navigateToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showHistoryToolStripMenuItem,
+            this.toolStripSeparator9,
             this.goBackToolStripMenuItem,
-            this.goForwardToolStripMenuItem});
+            this.goForwardToolStripMenuItem,
+            this.toolStripSeparator10,
+            this.gotoToolStripMenuItem,
+            this.gotoIntermediateAddressToolStripMenuItem,
+            this.gotoFirstUnreachedToolStripMenuItem,
+            this.gotoNearUnreachedToolStripMenuItem,
+            this.gotoNextUnreachedToolStripMenuItem});
             this.navigateToolStripMenuItem.Name = "navigateToolStripMenuItem";
             this.navigateToolStripMenuItem.Size = new System.Drawing.Size(66, 20);
-            this.navigateToolStripMenuItem.Text = "Navigate";
+            this.navigateToolStripMenuItem.Text = "&Navigate";
             // 
             // showHistoryToolStripMenuItem
             // 
             this.showHistoryToolStripMenuItem.Name = "showHistoryToolStripMenuItem";
             this.showHistoryToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
             | System.Windows.Forms.Keys.H)));
-            this.showHistoryToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.showHistoryToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.showHistoryToolStripMenuItem.Text = "Show History";
             this.showHistoryToolStripMenuItem.Click += new System.EventHandler(this.showHistoryToolStripMenuItem_Click);
             // 
@@ -879,7 +703,7 @@
             // 
             this.goBackToolStripMenuItem.Name = "goBackToolStripMenuItem";
             this.goBackToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Left)));
-            this.goBackToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.goBackToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.goBackToolStripMenuItem.Text = "Go Back";
             this.goBackToolStripMenuItem.Click += new System.EventHandler(this.goBackToolStripMenuItem_Click);
             // 
@@ -887,7 +711,7 @@
             // 
             this.goForwardToolStripMenuItem.Name = "goForwardToolStripMenuItem";
             this.goForwardToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Right)));
-            this.goForwardToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.goForwardToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.goForwardToolStripMenuItem.Text = "Go Forward";
             this.goForwardToolStripMenuItem.Click += new System.EventHandler(this.goForwardToolStripMenuItem_Click);
             // 
@@ -1021,21 +845,21 @@
             // 
             this.viewHelpToolStripMenuItem.Name = "viewHelpToolStripMenuItem";
             this.viewHelpToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
-            this.viewHelpToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.viewHelpToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.viewHelpToolStripMenuItem.Text = "View Help";
             this.viewHelpToolStripMenuItem.Click += new System.EventHandler(this.viewHelpToolStripMenuItem_Click);
             // 
             // githubToolStripMenuItem
             // 
             this.githubToolStripMenuItem.Name = "githubToolStripMenuItem";
-            this.githubToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.githubToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.githubToolStripMenuItem.Text = "Github";
             this.githubToolStripMenuItem.Click += new System.EventHandler(this.githubToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -1113,6 +937,191 @@
             this.timer1.Interval = 2000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // selectMarkerToolStripMenuItem
+            // 
+            this.selectMarkerToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.unreachedToolStripMenuItem,
+            this.opcodeToolStripMenuItem,
+            this.operandToolStripMenuItem,
+            this.bitDataToolStripMenuItem,
+            this.graphicsToolStripMenuItem,
+            this.musicToolStripMenuItem,
+            this.emptyToolStripMenuItem,
+            this.bitDataToolStripMenuItem1,
+            this.wordPointerToolStripMenuItem,
+            this.bitDataToolStripMenuItem2,
+            this.longPointerToolStripMenuItem,
+            this.bitDataToolStripMenuItem3,
+            this.dWordPointerToolStripMenuItem,
+            this.textToolStripMenuItem});
+            this.selectMarkerToolStripMenuItem.Name = "selectMarkerToolStripMenuItem";
+            this.selectMarkerToolStripMenuItem.Size = new System.Drawing.Size(90, 20);
+            this.selectMarkerToolStripMenuItem.Text = "Select &Marker";
+            // 
+            // unreachedToolStripMenuItem
+            // 
+            this.unreachedToolStripMenuItem.Name = "unreachedToolStripMenuItem";
+            this.unreachedToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.U)));
+            this.unreachedToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.unreachedToolStripMenuItem.Text = "Unreached";
+            this.unreachedToolStripMenuItem.Click += new System.EventHandler(this.unreachedToolStripMenuItem_Click);
+            // 
+            // opcodeToolStripMenuItem
+            // 
+            this.opcodeToolStripMenuItem.Name = "opcodeToolStripMenuItem";
+            this.opcodeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.O)));
+            this.opcodeToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.opcodeToolStripMenuItem.Text = "Opcode";
+            this.opcodeToolStripMenuItem.Click += new System.EventHandler(this.opcodeToolStripMenuItem_Click);
+            // 
+            // operandToolStripMenuItem
+            // 
+            this.operandToolStripMenuItem.Name = "operandToolStripMenuItem";
+            this.operandToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.P)));
+            this.operandToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.operandToolStripMenuItem.Text = "Operand";
+            this.operandToolStripMenuItem.Click += new System.EventHandler(this.operandToolStripMenuItem_Click);
+            // 
+            // bitDataToolStripMenuItem
+            // 
+            this.bitDataToolStripMenuItem.Name = "bitDataToolStripMenuItem";
+            this.bitDataToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D1)));
+            this.bitDataToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.bitDataToolStripMenuItem.Text = "8-Bit Data";
+            this.bitDataToolStripMenuItem.Click += new System.EventHandler(this.bitDataToolStripMenuItem_Click);
+            // 
+            // graphicsToolStripMenuItem
+            // 
+            this.graphicsToolStripMenuItem.Name = "graphicsToolStripMenuItem";
+            this.graphicsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.G)));
+            this.graphicsToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.graphicsToolStripMenuItem.Text = "     Graphics";
+            this.graphicsToolStripMenuItem.Click += new System.EventHandler(this.graphicsToolStripMenuItem_Click);
+            // 
+            // musicToolStripMenuItem
+            // 
+            this.musicToolStripMenuItem.Name = "musicToolStripMenuItem";
+            this.musicToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.M)));
+            this.musicToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.musicToolStripMenuItem.Text = "     Music";
+            this.musicToolStripMenuItem.Click += new System.EventHandler(this.musicToolStripMenuItem_Click);
+            // 
+            // emptyToolStripMenuItem
+            // 
+            this.emptyToolStripMenuItem.Name = "emptyToolStripMenuItem";
+            this.emptyToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.E)));
+            this.emptyToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.emptyToolStripMenuItem.Text = "     Empty";
+            this.emptyToolStripMenuItem.Click += new System.EventHandler(this.emptyToolStripMenuItem_Click);
+            // 
+            // bitDataToolStripMenuItem1
+            // 
+            this.bitDataToolStripMenuItem1.Name = "bitDataToolStripMenuItem1";
+            this.bitDataToolStripMenuItem1.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D2)));
+            this.bitDataToolStripMenuItem1.Size = new System.Drawing.Size(205, 22);
+            this.bitDataToolStripMenuItem1.Text = "16-Bit Data";
+            this.bitDataToolStripMenuItem1.Click += new System.EventHandler(this.bitDataToolStripMenuItem1_Click);
+            // 
+            // wordPointerToolStripMenuItem
+            // 
+            this.wordPointerToolStripMenuItem.Name = "wordPointerToolStripMenuItem";
+            this.wordPointerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.W)));
+            this.wordPointerToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.wordPointerToolStripMenuItem.Text = "     Word Pointer";
+            this.wordPointerToolStripMenuItem.Click += new System.EventHandler(this.wordPointerToolStripMenuItem_Click);
+            
+            // 
+            // bitDataToolStripMenuItem2
+            // 
+            this.bitDataToolStripMenuItem2.Name = "bitDataToolStripMenuItem2";
+            this.bitDataToolStripMenuItem2.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D3)));
+            this.bitDataToolStripMenuItem2.Size = new System.Drawing.Size(205, 22);
+            this.bitDataToolStripMenuItem2.Text = "24-Bit Data";
+            this.bitDataToolStripMenuItem2.Click += new System.EventHandler(this.bitDataToolStripMenuItem2_Click);
+            // 
+            // longPointerToolStripMenuItem
+            // 
+            this.longPointerToolStripMenuItem.Name = "longPointerToolStripMenuItem";
+            this.longPointerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.L)));
+            this.longPointerToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.longPointerToolStripMenuItem.Text = "     Long Pointer";
+            this.longPointerToolStripMenuItem.Click += new System.EventHandler(this.longPointerToolStripMenuItem_Click);
+            // 
+            // bitDataToolStripMenuItem3
+            // 
+            this.bitDataToolStripMenuItem3.Name = "bitDataToolStripMenuItem3";
+            this.bitDataToolStripMenuItem3.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D4)));
+            this.bitDataToolStripMenuItem3.Size = new System.Drawing.Size(205, 22);
+            this.bitDataToolStripMenuItem3.Text = "32-Bit Data";
+            this.bitDataToolStripMenuItem3.Click += new System.EventHandler(this.bitDataToolStripMenuItem3_Click);
+            // 
+            // dWordPointerToolStripMenuItem
+            // 
+            this.dWordPointerToolStripMenuItem.Name = "dWordPointerToolStripMenuItem";
+            this.dWordPointerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D)));
+            this.dWordPointerToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.dWordPointerToolStripMenuItem.Text = "     DWord Pointer";
+            this.dWordPointerToolStripMenuItem.Click += new System.EventHandler(this.dWordPointerToolStripMenuItem_Click);
+            // 
+            // textToolStripMenuItem
+            // 
+            this.textToolStripMenuItem.Name = "textToolStripMenuItem";
+            this.textToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.T)));
+            this.textToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.textToolStripMenuItem.Text = "Text";
+            this.textToolStripMenuItem.Click += new System.EventHandler(this.textToolStripMenuItem_Click);
+            // 
+            // gotoToolStripMenuItem
+            // 
+            this.gotoToolStripMenuItem.Name = "gotoToolStripMenuItem";
+            this.gotoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.G)));
+            this.gotoToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.gotoToolStripMenuItem.Text = "Goto...";
+            this.gotoToolStripMenuItem.Click += new System.EventHandler(this.gotoToolStripMenuItem_Click);
+            
+            // 
+            // gotoIntermediateAddressToolStripMenuItem
+            // 
+            this.gotoIntermediateAddressToolStripMenuItem.Name = "gotoIntermediateAddressToolStripMenuItem";
+            this.gotoIntermediateAddressToolStripMenuItem.ShortcutKeyDisplayString = "T";
+            this.gotoIntermediateAddressToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.gotoIntermediateAddressToolStripMenuItem.Text = "Goto In&termediate Address";
+            this.gotoIntermediateAddressToolStripMenuItem.Click += new System.EventHandler(this.gotoIntermediateAddressToolStripMenuItem_Click);
+            // 
+            // gotoFirstUnreachedToolStripMenuItem
+            // 
+            this.gotoFirstUnreachedToolStripMenuItem.Name = "gotoFirstUnreachedToolStripMenuItem";
+            this.gotoFirstUnreachedToolStripMenuItem.ShortcutKeyDisplayString = "U";
+            this.gotoFirstUnreachedToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.gotoFirstUnreachedToolStripMenuItem.Text = "Goto First &Unreached";
+            this.gotoFirstUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoFirstUnreachedToolStripMenuItem_Click);
+            // 
+            // gotoNearUnreachedToolStripMenuItem
+            // 
+            this.gotoNearUnreachedToolStripMenuItem.Name = "gotoNearUnreachedToolStripMenuItem";
+            this.gotoNearUnreachedToolStripMenuItem.ShortcutKeyDisplayString = "H";
+            this.gotoNearUnreachedToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.gotoNearUnreachedToolStripMenuItem.Text = "Goto Previous Unreac&hed";
+            this.gotoNearUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNearUnreachedToolStripMenuItem_Click);
+            // 
+            // gotoNextUnreachedToolStripMenuItem
+            // 
+            this.gotoNextUnreachedToolStripMenuItem.Name = "gotoNextUnreachedToolStripMenuItem";
+            this.gotoNextUnreachedToolStripMenuItem.ShortcutKeyDisplayString = "N";
+            this.gotoNextUnreachedToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.gotoNextUnreachedToolStripMenuItem.Text = "Goto &Next Unreached";
+            this.gotoNextUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNextUnreachedToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator9
+            // 
+            this.toolStripSeparator9.Name = "toolStripSeparator9";
+            this.toolStripSeparator9.Size = new System.Drawing.Size(225, 6);
+            // 
+            // toolStripSeparator10
+            // 
+            this.toolStripSeparator10.Name = "toolStripSeparator10";
+            this.toolStripSeparator10.Size = new System.Drawing.Size(225, 6);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -1161,12 +1170,6 @@
         private System.Windows.Forms.ToolStripMenuItem autoStepSafeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoStepHarshToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripMenuItem gotoToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem gotoIntermediateAddressToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem gotoFirstUnreachedToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem gotoNearUnreachedToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
-        private System.Windows.Forms.ToolStripMenuItem selectMarkerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem markOneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem markManyToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
@@ -1183,20 +1186,6 @@
         private System.Windows.Forms.ToolStripMenuItem addLabelToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleIndexSizeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addCommentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem unreachedToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem opcodeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem operandToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem bitDataToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem graphicsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem musicToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem emptyToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem bitDataToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem wordPointerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem bitDataToolStripMenuItem2;
-        private System.Windows.Forms.ToolStripMenuItem longPointerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem bitDataToolStripMenuItem3;
-        private System.Windows.Forms.ToolStripMenuItem dWordPointerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem textToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
         private System.Windows.Forms.ToolStripMenuItem fixMisalignedInstructionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
@@ -1213,7 +1202,6 @@
         private System.Windows.Forms.ToolStripStatusLabel currentMarker;
         private System.Windows.Forms.ToolStripMenuItem rescanForInOutPointsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem githubToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem gotoNextUnreachedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moveWithStepToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog openUsageMapFile;
@@ -1248,6 +1236,28 @@
         private System.Windows.Forms.ToolStripMenuItem goBackToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem goForwardToolStripMenuItem;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator10;
+        private System.Windows.Forms.ToolStripMenuItem gotoToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gotoIntermediateAddressToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gotoFirstUnreachedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gotoNearUnreachedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gotoNextUnreachedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem selectMarkerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem unreachedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem opcodeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem operandToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bitDataToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem graphicsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem musicToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem emptyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bitDataToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem wordPointerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bitDataToolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem longPointerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bitDataToolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem dWordPointerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem textToolStripMenuItem;
     }
 }
 

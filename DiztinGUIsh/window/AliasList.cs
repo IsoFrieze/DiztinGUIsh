@@ -50,7 +50,10 @@ namespace DiztinGUIsh.window
             var offset = Data.ConvertSnesToPc(val);
             if (offset >= 0)
             {
-                ProjectController.SelectOffset(offset, saveHistory: true);
+                ProjectController.SelectOffset(
+                    offset, 
+                    new ISnesNavigation.HistoryArgs {Description = "Jump To Label"}
+                    );
             }
         }
 

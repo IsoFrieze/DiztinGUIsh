@@ -220,10 +220,8 @@ namespace DiztinGUIsh.controller
             Project.UnsavedChanges = true;
         }
 
-        public void SelectOffset(int offset, int column = -1, bool saveHistory = false)
-        {
-            ProjectView.SelectOffset(offset, column, saveHistory);
-        }
+        public void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null) =>
+            ProjectView.SelectOffset(offset, historyArgs);
 
         public long ImportBsnesUsageMap(string fileName)
         {

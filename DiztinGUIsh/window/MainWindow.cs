@@ -121,26 +121,37 @@ namespace DiztinGUIsh.window
             return settings;
         }
 
-        private void RememberNavigationPoint(int pcOffset)
+        private void RememberNavigationPoint(int pcOffset, ISnesNavigation.HistoryArgs historyArgs)
         {
             var snesAddress = Project.Data.ConvertPCtoSnes(pcOffset);
             var history = Document.NavigationHistory;
             
             // if our last remembered offset IS the new offset, don't record it again
-            // (prevent duplication)
+            // (prevents duplication)
             if (history.Count > 0 && history[history.Count-1].SnesOffset == snesAddress)
                 return;
 
             history.Add(
                 new NavigationEntry(
                     snesAddress, 
-                    NavigationEntry.NavigationType.NextInstruction, 
+                    historyArgs,
                     Project.Data
                     )
                 );
         }
 
         private void timer1_Tick(object sender, System.EventArgs e)
+        {
+            // the point of this timer is to throttle the ROM% calculator
+            // since it is an expensive calculation. letting it happen attached to UI events
+            // would significantly slow the user down.
+            //
+            // TODO: this is the kind of thing that Rx.net's Throttle function, or 
+            // an async task would handle much better. For now, this is fine.
+            UpdatePercentageCalculatorCooldown();
+        }
+
+        private void UpdatePercentageCalculatorCooldown()
         {
             if (_cooldownForPercentUpdate == -1)
                 return;

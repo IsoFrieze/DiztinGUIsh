@@ -1,6 +1,4 @@
-﻿
-
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -15,25 +13,23 @@ namespace DiztinGUIsh.controller
         [Browsable(false)]
         public int SnesOffset { get; }
         
-        public NavigationEntry(int snesOffset, NavigationType type, Data data)
+        public NavigationEntry(int snesOffset, ISnesNavigation.HistoryArgs historyArgs, Data data)
         {
             SnesOffset = snesOffset;
-            Type = type;
+            Description = historyArgs?.Description ?? "";
+            Position = historyArgs?.Position ?? "";
+            
             Data = data;
         }
 
-        public enum NavigationType
-        {
-            NextInstruction,
-            Jump,
-        }
-        
         [DisplayName("SNES Offset")]
         [Editable(false)]
-        public string Pc => Util.ToHexString6(SnesOffset);
-
-        [DisplayName("Type")]
+        public string Address => Util.ToHexString6(SnesOffset);
+        
         [Editable(false)]
-        public NavigationType Type { get; }
+        public string Description { get; }
+        
+        [Editable(false)]
+        public string Position { get; }
     }
 }

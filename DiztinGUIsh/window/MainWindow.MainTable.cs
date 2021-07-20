@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
+using DiztinGUIsh.controller;
 
 namespace DiztinGUIsh.window
 {
@@ -55,9 +56,9 @@ namespace DiztinGUIsh.window
             InvalidateTable();
         }
 
-        private void table_SelectionChanged(object sender, System.EventArgs e)
+        private void table_SelectionChanged(object sender, EventArgs e)
         {
-            SelectOffset(SelectedOffset);
+            SelectOffset(SelectedOffset, -1);
         }
 
         private void table_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -82,7 +83,7 @@ namespace DiztinGUIsh.window
                     amount = e.KeyCode == Keys.Up ? 0x01 : e.KeyCode == Keys.PageUp ? 0x10 : 0x100;
                     newOffset = offset - amount;
                     if (newOffset < 0) newOffset = 0;
-                    SelectOffset(newOffset);
+                    SelectOffset(newOffset, -1);
                     break;
                 case Keys.End:
                 case Keys.PageDown:
@@ -90,7 +91,7 @@ namespace DiztinGUIsh.window
                     amount = e.KeyCode == Keys.Down ? 0x01 : e.KeyCode == Keys.PageDown ? 0x10 : 0x100;
                     newOffset = offset + amount;
                     if (newOffset >= Project.Data.GetRomSize()) newOffset = Project.Data.GetRomSize() - 1;
-                    SelectOffset(newOffset);
+                    SelectOffset(newOffset, -1);
                     break;
                 case Keys.Left:
                     amount = table.CurrentCell.ColumnIndex;
@@ -336,10 +337,25 @@ namespace DiztinGUIsh.window
             PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + ViewOffset);
         }
 
-        public void SelectOffset(int pcOffset, int column = -1, bool saveHistory = false)
+        public void MarkHistoryPoint(int pcOffset, ISnesNavigation.HistoryArgs historyArgs, string position)
         {
-            if (saveHistory)
-                RememberNavigationPoint(SelectedOffset); // save old position
+            if (historyArgs == null) 
+                return;
+
+            historyArgs.Position = position;
+            
+            RememberNavigationPoint(SelectedOffset, historyArgs); // save old position
+        }
+
+        public void SelectOffset(int pcOffset, ISnesNavigation.HistoryArgs historyArgs = null)
+            => SelectOffset(pcOffset, -1, historyArgs);
+
+        public void SelectOffset(int pcOffset, int column = -1, ISnesNavigation.HistoryArgs historyArgs = null)
+        {
+            if (pcOffset == -1)
+                return;
+            
+            MarkHistoryPoint(SelectedOffset, historyArgs, "start");
             
             var col = column == -1 ? table.CurrentCell.ColumnIndex : column;
             if (pcOffset < ViewOffset)
@@ -359,9 +375,8 @@ namespace DiztinGUIsh.window
                 table.CurrentCell = table.Rows[pcOffset - ViewOffset].Cells[col];
             }
 
-            if (saveHistory)
-                RememberNavigationPoint(pcOffset); // save new position
-            
+            MarkHistoryPoint(pcOffset, historyArgs, "end");
+
             InvalidateTable();
         }
 
