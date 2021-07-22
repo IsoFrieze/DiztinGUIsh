@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Windows.Forms;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -223,9 +224,33 @@ namespace DiztinGUIsh.window
             ShowInfo("Scan complete!", "Done!");
         }
 
-        private void SaveProject()
+        private void SaveProject(bool askFilenameIfNotSet = true, bool alwaysAsk = false)
         {
-            ProjectController.SaveProject(Project.ProjectFileName);
+            var showPrompt = 
+                askFilenameIfNotSet && string.IsNullOrEmpty(Project.ProjectFileName) || 
+                alwaysAsk;
+
+            var promptedFilename = "";
+            if (showPrompt)
+            {
+                saveProjectFile.InitialDirectory = Project.AttachedRomFilename;
+                if (saveProjectFile.ShowDialog() != DialogResult.OK || string.IsNullOrEmpty(saveProjectFile.FileName))
+                    return;
+
+                promptedFilename = saveProjectFile.FileName;
+            }
+
+            var origFilename = Project.ProjectFileName;
+            if (!string.IsNullOrEmpty(promptedFilename))
+                Project.ProjectFileName = promptedFilename;
+
+            var err = ProjectController.SaveProject(Project.ProjectFileName);
+
+            if (err == null) 
+                return;
+            
+            Project.ProjectFileName = origFilename;
+            ShowError($"Couldn't save: {err}");
         }
 
         private void ShowVisualizerForm()

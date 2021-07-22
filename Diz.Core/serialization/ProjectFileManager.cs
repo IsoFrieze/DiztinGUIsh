@@ -86,12 +86,21 @@ namespace Diz.Core.serialization
         private static bool IsLikelyCompressed(string filename) => 
             !Path.GetExtension(filename).Equals(".dizraw", StringComparison.InvariantCultureIgnoreCase);
 
-        public void Save(Project project, string filename)
+        public string Save(Project project, string filename)
         {
-            // Everything saves in XML format from here on out.
-            // Binary format is deprecated.
-            ProjectSerializer defaultSerializer = new ProjectXmlSerializer();
-            Save(project, filename, defaultSerializer);
+            try
+            {
+                // Everything saves in XML format from here on out.
+                // Binary format is deprecated.
+                ProjectSerializer defaultSerializer = new ProjectXmlSerializer();
+                Save(project, filename, defaultSerializer);
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+
+            return null;
         }
 
         private void Save(Project project, string filename, ProjectSerializer serializer)

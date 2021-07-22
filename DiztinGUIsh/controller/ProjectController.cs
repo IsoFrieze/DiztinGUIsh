@@ -133,11 +133,30 @@ namespace DiztinGUIsh.controller
             // so we can react appropriately.
         }
 
-        public void SaveProject(string filename)
+        public string SaveProject(string filename)
         {
-            DoLongRunningTask(delegate { new ProjectFileManager().Save(Project, filename); },
-                $"Saving {Path.GetFileName(filename)}...");
+            try
+            {
+                var emptyFilename = string.IsNullOrEmpty(filename);
+                if (emptyFilename)
+                    throw new ArgumentException("empty filename specified", nameof(filename));
+
+                string err = null;
+                DoLongRunningTask(
+                    () => err = new ProjectFileManager().Save(Project, filename),
+                    $"Saving {Path.GetFileName(filename)}..."
+                );
+
+                if (err != null)
+                    return err;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+
             ProjectView.OnProjectSaved();
+            return null;
         }
 
         public void ImportBizHawkCdl(string filename)

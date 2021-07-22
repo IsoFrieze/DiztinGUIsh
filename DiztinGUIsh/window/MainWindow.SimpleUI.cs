@@ -18,9 +18,12 @@ namespace DiztinGUIsh.window
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e) => CreateNewProject();
         private void openProjectToolStripMenuItem_Click(object sender, EventArgs e) => OpenProject();
 
-        private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e) => SaveProject();
+        private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e) => 
+            SaveProject(askFilenameIfNotSet: true, alwaysAsk: false); // save
 
-        private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e) => PromptForFilenameToSave();
+        private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e) => 
+            SaveProject(askFilenameIfNotSet: true, alwaysAsk: true); // save as
+        
         private void exportLogToolStripMenuItem_Click(object sender, EventArgs e) => ExportAssembly();
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e) => new About().ShowDialog();
         private void exitToolStripMenuItem_Click(object sender, EventArgs e) => Application.Exit();

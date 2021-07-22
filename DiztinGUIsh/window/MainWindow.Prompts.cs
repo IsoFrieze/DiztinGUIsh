@@ -39,15 +39,6 @@ namespace DiztinGUIsh.window
                     MessageBoxIcon.Asterisk);
         }
 
-        private void PromptForFilenameToSave()
-        {
-            saveProjectFile.InitialDirectory = Project.AttachedRomFilename;
-            if (saveProjectFile.ShowDialog() == DialogResult.OK && saveProjectFile.FileName != "")
-            {
-                ProjectController.SaveProject(saveProjectFile.FileName);
-            }
-        }
-
         private bool PromptForOpenProjectFilename()
         {
             if (!PromptContinueEvenIfUnsavedChanges())
