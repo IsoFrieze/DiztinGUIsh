@@ -9,8 +9,8 @@ namespace DiztinGUIsh
 {
     public partial class HarshAutoStep : Form
     {
-        public int Start { get; private set; }
-        public int End { get; private set; }
+        public int StartRomOffset { get; private set; }
+        public int EndRomOffset { get; private set; }
         public int Count { get; private set; }
         
         private readonly Data data;
@@ -23,10 +23,10 @@ namespace DiztinGUIsh
 
             InitializeComponent();
 
-            Start = offset;
-            var rest = data.GetRomSize() - Start;
+            StartRomOffset = offset;
+            var rest = data.GetRomSize() - StartRomOffset;
             Count = rest < 0x100 ? rest : 0x100;
-            End = Start + Count;
+            EndRomOffset = StartRomOffset + Count;
 
             UpdateText(null);
         }
@@ -34,16 +34,16 @@ namespace DiztinGUIsh
         private void UpdateText(TextBox selected)
         {
             var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-            var digits = noBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
+            var digits = noBase == Util.NumberBase.Hexadecimal && radioSNES.Checked ? 6 : 0;
 
-            if (Start < 0) Start = 0;
-            if (End >= data.GetRomSize()) End = data.GetRomSize() - 1;
-            Count = End - Start;
+            if (StartRomOffset < 0) StartRomOffset = 0;
+            if (EndRomOffset >= data.GetRomSize()) EndRomOffset = data.GetRomSize() - 1;
+            Count = EndRomOffset - StartRomOffset;
             if (Count < 0) Count = 0;
 
             updatingText = true;
-            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioROM.Checked ? data.ConvertPCtoSnes(Start) : Start, noBase, digits);
-            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? data.ConvertPCtoSnes(End) : End, noBase, digits);
+            if (selected != textStart) textStart.Text = Util.NumberToBaseString(radioSNES.Checked ? data.ConvertPCtoSnes(StartRomOffset) : StartRomOffset, noBase, digits);
+            if (selected != textEnd) textEnd.Text = Util.NumberToBaseString(radioSNES.Checked ? data.ConvertPCtoSnes(EndRomOffset) : EndRomOffset, noBase, digits);
             if (selected != textCount) textCount.Text = Util.NumberToBaseString(Count, noBase, 0);
             updatingText = false;
         }
@@ -63,7 +63,7 @@ namespace DiztinGUIsh
             OnTextChanged(textCount, value =>
             {
                 Count = value;
-                End = Start + Count;
+                EndRomOffset = StartRomOffset + Count;
             });
         }
 
@@ -71,11 +71,11 @@ namespace DiztinGUIsh
         {
             OnTextChanged(textEnd, value =>
             {
-                if (radioROM.Checked)
+                if (radioSNES.Checked)
                     value = data.ConvertSnesToPc(value);
 
-                End = value;
-                Count = End - Start;
+                EndRomOffset = value;
+                Count = EndRomOffset - StartRomOffset;
             });
         }
 
@@ -83,11 +83,11 @@ namespace DiztinGUIsh
         {
             OnTextChanged(textStart, value =>
             {
-                if (radioROM.Checked)
+                if (radioSNES.Checked)
                     value = data.ConvertSnesToPc(value);
 
-                Start = value;
-                Count = End - Start;
+                StartRomOffset = value;
+                Count = EndRomOffset - StartRomOffset;
             });
         }
 

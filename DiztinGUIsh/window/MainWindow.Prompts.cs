@@ -127,7 +127,7 @@ namespace DiztinGUIsh.window
             if (harsh.ShowDialog() != DialogResult.OK)
                 return false;
             
-            newOffset = harsh.Start;
+            newOffset = harsh.StartRomOffset;
             count = harsh.Count;
             return true;
         }

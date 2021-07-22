@@ -74,13 +74,13 @@ namespace DiztinGUIsh.window.dialog
 
             if (!IsPcOffsetValid())
             {
-                lblError.Text = "Invalid PC Offset";
+                lblError.Text = "Invalid ROM File Offset";
                 valid = false;
             }
 
             if (!IsRomAddressValid())
             {
-                lblError.Text = "Invalid ROM Address";
+                lblError.Text = "Invalid SNES Address";
                 valid = false;
             }
 

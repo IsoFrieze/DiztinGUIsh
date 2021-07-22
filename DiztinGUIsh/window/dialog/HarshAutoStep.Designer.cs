@@ -37,7 +37,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.textStart = new System.Windows.Forms.TextBox();
             this.radioPC = new System.Windows.Forms.RadioButton();
-            this.radioROM = new System.Windows.Forms.RadioButton();
+            this.radioSNES = new System.Windows.Forms.RadioButton();
             this.textEnd = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
@@ -95,7 +95,7 @@
             this.group.Controls.Add(this.label5);
             this.group.Controls.Add(this.textStart);
             this.group.Controls.Add(this.radioPC);
-            this.group.Controls.Add(this.radioROM);
+            this.group.Controls.Add(this.radioSNES);
             this.group.Controls.Add(this.textEnd);
             this.group.Controls.Add(this.label4);
             this.group.Controls.Add(this.label6);
@@ -132,21 +132,21 @@
             this.radioPC.Name = "radioPC";
             this.radioPC.Size = new System.Drawing.Size(70, 17);
             this.radioPC.TabIndex = 1;
-            this.radioPC.Text = "PC Offset";
+            this.radioPC.Text = "ROM File Offset";
             this.radioPC.UseVisualStyleBackColor = true;
             // 
             // radioROM
             // 
-            this.radioROM.AutoSize = true;
-            this.radioROM.Checked = true;
-            this.radioROM.Location = new System.Drawing.Point(176, 25);
-            this.radioROM.Name = "radioROM";
-            this.radioROM.Size = new System.Drawing.Size(91, 17);
-            this.radioROM.TabIndex = 0;
-            this.radioROM.TabStop = true;
-            this.radioROM.Text = "ROM Address";
-            this.radioROM.UseVisualStyleBackColor = true;
-            this.radioROM.CheckedChanged += new System.EventHandler(this.radioROM_CheckedChanged);
+            this.radioSNES.AutoSize = true;
+            this.radioSNES.Checked = true;
+            this.radioSNES.Location = new System.Drawing.Point(176, 25);
+            this.radioSNES.Name = "radioSNES";
+            this.radioSNES.Size = new System.Drawing.Size(91, 17);
+            this.radioSNES.TabIndex = 0;
+            this.radioSNES.TabStop = true;
+            this.radioSNES.Text = "SNES Address";
+            this.radioSNES.UseVisualStyleBackColor = true;
+            this.radioSNES.CheckedChanged += new System.EventHandler(this.radioROM_CheckedChanged);
             // 
             // textEnd
             // 
@@ -229,7 +229,7 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox textStart;
         private System.Windows.Forms.RadioButton radioPC;
-        private System.Windows.Forms.RadioButton radioROM;
+        private System.Windows.Forms.RadioButton radioSNES;
         private System.Windows.Forms.TextBox textEnd;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label6;

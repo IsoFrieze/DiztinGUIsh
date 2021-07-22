@@ -35,7 +35,7 @@ namespace DiztinGUIsh.window.dialog
         
         private Util.NumberBase NoBase => 
             radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-        private int DigitCount => NoBase == Util.NumberBase.Hexadecimal && radioROM.Checked ? 6 : 0;
+        private int DigitCount => NoBase == Util.NumberBase.Hexadecimal && radioSNES.Checked ? 6 : 0;
         
         private int PropertyValueAsInt => 
             comboPropertyType.SelectedIndex == 1 ? 
@@ -260,16 +260,16 @@ namespace DiztinGUIsh.window.dialog
             textCount.Text = Util.NumberToBaseString(Controller.DataRange.RangeCount, NoBase, 0);
 
         private void UpdateEndText() => 
-            textEnd.Text = Util.NumberToBaseString(radioROM.Checked ? Data.ConvertPCtoSnes(Controller.DataRange.EndIndex) : Controller.DataRange.EndIndex, NoBase, DigitCount);
+            textEnd.Text = Util.NumberToBaseString(radioSNES.Checked ? Data.ConvertPCtoSnes(Controller.DataRange.EndIndex) : Controller.DataRange.EndIndex, NoBase, DigitCount);
 
         private void UpdateStartText() =>
             textStart.Text =
-                Util.NumberToBaseString(radioROM.Checked ? Data.ConvertPCtoSnes(Controller.DataRange.StartIndex) : Controller.DataRange.StartIndex, NoBase, DigitCount);
+                Util.NumberToBaseString(radioSNES.Checked ? Data.ConvertPCtoSnes(Controller.DataRange.StartIndex) : Controller.DataRange.StartIndex, NoBase, DigitCount);
 
         private void property_SelectedIndexChanged(object sender, EventArgs e) => UpdateVisibility();
 
-        private bool IsRomAddress => radioROM.Checked;
-        private int ConvertToRomOffsetIfNeeded(int v) => IsRomAddress ? Data.ConvertSnesToPc(v) : v;
+        private bool IsSNESAddress => radioSNES.Checked;
+        private int ConvertToRomPcOffsetIfNeeded(int v) => IsSNESAddress ? Data.ConvertSnesToPc(v) : v;
         
         private void regValue_TextChanged(object sender, EventArgs e)
         {
@@ -316,14 +316,14 @@ namespace DiztinGUIsh.window.dialog
             OnTextChanged(textEnd, newEndIndex =>
             {
                 SetRangeValuesManually(Controller.DataRange, 
-                    -1, ConvertToRomOffsetIfNeeded(newEndIndex), -1);
+                    -1, ConvertToRomPcOffsetIfNeeded(newEndIndex), -1);
             });
 
         private void textStart_TextChanged(object sender, EventArgs e) => 
             OnTextChanged(textStart, newStartIndex =>
             {
                 SetRangeValuesManually(Controller.DataRange, 
-                    ConvertToRomOffsetIfNeeded(newStartIndex), -1, -1);
+                    ConvertToRomPcOffsetIfNeeded(newStartIndex), -1, -1);
             });
 
         public static void SetRangeValuesManually(IDataRange dataRange, int newStartIndex = -1, int newEndIndex = -1, int newCount = -1)

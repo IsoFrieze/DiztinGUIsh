@@ -5,6 +5,7 @@
 <body>
 
     <h1>DiztinGUIsh Help - v1.0.1.6</h1>
+    <hj>these docs are a little outdated and need updating for the 2.x branch of Diz. most of it still applies unchanged though.</hj>
 
     <hr />
 
@@ -29,7 +30,7 @@
         <li>
             <a href="#gotowindow">Goto Window</a>
             <ul>
-                <li><a href="#romvspc">ROM Address vs PC Offset</a></li>
+                <li><a href="#romvspc">SNES Address vs ROM file Offset</a></li>
                 <li><a href="#hexvsdec">Hexadecimal vs Decimal</a></li>
             </ul>
         </li>
@@ -207,7 +208,7 @@
 
     <p><strong>Hotkey: Ctrl + G, T, U, H, N</strong></p>
     <p>This is an easy way to hop around the ROM without having to scroll all the way to where you want.</p>
-    <p>Hitting Ctrl + G will bring up the <a href="#gotowindow">Goto window</a>. You can type in a ROM address or PC offset in decimal or hex to go directly to that location.</p>
+    <p>Hitting Ctrl + G will bring up the <a href="#gotowindow">Goto window</a>. You can type in a SNES address or ROM file offset in decimal or hex to go directly to that location.</p>
     <p>You can press T to jump to the intermediate address of the currently selected instruction. Only if the intermediate address refers to ROM of course.</p>
     <p>You can press U, H, or N to jump to the first unreached byte of the project, the nearest unreached block behind the selected address, or the nearest unreached block ahead of the selected address. These are useful just to get somewhere you haven't been yet.</p>
 
@@ -218,7 +219,7 @@
     <p><strong>Hotkey: K, Ctrl + K, B, D, M, X</strong></p>
     <p>For anything that isn't code, you will have to mark manually. You can select which flag type to mark with under the Edit -> Select Marker menu. The currently selected flag type is shown in the status bar at the bottom of the window.</p>
     <p>Pressing K will mark a single instance of that flag type. That is, 8-bit data will mark 1 byte at a time, 16-bit data 2 bytes at a time, etc.</p>
-    <p>You can press Ctrl + K to bring up a window that lets you mark an entire range at once. You can specify ROM address or PC offset, in hex or decimal, and you can specify the range via start &amp; end points, or just the number of bytes to mark.</p>
+    <p>You can press Ctrl + K to bring up a window that lets you mark an entire range at once. You can specify SNES address or ROM file offset, in hex or decimal, and you can specify the range via start &amp; end points, or just the number of bytes to mark.</p>
     <p>Pressing B, D, M, or X will jump the selected cell to the data bank, direct page, M flag, or X flag cell respectively. You can hold Ctrl while pressing one of these keys to bring up the same window as Ctrl + K with default options to mark that value.</p>
 
     <hr />
@@ -321,10 +322,10 @@
 
     <hr />
 
-    <h3 id="romvspc">ROM Address vs PC Offset</h3>
+    <h3 id="romvspc">SNES Address vs ROM file Offset</h3>
 
-    <p>The ROM address, also known as the SNES offset, is the location in the SNES's address space where the byte is located.</p>
-    <p>The PC offset is the raw offset of the byte in the ROM file. The first byte has an offset of 0. The ROM is always treated as unheadered, even if the ROM linked to the project has an SMC header.</p>
+    <p>The SNES address is the location in the SNES's address space where the byte is located.</p>
+    <p>The ROM File Offset (also called the PC offset) is the raw offset of the byte in the ROM file. The first byte has an offset of 0. The ROM is always treated as unheadered, even if the ROM linked to the project has an SMC header.</p>
 
     <hr />
 
@@ -332,7 +333,7 @@
 
     <p>Hexadecimal is a base 16 counting system. It is what most hex editors use for displaying offsets, since 16 is a power of 2.</p>
     <p>Decimal is a base 10 counting system.</p>
-    <p><em>Note: Using decimal to specify the ROM address is silly, I've found.</em></p>
+    <p><em>Note: Using decimal to specify the SNES address is silly, I've found.</em></p>
 
     <hr />
 
@@ -402,8 +403,8 @@
         <li><strong>%label:length%</strong>: Output the label for this line. Default length of -22.</li>
         <li><strong>%code:length%</strong>: Output the instruction, data, pointer, etc. for this line. This is where assembler directives will appear as well. Default length of 37.</li>
         <li><strong>%ia%</strong>: Output the intermediate address of this instruction or pointer if applicable. Forced length of 6.</li>
-        <li><strong>%pc%</strong>: Output the ROM address of this code. Forced length of 6.</li>
-        <li><strong>%offset%</strong>: Output the PC offset of this code. Forced length of -6.</li>
+        <li><strong>%pc%</strong>: Output the SNES address of this code. Forced length of 6.</li>
+        <li><strong>%offset%</strong>: Output the ROM file offset of this code. Forced length of -6.</li>
         <li><strong>%bytes%</strong>: Output the bytecode of this instruction. Forced length of 8.</li>
         <li><strong>%comment:length%</strong>: Output the comment for this line.</li>
         <li><strong>%b%</strong>: Output the Data Bank register for this line. Forced length of 2.</li>
@@ -446,8 +447,7 @@
 
     <p>If DiztinGUIsh outputs a disassembly without any warnings, it should <em>always</em> be assemblable with Asar. The code may be desynched or flagged incorrectly, but it should still assemble at least. You can assemble a disassembly via the command <tt>asar.exe [name].asm [output].sfc</tt>, where [name] is the disassembly file (or main.asm if output to multiple files).</p>
     <p>In theory if the world were perfect, the reassembled ROM should match the original ROM. Sometimes it will, and sometimes it won't. It depends on the code itself. The output should always <em>run</em> similarly (unless the ROM has built-in modification or checksum detection).</p>
-    <p>The reason this may not be the case is due to mirroring, and the way DiztinGUIsh deals with labels. Take the following two code snippets: <tt>JML $C00054 : JML $400054</tt>. One has an intermediate address of <tt>$C00054</tt> and the other has intermediate address <tt>$400054</tt>. These two addresses refer to the same byte in the ROM due to memory mapping mirroring. That is, they both refer to PC offset <tt>0x54</tt>. Currently, DiztinGUIsh stores labels according to PC offset, not ROM address. So when disassembled, these instructions will be given the same label, and they will be assembled to the exact same instruction.</p>
-    <p>This will be changed in a future update, along with the ability to assign labels to non-ROM addresses (addresses that don't refer to a PC offset). So sit tight, this will be fixed soon.</p>
+    <p>The reason this may not be the case is due to mirroring, and the way DiztinGUIsh deals with labels. Take the following two code snippets: <tt>JML $C00054 : JML $400054</tt>. One has an intermediate address of <tt>$C00054</tt> and the other has intermediate address <tt>$400054</tt>. These two addresses refer to the same byte in the ROM due to memory mapping mirroring. That is, they both refer to PC offset <tt>0x54</tt>. DiztinGUIsh stores labels according to SNES addresses.</p>
 
     <hr />
 

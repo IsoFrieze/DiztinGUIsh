@@ -46,7 +46,7 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(76, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "ROM Address:";
+            this.label1.Text = "SNES Address:";
             // 
             // label2
             // 

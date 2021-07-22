@@ -46,7 +46,7 @@
             this.mxCombo = new System.Windows.Forms.ComboBox();
             this.archCombo = new System.Windows.Forms.ComboBox();
             this.radioPC = new System.Windows.Forms.RadioButton();
-            this.radioROM = new System.Windows.Forms.RadioButton();
+            this.radioSNES = new System.Windows.Forms.RadioButton();
             this.radioHex = new System.Windows.Forms.RadioButton();
             this.radioDec = new System.Windows.Forms.RadioButton();
             this.group.SuspendLayout();
@@ -192,7 +192,7 @@
             this.group.Controls.Add(this.mxCombo);
             this.group.Controls.Add(this.archCombo);
             this.group.Controls.Add(this.radioPC);
-            this.group.Controls.Add(this.radioROM);
+            this.group.Controls.Add(this.radioSNES);
             this.group.Controls.Add(this.regValue);
             this.group.Controls.Add(this.textEnd);
             this.group.Controls.Add(this.label2);
@@ -262,22 +262,22 @@
             this.radioPC.Name = "radioPC";
             this.radioPC.Size = new System.Drawing.Size(75, 19);
             this.radioPC.TabIndex = 6;
-            this.radioPC.Text = "PC Offset";
+            this.radioPC.Text = "ROM File Offset";
             this.radioPC.UseVisualStyleBackColor = true;
             // 
-            // radioROM
+            // radioSNES
             // 
-            this.radioROM.AutoSize = true;
-            this.radioROM.Checked = true;
-            this.radioROM.Location = new System.Drawing.Point(205, 55);
-            this.radioROM.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.radioROM.Name = "radioROM";
-            this.radioROM.Size = new System.Drawing.Size(97, 19);
-            this.radioROM.TabIndex = 5;
-            this.radioROM.TabStop = true;
-            this.radioROM.Text = "ROM Address";
-            this.radioROM.UseVisualStyleBackColor = true;
-            this.radioROM.CheckedChanged += new System.EventHandler(this.radioROM_CheckedChanged);
+            this.radioSNES.AutoSize = true;
+            this.radioSNES.Checked = true;
+            this.radioSNES.Location = new System.Drawing.Point(205, 55);
+            this.radioSNES.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.radioSNES.Name = "radioSNES";
+            this.radioSNES.Size = new System.Drawing.Size(97, 19);
+            this.radioSNES.TabIndex = 5;
+            this.radioSNES.TabStop = true;
+            this.radioSNES.Text = "SNES Address";
+            this.radioSNES.UseVisualStyleBackColor = true;
+            this.radioSNES.CheckedChanged += new System.EventHandler(this.radioROM_CheckedChanged);
             // 
             // radioHex
             // 
@@ -348,7 +348,7 @@
         private System.Windows.Forms.GroupBox group;
         private System.Windows.Forms.ComboBox archCombo;
         private System.Windows.Forms.RadioButton radioPC;
-        private System.Windows.Forms.RadioButton radioROM;
+        private System.Windows.Forms.RadioButton radioSNES;
         private System.Windows.Forms.RadioButton radioHex;
         private System.Windows.Forms.RadioButton radioDec;
         private System.Windows.Forms.ComboBox mxCombo;
