@@ -28,120 +28,76 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.Address = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Alias = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Comment = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.import = new System.Windows.Forms.Button();
-            this.export = new System.Windows.Forms.Button();
+            this.labelGrid = new System.Windows.Forms.DataGridView();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.jump = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.btnImportReplace = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.jumpToLabelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.importAppendToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importReplaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportBSNESSymbolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.label3 = new System.Windows.Forms.Label();
+            this.txtText = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.txtAddress = new System.Windows.Forms.TextBox();
+            ((System.ComponentModel.ISupportInitialize) (this.labelGrid)).BeginInit();
             this.statusStrip1.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize) (this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // dataGridView1
+            // labelGrid
             // 
-            this.dataGridView1.AllowUserToResizeColumns = false;
-            this.dataGridView1.AllowUserToResizeRows = false;
-            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridView1.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Address,
-            this.Alias,
-            this.Comment});
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.CornflowerBlue;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle4;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 29);
-            this.dataGridView1.Margin = new System.Windows.Forms.Padding(0);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.RowHeadersVisible = false;
-            this.dataGridView1.RowHeadersWidth = 4;
-            this.dataGridView1.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dataGridView1.RowTemplate.Height = 15;
-            this.dataGridView1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.ShowCellErrors = false;
-            this.dataGridView1.ShowCellToolTips = false;
-            this.dataGridView1.ShowEditingIcon = false;
-            this.dataGridView1.ShowRowErrors = false;
-            this.dataGridView1.Size = new System.Drawing.Size(400, 310);
-            this.dataGridView1.TabIndex = 3;
-            this.dataGridView1.TabStop = false;
-            this.dataGridView1.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.dataGridView1_CellBeginEdit);
-            this.dataGridView1.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.dataGridView1_CellValidating);
-            this.dataGridView1.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.dataGridView1_UserDeletingRow);
-            // 
-            // Address
-            // 
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Address.DefaultCellStyle = dataGridViewCellStyle1;
-            this.Address.HeaderText = "PC";
-            this.Address.MaxInputLength = 6;
-            this.Address.Name = "Address";
-            this.Address.Width = 45;
-            // 
-            // Alias
-            // 
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Alias.DefaultCellStyle = dataGridViewCellStyle2;
-            this.Alias.HeaderText = "Label";
-            this.Alias.MaxInputLength = 60;
-            this.Alias.Name = "Alias";
-            this.Alias.Width = 138;
-            // 
-            // Comment
-            // 
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Comment.DefaultCellStyle = dataGridViewCellStyle3;
-            this.Comment.HeaderText = "Comment";
-            this.Comment.MaxInputLength = 800;
-            this.Comment.Name = "Comment";
-            this.Comment.Width = 1000;
-            // 
-            // import
-            // 
-            this.import.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.import.Location = new System.Drawing.Point(70, 3);
-            this.import.Name = "import";
-            this.import.Size = new System.Drawing.Size(116, 23);
-            this.import.TabIndex = 1;
-            this.import.Text = "Import (Append) ...";
-            this.import.UseVisualStyleBackColor = true;
-            this.import.Click += new System.EventHandler(this.importAppend_Click);
-            // 
-            // export
-            // 
-            this.export.Location = new System.Drawing.Point(338, 3);
-            this.export.Name = "export";
-            this.export.Size = new System.Drawing.Size(62, 23);
-            this.export.TabIndex = 2;
-            this.export.Text = "Export...";
-            this.export.UseVisualStyleBackColor = true;
-            this.export.Click += new System.EventHandler(this.export_Click);
+            this.labelGrid.AllowUserToResizeColumns = false;
+            this.labelGrid.AllowUserToResizeRows = false;
+            this.labelGrid.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.labelGrid.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            this.labelGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.Color.CornflowerBlue;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.labelGrid.DefaultCellStyle = dataGridViewCellStyle1;
+            this.labelGrid.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelGrid.Location = new System.Drawing.Point(0, 0);
+            this.labelGrid.Margin = new System.Windows.Forms.Padding(0);
+            this.labelGrid.Name = "labelGrid";
+            this.labelGrid.RowHeadersVisible = false;
+            this.labelGrid.RowHeadersWidth = 4;
+            this.labelGrid.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            this.labelGrid.RowTemplate.Height = 15;
+            this.labelGrid.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.labelGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.labelGrid.ShowCellErrors = false;
+            this.labelGrid.ShowCellToolTips = false;
+            this.labelGrid.ShowEditingIcon = false;
+            this.labelGrid.ShowRowErrors = false;
+            this.labelGrid.Size = new System.Drawing.Size(584, 342);
+            this.labelGrid.TabIndex = 3;
+            this.labelGrid.TabStop = false;
+            this.labelGrid.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.dataGridView1_CellBeginEdit);
+            this.labelGrid.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.dataGridView1_CellValidating);
+            this.labelGrid.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.dataGridView1_UserDeletingRow);
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 342);
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {this.toolStripStatusLabel1});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 437);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(402, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(584, 22);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -149,16 +105,6 @@
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(0, 17);
-            // 
-            // jump
-            // 
-            this.jump.Location = new System.Drawing.Point(3, 3);
-            this.jump.Name = "jump";
-            this.jump.Size = new System.Drawing.Size(63, 23);
-            this.jump.TabIndex = 0;
-            this.jump.Text = "Jump to";
-            this.jump.UseVisualStyleBackColor = true;
-            this.jump.Click += new System.EventHandler(this.jump_Click);
             // 
             // openFileDialog1
             // 
@@ -168,30 +114,131 @@
             // 
             this.saveFileDialog1.Filter = "Comma Separated Value Files|*.csv|Text Files|*.txt|All Files|*.*";
             // 
-            // btnImportReplace
+            // menuStrip1
             // 
-            this.btnImportReplace.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnImportReplace.Location = new System.Drawing.Point(192, 3);
-            this.btnImportReplace.Name = "btnImportReplace";
-            this.btnImportReplace.Size = new System.Drawing.Size(132, 23);
-            this.btnImportReplace.TabIndex = 5;
-            this.btnImportReplace.Text = "Import (Replace) ...";
-            this.btnImportReplace.UseVisualStyleBackColor = true;
-            this.btnImportReplace.Click += new System.EventHandler(this.btnImportReplace_Click);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {this.jumpToLabelToolStripMenuItem, this.toolStripMenuItem1});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(584, 24);
+            this.menuStrip1.TabIndex = 7;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // jumpToLabelToolStripMenuItem
+            // 
+            this.jumpToLabelToolStripMenuItem.Name = "jumpToLabelToolStripMenuItem";
+            this.jumpToLabelToolStripMenuItem.Size = new System.Drawing.Size(94, 20);
+            this.jumpToLabelToolStripMenuItem.Text = "Jump To Label";
+            this.jumpToLabelToolStripMenuItem.Click += new System.EventHandler(this.jumpToLabelToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {this.importAppendToolStripMenuItem, this.importReplaceToolStripMenuItem, this.exportCSVToolStripMenuItem, this.exportBSNESSymbolsToolStripMenuItem});
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(43, 20);
+            this.toolStripMenuItem1.Text = "Data";
+            // 
+            // importAppendToolStripMenuItem
+            // 
+            this.importAppendToolStripMenuItem.Name = "importAppendToolStripMenuItem";
+            this.importAppendToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
+            this.importAppendToolStripMenuItem.Text = "Import (Append)";
+            this.importAppendToolStripMenuItem.Click += new System.EventHandler(this.importAppendToolStripMenuItem_Click);
+            // 
+            // importReplaceToolStripMenuItem
+            // 
+            this.importReplaceToolStripMenuItem.Name = "importReplaceToolStripMenuItem";
+            this.importReplaceToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
+            this.importReplaceToolStripMenuItem.Text = "Import (Replace)";
+            this.importReplaceToolStripMenuItem.Click += new System.EventHandler(this.importReplaceToolStripMenuItem_Click);
+            // 
+            // exportCSVToolStripMenuItem
+            // 
+            this.exportCSVToolStripMenuItem.Name = "exportCSVToolStripMenuItem";
+            this.exportCSVToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
+            this.exportCSVToolStripMenuItem.Text = "Export CSV";
+            this.exportCSVToolStripMenuItem.Click += new System.EventHandler(this.exportCSVToolStripMenuItem_Click);
+            // 
+            // exportBSNESSymbolsToolStripMenuItem
+            // 
+            this.exportBSNESSymbolsToolStripMenuItem.Name = "exportBSNESSymbolsToolStripMenuItem";
+            this.exportBSNESSymbolsToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
+            this.exportBSNESSymbolsToolStripMenuItem.Text = "Export BSNES symbols";
+            this.exportBSNESSymbolsToolStripMenuItem.Click += new System.EventHandler(this.exportBSNESSymbolsToolStripMenuItem_Click);
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 24);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.label3);
+            this.splitContainer1.Panel1.Controls.Add(this.txtText);
+            this.splitContainer1.Panel1.Controls.Add(this.label2);
+            this.splitContainer1.Panel1.Controls.Add(this.label1);
+            this.splitContainer1.Panel1.Controls.Add(this.txtAddress);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.labelGrid);
+            this.splitContainer1.Size = new System.Drawing.Size(584, 413);
+            this.splitContainer1.SplitterDistance = 67;
+            this.splitContainer1.TabIndex = 6;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.label3.Location = new System.Drawing.Point(12, 3);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(35, 13);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "Filter";
+            // 
+            // txtText
+            // 
+            this.txtText.Location = new System.Drawing.Point(63, 38);
+            this.txtText.Name = "txtText";
+            this.txtText.Size = new System.Drawing.Size(233, 20);
+            this.txtText.TabIndex = 3;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(13, 41);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(31, 13);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "Text:";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 20);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(48, 13);
+            this.label1.TabIndex = 1;
+            this.label1.Text = "Address:";
+            // 
+            // txtAddress
+            // 
+            this.txtAddress.Location = new System.Drawing.Point(63, 16);
+            this.txtAddress.Name = "txtAddress";
+            this.txtAddress.Size = new System.Drawing.Size(233, 20);
+            this.txtAddress.TabIndex = 0;
             // 
             // AliasList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.import;
-            this.ClientSize = new System.Drawing.Size(402, 364);
-            this.Controls.Add(this.btnImportReplace);
-            this.Controls.Add(this.jump);
+            this.ClientSize = new System.Drawing.Size(584, 459);
+            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.export);
-            this.Controls.Add(this.import);
-            this.Controls.Add(this.dataGridView1);
+            this.Controls.Add(this.menuStrip1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            this.MainMenuStrip = this.menuStrip1;
             this.MaximumSize = new System.Drawing.Size(600, 5000);
             this.MinimumSize = new System.Drawing.Size(217, 250);
             this.Name = "AliasList";
@@ -200,27 +247,39 @@
             this.Text = "Label List";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AliasList_FormClosing);
             this.Resize += new System.EventHandler(this.AliasList_Resize);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.labelGrid)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel1.PerformLayout();
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize) (this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.Button import;
-        private System.Windows.Forms.Button export;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Address;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Alias;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Comment;
+        private System.Windows.Forms.DataGridView labelGrid;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.Button jump;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
-        private System.Windows.Forms.Button btnImportReplace;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem jumpToLabelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem importAppendToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importReplaceToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportCSVToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportBSNESSymbolsToolStripMenuItem;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox txtText;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox txtAddress;
     }
 }

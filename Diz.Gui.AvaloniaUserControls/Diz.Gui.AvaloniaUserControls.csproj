@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Avalonia">
+        <Version>0.10.6</Version>
+      </PackageReference>
+      <PackageReference Include="Avalonia.Controls.DataGrid">
+        <Version>0.10.6</Version>
+      </PackageReference>
+      <PackageReference Include="Avalonia.Desktop">
+        <Version>0.10.6</Version>
+      </PackageReference>
+      <PackageReference Include="Avalonia.Diagnostics">
+        <Version>0.10.6</Version>
+      </PackageReference>
+      <PackageReference Include="Avalonia.ReactiveUI">
+        <Version>0.10.6</Version>
+      </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+    </ItemGroup>
+
+</Project>
