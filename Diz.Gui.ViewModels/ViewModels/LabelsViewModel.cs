@@ -6,33 +6,13 @@ using ReactiveUI;
 
 namespace Diz.Gui.ViewModels.ViewModels
 {
-    // public class LabelViewModel : ViewModel
-    // {
-    //     public Label Label { get; set; }
-    //
-    //     public Label()
-    //     {
-    //         this.WhenActivated(
-    //             (CompositeDisposable disposables) => { });
-    //     }
-    // }
-
     public class LabelsViewModel : ViewModel
     {
-        // [Reactive] public int StartingOffset { get; set; }
-        //
-        // [Reactive] public int Count { get; set; }
-
-        // [Reactive] 
         public ObservableCollection<Label> Labels
         {
             get => labels;
             set => this.RaiseAndSetIfChanged(ref labels, value);
         }
-
-        // public Label SelectedByteOffset => SelectedItem;
-
-        // public ReactiveCommand<DataGridCellEditEndedEventArgs, Unit> SetSelectedItem { get; }
 
         private Label selectedItem;
         private ObservableCollection<Label> labels;
@@ -42,9 +22,6 @@ namespace Diz.Gui.ViewModels.ViewModels
             get => selectedItem;
             set => this.RaiseAndSetIfChanged(ref selectedItem, value);
         }
-
-        // public ReactiveCommand<string, Unit> SetComment { get; }
-        // public ByteEntry SelectedByteOffset;
 
         public LabelsViewModel()
         {
@@ -115,9 +92,9 @@ namespace Diz.Gui.ViewModels.ViewModels
                 },
                 new Label
                 {
-                Comment = "test3",
-                Name = "name3", Offset = 3,
-            }
+                    Comment = "test3",
+                    Name = "name3", Offset = 3,
+                }
             };
         }
     }

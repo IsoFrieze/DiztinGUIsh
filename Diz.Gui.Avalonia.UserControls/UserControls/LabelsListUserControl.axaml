@@ -29,8 +29,7 @@
             RowBackground="White" 
             AlternatingRowBackground="White" 
             GridLinesVisibility="All"
-            x:Name="LabelGrid"
-        >
+            x:Name="LabelGrid">
 
             <DataGrid.Columns>
                 <DataGridTextColumn Header="SNES Address"
