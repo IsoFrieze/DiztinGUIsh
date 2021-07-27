@@ -23,20 +23,4 @@
     <ItemGroup>
         <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <AvaloniaXaml Remove="Properties\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Properties\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Remove="Properties\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="Properties\**" />
-    </ItemGroup>
 </Project>
