@@ -3,17 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using Diz.Core.model;
-using JetBrains.Annotations;
 
 namespace Diz.Core.util
 {
@@ -406,115 +402,8 @@ namespace Diz.Core.util
             return c1?.SequenceEqual(c2) ?? false;
         }
         #endif
-    }
-    
-    
-    // makes it a little easier to deal with INotifyPropertyChanged in derived classes
-    public interface INotifyPropertyChangedExt : INotifyPropertyChanged
-    {
-        // would be great if this didn't have to be public. :shrug:
-        void OnPropertyChanged(string propertyName);
-    }
-    
-    public static class NotifyPropertyChangedExtensions
-    {
-        // returns true if we set property to a new value
-        public static bool SetField<T>(this INotifyPropertyChanged sender, PropertyChangedEventHandler handler, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
-        {
-            if (FieldIsEqual(field, value, compareRefOnly)) 
-                return false;
-            
-            field = value;
-            
-            handler?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
-            return true;
-        }
         
-        // returns true if we set property to a new value
-        public static bool SetField<T>(this INotifyPropertyChangedExt sender, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
-        {
-            if (FieldIsEqual(field, value, compareRefOnly)) 
-                return false;
-            
-            field = value;
-    
-            sender.OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        public static bool FieldIsEqual<T>(T field, T value, bool compareRefOnly = false)
-        {
-            if (compareRefOnly)
-            {
-                if (ReferenceEquals(field, value))
-                    return true;
-            }
-            else if (EqualityComparer<T>.Default.Equals(field, value))
-            {
-                return true;
-            }
-
-            return false;
-        }
-    }
-
-    public static class ContentUtils
-    {
-        public static Dictionary<int, Label> ReadLabelsFromCsv(string importFilename, ref int errLine)
-        {
-            var newValues = new Dictionary<int, Label>();
-            var lines = Util.ReadLines(importFilename).ToArray();
-
-            var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
-
-            // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
-            // section. replace with something better
-            for (var i = 0; i < lines.Length; i++)
-            {
-                var label = new Label();
-
-                errLine = i + 1;
-
-                Util.SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
-                Util.SplitOnFirstComma(remainder, out var labelName, out var labelComment);
-
-                label.Name = labelName.Trim();
-                label.Comment = labelComment;
-
-                if (!validLabelChars.Match(label.Name).Success)
-                    throw new InvalidDataException("invalid label name: " + label.Name);
-
-                newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), label);
-            }
-
-            errLine = -1;
-            return newValues;
-        }
-        
-        #if PORTING_FROM_V3_BRANCH // this isn't needed yet but will be part of v3.0.
-        public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, ref int errLine)
-        {
-            var labelsFromCsv = ReadLabelsFromCsv(importFilename, ref errLine);
-            
-            if (replaceAll)
-                labelProvider.DeleteAllLabels();
-            
-            foreach (var (key, value) in labelsFromCsv)
-            {
-                labelProvider.AddLabel(key, value, true);
-            }
-        }
-        #endif
-        
-        public static object SingleOrDefaultOfType<T>(this IEnumerable<T> enumerable, Type desiredType)
-        {
-            return enumerable.SingleOrDefault(item => item.GetType() == desiredType);
-        }
-        
-        [CanBeNull]
-        public static TDesired SingleOrDefaultOfType<TDesired, T>(this IEnumerable<T> enumerable)
-        {
-            return enumerable.OfType<TDesired>().SingleOrDefault();
-        }
+        public static string StripHex(string text) => 
+            text.Replace("0x", "");
     }
 }
