@@ -49,7 +49,7 @@ namespace Diz.Gui.ViewModels.ViewModels
         public LabelsViewModel()
         {
             // temp hack
-            labels = new ObservableCollection<Label>(GetLabelViews() ?? new List<Label>());
+            Labels = new ObservableCollection<Label>(GetSampleLabels() ?? new List<Label>());
 
             // byteEntries = this
             //     .WhenAnyValue(x => x.StartingOffset)
@@ -68,7 +68,7 @@ namespace Diz.Gui.ViewModels.ViewModels
                 });
         }
 
-        private List<Label> GetLabelViews()
+        private List<Label> GetSampleLabels()
         {
             // var loader = Service.Container.GetInstance<ISampleProjectLoader>("SampleProjectLoader");
 
@@ -100,7 +100,7 @@ namespace Diz.Gui.ViewModels.ViewModels
             //     }
             // });
 
-            return new List<Label>
+            return new()
             {
                 new Label
                 {
@@ -112,7 +112,12 @@ namespace Diz.Gui.ViewModels.ViewModels
                 {
                     Comment = "test1",
                     Name = "name1", Offset = 1,
-                }
+                },
+                new Label
+                {
+                Comment = "test3",
+                Name = "name3", Offset = 3,
+            }
             };
         }
     }

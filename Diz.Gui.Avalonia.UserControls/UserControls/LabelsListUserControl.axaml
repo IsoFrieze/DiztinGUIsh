@@ -1,14 +1,17 @@
 ﻿<reactiveUi:ReactiveUserControl
-    x:TypeArguments="avaloniaUserControls:LabelsViewModel"
-    x:Class="Diz.Gui.Avalonia.UserControls.UserControls.LabelsListUserControl"
+    
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:reactiveUi="http://reactiveui.net"
+    xmlns:viewModels="clr-namespace:Diz.Gui.ViewModels.ViewModels;assembly=Diz.Gui.ViewModels"
     mc:Ignorable="d"
-    d:DesignWidth="800" d:DesignHeight="450"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:avaloniaUserControls="clr-namespace:Diz.Gui.ViewModels.ViewModels;assembly=Diz.Gui.ViewModels">
+    
+    x:TypeArguments="viewModels:LabelsViewModel"
+    x:Class="Diz.Gui.Avalonia.UserControls.UserControls.LabelsListUserControl"
+    
+    d:DesignWidth="800" d:DesignHeight="450">
 
     <!-- 
     DataGrid below will have the Items databound from code.
@@ -18,26 +21,26 @@
     -->
 
     <Design.DataContext>
-        <avaloniaUserControls:LabelsViewModel />
+        <viewModels:LabelsViewModel />
     </Design.DataContext>
 
     <StackPanel>
         <DataGrid 
             RowBackground="White" 
             AlternatingRowBackground="White" 
-            GridLinesVisibility="All" 
+            GridLinesVisibility="All"
             x:Name="LabelGrid"
-            >
+        >
 
             <DataGrid.Columns>
                 <DataGridTextColumn Header="SNES Address"
-                                    Binding="{Binding Label.Offset}"
+                                    Binding="{Binding Offset}"
                                     Width=".2*" />
                 <DataGridTextColumn Header="Name"
-                                    Binding="{Binding Label.Name}"
+                                    Binding="{Binding Name}"
                                     Width=".1*" />
                 <DataGridTextColumn Header="Comment"
-                                    Binding="{Binding Label.Comment}"
+                                    Binding="{Binding Comment}"
                                     Width=".1*" />
             </DataGrid.Columns>
         </DataGrid>
