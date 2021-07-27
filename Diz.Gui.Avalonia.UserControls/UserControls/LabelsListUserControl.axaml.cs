@@ -1,6 +1,4 @@
 ﻿using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
@@ -24,8 +22,7 @@ namespace Diz.Gui.Avalonia.UserControls.UserControls
                 this.OneWayBind(ViewModel,
                     vm => vm.SearchResults,
                     v => v.LabelGrid.Items
-                )
-                    .DisposeWith(disposables);
+                ).DisposeWith(disposables);
 
                 // this.Bind(ViewModel,
                 //     viewmodel => viewmodel.Labels,
