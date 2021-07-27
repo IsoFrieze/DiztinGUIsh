@@ -1,0 +1,46 @@
+﻿<reactiveUi:ReactiveUserControl
+    x:TypeArguments="avaloniaUserControls:LabelsViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:reactiveUi="http://reactiveui.net"
+    xmlns:avaloniaUserControls="clr-namespace:Diz.Gui.AvaloniaUserControls"
+    mc:Ignorable="d"
+    d:DesignWidth="800" d:DesignHeight="450"
+    x:Class="Diz.Gui.AvaloniaUserControls.LabelsListUserControl"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    >
+
+    <!-- 
+    DataGrid below will have the Items databound from code.
+    Our DataContext might be ... wrong.... or something.
+    This is a view for a ByteEntriesViewModel,
+    but the datagrid is for the items
+    -->
+
+    <Design.DataContext>
+        <avaloniaUserControls:LabelsViewModel />
+    </Design.DataContext>
+
+    <StackPanel>
+        <DataGrid 
+            RowBackground="White" 
+            AlternatingRowBackground="White" 
+            GridLinesVisibility="All" 
+            x:Name="MainGrid"
+            >
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="SNES Address"
+                                    Binding="{Binding Label.Offset}"
+                                    Width=".2*" />
+                <DataGridTextColumn Header="Name"
+                                    Binding="{Binding Label.Name}"
+                                    Width=".1*" />
+                <DataGridTextColumn Header="Comment"
+                                    Binding="{Binding Label.Comment}"
+                                    Width=".1*" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </StackPanel>
+</reactiveUi:ReactiveUserControl>

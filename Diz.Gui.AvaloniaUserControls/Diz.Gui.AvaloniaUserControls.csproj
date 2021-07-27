@@ -2,28 +2,54 @@
 
     <PropertyGroup>
         <TargetFramework>net48</TargetFramework>
+        <OutputType>WinExe</OutputType>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Avalonia">
-        <Version>0.10.6</Version>
-      </PackageReference>
-      <PackageReference Include="Avalonia.Controls.DataGrid">
-        <Version>0.10.6</Version>
-      </PackageReference>
-      <PackageReference Include="Avalonia.Desktop">
-        <Version>0.10.6</Version>
-      </PackageReference>
-      <PackageReference Include="Avalonia.Diagnostics">
-        <Version>0.10.6</Version>
-      </PackageReference>
-      <PackageReference Include="Avalonia.ReactiveUI">
-        <Version>0.10.6</Version>
-      </PackageReference>
+        <PackageReference Include="Avalonia">
+            <Version>0.10.6</Version>
+        </PackageReference>
+        <PackageReference Include="Avalonia.Controls.DataGrid">
+            <Version>0.10.6</Version>
+        </PackageReference>
+        <PackageReference Include="Avalonia.Desktop">
+            <Version>0.10.6</Version>
+        </PackageReference>
+        <PackageReference Include="Avalonia.Diagnostics">
+            <Version>0.10.6</Version>
+        </PackageReference>
+        <PackageReference Include="Avalonia.ReactiveUI">
+            <Version>0.10.6</Version>
+        </PackageReference>
+        <PackageReference Include="DynamicData">
+            <Version>7.2.1</Version>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+        <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="**\*.xaml.cs">
+            <DependentUpon>%(Filename)</DependentUpon>
+        </Compile>
+        <AvaloniaResource Include="**\*.xaml">
+            <SubType>Designer</SubType>
+        </AvaloniaResource>
+        <AvaloniaResource Include="Views\Windows\Assets\diz-icon2-magenta-med32x32.ico" />
+    </ItemGroup>
+
+    <ItemGroup>
+<!--        <AvaloniaXaml Include="Views\Windows\MainWindow.xaml" />-->
+<!--        <None Remove="App\App.xaml" />-->
+<!--        <AvaloniaXaml Include="App\App.xaml" />-->
+<!--        <None Remove="Windows\MainWindow.xaml" />-->
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Views\Windows\Assets" />
     </ItemGroup>
 
 </Project>

@@ -471,7 +471,8 @@
           "Avalonia.Desktop": "0.10.6",
           "Avalonia.Diagnostics": "0.10.6",
           "Avalonia.ReactiveUI": "0.10.6",
-          "Diz.Core": "1.0.0"
+          "Diz.Core": "1.0.0",
+          "DynamicData": "7.2.1"
         }
       }
     },
