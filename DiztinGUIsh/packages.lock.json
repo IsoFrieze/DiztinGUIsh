@@ -463,12 +463,36 @@
           "System.Resources.Extensions": "5.0.0"
         }
       },
-      "diz.gui.avaloniausercontrols": {
+      "diz.gui.avalonia": {
         "type": "Project",
         "dependencies": {
           "Avalonia": "0.10.6",
           "Avalonia.Controls.DataGrid": "0.10.6",
           "Avalonia.Desktop": "0.10.6",
+          "Avalonia.Diagnostics": "0.10.6",
+          "Avalonia.ReactiveUI": "0.10.6",
+          "Diz.Core": "1.0.0",
+          "Diz.Gui.Avalonia.UserControls": "1.0.0",
+          "DynamicData": "7.2.1"
+        }
+      },
+      "diz.gui.avalonia.usercontrols": {
+        "type": "Project",
+        "dependencies": {
+          "Avalonia": "0.10.6",
+          "Avalonia.Controls.DataGrid": "0.10.6",
+          "Avalonia.Desktop": "0.10.6",
+          "Avalonia.Diagnostics": "0.10.6",
+          "Avalonia.ReactiveUI": "0.10.6",
+          "Diz.Core": "1.0.0",
+          "Diz.Gui.ViewModels": "1.0.0",
+          "DynamicData": "7.2.1"
+        }
+      },
+      "diz.gui.viewmodels": {
+        "type": "Project",
+        "dependencies": {
+          "Avalonia": "0.10.6",
           "Avalonia.Diagnostics": "0.10.6",
           "Avalonia.ReactiveUI": "0.10.6",
           "Diz.Core": "1.0.0",

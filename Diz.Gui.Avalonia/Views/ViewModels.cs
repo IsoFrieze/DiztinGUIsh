@@ -1,5 +1,5 @@
-﻿using Diz.Gui.Avalonia.Views.Windows;
-using Diz.ViewModels;
+﻿using Diz.Gui.Avalonia.ViewModels;
+using Diz.Gui.Avalonia.Views.Windows;
 
 namespace Diz.Gui.Avalonia.Views
 {

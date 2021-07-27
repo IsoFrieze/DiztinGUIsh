@@ -3,7 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
-using Diz.Gui.AvaloniaUserControls;
+using Diz.Gui.Avalonia.UserControls.UserControls;
 using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.Windows

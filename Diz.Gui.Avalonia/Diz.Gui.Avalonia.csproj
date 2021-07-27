@@ -4,6 +4,7 @@
         <TargetFramework>net48</TargetFramework>
         <OutputType>WinExe</OutputType>
         <LangVersion>default</LangVersion>
+        <RootNamespace>Diz.Gui.Avalonia</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -29,6 +30,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+        <ProjectReference Include="..\Diz.Gui.Avalonia.UserControls\Diz.Gui.Avalonia.UserControls.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -42,14 +44,11 @@
     </ItemGroup>
 
     <ItemGroup>
-<!--        <AvaloniaXaml Include="Views\Windows\MainWindow.xaml" />-->
-<!--        <None Remove="App\App.xaml" />-->
-<!--        <AvaloniaXaml Include="App\App.xaml" />-->
-<!--        <None Remove="Windows\MainWindow.xaml" />-->
-    </ItemGroup>
-
-    <ItemGroup>
       <Folder Include="Views\Windows\Assets" />
     </ItemGroup>
+
+<!--    <ItemGroup>-->
+<!--      <UpToDateCheckInput Remove="UserControls\LabelsListUserControl.axaml" />-->
+<!--    </ItemGroup>-->
 
 </Project>

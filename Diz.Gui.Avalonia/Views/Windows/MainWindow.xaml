@@ -6,7 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:reactiveUi="http://reactiveui.net"
     xmlns:views="clr-namespace:Diz.Gui.Avalonia.Views"
-    xmlns:uc="clr-namespace:Diz.Gui.AvaloniaUserControls"
+    xmlns:userControls="clr-namespace:Diz.Gui.Avalonia.UserControls.UserControls;assembly=Diz.Gui.Avalonia.UserControls"
     x:Class="Diz.Gui.Avalonia.Views.Windows.MainWindow"
     Icon="Assets/diz-icon2-magenta-med32x32.ico"
     mc:Ignorable="d"
@@ -23,6 +23,6 @@
     
     <StackPanel>
         <!-- <uc:MainMenu x:Name="MainMenuUserControl" /> -->
-        <uc:LabelsListUserControl x:Name="LabelsListUserControl" />
+        <userControls:LabelsListUserControl x:Name="LabelsListUserControl" />
     </StackPanel>
 </reactiveUi:ReactiveWindow>

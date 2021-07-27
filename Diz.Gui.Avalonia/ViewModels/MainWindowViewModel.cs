@@ -1,7 +1,8 @@
 ﻿using Diz.Gui.Avalonia.Views.Windows;
-using Diz.Gui.AvaloniaUserControls;
+using Diz.Gui.ViewModels;
+using Diz.Gui.ViewModels.ViewModels;
 
-namespace Diz.ViewModels
+namespace Diz.Gui.Avalonia.ViewModels
 {
     public abstract class MainWindowViewModelBase : ViewModel
     {

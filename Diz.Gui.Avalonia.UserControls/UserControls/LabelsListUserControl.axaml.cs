@@ -2,9 +2,10 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
+using Diz.Gui.ViewModels.ViewModels;
 using ReactiveUI;
 
-namespace Diz.Gui.AvaloniaUserControls
+namespace Diz.Gui.Avalonia.UserControls.UserControls
 {
     public class LabelsListUserControl : ReactiveUserControl<LabelsViewModel>
     {

@@ -1,13 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using Diz.Core.model;
-using Diz.ViewModels;
-using DynamicData;
 using ReactiveUI;
 
-namespace Diz.Gui.AvaloniaUserControls
+namespace Diz.Gui.ViewModels.ViewModels
 {
     // public class LabelViewModel : ViewModel
     // {

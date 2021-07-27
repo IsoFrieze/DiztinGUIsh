@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+        <LangVersion>default</LangVersion>
+        <RootNamespace>Diz.Gui.ViewModels</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia">
+            <Version>0.10.6</Version>
+        </PackageReference>
+        <PackageReference Include="Avalonia.Diagnostics">
+            <Version>0.10.6</Version>
+        </PackageReference>
+        <PackageReference Include="Avalonia.ReactiveUI">
+            <Version>0.10.6</Version>
+        </PackageReference>
+        <PackageReference Include="DynamicData">
+            <Version>7.2.1</Version>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AvaloniaXaml Remove="Properties\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Properties\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Properties\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Properties\**" />
+    </ItemGroup>
+</Project>

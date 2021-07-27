@@ -15,7 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
-    <ProjectReference Include="..\Diz.Gui.AvaloniaUserControls\Diz.Gui.AvaloniaUserControls.csproj" />
+    <ProjectReference Include="..\Diz.Gui.Avalonia\Diz.Gui.Avalonia.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,15 +1,14 @@
 ﻿<reactiveUi:ReactiveUserControl
     x:TypeArguments="avaloniaUserControls:LabelsViewModel"
+    x:Class="Diz.Gui.Avalonia.UserControls.UserControls.LabelsListUserControl"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:reactiveUi="http://reactiveui.net"
-    xmlns:avaloniaUserControls="clr-namespace:Diz.Gui.AvaloniaUserControls"
     mc:Ignorable="d"
     d:DesignWidth="800" d:DesignHeight="450"
-    x:Class="Diz.Gui.AvaloniaUserControls.LabelsListUserControl"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    >
+    xmlns:avaloniaUserControls="clr-namespace:Diz.Gui.ViewModels.ViewModels;assembly=Diz.Gui.ViewModels">
 
     <!-- 
     DataGrid below will have the Items databound from code.
