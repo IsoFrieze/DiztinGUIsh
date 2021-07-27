@@ -9,7 +9,7 @@ namespace Diz.Gui.Avalonia.UserControls.UserControls
 {
     public class LabelsListUserControl : ReactiveUserControl<LabelsViewModel>
     {
-        public DataGrid MainGrid => this.FindControl<DataGrid>("MainGrid");
+        public DataGrid LabelGrid => this.FindControl<DataGrid>("LabelGrid");
 
         public LabelsListUserControl()
         {
@@ -20,24 +20,24 @@ namespace Diz.Gui.Avalonia.UserControls.UserControls
                 // prob how we should do it with commands to edit
                 this.OneWayBind(ViewModel,
                     viewmodel => viewmodel.Labels,
-                    view => view.MainGrid.Items
+                    view => view.LabelGrid.Items
                 ).DisposeWith(disposables);
                 //
                 // two way binding (try this?)
                 // this.Bind(ViewModel,
                 //     viewmodel => viewmodel.ByteEntries,
-                //     view => view.MainGrid.Items
+                //     view => view.LabelGrid.Items
                 // ).DisposeWith(disposables);
 
-                this.WhenAnyValue(x => x.MainGrid.SelectedItem)
+                this.WhenAnyValue(x => x.LabelGrid.SelectedItem)
                     .BindTo(this, x => x.ViewModel.SelectedItem);
 
                 this.Bind(ViewModel,
                     vm => vm.SelectedItem,
-                    v => v.MainGrid.SelectedItem
+                    v => v.LabelGrid.SelectedItem
                 );
 
-                // MainGrid.LoadingRow += MainGridOnLoadingRow;
+                // LabelGrid.LoadingRow += LabelGridOnLoadingRow;
 
                 // var x = new Style(
                 //     x => x.OfType<DataGridCell>()
@@ -47,31 +47,31 @@ namespace Diz.Gui.Avalonia.UserControls.UserControls
                 // this.
                 // // Observable.FromEventPattern<DataGridCellEditEndedEventArgs>()
                 //
-                // MainGrid.CellEditEnded
+                // LabelGrid.CellEditEnded
 
                 // this.BindCommand(ViewModel, vm=>vm.)
 
                 // this.BindCommand(
                 //     ViewModel,
                 //     vm => vm.SetSelectedItem,
-                //     v => v.MainGrid,
-                //     nameof(MainGrid.CellEditEnded));
+                //     v => v.LabelGrid,
+                //     nameof(LabelGrid.CellEditEnded));
 
                 // this.BindCommand(
                 //     ViewModel,
                 //     vm => vm.SetSelectedItem,
-                //     v => v.MainGrid.SelectedItem,
-                //     nameof(MainGrid.CellEditEnded));
+                //     v => v.LabelGrid.SelectedItem,
+                //     nameof(LabelGrid.CellEditEnded));
 
 //                this.BindCommand(ViewModel,
                 //                  vm => vm.ByteEntries,
-                //                view=>view.MainGrid.Items[0]
+                //                view=>view.LabelGrid.Items[0]
             });
 
             InitializeComponent();
         }
 
-        // private void MainGridOnLoadingRow(object sender, DataGridRowEventArgs e)
+        // private void LabelGridOnLoadingRow(object sender, DataGridRowEventArgs e)
         // {
         //     if (e.Row.DataContext is not LabelsViewModel byteEntryDetailsViewModel)
         //         return;

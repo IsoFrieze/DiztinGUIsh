@@ -46,9 +46,4 @@
     <ItemGroup>
       <Folder Include="Views\Windows\Assets" />
     </ItemGroup>
-
-<!--    <ItemGroup>-->
-<!--      <UpToDateCheckInput Remove="UserControls\LabelsListUserControl.axaml" />-->
-<!--    </ItemGroup>-->
-
 </Project>
