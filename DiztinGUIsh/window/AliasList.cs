@@ -224,57 +224,57 @@ namespace DiztinGUIsh.window
         //     labelGrid.Invalidate();
         // }
         
-        // keep here
-        BindingList<Label> dataBindingList;
-        
-        // put elsewhere
-        SourceCache<Label, int> sourceCache;
+        // // keep here
+        // BindingList<Label> dataBindingList;
+        //
+        // // put elsewhere
+        // SourceCache<Label, int> sourceCache;
         
         public void RebindProject()
         {
-            sourceCache = new SourceCache<Label, int>(label=>label.Offset);
-
-            // var sourceLabels = 
-            //     sourceCache
-            //     // .Filter(t => t.Status == "Something")
-            //     .to();
-            
-            dataBindingList = new BindingList<Label>();
-
-            var observable = sourceCache.Connect();
-            
-            var disposable = observable
-                // .Filter(Filter)
-                .Bind(dataBindingList)
-                .DisposeMany()
-                .Subscribe();
-
-            labelGrid.Columns.Clear();
-            labelGrid.Rows.Clear();
-            labelGrid.AutoGenerateColumns = true;
-
-            var bs = new BindingSource(dataBindingList, null);
-
-            labelGrid.DataSource = bs;
-
-            sourceCache.AddOrUpdate(new Label
-            {
-                Comment = "test2",
-                Name = "name2", Offset = 2,
-            });
-            
-            sourceCache.AddOrUpdate(new Label
-            {
-                Comment = "test1",
-                Name = "name1", Offset = 1,
-            });
-
-            /*RepopulateFromData();
-
-            // todo: eventually use databinding/datasource, probably.
-            // Todo: modify observabledictionary wrapper to avoid having to do the .Dict call here.
-            Data.Labels.PropertyChanged += Labels_PropertyChanged;
-            Data.Labels.CollectionChanged += Labels_CollectionChanged;*/
+//             sourceCache = new SourceCache<Label, int>(label=>label.Offset);
+//
+//             // var sourceLabels = 
+//             //     sourceCache
+//             //     // .Filter(t => t.Status == "Something")
+//             //     .to();
+//             
+//             dataBindingList = new BindingList<Label>();
+//
+//             var observable = sourceCache.Connect();
+//             
+//             var disposable = observable
+//                 // .Filter(Filter)
+//                 .Bind(dataBindingList)
+//                 .DisposeMany()
+//                 .Subscribe();
+//
+//             labelGrid.Columns.Clear();
+//             labelGrid.Rows.Clear();
+//             labelGrid.AutoGenerateColumns = true;
+//
+//             var bs = new BindingSource(dataBindingList, null);
+//
+//             labelGrid.DataSource = bs;
+//
+//             sourceCache.AddOrUpdate(new Label
+//             {
+//                 Comment = "test2",
+//                 Name = "name2",
+//             });
+//             
+//             sourceCache.AddOrUpdate(new Label
+//             {
+//                 Comment = "test1",
+//                 Name = "name1"
+//             });
+//
+//             /*RepopulateFromData();
+//
+//             // todo: eventually use databinding/datasource, probably.
+//             // Todo: modify observabledictionary wrapper to avoid having to do the .Dict call here.
+//             Data.Labels.PropertyChanged += Labels_PropertyChanged;
+//             Data.Labels.CollectionChanged += Labels_CollectionChanged;*/
         }
 
         private bool Filter(Label label)
