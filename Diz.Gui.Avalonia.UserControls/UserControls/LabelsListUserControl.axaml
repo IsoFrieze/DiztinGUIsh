@@ -25,21 +25,23 @@
     </Design.DataContext>
 
     <StackPanel>
-        <DataGrid 
-            RowBackground="White" 
-            AlternatingRowBackground="White" 
-            GridLinesVisibility="All"
-            x:Name="LabelGrid">
+        <Label>Search offset: </Label>
+        <TextBox x:Name="TxtOffsetSearch"/>
+        <DataGrid DataContext="{Binding Labels}" 
+                  RowBackground="White" 
+                  AlternatingRowBackground="White" 
+                  GridLinesVisibility="All"
+                  x:Name="LabelGrid">
 
             <DataGrid.Columns>
                 <DataGridTextColumn Header="SNES Address"
-                                    Binding="{Binding Offset}"
+                                    Binding="{Binding Label.Offset}"
                                     Width=".2*" />
                 <DataGridTextColumn Header="Name"
-                                    Binding="{Binding Name}"
+                                    Binding="{Binding Label.Name}"
                                     Width=".1*" />
                 <DataGridTextColumn Header="Comment"
-                                    Binding="{Binding Comment}"
+                                    Binding="{Binding Label.Comment}"
                                     Width=".1*" />
             </DataGrid.Columns>
         </DataGrid>
