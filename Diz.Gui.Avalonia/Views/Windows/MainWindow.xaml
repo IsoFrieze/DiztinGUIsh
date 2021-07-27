@@ -14,15 +14,14 @@
     d:DesignHeight="150"
     Title="DiztinGUIsh 3.0 (preview)"
     Name="MainWindow"
-    MinWidth="800"
-    MinHeight="150">
+    MinWidth="400"
+    MinHeight="800">
     
     <Design.DataContext>
         <views:MainWindowViewModel />
     </Design.DataContext>
     
-    <StackPanel>
-        <!-- <uc:MainMenu x:Name="MainMenuUserControl" /> -->
-        <userControls:LabelsListUserControl x:Name="LabelsListUserControl" />
-    </StackPanel>
+    <!-- <uc:MainMenu x:Name="MainMenuUserControl" /> -->
+    <userControls:LabelsListUserControl x:Name="LabelsListUserControl" />
+
 </reactiveUi:ReactiveWindow>

@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Diz.Core.model;
 using DynamicData;
-using DynamicData.Binding;
 using ReactiveUI;
 
 namespace Diz.Gui.ViewModels.ViewModels
@@ -37,19 +36,13 @@ namespace Diz.Gui.ViewModels.ViewModels
 
     public class LabelsViewModel : ViewModel
     {
-        // public ObservableCollection<Label> Labels
-        // {
-        //     get => labels;
-        //     set => this.RaiseAndSetIfChanged(ref labels, value);
-        // }
-
-        private readonly ObservableAsPropertyHelper<IEnumerable<LabelViewModel>> _labels;
-        public IEnumerable<LabelViewModel> Labels => _labels.Value;
+        private readonly ObservableAsPropertyHelper<IEnumerable<LabelViewModel>> searchResults;
+        public IEnumerable<LabelViewModel> SearchResults => searchResults.Value;
 
         private LabelViewModel selectedItem;
-
-        // private ObservableCollection<Label> labels;
         private string offsetFilter;
+
+        private ReadOnlyObservableCollection<LabelViewModel> _allLabels;
 
         public LabelViewModel SelectedItem
         {
@@ -65,66 +58,56 @@ namespace Diz.Gui.ViewModels.ViewModels
 
         public LabelsViewModel()
         {
-            // temp hack
-            // Labels = new ObservableCollection<Label>(GetSampleLabels() ?? new List<Label>());
-
-            // Labels.ToObservableChangeSet();
-
-            // var sourceCache = new SourceCache<Label, int>(x => x.Offset);
-            // var outObservableCollection = new ObservableCollectionExtended<Label>();
-            // sourceCache
-            //     .Connect()
-            //     .Bind(outObservableCollection);
-
-            // byteEntries = this
-            //     .WhenAnyValue(x => x.StartingOffset)
-            //     .Throttle(TimeSpan.FromMilliseconds(800))
-            //     // .WhenActivated()
-            //     .DistinctUntilChanged()
-            //     .Where( x=> x != -1)
-            //     .SelectMany(GetByteEntries)
-            //     .ObserveOn(RxApp.MainThreadScheduler)
-            //     .ToProperty(this, x => x.ByteEntries);
-
-            _labels = this.WhenAnyValue(x => x.OffsetFilter)
-                .Throttle(TimeSpan.FromMilliseconds(100))
-                .Select(term => term?.Trim() ?? "")
+            searchResults = this
+                .WhenAnyValue(x => x.OffsetFilter)
+                .Throttle(TimeSpan.FromMilliseconds(50))
+                .Select(searchTerm => searchTerm?.Trim() ?? "")
                 .DistinctUntilChanged()
-                .SelectMany(SearchLabels)
+                .SelectMany(SearchForLabels)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .ToProperty(this, x=>x.Labels);
+                .AsObservable()
+                .ToProperty(this, x=>x.SearchResults);
+
+            FakeLabelService
+                .Connect()
+                .Bind(out _allLabels)
+                .Subscribe(x => RefreshSearch());
 
             this.WhenActivated(
                 (CompositeDisposable disposables) =>
                 {
                     // ReactiveCommand.Create<DataGridCellEditEndedEventArgs>(CellEdited);
-                    // this
-                    //     .WhenAnyValue(x => x.Labels)
-                    //     .Subscribe(x);
                 });
         }
 
+        private void RefreshSearch()
+        {
+            this.RaisePropertyChanging(nameof(OffsetFilter));
+        }
+
         // private IEnumerable<LabelViewModel> SearchLabels(string searchTerm)
-        private static async Task<IEnumerable<LabelViewModel>> SearchLabels(string searchTerm, CancellationToken token)
+        private static async Task<IEnumerable<LabelViewModel>> SearchForLabels(string searchTerm, CancellationToken token)
         {
             return await Task.Run(() =>
             {
-                var sourceData = FakeModel.SourceLabels.Value;
-                return sourceData.Items
-                    .Where(x=>
+                var results = FakeLabelService
+                    .Connect()
+                    .Filter(x =>
                         SearchLabelView(x, searchTerm)
-                    );
+                    ).AsObservableCache().Items;
+
+                return results;
             }, token);
         }
 
         private static bool SearchLabelView(LabelViewModel x, string searchTerm) =>
-            string.IsNullOrEmpty(searchTerm) || 
+            string.IsNullOrEmpty(searchTerm) ||
             x.Label.Offset.ToString().Contains(searchTerm);
     }
 
-    public static class FakeModel
+    public static class FakeLabelService
     {
-        public static Lazy<SourceCache<LabelViewModel, int>> SourceLabels
+        private static Lazy<SourceCache<LabelViewModel, int>> SourceLabels
             = new(valueFactory: () =>
             {
                 var sourceCache = new SourceCache<LabelViewModel, int>(x => x.Label.Offset);
@@ -132,38 +115,12 @@ namespace Diz.Gui.ViewModels.ViewModels
                 return sourceCache;
             });
 
+        public static IObservable<IChangeSet<LabelViewModel, int>> Connect() =>
+            SourceLabels.Value.Connect();
+
         private static IEnumerable<LabelViewModel> CreateSampleLabels()
         {
             // var loader = Service.Container.GetInstance<ISampleProjectLoader>("SampleProjectLoader");
-
-            // this interface access code is a little screwed up with Diz here, it's just a starting point.
-
-            // var project = loader?.GetSampleProject();
-            //
-            // return project?.Data?.RomByteSource.Bytes?.Skip(0)
-            //     .Take(20)
-            //     .Select(x => new ByteEntryDetailsViewModel
-            //     {
-            //         ByteEntry = new RomByteRowBase
-            //         {
-            //             ByteEntry = x,
-            //             Data = project.Data,
-            //             ParentView = this,
-            //         }
-            //     });
-
-            // temp hack for some temp data
-            // FakeLabelCache = new SourceCache<Label, int>(x => x.Label.Offset);
-
-            // FakeLabelCache.AddOrUpdate(new Label
-            // {
-            //     Label = new Label
-            //     {
-            //         Comment = "test2",
-            //         Name = "name2", Offset = 2,
-            //     }
-            // });
-
             return new List<Label>
                 {
                     new()
@@ -183,7 +140,7 @@ namespace Diz.Gui.ViewModels.ViewModels
                         Name = "name3", Offset = 3,
                     }
                 }
-                .Select(x=>
+                .Select(x =>
                     new LabelViewModel {Label = x}
                 ).ToList();
         }

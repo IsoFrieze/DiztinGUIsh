@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
@@ -21,20 +22,21 @@ namespace Diz.Gui.Avalonia.UserControls.UserControls
             this.WhenActivated(disposables =>
             {
                 this.OneWayBind(ViewModel,
-                    viewmodel => viewmodel.Labels,
-                    view => view.LabelGrid.Items
-                ).DisposeWith(disposables);
+                    vm => vm.SearchResults,
+                    v => v.LabelGrid.Items
+                )
+                    .DisposeWith(disposables);
 
                 // this.Bind(ViewModel,
                 //     viewmodel => viewmodel.Labels,
                 //     view => view.LabelGrid.Items
                 // ).DisposeWith(disposables);
 
-                this.WhenAnyValue(x => x.LabelGrid.SelectedItem)
-                    .BindTo(this, x => x.ViewModel.SelectedItem);
+                this.WhenAnyValue(v => v.LabelGrid.SelectedItem)
+                    .BindTo(this, vm => vm.ViewModel.SelectedItem);
 
-                this.WhenAnyValue(x => x.TxtOffsetSearch.Text)
-                    .BindTo(this, x => x.ViewModel.OffsetFilter);
+                this.WhenAnyValue(v => v.TxtOffsetSearch.Text)
+                    .BindTo(this, vm => vm.ViewModel.OffsetFilter);
 
                 this.Bind(ViewModel,
                     vm => vm.SelectedItem,

@@ -24,10 +24,16 @@
         <viewModels:LabelsViewModel />
     </Design.DataContext>
 
-    <StackPanel>
-        <Label>Search offset: </Label>
-        <TextBox x:Name="TxtOffsetSearch"/>
-        <DataGrid DataContext="{Binding Labels}" 
+    <DockPanel LastChildFill="True" >
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+            <Label>Search for offset: </Label>
+            <TextBox x:Name="TxtOffsetSearch" HorizontalAlignment="Stretch"/>
+        </StackPanel>
+        
+        <DataGrid DockPanel.Dock="Bottom"
+                  VerticalScrollBarVisibility="Visible"
+                  
+                  DataContext="{Binding SearchResults}" 
                   RowBackground="White" 
                   AlternatingRowBackground="White" 
                   GridLinesVisibility="All"
@@ -36,14 +42,14 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="SNES Address"
                                     Binding="{Binding Label.Offset}"
-                                    Width=".2*" />
+                                    Width=".1*" />
                 <DataGridTextColumn Header="Name"
                                     Binding="{Binding Label.Name}"
-                                    Width=".1*" />
+                                    Width=".4*" />
                 <DataGridTextColumn Header="Comment"
                                     Binding="{Binding Label.Comment}"
-                                    Width=".1*" />
+                                    Width=".8*" />
             </DataGrid.Columns>
         </DataGrid>
-    </StackPanel>
+    </DockPanel>
 </reactiveUi:ReactiveUserControl>
