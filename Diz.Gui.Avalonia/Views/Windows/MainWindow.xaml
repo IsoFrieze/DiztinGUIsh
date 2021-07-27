@@ -23,5 +23,6 @@
     
     <!-- <uc:MainMenu x:Name="MainMenuUserControl" /> -->
     <userControls:LabelsListUserControl x:Name="LabelsListUserControl" />
+    
 
 </reactiveUi:ReactiveWindow>
