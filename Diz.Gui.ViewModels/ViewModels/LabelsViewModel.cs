@@ -1,13 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Diz.Core.util;
-using Diz.Gui.ViewModels.ViewModels;
-using DynamicData;
 using ReactiveUI;
 
 namespace Diz.Gui.ViewModels.ViewModels
@@ -51,32 +45,4 @@ namespace Diz.Gui.ViewModels.ViewModels
                 });
         }
     }
-}
-
-public static class LabelSearchEx
-{
-    public static IObservable<IEnumerable<LabelViewModel>> SearchForLabels(this IObservable<string> searchQuery)
-    {
-        return searchQuery
-            .Select(Util.StripHex)
-            .SelectMany(SearchForLabelsAsync);
-    }
-
-    public static async Task<IEnumerable<LabelViewModel>> SearchForLabelsAsync(
-        string searchTerm,
-        CancellationToken token)
-    {
-        return await Task.Run(() =>
-        {
-            return FakeLabelService
-                .Connect()
-                .Filter(labelViewModel =>
-                    LabelViewMatches(labelViewModel, searchTerm)
-                ).AsObservableCache().Items;
-        }, token);
-    }
-
-    private static bool LabelViewMatches(LabelViewModel labelVm, string addressSubsetToMatch) =>
-        string.IsNullOrEmpty(addressSubsetToMatch) ||
-        Util.StripHex(labelVm.SnesAddress).Contains(addressSubsetToMatch);
 }

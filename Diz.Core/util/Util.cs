@@ -10,6 +10,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using Diz.Core.model;
+using DynamicData;
 
 namespace Diz.Core.util
 {
@@ -405,5 +406,18 @@ namespace Diz.Core.util
         
         public static string StripHex(string text) => 
             text.Replace("0x", "");
+        
+        public static SourceCache<T, int> FromEnumerable<T>(this IEnumerable<T> @this)
+            where T : IOffset
+        {
+            var labels = new SourceCache<T, int>(x => x.Offset);
+            @this.ForEach(proxy => labels.AddOrUpdate(proxy));
+            return labels;
+        }
+
+        public interface IOffset
+        {
+            public int Offset { get; }
+        }
     }
 }

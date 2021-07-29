@@ -44,10 +44,10 @@
                                     Binding="{Binding SnesAddress}"
                                     Width=".1*" />
                 <DataGridTextColumn Header="Name"
-                                    Binding="{Binding Label.Name}"
+                                    Binding="{Binding LabelProxy.Label.Name}"
                                     Width=".4*" />
                 <DataGridTextColumn Header="Comment"
-                                    Binding="{Binding Label.Comment}"
+                                    Binding="{Binding LabelProxy.Label.Comment}"
                                     Width=".8*" />
             </DataGrid.Columns>
         </DataGrid>

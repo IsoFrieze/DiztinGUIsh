@@ -7,18 +7,17 @@ namespace Diz.Gui.ViewModels.ViewModels
 {
     public class LabelViewModel : ViewModel
     {
-        private Label label;
+        private LabelProxy labelProxy;
 
-        public Label Label
+        public LabelProxy LabelProxy
         {
-            get => label;
-            set => this.RaiseAndSetIfChanged(ref label, value);
+            get => labelProxy;
+            set => this.RaiseAndSetIfChanged(ref labelProxy, value);
         }
 
-        public int Offset { get; set; }
-        
+        // no reason this can't have a "Set" on it.
         [DisplayName("Snes Address")]
         [ReadOnly(false)]
-        public string SnesAddress => Util.ToHexString6(Offset);  
+        public string SnesAddress => Util.ToHexString6(LabelProxy.Offset);
     }
 }

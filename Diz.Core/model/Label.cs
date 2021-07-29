@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing.Drawing2D;
 using System.Runtime.CompilerServices;
 using Diz.Core.interfaces;
+using Diz.Core.util;
+using DynamicData;
 using JetBrains.Annotations;
 
 namespace Diz.Core.model
@@ -85,5 +89,18 @@ namespace Diz.Core.model
         [NotifyPropertyChangedInvocator]
         public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) => 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+    
+    public class LabelProxy : Util.IOffset
+    {
+        public int Offset { get; }
+
+        public Label Label { get; }
+        
+        public LabelProxy(int offset, Label label)
+        {
+            Offset = offset;
+            Label = label;
+        }
     }
 }

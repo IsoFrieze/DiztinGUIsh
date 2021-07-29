@@ -155,14 +155,14 @@ namespace Diz.Core.serialization.binary_serializer_old
             var allComments = project.Data.Comments;
 
             ByteUtil.AppendIntegerToByteList((uint)allLabels.Count, label);
-            foreach (var pair in allLabels)
+            foreach (var pair in allLabels.KeyValues)
             {
                 ByteUtil.AppendIntegerToByteList((uint)pair.Key, label);
 
-                SaveStringToBytes(pair.Value.Name, label);
+                SaveStringToBytes(pair.Value.Label.Name, label);
                 if (version >= 2)
                 {
-                    SaveStringToBytes(pair.Value.Comment, label);
+                    SaveStringToBytes(pair.Value.Label.Comment, label);
                 }
             }
 

@@ -6,6 +6,7 @@ using System.Text;
 using Diz.Core.arch;
 using Diz.Core.util;
 using DiztinGUIsh;
+using DynamicData;
 using IX.Observable;
 
 namespace Diz.Core.model
@@ -18,9 +19,9 @@ namespace Diz.Core.model
         // other objects can subscribe to modification notifications
         private RomMapMode romMapMode;
         private RomSpeed romSpeed = RomSpeed.Unknown;
-        private ObservableDictionary<int, string> comments;
-        private ObservableDictionary<int, Label> labels;
-        private RomBytes romBytes;
+        private ObservableDictionary<int, string> comments = new();
+        private SourceCache<LabelProxy, int> labels = new(x=>x.Offset);
+        private RomBytes romBytes = new();
 
         // Note: order of these public properties matters for the load/save process. Keep 'RomBytes' LAST
         // TODO: should be a way in the XML serializer to control the order, remove this comment
@@ -43,8 +44,8 @@ namespace Diz.Core.model
             get => comments;
             set => SetField(ref comments, value);
         }
-
-        public ObservableDictionary<int, Label> Labels
+        
+        public SourceCache<LabelProxy, int> Labels
         {
             get => labels;
             set => SetField(ref labels, value);
@@ -59,9 +60,6 @@ namespace Diz.Core.model
 
         public Data()
         {
-            comments = new ObservableDictionary<int, string>();
-            labels = new ObservableDictionary<int, Label>();
-            romBytes = new RomBytes();
             cpu65C816 = new Cpu65C816(this);
         }
 
@@ -173,19 +171,25 @@ namespace Diz.Core.model
             RomBytes[i].MFlag = ((mx & 0x20) != 0);
             RomBytes[i].XFlag = ((mx & 0x10) != 0);
         }
-        public string GetLabelName(int i)
+        
+        public IObservable<IChangeSet<LabelProxy, int>> ConnectLabels() => Labels.Connect();
+        
+        public string GetLabelName(int snes)
         {
-            if (Labels.TryGetValue(i, out var val)) 
-                return val?.Name ?? "";
+            var existing = Labels.Lookup(snes);
+            if (existing == null)
+                return "";
 
-            return "";
+            return existing.Value?.Label?.Name ?? "";
         }
-        public string GetLabelComment(int i)
+        
+        public string GetLabelComment(int snes)
         {
-            if (Labels.TryGetValue(i, out var val)) 
-                return val?.Comment ?? "";
+            var existing = Labels.Lookup(snes);
+            if (existing == null)
+                return "";
 
-            return "";
+            return existing.Value?.Label?.Comment ?? "";
         }
 
         public void DeleteAllLabels()
@@ -198,23 +202,21 @@ namespace Diz.Core.model
             // adding null label removes it
             if (label == null)
             {
-                if (Labels.ContainsKey(offset))
-                    Labels.Remove(offset);
-
+                Labels.RemoveKey(offset);
                 return;
             }
 
             if (overwrite)
             {
-                if (Labels.ContainsKey(offset))
-                    Labels.Remove(offset);
+                Labels.RemoveKey(offset);
             }
 
-            if (!Labels.ContainsKey(offset))
-            {
-                label.CleanUp();
-                Labels.Add(offset, label);
-            }
+            var existing = Labels.Lookup(offset);
+            if (existing != null) 
+                return;
+            
+            label.CleanUp();
+            Labels.AddOrUpdate(new LabelProxy(offset, label));
         }
 
         public string GetComment(int i)
@@ -638,7 +640,12 @@ namespace Diz.Core.model
         #region Equality
         protected bool Equals(Data other)
         {
-            return Labels.SequenceEqual(other.Labels) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
+            return 
+                RomMapMode == other.RomMapMode && 
+                RomSpeed == other.RomSpeed && 
+                Labels.Items.SequenceEqual(other.Labels.Items) &&
+                Comments.SequenceEqual(other.Comments) && 
+                RomBytes.Equals(other.RomBytes);
         }
 
         public override bool Equals(object obj)

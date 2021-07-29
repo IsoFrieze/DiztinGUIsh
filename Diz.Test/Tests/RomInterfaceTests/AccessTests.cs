@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Diz.Core.model;
 using Diz.Core.util;
 using Diz.Test.Utils;
+using DynamicData;
 using IX.Observable;
 using Xunit;
 
@@ -11,34 +12,41 @@ namespace Diz.Test
 {
     public static class CpuTests
     {
-        private static Data GetSampleData() => new Data
+        private static Data GetSampleData()
         {
-            RomMapMode = RomMapMode.HiRom,
-            RomSpeed = RomSpeed.FastRom,
-            RomBytes = new RomBytes
+            var data = new Data
             {
-                // starts at PC=0, which is SNES=0xC00000
-                // STA.W SNES_VMADDL
-                // OR (equivalent)
-                // STA.W $2116
-                new RomByte
+                RomMapMode = RomMapMode.HiRom,
+                RomSpeed = RomSpeed.FastRom,
+                RomBytes = new RomBytes
                 {
-                    Rom = 0x8D, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, DataBank = 0x00,
-                    DirectPage = 0,
+                    // starts at PC=0, which is SNES=0xC00000
+                    // STA.W SNES_VMADDL
+                    // OR (equivalent)
+                    // STA.W $2116
+                    new()
+                    {
+                        Rom = 0x8D, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, DataBank = 0x00,
+                        DirectPage = 0
+                    },
+                    new() {Rom = 0x16, TypeFlag = FlagType.Operand},
+                    new() {Rom = 0x21, TypeFlag = FlagType.Operand}
                 },
-                new RomByte {Rom = 0x16, TypeFlag = FlagType.Operand},
-                new RomByte {Rom = 0x21, TypeFlag = FlagType.Operand},
-            },
-            Comments = new ObservableDictionary<int, string>()
+                Comments = new ObservableDictionary<int, string>
+                {
+                    {0xC00001, "unused"}
+                }
+            };
+            
+            var labelsCache = new SourceCache<LabelProxy, int>(x => x.Offset);
+            labelsCache.AddOrUpdate(new List<LabelProxy>
             {
-                {0xC00001, "unused"},
-            },
-            Labels = new ObservableDictionary<int, Label>()
-            {
-                {0x002116, new Label {Name = "SNES_VMADDL", Comment = "SNES hardware register example."}},
-            },
-        };
-        
+                new(0x002116, new Label {Name = "SNES_VMADDL", Comment = "SNES hardware register example."})
+            });
+                
+            return data;
+        }
+
         public static IReadOnlyList<byte> AssemblyRom => AsarRunner.AssembleToRom(@"
             hirom
 
