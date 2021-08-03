@@ -2,6 +2,58 @@
   "version": 1,
   "dependencies": {
     ".NETFramework,Version=v4.8": {
+      "Avalonia.Desktop": {
+        "type": "Direct",
+        "requested": "[0.10.6, )",
+        "resolved": "0.10.6",
+        "contentHash": "7xm0/IsKjzBp2qUmKrUjIPAYlM5PmuYPrFb44kZtZaI8YzxOMyHQc142yBmjUMZ6pp39cpiZvtAnIjLPnbLaeA==",
+        "dependencies": {
+          "Avalonia": "0.10.6",
+          "Avalonia.Native": "0.10.6",
+          "Avalonia.Skia": "0.10.6",
+          "Avalonia.Win32": "0.10.6",
+          "Avalonia.X11": "0.10.6"
+        }
+      },
+      "Avalonia.ReactiveUI": {
+        "type": "Direct",
+        "requested": "[0.10.6, )",
+        "resolved": "0.10.6",
+        "contentHash": "JYF4kTMWXrj2C+7PAafgetvsuD1Gangpn/xXJf1nuarBIDdvo1Fy7IgrcCJMqGmZhGVhYfFQCTgObE4jVzY8Ug==",
+        "dependencies": {
+          "Avalonia": "0.10.6",
+          "ReactiveUI": "13.2.10",
+          "System.Reactive": "5.0.0"
+        }
+      },
+      "Avalonia.Win32": {
+        "type": "Direct",
+        "requested": "[0.10.6, )",
+        "resolved": "0.10.6",
+        "contentHash": "jdI+ZOwlEAiDcyoN+7lL8kWx4PqPjlNvJtDwqEMFd2ZbAE+SaBAF7G/TtUjpqW+skvSIilu/anCWN8UYKgdftQ==",
+        "dependencies": {
+          "Avalonia": "0.10.6",
+          "Avalonia.Angle.Windows.Natives": "2.1.0.2020091801",
+          "System.Drawing.Common": "4.5.0",
+          "System.Numerics.Vectors": "4.5.0"
+        }
+      },
+      "Avalonia.Win32.Interoperability": {
+        "type": "Direct",
+        "requested": "[0.10.6, )",
+        "resolved": "0.10.6",
+        "contentHash": "AK1PNTHwIuvV/dxu0u4uzR+lkpH/546ZIu2stFNEUIjAZcIEUyOKc4DNSOH3PDKDWnbbfTNy8UzyWQ9PrGeZwg==",
+        "dependencies": {
+          "Avalonia": "0.10.6",
+          "Avalonia.Direct2D1": "0.10.6",
+          "Avalonia.Win32": "0.10.6",
+          "SharpDX": "4.0.1",
+          "SharpDX.DXGI": "4.0.1",
+          "SharpDX.Direct2D1": "4.0.1",
+          "SharpDX.Direct3D11": "4.0.1",
+          "SharpDX.Direct3D9": "4.0.1"
+        }
+      },
       "ByteSize": {
         "type": "Direct",
         "requested": "[2.0.0, )",
@@ -31,9 +83,40 @@
       },
       "JetBrains.Annotations": {
         "type": "Direct",
-        "requested": "[2021.1.0, )",
-        "resolved": "2021.1.0",
-        "contentHash": "n9JSw5Z+F+6gp9vSv4aLH6p/bx3GAYA6FZVq1wJq/TJySv/kPgFKLGFeS7A8Xa5X4/GWorh5gd43yjamUgnBNA=="
+        "requested": "[2021.2.0, )",
+        "resolved": "2021.2.0",
+        "contentHash": "kKSyoVfndMriKHLfYGmr0uzQuI4jcc3TKGyww7buJFCYeHb/X0kodYBPL7n9454q7v6ASiRmDgpPGaDGerg/Hg=="
+      },
+      "ReactiveUI": {
+        "type": "Direct",
+        "requested": "[14.1.1, )",
+        "resolved": "14.1.1",
+        "contentHash": "ciPAewJlxOZ9ieCxPWCk7AeFM70m+OviHBO9TMAzAnRSYh63UjZ+aac5J1G+Z6djeEi1Ns9I1IqBMWNcamUeWg==",
+        "dependencies": {
+          "DynamicData": "7.1.17",
+          "Splat": "11.1.1",
+          "System.Reactive": "5.0.0"
+        }
+      },
+      "ReactiveUI.Events.Winforms": {
+        "type": "Direct",
+        "requested": "[14.1.1, )",
+        "resolved": "14.1.1",
+        "contentHash": "VLgfTGJ3yY3ZdL1nrn0SldJzxsCHqs1WKGr08fetdyUMU9m/IS9JC1Je9r1oyLFxbYB1UuOMzoF6xsakxO2oEQ==",
+        "dependencies": {
+          "Pharmacist.Common": "2.0.8",
+          "System.Reactive": "5.0.0"
+        }
+      },
+      "ReactiveUI.WinForms": {
+        "type": "Direct",
+        "requested": "[14.1.1, )",
+        "resolved": "14.1.1",
+        "contentHash": "ymBVa8toxdMDFfZkesQI6lgIHevOSIpSXcBZLSSkvbVR3zgMEf76uPDyzBSXyW4cJ6o6h3UPEuqPUsHRMJapMA==",
+        "dependencies": {
+          "ReactiveUI": "14.1.1",
+          "System.Reactive": "5.0.0"
+        }
       },
       "System.Resources.Extensions": {
         "type": "Direct",
@@ -75,18 +158,6 @@
           "System.Reactive": "5.0.0"
         }
       },
-      "Avalonia.Desktop": {
-        "type": "Transitive",
-        "resolved": "0.10.6",
-        "contentHash": "7xm0/IsKjzBp2qUmKrUjIPAYlM5PmuYPrFb44kZtZaI8YzxOMyHQc142yBmjUMZ6pp39cpiZvtAnIjLPnbLaeA==",
-        "dependencies": {
-          "Avalonia": "0.10.6",
-          "Avalonia.Native": "0.10.6",
-          "Avalonia.Skia": "0.10.6",
-          "Avalonia.Win32": "0.10.6",
-          "Avalonia.X11": "0.10.6"
-        }
-      },
       "Avalonia.Diagnostics": {
         "type": "Transitive",
         "resolved": "0.10.6",
@@ -95,6 +166,21 @@
           "Avalonia": "0.10.6",
           "Avalonia.Controls.DataGrid": "0.10.6",
           "Microsoft.CodeAnalysis.CSharp.Scripting": "3.4.0",
+          "System.Reactive": "5.0.0"
+        }
+      },
+      "Avalonia.Direct2D1": {
+        "type": "Transitive",
+        "resolved": "0.10.6",
+        "contentHash": "7X7goXsnsFiy1Ur6pO3SGzpuWZUS2yGwhaeZVdsRfNX2q/xnOX2g41fsAIYO/9Qpy6IxAsQeFd3rojcGoUahKg==",
+        "dependencies": {
+          "Avalonia": "0.10.6",
+          "HarfBuzzSharp": "2.6.1.7",
+          "JetBrains.Annotations": "10.3.0",
+          "SharpDX": "4.0.1",
+          "SharpDX.DXGI": "4.0.1",
+          "SharpDX.Direct2D1": "4.0.1",
+          "SharpDX.Direct3D11": "4.0.1",
           "System.Reactive": "5.0.0"
         }
       },
@@ -115,16 +201,6 @@
           "Avalonia": "0.10.6"
         }
       },
-      "Avalonia.ReactiveUI": {
-        "type": "Transitive",
-        "resolved": "0.10.6",
-        "contentHash": "JYF4kTMWXrj2C+7PAafgetvsuD1Gangpn/xXJf1nuarBIDdvo1Fy7IgrcCJMqGmZhGVhYfFQCTgObE4jVzY8Ug==",
-        "dependencies": {
-          "Avalonia": "0.10.6",
-          "ReactiveUI": "13.2.10",
-          "System.Reactive": "5.0.0"
-        }
-      },
       "Avalonia.Remote.Protocol": {
         "type": "Transitive",
         "resolved": "0.10.6",
@@ -140,17 +216,6 @@
           "HarfBuzzSharp.NativeAssets.Linux": "2.6.1.7",
           "SkiaSharp": "2.80.2",
           "SkiaSharp.NativeAssets.Linux": "2.80.2"
-        }
-      },
-      "Avalonia.Win32": {
-        "type": "Transitive",
-        "resolved": "0.10.6",
-        "contentHash": "jdI+ZOwlEAiDcyoN+7lL8kWx4PqPjlNvJtDwqEMFd2ZbAE+SaBAF7G/TtUjpqW+skvSIilu/anCWN8UYKgdftQ==",
-        "dependencies": {
-          "Avalonia": "0.10.6",
-          "Avalonia.Angle.Windows.Natives": "2.1.0.2020091801",
-          "System.Drawing.Common": "4.5.0",
-          "System.Numerics.Vectors": "4.5.0"
         }
       },
       "Avalonia.X11": {
@@ -290,15 +355,51 @@
         "resolved": "1.0.12",
         "contentHash": "f1nye8fMJCYfJeR+Qb7qlcvC8et4Y4TLf2GLfaFoeISgI+yisaJkbNSGfKCpFBNeVF/iPDkyFmr4J28dv342/Q=="
       },
-      "ReactiveUI": {
+      "Pharmacist.Common": {
         "type": "Transitive",
-        "resolved": "13.2.10",
-        "contentHash": "fOCbEZ+RsO2Jhv6vB8VX+ZEvczYJaC95atcSG7oXohJeL/sEwbbqvv9k+tbj2l4bRSj2j5CQvhwA3HNLaxlCAg==",
+        "resolved": "2.0.8",
+        "contentHash": "NNiYvv2oTd18ckJMBt8zatCBPj0KwbzbxMuxgu45m20VtqvkvR6AborbOhkhmJC70iaSv3uLvhTnFExIJGDnQA==",
         "dependencies": {
-          "DynamicData": "7.1.1",
-          "Splat": "10.0.1",
-          "System.Reactive": "5.0.0",
-          "System.ValueTuple": "4.5.0"
+          "System.Reactive": "5.0.0"
+        }
+      },
+      "SharpDX": {
+        "type": "Transitive",
+        "resolved": "4.0.1",
+        "contentHash": "8YA1VFg1/K8Emb8FEZDobojcv1BLuppVo7CRJQEgA1V748VIMPBru0i0OnsCjLSThzTn7juOvH85qjFL9Grl1w=="
+      },
+      "SharpDX.Direct2D1": {
+        "type": "Transitive",
+        "resolved": "4.0.1",
+        "contentHash": "EDBYa9kAG+gaMB4cCH7WNpxS8WijSCejNz/SERs2P1sWEPZZdUiUIruQMjPCdW3lXxT508aYiH2UXHAaZtk00g==",
+        "dependencies": {
+          "SharpDX": "4.0.1",
+          "SharpDX.DXGI": "4.0.1"
+        }
+      },
+      "SharpDX.Direct3D11": {
+        "type": "Transitive",
+        "resolved": "4.0.1",
+        "contentHash": "7xIfeAhxPhbPgSiREfFbOOwIWonUt2GHR7XZN5p2DJMWuqjl0+h1oo2/sF+SH/c6D6APjdbt0J+dYSzoV0PA/w==",
+        "dependencies": {
+          "SharpDX": "4.0.1",
+          "SharpDX.DXGI": "4.0.1"
+        }
+      },
+      "SharpDX.Direct3D9": {
+        "type": "Transitive",
+        "resolved": "4.0.1",
+        "contentHash": "xUgVtuy3UGljCjzPe1d0yndNI+htHnpCUcMk1QpmXZHwxudUGtes1iz18JD2Zy5Xx7VzFp2+guOGWkNrJmIgEA==",
+        "dependencies": {
+          "SharpDX": "4.0.1"
+        }
+      },
+      "SharpDX.DXGI": {
+        "type": "Transitive",
+        "resolved": "4.0.1",
+        "contentHash": "Av/kToUkVR1tDtIP9zmDGwCuCtyL04+PP7kes6aABzky1Y9vT03kR7mDeE83gl+E8GUmMMbVXbQ4AG2CVb66sg==",
+        "dependencies": {
+          "SharpDX": "4.0.1"
         }
       },
       "SharpZipLib": {
@@ -324,11 +425,8 @@
       },
       "Splat": {
         "type": "Transitive",
-        "resolved": "10.0.1",
-        "contentHash": "N8BMGVuUBnVLAHSVbna/st8XiLd8ulF3BfkKUSGCPqYpDCis3ELvM+aFaZQLBUIBEcweCYVLq3HFEBqHkCKFyA==",
-        "dependencies": {
-          "System.ValueTuple": "4.5.0"
-        }
+        "resolved": "11.1.1",
+        "contentHash": "qIgixm6tg+6Sztd5BM36Y+sRWdmzlCV2TYnViOSwqvOGAMaYYE9EhIaKHLbZHn6KXWAML8GMGx0kaosUMUA0rA=="
       },
       "Sprache": {
         "type": "Transitive",
@@ -473,7 +571,8 @@
           "Avalonia.ReactiveUI": "0.10.6",
           "Diz.Core": "1.0.0",
           "Diz.Gui.Avalonia.UserControls": "1.0.0",
-          "DynamicData": "7.2.1"
+          "DynamicData": "7.2.1",
+          "ReactiveUI": "14.1.1"
         }
       },
       "diz.gui.avalonia.usercontrols": {
@@ -486,17 +585,26 @@
           "Avalonia.ReactiveUI": "0.10.6",
           "Diz.Core": "1.0.0",
           "Diz.Gui.ViewModels": "1.0.0",
-          "DynamicData": "7.2.1"
+          "DynamicData": "7.2.1",
+          "ReactiveUI": "14.1.1",
+          "ReactiveUI.Events.Winforms": "14.1.1",
+          "ReactiveUI.WinForms": "14.1.1"
         }
       },
       "diz.gui.viewmodels": {
         "type": "Project",
         "dependencies": {
           "Avalonia": "0.10.6",
+          "Avalonia.Desktop": "0.10.6",
           "Avalonia.Diagnostics": "0.10.6",
           "Avalonia.ReactiveUI": "0.10.6",
+          "Avalonia.Win32": "0.10.6",
+          "Avalonia.Win32.Interoperability": "0.10.6",
           "Diz.Core": "1.0.0",
-          "DynamicData": "7.2.1"
+          "DynamicData": "7.2.1",
+          "ReactiveUI": "14.1.1",
+          "ReactiveUI.Events.Winforms": "14.1.1",
+          "ReactiveUI.WinForms": "14.1.1"
         }
       }
     },

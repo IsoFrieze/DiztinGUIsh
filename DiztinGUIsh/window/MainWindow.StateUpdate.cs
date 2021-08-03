@@ -14,9 +14,16 @@ namespace DiztinGUIsh.window
     {
         private void RebindProject()
         {
-            AliasList?.RebindProject();
+            RebindLabelsList();
+
             if (visualForm != null) 
                 visualForm.Project = Project;
+        }
+
+        private void RebindLabelsList()
+        {
+            if (LabelsList != null)
+                LabelsList.Project = Project;
         }
 
         private void UpdatePanels()

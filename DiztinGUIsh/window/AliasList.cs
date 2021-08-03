@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows.Forms;
+using Diz.Core;
 using Diz.Core.model;
 using DiztinGUIsh.controller;
 using DynamicData;
@@ -8,11 +9,13 @@ using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window
 {
-    public partial class AliasList : Form
+    public partial class AliasList : Form, IViewLabels
     {
         private readonly MainWindow parentWindow;
         private ProjectController ProjectController => parentWindow?.ProjectController;
         private Data Data => ProjectController?.Project?.Data;
+        
+        public Project Project { get; set; } // TODO call RebindProject() on set
 
         //public bool Locked;
         //private int currentlyEditing = -1;

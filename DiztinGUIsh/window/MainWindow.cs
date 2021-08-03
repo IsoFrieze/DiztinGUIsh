@@ -1,6 +1,5 @@
 ﻿using System.Windows.Forms;
 using Diz.Core.export;
-using Diz.Core.model;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 
@@ -30,12 +29,10 @@ namespace DiztinGUIsh.window
         {
             InitMainTable();
 
-            AliasList = new AliasList(this);
-
             UpdatePanels();
             UpdateUiFromSettings();
 
-            if (Settings.Default.OpenLastFileAutomatically)
+            if (Settings.Default.OpenLastFileAutomatically && Project == null)
                 OpenLastProject();
         }
 

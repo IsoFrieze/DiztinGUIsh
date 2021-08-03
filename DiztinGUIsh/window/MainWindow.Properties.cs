@@ -1,4 +1,5 @@
-﻿using Diz.Core.model;
+﻿using Diz.Core;
+using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
 
@@ -21,7 +22,7 @@ namespace DiztinGUIsh.window
             ProgressBarJob.RunAndWaitForCompletion;
         
         // sub windows
-        public AliasList AliasList;
+        public IViewLabels LabelsList;
         private VisualizerForm visualForm;
 
         // TODO: add a handler so we get notified when CurrentViewOffset changes.

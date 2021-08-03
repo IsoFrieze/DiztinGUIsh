@@ -1,4 +1,8 @@
-﻿namespace Diz.Core
+﻿using System;
+using System.Windows.Forms;
+using Diz.Core.model;
+
+namespace Diz.Core
 {
     public interface IDataRange
     {
@@ -9,5 +13,12 @@
         public int RangeCount { get; set; }
 
         public void ManualUpdate(int newStartIndex, int newRangeCount);
+    }
+    
+    public interface IViewLabels
+    {
+        void Show();
+        Project Project { get; set; }
+        public event FormClosedEventHandler FormClosed;
     }
 }

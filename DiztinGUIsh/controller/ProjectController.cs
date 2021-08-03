@@ -101,6 +101,11 @@ namespace DiztinGUIsh.controller
                 }
             }, $"Opening {Path.GetFileName(filename)}...");
 
+            return AfterProjectOpenAttempt(filename, project, errorMsg, warningMsg);
+        }
+
+        private bool AfterProjectOpenAttempt(string filename, Project project, string errorMsg, string warningMsg)
+        {
             if (project == null)
             {
                 ProjectView.OnProjectOpenFail(errorMsg);
@@ -119,7 +124,7 @@ namespace DiztinGUIsh.controller
             ProjectView.Project = Project = project;
             Project.PropertyChanged += Project_PropertyChanged;
 
-            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs()
+            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs
             {
                 ChangeType = ProjectChangedEventArgs.ProjectChangedType.Opened,
                 Filename = filename,
@@ -286,6 +291,14 @@ namespace DiztinGUIsh.controller
             });
 
             Project = null;
+        }
+
+        public void OpenSampleProject()
+        {
+            OnProjectOpenSuccess("SAMPLE.dizraw", new Project
+            {
+                Data = SampleRomData.CreateSampleData(),
+            });
         }
     }
 }

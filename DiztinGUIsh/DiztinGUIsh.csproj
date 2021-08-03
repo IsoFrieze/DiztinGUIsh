@@ -12,13 +12,35 @@
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <DefineConstants>$(DefineConstants);USE_AVALONIA_WINFORMS_EMBED</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+    <ProjectReference Include="..\Diz.Gui.Avalonia.UserControls\Diz.Gui.Avalonia.UserControls.csproj" />
     <ProjectReference Include="..\Diz.Gui.Avalonia\Diz.Gui.Avalonia.csproj" />
+    <ProjectReference Include="..\Diz.Gui.ViewModels\Diz.Gui.ViewModels.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    
+    <!-- avalonia UI -->
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.6" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.6" />
+    <PackageReference Include="Avalonia.Win32" Version="0.10.6" />
+    <PackageReference Include="Avalonia.Win32.Interoperability">
+      <Version>0.10.6</Version>
+    </PackageReference>
+    <PackageReference Include="ReactiveUI">
+      <Version>14.1.1</Version>
+    </PackageReference>
+
+    <!-- reactive UI -->
+    <PackageReference Include="ReactiveUI.Events.Winforms">
+      <Version>14.1.1</Version>
+    </PackageReference>
+    <PackageReference Include="ReactiveUI.WinForms" Version="14.1.1" />
+
+    <!-- all else -->
     <PackageReference Include="ByteSize">
       <Version>2.0.0</Version>
     </PackageReference>
@@ -29,13 +51,13 @@
       <Version>2.0.0</Version>
     </PackageReference>
     <PackageReference Include="JetBrains.Annotations">
-      <Version>2021.1.0</Version>
+      <Version>2021.2.0</Version>
     </PackageReference>
     <PackageReference Include="GitInfo">
       <Version>2.1.2</Version>
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    </PackageReference>    
     <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
   </ItemGroup>
 
@@ -240,6 +262,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="window\StartForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="window\LabelsListWinForm.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>

@@ -1,19 +1,19 @@
-﻿using Diz.Gui.Avalonia.Views.Windows;
+﻿using Diz.Core.model;
 using Diz.Gui.ViewModels;
 using Diz.Gui.ViewModels.ViewModels;
 
 namespace Diz.Gui.Avalonia.ViewModels
 {
-    public abstract class MainWindowViewModelBase : ViewModel
+    public class MainWindowViewModel : ViewModel
     {
-        public LabelsViewModel LabelsViewModel { get; } = new LabelsViewModel();
-
-        public abstract MainWindow CreateWindow();
-
-        public void OpenNewWindow()
+        public MainWindowViewModel(Data data)
         {
-            var newWindow = CreateWindow();
-            newWindow.Show();
+            LabelsViewModel = new LabelsViewModel
+            {
+                SourceLabels = data?.ConnectLabels()
+            };
         }
+
+        public LabelsViewModel LabelsViewModel { get; }
     }
 }

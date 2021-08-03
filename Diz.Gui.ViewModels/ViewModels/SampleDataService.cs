@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Diz.Core.util;
-using DynamicData;
 using Diz.Core.model;
 
 namespace Diz.Gui.ViewModels.ViewModels

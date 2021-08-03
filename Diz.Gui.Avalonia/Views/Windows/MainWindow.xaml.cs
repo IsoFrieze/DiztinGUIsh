@@ -3,31 +3,40 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
+using Diz.Core.model;
 using Diz.Gui.Avalonia.UserControls.UserControls;
+using Diz.Gui.Avalonia.ViewModels;
 using ReactiveUI;
 
 namespace Diz.Gui.Avalonia.Views.Windows
 {
     public class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
-        public MainWindow()
+        private Data data;
+
+        public MainWindow() : this(null)
         {
-            #if DEBUG
-            this.AttachDevTools();
-            #endif
+        } 
+        
+        public MainWindow(Data data)
+        {
+#if DEBUG
+        this.AttachDevTools();
+#endif
+            this.data = data;
             
-            ViewModel = new MainWindowViewModel();
+            ViewModel = new MainWindowViewModel(data);
 
             this
                 .WhenActivated(
                     disposableRegistration =>
-                     {
-                         this.Bind(ViewModel, 
-                                 vm => vm.LabelsViewModel,
-                                 view => view.LabelsListUserControl.ViewModel
-                                 )
-                             .DisposeWith(disposableRegistration);
-                     });
+                    {
+                        this.Bind(ViewModel, 
+                                vm => vm.LabelsViewModel,
+                                view => view.LabelsListUserControl.ViewModel
+                            )
+                            .DisposeWith(disposableRegistration);
+                    });
 
             InitializeComponent();
         }

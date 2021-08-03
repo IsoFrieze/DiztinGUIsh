@@ -6,15 +6,30 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <!-- avalonia UI -->
         <PackageReference Include="Avalonia">
+            <Version>0.10.6</Version>
+        </PackageReference>
+        <PackageReference Include="Avalonia.Desktop" Version="0.10.6" />
+        <PackageReference Include="Avalonia.Win32" Version="0.10.6" />
+        <PackageReference Include="Avalonia.Win32.Interoperability">
             <Version>0.10.6</Version>
         </PackageReference>
         <PackageReference Include="Avalonia.Diagnostics">
             <Version>0.10.6</Version>
         </PackageReference>
-        <PackageReference Include="Avalonia.ReactiveUI">
-            <Version>0.10.6</Version>
+
+        <!-- reactive UI -->
+        <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.6" />
+        <PackageReference Include="ReactiveUI">
+          <Version>14.1.1</Version>
         </PackageReference>
+        <PackageReference Include="ReactiveUI.Events.Winforms">
+            <Version>14.1.1</Version>
+        </PackageReference>
+        <PackageReference Include="ReactiveUI.WinForms" Version="14.1.1" />
+        
+        <!-- all else -->
         <PackageReference Include="DynamicData">
             <Version>7.2.1</Version>
         </PackageReference>

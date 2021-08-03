@@ -123,7 +123,7 @@ namespace DiztinGUIsh.window
             FixMisalignedInstructions();
 
         private void moveWithStepToolStripMenuItem_Click(object sender, EventArgs e) => ToggleMoveWithStep();
-        private void labelListToolStripMenuItem_Click(object sender, EventArgs e) => ShowCommentList();
+        private void labelListToolStripMenuItem_Click(object sender, EventArgs e) => ShowLabelsListView();
 
         private void openLastProjectAutomaticallyToolStripMenuItem_Click(object sender, EventArgs e) =>
             ToggleOpenLastProjectEnabled();

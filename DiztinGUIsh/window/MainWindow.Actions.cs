@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Windows.Forms;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -234,9 +235,24 @@ namespace DiztinGUIsh.window
             visualForm.Show();
         }
 
-        private void ShowCommentList()
+        public void ShowLabelsListView()
         {
-            AliasList.Show();
+            CreateLabelsListViewIfNeeded();
+            LabelsList.Show();
+        }
+
+        private void CreateLabelsListViewIfNeeded()
+        {
+#if USE_AVALONIA_WINFORMS_EMBED
+            LabelsList = new LabelsListWinForm();
+#else
+            LabelsList = new AliasList(this);
+#endif
+
+            LabelsList.FormClosed += (sender, e) => 
+                LabelsList = null;
+            
+            RebindLabelsList();
         }
 
         private void SetMarkerLabel(FlagType flagType)

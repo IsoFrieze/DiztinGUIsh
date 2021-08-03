@@ -25,6 +25,15 @@
         <PackageReference Include="DynamicData">
             <Version>7.2.1</Version>
         </PackageReference>
+        <PackageReference Include="ReactiveUI">
+          <Version>14.1.1</Version>
+        </PackageReference>
+        <PackageReference Include="ReactiveUI.Events.Winforms">
+          <Version>14.1.1</Version>
+        </PackageReference>
+        <PackageReference Include="ReactiveUI.WinForms">
+          <Version>14.1.1</Version>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>

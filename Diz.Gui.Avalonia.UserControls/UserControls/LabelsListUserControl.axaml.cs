@@ -15,6 +15,8 @@ namespace Diz.Gui.Avalonia.UserControls.UserControls
 
         public LabelsListUserControl()
         {
+            InitializeComponent();
+            
             ViewModel = new LabelsViewModel();
 
             this.WhenActivated(disposables =>
@@ -40,8 +42,6 @@ namespace Diz.Gui.Avalonia.UserControls.UserControls
                     v => v.LabelGrid.SelectedItem
                 );
             });
-
-            InitializeComponent();
         }
 
         private void InitializeComponent()
