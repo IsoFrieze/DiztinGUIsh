@@ -1,6 +1,7 @@
 ﻿// #define EXTRA_DEBUG_CHECKS
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -11,31 +12,26 @@ namespace Diz.Core.serialization.xml_serializer
 {
     public class RomByteEncoding
     {
-        public class FlagEncodeEntry
+        private static readonly IReadOnlyDictionary<char, FlagType> FlagEncodeTable = new Dictionary<char, FlagType>()
         {
-            public char C;
-            public FlagType F;
-        };
+            {'U', FlagType.Unreached},
 
-        private static readonly IReadOnlyCollection<FlagEncodeEntry> FlagEncodeTable = new List<FlagEncodeEntry> {
-            new FlagEncodeEntry() {F = FlagType.Unreached, C = 'U'},
+            {'+', FlagType.Opcode},
+            {'.', FlagType.Operand},
 
-            new FlagEncodeEntry() {F = FlagType.Opcode, C = '+'},
-            new FlagEncodeEntry() {F = FlagType.Operand, C = '.'},
+            {'G', FlagType.Graphics},
+            {'M', FlagType.Music},
+            {'X', FlagType.Empty},
+            {'T', FlagType.Text},
 
-            new FlagEncodeEntry() {F = FlagType.Graphics, C = 'G'},
-            new FlagEncodeEntry() {F = FlagType.Music, C = 'M'},
-            new FlagEncodeEntry() {F = FlagType.Empty, C = 'X'},
-            new FlagEncodeEntry() {F = FlagType.Text, C = 'T'},
+            {'A', FlagType.Data8Bit},
+            {'B', FlagType.Data16Bit},
+            {'C', FlagType.Data24Bit},
+            {'D', FlagType.Data32Bit},
 
-            new FlagEncodeEntry() {F = FlagType.Data8Bit, C = 'A'},
-            new FlagEncodeEntry() {F = FlagType.Data16Bit, C = 'B'},
-            new FlagEncodeEntry() {F = FlagType.Data24Bit, C = 'C'},
-            new FlagEncodeEntry() {F = FlagType.Data32Bit, C = 'D'},
-
-            new FlagEncodeEntry() {F = FlagType.Pointer16Bit, C = 'E'},
-            new FlagEncodeEntry() {F = FlagType.Pointer24Bit, C = 'F'},
-            new FlagEncodeEntry() {F = FlagType.Pointer32Bit, C = 'G'},
+            {'E', FlagType.Pointer16Bit},
+            {'F', FlagType.Pointer24Bit},
+            {'H', FlagType.Pointer32Bit},
         };
 
         private readonly StringBuilder cachedPadSb = new StringBuilder(LineMaxLen);
@@ -66,13 +62,14 @@ namespace Diz.Core.serialization.xml_serializer
             var found = false;
             foreach (var e in FlagEncodeTable)
             {
-                if (e.C != flagTxt)
+                if (e.Key != flagTxt)
                     continue;
 
-                newByte.TypeFlag = e.F;
+                newByte.TypeFlag = e.Value;
                 found = true;
                 break;
             }
+            
             if (!found)
                 throw new InvalidDataException("Unknown FlagType");
 
@@ -118,18 +115,18 @@ namespace Diz.Core.serialization.xml_serializer
             var flagTxt = ' ';
             foreach (var e in FlagEncodeTable)
             {
-                if (e.F == instance.TypeFlag)
-                {
-                    flagTxt = e.C;
-                    break;
-                }
+                if (e.Value != instance.TypeFlag) 
+                    continue;
+                
+                flagTxt = e.Key;
+                break;
             }
 
             if (flagTxt == ' ')
                 throw new InvalidDataException("Unknown FlagType");
 
             // max 6 bits if we want to fit in 1 base64 ASCII digit
-            byte otherFlags1 = (byte)(
+            var otherFlags1 = (byte)(
                 (instance.XFlag ? 1 : 0) << 2 | // 1 bit
                 (instance.MFlag ? 1 : 0) << 3 | // 1 bit
                 (byte)instance.Point << 4   // 4 bits
