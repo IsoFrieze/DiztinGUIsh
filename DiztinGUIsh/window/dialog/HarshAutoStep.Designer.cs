@@ -1,4 +1,4 @@
-﻿namespace DiztinGUIsh
+namespace DiztinGUIsh
 {
     partial class HarshAutoStep
     {
@@ -118,6 +118,7 @@
             // 
             // textStart
             // 
+            this.textStart.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textStart.Location = new System.Drawing.Point(103, 24);
             this.textStart.MaxLength = 6;
             this.textStart.Name = "textStart";
@@ -130,18 +131,18 @@
             this.radioPC.AutoSize = true;
             this.radioPC.Location = new System.Drawing.Point(176, 48);
             this.radioPC.Name = "radioPC";
-            this.radioPC.Size = new System.Drawing.Size(70, 17);
+            this.radioPC.Size = new System.Drawing.Size(100, 17);
             this.radioPC.TabIndex = 1;
             this.radioPC.Text = "ROM File Offset";
             this.radioPC.UseVisualStyleBackColor = true;
             // 
-            // radioROM
+            // radioSNES
             // 
             this.radioSNES.AutoSize = true;
             this.radioSNES.Checked = true;
             this.radioSNES.Location = new System.Drawing.Point(176, 25);
             this.radioSNES.Name = "radioSNES";
-            this.radioSNES.Size = new System.Drawing.Size(91, 17);
+            this.radioSNES.Size = new System.Drawing.Size(95, 17);
             this.radioSNES.TabIndex = 0;
             this.radioSNES.TabStop = true;
             this.radioSNES.Text = "SNES Address";
@@ -150,6 +151,7 @@
             // 
             // textEnd
             // 
+            this.textEnd.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textEnd.Location = new System.Drawing.Point(103, 48);
             this.textEnd.MaxLength = 6;
             this.textEnd.Name = "textEnd";
@@ -177,6 +179,7 @@
             // 
             // textCount
             // 
+            this.textCount.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textCount.Location = new System.Drawing.Point(103, 72);
             this.textCount.MaxLength = 6;
             this.textCount.Name = "textCount";
