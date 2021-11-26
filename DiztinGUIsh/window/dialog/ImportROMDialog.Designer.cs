@@ -1,4 +1,4 @@
-﻿namespace DiztinGUIsh.window.dialog
+namespace DiztinGUIsh.window.dialog
 {
     partial class ImportRomDialog
     {
@@ -343,6 +343,7 @@
             // 
             // textEmuIRQ
             // 
+            this.textEmuIRQ.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textEmuIRQ.Location = new System.Drawing.Point(156, 149);
             this.textEmuIRQ.MaxLength = 4;
             this.textEmuIRQ.Name = "textEmuIRQ";
@@ -354,6 +355,7 @@
             // 
             // textEmuRESET
             // 
+            this.textEmuRESET.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textEmuRESET.Location = new System.Drawing.Point(156, 127);
             this.textEmuRESET.MaxLength = 4;
             this.textEmuRESET.Name = "textEmuRESET";
@@ -365,6 +367,7 @@
             // 
             // textEmuNMI
             // 
+            this.textEmuNMI.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textEmuNMI.Location = new System.Drawing.Point(156, 105);
             this.textEmuNMI.MaxLength = 4;
             this.textEmuNMI.Name = "textEmuNMI";
@@ -376,6 +379,7 @@
             // 
             // textEmuABORT
             // 
+            this.textEmuABORT.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textEmuABORT.Location = new System.Drawing.Point(156, 83);
             this.textEmuABORT.MaxLength = 4;
             this.textEmuABORT.Name = "textEmuABORT";
@@ -387,6 +391,7 @@
             // 
             // textEmuBRK
             // 
+            this.textEmuBRK.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textEmuBRK.Location = new System.Drawing.Point(156, 61);
             this.textEmuBRK.MaxLength = 4;
             this.textEmuBRK.Name = "textEmuBRK";
@@ -398,6 +403,7 @@
             // 
             // textEmuCOP
             // 
+            this.textEmuCOP.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textEmuCOP.Location = new System.Drawing.Point(156, 39);
             this.textEmuCOP.MaxLength = 4;
             this.textEmuCOP.Name = "textEmuCOP";
@@ -409,6 +415,7 @@
             // 
             // textNativeIRQ
             // 
+            this.textNativeIRQ.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textNativeIRQ.Location = new System.Drawing.Point(79, 149);
             this.textNativeIRQ.MaxLength = 4;
             this.textNativeIRQ.Name = "textNativeIRQ";
@@ -420,6 +427,7 @@
             // 
             // textNativeRESET
             // 
+            this.textNativeRESET.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textNativeRESET.Location = new System.Drawing.Point(79, 127);
             this.textNativeRESET.MaxLength = 4;
             this.textNativeRESET.Name = "textNativeRESET";
@@ -431,6 +439,7 @@
             // 
             // textNativeNMI
             // 
+            this.textNativeNMI.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textNativeNMI.Location = new System.Drawing.Point(79, 105);
             this.textNativeNMI.MaxLength = 4;
             this.textNativeNMI.Name = "textNativeNMI";
@@ -442,6 +451,7 @@
             // 
             // textNativeABORT
             // 
+            this.textNativeABORT.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textNativeABORT.Location = new System.Drawing.Point(79, 83);
             this.textNativeABORT.MaxLength = 4;
             this.textNativeABORT.Name = "textNativeABORT";
@@ -453,6 +463,7 @@
             // 
             // textNativeBRK
             // 
+            this.textNativeBRK.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textNativeBRK.Location = new System.Drawing.Point(79, 61);
             this.textNativeBRK.MaxLength = 4;
             this.textNativeBRK.Name = "textNativeBRK";
@@ -464,6 +475,7 @@
             // 
             // textNativeCOP
             // 
+            this.textNativeCOP.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textNativeCOP.Location = new System.Drawing.Point(79, 39);
             this.textNativeCOP.MaxLength = 4;
             this.textNativeCOP.Name = "textNativeCOP";
