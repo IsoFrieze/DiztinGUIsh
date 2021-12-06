@@ -35,7 +35,7 @@ namespace Diz.Gui.Avalonia.UserControls.UserControls
                     .BindTo(this, vm => vm.ViewModel.SelectedItem);
 
                 this.WhenAnyValue(v => v.TxtOffsetSearch.Text)
-                    .BindTo(this, vm => vm.ViewModel.OffsetFilter);
+                    .BindTo(this, vm => vm.ViewModel.SearchText);
 
                 this.Bind(ViewModel,
                     vm => vm.SelectedItem,

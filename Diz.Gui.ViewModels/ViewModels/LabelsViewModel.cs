@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using Diz.Core.model;
 using DynamicData;
 using ReactiveUI;
@@ -14,7 +16,7 @@ namespace Diz.Gui.ViewModels.ViewModels
         public IEnumerable<LabelViewModel> SearchResults => searchResults?.Value;
 
         private LabelViewModel selectedItem;
-        private string offsetFilter;
+        private string searchText;
         private IObservable<IChangeSet<LabelProxy, int>> sourceLabels;
 
         public LabelViewModel SelectedItem
@@ -23,10 +25,10 @@ namespace Diz.Gui.ViewModels.ViewModels
             set => this.RaiseAndSetIfChanged(ref selectedItem, value);
         }
 
-        public string OffsetFilter
+        public string SearchText
         {
-            get => offsetFilter;
-            set => this.RaiseAndSetIfChanged(ref offsetFilter, value);
+            get => searchText;
+            set => this.RaiseAndSetIfChanged(ref searchText, value);
         }
 
         public IObservable<IChangeSet<LabelProxy, int>> SourceLabels
@@ -45,18 +47,47 @@ namespace Diz.Gui.ViewModels.ViewModels
                 {
                     // ReactiveCommand.Create<DataGridCellEditEndedEventArgs>(CellEdited);
                     
-                    searchResults = this
-                        .WhenAnyValue(x=>x.SourceLabels, x => x.OffsetFilter)
-                        .Select(x=>x.Item2)
-                        .Throttle(TimeSpan.FromMilliseconds(50))
-                        .Select(TrimSearchTerm)
-                        .DistinctUntilChanged()
+                    var command = ReactiveCommand.Create<string>(
+                        s =>
+                        {
+                            Console.WriteLine($"CMD: {s}");
+                            
+                        });
+                    
+                    // In the ViewModel.
+                    this.WhenAnyValue(x => x.SearchText)
+                        // .Where(x => !string.IsNullOrWhiteSpace(x))
+                        // .Throttle(TimeSpan.FromSeconds(.1))
+                        .InvokeCommand(command)
                         .SearchForLabels(SourceLabels)
-                        .ObserveOn(RxApp.MainThreadScheduler)
-                        .AsObservable()
-                        .ToProperty(this, x => x.SearchResults);
+                    
+                    // ReactiveCommand<string,IObservable<IChangeSet<LabelProxy, int>>> cmd = ReactiveCommand.
+                    // IObservable<IChangeSet<LabelProxy, int>> sourceLabels
+
+                    // SearchCommand = ReactiveCommand.CreateFromTask(CreateUser, canCreateUser);
+
+                    // searchResults = this
+                    //     .WhenAnyValue(x => x.SourceLabels, x => x.SearchText)
+                    //     .Subscribe(x =>
+                    //     {
+                    //
+                    //     });
+                    // .Select(x=>x.Item2)
+                    // .Throttle(TimeSpan.FromMilliseconds(50))
+                    // .Select(s =>
+                    // {
+                    //     var (labels, offsetFilterTxt) = s;
+                    //     return (labels, TrimSearchTerm(offsetFilterTxt));
+                    // })
+                    // .DistinctUntilChanged()
+                    // .SearchForLabels(SourceLabels)
+                    // .ObserveOn(RxApp.MainThreadScheduler)
+                    // .AsObservable()
+                    // .ToProperty(this, x => x.SearchResults);
                 });
         }
+
+        public ICommand SearchCommand { get; set; }
 
         private static string TrimSearchTerm(string searchTerm)
         {

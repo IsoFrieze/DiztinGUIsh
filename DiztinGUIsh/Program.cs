@@ -23,7 +23,7 @@ namespace DiztinGUIsh
                 openFile = args[0];
             
             // DONT CHECK IN. DEBUG ONLY
-            //openFile = "SAMPLE";
+            openFile = "SAMPLE";
 
             RunNormally(openFile);
         }
