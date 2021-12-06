@@ -1,38 +1,43 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../common/CommonSettings.targets" />
-
   <PropertyGroup>
     <UseWindowsForms>false</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-
     <RootNamespace>Diz.Test</RootNamespace>
     <AssemblyName>Diz.Test</AssemblyName>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet">
-      <Version>0.13.0</Version>
+      <Version>0.13.1</Version>
     </PackageReference>
     <PackageReference Include="ExtendedXmlSerializer">
-      <Version>3.7.1</Version>
+      <Version>3.7.6</Version>
     </PackageReference>
     <PackageReference Include="FluentAssertions">
-      <Version>5.10.3</Version>
+      <Version>6.2.0</Version>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions.Analyzers">
+      <Version>0.13.0</Version>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions.ArgumentMatchers.Moq">
+      <Version>2.0.0</Version>
     </PackageReference>
     <PackageReference Include="IX.Observable">
       <Version>0.7.3</Version>
     </PackageReference>
     <PackageReference Include="JetBrains.Annotations">
-      <Version>2021.1.0</Version>
+      <Version>2021.3.0</Version>
     </PackageReference>
     <PackageReference Include="LightInject">
       <Version>6.4.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk">
-      <Version>16.10.0</Version>
+      <Version>17.0.0</Version>
     </PackageReference>
     <PackageReference Include="Moq">
       <Version>4.16.1</Version>
@@ -59,7 +64,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
+    <PackageReference Include="System.Resources.Extensions" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />

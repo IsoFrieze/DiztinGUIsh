@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using Diz.Core.util;
 
-namespace DiztinGUIsh.window
+namespace DiztinGUIsh.util
 {
     public static class GuiUtil
     {

@@ -1,6 +1,7 @@
 ﻿using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window
 {

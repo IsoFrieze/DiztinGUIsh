@@ -1,22 +1,25 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using Xunit;
 
 namespace Diz.Test.Utils
 {
-    public abstract class FactIfFilePresent : FactAttribute
+    public class FactOnlyIfFilePresent : FactAttribute
     {
-        private string exePath;
-
-        public string ExePath
+        public FactOnlyIfFilePresent(string[] files = null)
         {
-            get => exePath;
-            set
-            {
-                if (!File.Exists(value))
-                    Skip = $"Can't find tool {exePath}";
-                else
-                    exePath = value;
-            }
+            var toCheck = new List<string>();
+            if (files != null)
+                toCheck.AddRange(files);
+
+            CheckExists(toCheck);
+        }
+
+        private void CheckExists(List<string> toCheck)
+        {
+            var missingFile = toCheck.Find(f => !File.Exists(f));
+            if (missingFile != null)
+                Skip = $"Can't find test prerequisite file {missingFile}";
         }
     }
 }

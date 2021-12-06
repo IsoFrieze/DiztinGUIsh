@@ -1,37 +1,50 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
+using Diz.Core.util;
+using DiztinGUIsh.controller;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog
 {
-    public partial class ProgressDialog : Form
+    public partial class ProgressDialog : Form, IProgressView
     {
-        private readonly string overrideText;
+        public bool IsMarquee
+        {
+            get => isMarquee;
+            set => this.InvokeIfRequired(() => UpdateProgressBarStyle(value));
+        }
+        
+        public string TextOverride
+        {
+            get => textOverride;
+            set => this.InvokeIfRequired(() => UpdateTextOverride(value));
+        }
+        
+        private bool isMarquee;
+        private string textOverride;
 
-        public ProgressDialog(bool marquee = false, string textOverride = null)
+        public ProgressDialog()
         {
             InitializeComponent();
             progressBar1.Value = 0;
             progressBar1.Maximum = 100;
-
-            overrideText = textOverride;
-            UpdateProgressText();
-
-            if (marquee)
-                progressBar1.Style = ProgressBarStyle.Marquee;
         }
 
-        private void UpdateProgressText()
+        private void UpdateProgressBarStyle(bool isMarqueeType)
         {
-            if (overrideText != null)
-            {
-                label2.Text = overrideText;
-                return;
-            }
-
-            var percentDone = (int)(100 * ((float)progressBar1.Value / (float)progressBar1.Maximum));
-            label2.Text = $@"{percentDone}%";
+            isMarquee = isMarqueeType;
+            progressBar1.Style = isMarqueeType
+                ? ProgressBarStyle.Marquee
+                : ProgressBarStyle.Continuous;
         }
 
-        public void UpdateProgress(int i)
+        private void UpdateTextOverride(string value)
+        {
+            textOverride = value;
+            UpdateProgressText();
+        }
+        
+        public void Report(int i)
         {
             this.InvokeIfRequired(() =>
             {
@@ -39,6 +52,20 @@ namespace DiztinGUIsh.window.dialog
                 UpdateProgressText();
             });
         }
+
+        private void UpdateProgressText()
+        {
+            if (textOverride != null)
+            {
+                lblStatusText.Text = textOverride;
+                return;
+            }
+
+            var percentDone = (int) (100 * (progressBar1.Value / (float) progressBar1.Maximum));
+            lblStatusText.Text = $@"{percentDone}%";
+        }
+
+        public void SignalJobIsDone() => this.InvokeIfRequired(Close);
+        public bool PromptDialog() => ShowDialog() == DialogResult.OK;
     }
 }
-

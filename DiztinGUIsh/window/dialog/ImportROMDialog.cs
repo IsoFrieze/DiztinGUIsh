@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using Diz.Core.serialization;
 using Diz.Core.util;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog
 {

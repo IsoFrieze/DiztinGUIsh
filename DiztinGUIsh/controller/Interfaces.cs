@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.model;
@@ -20,6 +21,11 @@ namespace DiztinGUIsh.controller
     
     public interface IViewer {}
     
+    public interface ICloseable
+    {
+        void Close();
+    }
+    
     public interface IModalDialog
     {
         /// <summary>
@@ -28,6 +34,19 @@ namespace DiztinGUIsh.controller
         /// </summary>
         /// <returns>True if steps were completed and we have a valid result</returns>
         bool PromptDialog();
+    }
+
+    public interface IProgressView : ICloseable, IModalDialog, IProgress<int> {
+        public bool IsMarquee { get; set; }
+        public string TextOverride { get; set; }
+        bool Visible { get; set; }
+        
+        /// <summary>
+        /// Signal that a job (potentially running in another task/thread) has completed.
+        /// CAUTION: Implementers should use thread-safety measures, this may be called
+        /// from a different thread than any other calls 
+        /// </summary>
+        void SignalJobIsDone();
     }
     
     public interface IMarkManyView : IViewer, IModalDialog

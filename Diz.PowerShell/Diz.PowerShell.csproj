@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../common/CommonSettings.targets" />
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="2.2.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Management.Automation" Version="7.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+  </ItemGroup>
+
+</Project>
