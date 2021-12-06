@@ -2,18 +2,18 @@
   <Import Project="../common/CommonSettings.targets" />
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitInfo" Version="2.1.2">
+    <PackageReference Include="GitInfo" Version="2.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Management.Automation" Version="7.1.3" />
+    <PackageReference Include="System.Management.Automation" Version="7.2.0" />
   </ItemGroup>
 
   <ItemGroup>
