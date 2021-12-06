@@ -1,18 +1,24 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="../common/CommonSettings.targets" />
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net5.0-windows7.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>DiztinGUIsh</RootNamespace>
     <AssemblyName>DiztinGUIsh</AssemblyName>
-    <LangVersion>8.0</LangVersion>
+    <ApplicationIcon>resource/diz-icon2-magenta-med32x32.ico</ApplicationIcon>
+    <LangVersion>latest</LangVersion>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <PackageVersion>3.0.0</PackageVersion>
   </PropertyGroup>
+  
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />  <!-- import this so our custom targets work -->
+  
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
   </ItemGroup>
@@ -212,14 +218,12 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    
     <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="..\nuget.config">
-      <Link>diztinguish\nuget.config</Link>
-    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -229,6 +233,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="build\TidyPublishDir.targets" />
     <Compile Update="window\usercontrols\DataGridEditorControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -238,6 +243,14 @@
     <Compile Update="window\StartForm.cs">
       <SubType>Form</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\.github\workflows\dotnet.yml">
+      <Link>diztinguish\.github\workflows\dotnet.yml</Link>
+    </Content>
+    <Content Include="..\common\CommonSettings.targets">
+      <Link>diztinguish\common\CommonSettings.targets</Link>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dist\" />
