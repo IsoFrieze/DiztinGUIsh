@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Diz.Core.import;
+using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog
 {

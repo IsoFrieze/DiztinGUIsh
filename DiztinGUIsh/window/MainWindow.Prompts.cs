@@ -6,6 +6,7 @@ using Diz.Controllers.controllers;
 using Diz.Core.commands;
 using Diz.Core.export;
 using DiztinGUIsh.controller;
+using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window

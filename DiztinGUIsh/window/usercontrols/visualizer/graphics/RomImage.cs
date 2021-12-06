@@ -1,7 +1,9 @@
 ﻿using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.util;
+using DiztinGUIsh.util;
 
 // this usercontrol is JUST to show the raw image data (no markup, formatting, etc)
 
@@ -47,6 +49,9 @@ namespace DiztinGUIsh.window.usercontrols
 
             graphics ??= CreateGraphics();
 
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) 
+                return;
+            
             var width = RomVisual.Bitmap.Width;
             var height = RomVisual.Bitmap.Height;
             graphics.DrawImage(RomVisual.Bitmap, 0, 0, width, height);

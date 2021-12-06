@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Diz.Core.model;
+using Diz.Core.util;
 using FastBitmapLib;
 
-namespace Diz.Core.util
+namespace DiztinGUIsh.util
 {
     public class RomVisual
     {
@@ -168,9 +170,16 @@ namespace Diz.Core.util
             var h = Height;
             var w = Width;
 
-            var shouldRecreateBitmap = bitmap == null || bitmap.Width != w || bitmap.Height != h;
-            if (shouldRecreateBitmap)
-                bitmap = new Bitmap(w, h);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                bitmap = null; // not supported (yet?)
+            } 
+            else 
+            {
+                var shouldRecreateBitmap = bitmap == null || bitmap.Width != w || bitmap.Height != h;
+                if (shouldRecreateBitmap)
+                    bitmap = new Bitmap(w, h);
+            }
 
             var romBytes = ConsumeRomDirtyBytes(out var usedDirtyList);
             var currentPixel = 0;
