@@ -9,7 +9,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>DiztinGUIsh</RootNamespace>
     <AssemblyName>DiztinGUIsh</AssemblyName>
-    <ApplicationIcon>diz-icon2-magenta-med32x32.ico</ApplicationIcon>
+    <ApplicationIcon>resource/diz-icon2-magenta-med32x32.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -216,6 +216,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    
     <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
@@ -251,7 +252,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dist\" />
-    <Folder Include="Properties\DataSources\" />
   </ItemGroup>
   <Import Project="build/TidyPublishDir.targets" />
 </Project>
