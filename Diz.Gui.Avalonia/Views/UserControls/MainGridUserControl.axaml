@@ -21,32 +21,6 @@
         <viewModels:ByteEntriesViewModel />
     </Design.DataContext>
 
-    <!-- <DataGridTextColumn Header="GDP" Binding="{Binding GDP}" Width="3*" CellStyleClasses="gdp" /> -->
-    <!--<UserControl.Styles>
-        ~1~<Style Selector="DataGridCell.gdp">
-            <Setter Property="Background" Value="{Binding Path=GDP, Mode=OneWay, Converter={StaticResource GDPConverter}}" />
-        </Style>@1@
-        ~1~<Style Selector="DataGridCell:current">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="FontWeight" Value="Normal"/>
-        </Style>
-        <Style Selector="DataGridCell:selected">
-            <Setter Property="Background" Value="Red" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>@1@
-        
-        ~1~<Style Selector="DataGridTextColumn[='Label']">
-            <Setter Property="FontSize" Value="{Binding SelectedFontSize}"/>
-        </Style>@1@
-        ~1~<Style Selector="Button.tabButton:pointerover">
-            <Setter Property="Background" Value="{DynamicResource TabButtonHoverBrush}" />
-        </Style>@1@
-        
-        <Style Selector="DataGridTextColumn.dgLabel">
-            <Setter Property="Background" Value="Red" />
-        </Style>
-    </UserControl.Styles>-->
-    
     <StackPanel>
         <DataGrid RowBackground="White" AlternatingRowBackground="White" GridLinesVisibility="All" x:Name="MainGrid">
             
