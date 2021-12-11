@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dependencies": {
-    ".NETCoreApp,Version=v5.0": {
+    "net5.0-windows7.0": {
       "ByteSize": {
         "type": "Direct",
         "requested": "[2.0.0, )",
@@ -1054,7 +1054,7 @@
         "type": "Project",
         "dependencies": {
           "Diz.Core": "3.0.0",
-          "Diz.LogWriter": "1.0.0"
+          "Diz.LogWriter": "3.0.0"
         }
       },
       "diz.core": {

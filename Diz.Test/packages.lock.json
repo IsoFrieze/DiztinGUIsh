@@ -65,12 +65,6 @@
           "Moq": "[4.7.0, 5.0.0)"
         }
       },
-      "GitInfo": {
-        "type": "Direct",
-        "requested": "[2.1.2, )",
-        "resolved": "2.1.2",
-        "contentHash": "1sO441DFuueysHa9gDWpql+bra1wL9KBHAM823dHUHuBTJjKwnv4Dpr+/+nnZ6cdY3mECtbWoMrYgeTiKwJ8Rg=="
-      },
       "JetBrains.Annotations": {
         "type": "Direct",
         "requested": "[2021.1.0, )",
@@ -1706,7 +1700,7 @@
         "type": "Project",
         "dependencies": {
           "Diz.Core": "3.0.0",
-          "Diz.LogWriter": "1.0.0"
+          "Diz.LogWriter": "3.0.0"
         }
       },
       "diz.core": {
