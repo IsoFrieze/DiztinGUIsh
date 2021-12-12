@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../common/CommonSettings.targets" />
+
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <UseWindowsForms>false</UseWindowsForms>
