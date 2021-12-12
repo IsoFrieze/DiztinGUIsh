@@ -1,4 +1,4 @@
-name: .NET 5 Win Desktop
+name: .NET 6 Win Desktop
 
 on: [ push, pull_request ]
 
@@ -29,7 +29,7 @@ jobs:
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
 
     - name: Nuget (restore from cache)
       uses: actions/cache@v1
@@ -53,7 +53,7 @@ jobs:
 
     - uses: papeloto/action-zip@v1
       with:
-        files: DiztinGUIsh\bin\Release\net5.0-windows7.0\publish\
+        files: DiztinGUIsh\bin\Release\net6.0-windows7.0\publish\
         dest: ${{ steps.ver.outputs.ver }}.zip
         
     - name: Upload Artifact

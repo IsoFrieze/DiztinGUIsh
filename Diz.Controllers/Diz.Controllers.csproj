@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="../common/CommonSettings.targets" />
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
@@ -15,7 +15,7 @@
 
     <ItemGroup>
       <PackageReference Include="GitInfo">
-        <Version>2.1.2</Version>
+        <Version>2.2.0</Version>
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>

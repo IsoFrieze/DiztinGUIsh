@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="../common/CommonSettings.targets" />
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>

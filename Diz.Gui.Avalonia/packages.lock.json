@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dependencies": {
-    ".NETCoreApp,Version=v5.0": {
+    "net6.0": {
       "Avalonia": {
         "type": "Direct",
         "requested": "[0.10.5, )",
@@ -720,7 +720,7 @@
         "type": "Project",
         "dependencies": {
           "Diz.Core": "3.0.0",
-          "Diz.LogWriter": "1.0.0"
+          "Diz.LogWriter": "3.0.0"
         }
       },
       "diz.core": {

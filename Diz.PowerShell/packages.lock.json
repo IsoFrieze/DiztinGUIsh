@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dependencies": {
-    ".NETCoreApp,Version=v5.0": {
+    "net6.0": {
       "GitInfo": {
         "type": "Direct",
         "requested": "[2.1.2, )",
@@ -511,7 +511,7 @@
       "diz.logwriter": {
         "type": "Project",
         "dependencies": {
-          "Diz.Core": "1.0.0"
+          "Diz.Core": "3.0.0"
         }
       }
     }
