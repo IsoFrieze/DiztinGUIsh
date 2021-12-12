@@ -22,7 +22,7 @@ namespace Diz.Core.util
             if (string.IsNullOrEmpty(addressTxt))
                 return false;
 
-            var inputText = new string(Array.FindAll<char>(addressTxt.ToCharArray(), (c =>
+            var inputText = new string(Array.FindAll(addressTxt.ToCharArray(), (c =>
                     (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
                 )));
 
@@ -235,7 +235,7 @@ namespace Diz.Core.util
                 return Encoding.GetEncoding(932);
             }
         }
-        
+
         public static string ReadShiftJisEncodedString(byte[] buffer, int index = 0, int count = -1) => 
             ReadStringFromByteArray(buffer, index, count, ShiftJisEncoding);
         
