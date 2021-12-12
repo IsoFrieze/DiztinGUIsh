@@ -9,6 +9,12 @@ using Diz.Core.model.byteSources;
 
 namespace Diz.Core.model
 {
+    public interface IReadOnlyLabel
+    {
+        string Name { get; }
+        string Comment { get; }
+    }
+    
     public interface IReadOnlyLabelProvider
     {
         public IEnumerable<KeyValuePair<int, Label>> Labels { get; }
@@ -32,11 +38,15 @@ namespace Diz.Core.model
         RomSpeed RomSpeed { get; }
     }
 
+    public interface ICommentTextProvider
+    {
+        string GetCommentText(int snesAddress);
+    }
+
     #if DIZ_3_BRANCH
     public interface ICommentProvider
     {
         Comment GetComment(int offset);
-        string GetCommentText(int snesAddress);
     }
 
     public interface IAnnotationProvider
@@ -60,6 +70,7 @@ namespace Diz.Core.model
         IReadOnlyByteSource,
         ISnesAddressConverter,
         IRomMapProvider,
+        ICommentTextProvider,
         #if DIZ_3_BRANCH
         ICommentProvider,
         IAnnotationProvider,

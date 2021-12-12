@@ -472,8 +472,6 @@ namespace Diz.Core.model.snes
             return destinationOfIa == addressToMatch;
         }
 
-        // public event PropertyChangedEventHandler? PropertyChanged;
-
         #region Equality
         protected bool Equals(Data other)
         {

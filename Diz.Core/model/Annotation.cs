@@ -1,26 +1,37 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Diz.Core.model.byteSources;
 using Diz.Core.util;
 using JetBrains.Annotations;
 
+#if DIZ_3_BRANCH
+using Diz.Core.model.byteSources;
+#endif
+
 namespace Diz.Core.model
 {
-    public abstract class Annotation : IParentAware<ByteEntry>, INotifyPropertyChangedExt
+    public abstract class Annotation : AnnotationBase
+    #if !DIZ_3_BRANCH
+    {}
+    #else
+        , IParentAware<ByteEntry>
     {
         public ByteEntry Parent { get; protected set; }
+        public void OnParentChanged(ByteEntry parent)
+        {
+            Parent = parent;
+        }
+    } 
+    #endif
+    
+    public abstract class AnnotationBase : INotifyPropertyChangedExt
+    {
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
         public virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public void OnParentChanged(ByteEntry parent)
-        {
-            Parent = parent;
         }
     }
 
@@ -251,12 +262,6 @@ namespace Diz.Core.model
         #endregion
     }
 
-    public interface IReadOnlyLabel
-    {
-        string Name { get; }
-        string Comment { get; }
-    }
-    
     // represent a label at a particular SNES address
     //
     // Comments here are for the LABEL itself, and not so much about where they're used.
