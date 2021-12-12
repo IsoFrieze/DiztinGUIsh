@@ -70,7 +70,7 @@ namespace Diz.Core.import
             public bool wasDecompressed;
 
             public byte[] tmpHeader;
-            public List<WorkItem> listHeads = new List<BsnesImportStreamProcessor.WorkItem>();
+            public List<WorkItem> listHeads = new();
         }
 
         public class WorkItem : PoolItem
@@ -83,7 +83,7 @@ namespace Diz.Core.import
         private ObjPool<CompressedWorkItem> poolCompressedWorkItems;
         private ObjPool<WorkItem> poolWorkItems;
 
-        public CancellationTokenSource CancelToken { get; private set; } = new CancellationTokenSource();
+        public CancellationTokenSource CancelToken { get; private set; } = new();
 
         public BsnesImportStreamProcessor(bool poolAllocations = true)
         {

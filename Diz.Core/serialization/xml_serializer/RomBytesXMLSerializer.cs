@@ -33,7 +33,7 @@ namespace Diz.Core.serialization.xml_serializer
         // but, let's add one here just because this specific class is complex.
         private const int CurrentDataFormatVersion = 200;
 
-        public static RomBytesSerializer Default { get; } = new RomBytesSerializer();
+        public static RomBytesSerializer Default { get; } = new();
 
         private const bool CompressGroupBlock = true;
         private const bool CompressUsingTable1 = true;

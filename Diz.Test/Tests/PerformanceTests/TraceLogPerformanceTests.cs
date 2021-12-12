@@ -75,7 +75,7 @@ namespace Diz.Test
             const string datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
             readonly Data Data = new EmptyRom();
             private readonly BsnesTraceLogDebugBenchmarkFileCapture capturing;
-            private readonly Stopwatch stopWatch = new Stopwatch();
+            private readonly Stopwatch stopWatch = new();
             private readonly ITestOutputHelper output;
 
             public ImportTraceLogStreamTestHarness(ITestOutputHelper output)

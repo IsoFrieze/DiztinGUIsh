@@ -119,6 +119,6 @@ namespace Diz.Core.model
     {
         // note: our thread safety isn't comprehensive in this project yet.
         // be careful with this if you're doing anything clever, especially writing.
-        public ReaderWriterLockSlim Lock { get; protected set; } = new ReaderWriterLockSlim();
+        public ReaderWriterLockSlim Lock { get; protected set; } = new();
     }
 }

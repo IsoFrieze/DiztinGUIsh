@@ -114,8 +114,8 @@ namespace Diz.Core.import
 
         // set a limit for the max# of worker tasks allowed to operate on the compressed data. tweak this number as needed.
         // this is purely for throttling and not for thread safety, otherwise # of Tasks will run out of control.
-        private SemaphoreSlim compressedWorkersLimit = new SemaphoreSlim(4,4);
-        private SemaphoreSlim uncompressedWorkersLimit = new SemaphoreSlim(4, 4);
+        private SemaphoreSlim compressedWorkersLimit = new(4,4);
+        private SemaphoreSlim uncompressedWorkersLimit = new(4, 4);
 
         private void ProcessStreamData(Stream networkStream)
         {

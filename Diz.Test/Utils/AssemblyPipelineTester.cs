@@ -18,7 +18,7 @@ namespace Diz.Test.Utils
 
         public static AssemblyPipelineTester SetupFromResource(Data input, string expectedAsmOutputResource)
         {
-            return new()
+            return new AssemblyPipelineTester
             {
                 Source = input,
                 ExpectedAsmOutput = EmbeddedResourceDataAttribute.ReadResource(expectedAsmOutputResource)

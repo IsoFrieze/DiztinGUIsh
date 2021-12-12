@@ -288,8 +288,7 @@ namespace Diz.Core.util
         }
 
         // sadly, this entire conversion is a bit slow so, cache it as we look it up
-        private static readonly Dictionary<FlagType, Color> CachedRomFlagColors =
-            new Dictionary<FlagType, Color>();
+        private static readonly Dictionary<FlagType, Color> CachedRomFlagColors = new();
 
         public static Color GetColorFromFlag(FlagType romFlag)
         {

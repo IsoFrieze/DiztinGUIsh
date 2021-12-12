@@ -8,13 +8,13 @@ namespace Diz.Core.util
 {
     public class WorkerTaskManager : IWorkerTaskManager
     {
-        private readonly List<Task> tasks = new List<Task>();
-        private readonly object taskLock = new object();
+        private readonly List<Task> tasks = new();
+        private readonly object taskLock = new();
 
-        private readonly ManualResetEvent notFinishing = new ManualResetEvent(false);
+        private readonly ManualResetEvent notFinishing = new(false);
         private volatile bool finished = false;
         private Timer timer;
-        private object timerLock = new object();
+        private object timerLock = new();
 
         public WorkerTaskManager()
         {

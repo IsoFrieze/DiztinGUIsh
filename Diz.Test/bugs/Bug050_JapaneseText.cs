@@ -67,14 +67,16 @@ namespace Diz.Test.bugs
         public static IEnumerable<object[]> Harnesses => new List<Harness>
         {
             // we should see the mitigation code fix this scenario up correctly
-            new Harness {
+            new()
+            {
                 ExpectedMitigationApplied = true,
                 OverrideGameName = "BAD",
             },
             
             // in a newer save format, there shouldn't be a bug anyomre,
             // so we don't expect the mitigation code to run.
-            new Harness {
+            new()
+            {
                 ExpectedMitigationApplied = false,
                 OverrideGameName = "BAD",
                 ForceOlderSaveVersionWhichShouldFix = false,

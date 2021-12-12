@@ -141,7 +141,7 @@ namespace Diz.LogWriter
             if (string.IsNullOrEmpty(token))
                 return null;
             
-            return new()
+            return new ColumnFormat
             {
                 Value = token,
                 IsLiteral = true

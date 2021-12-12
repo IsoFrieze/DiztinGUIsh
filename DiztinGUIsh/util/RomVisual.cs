@@ -114,8 +114,8 @@ namespace DiztinGUIsh.util
         private Bitmap bitmap;
         private Project project;
 
-        private readonly object dirtyLock = new object();
-        private readonly Dictionary<int, RomByte> dirtyRomBytes = new Dictionary<int, RomByte>();
+        private readonly object dirtyLock = new();
+        private readonly Dictionary<int, RomByte> dirtyRomBytes = new();
 
         private void RomBytes_CollectionChanged(object sender,
             System.Collections.Specialized.NotifyCollectionChangedEventArgs e)

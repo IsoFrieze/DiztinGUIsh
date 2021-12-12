@@ -42,7 +42,7 @@ namespace DiztinGUIsh.window.usercontrols
             InitializeComponent();
         }
 
-        public List<RomBankVisualizer> BankControls = new List<RomBankVisualizer>();
+        public List<RomBankVisualizer> BankControls = new();
 
         public void Init()
         {

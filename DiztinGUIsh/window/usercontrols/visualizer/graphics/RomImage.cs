@@ -11,7 +11,7 @@ namespace DiztinGUIsh.window.usercontrols
 {
     public partial class RomImage : UserControl
     {
-        public RomVisual RomVisual { get; protected set; } = new RomVisual();
+        public RomVisual RomVisual { get; protected set; } = new();
         public Project Project
         {
             get => RomVisual.Project;

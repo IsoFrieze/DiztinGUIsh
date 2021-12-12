@@ -12,7 +12,7 @@ namespace Diz.Core.serialization.xml_serializer
             public string ShortTextToEncode;
         }
 
-        private static readonly List<CompressionEntry> Table1 = new List<CompressionEntry>
+        private static readonly List<CompressionEntry> Table1 = new()
         {
             new CompressionEntry() {LongTextPattern = "0001E", ShortTextToEncode="ZQ"},
             new CompressionEntry() {LongTextPattern = "B0001", ShortTextToEncode="Zq"},

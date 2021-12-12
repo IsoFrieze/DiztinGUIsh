@@ -33,7 +33,7 @@ namespace Diz.Controllers.controllers
         }
 
         private MarkCommand CreateCommandFromView() =>
-            new MarkCommand
+            new()
             {
                 Start = DataRange.StartIndex,
                 Count = DataRange.RangeCount,
@@ -50,6 +50,6 @@ namespace Diz.Controllers.controllers
             return command;
         }
 
-        public Dictionary<MarkCommand.MarkManyProperty, object> Settings { get; set; } = new Dictionary<MarkCommand.MarkManyProperty, object>();
+        public Dictionary<MarkCommand.MarkManyProperty, object> Settings { get; set; } = new();
     }
 }

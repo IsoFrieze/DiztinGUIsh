@@ -7,7 +7,7 @@ namespace DiztinGUIsh.window
 {
     public partial class MainWindow
     {
-        public DizDocument Document { get; } = new DizDocument();
+        public DizDocument Document { get; } = new();
 
         public Project Project
         {

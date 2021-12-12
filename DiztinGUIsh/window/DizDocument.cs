@@ -43,7 +43,7 @@ namespace DiztinGUIsh.window
         
         private Project project;
 
-        private BindingList<NavigationEntry> navigationHistory = new BindingList<NavigationEntry>
+        private BindingList<NavigationEntry> navigationHistory = new()
         {
             RaiseListChangedEvents = true,
             AllowNew = false,

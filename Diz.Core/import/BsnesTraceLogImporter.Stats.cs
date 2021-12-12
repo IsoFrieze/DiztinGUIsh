@@ -16,7 +16,7 @@ namespace Diz.Core.import
             public long NumMarksModified;
         }
 
-        private readonly ReaderWriterLockSlim statsLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim statsLock = new();
         private Stats currentStats;
 
         // return a copy of struct so caller doesn't have to deal with thread safety issues 

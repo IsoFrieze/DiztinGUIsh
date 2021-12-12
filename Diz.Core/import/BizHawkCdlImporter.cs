@@ -9,7 +9,7 @@ namespace Diz.Core.import
 {
     public class BizHawkCdlImporter
     {
-        private readonly Dictionary<string, IList<BizHawkCdlImporter.Flag>> cdl = new Dictionary<string, IList<Flag>>();
+        private readonly Dictionary<string, IList<BizHawkCdlImporter.Flag>> cdl = new();
         
         [Flags]
         public enum Flag : byte

@@ -15,7 +15,7 @@ namespace Diz.Core.serialization.xml_serializer
         // - multiple of the same version# ARE allowed
         // - items of equal version# will be applied in the order they're in the list
         // - caller must keep this sorted
-        public List<IMigration> Migrations { get; set; } = new List<IMigration>();
+        public List<IMigration> Migrations { get; set; } = new();
         
         // when run, we'll filter out any migrations not between the Start and Target ranges
         public int StartingSaveVersion { get; set; }

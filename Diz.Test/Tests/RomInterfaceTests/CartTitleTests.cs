@@ -75,7 +75,7 @@ namespace Diz.Test.Tests
             public string CartTitle { get; set; }
         }
 
-        private static TestRoot Root => new TestRoot {CartTitle = ExpectedTitleStr};
+        private static TestRoot Root => new() {CartTitle = ExpectedTitleStr};
 
         [Fact]
         public static void TestXmlCycle3()

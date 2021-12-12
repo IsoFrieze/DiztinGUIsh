@@ -36,7 +36,7 @@ namespace Diz.Test
                 .Should().Throw<InvalidDataException>().WithMessage("*starting migration version is greater than target version*");
 
         #region HarnessData
-        public static TheoryData<Harness> Harnesses => new TheoryData<Harness>
+        public static TheoryData<Harness> Harnesses => new()
         {
             new Harness
             {
@@ -139,7 +139,7 @@ namespace Diz.Test
             public int RunnerStart;
             public int RunnerTarget;
             public string ExpectedException = null;
-            public readonly List<MigrationMock> Migrations = new List<MigrationMock>();
+            public readonly List<MigrationMock> Migrations = new();
 
             public List<IMigration> MigrationObjs => Migrations.Select(mock => mock.Mock.Object).ToList();
             

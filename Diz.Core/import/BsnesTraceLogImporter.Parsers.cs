@@ -44,7 +44,7 @@ namespace Diz.Core.import
             SetOpcodeAndOperandsFromTraceData(modData, opcodeLen);  // note: frees modData, don't use after
         }
 
-        private CachedTraceLineTextIndex TextImportFormatCached { get; } = new CachedTraceLineTextIndex();
+        private CachedTraceLineTextIndex TextImportFormatCached { get; } = new();
 
         public bool ParseTextLine(string line, ModificationData modData)
         {

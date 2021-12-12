@@ -136,7 +136,7 @@ namespace DiztinGUIsh.window
             return markCommand;
         }
 
-        private Dictionary<MarkCommand.MarkManyProperty, object> SavedMarkManySettings { get; set; } = new Dictionary<MarkCommand.MarkManyProperty, object>();
+        private Dictionary<MarkCommand.MarkManyProperty, object> SavedMarkManySettings { get; set; } = new();
         
         private IMarkManyController CreateMarkManyController(int offset, MarkCommand.MarkManyProperty property)
         {

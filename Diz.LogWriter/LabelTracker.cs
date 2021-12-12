@@ -34,7 +34,7 @@ namespace Diz.LogWriter
 
         private void CacheUnvisitedLabels()
         {
-            cachedUnvisitedLabels = new();
+            cachedUnvisitedLabels = new Dictionary<int, IReadOnlyLabel>();
             if (VisitedLabelSnesAddresses == null)
                 return;
 

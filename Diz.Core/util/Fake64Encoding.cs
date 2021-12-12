@@ -26,7 +26,7 @@ namespace Diz.Core.util
         }
         
         // char to byte
-        private static readonly Dictionary<char, byte> Fake64CharToByte = new Dictionary<char, byte>()
+        private static readonly Dictionary<char, byte> Fake64CharToByte = new()
         {
             {'A', 208},
             {'B', 4},
@@ -94,7 +94,7 @@ namespace Diz.Core.util
             {'/', 252},
         };
 
-        private static readonly Dictionary<byte, char> Fake64ByteToChar = new Dictionary<byte, char>()
+        private static readonly Dictionary<byte, char> Fake64ByteToChar = new()
         {
             {208, 'A'},
             {4, 'B'},

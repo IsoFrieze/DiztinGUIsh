@@ -34,7 +34,7 @@ namespace Diz.Core.serialization.xml_serializer
             {'H', FlagType.Pointer32Bit},
         };
 
-        private readonly StringBuilder cachedPadSb = new StringBuilder(LineMaxLen);
+        private readonly StringBuilder cachedPadSb = new(LineMaxLen);
 
         private const int LineMaxLen = 9;
 
