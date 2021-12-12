@@ -1,6 +1,6 @@
 <Project>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-  <Import Project="../common/CommonSettings.targets" />
+
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -241,14 +241,12 @@
     <Content Include="..\.github\workflows\dotnet.yml">
       <Link>diztinguish\.github\workflows\dotnet.yml</Link>
     </Content>
-    <Content Include="..\common\CommonSettings.targets">
-      <Link>diztinguish\common\CommonSettings.targets</Link>
+    <Content Include="..\Directory.Build.targets">
+      <Link>diztinguish\Directory.Build.targets</Link>
     </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dist\" />
   </ItemGroup>
   <Import Project="build/TidyPublishDir.targets" />
-
-
 </Project>
