@@ -1,6 +1,7 @@
 ﻿using System;
 using Diz.Core.export;
 using Diz.Core.model;
+using Diz.LogWriter;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.controller
@@ -10,7 +11,7 @@ namespace DiztinGUIsh.controller
         Project Project { get; set; }
         void OnProjectOpenFail(string errorMsg);
         void OnProjectSaved();
-        void OnExportFinished(LogCreator.OutputResult result);
+        void OnExportFinished(LogCreatorOutput.OutputResult result);
 
         public delegate void LongRunningTaskHandler(Action task, string description = null);
         LongRunningTaskHandler TaskHandler { get; }

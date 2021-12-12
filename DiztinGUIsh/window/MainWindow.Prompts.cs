@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Core.commands;
 using Diz.Core.export;
+using Diz.LogWriter;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
@@ -30,7 +31,7 @@ namespace DiztinGUIsh.window
             return openFileDialog.ShowDialog() == DialogResult.OK ? openFileDialog.FileName : "";
         }
 
-        private static void ShowExportResults(LogCreator.OutputResult result)
+        private static void ShowExportResults(LogCreatorOutput.OutputResult result)
         {
             if (result.ErrorCount > 0)
                 MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",

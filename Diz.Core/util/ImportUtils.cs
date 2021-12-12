@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.serialization;
 
 namespace Diz.Core.util
@@ -97,7 +98,7 @@ namespace Diz.Core.util
             project.Data.CreateRomBytesFromRom(importSettings.RomBytes);
 
             foreach (var pair in importSettings.InitialLabels)
-                project.Data.AddLabel(pair.Key, pair.Value, true);
+                project.Data.Labels.AddLabel(pair.Key, pair.Value, true);
 
             foreach (var pair in importSettings.InitialHeaderFlags)
                 project.Data.SetFlag(pair.Key, pair.Value);

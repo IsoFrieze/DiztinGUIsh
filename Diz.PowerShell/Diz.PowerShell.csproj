@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+    <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
   </ItemGroup>
 
 </Project>

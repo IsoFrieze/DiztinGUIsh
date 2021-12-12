@@ -1,6 +1,7 @@
 ﻿using System.Windows.Forms;
 using Diz.Core.export;
 using Diz.Core.model;
+using Diz.LogWriter;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 
@@ -99,7 +100,7 @@ namespace DiztinGUIsh.window
             UpdateWindowTitle();
         }
 
-        public void OnExportFinished(LogCreator.OutputResult result)
+        public void OnExportFinished(LogCreatorOutput.OutputResult result)
         {
             ShowExportResults(result);
         }

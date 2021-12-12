@@ -10,6 +10,7 @@ using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
 using Diz.Core.import;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 using Diz.Test.Utils;
 using Xunit;

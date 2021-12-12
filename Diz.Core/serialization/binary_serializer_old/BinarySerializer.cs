@@ -1,11 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
+using Diz.Core.model.snes;
 using Diz.Core.util;
+
+// IMPORTANT NOTE:
+// This serializer is compact, but it's deprecated in favor of the XML serializer, which is way easier
+// to make changes to and deal with backwards compatibility.
+//
+// This is only here for loading older files saved in this format, it shouldn't be used for anything new going forward.
 
 namespace Diz.Core.serialization.binary_serializer_old
 {
@@ -16,8 +23,8 @@ namespace Diz.Core.serialization.binary_serializer_old
 
         public static bool IsBinaryFileFormat(byte[] data)
         {
-            for (var i = 0; i < Watermark.Length; i++) {
-                if (data[i + 1] != (byte) Watermark[i])
+            for (var i = 0; i < DizWatermark.Length; i++) {
+                if (data[i + 1] != (byte) DizWatermark[i])
                     return false;
             }
             return true;
@@ -30,7 +37,7 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             var everything = new byte[HeaderSize + data.Length];
             everything[0] = versionToSave;
-            ByteUtil.StringToNullTermByteArray(Watermark).CopyTo(everything, 1);
+            ByteUtil.StringToNullTermByteArray(DizWatermark).CopyTo(everything, 1);
             data.CopyTo(everything, HeaderSize);
 
             return data;
@@ -49,21 +56,27 @@ namespace Diz.Core.serialization.binary_serializer_old
             {
                 Project = project,
                 SaveVersion = version,
-                Watermark = Watermark,
+                Watermark = DizWatermark,
             }, warning);
         }
         private (Project project, string warning, byte version) LoadProject(byte[] data)
         {
             if (!IsBinaryFileFormat(data))
-                throw new InvalidDataException($"This is not a binary serialized project file!");
+                throw new InvalidDataException("This is not a binary serialized project file!");
 
             var version = data[0];
             ValidateProjectFileVersion(version);
 
-            var project = new Project
-            {
+            var project = new Project {
                 Data = new Data()
             };
+
+            #if DIZ_3_BRANCH
+            project.Session = new ProjectSession(project)
+            {
+                UnsavedChanges = false
+            };
+            #endif
 
             // version 0 needs to convert PC to SNES for some addresses
             ByteUtil.AddressConverter converter = address => address;
@@ -71,8 +84,14 @@ namespace Diz.Core.serialization.binary_serializer_old
                 converter = project.Data.ConvertPCtoSnes;
 
             // read mode, speed, size
-            project.Data.RomMapMode = (RomMapMode)data[HeaderSize];
-            project.Data.RomSpeed = (RomSpeed)data[HeaderSize + 1];
+            var mode = (RomMapMode) data[HeaderSize];
+            var speed = (RomSpeed) data[HeaderSize + 1];
+            
+            #if !DIZ_3_BRANCH
+            project.Data.RomMapMode = mode;
+            project.Data.RomSpeed = speed;
+            #endif
+            
             var size = ByteUtil.ConvertByteArrayToInt32(data, HeaderSize + 2);
 
             // read internal title
@@ -86,24 +105,31 @@ namespace Diz.Core.serialization.binary_serializer_old
 
             // read full filepath to the ROM .sfc file
             while (data[pointer] != 0)
-                project.AttachedRomFilename += (char)data[pointer++];
+                project.AttachedRomFilename += (char) data[pointer++];
             pointer++;
 
+            #if DIZ_3_BRANCH
+            project.Data.InitializeEmptyRomMapping(size, mode, speed);
+            #else
             project.Data.RomBytes.Create(size);
+            #endif
 
             for (int i = 0; i < size; i++) project.Data.SetDataBank(i, data[pointer + i]);
-            for (int i = 0; i < size; i++) project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
+            for (int i = 0; i < size; i++)
+                project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
             for (int i = 0; i < size; i++) project.Data.SetXFlag(i, data[pointer + 3 * size + i] != 0);
             for (int i = 0; i < size; i++) project.Data.SetMFlag(i, data[pointer + 4 * size + i] != 0);
-            for (int i = 0; i < size; i++) project.Data.SetFlag(i, (FlagType)data[pointer + 5 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetArchitecture(i, (Architecture)data[pointer + 6 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (InOutPoint)data[pointer + 7 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetFlag(i, (FlagType) data[pointer + 5 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetArchitecture(i, (Architecture) data[pointer + 6 * size + i]);
+            for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (InOutPoint) data[pointer + 7 * size + i]);
             pointer += 8 * size;
 
             ReadLabels(project, data, ref pointer, converter, version >= 2);
             ReadComments(project, data, ref pointer, converter);
 
+            #if !DIZ_3_BRANCH
             project.UnsavedChanges = false;
+            #endif
 
             var warning = "";
             if (version != LatestFileFormatVersion)
@@ -116,6 +142,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             return (project, warning, version);
         }
 
+        #if ALLOW_OLD_SAVE_FORMATS
         private static void SaveStringToBytes(string str, ICollection<byte> bytes)
         {
             // TODO: combine with Util.StringToByteArray() probably.
@@ -126,9 +153,22 @@ namespace Diz.Core.serialization.binary_serializer_old
             }
             bytes.Add(0);
         }
+        #endif
 
+        private void VoidTheWarranty()
+        {
+            // comment this out only if you are an expert and know what you're doing. Binary serialization is deprecated.
+            //
+            // How did you even get here, dawg? #yolo
+            throw new NotSupportedException("Binary serializer saving is OLD, please use the XML serializer instead.");
+        }
+
+        [SuppressMessage("ReSharper", "UnusedParameter.Local")]
         private byte[] SaveVersion(Project project, int version)
         {
+            VoidTheWarranty();
+            
+            #if ALLOW_OLD_SAVE_FORMATS
             ValidateSaveVersion(version);
 
             int size = project.Data.GetRomSize();
@@ -150,7 +190,7 @@ namespace Diz.Core.serialization.binary_serializer_old
             // TODO put selected offset in save file
 
             // save all labels ad comments
-            List<byte> label = new List<byte>(), comment = new List<byte>();
+            List<byte> label = new(), comment = new();
             var allLabels = project.Data.Labels;
             var allComments = project.Data.Comments;
 
@@ -167,10 +207,10 @@ namespace Diz.Core.serialization.binary_serializer_old
             }
 
             ByteUtil.AppendIntegerToByteList((uint)allComments.Count, comment);
-            foreach (KeyValuePair<int, string> pair in allComments)
+            foreach (KeyValuePair<int, Comment> pair in allComments)
             {
                 ByteUtil.AppendIntegerToByteList((uint)pair.Key, comment);
-                SaveStringToBytes(pair.Value, comment);
+                SaveStringToBytes(pair.Value.Text, comment);
             }
 
             // save current Rom full path - "c:\whatever\someRom.sfc"
@@ -202,7 +242,7 @@ namespace Diz.Core.serialization.binary_serializer_old
                 var op = readOps[whichOp];
                 for (var i = 0; i < size; i++)
                 {
-                    data[baseidx + i] = (byte)op(i);
+                    data[baseidx + i] = op(i);
                 }
             }
 
@@ -218,13 +258,17 @@ namespace Diz.Core.serialization.binary_serializer_old
             // ???
 
             return data;
+            #endif
+            return null;
         }
 
+        #if ALLOW_OLD_SAVE_FORMATS
         private static void ValidateSaveVersion(int version) {
             if (version < 1 || version > LatestFileFormatVersion) {
                 throw new ArgumentException($"Saving: Invalid save version requested for saving: {version}.");
             }
         }
+        #endif
 
         private static void ValidateProjectFileVersion(int version)
         {
@@ -244,18 +288,18 @@ namespace Diz.Core.serialization.binary_serializer_old
         {
             const int stringsPerEntry = 1;
             pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter, 
-                (int offset, string[] strings) =>
-            {
-                Debug.Assert(strings.Length == 1);
-                project.Data.AddComment(offset, strings[0], true);
-            });
+                (offset, strings) =>
+                {
+                    Debug.Assert(strings.Length == 1);
+                    project.Data?.AddComment(offset, strings[0], true);
+                });
         }
 
         private void ReadLabels(Project project, byte[] bytes, ref int pointer, ByteUtil.AddressConverter converter, bool readAliasComments)
         {
             var stringsPerEntry = readAliasComments ? 2 : 1;
             pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter,
-                (int offset, string[] strings) =>
+                (offset, strings) =>
                 {
                     Debug.Assert(strings.Length == stringsPerEntry);
                     var label = new Label
@@ -263,8 +307,7 @@ namespace Diz.Core.serialization.binary_serializer_old
                         Name = strings[0],
                         Comment = strings.ElementAtOrDefault(1)
                     };
-                    label.CleanUp();
-                    project.Data.AddLabel(offset, label, true);
+                    project.Data.Labels.AddLabel(offset, label, true);
                 });
         }
     }

@@ -1,79 +1,83 @@
-﻿using System.IO;
+﻿#nullable enable
+
+using Diz.Core.util;
+
+/*
+ * TODO:
+ * Couple things for ongoing refactors:
+ * 1) This class should live with the Diz.LogWriter project (not Diz.Core)
+ * 2) It should inherit some kind of IDocRootItem class and be saved alongside Diz.Project
+ * 3) Diz.Core shouldn't have to know about anything in here or anything about assembly export/generation
+ * 4) Probably use dependency injection starting with this system to register settings providers in Diz like this one
+ */
 
 namespace Diz.Core.export
 {
-    public struct LogWriterSettings
+    public record LogWriterSettings
     {
-        // struct because we want to make a bunch of copies of this struct.
-        // The plumbing could use a pass of something like 'ref readonly' because:
-        // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/ref#reference-return-values
-
-        public string Format;
-        public int DataPerLine;
-        public LogCreator.FormatUnlabeled Unlabeled;
-        public LogCreator.FormatStructure Structure;
-        public bool IncludeUnusedLabels;
-        public bool PrintLabelSpecificComments;
-        public bool OutputExtraWhitespace;
-
-        private bool wasInitialized;
-        public int RomSizeOverride; // specify an override for the # of bytes to assemble. default is the entire ROM
-
-        public string FileOrFolderOutPath;
-        public bool OutputToString;
-        public string ErrorFilename;
-
-        public void SetDefaults()
+        public const string DefaultStr = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
+        
+        public enum FormatUnlabeled
         {
-            Format = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";
+            ShowAll = 0,
+            ShowInPoints = 1, // TODO Add Show In Points with +/- labels
+            ShowNone = 2
+        }
+
+        public enum FormatStructure
+        {
+            SingleFile = 0,
+            OneBankPerFile = 1
+        }
+        
+        public string Format { get; init; }
+        public int DataPerLine { get; init; }
+        public FormatUnlabeled Unlabeled { get; init; }
+        public FormatStructure Structure { get; init; }
+        public bool IncludeUnusedLabels  { get; init; }
+        public bool PrintLabelSpecificComments { get; init; }
+        public bool OutputExtraWhitespace  { get; init; }
+
+        // specify an override for the # of bytes to assemble. default is the entire ROM
+        public int RomSizeOverride { get; init; }
+        public string FileOrFolderOutPath { get; init; }
+
+        public bool OutputToString { get; init; }
+        public string ErrorFilename { get; init; }
+        
+        public LogWriterSettings WithPathRelativeTo(string newFileNameAndPath, string pathToMakeRelativeTo) =>
+            this with
+            {
+                FileOrFolderOutPath = Util.TryGetRelativePath(newFileNameAndPath, pathToMakeRelativeTo)
+            };
+
+        public LogWriterSettings()
+        {
+            Format = DefaultStr;
             DataPerLine = 8;
-            Unlabeled = LogCreator.FormatUnlabeled.ShowInPoints;
-            Structure = LogCreator.FormatStructure.OneBankPerFile;
+            Unlabeled = FormatUnlabeled.ShowInPoints;
+            Structure = FormatStructure.OneBankPerFile;
             IncludeUnusedLabels = false;
             PrintLabelSpecificComments = false;
-            FileOrFolderOutPath = ""; // path to output file or folder
-            wasInitialized = true;
             RomSizeOverride = -1;
             ErrorFilename = "errors.txt";
             OutputExtraWhitespace = true;
-        }
-
-        // return null if no error, or message if there is
-        public string Validate()
-        {
-            // for now, just make sure it was initialized somewhere by someone
-            if (!wasInitialized)
-                return "Not initialized";
-
-            // TODO: add more validation.
-
-            if (OutputToString)
-            {
-                if (Structure == LogCreator.FormatStructure.OneBankPerFile)
-                    return "Can't use one-bank-per-file output with string output";
-
-                if (FileOrFolderOutPath != "")
-                    return "Can't use one-bank-per-file output with file output";
-            }
-            else
-            {
-                if (FileOrFolderOutPath == "")
-                    return "No file path set";
-
-                if (!Directory.Exists(Path.GetDirectoryName(FileOrFolderOutPath)))
-                    return "File or folder output directory doesn't exist";
-
-                if (Structure == LogCreator.FormatStructure.SingleFile)
-                {
-                    // don't check for existence, just that what we have appears to be a filename and
-                    // not a directory.
-                    if (Path.GetFileName(FileOrFolderOutPath) == string.Empty)
-                        return "Output path doesn't appear to be a valid file selection";
-                }
-            }
-
-            return null;
+            FileOrFolderOutPath = ""; // path to output file or folder
         }
     }
 
+    public static class LogWriterSettingsExtensions
+    {
+        public static LogWriterSettings GetDefaultsIfInvalid(this LogWriterSettings @this) =>
+            @this.IsValid() ? @this : new LogWriterSettings();
+
+        public static string? Validate(this LogWriterSettings @this)
+        {
+            var results = new LogWriterSettingsValidator().Validate(@this);
+            return !results.IsValid ? results.ToString() : null;
+        }
+
+        public static bool IsValid(this LogWriterSettings @this) => 
+            @this.Validate() != null;
+    }
 }

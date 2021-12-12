@@ -9,6 +9,7 @@ using Diz.Core.import;
 using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
+using Diz.LogWriter;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
 
@@ -220,7 +221,7 @@ namespace DiztinGUIsh.controller
                 Data = Project.Data,
             };
 
-            LogCreator.OutputResult result = null;
+            LogCreatorOutput.OutputResult result = null;
             DoLongRunningTask(delegate { result = lc.CreateLog(); }, "Exporting assembly source code...");
 
             ProjectView.OnExportFinished(result);

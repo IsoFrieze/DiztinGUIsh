@@ -340,6 +340,12 @@
           "System.Resources.Extensions": "6.0.0",
           "System.Text.Encoding.CodePages": "6.0.0"
         }
+      },
+      "diz.logwriter": {
+        "type": "Project",
+        "dependencies": {
+          "Diz.Core": "3.0.0"
+        }
       }
     }
   }

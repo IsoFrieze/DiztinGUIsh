@@ -1,4 +1,5 @@
 ﻿using Diz.Core.export;
+using Diz.Core.model.snes;
 using DiztinGUIsh;
 
 namespace Diz.Core.model
@@ -86,7 +87,7 @@ namespace Diz.Core.model
 
         public Project()
         {
-            LogWriterSettings.SetDefaults();
+            logWriterSettings = new LogWriterSettings();
         }
 
         // don't access these backing fields directly, instead, always use the properties

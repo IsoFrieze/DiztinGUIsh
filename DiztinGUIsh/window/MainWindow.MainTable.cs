@@ -200,7 +200,7 @@ namespace DiztinGUIsh.window
                     e.Value = RomUtil.BoolToSize(Project.Data.GetXFlag(row));
                     break;
                 case 12:
-                    e.Value = Project.Data.GetComment(Project.Data.ConvertPCtoSnes(row));
+                    e.Value = Project.Data.GetCommentText(Project.Data.ConvertPCtoSnes(row));
                     break;
             }
         }

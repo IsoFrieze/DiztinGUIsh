@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Diz.Core.export;
 using Diz.Core.model;
 using JetBrains.Annotations;
 
@@ -29,13 +30,13 @@ namespace Diz.Core.util
                 .ToList()
                 .ForEach(item => collection.Remove(item));
         }
-            
+        
         public static void AddRange<TItem>(this ICollection<TItem> collection, IEnumerable<TItem> newItems)
         {
             foreach (var newItem in newItems) 
                 collection.Add(newItem);
         }
-
+        
         // https://stackoverflow.com/questions/703281/getting-path-relative-to-the-current-working-directory/703290#703290
         public static string GetRelativePath(string fileSpec, string folder)
         {
@@ -95,7 +96,7 @@ namespace Diz.Core.util
             }
             return "";
         }
-
+        
         public static string ToHexString6(int i)
         {
             return NumberToBaseString(i, NumberBase.Hexadecimal, 6);
@@ -301,7 +302,6 @@ namespace Diz.Core.util
             return color;
         }
         
-        
         public static (string stdout, string stderr) RunCommandGetOutput(string cmdExePath, string args)
         {
             var process = new Process
@@ -350,7 +350,7 @@ namespace Diz.Core.util
                     ? min
                     : i;
         }
-        
+
         public static bool IsBetween(int i, int max) => i >= 0 && i <= max;
         public static bool IsBetween(int i, int min, int max) => i >= min && i <= max;
 
@@ -362,7 +362,7 @@ namespace Diz.Core.util
                 remainder = "";
                 return;
             }
-    
+
             firstPart = instr.Substring(0, instr.IndexOf(','));
             remainder = instr.Substring(instr.IndexOf(',') + 1);
         }
@@ -386,7 +386,7 @@ namespace Diz.Core.util
         // considers them equal if any are true:
         // - both lists are null
         // - if one list is non-null, and the other contains zero elements
-        #if PORTING_FROM_V3_BRANCH // this isn't needed yet but will be part of v3.0.
+        #if DIZ_3_BRANCH // this isn't needed yet but will be part of v3.0.
         public static bool BothListsNullOrContainNoItems<T>(ICollection<T> c1, ICollection<T> c2)
         {
             return c1 switch
@@ -404,7 +404,7 @@ namespace Diz.Core.util
                 return true;
 
             return c1?.SequenceEqual(c2) ?? false;
-        }
+        } 
         #endif
     }
     
@@ -418,7 +418,10 @@ namespace Diz.Core.util
     
     public static class NotifyPropertyChangedExtensions
     {
-        // returns true if we set property to a new value
+        /// <summary>
+        /// Set a field, and if changed, dispatch any events associated with it
+        /// </summary>
+        /// <returns>true if we set property to a new value and dispatched events</returns>
         public static bool SetField<T>(this INotifyPropertyChanged sender, PropertyChangedEventHandler handler, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
             if (FieldIsEqual(field, value, compareRefOnly)) 
@@ -430,18 +433,25 @@ namespace Diz.Core.util
             return true;
         }
         
-        // returns true if we set property to a new value
+        /// <summary>
+        /// Set a field, and if changed, dispatch any events associated with it
+        /// </summary>
+        /// <returns>true if we set property to a new value and dispatched events</returns>
         public static bool SetField<T>(this INotifyPropertyChangedExt sender, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
         {
             if (FieldIsEqual(field, value, compareRefOnly)) 
                 return false;
             
             field = value;
-    
+            
             sender.OnPropertyChanged(propertyName);
             return true;
         }
 
+        /// <summary>
+        /// Test if one field is equal to another
+        /// </summary>
+        /// <returns>true if we equal</returns>
         public static bool FieldIsEqual<T>(T field, T value, bool compareRefOnly = false)
         {
             if (compareRefOnly)
@@ -460,12 +470,14 @@ namespace Diz.Core.util
 
     public static class ContentUtils
     {
-        public static Dictionary<int, Label> ReadLabelsFromCsv(string importFilename, ref int errLine)
+        public static Dictionary<int, Label> ReadLabelsFromCsv(string importFilename, out int errLine)
         {
             var newValues = new Dictionary<int, Label>();
             var lines = Util.ReadLines(importFilename).ToArray();
 
             var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
+
+            errLine = 0;
 
             // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
             // section. replace with something better
@@ -491,10 +503,10 @@ namespace Diz.Core.util
             return newValues;
         }
         
-        #if PORTING_FROM_V3_BRANCH // this isn't needed yet but will be part of v3.0.
+        #if DIZ_3_BRANCH // this isn't needed yet but will be part of v3.0.
         public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, ref int errLine)
         {
-            var labelsFromCsv = ReadLabelsFromCsv(importFilename, ref errLine);
+            var labelsFromCsv = ReadLabelsFromCsv(importFilename, out errLine);
             
             if (replaceAll)
                 labelProvider.DeleteAllLabels();

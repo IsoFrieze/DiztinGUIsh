@@ -1,5 +1,6 @@
 ﻿using System;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 
 namespace Diz.Core.import
 {

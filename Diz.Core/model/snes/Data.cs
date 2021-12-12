@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
+using System.Xml.Serialization;
 using Diz.Core.arch;
+using Diz.Core.export;
 using Diz.Core.util;
 using DiztinGUIsh;
 using IX.Observable;
 
-namespace Diz.Core.model
+namespace Diz.Core.model.snes
 {
-    public partial class Data : DizDataModel, IReadOnlySnesRomBase
+    public class Data : DizDataModel, ILogCreatorDataSource, ICpuOperableByteSource
     {
         // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something that operates on Data
         private readonly Cpu65C816 cpu65C816;
@@ -42,12 +43,6 @@ namespace Diz.Core.model
         {
             get => comments;
             set => SetField(ref comments, value);
-        }
-
-        public ObservableDictionary<int, Label> Labels
-        {
-            get => labels;
-            set => SetField(ref labels, value);
         }
 
         // RomBytes stored as PC file offset addresses (since ROM will always be mapped to disk)
@@ -173,56 +168,26 @@ namespace Diz.Core.model
             RomBytes[i].MFlag = ((mx & 0x20) != 0);
             RomBytes[i].XFlag = ((mx & 0x10) != 0);
         }
-        public string GetLabelName(int i)
-        {
-            if (Labels.TryGetValue(i, out var val)) 
-                return val?.Name ?? "";
-
-            return "";
-        }
-        public string GetLabelComment(int i)
-        {
-            if (Labels.TryGetValue(i, out var val)) 
-                return val?.Comment ?? "";
-
-            return "";
-        }
-
-        public void DeleteAllLabels()
-        {
-            Labels.Clear();
-        }
-
-        public void AddLabel(int offset, Label label, bool overwrite)
-        {
-            // adding null label removes it
-            if (label == null)
-            {
-                if (Labels.ContainsKey(offset))
-                    Labels.Remove(offset);
-
-                return;
-            }
-
-            if (overwrite)
-            {
-                if (Labels.ContainsKey(offset))
-                    Labels.Remove(offset);
-            }
-
-            if (!Labels.ContainsKey(offset))
-            {
-                label.CleanUp();
-                Labels.Add(offset, label);
-            }
-        }
-
+        
         public string GetComment(int i)
         {
             if (Comments.TryGetValue(i, out var val))
                 return val;
 
-            return GetLabelComment(i) ?? "";
+            return GetCommentText(i) ?? "";
+        }
+        
+        public string GetCommentText(int snesAddress)
+        {
+            // option 1: use the comment text first
+            var comment = GetComment(snesAddress);
+            if (!string.IsNullOrEmpty(comment))
+                return comment;
+
+            // option 2: if a real comment doesn't exist, try see if our label itself has a comment attached, display that.
+            // TODO: this is convenient for display but might mess up setting. we probably should do this
+            // only in views, remove from here.
+            return Labels.GetLabelComment(snesAddress) ?? "";
         }
 
         public void AddComment(int i, string v, bool overwrite)
@@ -242,6 +207,26 @@ namespace Diz.Core.model
             return RomUtil.ConvertPCtoSnes(offset, RomMapMode, RomSpeed);
         }
         public int GetRomByte(int i) => RomBytes[i].Rom;
+        int? IReadOnlyByteSource.GetRomWord(int offset)
+        {
+            return GetRomWord(offset);
+        }
+
+        int? IReadOnlyByteSource.GetRomLong(int offset)
+        {
+            return GetRomLong(offset);
+        }
+
+        int? IReadOnlyByteSource.GetRomDoubleWord(int offset)
+        {
+            return GetRomDoubleWord(offset);
+        }
+
+        byte? IReadOnlyByteSource.GetRomByte(int offset)
+        {
+            throw new NotImplementedException();
+        }
+
         public int GetRomWord(int offset)
         {
             if (offset + 1 < GetRomSize())
@@ -328,50 +313,6 @@ namespace Diz.Core.model
         public int ConvertSnesToPc(int address)
         {
             return RomUtil.ConvertSnesToPc(address, RomMapMode, GetRomSize());
-        }
-
-        public string GetPointer(int offset, int bytes)
-        {
-            var ia = -1;
-            string format = "", param = "";
-            switch (bytes)
-            {
-                case 2:
-                    ia = (GetDataBank(offset) << 16) | GetRomWord(offset);
-                    format = "dw {0}";
-                    param = Util.NumberToBaseString(GetRomWord(offset), Util.NumberBase.Hexadecimal, 4, true);
-                    break;
-                case 3:
-                    ia = GetRomLong(offset);
-                    format = "dl {0}";
-                    param = Util.NumberToBaseString(GetRomLong(offset), Util.NumberBase.Hexadecimal, 6, true);
-                    break;
-                case 4:
-                    ia = GetRomLong(offset);
-                    format = "dl {0}" +
-                             $" : db {Util.NumberToBaseString(GetRomByte(offset + 3), Util.NumberBase.Hexadecimal, 2, true)}";
-                    param = Util.NumberToBaseString(GetRomLong(offset), Util.NumberBase.Hexadecimal, 6, true);
-                    break;
-            }
-
-            var pc = ConvertSnesToPc(ia);
-            if (pc >= 0 && GetLabelName(ia) != "") param = GetLabelName(ia);
-            return string.Format(format, param);
-        }
-
-        public string GetFormattedText(int offset, int bytes)
-        {
-            var text = "db \"";
-            for (var i = 0; i < bytes; i++) text += (char)GetRomByte(offset + i);
-            return text + "\"";
-        }
-
-        public string GetDefaultLabel(int snes)
-        {
-            var pcoffset = ConvertSnesToPc(snes);
-            var prefix = RomUtil.TypeToLabel(GetFlag(pcoffset));
-            var labelAddress = Util.NumberToBaseString(snes, Util.NumberBase.Hexadecimal, 6);
-            return $"{prefix}_{labelAddress}";
         }
 
         public int Step(int offset, bool branch, bool force, int prevOffset)
@@ -638,7 +579,7 @@ namespace Diz.Core.model
         #region Equality
         protected bool Equals(Data other)
         {
-            return Labels.SequenceEqual(other.Labels) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
+            return Labels.Equals(other.Labels) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
         }
 
         public override bool Equals(object obj)
@@ -661,5 +602,9 @@ namespace Diz.Core.model
             }
         }
         #endregion
+
+        [XmlIgnore] public ILabelProvider Labels { get; protected init; }
+        [XmlIgnore] IReadOnlyLabelProvider IReadOnlyLabels.Labels => Labels;
+        [XmlIgnore] ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => Labels;
     }
 }

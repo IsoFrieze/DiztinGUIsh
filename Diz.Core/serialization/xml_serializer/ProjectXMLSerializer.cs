@@ -45,7 +45,7 @@ namespace Diz.Core.serialization.xml_serializer
             var rootElement = new Root
             {
                 SaveVersion = CurrentSaveFormatVersion,
-                Watermark = ProjectSerializer.Watermark,
+                Watermark = ProjectSerializer.DizWatermark,
                 Project = project,
             };
 
@@ -110,7 +110,7 @@ namespace Diz.Core.serialization.xml_serializer
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private static void RunIntegrityChecks(int saveVersion, string watermark)
         {
-            if (watermark != Watermark)
+            if (watermark != DizWatermark)
                 throw new InvalidDataException(
                     "This file doesn't appear to be a valid DiztinGUIsh XML file (missing/invalid watermark element in XML)");
             

@@ -2,13 +2,23 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Diz.Core.export;
 using Diz.Core.util;
 
-namespace Diz.Core.export
+namespace Diz.LogWriter
 {
     public abstract class LogCreatorOutput
     {
+        public class OutputResult
+        {
+            public bool Success;
+            public int ErrorCount = -1;
+            public LogCreator LogCreator;
+            public string OutputStr = ""; // this is only populated if outputString=true
+        }
+        
         protected LogCreator LogCreator;
+        public int ErrorCount { get; protected set; }
 
         public void Init(LogCreator logCreator)
         {
@@ -17,26 +27,33 @@ namespace Diz.Core.export
         }
 
         protected virtual void Init() { }
-        public virtual void Finish(LogCreator.OutputResult result) { }
-        public virtual void SwitchToBank(int bankNum) { }
+        public virtual void Finish(OutputResult result) { }
+        public virtual void SetBank(int bankNum) { }
         public virtual void SwitchToStream(string streamName, bool isErrorStream = false) { }
         public abstract void WriteLine(string line);
         public abstract void WriteErrorLine(string line);
 
+        public void WriteErrorLine(int offset, string msg)
+        {
+            ErrorCount++;
+            var offsetMsg = offset >= 0 ? $" Offset 0x{offset:X}" : "";
+            WriteErrorLine($"({ErrorCount}){offsetMsg}: {msg}");
+        }
+        
         protected bool ShouldOutput(string line) => !string.IsNullOrEmpty(line);
     }
 
     public class LogCreatorStringOutput : LogCreatorOutput
     {
-        protected StringBuilder OutputBuilder = new StringBuilder();
-        protected StringBuilder ErrorBuilder = new StringBuilder();
+        private readonly StringBuilder outputBuilder = new();
+        private readonly StringBuilder errorBuilder = new();
 
-        public string OutputString => OutputBuilder.ToString();
-        public string ErrorString => ErrorBuilder.ToString();
+        public string OutputString => outputBuilder.ToString();
+        public string ErrorString => errorBuilder.ToString();
 
         protected override void Init()
         {
-            Debug.Assert(LogCreator.Settings.OutputToString && LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile);
+            Debug.Assert(LogCreator.Settings.OutputToString && LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.SingleFile);
         }
 
         public override void WriteLine(string line)
@@ -44,12 +61,16 @@ namespace Diz.Core.export
             if (!ShouldOutput(line))
                 return;
             
-            OutputBuilder.AppendLine(line);
+            outputBuilder.AppendLine(line);
         }
 
-        public override void WriteErrorLine(string line) => ErrorBuilder.AppendLine(line);
+        public override void WriteErrorLine(string line)
+        {
+            ErrorCount++;
+            errorBuilder.AppendLine(line);
+        }
 
-        public override void Finish(LogCreator.OutputResult result)
+        public override void Finish(OutputResult result)
         {
             result.OutputStr = OutputString;
         }
@@ -57,29 +78,29 @@ namespace Diz.Core.export
 
     public class LogCreatorStreamOutput : LogCreatorOutput
     {
-        protected Dictionary<string, StreamWriter> OutputStreams = new Dictionary<string, StreamWriter>();
-        protected StreamWriter ErrorOutputStream;
+        private readonly Dictionary<string, StreamWriter> outputStreams = new();
+        private StreamWriter errorOutputStream;
 
         // references to stuff in outputStreams
         private string activeStreamName;
         private StreamWriter activeOutputStream;
 
-        protected string Folder;
-        protected string Filename; // if set to single file output moe.
+        private string folder;
+        private string filename; // if set to single file output mode.
 
         protected override void Init()
         {
             var basePath = LogCreator.Settings.FileOrFolderOutPath;
 
-            if (LogCreator.Settings.Structure == LogCreator.FormatStructure.OneBankPerFile)
+            if (LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.OneBankPerFile)
                 basePath += "\\"; // force it to treat it as a path. not the best way.
 
-            Folder = Path.GetDirectoryName(basePath);
+            folder = Path.GetDirectoryName(basePath);
 
-            if (LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile)
+            if (LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.SingleFile)
             {
-                Filename = Path.GetFileName(LogCreator.Settings.FileOrFolderOutPath);
-                SwitchToStream(Filename);
+                filename = Path.GetFileName(LogCreator.Settings.FileOrFolderOutPath);
+                SwitchToStream(filename);
             }
             else
             {
@@ -89,61 +110,61 @@ namespace Diz.Core.export
             SwitchToStream(LogCreator.Settings.ErrorFilename, isErrorStream: true);
         }
 
-        public override void Finish(LogCreator.OutputResult result)
+        public override void Finish(OutputResult result)
         {
-            foreach (var stream in OutputStreams)
+            foreach (var stream in outputStreams)
             {
                 stream.Value.Close();
             }
-            OutputStreams.Clear();
+            outputStreams.Clear();
 
             activeOutputStream = null;
-            ErrorOutputStream = null;
+            errorOutputStream = null;
             activeStreamName = "";
 
             if (result.ErrorCount == 0)
                 File.Delete(BuildStreamPath(LogCreator.Settings.ErrorFilename));
         }
 
-        public override void SwitchToBank(int bankNum)
+        public override void SetBank(int bankNum)
         {
             var bankStr = Util.NumberToBaseString(bankNum, Util.NumberBase.Hexadecimal, 2);
-            SwitchToStream($"bank_{ bankStr}");
+            SwitchToStream($"bank_{bankStr}");
         }
 
         public override void SwitchToStream(string streamName, bool isErrorStream = false)
         {
             // don't switch off the main file IF we're only supposed to be outputting one file
-            if (LogCreator.Settings.Structure == LogCreator.FormatStructure.SingleFile &&
+            if (LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.SingleFile &&
                 !string.IsNullOrEmpty(activeStreamName))
                 return;
 
-            var whichStream = OutputStreams.TryGetValue(streamName, out var outputStream) 
+            var whichStream = outputStreams.TryGetValue(streamName, out var outputStream) 
                 ? outputStream 
                 : OpenNewStream(streamName);
 
             if (!isErrorStream)
                 SetActiveStream(streamName, whichStream);
             else
-                ErrorOutputStream = whichStream;
+                errorOutputStream = whichStream;
         }
 
-        public void SetActiveStream(string streamName, StreamWriter streamWriter)
+        private void SetActiveStream(string streamName, StreamWriter streamWriter)
         {
             activeStreamName = streamName;
             activeOutputStream = streamWriter;
         }
 
-        protected virtual StreamWriter OpenNewStream(string streamName)
+        protected StreamWriter OpenNewStream(string streamName)
         {
             var streamWriter = new StreamWriter(BuildStreamPath(streamName));
-            OutputStreams.Add(streamName, streamWriter);
+            outputStreams.Add(streamName, streamWriter);
             return streamWriter;
         }
 
         private string BuildStreamPath(string streamName)
         {
-            var fullOutputPath = Path.Combine(Folder, streamName);
+            var fullOutputPath = Path.Combine(folder, streamName);
 
             if (!Path.HasExtension(fullOutputPath))
                 fullOutputPath += ".asm";
@@ -161,7 +182,8 @@ namespace Diz.Core.export
 
         public override void WriteErrorLine(string line)
         {
-            ErrorOutputStream?.WriteLine(line);
+            ErrorCount++;
+            errorOutputStream?.WriteLine(line);
         }
     }
 }

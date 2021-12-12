@@ -1,4 +1,5 @@
 ﻿using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 
 namespace Diz.Core.arch
@@ -252,7 +253,7 @@ namespace Diz.Core.arch
             if (address < 0) 
                 return "";
 
-            var label = data.GetLabelName(address);
+            var label = data.Labels.GetLabelName(address);
             if (label != "") 
                 return label;
 

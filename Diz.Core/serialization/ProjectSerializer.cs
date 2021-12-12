@@ -2,13 +2,12 @@
 using System.IO;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
-using Diz.Core.util;
 
 namespace Diz.Core.serialization
 {
     public abstract class ProjectSerializer
     {
-        public const string Watermark = "DiztinGUIsh";
+        public const string DizWatermark = "DiztinGUIsh";
 
         public abstract byte[] Save(Project project);
         public abstract (ProjectXmlSerializer.Root xmlRoot, string warning) Load(byte[] rawBytes);

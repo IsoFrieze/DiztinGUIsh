@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 using DiztinGUIsh.controller;
 using Label = Diz.Core.model.Label;

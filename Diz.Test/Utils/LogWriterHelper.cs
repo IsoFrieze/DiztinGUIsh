@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Diz.Core.export;
-using Diz.Core.model;
+using Diz.Core.model.snes;
+using Diz.LogWriter;
+using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Diz.Test.Utils
 {
-    public class LogWriterHelper
+    public static class LogWriterHelper
     {
         public class ParsedOutput
         {
@@ -92,7 +94,7 @@ namespace Diz.Test.Utils
                 .Select(line => ParseLine(line.Trim()))
                 .ToList();
 
-        public static void AssertAssemblyOutputEquals(string expectedRaw, LogCreator.OutputResult result, ITestOutputHelper testOutputHelper = null)
+        public static void AssertAssemblyOutputEquals(string expectedRaw, LogCreatorOutput.OutputResult result, ITestOutputHelper testOutputHelper = null)
         {
             testOutputHelper?.WriteLine("** EXPECTED **");
             testOutputHelper?.WriteLine(expectedRaw);
@@ -112,17 +114,15 @@ namespace Diz.Test.Utils
             Assert.Equal(expectedRaw, result.OutputStr);
         }
 
-        public static LogCreator.OutputResult ExportAssembly(Data inputRom, Action<LogCreator> postInitHook = null)
+        public static LogCreatorOutput.OutputResult ExportAssembly(Data inputRom, Action<LogCreator> postInitHook = null)
         {
-            var settings = new LogWriterSettings();
-            settings.SetDefaults();
-            settings.OutputToString = true;
-            settings.Structure = LogCreator.FormatStructure.SingleFile;
-
             var logCreator = new LogCreator
             {
                 Data = inputRom,
-                Settings = settings,
+                Settings = new LogWriterSettings {
+                    OutputToString = true,
+                    Structure = LogWriterSettings.FormatStructure.SingleFile
+                }
             };
             
             postInitHook?.Invoke(logCreator);
@@ -131,7 +131,7 @@ namespace Diz.Test.Utils
         }
 
         [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
-        private static void AssertGoodOutput(LogCreator.OutputResult result)
+        private static void AssertGoodOutput(LogCreatorOutput.OutputResult result)
         {
             Assert.True(result.LogCreator != null);
             Assert.True(result.OutputStr != null);
