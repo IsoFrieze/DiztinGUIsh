@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using Diz.Core.model.byteSources;
 using Diz.Core.util;
+
+#if DIZ_3_BRANCH
+using Diz.Core.model.byteSources;
+#endif
 
 namespace Diz.Core.model
 {
@@ -23,16 +26,17 @@ namespace Diz.Core.model
         int? GetRomDoubleWord(int offset);
     }
 
-    public interface ICommentProvider
-    {
-        Comment GetComment(int offset);
-        string GetCommentText(int snesAddress);
-    }
-
     public interface IRomMapProvider
     {
         RomMapMode RomMapMode { get; }
         RomSpeed RomSpeed { get; }
+    }
+
+    #if DIZ_3_BRANCH
+    public interface ICommentProvider
+    {
+        Comment GetComment(int offset);
+        string GetCommentText(int snesAddress);
     }
 
     public interface IAnnotationProvider
@@ -45,6 +49,7 @@ namespace Diz.Core.model
         ByteEntry BuildFlatByteEntryForSnes(int snesAddress);
         ByteEntry BuildFlatByteEntryForRom(int snesAddress);
     }
+    #endif
 
     public interface IReadOnlyLabels
     {
@@ -53,11 +58,13 @@ namespace Diz.Core.model
 
     public interface IReadOnlySnesRom : 
         IReadOnlyByteSource,
-        ISnesAddressConverter, 
-        ICommentProvider,
+        ISnesAddressConverter,
         IRomMapProvider,
+        #if DIZ_3_BRANCH
+        ICommentProvider,
         IAnnotationProvider,
         IByteGraphProvider,
+        #endif
         IReadOnlyLabels,
         IReadOnlySnesRomBase
     {
