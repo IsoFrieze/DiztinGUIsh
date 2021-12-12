@@ -1,5 +1,4 @@
-﻿using Diz.Controllers;
-using Diz.Controllers.interfaces;
+﻿using Diz.Controllers.interfaces;
 using Diz.Core.datasubset;
 using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
