@@ -48,6 +48,13 @@ namespace Diz.Core.util
             }
         }
 
+        public void ManualUpdate(int newStartIndex, int newRangeCount)
+        {
+            rangeStartIndex = ClampIndex(newStartIndex);
+            rangeCount = ClampCount(newRangeCount);
+            AssertValid();
+        }
+
         private void OnStartIndexChanged() => UpdateRangeCountToBounds();
         private void OnRangeCountChanged() => UpdateStartIndexToBounds();
 
