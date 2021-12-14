@@ -2,6 +2,9 @@
 using System.Diagnostics;
 using System.Linq;
 using Diz.Core.export;
+#if DIZ_3_BRANCH
+using Diz.Core.model.byteSources;
+#endif
 using Diz.Core.model.snes;
 
 namespace Diz.Core.model
@@ -15,22 +18,36 @@ namespace Diz.Core.model
     //
     // I think once things are further along, it should be possible to just use a new ByteSource that's overlaid
     // on top of SnesAddressSpace and add labels to just THAT.
-    public class LabelProvider : ILabelProvider
+    public abstract class LabelProviderBase
+    {
+        public abstract Label GetLabel(int snesAddress);
+        
+        public string GetLabelName(int snesAddress) => 
+            GetLabel(snesAddress)?.Name ?? "";
+
+        public string GetLabelComment(int snesAddress) => 
+            GetLabel(snesAddress)?.Comment ?? "";
+    }
+    
+    public class LabelProvider : LabelProviderBase, ILabelServiceWithTempLabels
     {
         public LabelProvider(Data data)
         {
             Data = data;
+            
             #if DIZ_3_BRANCH
-            NormalProvider = new NormalLabelProvider(data);
-            #endif
+            NormalProvider = new ByteSourceLabelProvider(data.SnesAddressSpace);
+            #else
             NormalProvider = new TemporaryLabelProvider();
+            #endif
+            
             TemporaryProvider = new TemporaryLabelProvider();
         }
         
         public Data Data { get; }
 
-        private TemporaryLabelProvider NormalProvider { get; }
-        private TemporaryLabelProvider TemporaryProvider { get; }
+        private ILabelService NormalProvider { get; }
+        private ILabelService TemporaryProvider { get; }
 
 
         // returns both real and temporary labels
@@ -44,7 +61,7 @@ namespace Diz.Core.model
 
         public void ClearTemporaryLabels()
         {
-            TemporaryProvider.ClearTemporaryLabels();
+            TemporaryProvider.DeleteAllLabels();
         }
 
         // probably a very expensive method, use sparingly
@@ -54,28 +71,16 @@ namespace Diz.Core.model
         public IEnumerable<KeyValuePair<int, Label>> Labels => 
             NormalProvider.Labels.Concat(TemporaryProvider.Labels);
 
-        public Label GetLabel(int snesAddress)
+        public override Label GetLabel(int snesAddress)
         {
             var normalExisting = NormalProvider.GetLabel(snesAddress);
             return normalExisting ?? TemporaryProvider.GetLabel(snesAddress);
         }
 
-        public string GetLabelName(int snesAddress)
-        {
-            var label = GetLabel(snesAddress);
-            return label?.Name ?? "";
-        }
-        
-        public string GetLabelComment(int snesAddress)
-        {
-            var label = GetLabel(snesAddress);
-            return label?.Comment ?? "";
-        }
-
         public void DeleteAllLabels()
         {
             NormalProvider.DeleteAllLabels();
-            TemporaryProvider.ClearTemporaryLabels();
+            TemporaryProvider.DeleteAllLabels();
         }
 
         public void RemoveLabel(int snesAddress)
@@ -95,31 +100,32 @@ namespace Diz.Core.model
     }
 
     #if DIZ_3_BRANCH
-    public class NormalLabelProvider
+    public class ByteSourceLabelProvider : LabelProviderBase, ILabelService
     {
-        private Data Data { get; }
+        private ByteSource ByteSource { get; }
         
-        public NormalLabelProvider(Data data)
+        // pass in topleve (i.e. Data.SnesAddressSpace)
+        public ByteSourceLabelProvider(ByteSource byteSource)
         {
-            Data = data;
+            ByteSource = byteSource;
         }
 
         public IEnumerable<KeyValuePair<int, Label>> Labels => 
-            Data.SnesAddressSpace.GetAnnotationsIncludingChildrenEnumerator<Label>();
+            ByteSource.GetAnnotationsIncludingChildrenEnumerator<Label>();
 
         public static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
         
         public void DeleteAllLabels()
         {
-            Data.SnesAddressSpace.RemoveAllAnnotations(IsLabel);
+            ByteSource.RemoveAllAnnotations(IsLabel);
         }
 
         public void RemoveLabel(int snesAddress)
         {
-            Data.SnesAddressSpace.RemoveAllAnnotationsAt(snesAddress, IsLabel);
+            ByteSource.RemoveAllAnnotationsAt(snesAddress, IsLabel);
         }
         
-        public Label GetLabel(int snesAddress) => Data.SnesAddressSpace.GetOneAnnotation<Label>(snesAddress);
+        public override Label GetLabel(int snesAddress) => ByteSource.GetOneAnnotation<Label>(snesAddress);
 
         public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite)
         {
@@ -128,20 +134,19 @@ namespace Diz.Core.model
             if (overwrite)
                 RemoveLabel(snesAddress);
 
-            var existing = Data.SnesAddressSpace.GetOneAnnotation<Label>(snesAddress);
+            var existing = ByteSource.GetOneAnnotation<Label>(snesAddress);
             
             if (existing == null)
-                Data.SnesAddressSpace.AddAnnotation(snesAddress, labelToAdd);
+                ByteSource.AddAnnotation(snesAddress, labelToAdd);
         }
     } 
     #endif
     
-    public class TemporaryLabelProvider
+    public class TemporaryLabelProvider : LabelProviderBase, ILabelService
     {
-        private Dictionary<int, Label> TempLabels { get; } = new();  // NEVER serialize
-        
-        public IEnumerable<KeyValuePair<int, Label>> Labels => TempLabels;
-        
+        private readonly Dictionary<int, Label> labels = new();
+        public IEnumerable<KeyValuePair<int, Label>> Labels => labels;
+
         public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite = false)
         {
             Debug.Assert(labelToAdd != null);
@@ -149,28 +154,23 @@ namespace Diz.Core.model
             if (overwrite)
                 RemoveLabel(snesAddress);
 
-            var existing = TempLabels.ContainsKey(snesAddress);
+            var existing = labels.ContainsKey(snesAddress);
 
             if (!existing)
-                TempLabels.Add(snesAddress, labelToAdd);
+                labels.Add(snesAddress, labelToAdd);
         }
 
-        public void ClearTemporaryLabels()
-        {
-            TempLabels.Clear();
-        }
-        
         public void DeleteAllLabels()
         {
-            ClearTemporaryLabels();
+            labels.Clear();
         }
         
-        public bool RemoveLabel(int snesAddress)
+        public void RemoveLabel(int snesAddress)
         {
-            return TempLabels.Remove(snesAddress);
+            labels.Remove(snesAddress);
         }
         
-        public Label GetLabel(int snesAddress) => 
-            TempLabels.TryGetValue(snesAddress, out var label) ? label : null;
+        public override Label GetLabel(int snesAddress) => 
+            labels.TryGetValue(snesAddress, out var label) ? label : null;
     }
 }

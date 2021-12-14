@@ -6,7 +6,7 @@ namespace Diz.Core.export
     {
         ITemporaryLabelProvider TemporaryLabelProvider { get; }
     }
-    
+
     // would love to redesign so we can get rid of this class and all this temporary label stuff.
     public interface ITemporaryLabelProvider
     {
@@ -15,13 +15,18 @@ namespace Diz.Core.export
         public void AddTemporaryLabel(int snesAddress, Label label);
         public void ClearTemporaryLabels();
     }
-    
-    public interface ILabelProvider : ITemporaryLabelProvider, IReadOnlyLabelProvider
+
+    public interface ILabelService : 
+        ILabelProvider,
+        IReadOnlyLabelProvider
     {
-        void AddLabel(int snesAddress, Label label, bool overwrite = false);
-        void DeleteAllLabels();
         
-        // if any labels exist at this address, remove them
-        void RemoveLabel(int snesAddress);
+    }
+    
+    public interface ILabelServiceWithTempLabels : 
+        ILabelService,
+        ITemporaryLabelProvider
+    {
+        
     }
 }

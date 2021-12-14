@@ -24,6 +24,15 @@ namespace Diz.Core.model
         string GetLabelComment(int snesAddress);
     }
     
+    public interface ILabelProvider
+    {
+        void AddLabel(int snesAddress, Label label, bool overwrite = false);
+        void DeleteAllLabels();
+        
+        // if any labels exist at this address, remove them
+        void RemoveLabel(int snesAddress);
+    }
+    
     public interface IReadOnlyByteSource
     {
         byte? GetRomByte(int offset);

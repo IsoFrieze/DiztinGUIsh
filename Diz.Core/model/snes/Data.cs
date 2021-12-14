@@ -604,7 +604,7 @@ namespace Diz.Core.model.snes
         }
         #endregion
 
-        [XmlIgnore] public ILabelProvider Labels { get; protected init; }
+        [XmlIgnore] public ILabelServiceWithTempLabels Labels { get; protected init; }
         [XmlIgnore] IReadOnlyLabelProvider IReadOnlyLabels.Labels => Labels;
         [XmlIgnore] ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => Labels;
         public event PropertyChangedEventHandler PropertyChanged;
