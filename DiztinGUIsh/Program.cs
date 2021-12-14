@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using Diz.Controllers.services;
 using Diz.Core.util;
 using DiztinGUIsh.window;
 
@@ -48,7 +49,7 @@ namespace DiztinGUIsh
             //
             // Plugins will need to explicitly register themselves with the container on startup
             Service.Container.RegisterFrom<DizUiCompositionRoot>();
-            // Service.Container.RegisterFrom<DizControllersCompositionRoot>();
+            Service.Container.RegisterFrom<DizControllersCompositionRoot>();
         }
     }
 }

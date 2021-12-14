@@ -45,7 +45,7 @@ namespace Diz.Core.serialization.xml_serializer
             var rootElement = new Root
             {
                 SaveVersion = CurrentSaveFormatVersion,
-                Watermark = ProjectSerializer.DizWatermark,
+                Watermark = DizWatermark,
                 Project = project,
             };
 

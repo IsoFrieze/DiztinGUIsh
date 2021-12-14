@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Diz.Controllers.interfaces;
+using Diz.Controllers.util;
 using Diz.Core.export;
 using Diz.Core.import;
 using Diz.Core.model;
@@ -202,6 +204,25 @@ namespace DiztinGUIsh.controller
             var project = ImportUtils.ImportRomAndCreateNewProject(importSettings);
             OnProjectOpenSuccess(project.ProjectFileName, project);
         }
+        
+        public void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll)
+        {
+            var importFilename = labelEditor.PromptForCsvFilename();
+            if (string.IsNullOrEmpty(importFilename))
+                return;
+
+            var errLine = 0;
+            try
+            {
+                Project.Data.Labels.ImportLabelsFromCsv(importFilename, replaceAll, ref errLine);
+                labelEditor.RepopulateFromData();
+            }
+            catch (Exception ex)
+            {
+                labelEditor.ShowLineItemError(ex.Message, errLine);
+            }
+        }
+
 
         private string AskToSelectNewRomFilename(string error)
         {
@@ -294,7 +315,7 @@ namespace DiztinGUIsh.controller
 
             return importer.CurrentStats.NumRomBytesModified;
         }
-
+        
         public void CloseProject()
         {
             if (Project == null)

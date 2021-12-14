@@ -4,6 +4,7 @@ using Diz.Core.model;
 using Diz.LogWriter;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
+using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
 {
@@ -105,21 +106,35 @@ namespace DiztinGUIsh.window
             ShowExportResults(result);
         }
 
-        private LogWriterSettings? PromptForExportSettingsAndConfirmation()
+        /// <summary>
+        /// shows the assembly export settings editor UI 
+        /// </summary>
+        /// <returns>non-null and valid settings object if all user selections are valid</returns>
+        private bool PromptForExportSettingsAndConfirmation()
         {
-            // TODO: use the controller to update the project settings from a new one we build
-            // don't update directly.
-            // probably make our Project property be fully readonly/const/whatever [ReadOnly] attribute
+            if (Project == null)
+                return false;
+            
+            // might want to rethink the directory data being passed around, flow is kinda awkward,
+            // can surely be simplified.
+            var initialPath = Project?.Session?.ProjectDirectory ?? "";
+            var exportDialog = new ExportDisassembly(Project.LogWriterSettings)
+            {
+                InitialDirForOutput = initialPath,
+                KeepPathsRelativeToThisPath = initialPath,
+            };
 
-            var selectedSettings = ExportDisassembly.ConfirmSettingsAndAskToStart(Project);
-            if (!selectedSettings.HasValue)
-                return null;
-
-            var settings = selectedSettings.Value;
-
-            ProjectController.UpdateExportSettings(selectedSettings.Value);
-
-            return settings;
+            var newValidatedSettings = GetExportSettingsFromDialog(exportDialog);
+            if (newValidatedSettings == null) 
+                return false;
+            
+            ProjectController.UpdateExportSettings(newValidatedSettings);
+            return true;
+        }
+        
+        private static LogWriterSettings GetExportSettingsFromDialog(ExportDisassembly export)
+        {
+            return export.ShowDialog() != DialogResult.OK ? null : export.ProposedSettings;
         }
 
         private void RememberNavigationPoint(int pcOffset, ISnesNavigation.HistoryArgs historyArgs)

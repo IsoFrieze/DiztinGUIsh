@@ -15,20 +15,28 @@ namespace Diz.Core.serialization.xml_serializer
             //
             // TODO: would be cool if these were stored as attributes on the classes themselves
             return new ConfigurationContainer()
-                
+
                 .Type<Project>()
                 .Member(x => x.UnsavedChanges).Ignore()
                 .Member(x => x.ProjectFileName).Ignore()
 
                 .Type<RomBytes>()
                 .Register().Serializer().Using(RomBytesSerializer.Default)
-                
+
                 .Type<Data>()
                 .UseOptimizedNamespaces()
                 .UseAutoFormatting()
-                
+                .EnableReferences()
+
                 .EnableImplicitTyping(typeof(Data))
-                .EnableImplicitTyping(typeof(Label));
+
+                .Type<Label>()
+                #if DIZ_3_BRANCH
+                .Name("L")
+                .Member(x => x.Comment).Name("Cmt").EmitWhen(text => !string.IsNullOrEmpty(text))
+                .Member(x => x.Name).Name("V").EmitWhen(text => !string.IsNullOrEmpty(text))
+                #endif
+                .EnableImplicitTyping();
         }
     }
 }

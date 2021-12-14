@@ -271,7 +271,6 @@ namespace Diz.Core.model
     // - comment: "this address is only used in RAM during battle sequences"
     public class Label : Annotation, IReadOnlyLabel, IComparable<Label>, IComparable
     {
-    
         private string comment = "";
         private string name = "";
 

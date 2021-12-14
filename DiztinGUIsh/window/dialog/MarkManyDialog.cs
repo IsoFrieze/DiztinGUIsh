@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Forms;
+using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
 
 // be careful modifying anything in this class, it's extremely fragile and hardcoded.
 

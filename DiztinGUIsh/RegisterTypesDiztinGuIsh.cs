@@ -1,3 +1,4 @@
+using Diz.Controllers.interfaces;
 using Diz.Core;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.util;

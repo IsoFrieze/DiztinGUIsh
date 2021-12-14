@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh;
 
 namespace Diz.Core.serialization
 {
-    public class ImportRomSettings : PropertyNotifyChanged
+    public class ImportRomSettings : INotifyPropertyChanged
     {
         private RomMapMode mode;
         private byte[] romBytes;
@@ -14,7 +14,7 @@ namespace Diz.Core.serialization
         public RomMapMode RomMapMode
         {
             get => mode;
-            set => SetField(ref mode, value);
+            set => this.SetField(PropertyChanged, ref mode, value);
         }
         
         public int RomSettingsOffset => RomUtil.GetRomSettingOffset(RomMapMode);
@@ -28,13 +28,15 @@ namespace Diz.Core.serialization
         public byte[] RomBytes
         {
             get => romBytes;
-            set => SetField(ref romBytes, value);
+            set => this.SetField(PropertyChanged, ref romBytes, value);
         }
 
         public string RomFilename
         {
             get => romFilename;
-            set => SetField(ref romFilename, value);
+            set => this.SetField(PropertyChanged, ref romFilename, value);
         }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Diz.Core.model;
+using Diz.Core.util;
 using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 
@@ -13,12 +12,12 @@ namespace DiztinGUIsh.window
     //
     // This can store some per-user settings that get saved locally.
     // Don't save anything important here though.
-    public class DizDocument : DizDataModel
+    public class DizDocument : INotifyPropertyChanged
     {
         public Project Project
         {
             get => project;
-            set => SetField(ref project, value, compareRefOnly: true);
+            set => this.SetField(PropertyChanged, ref project, value, compareRefOnly: true);
         }
 
         public string LastProjectFilename
@@ -27,7 +26,7 @@ namespace DiztinGUIsh.window
             set
             {
                 var lastOpenFile = Settings.Default.LastOpenedFile;
-                if (!SetField(ref lastOpenFile, value))
+                if (!this.SetField(PropertyChanged, ref lastOpenFile, value))
                     return;
 
                 Settings.Default.LastOpenedFile = lastOpenFile;
@@ -38,7 +37,7 @@ namespace DiztinGUIsh.window
         public BindingList<NavigationEntry> NavigationHistory
         {
             get => navigationHistory;
-            set => SetField(ref navigationHistory, value);
+            set => this.SetField(PropertyChanged, ref navigationHistory, value);
         }
         
         private Project project;
@@ -50,5 +49,7 @@ namespace DiztinGUIsh.window
             AllowRemove = false,
             AllowEdit = false,
         };
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

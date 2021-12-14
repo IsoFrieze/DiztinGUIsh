@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
 
 namespace Diz.Controllers.controllers
 {
     public class MarkManyController : IMarkManyController
     {
         public IDataRange DataRange { get; }
-        public IMarkManyView MarkManyView { get; }
         public IReadOnlySnesRomBase Data { get; }
+        public IMarkManyView MarkManyView { get; }
         public int DesiredStartingCount { get; set; } = 0x10;
 
         public MarkManyController(int offset, MarkCommand.MarkManyProperty initialProperty, IReadOnlySnesRomBase data, IMarkManyView view)

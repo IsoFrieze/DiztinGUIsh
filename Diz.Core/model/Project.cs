@@ -1,10 +1,16 @@
-﻿using Diz.Core.export;
+﻿#nullable enable
+
+using System.ComponentModel;
+using System.IO;
+using System.Xml.Serialization;
+using Diz.Core.export;
 using Diz.Core.model.snes;
-using DiztinGUIsh;
+using Diz.Core.util;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
-    public class Project : DizDataModel
+    public class Project : INotifyPropertyChanged, IProjectWithSession
     {
         // Any public properties will be automatically serialized to XML unless noted.
         // They will require a get AND set.
@@ -14,7 +20,7 @@ namespace Diz.Core.model
         public string ProjectFileName
         {
             get => projectFileName;
-            set => SetField(ref projectFileName, value);
+            set => this.SetField(PropertyChanged, ref projectFileName, value);
         }
 
         // not saved in XML
@@ -26,7 +32,7 @@ namespace Diz.Core.model
                 if (attachedRomFilename != value)
                     UnsavedChanges = true;
                 
-                SetField(ref attachedRomFilename, value);
+                this.SetField(PropertyChanged, ref attachedRomFilename, value);
             }
         }
 
@@ -34,8 +40,11 @@ namespace Diz.Core.model
         // for a lot of it.
         public bool UnsavedChanges
         {
-            get => unsavedChanges;
-            set => SetField(ref unsavedChanges, value);
+            get => Session?.UnsavedChanges ?? true;
+            set
+            {
+                if (Session != null) Session.UnsavedChanges = value;
+            }
         }
 
         // safety checks:
@@ -53,19 +62,19 @@ namespace Diz.Core.model
         public string InternalRomGameName
         {
             get => internalRomGameName;
-            set => SetField(ref internalRomGameName, value);
+            set => this.SetField(PropertyChanged, ref internalRomGameName, value);
         }
 
         public uint InternalCheckSum
         {
             get => internalCheckSum;
-            set => SetField(ref internalCheckSum, value);
+            set => this.SetField(PropertyChanged, ref internalCheckSum, value);
         }
 
         public LogWriterSettings LogWriterSettings
         {
             get => logWriterSettings;
-            set => SetField(ref logWriterSettings, value);
+            set => this.SetField(PropertyChanged, ref logWriterSettings, value);
         }
 
         // purely visual. what offset is currently being looked at in the main grid.
@@ -74,7 +83,7 @@ namespace Diz.Core.model
         public int CurrentViewOffset
         {
             get => currentViewOffset;
-            set => SetField(ref currentViewOffset, value);
+            set => this.SetField(PropertyChanged, ref currentViewOffset, value);
         }
 
         // needs to come last for serialization. this is the heart of the app, the actual
@@ -82,22 +91,83 @@ namespace Diz.Core.model
         public Data Data
         {
             get => data;
-            set => SetField(ref data, value);
+            set => this.SetField(PropertyChanged, ref data, value);
         }
+        
+        /// <summary>
+        /// Temporary session-specific data associated with this Project
+        /// </summary>
+        /// <remarks>
+        /// Never saved with XML, this is all temporary data that exists as long as its open
+        /// in the app, and no longer.
+        /// </remarks>
+        [XmlIgnore]
+        public IProjectSession? Session
+        {
+            get => session;
+            set
+            {
+                if (session != null)
+                    session.PropertyChanged -= SessionOnPropertyChanged;
+
+                this.SetField(PropertyChanged, ref session, value);
+                
+                if (session != null)
+                    session.PropertyChanged += SessionOnPropertyChanged;
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public Project()
         {
             logWriterSettings = new LogWriterSettings();
+            PropertyChanged += ProjectPropertyChanged;
+        }
+        
+        private string GetAbsolutePathToRomFile()
+        {
+            var pathToProjectFile = GetFullBasePathToRomFile(session?.ProjectFileName ?? "");
+            var attachedRomFileNoPath = Path.GetFileName(AttachedRomFilename);
+            return Path.Combine(pathToProjectFile, attachedRomFileNoPath);
+        }
+        
+        private string GetFullBasePathToRomFile(string projFileName)
+        {
+            var projDir = session?.ProjectDirectory ?? "";
+            if (projDir != "")
+                return projDir;
+                
+            return projFileName != "" ? Util.GetDirNameOrEmpty(projFileName) : "";
+        }
+        
+        private void SessionOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(IProjectSession.ProjectFileName):
+                    AttachedRomFilename = GetAbsolutePathToRomFile();
+                    break;
+            }
+            
+            PropertyChanged?.Invoke(sender, e);
+        }
+
+        private void ProjectPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            // try not to get too fancy in this method.
+            if (Session != null) 
+                Session.UnsavedChanges = true;
         }
 
         // don't access these backing fields directly, instead, always use the properties
         private string projectFileName;
         private string attachedRomFilename;
-        private bool unsavedChanges;
         private string internalRomGameName;
         private uint internalCheckSum;
-        private Data data;
+        [CanBeNull] private Data data;
         private LogWriterSettings logWriterSettings;
+        [CanBeNull] private IProjectSession session;
 
         public void CacheVerificationInfo()
         {
@@ -136,5 +206,59 @@ namespace Diz.Core.model
             }
         }
         #endregion
+    }
+    
+    public interface IProjectWithSession {
+        IProjectSession? Session { get; set; }
+        string AttachedRomFilename { get; }
+    }
+    
+    public interface IProjectSession : INotifyPropertyChanged
+    {
+        public string ProjectDirectory { get; }
+        string AttachedRomFileFullPath { get; }
+        string ProjectFileName { get; set; }
+        bool UnsavedChanges { get; set; }
+    }
+    
+    
+    /// <summary>
+    /// temporary data stored about the current project "session"
+    /// i.e. mostly stuff we don't want serialized to XML that may change
+    /// from run to run of the app (like working dir,etc)
+    /// stuff in here might want to be saved somewhere else. 
+    /// </summary>
+    public class ProjectSession : IProjectSession
+    {
+        // cache of the last filename this project was saved as.
+        // (This field may require some rework for GUI multi-project support)
+        public string ProjectFileName
+        {
+            get => projectFileName;
+            set => this.SetField(PropertyChanged, ref projectFileName, value);
+        }
+        
+        public bool UnsavedChanges
+        {
+            get => unsavedChanges;
+            set => this.SetField(PropertyChanged, ref unsavedChanges, value);
+        }
+        
+        public string ProjectDirectory =>
+            Util.GetDirNameOrEmpty(projectFileName);
+        
+        public string AttachedRomFileFullPath =>
+            Path.Combine(ProjectDirectory, project.AttachedRomFilename);
+
+        private string projectFileName = "";
+        private bool unsavedChanges;
+        private readonly IProjectWithSession project;
+
+        public ProjectSession(IProjectWithSession project)
+        {
+            this.project = project;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

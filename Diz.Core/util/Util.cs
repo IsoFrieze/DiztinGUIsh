@@ -502,7 +502,6 @@ namespace Diz.Core.util
             return newValues;
         }
         
-        #if DIZ_3_BRANCH // this isn't needed yet but will be part of v3.0.
         public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, ref int errLine)
         {
             var labelsFromCsv = ReadLabelsFromCsv(importFilename, out errLine);
@@ -515,8 +514,7 @@ namespace Diz.Core.util
                 labelProvider.AddLabel(key, value, true);
             }
         }
-        #endif
-        
+
         public static object SingleOrDefaultOfType<T>(this IEnumerable<T> enumerable, Type desiredType)
         {
             return enumerable.SingleOrDefault(item => item.GetType() == desiredType);

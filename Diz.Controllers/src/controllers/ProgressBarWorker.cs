@@ -2,11 +2,12 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Diz.Controllers.interfaces;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
+using ExtendedXmlSerializer.Configuration;
 using LightInject;
 
-namespace DiztinGUIsh.util
+namespace Diz.Controllers.controllers
 {
     // TODO: replace this with Task and async/await. don't use threads directly.
     public abstract class ProgressBarWorker
@@ -48,6 +49,8 @@ namespace DiztinGUIsh.util
             isRunning = true;
 
             Debug.Assert(View != null);
+            
+            
             View.IsMarquee = IsMarquee;
             View.TextOverride = TextOverride;
 

@@ -1,6 +1,7 @@
 ﻿// everything here was migrated to AccessTests.cs
 
 using System.Collections.Generic;
+using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
@@ -12,34 +13,43 @@ namespace Diz.Test
 {
     public static class CpuTests
     {
-        private static Data GetSampleData() => new()
+        private static Data GetSampleData()
         {
-            RomMapMode = RomMapMode.HiRom,
-            RomSpeed = RomSpeed.FastRom,
-            RomBytes = new RomBytes
+            var data = new Data
             {
-                // starts at PC=0, which is SNES=0xC00000
-                // STA.W SNES_VMADDL
-                // OR (equivalent)
-                // STA.W $2116
-                new()
+                RomMapMode = RomMapMode.HiRom,
+                RomSpeed = RomSpeed.FastRom,
+                RomBytes = new RomBytes
                 {
-                    Rom = 0x8D, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, DataBank = 0x00,
-                    DirectPage = 0,
+                    // starts at PC=0, which is SNES=0xC00000
+                    // STA.W SNES_VMADDL
+                    // OR (equivalent)
+                    // STA.W $2116
+                    new()
+                    {
+                        Rom = 0x8D, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, DataBank = 0x00,
+                        DirectPage = 0,
+                    },
+                    new() { Rom = 0x16, TypeFlag = FlagType.Operand },
+                    new() { Rom = 0x21, TypeFlag = FlagType.Operand },
                 },
-                new() {Rom = 0x16, TypeFlag = FlagType.Operand},
-                new() {Rom = 0x21, TypeFlag = FlagType.Operand},
-            },
-            Comments = new ObservableDictionary<int, string>()
-            {
-                {0xC00001, "unused"},
-            },
-            Labels = new ObservableDictionary<int, Label>()
-            {
-                {0x002116, new Label {Name = "SNES_VMADDL", Comment = "SNES hardware register example."}},
-            },
-        };
-        
+                Comments = new ObservableDictionary<int, string>()
+                {
+                    { 0xC00001, "unused" },
+                }
+            };
+
+            new Dictionary<int, Label>
+                {
+                    {0x002116, new Label { Name = "SNES_VMADDL", Comment = "SNES hardware register example." }}
+                }
+                .ForEach(kvp =>
+                    data.Labels.AddLabel(kvp.Key, kvp.Value)
+                );
+            
+            return data;
+        }
+
         public static IReadOnlyList<byte> AssemblyRom => AsarRunner.AssembleToRom(@"
             hirom
 
@@ -60,8 +70,8 @@ namespace Diz.Test
             Assert.Equal(0x21, data.GetRomByte(2));
             Assert.Equal(3, data.GetRomSize());
 
-            Assert.Equal("SNES_VMADDL", data.GetLabelName(0x2116));
-            Assert.Equal("", data.GetLabelName(0x2119)); // bogus address
+            Assert.Equal("SNES_VMADDL", data.Labels.GetLabel(0x2116).Name);
+            Assert.Null(data.Labels.GetLabel(0x2119)); // bogus address
             // Assert.Equal("SNES_VMADDL", data.GetLabelName(0x7E2116)); // later, we need this to ALSO work
         }
 

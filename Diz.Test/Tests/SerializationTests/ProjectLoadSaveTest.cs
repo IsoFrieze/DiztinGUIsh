@@ -23,7 +23,7 @@ namespace Diz.Test
             var expectedTitle = SampleRomData.GetSampleUtf8CartridgeTitle();
 
             srcProject.Data.Comments.Count.Should().BeGreaterThan(0);
-            srcProject.Data.Labels.Count.Should().BeGreaterThan(0);
+            srcProject.Data.Labels.Labels.Count().Should().BeGreaterThan(0);
 
             // extract the bytes that would normally be in the SMC file (they only exist in code for this sample data)
             var romFileBytes = srcProject.Data.GetFileBytes().ToList();
@@ -41,10 +41,11 @@ namespace Diz.Test
             // now we can do a full compare between the original project, and the project which has been cycled through
             // serialization and deserialization
             Assert.True(warning == "");
+            Assert.True(srcProject.Data.Labels.Equals(deserializedProject.Project.Data.Labels));
             Assert.True(srcProject.Equals(deserializedProject.Project));
             
             deserializedProject.Project.Data.Comments.Count.Should().BeGreaterThan(0);
-            deserializedProject.Project.Data.Labels.Count.Should().BeGreaterThan(0);
+            deserializedProject.Project.Data.Labels.Labels.Count().Should().BeGreaterThan(0);
 
             CartNameTests.TestRomCartTitle(deserializedProject.Project, expectedTitle);
         }

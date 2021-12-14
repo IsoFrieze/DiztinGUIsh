@@ -1,11 +1,12 @@
-﻿using System.Threading;
-using DiztinGUIsh;
+﻿using System.ComponentModel;
+using System.Threading;
+using Diz.Core.util;
 
 namespace Diz.Core.model
 {
     // represents metadata associated with each byte of the ROM
     // RomByteData is just the data itself with as little associated fluff as possible 
-    public class RomByteData : DizDataModel
+    public class RomByteData : INotifyPropertyChangedExt
     {
         // never modify directly. only go through the public fields
         private byte rom;
@@ -21,50 +22,50 @@ namespace Diz.Core.model
         public byte Rom
         {
             get => rom;
-            set => SetField(ref rom, value);
+            set => this.SetField(PropertyChanged, ref rom, value);
         } // never serialize this, read from ROM on load. (for copyright reasons)
 
         // everything else is metadata that describes the source byte above
         public byte DataBank
         {
             get => dataBank;
-            set => SetField(ref dataBank, value);
+            set => this.SetField(PropertyChanged, ref dataBank, value);
         }
 
         public int DirectPage
         {
             get => directPage;
-            set => SetField(ref directPage, value);
+            set => this.SetField(PropertyChanged, ref directPage, value);
         }
 
         public bool XFlag
         {
             get => xFlag;
-            set => SetField(ref xFlag, value);
+            set => this.SetField(PropertyChanged, ref xFlag, value);
         }
 
         public bool MFlag
         {
             get => mFlag;
-            set => SetField(ref mFlag, value);
+            set => this.SetField(PropertyChanged, ref mFlag, value);
         }
 
         public FlagType TypeFlag
         {
             get => typeFlag;
-            set => SetField(ref typeFlag, value);
+            set => this.SetField(PropertyChanged, ref typeFlag, value);
         }
 
         public Architecture Arch
         {
             get => arch;
-            set => SetField(ref arch, value);
+            set => this.SetField(PropertyChanged, ref arch, value);
         }
 
         public InOutPoint Point
         {
             get => point;
-            set => SetField(ref point, value);
+            set => this.SetField(PropertyChanged, ref point, value);
         }
 
         // don't serialize. cached copy of our offset in parent collection
@@ -112,6 +113,11 @@ namespace Diz.Core.model
             }
         }
         #endregion
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public void OnPropertyChanged(string propertyName)
+        {
+        }
     }
 
     // wrap RomByteData with extra helper stuff like locking

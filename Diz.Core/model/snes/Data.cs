@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using Diz.Core.arch;
 using Diz.Core.export;
 using Diz.Core.util;
-using DiztinGUIsh;
 using IX.Observable;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model.snes
 {
-    public class Data : DizDataModel, ILogCreatorDataSource, ICpuOperableByteSource
+    public class Data : ILogCreatorDataSource, ICpuOperableByteSource, INotifyPropertyChanged
     {
         // TODO: this really shouldn't be in Data, move to an outside 'SNESSystem' class or something that operates on Data
         private readonly Cpu65C816 cpu65C816;
@@ -20,7 +22,6 @@ namespace Diz.Core.model.snes
         private RomMapMode romMapMode;
         private RomSpeed romSpeed = RomSpeed.Unknown;
         private ObservableDictionary<int, string> comments;
-        private ObservableDictionary<int, Label> labels;
         private RomBytes romBytes;
 
         // Note: order of these public properties matters for the load/save process. Keep 'RomBytes' LAST
@@ -29,33 +30,33 @@ namespace Diz.Core.model.snes
         public RomMapMode RomMapMode
         {
             get => romMapMode;
-            set => SetField(ref romMapMode, value);
+            set => this.SetField(PropertyChanged, ref romMapMode, value);
         }
 
         public RomSpeed RomSpeed
         {
             get => romSpeed;
-            set => SetField(ref romSpeed, value);
+            set => this.SetField(PropertyChanged, ref romSpeed, value);
         }
 
         // next 2 dictionaries store in SNES address format (since memory labels can't be represented as a PC address)
         public ObservableDictionary<int, string> Comments
         {
             get => comments;
-            set => SetField(ref comments, value);
+            set => this.SetField(PropertyChanged, ref comments, value);
         }
 
         // RomBytes stored as PC file offset addresses (since ROM will always be mapped to disk)
         public RomBytes RomBytes
         {
             get => romBytes;
-            set => SetField(ref romBytes, value);
+            set => this.SetField(PropertyChanged, ref romBytes, value);
         }
 
         public Data()
         {
             comments = new ObservableDictionary<int, string>();
-            labels = new ObservableDictionary<int, Label>();
+            Labels = new LabelProvider(this);
             romBytes = new RomBytes();
             cpu65C816 = new Cpu65C816(this);
         }
@@ -606,5 +607,6 @@ namespace Diz.Core.model.snes
         [XmlIgnore] public ILabelProvider Labels { get; protected init; }
         [XmlIgnore] IReadOnlyLabelProvider IReadOnlyLabels.Labels => Labels;
         [XmlIgnore] ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => Labels;
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

@@ -43,14 +43,12 @@ namespace DiztinGUIsh.window
 
             ProjectController.ImportRomAndCreateNewProject(openFileDialog.FileName);
         }
-        
+
         private void ExportAssembly()
         {
-            var adjustedSettings = PromptForExportSettingsAndConfirmation();
-            if (!adjustedSettings.HasValue)
+            if (!PromptForExportSettingsAndConfirmation())
                 return;
 
-            ProjectController.UpdateExportSettings(adjustedSettings.Value);
             ProjectController.WriteAssemblyOutput();
         }
 

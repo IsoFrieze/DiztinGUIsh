@@ -162,7 +162,7 @@ namespace DiztinGUIsh.window
             switch (e.ColumnIndex)
             {
                 case 0:
-                    e.Value = Project.Data.GetLabelName(Project.Data.ConvertPCtoSnes(row));
+                    e.Value = Project.Data.Labels.GetLabelName(Project.Data.ConvertPCtoSnes(row));
                     break;
                 case 1:
                     e.Value = Util.NumberToBaseString(Project.Data.ConvertPCtoSnes(row), Util.NumberBase.Hexadecimal, 6);
@@ -214,7 +214,7 @@ namespace DiztinGUIsh.window
             switch (e.ColumnIndex)
             {
                 case 0:
-                    Project.Data.AddLabel(Project.Data.ConvertPCtoSnes(row), new Diz.Core.model.Label() { Name = value }, true);
+                    Project.Data.Labels.AddLabel(Project.Data.ConvertPCtoSnes(row), new Diz.Core.model.Label() { Name = value }, true);
                     break; // todo (validate for valid label characters)
                 case 8:
                     if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.SetDataBank(row, result);

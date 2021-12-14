@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.commands;
 using Diz.Core.export;
 using Diz.LogWriter;
@@ -138,7 +139,7 @@ namespace DiztinGUIsh.window
 
         private Dictionary<MarkCommand.MarkManyProperty, object> SavedMarkManySettings { get; set; } = new();
         
-        private IMarkManyController CreateMarkManyController(int offset, MarkCommand.MarkManyProperty property)
+        private MarkManyController CreateMarkManyController(int offset, MarkCommand.MarkManyProperty property)
         {
             // NOTE: in upstream 3.0 branch, replace this with dependency injection
             var view = new MarkManyView();
