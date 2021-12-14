@@ -204,7 +204,7 @@ namespace Diz.Test.Tests.RomInterfaceTests
             byteSourceSparse.IsValidIndex(0).Should().Be(true);
             byteSourceSparse.Bytes[0].Should().Be(null);
             byteSourceSparse.Bytes.Should().BeOfType(typeof(StorageSparse<ByteEntry>));
-            byteSourceSparse.Invoking(x => x.RemoveAllAnnotationsAt(0, NormalLabelProvider.IsLabel))
+            byteSourceSparse.Invoking(x => x.RemoveAllAnnotationsAt(0, ByteSourceLabelProvider.IsLabel))
                 .Should().NotThrow<NullReferenceException>();
         }
 

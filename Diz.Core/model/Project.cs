@@ -9,6 +9,8 @@ using Diz.Core.util;
 
 namespace Diz.Core.model
 {
+    
+    
     /// <summary>
     /// Any public properties will be automatically serialized to XML unless noted.
     /// They will require a get AND set. Order is important. 
