@@ -28,8 +28,12 @@ namespace Diz.Core.serialization.xml_serializer
                 .Name("Labels")
                 .UseOptimizedNamespaces()
                 .UseAutoFormatting()
+                
+#if DIZ_3_BRANCH
                 .EnableReferences()
-                .EnableImplicitTyping()
+#endif
+                
+                .EnableImplicitTyping(typeof(Data))
 
                 .Type<Label>()
 #if DIZ_3_BRANCH
