@@ -54,7 +54,7 @@ namespace Diz.Core.model.snes
         public Data()
         {
             SnesAddressSpace = RomUtil.CreateSnesAddressSpace();
-            Labels = new LabelProvider(this);
+            Labels = new LabelsServiceWithTemp(this);
         }
 
         // NOTE: specially named parameterized constructor for XML serializer
@@ -68,7 +68,7 @@ namespace Diz.Core.model.snes
         {
             var output = new byte[count];
             for (var i = 0; i < output.Length; i++)
-                output[i] = (byte)GetRomByte(pcOffset + i);
+                output[i] = GetRomByte(pcOffset + i) ?? 0;
 
             return output;
         }
@@ -85,8 +85,8 @@ namespace Diz.Core.model.snes
                 GetRomBytes(CartridgeTitleStartingOffset, RomUtil.LengthOfTitleName)
             );
 
-        public uint RomComplement => (uint) GetRomWord(RomComplementOffset);
-        public uint RomChecksum => (uint) GetRomWord(RomChecksumOffset);
+        public uint RomComplement => (uint)(GetRomWord(RomComplementOffset) ?? 0);
+        public uint RomChecksum => (uint)(GetRomWord(RomChecksumOffset) ?? 0);
         public uint RomCheckSumsFromRomBytes => (RomChecksum << 16) | RomComplement;
         
         // recalculates the checksum and then modifies the internal bytes in the ROM so it contains
