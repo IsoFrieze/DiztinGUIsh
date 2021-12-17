@@ -31,7 +31,7 @@ namespace DiztinGUIsh.window
         public void UpdateWindowTitle()
         {
             Text =
-                (Project.UnsavedChanges ? "*" : "") +
+                (Project.Session?.UnsavedChanges ?? true ? "*" : "") +
                 (Project.ProjectFileName ?? "New Project") +
                 " - DiztinGUIsh";
         }

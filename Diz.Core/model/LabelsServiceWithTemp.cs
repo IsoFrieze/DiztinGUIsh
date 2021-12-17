@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Xml.Serialization;
 using Diz.Core.export;
 #if DIZ_3_BRANCH
 using Diz.Core.model.byteSources;
@@ -29,24 +32,27 @@ namespace Diz.Core.model
             GetLabel(snesAddress)?.Comment ?? "";
     }
     
-    public class LabelProvider : LabelProviderBase, ILabelServiceWithTempLabels
+    public class LabelsServiceWithTemp : LabelProviderBase, ILabelServiceWithTempLabels, IEquatable<LabelsServiceWithTemp>
     {
-        public LabelProvider(Data data)
+        public LabelsServiceWithTemp(Data data)
         {
             Data = data;
             
             #if DIZ_3_BRANCH
             NormalProvider = new ByteSourceLabelProvider(data.SnesAddressSpace);
             #else
-            NormalProvider = new TemporaryLabelProvider();
+            NormalProvider = new LabelsCollection();
             #endif
             
-            TemporaryProvider = new TemporaryLabelProvider();
+            TemporaryProvider = new LabelsCollection();
         }
         
+        [XmlIgnore] 
         public Data Data { get; }
 
         private ILabelService NormalProvider { get; }
+        
+        [XmlIgnore] 
         private ILabelService TemporaryProvider { get; }
 
 
@@ -97,11 +103,85 @@ namespace Diz.Core.model
             
             NormalProvider.AddLabel(snesAddress, labelToAdd, overwrite);
         }
+
+        public void SetAll(Dictionary<int, Label> newLabels)
+        {
+            ClearTemporaryLabels();
+            NormalProvider.SetAll(newLabels);
+        }
+        
+        #region "Equality"
+        public bool Equals(LabelsServiceWithTemp other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Labels.SequenceEqual(other.Labels); // expensive, allocates memory for copy. probably ok though.
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((LabelsServiceWithTemp)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (Data != null ? Data.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (NormalProvider != null ? NormalProvider.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (TemporaryProvider != null ? TemporaryProvider.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
+        public static bool operator ==(LabelsServiceWithTemp left, LabelsServiceWithTemp right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(LabelsServiceWithTemp left, LabelsServiceWithTemp right)
+        {
+            return !Equals(left, right);
+        }
+        #endregion
     }
 
     #if DIZ_3_BRANCH
-    public class ByteSourceLabelProvider : LabelProviderBase, ILabelService
+    public class ByteSourceLabelProvider : LabelProviderBase, ILabelService, IEquatable<ByteSourceLabelProvider>
     {
+        public bool Equals(ByteSourceLabelProvider other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return ByteSource.ReferenceEquals(other.ByteSource);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ByteSourceLabelProvider)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return ByteSource.GetHashCode();
+        }
+
+        public static bool operator ==(ByteSourceLabelProvider left, ByteSourceLabelProvider right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(ByteSourceLabelProvider left, ByteSourceLabelProvider right)
+        {
+            return !Equals(left, right);
+        }
+
         private ByteSource ByteSource { get; }
         
         // pass in topleve (i.e. Data.SnesAddressSpace)
@@ -142,10 +222,13 @@ namespace Diz.Core.model
     } 
     #endif
     
-    public class TemporaryLabelProvider : LabelProviderBase, ILabelService
+    public class LabelsCollection : LabelProviderBase, ILabelService, IEquatable<LabelsCollection>
     {
-        private readonly Dictionary<int, Label> labels = new();
-        public IEnumerable<KeyValuePair<int, Label>> Labels => labels;
+        // ReSharper disable once MemberCanBePrivate.Global
+        public Dictionary<int, Label> Labels { get; } = new();
+        
+        [XmlIgnore]
+        IEnumerable<KeyValuePair<int, Label>> IReadOnlyLabelProvider.Labels => Labels;
 
         public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite = false)
         {
@@ -154,23 +237,64 @@ namespace Diz.Core.model
             if (overwrite)
                 RemoveLabel(snesAddress);
 
-            var existing = labels.ContainsKey(snesAddress);
+            var existing = Labels.ContainsKey(snesAddress);
 
             if (!existing)
-                labels.Add(snesAddress, labelToAdd);
+                Labels.Add(snesAddress, labelToAdd);
         }
 
         public void DeleteAllLabels()
         {
-            labels.Clear();
+            Labels.Clear();
         }
         
         public void RemoveLabel(int snesAddress)
         {
-            labels.Remove(snesAddress);
+            Labels.Remove(snesAddress);
         }
-        
+
+        public void SetAll(Dictionary<int, Label> newLabels)
+        {
+            DeleteAllLabels();
+            foreach (var key in newLabels.Keys)
+            {
+                Labels.Add(key, newLabels[key]);
+            }
+        }
+
         public override Label GetLabel(int snesAddress) => 
-            labels.TryGetValue(snesAddress, out var label) ? label : null;
+            Labels.TryGetValue(snesAddress, out var label) ? label : null;
+        
+        #region "Equality"
+        public bool Equals(LabelsCollection other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(Labels, other.Labels);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((LabelsCollection)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Labels != null ? Labels.GetHashCode() : 0);
+        }
+
+        public static bool operator ==(LabelsCollection left, LabelsCollection right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(LabelsCollection left, LabelsCollection right)
+        {
+            return !Equals(left, right);
+        }
+        #endregion
     }
 }

@@ -17,7 +17,7 @@ namespace DiztinGUIsh.window
     {
         private bool PromptContinueEvenIfUnsavedChanges()
         {
-            if (Project == null || !Project.UnsavedChanges)
+            if (Project == null || !(Project.Session?.UnsavedChanges ?? true))
                 return true;
 
             return DialogResult.OK == MessageBox.Show(

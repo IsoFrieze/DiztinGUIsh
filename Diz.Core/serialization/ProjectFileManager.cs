@@ -108,7 +108,7 @@ namespace Diz.Core.serialization
             var data = DoSave(project, filename, serializer);
 
             WriteBytes(filename, data);
-            project.UnsavedChanges = false;
+            if (project.Session != null) project.Session.UnsavedChanges = false;
             project.ProjectFileName = filename;
         }
 

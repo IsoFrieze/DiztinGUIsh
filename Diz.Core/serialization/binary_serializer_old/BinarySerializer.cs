@@ -128,7 +128,8 @@ namespace Diz.Core.serialization.binary_serializer_old
             ReadComments(project, data, ref pointer, converter);
 
             #if !DIZ_3_BRANCH
-            project.UnsavedChanges = false;
+            if (project.Session != null) 
+                project.Session.UnsavedChanges = false;
             #endif
 
             var warning = "";

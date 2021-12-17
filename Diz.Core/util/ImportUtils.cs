@@ -104,7 +104,8 @@ namespace Diz.Core.util
                 project.Data.SetFlag(pair.Key, pair.Value);
 
             project.CacheVerificationInfo();
-            project.UnsavedChanges = true;
+            if (project.Session != null) 
+                project.Session.UnsavedChanges = true;
 
             return project;
         }

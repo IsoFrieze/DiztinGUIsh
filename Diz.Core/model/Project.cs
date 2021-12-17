@@ -30,20 +30,11 @@ namespace Diz.Core.model
             set
             {
                 if (attachedRomFilename != value)
-                    UnsavedChanges = true;
-                
-                this.SetField(PropertyChanged, ref attachedRomFilename, value);
-            }
-        }
+                {
+                    if (Session != null) Session.UnsavedChanges = true;
+                }
 
-        // would be cool to make this more automatic. probably hook into SetField()
-        // for a lot of it.
-        public bool UnsavedChanges
-        {
-            get => Session?.UnsavedChanges ?? true;
-            set
-            {
-                if (Session != null) Session.UnsavedChanges = value;
+                this.SetField(PropertyChanged, ref attachedRomFilename, value);
             }
         }
 

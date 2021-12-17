@@ -31,6 +31,8 @@ namespace Diz.Core.model
         
         // if any labels exist at this address, remove them
         void RemoveLabel(int snesAddress);
+
+        void SetAll(Dictionary<int, Label> newLabels);
     }
     
     public interface IReadOnlyByteSource

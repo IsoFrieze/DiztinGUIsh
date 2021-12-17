@@ -1,4 +1,5 @@
-﻿using Diz.Core.model;
+﻿using System;
+using Diz.Core.model;
 using Diz.Core.model.snes;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
@@ -17,25 +18,25 @@ namespace Diz.Core.serialization.xml_serializer
             return new ConfigurationContainer()
 
                 .Type<Project>()
-                .Member(x => x.UnsavedChanges).Ignore()
                 .Member(x => x.ProjectFileName).Ignore()
 
                 .Type<RomBytes>()
                 .Register().Serializer().Using(RomBytesSerializer.Default)
 
                 .Type<Data>()
+                .Member(x => x.LabelsSerialization)
+                .Name("Labels")
                 .UseOptimizedNamespaces()
                 .UseAutoFormatting()
                 .EnableReferences()
-
-                .EnableImplicitTyping(typeof(Data))
+                .EnableImplicitTyping()
 
                 .Type<Label>()
-                #if DIZ_3_BRANCH
+#if DIZ_3_BRANCH
                 .Name("L")
                 .Member(x => x.Comment).Name("Cmt").EmitWhen(text => !string.IsNullOrEmpty(text))
                 .Member(x => x.Name).Name("V").EmitWhen(text => !string.IsNullOrEmpty(text))
-                #endif
+#endif
                 .EnableImplicitTyping();
         }
     }

@@ -45,6 +45,15 @@ namespace Diz.Core.model.snes
             get => comments;
             set => this.SetField(PropertyChanged, ref comments, value);
         }
+        
+        // for deserialization/loading in Diz2.0
+        // this is kind of a hack needs rework. would be better to ditch this and write some kind of custom
+        // deserializer that handles this instead
+        public Dictionary<int, Label> LabelsSerialization
+        {
+            get => new(Labels.Labels);
+            set => Labels.SetAll(value);
+        }
 
         // RomBytes stored as PC file offset addresses (since ROM will always be mapped to disk)
         public RomBytes RomBytes
@@ -56,7 +65,7 @@ namespace Diz.Core.model.snes
         public Data()
         {
             comments = new ObservableDictionary<int, string>();
-            Labels = new LabelProvider(this);
+            Labels = new LabelsServiceWithTemp(this);
             romBytes = new RomBytes();
             cpu65C816 = new Cpu65C816(this);
         }
@@ -604,9 +613,11 @@ namespace Diz.Core.model.snes
         }
         #endregion
 
-        [XmlIgnore] public ILabelServiceWithTempLabels Labels { get; protected init; }
+        
+        [XmlIgnore] public LabelsServiceWithTemp Labels { get; protected init; }
         [XmlIgnore] IReadOnlyLabelProvider IReadOnlyLabels.Labels => Labels;
         [XmlIgnore] ITemporaryLabelProvider ILogCreatorDataSource.TemporaryLabelProvider => Labels;
+
         public event PropertyChangedEventHandler PropertyChanged;
     }
 }

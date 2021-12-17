@@ -258,7 +258,7 @@ namespace DiztinGUIsh.controller
         public void MarkChanged()
         {
             // eventually set this via INotifyPropertyChanged or similar.
-            Project.UnsavedChanges = true;
+            if (Project.Session != null) Project.Session.UnsavedChanges = true;
         }
 
         public void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null) =>
