@@ -156,7 +156,7 @@ namespace Diz.Core.model
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return ByteSource.ReferenceEquals(other.ByteSource);
+            return ReferenceEquals(ByteSource, other.ByteSource);
         }
 
         public override bool Equals(object obj)
@@ -204,10 +204,19 @@ namespace Diz.Core.model
         {
             ByteSource.RemoveAllAnnotationsAt(snesAddress, IsLabel);
         }
-        
+
+        public void SetAll(Dictionary<int, Label> newLabels)
+        {
+            DeleteAllLabels();
+            foreach (var (key, value) in newLabels)
+            {
+                AddLabel(key, value);
+            }
+        }
+
         public override Label GetLabel(int snesAddress) => ByteSource.GetOneAnnotation<Label>(snesAddress);
 
-        public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite)
+        public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite = false)
         {
             Debug.Assert(labelToAdd != null);
             
