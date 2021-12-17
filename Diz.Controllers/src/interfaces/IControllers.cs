@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.datasubset;
@@ -40,6 +41,7 @@ namespace Diz.Controllers.interfaces
         DataSubsetWithSelection<TRow, TItem> DataSubset { get; }
         void MatchCachedRowsToView();
     }
+    #endif
 
     public interface IStartFormController : IFormController
     {
@@ -51,7 +53,6 @@ namespace Diz.Controllers.interfaces
         public void OpenFileWithNewView(string filename);
         public void OpenNewViewOfLastLoadedProject();
     }
-    #endif
     
     public interface IProjectController
     {
@@ -86,7 +87,6 @@ namespace Diz.Controllers.interfaces
         bool ImportRomAndCreateNewProject(string romFilename);
     }
     
-    #if DIZ_3_BRANCH
     public interface IProjectOpenerHandler : ILongRunningTaskHandler
     {
         public void OnProjectOpenSuccess(string filename, Project project);
@@ -96,7 +96,6 @@ namespace Diz.Controllers.interfaces
         
         Project OpenProject(string filename, bool showPopupAlertOnLoaded);
     }
-    #endif
 
     public interface I65816CpuOperations
     {

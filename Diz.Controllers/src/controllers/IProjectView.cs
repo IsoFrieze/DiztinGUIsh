@@ -5,15 +5,19 @@ using Diz.LogWriter;
 
 namespace Diz.Controllers.controllers
 {
-    public interface IProjectView : ISnesNavigation
+    public interface ILongRunningTaskHandler
+    {
+        public delegate void LongRunningTaskHandler(Action task, string description = null);
+        LongRunningTaskHandler TaskHandler { get; }
+    }
+    
+    public interface IProjectView : ILongRunningTaskHandler, ISnesNavigation
     {
         Project Project { get; set; }
         void OnProjectOpenFail(string errorMsg);
         void OnProjectSaved();
         void OnExportFinished(LogCreatorOutput.OutputResult result);
-
-        public delegate void LongRunningTaskHandler(Action task, string description = null);
-        LongRunningTaskHandler TaskHandler { get; }
+        
         string AskToSelectNewRomFilename(string promptSubject, string promptText);
         IImportRomDialogView GetImportView();
         void OnProjectOpenWarning(string warningMsg);

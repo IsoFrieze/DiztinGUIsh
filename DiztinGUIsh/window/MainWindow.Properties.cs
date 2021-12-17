@@ -19,7 +19,7 @@ namespace DiztinGUIsh.window
         // not sure if this will be the final place this lives. OK for now. -Dom
         public ProjectController ProjectController { get; protected set; }
 
-        IProjectView.LongRunningTaskHandler IProjectView.TaskHandler =>
+        public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
             ProgressBarJob.RunAndWaitForCompletion;
         
         // sub windows
