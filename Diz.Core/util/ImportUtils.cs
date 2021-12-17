@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.serialization;
+using JetBrains.Annotations;
 
 namespace Diz.Core.util
 {
@@ -13,22 +14,30 @@ namespace Diz.Core.util
         public Dictionary<string, bool> VectorTableEntriesEnabled { get; set; }
         public bool ShouldCheckHeader { get; set; } = true;
         
-        public static ImportRomSettingsBuilder CreateFor(string romFilename)
+        [PublicAPI] 
+        public ImportRomSettingsBuilder()
         {
-            var builder = new ImportRomSettingsBuilder();
-            builder.Init(romFilename);
-            return builder;
+            
+        }
+        
+        [PublicAPI]
+        public ImportRomSettingsBuilder(string romFilenameToAnalyze)
+        {
+            Init(romFilenameToAnalyze);
         }
 
         public void Init(string romFilename)
         {
+            var rawRomBytes = RomUtil.ReadRomFileBytes(romFilename);
+            
             ImportSettings = new ImportRomSettings
             {
                 RomFilename = romFilename,
-                RomBytes = RomUtil.ReadRomFileBytes(romFilename),
-                RomMapMode =
-                    RomUtil.DetectRomMapMode(RomUtil.ReadRomFileBytes(romFilename), out var detectedMapModeSuccess)
+                RomBytes = rawRomBytes,
+                RomMapMode = RomUtil.DetectRomMapMode(rawRomBytes, out var detectedMapModeSuccess),
             };
+
+            ImportSettings.RomSpeed = RomUtil.GetRomSpeed(ImportSettings.RomSettingsOffset, rawRomBytes);
 
             if (detectedMapModeSuccess)
                 DetectedMapMode = ImportSettings.RomMapMode;
@@ -39,13 +48,11 @@ namespace Diz.Core.util
         public ImportRomSettings CreateSettings()
         {
             ImportSettings.InitialLabels = RomUtil.GenerateVectorLabels(
-                VectorTableEntriesEnabled, ImportSettings.RomSettingsOffset, ImportSettings.RomBytes,
-                ImportSettings.RomMapMode);
+                VectorTableEntriesEnabled, ImportSettings.RomSettingsOffset, ImportSettings.RomBytes, ImportSettings.RomMapMode);
 
-            ImportSettings.InitialHeaderFlags =
-                !ShouldCheckHeader
-                    ? new Dictionary<int, FlagType>()
-                    : RomUtil.GenerateHeaderFlags(ImportSettings.RomSettingsOffset, ImportSettings.RomBytes);
+            if (ShouldCheckHeader)
+                ImportSettings.InitialHeaderFlags =
+                    RomUtil.GenerateHeaderFlags(ImportSettings.RomSettingsOffset, ImportSettings.RomBytes);
 
             return ImportSettings;
         }
@@ -80,32 +87,42 @@ namespace Diz.Core.util
         {
             // automated headless helper method to use all default settings and pray it works
             // no GUI or anything. use with caution, only if you know what you're doing
-            var importSettings = ImportRomSettingsBuilder.CreateFor(romFilename).CreateSettings();
-            return ImportRomAndCreateNewProject(importSettings);
+            return ImportRomAndCreateNewProject(
+                new ImportRomSettingsBuilder(romFilename)
+                    .CreateSettings());
         }
-        
+
         public static Project ImportRomAndCreateNewProject(ImportRomSettings importSettings)
         {
             var project = new Project
             {
                 AttachedRomFilename = importSettings.RomFilename,
-                ProjectFileName = null,
                 Data = new Data()
             };
 
+            project.Session = new ProjectSession(project)
+            {
+                ProjectFileName = "",
+                UnsavedChanges = true,
+            };
+            
+            #if DIZ_3_BRANCH
+            // new way
+            project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
+            #else
+            // old way
             project.Data.RomMapMode = importSettings.RomMapMode;
             project.Data.RomSpeed = importSettings.RomSpeed;
             project.Data.CreateRomBytesFromRom(importSettings.RomBytes);
+            #endif
 
-            foreach (var pair in importSettings.InitialLabels)
-                project.Data.Labels.AddLabel(pair.Key, pair.Value, true);
+            foreach (var (offset, label) in importSettings.InitialLabels)
+                project.Data.Labels.AddLabel(offset, label, true);
 
-            foreach (var pair in importSettings.InitialHeaderFlags)
-                project.Data.SetFlag(pair.Key, pair.Value);
+            foreach (var (offset, flagType) in importSettings.InitialHeaderFlags)
+                project.Data.SetFlag(offset, flagType);
 
             project.CacheVerificationInfo();
-            if (project.Session != null) 
-                project.Session.UnsavedChanges = true;
 
             return project;
         }

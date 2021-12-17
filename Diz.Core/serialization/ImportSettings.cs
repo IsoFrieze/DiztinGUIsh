@@ -8,8 +8,11 @@ namespace Diz.Core.serialization
     public class ImportRomSettings : INotifyPropertyChanged
     {
         private RomMapMode mode;
+        private RomSpeed romSpeed;
         private byte[] romBytes;
         private string romFilename;
+        private Dictionary<int, FlagType> initialHeaderFlags = new();
+        private Dictionary<int, Label> initialLabels = new();
 
         public RomMapMode RomMapMode
         {
@@ -18,12 +21,24 @@ namespace Diz.Core.serialization
         }
         
         public int RomSettingsOffset => RomUtil.GetRomSettingOffset(RomMapMode);
+        
+        public RomSpeed RomSpeed
+        {
+            get => romSpeed;
+            set => this.SetField(PropertyChanged, ref romSpeed, value);
+        }
+        
+        public Dictionary<int, Label> InitialLabels
+        {
+            get => initialLabels;
+            set => this.SetField(PropertyChanged, ref initialLabels, value);
+        }
 
-        public RomSpeed RomSpeed => RomBytes != null ? RomUtil.GetRomSpeed(RomSettingsOffset, RomBytes) : default;
-
-        // todo: add INotify stuff if we care. probably dont need to.
-        public Dictionary<int, Label> InitialLabels { get; set; }
-        public Dictionary<int, FlagType> InitialHeaderFlags { get; set; }
+        public Dictionary<int, FlagType> InitialHeaderFlags
+        {
+            get => initialHeaderFlags;
+            set => this.SetField(PropertyChanged, ref initialHeaderFlags, value);
+        }
 
         public byte[] RomBytes
         {
@@ -37,6 +52,6 @@ namespace Diz.Core.serialization
             set => this.SetField(PropertyChanged, ref romFilename, value);
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

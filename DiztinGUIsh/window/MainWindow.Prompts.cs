@@ -63,10 +63,8 @@ namespace DiztinGUIsh.window
             }
         }
 
-        private void githubToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start("https://github.com/Dotsarecool/DiztinGUIsh");
-        }
+        private void githubToolStripMenuItem_Click(object sender, EventArgs e) =>
+            GuiUtil.OpenExternalProcess("https://github.com/Dotsarecool/DiztinGUIsh");
 
         private string PromptOpenBizhawkCDLFile()
         {

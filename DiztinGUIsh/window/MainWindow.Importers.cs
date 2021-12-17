@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Windows.Forms;
+using Diz.Controllers.interfaces;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
 {
     public partial class MainWindow
     {
-        public IImportRomDialogView GetImportView()
-        {
-            return new ImportRomDialog();
-        }
+        public IImportRomDialogView GetImportView() => new ImportRomDialog();
 
         private void ImportBizhawkCDL()
         {

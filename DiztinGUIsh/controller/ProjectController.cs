@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
 using Diz.Core.export;
@@ -12,8 +13,6 @@ using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using Diz.LogWriter;
-using DiztinGUIsh.util;
-using DiztinGUIsh.window.dialog;
 
 // Model-View-Controller architecture.
 // goal: while this class's purpose is to be the middleman between dumb GUI elements and 

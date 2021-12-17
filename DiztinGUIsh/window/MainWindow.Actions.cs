@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Windows.Forms;
+using Diz.Controllers.controllers;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;

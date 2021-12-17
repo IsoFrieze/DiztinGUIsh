@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Diz.Controllers.controllers;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;

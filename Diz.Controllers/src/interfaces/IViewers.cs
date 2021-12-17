@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-// using Diz.Controllers.controllers;
-using Diz.Controllers.util;
+using Diz.Controllers.controllers;
 using Diz.Core.commands;
-using Diz.Core.util;
 
 namespace Diz.Controllers.interfaces
 {
@@ -121,7 +119,6 @@ namespace Diz.Controllers.interfaces
         void ShowLineItemError(string exMessage, int errLine);
     }
     
-    #if DIZ_3_BRANCH
     public interface IImportRomDialogView
     {
         bool PromptToConfirmAction(string msg);
@@ -131,6 +128,7 @@ namespace Diz.Controllers.interfaces
         void RefreshUi();
     }
     
+    #if DIZ_3_BRANCH
     public interface IDataGridEditorForm : IFormViewer, IProjectView
     {
         IMainFormController MainFormController { get; set; }

@@ -2,6 +2,8 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Forms;
+using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using DiztinGUIsh.util;

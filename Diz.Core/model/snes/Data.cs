@@ -181,10 +181,7 @@ namespace Diz.Core.model.snes
         
         public string GetComment(int i)
         {
-            if (Comments.TryGetValue(i, out var val))
-                return val;
-
-            return GetCommentText(i) ?? "";
+            return Comments.TryGetValue(i, out var val) ? val : null;
         }
         
         public string GetCommentText(int snesAddress)

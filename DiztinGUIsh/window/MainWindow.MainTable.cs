@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
+using Diz.Controllers.controllers;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.controller;

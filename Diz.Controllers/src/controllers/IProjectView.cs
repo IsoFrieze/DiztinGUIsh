@@ -1,10 +1,9 @@
 ﻿using System;
-using Diz.Core.export;
+using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.LogWriter;
-using DiztinGUIsh.window.dialog;
 
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.controllers
 {
     public interface IProjectView : ISnesNavigation
     {

@@ -1,19 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using Diz.Controllers.interfaces;
 using Diz.Core.serialization;
 using Diz.Core.util;
 
-namespace DiztinGUIsh.window.dialog
+namespace Diz.Controllers.controllers
 {
-    public interface IImportRomDialogView
-    {
-        bool PromptToConfirmAction(string msg);
-        bool ShowAndWaitForUserToConfirmSettings();
-        ImportRomDialogController Controller { get; set; }
-        bool GetVectorValue(int i, int j);
-        void RefreshUi();
-    }
-
     public class ImportRomDialogController
     {
         public IImportRomDialogView View { get; set; }
@@ -24,7 +16,7 @@ namespace DiztinGUIsh.window.dialog
 
         public ImportRomSettings PromptUserForImportOptions(string romFilename)
         {
-            Builder = ImportRomSettingsBuilder.CreateFor(romFilename);
+            Builder = new ImportRomSettingsBuilder(romFilename);
             return !PromptUserForOptions()
                 ? null 
                 : Builder.CreateSettings();
@@ -38,7 +30,12 @@ namespace DiztinGUIsh.window.dialog
             Builder.ImportSettings.PropertyChanged += ImportSettingsOnPropertyChanged;
             Refresh();
 
-            return View.ShowAndWaitForUserToConfirmSettings();
+            var result = View.ShowAndWaitForUserToConfirmSettings();
+            
+            Builder.ImportSettings.PropertyChanged -= ImportSettingsOnPropertyChanged;
+            View = null;
+            
+            return result;
         }
 
         private void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e)

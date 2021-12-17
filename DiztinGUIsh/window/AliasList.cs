@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
+using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 using Diz.Core.model.snes;
 using Diz.Core.util;
