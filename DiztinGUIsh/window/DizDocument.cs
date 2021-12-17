@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Diz.Controllers.controllers;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.controller;

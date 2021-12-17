@@ -1,4 +1,6 @@
 ﻿
+using Diz.Controllers.controllers;
+
 #pragma warning disable 169
 namespace DiztinGUIsh.window.usercontrols
 {
@@ -150,7 +152,7 @@ namespace DiztinGUIsh.window.usercontrols
             // 
             // navigationEntryBindingSource
             // 
-            this.navigationEntryBindingSource.DataSource = typeof(DiztinGUIsh.controller.NavigationEntry);
+            this.navigationEntryBindingSource.DataSource = typeof(NavigationEntry);
             this.navigationEntryBindingSource.CurrentChanged += new System.EventHandler(this.navigationEntryBindingSource_CurrentChanged);
             // 
             // btnClearHistory

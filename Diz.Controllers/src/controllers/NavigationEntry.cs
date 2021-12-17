@@ -1,11 +1,9 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using Diz.Controllers.controllers;
-using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 
-namespace DiztinGUIsh.controller
+namespace Diz.Controllers.controllers
 {
     public class NavigationEntry
     {

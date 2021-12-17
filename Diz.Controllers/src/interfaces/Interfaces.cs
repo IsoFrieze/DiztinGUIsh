@@ -7,7 +7,6 @@ using Diz.Core.model.snes;
 
 namespace Diz.Controllers.interfaces
 {
-#if DIZ_3_BRANCH
     public interface IDizApplication
     {
         public class Args
@@ -23,7 +22,8 @@ namespace Diz.Controllers.interfaces
         Data Data { get; init; }
         TItem Item { get; }
     }
-    
+ 
+#if DIZ_3_BRANCH
     public interface IDataGridRow : IGridRow<ByteEntry>, INotifyPropertyChanged
     {
         
@@ -37,6 +37,7 @@ namespace Diz.Controllers.interfaces
         public IBytesGridViewer<TItem> View { get; set; }
         public Data Data { get; set; }
     }
+#endif
     
     public interface IProjectsManager : IProjects, IProjectLoadListener, ISampleProjectLoader, ILastProjectLoaded { }
 
@@ -61,5 +62,4 @@ namespace Diz.Controllers.interfaces
         Project GetLastOpenedProject();
         void OpenLastLoadedProject();
     }
-#endif
 }
