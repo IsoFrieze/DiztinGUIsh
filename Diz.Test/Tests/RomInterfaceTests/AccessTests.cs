@@ -65,9 +65,9 @@ namespace Diz.Test
         public static void SanityTest()
         {
             var data = GetSampleData();
-            Assert.Equal(0x8D, data.GetRomByte(0));
-            Assert.Equal(0x16, data.GetRomByte(1));
-            Assert.Equal(0x21, data.GetRomByte(2));
+            Assert.Equal(0x8D, data.GetRomByte(0) ?? 0);
+            Assert.Equal(0x16, data.GetRomByte(1) ?? 0);
+            Assert.Equal(0x21, data.GetRomByte(2) ?? 0);
             Assert.Equal(3, data.GetRomSize());
 
             Assert.Equal("SNES_VMADDL", data.Labels.GetLabel(0x2116).Name);
