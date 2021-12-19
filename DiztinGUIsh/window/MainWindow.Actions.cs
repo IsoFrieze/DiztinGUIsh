@@ -82,7 +82,7 @@ namespace DiztinGUIsh.window
                 return;
             
             ProjectController.MarkChanged();
-            var destination = Project.Data.AutoStep(offset, false, 0);
+            var destination = Project.Data.AutoStepSafe(offset);
             if (moveWithStep) 
                 SelectOffset(destination, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Safe)"});
             
@@ -98,7 +98,7 @@ namespace DiztinGUIsh.window
                 return;
 
             ProjectController.MarkChanged();
-            var destination = Project.Data.AutoStep(newOffset, true, count);
+            var destination = Project.Data.AutoStepHarsh(newOffset, count);
             
             if (moveWithStep) 
                 SelectOffset(destination, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Harsh)"});

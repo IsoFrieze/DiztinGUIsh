@@ -172,7 +172,7 @@ namespace DiztinGUIsh.window
                     e.Value = (char)Project.Data.GetRomByte(row);
                     break;
                 case 3:
-                    e.Value = Util.NumberToBaseString(Project.Data.GetRomByte(row), displayBase);
+                    e.Value = Util.NumberToBaseString(Project.Data.GetRomByte(row) ?? 0x0, displayBase);
                     break;
                 case 4:
                     e.Value = RomUtil.PointToString(Project.Data.GetInOutPoint(row));
@@ -249,7 +249,7 @@ namespace DiztinGUIsh.window
                     style.ForeColor = Color.DarkSlateGray;
                     break;
                 case FlagType.Opcode:
-                    int opcode = Project.Data.GetRomByte(offset);
+                    int opcode = Project.Data.GetRomByte(offset) ?? 0x0;
                     switch (column)
                     {
                         case 4: // <*>
