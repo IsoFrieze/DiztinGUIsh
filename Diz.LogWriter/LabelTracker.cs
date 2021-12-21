@@ -6,14 +6,17 @@ namespace Diz.LogWriter
 {
     public class LabelTracker
     {
-        public LabelTracker(ILogCreatorForGenerator logCreator)
-        {
-            this.logCreator = logCreator;
-        }
 
         private readonly ILogCreatorForGenerator logCreator;
         public ILogCreatorDataSource Data => logCreator?.Data;
         public List<int> VisitedLabelSnesAddresses { get; } = new();
+        
+        private Dictionary<int, IReadOnlyLabel> cachedUnvisitedLabels;
+        
+        public LabelTracker(ILogCreatorForGenerator logCreator)
+        {
+            this.logCreator = logCreator;
+        }
 
         public Dictionary<int, IReadOnlyLabel> UnvisitedLabels
         {
@@ -23,8 +26,6 @@ namespace Diz.LogWriter
                 return cachedUnvisitedLabels;
             }
         }
-
-        private Dictionary<int, IReadOnlyLabel> cachedUnvisitedLabels;
 
         public void OnLabelVisited(int snesAddress)
         {
