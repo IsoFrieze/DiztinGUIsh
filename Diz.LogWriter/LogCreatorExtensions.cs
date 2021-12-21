@@ -25,7 +25,7 @@ namespace Diz.LogWriter
 
             bool IsPrintableCharacter(char x)
             {
-                return x != 0; // add more later if desired
+                return x != 0 && x != '\n' && x != '\r';
             }
 
             var outputStr = new StringBuilder("db ");
@@ -56,6 +56,8 @@ namespace Diz.LogWriter
                 return true;
             }
 
+            var previouslyOutputConstant = false;
+
             var i = 0;
             foreach (var c in rawStr)
             {
@@ -66,11 +68,13 @@ namespace Diz.LogWriter
                 } 
                 else
                 {
-                    if (EndQuotedSectionIfNeeded())
+                    if (EndQuotedSectionIfNeeded() || previouslyOutputConstant)
                         outputStr.Append(", ");
                         
                     outputStr.Append('$');
                     outputStr.Append(Util.NumberToBaseString(c, Util.NumberBase.Hexadecimal, 2));
+
+                    previouslyOutputConstant = true;
                 }
 
                 ++i;
