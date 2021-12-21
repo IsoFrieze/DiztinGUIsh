@@ -23,10 +23,8 @@ namespace Diz.LogWriter
         {
             // important: Asar will not accept null characters printed inside quoted text. so we need to break up text lines.
 
-            bool IsPrintableCharacter(char x)
-            {
-                return x != 0 && x != '\n' && x != '\r';
-            }
+            bool IsPrintableAsciiCharacter(char x) => 
+                x >= 32 && x <= 127;
 
             var outputStr = new StringBuilder("db ");
             var inQuotedSection = false;
@@ -61,7 +59,7 @@ namespace Diz.LogWriter
             var i = 0;
             foreach (var c in rawStr)
             {
-                if (IsPrintableCharacter(c))
+                if (IsPrintableAsciiCharacter(c))
                 {
                     StartQuotedSectionIfNeeded(i != 0);
                     outputStr.Append(c);
