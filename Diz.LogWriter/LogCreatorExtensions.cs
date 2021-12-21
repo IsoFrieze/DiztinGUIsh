@@ -1,18 +1,84 @@
-﻿using Diz.Core.export;
+﻿using System.Text;
+using System.Threading;
+using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.util;
 
 namespace Diz.LogWriter
 {
-    internal static class LogCreatorExtensions
+    public static class LogCreatorExtensions
     {
-        public static string GetFormattedText(this ILogCreatorDataSource data, int offset, int bytes)
+        public static string CreateAssemblyFormattedTextLine(this ILogCreatorDataSource data, int offset, int count)
         {
-            var text = "db \"";
-            for (var i = 0; i < bytes; i++) 
-                text += (char) data.GetRomByte(offset + i);
+            var rawStr = new StringBuilder();
+            for (var i = 0; i < count; i++)
+            {
+                rawStr.Append((char)(data.GetRomByte(offset + i) ?? 0));
+            }
+
+            return CreateAssemblyFormattedTextLine(rawStr.ToString());
+        }
+        
+        public static string CreateAssemblyFormattedTextLine(string rawStr)
+        {
+            // important: Asar will not accept null characters printed inside quoted text. so we need to break up text lines.
+
+            bool IsPrintableCharacter(char x)
+            {
+                return x != 0; // add more later if desired
+            }
+
+            var outputStr = new StringBuilder("db ");
+            var inQuotedSection = false;
+
+            bool StartQuotedSectionIfNeeded(bool printedSomethingBeforeThis)
+            {
+                if (inQuotedSection)
+                    return false;
+
+                if (printedSomethingBeforeThis)
+                    outputStr.Append(", ");
+                
+                outputStr.Append('"');
+                inQuotedSection = true;
+
+                return true;
+            }
+
+            bool EndQuotedSectionIfNeeded()
+            {
+                if (!inQuotedSection)
+                    return false;
+                
+                outputStr.Append('"');
+                inQuotedSection = false;
+
+                return true;
+            }
+
+            var i = 0;
+            foreach (var c in rawStr)
+            {
+                if (IsPrintableCharacter(c))
+                {
+                    StartQuotedSectionIfNeeded(i != 0);
+                    outputStr.Append(c);
+                } 
+                else
+                {
+                    if (EndQuotedSectionIfNeeded())
+                        outputStr.Append(", ");
+                        
+                    outputStr.Append('$');
+                    outputStr.Append(Util.NumberToBaseString(c, Util.NumberBase.Hexadecimal, 2));
+                }
+
+                ++i;
+            }
             
-            return text + "\"";
+            EndQuotedSectionIfNeeded();
+
+            return outputStr.ToString();
         }
         
         public static int GetLineByteLength(this ILogCreatorDataSource data, int offset, int romSizeMax,

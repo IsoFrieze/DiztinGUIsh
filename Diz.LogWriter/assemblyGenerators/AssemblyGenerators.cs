@@ -108,7 +108,8 @@ namespace Diz.LogWriter.assemblyGenerators
                     code = Data.GeneratePointerStr(offset, 4);
                     break;
                 case FlagType.Text:
-                    code = Data.GetFormattedText(offset, bytes);
+                    // note: this won't always respect the line length because it can generate, on the same line, multiple strings, etc.
+                    code = Data.CreateAssemblyFormattedTextLine(offset, bytes);
                     break;
             }
 
