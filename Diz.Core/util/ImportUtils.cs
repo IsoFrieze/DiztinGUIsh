@@ -100,10 +100,9 @@ namespace Diz.Core.util
                 Data = new Data()
             };
 
-            project.Session = new ProjectSession(project)
+            project.Session = new ProjectSession(project, "")
             {
-                ProjectFileName = "",
-                UnsavedChanges = true,
+                UnsavedChanges = true
             };
             
             #if DIZ_3_BRANCH

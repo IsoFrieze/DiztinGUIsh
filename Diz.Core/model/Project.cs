@@ -98,13 +98,21 @@ namespace Diz.Core.model
             get => session;
             set
             {
+                var previouslyUnsaved = false;
+
                 if (session != null)
+                {
                     session.PropertyChanged -= SessionOnPropertyChanged;
+                    previouslyUnsaved = session.UnsavedChanges;
+                }
 
                 this.SetField(PropertyChanged, ref session, value);
+
+                if (session == null) 
+                    return;
                 
-                if (session != null)
-                    session.PropertyChanged += SessionOnPropertyChanged;
+                session.PropertyChanged += SessionOnPropertyChanged;
+                session.UnsavedChanges = previouslyUnsaved;
             }
         }
 
@@ -146,9 +154,10 @@ namespace Diz.Core.model
 
         private void ProjectPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // try not to get too fancy in this method.
-            if (Session != null) 
+            if (e.PropertyName != nameof(IProjectSession.UnsavedChanges) && Session != null)
                 Session.UnsavedChanges = true;
+
+            // try not to get too fancy in this method.
         }
 
         // don't access these backing fields directly, instead, always use the properties
@@ -156,9 +165,9 @@ namespace Diz.Core.model
         private string attachedRomFilename;
         private string internalRomGameName;
         private uint internalCheckSum;
-        [CanBeNull] private Data data;
+        private Data? data;
         private LogWriterSettings logWriterSettings;
-        [CanBeNull] private IProjectSession session;
+        private IProjectSession? session;
 
         public void CacheVerificationInfo()
         {
@@ -241,12 +250,14 @@ namespace Diz.Core.model
         public string AttachedRomFileFullPath =>
             Path.Combine(ProjectDirectory, project.AttachedRomFilename);
 
-        private string projectFileName = "";
-        private bool unsavedChanges;
         private readonly IProjectWithSession project;
+        
+        private string projectFileName;
+        private bool unsavedChanges;
 
-        public ProjectSession(IProjectWithSession project)
+        public ProjectSession(IProjectWithSession project, string projectFileName)
         {
+            this.projectFileName = projectFileName;
             this.project = project;
         }
 

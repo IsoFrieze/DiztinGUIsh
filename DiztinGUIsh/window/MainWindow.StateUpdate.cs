@@ -36,7 +36,7 @@ namespace DiztinGUIsh.window
         {
             Text =
                 (Project.Session?.UnsavedChanges ?? true ? "*" : "") +
-                (Project.ProjectFileName ?? "New Project") +
+                (string.IsNullOrEmpty(Project.ProjectFileName) ? "New Project" : Project.ProjectFileName) +
                 " - DiztinGUIsh";
         }
 

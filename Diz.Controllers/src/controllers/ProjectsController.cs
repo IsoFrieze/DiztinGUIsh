@@ -146,9 +146,7 @@ namespace Diz.Controllers.controllers
                 Data = SampleRomData.CreateSampleData(),
             };
 
-            project.Session = new ProjectSession(project) {
-                ProjectFileName = MagicSampleProjectName,
-            };
+            project.Session = new ProjectSession(project, MagicSampleProjectName);
             
             return project;
         }
