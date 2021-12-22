@@ -53,29 +53,31 @@
             // lblStatusText
             // 
             this.lblStatusText.AutoSize = true;
+            this.lblStatusText.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.lblStatusText.Location = new System.Drawing.Point(46, 0);
             this.lblStatusText.Margin = new System.Windows.Forms.Padding(2);
             this.lblStatusText.Name = "lblStatusText";
-            this.lblStatusText.Size = new System.Drawing.Size(83, 15);
+            this.lblStatusText.Size = new System.Drawing.Size(408, 13);
             this.lblStatusText.TabIndex = 1;
-            this.lblStatusText.Text = "[progress text]";
+            this.lblStatusText.Text = "[progress text asdf asdf asdf asdf asdf aasdf asdf asdf aasdf asdf sdf sdf asdf ]" +
+    "";
             this.lblStatusText.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(2, 268);
+            this.progressBar1.Location = new System.Drawing.Point(2, 356);
             this.progressBar1.Margin = new System.Windows.Forms.Padding(2);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(211, 22);
+            this.progressBar1.Size = new System.Drawing.Size(324, 17);
             this.progressBar1.TabIndex = 2;
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.Image = global::DiztinGUIsh.Properties.Resources.diz_4;
             this.pictureBox1.Location = new System.Drawing.Point(4, 3);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(209, 228);
+            this.pictureBox1.Size = new System.Drawing.Size(322, 325);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 3;
             this.pictureBox1.TabStop = false;
@@ -86,25 +88,26 @@
             this.flowLayoutPanel1.Controls.Add(this.panel1);
             this.flowLayoutPanel1.Controls.Add(this.progressBar1);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(10, 10);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(217, 296);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(326, 375);
             this.flowLayoutPanel1.TabIndex = 4;
             // 
             // panel1
             // 
             this.panel1.Controls.Add(this.lblStatusStatic);
             this.panel1.Controls.Add(this.lblStatusText);
-            this.panel1.Location = new System.Drawing.Point(3, 237);
+            this.panel1.Location = new System.Drawing.Point(3, 334);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(210, 26);
+            this.panel1.Size = new System.Drawing.Size(419, 17);
             this.panel1.TabIndex = 4;
-            // 
+            //
             // ProgressDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(237, 316);
+            this.ClientSize = new System.Drawing.Size(346, 395);
             this.ControlBox = false;
             this.Controls.Add(this.flowLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
