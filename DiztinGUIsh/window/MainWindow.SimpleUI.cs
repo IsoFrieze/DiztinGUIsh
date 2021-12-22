@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Windows.Forms;
 using Diz.Core.commands;
 using Diz.Core.model;

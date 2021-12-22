@@ -81,7 +81,7 @@ namespace Diz.Core.model
         // data from the ROM and metadata we add/create.
         public Data Data
         {
-            get => data;
+            get => data!;
             set => this.SetField(PropertyChanged, ref data, value);
         }
         
@@ -161,9 +161,9 @@ namespace Diz.Core.model
         }
 
         // don't access these backing fields directly, instead, always use the properties
-        private string projectFileName;
-        private string attachedRomFilename;
-        private string internalRomGameName;
+        private string projectFileName = "";
+        private string attachedRomFilename = "";
+        private string internalRomGameName = "";
         private uint internalCheckSum;
         private Data? data;
         private LogWriterSettings logWriterSettings;
@@ -185,7 +185,7 @@ namespace Diz.Core.model
             return ProjectFileName == other.ProjectFileName && AttachedRomFilename == other.AttachedRomFilename && Equals(Data, other.Data) && InternalRomGameName == other.InternalRomGameName && InternalCheckSum == other.InternalCheckSum;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

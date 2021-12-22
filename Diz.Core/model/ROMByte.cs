@@ -2,6 +2,8 @@
 using System.Threading;
 using Diz.Core.util;
 
+#nullable enable
+
 namespace Diz.Core.model
 {
     // represents metadata associated with each byte of the ROM
@@ -80,7 +82,8 @@ namespace Diz.Core.model
 
 
         #region Equality
-        protected bool Equals(RomByte other)
+
+        private bool Equals(RomByte other)
         {
             return Rom == other.Rom && EqualsButNoRomByte(other);
         }
@@ -90,7 +93,7 @@ namespace Diz.Core.model
             return DataBank == other.DataBank && DirectPage == other.DirectPage && XFlag == other.XFlag && MFlag == other.MFlag && TypeFlag == other.TypeFlag && Arch == other.Arch && Point == other.Point;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

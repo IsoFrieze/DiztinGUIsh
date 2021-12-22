@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -17,8 +19,8 @@ namespace DiztinGUIsh.window
     public partial class AliasList : Form, ILabelEditorView
     {
         private readonly MainWindow parentWindow;
-        private ProjectController MainFormController => parentWindow?.ProjectController;
-        private Data Data => MainFormController?.Project?.Data;
+        private ProjectController? MainFormController => parentWindow?.ProjectController;
+        private Data Data => MainFormController?.Project?.Data!;
 
         private bool locked;
         private int currentlyEditing = -1;
@@ -56,7 +58,7 @@ namespace DiztinGUIsh.window
             var offset = Data.ConvertSnesToPc(val);
             if (offset >= 0)
             {
-                MainFormController.SelectOffset(
+                MainFormController!.SelectOffset(
                     offset,
                     new ISnesNavigation.HistoryArgs { Description = "Jump To Label" }
                 );
@@ -102,8 +104,13 @@ namespace DiztinGUIsh.window
 
         private void dataGridView1_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {
-            if (!int.TryParse((string) dataGridView1.Rows[e.Row.Index].Cells[0].Value, NumberStyles.HexNumber, null,
-                out var val)) return;
+            var cellValue = e.Row != null ? (string)dataGridView1.Rows[e.Row.Index].Cells[0].Value : "";
+            if (string.IsNullOrEmpty(cellValue))
+                return;
+
+            if (!int.TryParse(cellValue, NumberStyles.HexNumber, null, out var val)) 
+                return;
+            
             locked = true;
             Data.Labels.RemoveLabel(val);
             locked = false;
@@ -239,7 +246,7 @@ namespace DiztinGUIsh.window
             if (!PromptWarning(msg))
                 return;
 
-            MainFormController.ImportLabelsCsv(this, false);
+            MainFormController!.ImportLabelsCsv(this, false);
         }
 
         private void btnImportReplace_Click(object sender, EventArgs e)
@@ -249,7 +256,7 @@ namespace DiztinGUIsh.window
                               "Continue?\n"))
                 return;
 
-            MainFormController.ImportLabelsCsv(this, true);
+            MainFormController!.ImportLabelsCsv(this, true);
         }
         
         public static bool PromptWarning(string msg)
