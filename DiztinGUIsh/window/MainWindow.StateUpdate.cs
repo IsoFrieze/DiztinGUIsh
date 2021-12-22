@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Windows.Forms;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 using DiztinGUIsh.Properties;
 
@@ -17,6 +18,9 @@ namespace DiztinGUIsh.window
             AliasList?.RebindProject();
             if (visualForm != null) 
                 visualForm.Project = Project;
+            
+            if (Project?.Data.Labels != null) 
+                Project.Data.Labels.OnLabelChanged += LabelsOnOnLabelChanged;
         }
 
         private void UpdatePanels()

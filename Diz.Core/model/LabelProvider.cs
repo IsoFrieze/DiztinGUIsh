@@ -54,7 +54,11 @@ namespace Diz.Core.model
         
         [XmlIgnore] 
         private ILabelService TemporaryProvider { get; }
-
+        
+        
+        // this isn't bulletproof, but the best we can do for now.
+        // better to replace this with observable collections or something later.
+        public event EventHandler OnLabelChanged;
 
         // returns both real and temporary labels
         IEnumerable<KeyValuePair<int, Label>> IReadOnlyLabelProvider.Labels => Labels;
@@ -87,6 +91,8 @@ namespace Diz.Core.model
         {
             NormalProvider.DeleteAllLabels();
             TemporaryProvider.DeleteAllLabels();
+            
+            OnLabelChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void RemoveLabel(int snesAddress)
@@ -94,6 +100,8 @@ namespace Diz.Core.model
             // we should only operate on real labels here. ignore temporary labels
             
             NormalProvider.RemoveLabel(snesAddress);
+            
+            OnLabelChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite = false)
@@ -102,12 +110,16 @@ namespace Diz.Core.model
             // explicitly use AddTemporaryLabel() for temp stuff.
             
             NormalProvider.AddLabel(snesAddress, labelToAdd, overwrite);
+            
+            OnLabelChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void SetAll(Dictionary<int, Label> newLabels)
         {
             ClearTemporaryLabels();
             NormalProvider.SetAll(newLabels);
+            
+            OnLabelChanged?.Invoke(this, EventArgs.Empty);
         }
         
         #region "Equality"

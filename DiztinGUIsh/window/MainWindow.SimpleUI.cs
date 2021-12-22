@@ -170,5 +170,10 @@ namespace DiztinGUIsh.window
 
         private void goForwardToolStripMenuItem_Click(object sender, EventArgs e) => 
             NavigationForm.Navigate(forwardDirection: true);
+
+        private void LabelsOnOnLabelChanged(object? sender, EventArgs e)
+        {
+            InvalidateTable();
+        }
     }
 }

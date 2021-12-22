@@ -29,6 +29,12 @@ namespace DiztinGUIsh.window
             InitializeComponent();
         }
 
+        private void LabelsOnOnLabelChanged(object? sender, EventArgs e)
+        {
+            // this is a bit hacky for the moment. be careful. better to use property notify change/etc later on.
+            RepopulateFromData();
+        }
+
         private void AliasList_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (e.CloseReason != CloseReason.UserClosing) return;
@@ -253,6 +259,9 @@ namespace DiztinGUIsh.window
 
         public void RebindProject()
         {
+            if (Data?.Labels != null) 
+                Data.Labels.OnLabelChanged += LabelsOnOnLabelChanged;
+            
             RepopulateFromData();
 
             // todo: eventually use databinding/datasource, probably.
@@ -263,6 +272,9 @@ namespace DiztinGUIsh.window
 
         public void RepopulateFromData()
         {
+            if (locked)
+                return;
+            
             ClearAndInvalidateDataGrid();
 
             if (Data == null)
