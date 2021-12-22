@@ -79,7 +79,8 @@ namespace DiztinGUIsh.window.dialog
             RefreshUi();
         }
 
-        public void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e) => RefreshUi();
+        public void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e) => 
+            RefreshUi();
 
         public void RefreshUi()
         {
