@@ -54,7 +54,7 @@ namespace Diz.PowerShell
                 return false;
             }
 
-            var lc = new LogCreator()
+            var lc = new LogCreator
             {
                 Settings = project.LogWriterSettings,
                 Data = project.Data,
