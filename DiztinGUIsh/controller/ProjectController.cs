@@ -83,7 +83,7 @@ namespace DiztinGUIsh.controller
             {
                 try
                 {
-                    var (project1, warning) = new ProjectFileManager()
+                    var (project1, warning) = new ProjectFileManager
                     {
                         RomPromptFn = AskToSelectNewRomFilename
                     }.Open(filename);
@@ -320,7 +320,7 @@ namespace DiztinGUIsh.controller
             if (Project == null)
                 return;
 
-            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs()
+            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs
             {
                 ChangeType = ProjectChangedEventArgs.ProjectChangedType.Closing
             });
