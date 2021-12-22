@@ -28,6 +28,9 @@ namespace Diz.Core.serialization
             set => this.SetField(PropertyChanged, ref romSpeed, value);
         }
         
+        /// <summary>
+        /// List of Rom offsets (not SNES addresses) for labels for initial vector tables/etc
+        /// </summary>
         public Dictionary<int, Label> InitialLabels
         {
             get => initialLabels;

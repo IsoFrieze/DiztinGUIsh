@@ -397,6 +397,14 @@ namespace Diz.Core.util
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="vectorNames"></param>
+        /// <param name="romSettingsOffset"></param>
+        /// <param name="romBytes"></param>
+        /// <param name="mode"></param>
+        /// <returns>A list of ROM offsets [NOT snes addresses] to add these labels to</returns>
         public static Dictionary<int, Label> GenerateVectorLabels(Dictionary<string, bool> vectorNames, int romSettingsOffset, IReadOnlyList<byte> romBytes, RomMapMode mode)
         {
             // TODO: probably better to just use a data structure for this instead of generating the 
@@ -410,8 +418,8 @@ namespace Diz.Core.util
             var entry = 0; const int entryCount = 6;
             foreach (var vectorEntry in vectorNames)
             {
-                Debug.Assert(table >= 0 && table < tableCount);
-                Debug.Assert(entry >= 0 && entry < entryCount);
+                Debug.Assert(table is >= 0 and < tableCount);
+                Debug.Assert(entry is >= 0 and < entryCount);
                 // table = 0,1              // which table of Native vs Emulation
                 // entry = 0,1,2,3,4,5      // which offset
                 //
@@ -421,7 +429,7 @@ namespace Diz.Core.util
                 var offset = romBytes[index] + (romBytes[index + 1] << 8);
                 var pc = ConvertSnesToPc(offset, mode, romBytes.Count);
                 if (pc >= 0 && pc < romBytes.Count && !labels.ContainsKey(offset))
-                    labels.Add(offset, new Label() { Name = vectorEntry.Key });
+                    labels.Add(offset, new Label { Name = vectorEntry.Key });
 
                 if (++entry < entryCount)
                     continue;

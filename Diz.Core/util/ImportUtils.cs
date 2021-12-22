@@ -116,8 +116,11 @@ namespace Diz.Core.util
             project.Data.CreateRomBytesFromRom(importSettings.RomBytes);
             #endif
 
-            foreach (var (offset, label) in importSettings.InitialLabels)
-                project.Data.Labels.AddLabel(offset, label, true);
+            foreach (var (romOffset, label) in importSettings.InitialLabels)
+            {
+                var snesAddress = project.Data.ConvertPCtoSnes(romOffset);
+                project.Data.Labels.AddLabel(snesAddress, label, true);
+            }
 
             foreach (var (offset, flagType) in importSettings.InitialHeaderFlags)
                 project.Data.SetFlag(offset, flagType);
