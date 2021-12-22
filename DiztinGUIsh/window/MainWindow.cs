@@ -120,7 +120,6 @@ namespace DiztinGUIsh.window
             var initialPath = Project?.Session?.ProjectDirectory ?? "";
             var exportDialog = new ExportDisassembly(Project.LogWriterSettings)
             {
-                InitialDirForOutput = initialPath,
                 KeepPathsRelativeToThisPath = initialPath,
             };
 

@@ -20,12 +20,10 @@ namespace DiztinGUIsh.window.dialog
             private set
             {
                 proposedSettings = value;
-                UpdateDirectoryPaths();
                 RegenerateSampleOutput();
             }
         }
         
-        public string InitialDirForOutput { get; set; }
         public string KeepPathsRelativeToThisPath { get; set; }
         
         private LogWriterSettings proposedSettings = new();
@@ -68,19 +66,16 @@ namespace DiztinGUIsh.window.dialog
         private string PromptForLogPathFromFileOrFolderDialog(bool askForFile) => 
             askForFile ? PromptSaveLogFile() : PromptSaveLogPath();
 
-        private void UpdateDirectoryPaths() => 
-            InitialDirForOutput = ProposedSettings.FileOrFolderOutPath;
-
         private string PromptSaveLogPath()
         {
-            chooseLogFolder.SelectedPath = InitialDirForOutput;
+            chooseLogFolder.SelectedPath = proposedSettings.BuildFullOutputPath();
             return chooseLogFolder.ShowDialog() == DialogResult.OK && 
                    chooseLogFolder.SelectedPath != "" ? chooseLogFolder.SelectedPath : null;
         }
 
         private string PromptSaveLogFile()
         {
-            saveLogSingleFile.InitialDirectory = InitialDirForOutput;
+            saveLogSingleFile.InitialDirectory = proposedSettings.BuildFullOutputPath();
             return saveLogSingleFile.ShowDialog() == DialogResult.OK && 
                    saveLogSingleFile.FileName != "" ? saveLogSingleFile.FileName : null;
         }

@@ -90,13 +90,17 @@ namespace Diz.LogWriter
 
         protected override void Init()
         {
-            var basePath = LogCreator.Settings.FileOrFolderOutPath;
+            SetupOutputFolderFromSettings();
+            SetupInitialOutputStreams();
+        }
 
-            if (LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.OneBankPerFile)
-                basePath += "\\"; // force it to treat it as a path. not the best way.
+        private void SetupOutputFolderFromSettings()
+        {
+            folder = LogCreator.Settings.BuildFullOutputPath();
+        }
 
-            folder = Path.GetDirectoryName(basePath);
-
+        private void SetupInitialOutputStreams()
+        {
             if (LogCreator.Settings.Structure == LogWriterSettings.FormatStructure.SingleFile)
             {
                 filename = Path.GetFileName(LogCreator.Settings.FileOrFolderOutPath);
@@ -157,7 +161,8 @@ namespace Diz.LogWriter
 
         protected StreamWriter OpenNewStream(string streamName)
         {
-            var streamWriter = new StreamWriter(BuildStreamPath(streamName));
+            var finalPath = BuildStreamPath(streamName);
+            var streamWriter = new StreamWriter(finalPath);
             outputStreams.Add(streamName, streamWriter);
             return streamWriter;
         }

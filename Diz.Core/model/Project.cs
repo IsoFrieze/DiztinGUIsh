@@ -64,7 +64,10 @@ namespace Diz.Core.model
 
         public LogWriterSettings LogWriterSettings
         {
-            get => logWriterSettings;
+            get => logWriterSettings with
+            {
+                BaseOutputPath = Session?.ProjectDirectory ?? "",
+            };
             set => this.SetField(PropertyChanged, ref logWriterSettings, value);
         }
 
