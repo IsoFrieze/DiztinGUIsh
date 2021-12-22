@@ -29,13 +29,14 @@ namespace Diz.Core.serialization
         {
             xmlRoot.Project.ProjectFileName = filename;
 
+            xmlRoot.Project.Session = new ProjectSession(xmlRoot.Project, filename);
+
             // at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
             // It would be easy to store the ROM bytes in the save file, but, for copyright reasons,
             // we leave it out.
             //
             // So now, with all our metadata loaded successfully, we now open the .smc file on disk
             // and marry the original rom's bytes with all of our metadata loaded from the project file.
-
             var romAddCmd = new AddRomDataCommand(xmlRoot)
             {
                 GetNextRomFileToTry = RomPromptFn,
