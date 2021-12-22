@@ -385,7 +385,6 @@ namespace Diz.Core.util
         // considers them equal if any are true:
         // - both lists are null
         // - if one list is non-null, and the other contains zero elements
-        #if DIZ_3_BRANCH // this isn't needed yet but will be part of v3.0.
         public static bool BothListsNullOrContainNoItems<T>(ICollection<T> c1, ICollection<T> c2)
         {
             return c1 switch
@@ -399,12 +398,11 @@ namespace Diz.Core.util
         
         public static bool CollectionsBothEmptyOrEqual<T>(ICollection<T> c1, ICollection<T> c2)
         {
-            if (Util.BothListsNullOrContainNoItems(c1, c2)) 
+            if (BothListsNullOrContainNoItems(c1, c2)) 
                 return true;
 
             return c1?.SequenceEqual(c2) ?? false;
-        } 
-        #endif
+        }
     }
     
     

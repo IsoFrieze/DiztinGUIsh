@@ -235,22 +235,20 @@ namespace DiztinGUIsh.controller
 
         private void WriteAssemblyOutput(LogWriterSettings settings, bool showProgressBarUpdates = false)
         {
-            var lc = new LogCreator()
+            var lc = new LogCreator
             {
                 Settings = settings,
                 Data = Project.Data,
             };
 
             LogCreatorOutput.OutputResult result = null;
-            DoLongRunningTask(delegate { result = lc.CreateLog(); }, "Exporting assembly source code...");
+            DoLongRunningTask(() => result = lc.CreateLog(), "Exporting assembly source code...");
 
             ProjectView.OnExportFinished(result);
         }
 
         public void UpdateExportSettings(LogWriterSettings selectedSettings)
         {
-            // TODO: ref readonly or similar here, to save us an extra copy of the struct?
-
             Project.LogWriterSettings = selectedSettings;
         }
 
