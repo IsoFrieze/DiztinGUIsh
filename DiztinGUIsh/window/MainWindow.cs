@@ -115,25 +115,16 @@ namespace DiztinGUIsh.window
             if (Project == null)
                 return false;
             
-            // might want to rethink the directory data being passed around, flow is kinda awkward,
-            // can surely be simplified.
-            var initialPath = Project?.Session?.ProjectDirectory ?? "";
-            var exportDialog = new ExportDisassembly(Project.LogWriterSettings)
+            var exportDialogController = new LogCreatorSettingsEditorController(new LogCreatorSettingsEditorForm(), Project.LogWriterSettings with {})
             {
-                KeepPathsRelativeToThisPath = initialPath,
+                KeepPathsRelativeToThisPath = Project?.Session?.ProjectDirectory
             };
-
-            var newValidatedSettings = GetExportSettingsFromDialog(exportDialog);
-            if (newValidatedSettings == null) 
+            
+            if (!exportDialogController.PromptSetupAndValidateExportSettings())
                 return false;
             
-            ProjectController.UpdateExportSettings(newValidatedSettings);
+            ProjectController.UpdateExportSettings(exportDialogController.Settings);
             return true;
-        }
-        
-        private static LogWriterSettings GetExportSettingsFromDialog(ExportDisassembly export)
-        {
-            return export.ShowDialog() != DialogResult.OK ? null : export.ProposedSettings;
         }
 
         private void RememberNavigationPoint(int pcOffset, ISnesNavigation.HistoryArgs historyArgs)

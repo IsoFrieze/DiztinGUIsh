@@ -49,7 +49,7 @@ public record LogWriterSettings
     /// Don't save this with the project XML.
     /// </summary>
     [XmlIgnore]
-    public string BaseOutputPath { get; init; } = "";
+    public string? BaseOutputPath { get; init; }
         
     /// <summary>
     /// Relative path to add on after the base path.
@@ -59,7 +59,7 @@ public record LogWriterSettings
     public bool OutputToString { get; init; }
     public string ErrorFilename { get; init; } = "errors.txt";
 
-    public LogWriterSettings WithPathRelativeTo(string newFileNameAndPath, string pathToMakeRelativeTo) =>
+    public LogWriterSettings WithPathRelativeTo(string newFileNameAndPath, string? pathToMakeRelativeTo) =>
         this with
         {
             FileOrFolderOutPath = Util.TryGetRelativePath(newFileNameAndPath, pathToMakeRelativeTo),
@@ -68,12 +68,21 @@ public record LogWriterSettings
 
     public string BuildFullOutputPath()
     {
-        var relativeOutPath = FileOrFolderOutPath;
-
+        // this is still a bit of an in-progress mess. sigh.
+        
+        var path = FileOrFolderOutPath;
         if (Structure == FormatStructure.OneBankPerFile)
-            relativeOutPath += "\\"; // force it to treat it as a path.
+            path += "\\"; // force it to treat it as a path.
 
-        var relativeFolderPath = Path.GetDirectoryName(relativeOutPath) ?? "";
+        // if it's absolute path, use that first, ignore base path
+        if (Path.IsPathFullyQualified(path))
+            return path;
+
+        // if it's not an absolute path, combine BaseOutputPath and FileOrFolderPath to get the final
+        var relativeFolderPath = Path.GetDirectoryName(path) ?? "";
+        
+        if (Structure == FormatStructure.OneBankPerFile)
+            relativeFolderPath += "\\"; // force it to treat it as a path.
 
         return Path.Combine(BaseOutputPath, relativeFolderPath);
     }
@@ -91,5 +100,5 @@ public static class LogWriterSettingsExtensions
     }
 
     public static bool IsValid(this LogWriterSettings @this) => 
-        @this.Validate() != null;
+        @this.Validate() == null;
 }

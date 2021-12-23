@@ -249,7 +249,16 @@ namespace DiztinGUIsh.controller
 
         public void UpdateExportSettings(LogWriterSettings selectedSettings)
         {
+            if (Project == null)
+                return;
+            
+            var projectHadUnsavedChanges = Project.Session?.UnsavedChanges ?? false;
+            var exportSettingsChanged = !Project.LogWriterSettings.Equals(selectedSettings);
+
             Project.LogWriterSettings = selectedSettings;
+
+            if (Project.Session != null && exportSettingsChanged && !projectHadUnsavedChanges)
+                Project.Session.UnsavedChanges = true;
         }
 
         public void MarkChanged()

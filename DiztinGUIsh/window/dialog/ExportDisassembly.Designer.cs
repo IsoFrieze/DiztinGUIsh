@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace DiztinGUIsh.window.dialog
 {
-    partial class ExportDisassembly
+    partial class LogCreatorSettingsEditorForm
     {
         /// <summary>
         /// Required designer variable.
@@ -33,7 +33,7 @@ namespace DiztinGUIsh.window.dialog
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ExportDisassembly));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LogCreatorSettingsEditorForm));
             this.cancel = new System.Windows.Forms.Button();
             this.disassembleButton = new System.Windows.Forms.Button();
             this.textFormat = new System.Windows.Forms.TextBox();
@@ -51,13 +51,17 @@ namespace DiztinGUIsh.window.dialog
             this.chkIncludeUnusedLabels = new System.Windows.Forms.CheckBox();
             this.saveLogSingleFile = new System.Windows.Forms.SaveFileDialog();
             this.chooseLogFolder = new System.Windows.Forms.FolderBrowserDialog();
+            this.label7 = new System.Windows.Forms.Label();
+            this.txtExportPath = new System.Windows.Forms.TextBox();
+            this.btnBrowseOutputPath = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numData)).BeginInit();
             this.SuspendLayout();
             // 
             // cancel
             // 
             this.cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancel.Location = new System.Drawing.Point(10, 567);
+            this.cancel.Location = new System.Drawing.Point(14, 613);
             this.cancel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(88, 27);
@@ -69,34 +73,34 @@ namespace DiztinGUIsh.window.dialog
             // 
             // disassembleButton
             // 
-            this.disassembleButton.Location = new System.Drawing.Point(568, 567);
+            this.disassembleButton.Location = new System.Drawing.Point(762, 613);
             this.disassembleButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.disassembleButton.Name = "disassembleButton";
             this.disassembleButton.Size = new System.Drawing.Size(132, 27);
             this.disassembleButton.TabIndex = 11;
-            this.disassembleButton.Text = "Disassemble";
+            this.disassembleButton.Text = "Start Export!";
             this.disassembleButton.UseVisualStyleBackColor = true;
             this.disassembleButton.Click += new System.EventHandler(this.disassembleButton_Click);
             // 
             // textFormat
             // 
-            this.textFormat.Location = new System.Drawing.Point(103, 160);
+            this.textFormat.Location = new System.Drawing.Point(103, 194);
             this.textFormat.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.textFormat.Name = "textFormat";
-            this.textFormat.Size = new System.Drawing.Size(597, 23);
+            this.textFormat.Size = new System.Drawing.Size(791, 23);
             this.textFormat.TabIndex = 8;
             this.textFormat.TextChanged += new System.EventHandler(this.textFormat_TextChanged);
             // 
             // textSample
             // 
             this.textSample.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.textSample.Location = new System.Drawing.Point(103, 192);
+            this.textSample.Location = new System.Drawing.Point(13, 249);
             this.textSample.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.textSample.Multiline = true;
             this.textSample.Name = "textSample";
             this.textSample.ReadOnly = true;
             this.textSample.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textSample.Size = new System.Drawing.Size(597, 367);
+            this.textSample.Size = new System.Drawing.Size(881, 358);
             this.textSample.TabIndex = 10;
             this.textSample.TabStop = false;
             this.textSample.WordWrap = false;
@@ -107,7 +111,7 @@ namespace DiztinGUIsh.window.dialog
             this.comboStructure.Items.AddRange(new object[] {
             "All in one file",
             "One bank per file"});
-            this.comboStructure.Location = new System.Drawing.Point(559, 45);
+            this.comboStructure.Location = new System.Drawing.Point(754, 39);
             this.comboStructure.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.comboStructure.Name = "comboStructure";
             this.comboStructure.Size = new System.Drawing.Size(140, 23);
@@ -121,7 +125,7 @@ namespace DiztinGUIsh.window.dialog
             "Create All",
             "In points only",
             "None"});
-            this.comboUnlabeled.Location = new System.Drawing.Point(559, 14);
+            this.comboUnlabeled.Location = new System.Drawing.Point(754, 12);
             this.comboUnlabeled.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.comboUnlabeled.Name = "comboUnlabeled";
             this.comboUnlabeled.Size = new System.Drawing.Size(140, 23);
@@ -131,7 +135,7 @@ namespace DiztinGUIsh.window.dialog
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(14, 164);
+            this.label1.Location = new System.Drawing.Point(8, 197);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(87, 15);
@@ -141,7 +145,7 @@ namespace DiztinGUIsh.window.dialog
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(7, 195);
+            this.label2.Location = new System.Drawing.Point(8, 231);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(90, 15);
@@ -151,7 +155,7 @@ namespace DiztinGUIsh.window.dialog
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(514, 78);
+            this.label3.Location = new System.Drawing.Point(613, 69);
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(132, 15);
@@ -161,7 +165,7 @@ namespace DiztinGUIsh.window.dialog
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(464, 48);
+            this.label4.Location = new System.Drawing.Point(659, 42);
             this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(86, 15);
@@ -171,7 +175,7 @@ namespace DiztinGUIsh.window.dialog
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(424, 17);
+            this.label5.Location = new System.Drawing.Point(619, 15);
             this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(128, 15);
@@ -190,7 +194,7 @@ namespace DiztinGUIsh.window.dialog
             // 
             // numData
             // 
-            this.numData.Location = new System.Drawing.Point(656, 76);
+            this.numData.Location = new System.Drawing.Point(753, 67);
             this.numData.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.numData.Maximum = new decimal(new int[] {
             16,
@@ -217,7 +221,7 @@ namespace DiztinGUIsh.window.dialog
             this.chkPrintLabelSpecificComments.AutoSize = true;
             this.chkPrintLabelSpecificComments.Checked = true;
             this.chkPrintLabelSpecificComments.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkPrintLabelSpecificComments.Location = new System.Drawing.Point(439, 107);
+            this.chkPrintLabelSpecificComments.Location = new System.Drawing.Point(613, 97);
             this.chkPrintLabelSpecificComments.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.chkPrintLabelSpecificComments.Name = "chkPrintLabelSpecificComments";
             this.chkPrintLabelSpecificComments.Size = new System.Drawing.Size(255, 19);
@@ -229,7 +233,7 @@ namespace DiztinGUIsh.window.dialog
             // chkIncludeUnusedLabels
             // 
             this.chkIncludeUnusedLabels.AutoSize = true;
-            this.chkIncludeUnusedLabels.Location = new System.Drawing.Point(439, 133);
+            this.chkIncludeUnusedLabels.Location = new System.Drawing.Point(613, 113);
             this.chkIncludeUnusedLabels.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.chkIncludeUnusedLabels.Name = "chkIncludeUnusedLabels";
             this.chkIncludeUnusedLabels.Size = new System.Drawing.Size(211, 19);
@@ -242,13 +246,57 @@ namespace DiztinGUIsh.window.dialog
             // 
             this.saveLogSingleFile.Filter = "Assembly Files|*.asm|All Files|*.*";
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(13, 137);
+            this.label7.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(57, 45);
+            this.label7.TabIndex = 15;
+            this.label7.Text = "Output \r\ndirectory \r\nor file:";
+            // 
+            // txtExportPath
+            // 
+            this.txtExportPath.Location = new System.Drawing.Point(103, 138);
+            this.txtExportPath.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.txtExportPath.Name = "txtExportPath";
+            this.txtExportPath.Size = new System.Drawing.Size(717, 23);
+            this.txtExportPath.TabIndex = 16;
+            this.txtExportPath.TextChanged += new System.EventHandler(this.txtExportPath_TextChanged);
+            // 
+            // btnBrowseOutputPath
+            // 
+            this.btnBrowseOutputPath.Location = new System.Drawing.Point(819, 138);
+            this.btnBrowseOutputPath.Name = "btnBrowseOutputPath";
+            this.btnBrowseOutputPath.Size = new System.Drawing.Size(75, 24);
+            this.btnBrowseOutputPath.TabIndex = 17;
+            this.btnBrowseOutputPath.Text = "Browse...";
+            this.btnBrowseOutputPath.UseVisualStyleBackColor = true;
+            this.btnBrowseOutputPath.Click += new System.EventHandler(this.btnBrowseOutputPath_Click);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(103, 164);
+            this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(482, 15);
+            this.label8.TabIndex = 18;
+            this.label8.Text = "(By default, path is relative to the project file\'s directory. it will be created" +
+    " if it doesn\'t exist)";
+            // 
             // ExportDisassembly
             // 
             this.AcceptButton = this.disassembleButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
-            this.ClientSize = new System.Drawing.Size(713, 606);
+            this.ClientSize = new System.Drawing.Size(907, 652);
+            this.Controls.Add(this.label8);
+            this.Controls.Add(this.btnBrowseOutputPath);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.txtExportPath);
             this.Controls.Add(this.chkIncludeUnusedLabels);
             this.Controls.Add(this.chkPrintLabelSpecificComments);
             this.Controls.Add(this.numData);
@@ -267,7 +315,7 @@ namespace DiztinGUIsh.window.dialog
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.Name = "ExportDisassembly";
+            this.Name = "LogCreatorSettingsEditorForm";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Export Disassembly";
@@ -296,5 +344,9 @@ namespace DiztinGUIsh.window.dialog
         private CheckBox chkIncludeUnusedLabels;
         private SaveFileDialog saveLogSingleFile;
         private FolderBrowserDialog chooseLogFolder;
+        private Label label7;
+        private TextBox txtExportPath;
+        private Button btnBrowseOutputPath;
+        private Label label8;
     }
 }

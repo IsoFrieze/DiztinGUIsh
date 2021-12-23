@@ -33,6 +33,22 @@ namespace DiztinGUIsh.util
                 action();
             }
         }
+        
+        public static string? PromptSelectFolder(this FolderBrowserDialog folderBrowserDialog, string path)
+        {
+            folderBrowserDialog.SelectedPath = path;
+            return folderBrowserDialog.ShowDialog() == DialogResult.OK && folderBrowserDialog.SelectedPath != ""
+                ? folderBrowserDialog.SelectedPath
+                : null;
+        }
+    
+        public static string? PromptSaveFileDialog(this FileDialog saveFileDialog, string path)
+        {
+            saveFileDialog.InitialDirectory = path;
+            return saveFileDialog.ShowDialog() == DialogResult.OK && saveFileDialog.FileName != ""
+                ? saveFileDialog.FileName
+                : null;
+        }
 
         public static string PromptToSelectFile(string initialDirectory = null)
         {
@@ -49,8 +65,8 @@ namespace DiztinGUIsh.util
             return dialogResult == DialogResult.Yes ? confirmAction() : default;
         }
 
-        const string scaryWarning = "BETA: Save/load in this version of Diz is unstable right now. \nDO NOT save over anything you care about without a backup.\nLoading an existing project file from previous versions of Diz is not guaranteed to work yet, it may silently fail to import data.\n\n\nEXPERTS ONLY. CONFIRM OPENING A PROJECT FILE?\n(If looking to mess around, do File -> Import ROM, much more stable for now)";
-        public static bool PromptScaryUnstableBetaAreYouSure() => PromptToConfirmAction("IMPORTANT", scaryWarning, () => true);
+        private const string ScaryWarning = "BETA: Save/load in this version of Diz is unstable right now. \nDO NOT save over anything you care about without a backup.\nLoading an existing project file from previous versions of Diz is not guaranteed to work yet, it may silently fail to import data.\n\n\nEXPERTS ONLY. CONFIRM OPENING A PROJECT FILE?\n(If looking to mess around, do File -> Import ROM, much more stable for now)";
+        public static bool PromptScaryUnstableBetaAreYouSure() => PromptToConfirmAction("IMPORTANT", ScaryWarning, () => true);
 
 
         /// <summary>

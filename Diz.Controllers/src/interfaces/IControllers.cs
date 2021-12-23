@@ -1,12 +1,11 @@
 ﻿using System;
-using System.ComponentModel;
 using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.commands;
-using Diz.Core.datasubset;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.snes;
+using Diz.Core.util;
 
 // NOTE: lots of these interfaces were created temporarily for major refactoring.
 // when that process is finished, we should probably take a pass here to simplify anything
@@ -169,5 +168,24 @@ namespace Diz.Controllers.interfaces
         IDataRange DataRange { get; }
         IReadOnlySnesRomBase Data { get; }
         MarkCommand GetMarkCommand();
+    }
+
+    public interface ILogCreatorSettingsEditorController : IController, ICloseHandler, INotifyPropertyChangedExt
+    {
+        internal enum PromptCreateDirResult
+        {
+            AlreadyExists,
+            DontWantToCreateItNow,
+            DidCreateItNow,
+        }
+    
+        ILogCreatorSettingsEditorView View { get; set; }
+    
+        LogWriterSettings Settings { get; set; }
+
+        string GetSampleOutput();
+
+        bool ValidateFormat(string formatStr);
+        bool EnsureSelectRealOutputDirectory(bool forcePrompt = false);
     }
 }
