@@ -53,9 +53,11 @@ namespace Diz.Controllers.interfaces
         public void OpenNewViewOfLastLoadedProject();
     }
     
-    public interface IProjectController
+    public interface IProjectController : ITraceLogImporters
     {
-        public Project Project  { get; }
+        // diz3.0 is going to need some major surgery from this one.
+        
+        public Project Project { get; }
         
         public class ProjectChangedEventArgs
         {
@@ -71,19 +73,23 @@ namespace Diz.Controllers.interfaces
             public ProjectChangedType ChangeType;
             public Project Project;
             public string Filename;
-        }   
+        }
                 
         delegate void ProjectChangedEvent(object sender, ProjectChangedEventArgs e);
-
         event ProjectChangedEvent ProjectChanged;
-        
-        void SaveProject(string filename);
-        
-        void OpenProject(string fileName);
 
-        void MarkProjectAsUnsaved();
-        
+        public IProjectView ProjectView { get; set; }
+
+        public bool OpenProject(string filename);  // older signature
+        public string SaveProject(string filename); // older signature. new should return void
+
         bool ImportRomAndCreateNewProject(string romFilename);
+        void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
+        void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null);
+
+        public bool ConfirmSettingsThenExportAssembly();
+
+        public void MarkChanged(); // rename to MarkUnsaved or similar in Diz3.0
     }
     
     public interface IProjectOpenerHandler : ILongRunningTaskHandler
@@ -172,20 +178,14 @@ namespace Diz.Controllers.interfaces
 
     public interface ILogCreatorSettingsEditorController : IController, ICloseHandler, INotifyPropertyChangedExt
     {
-        internal enum PromptCreateDirResult
-        {
-            AlreadyExists,
-            DontWantToCreateItNow,
-            DidCreateItNow,
-        }
-    
         ILogCreatorSettingsEditorView View { get; set; }
     
         LogWriterSettings Settings { get; set; }
+        
+        public string? KeepPathsRelativeToThisPath { get; set; }
 
-        string GetSampleOutput();
+        bool PromptSetupAndValidateExportSettings();
 
-        bool ValidateFormat(string formatStr);
         bool EnsureSelectRealOutputDirectory(bool forcePrompt = false);
     }
 }

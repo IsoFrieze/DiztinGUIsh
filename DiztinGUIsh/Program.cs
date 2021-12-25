@@ -17,8 +17,8 @@ namespace DiztinGUIsh
             var openFile = "";
             if (args.Length > 0)
                 openFile = args[0];
-            
-            RegisterTypes();
+
+            DizAppServices.RegisterDizServiceTypes();
             
             RunNormally(openFile);
         }
@@ -38,18 +38,6 @@ namespace DiztinGUIsh
                 window.ProjectController.OpenProject("");
 
             Application.Run(window);
-        }
-        
-        private static void RegisterTypes()
-        {
-            // see https://www.lightinject.net/ for more info on what you can do here
-            // we only need to explicitly scan the first assembly. after that, all others are
-            // lazy-loaded as needed.  This will look for a class derived from
-            // ICompositionRoot in each assembly scanned.
-            //
-            // Plugins will need to explicitly register themselves with the container on startup
-            Service.Container.RegisterFrom<DizUiCompositionRoot>();
-            Service.Container.RegisterFrom<DizControllersCompositionRoot>();
         }
     }
 }

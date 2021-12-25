@@ -19,7 +19,6 @@ namespace Diz.Controllers.controllers
         void OnExportFinished(LogCreatorOutput.OutputResult result);
         
         string AskToSelectNewRomFilename(string promptSubject, string promptText);
-        IImportRomDialogView GetImportView();
         void OnProjectOpenWarning(string warningMsg);
     }
 

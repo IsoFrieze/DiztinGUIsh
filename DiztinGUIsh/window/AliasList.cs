@@ -11,7 +11,6 @@ using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 using Diz.Core.model.snes;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
 using Label = Diz.Core.model.Label;
 
 namespace DiztinGUIsh.window
@@ -19,7 +18,7 @@ namespace DiztinGUIsh.window
     public partial class AliasList : Form, ILabelEditorView
     {
         private readonly MainWindow parentWindow;
-        private ProjectController? MainFormController => parentWindow?.ProjectController;
+        private IProjectController? MainFormController => parentWindow?.ProjectController;
         private Data Data => MainFormController?.Project?.Data!;
 
         private bool locked;
@@ -259,10 +258,8 @@ namespace DiztinGUIsh.window
             MainFormController!.ImportLabelsCsv(this, true);
         }
         
-        public static bool PromptWarning(string msg)
-        {
-            return MessageBox.Show(msg, "Warning", MessageBoxButtons.OKCancel) == DialogResult.OK;
-        }
+        public static bool PromptWarning(string msg) => 
+            MessageBox.Show(msg, "Warning", MessageBoxButtons.OKCancel) == DialogResult.OK;
 
         public void RebindProject()
         {

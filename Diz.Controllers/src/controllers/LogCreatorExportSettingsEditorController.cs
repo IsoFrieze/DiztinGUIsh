@@ -2,19 +2,25 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Diz.Controllers.interfaces;
 using Diz.Core.export;
 using Diz.Core.util;
-using Diz.LogWriter;
-using Diz.LogWriter.util;
 using JetBrains.Annotations;
 
 namespace Diz.Controllers.controllers;
 
 public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorController
 {
+    private enum PromptCreateDirResult
+    {
+        AlreadyExists,
+        DontWantToCreateItNow,
+        DidCreateItNow,
+    }
+    
     public LogWriterSettings Settings
     {
         get => settings;
@@ -26,92 +32,70 @@ public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorContr
         get => keepPathsRelativeToThisPath;
         set => this.SetField(PropertyChanged, ref keepPathsRelativeToThisPath, value);
     }
-    
-    private LogWriterSettings settings = null!;
-    private string? keepPathsRelativeToThisPath;
-
-    public LogCreatorSettingsEditorController(ILogCreatorSettingsEditorView view, LogWriterSettings startingSettings)
-    {
-        View = view;
-        View.Controller = this;
-        View.Closed += OnClosed;
-        
-        Settings = startingSettings;
-        UseDefaultsIfInvalidSettings();
-    }
-    
-    public bool PromptSetupAndValidateExportSettings() => 
-        View.PromptEditAndConfirmSettings() && Settings.IsValid();
-
-    public event EventHandler? Closed;
 
     public ILogCreatorSettingsEditorView View { get; set; }
     
-    public string GetSampleOutput()
-    {
-        try
-        {
-            return LogUtil.GetSampleAssemblyOutput(Settings).OutputStr;
-        }
-        catch (Exception ex)
-        {
-            return $"Invalid format or sample output: {ex.Message}";
-        }
-    }
-
+    public event EventHandler? Closed;
     public event PropertyChangedEventHandler? PropertyChanged;
+    
+    private LogWriterSettings settings = new();
+    private string? keepPathsRelativeToThisPath;
+    private readonly IFilesystemService fs;
 
+    public LogCreatorSettingsEditorController(ILogCreatorSettingsEditorView view, IFilesystemService fs)
+    {
+        this.fs = fs;
+        Debug.Assert(fs != null);
+        
+        View = view;
+        View.Controller = this;
+        View.Closed += OnClosed;
+    }
+    
+    /// <summary>
+    /// Show settings editor UI for user to edit.
+    /// NOTE: edited settings don't have to be valid when this returns.
+    /// </summary>
+    /// <returns>True if settings were saved, false if user cancelled the operation and we should discard edits</returns>
+    public bool PromptSetupAndValidateExportSettings() => 
+        View.PromptEditAndConfirmSettings();
+    
     [NotifyPropertyChangedInvocator]
     public void OnPropertyChanged([CallerMemberName] string? propertyName = null) => 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-    private void UseDefaultsIfInvalidSettings() => 
-        Settings = Settings.GetDefaultsIfInvalid();
-    
-    public bool ValidateFormat(string formatStr) => 
-        LogCreatorLineFormatter.Validate(formatStr);
-    
     public bool EnsureSelectRealOutputDirectory(bool forcePrompt = false)
     {
         var result = PromptToCreateOutputDirIfNeeded("Press YES to create and use this path, NO to select a new path instead.");
 
-        if (result == ILogCreatorSettingsEditorController.PromptCreateDirResult.DidCreateItNow)
+        if (result == PromptCreateDirResult.DidCreateItNow)
             return true;
 
-        var shouldPrompt = forcePrompt || result == ILogCreatorSettingsEditorController.PromptCreateDirResult.DontWantToCreateItNow;
+        var shouldPrompt = forcePrompt || result == PromptCreateDirResult.DontWantToCreateItNow;
         if (shouldPrompt && !PromptForPath())
             return false;
         
         return PromptToCreateOutputDirIfNeeded() is 
-            ILogCreatorSettingsEditorController.PromptCreateDirResult.AlreadyExists or 
-            ILogCreatorSettingsEditorController.PromptCreateDirResult.DidCreateItNow;
+            PromptCreateDirResult.AlreadyExists or 
+            PromptCreateDirResult.DidCreateItNow;
     }
 
     /// <summary>
     /// If the output directory doesn't exist, ask the user if they'd like to create it. 
     /// </summary>
     /// <returns>true if the directory exists (either already existing or was just created), false if user chose not to create it</returns>
-    private ILogCreatorSettingsEditorController.PromptCreateDirResult PromptToCreateOutputDirIfNeeded(string extraMsg = "")
+    private PromptCreateDirResult PromptToCreateOutputDirIfNeeded(string extraMsg = "")
     {
         if (DoesOutputDirExist())
-            return ILogCreatorSettingsEditorController.PromptCreateDirResult.AlreadyExists; // already exists, so we're good.
+            return PromptCreateDirResult.AlreadyExists; // already exists, so we're good.
 
         // doesn't exist, ask if they want to create it now
         if (!View.PromptCreatePath(Settings.BuildFullOutputPath(), extraMsg))
-            return ILogCreatorSettingsEditorController.PromptCreateDirResult.DontWantToCreateItNow; // they don't want to create it now
+            return PromptCreateDirResult.DontWantToCreateItNow; // they don't want to create it now
             
         // yes, they want to create the directory now
         CreateOutputDirIfNeeded();
-        return ILogCreatorSettingsEditorController.PromptCreateDirResult.DidCreateItNow;
-    }
-
-    private string? GetOutputDirectoryName() => 
-        Path.GetDirectoryName(Settings.BuildFullOutputPath());
-        
-    private bool DoesOutputDirExist()
-    {
-        var outputDirectoryName = GetOutputDirectoryName();
-        return Directory.Exists(outputDirectoryName);
+        return PromptCreateDirResult.DidCreateItNow;
     }
 
     private void CreateOutputDirIfNeeded()
@@ -121,8 +105,8 @@ public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorContr
 
         // TODO: catch exceptions here.
         var outputDirectoryName = GetOutputDirectoryName();
-        if (!string.IsNullOrEmpty(outputDirectoryName))
-            Directory.CreateDirectory(outputDirectoryName);
+        if (!string.IsNullOrEmpty(outputDirectoryName)) 
+            fs.CreateDirectory(outputDirectoryName);
     }
 
     private bool PromptForPath()
@@ -137,6 +121,12 @@ public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorContr
 
         return true;
     }
+    
+    private string? GetOutputDirectoryName() => 
+        Path.GetDirectoryName(Settings.BuildFullOutputPath());
+
+    private bool DoesOutputDirExist() => 
+        fs.DirectoryExists(GetOutputDirectoryName());
 
     private void OnClosed(object? sender, EventArgs eventArgs) => 
         Closed?.Invoke(sender, eventArgs);

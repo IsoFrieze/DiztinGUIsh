@@ -7,7 +7,6 @@ using Diz.Controllers.interfaces;
 using Diz.Core.commands;
 using Diz.Core.export;
 using Diz.LogWriter;
-using DiztinGUIsh.controller;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
 

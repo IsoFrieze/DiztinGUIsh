@@ -1,10 +1,10 @@
 ﻿using System.Windows.Forms;
 using Diz.Controllers.controllers;
-using Diz.Core.export;
+using Diz.Controllers.interfaces;
+using Diz.Core.util;
 using Diz.LogWriter;
-using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
-using DiztinGUIsh.window.dialog;
+using LightInject;
 
 namespace DiztinGUIsh.window
 {
@@ -12,9 +12,12 @@ namespace DiztinGUIsh.window
     {
         public MainWindow()
         {
-            ProjectController = new ProjectController {
-                ProjectView = this,
-            };
+            // note: new diz refactor makes this not be the entry point, instead using DizApplication
+            // right now, this is a weird way to initialize this, it should come first
+            var controller = Service.Container.GetInstance<IProjectController>();
+            
+            ProjectController = controller;
+            ProjectController.ProjectView = this;
 
             Document.PropertyChanged += Document_PropertyChanged;
             ProjectController.ProjectChanged += ProjectController_ProjectChanged;
@@ -50,20 +53,20 @@ namespace DiztinGUIsh.window
             }
         }
 
-        private void ProjectController_ProjectChanged(object sender, ProjectController.ProjectChangedEventArgs e)
+        private void ProjectController_ProjectChanged(object sender, IProjectController.ProjectChangedEventArgs e)
         {
             switch (e.ChangeType)
             {
-                case ProjectController.ProjectChangedEventArgs.ProjectChangedType.Saved:
+                case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Saved:
                     OnProjectSaved();
                     break;
-                case ProjectController.ProjectChangedEventArgs.ProjectChangedType.Opened:
+                case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Opened:
                     OnProjectOpened(e.Filename);
                     break;
-                case ProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported:
+                case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported:
                     OnImportedProjectSuccess();
                     break;
-                case ProjectController.ProjectChangedEventArgs.ProjectChangedType.Closing:
+                case IProjectController.ProjectChangedEventArgs.ProjectChangedType.Closing:
                     OnProjectClosing();
                     break;
             }
@@ -104,27 +107,6 @@ namespace DiztinGUIsh.window
         public void OnExportFinished(LogCreatorOutput.OutputResult result)
         {
             ShowExportResults(result);
-        }
-
-        /// <summary>
-        /// shows the assembly export settings editor UI 
-        /// </summary>
-        /// <returns>non-null and valid settings object if all user selections are valid</returns>
-        private bool PromptForExportSettingsAndConfirmation()
-        {
-            if (Project == null)
-                return false;
-            
-            var exportDialogController = new LogCreatorSettingsEditorController(new LogCreatorSettingsEditorForm(), Project.LogWriterSettings with {})
-            {
-                KeepPathsRelativeToThisPath = Project?.Session?.ProjectDirectory
-            };
-            
-            if (!exportDialogController.PromptSetupAndValidateExportSettings())
-                return false;
-            
-            ProjectController.UpdateExportSettings(exportDialogController.Settings);
-            return true;
         }
 
         private void RememberNavigationPoint(int pcOffset, ISnesNavigation.HistoryArgs historyArgs)

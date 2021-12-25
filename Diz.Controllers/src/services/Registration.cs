@@ -2,7 +2,7 @@
 
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
-using Diz.Core.model;
+using Diz.Core.util;
 // using Diz.Core.model.byteSources;
 using JetBrains.Annotations;
 using LightInject;
@@ -14,6 +14,15 @@ namespace Diz.Controllers.services
     {
         public void Compose(IServiceRegistry serviceRegistry)
         {
+            serviceRegistry.Register<IFilesystemService, FilesystemService>(); // TODO: move all this fs stuff to (possibly new) ICompositionRoot in Diz.core
+            
+            serviceRegistry.Register<ILogCreatorSettingsEditorController, LogCreatorSettingsEditorController>();
+            serviceRegistry.Register<IImportRomDialogController, ImportRomDialogController>();
+
+            serviceRegistry.Register<IProjectController, ProjectController>();
+
+            // sorry this is all a huge WIP mess, cleanup incoming soon.
+
             // serviceRegistry.Register<int, int, IReadOnlySnesRom, IMarkManyController>(
             //     (factory, offset, whichIndex, data) =>
             //     {
@@ -24,11 +33,11 @@ namespace Diz.Controllers.services
             //         markManyController.MarkManyView.Controller = markManyController;
             //         return markManyController;
             //     });
-            
+
             // TODO: might be able to make some of these register using
             // "open generics" to be more flexible.
-            
-            #if DIZ_3_BRANCH
+
+#if DIZ_3_BRANCH
             serviceRegistry.Register(
                 typeof(IDataController), 
                 typeof(RomByteDataBindingController<IGridRow<ByteEntry>>)
@@ -58,7 +67,7 @@ namespace Diz.Controllers.services
             serviceRegistry.Register<IProjectsManager, ProjectsManager>();
             
             serviceRegistry.RegisterSingleton<ISampleProjectLoader, ProjectsManager>("SampleProjectLoader");
-            #endif
+#endif
         }
     }
 }

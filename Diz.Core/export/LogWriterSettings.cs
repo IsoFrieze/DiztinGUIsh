@@ -3,6 +3,7 @@
 using System.IO;
 using System.Xml.Serialization;
 using Diz.Core.util;
+using LightInject;
 
 /*
  * TODO:
@@ -58,6 +59,8 @@ public record LogWriterSettings
 
     public bool OutputToString { get; init; }
     public string ErrorFilename { get; init; } = "errors.txt";
+    
+    private readonly IFilesystemService fs = Service.Container.GetInstance<IFilesystemService>();
 
     public LogWriterSettings WithPathRelativeTo(string newFileNameAndPath, string? pathToMakeRelativeTo) =>
         this with
@@ -84,7 +87,7 @@ public record LogWriterSettings
         if (Structure == FormatStructure.OneBankPerFile)
             relativeFolderPath += "\\"; // force it to treat it as a path.
 
-        return Path.Combine(BaseOutputPath, relativeFolderPath);
+        return Path.Combine(BaseOutputPath ?? "", relativeFolderPath);
     }
 }
 

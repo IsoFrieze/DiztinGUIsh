@@ -7,8 +7,6 @@ namespace DiztinGUIsh.window
 {
     public partial class MainWindow
     {
-        public IImportRomDialogView GetImportView() => new ImportRomDialog();
-
         private void ImportBizhawkCDL()
         {
             var filename = PromptOpenBizhawkCDLFile();

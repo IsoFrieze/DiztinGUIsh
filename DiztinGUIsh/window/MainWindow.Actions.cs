@@ -4,7 +4,6 @@ using Diz.Controllers.controllers;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window
@@ -45,14 +44,8 @@ namespace DiztinGUIsh.window
             ProjectController.ImportRomAndCreateNewProject(openFileDialog.FileName);
         }
 
-        private void ExportAssembly()
-        {
-            if (!PromptForExportSettingsAndConfirmation())
-                return;
-
-            ProjectController.WriteAssemblyOutput();
-        }
-
+        private void ExportAssembly() => 
+            ProjectController?.ConfirmSettingsThenExportAssembly();
 
         private void Step(int offset)
         {

@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using Diz.Controllers.interfaces;
 using Diz.Core.export;
+using Diz.LogWriter;
+using Diz.LogWriter.util;
 using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog;
@@ -55,13 +57,23 @@ public partial class LogCreatorSettingsEditorForm : Form, ILogCreatorSettingsEdi
         chkPrintLabelSpecificComments.Checked = Settings.PrintLabelSpecificComments;
         txtExportPath.Text = Settings.FileOrFolderOutPath;
         
-        var validFormat = Controller?.ValidateFormat(Settings.Format) ?? false;
+        var validFormat = LogCreatorLineFormatter.Validate(Settings.Format);
         
         disassembleButton.Enabled = validFormat;
 
-        textSample.Text = validFormat 
-            ? Controller?.GetSampleOutput() ?? ""
-            : "Invalid format!";
+        textSample.Text = validFormat ? GetSampleOutput() : "Invalid format!";
+    }
+
+    public string GetSampleOutput()
+    {
+        try
+        {
+            return LogUtil.GetSampleAssemblyOutput(Settings).OutputStr;
+        }
+        catch (Exception ex)
+        {
+            return $"Invalid format or sample output: {ex.Message}";
+        }
     }
 
     private void ControllerOnPropertyChanged(object? sender, PropertyChangedEventArgs e)

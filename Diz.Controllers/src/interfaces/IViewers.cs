@@ -121,11 +121,20 @@ namespace Diz.Controllers.interfaces
     
     public interface IImportRomDialogView
     {
-        bool PromptToConfirmAction(string msg);
+        IImportRomDialogController Controller { get; set; }
+        
         bool ShowAndWaitForUserToConfirmSettings();
-        ImportRomDialogController Controller { get; set; }
         bool GetVectorValue(int i, int j);
         void RefreshUi();
+    }
+
+    public interface ICommonGui
+    {
+        bool PromptToConfirmAction(string msg);
+        
+        void ShowError(string msg);
+        void ShowWarning(string msg);
+        void ShowMessage(string msg);
     }
     
     public interface ILogCreatorSettingsEditorView : IViewer, ICloseHandler

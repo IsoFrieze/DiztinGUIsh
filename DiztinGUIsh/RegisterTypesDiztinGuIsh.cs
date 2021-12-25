@@ -1,35 +1,44 @@
 using Diz.Controllers.interfaces;
-using Diz.Core;
-using DiztinGUIsh.controller;
-using DiztinGUIsh.util;
-using DiztinGUIsh.window;
+using Diz.Controllers.services;
+using Diz.Core.util;
 using DiztinGUIsh.window.dialog;
-using DiztinGUIsh.window.usercontrols;
 using JetBrains.Annotations;
 using LightInject;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh;
+
+public static class DizAppServices
 {
-    [UsedImplicitly] public class DizUiCompositionRoot : ICompositionRoot
+    public static void RegisterDizServiceTypes()
     {
-        public void Compose(IServiceRegistry serviceRegistry)
-        {
-            serviceRegistry.Register<IProgressView, ProgressDialog>();
-            
-            // coming soon. backported from upcoming 3.0 branch
-            // serviceRegistry.RegisterSingleton<IDizApplication, DizApplication>();
-            // serviceRegistry.Register<IMarkManyView, MarkManyView>();
-            // serviceRegistry.Register(
-            //     typeof(IDataSubsetRomByteDataGridLoader<,>), 
-            //     typeof(DataSubsetRomByteDataGridLoader<,>)
-            //     );
-            //
-            // serviceRegistry.Register<IBytesGridViewer<ByteEntry>, DataGridEditorControl>();
-            // serviceRegistry.Register<IDataGridEditorForm, DataGridEditorForm>();
-            //
-            // serviceRegistry.Register<IStartFormViewer, StartForm>("StartForm");
-            //
-            // serviceRegistry.Register<IDataGridEditorForm, DataGridEditorForm> ("DataGridForm");
-        }
+        Service.Container.RegisterFrom<DizUiCompositionRoot>();
+        Service.Container.RegisterFrom<DizControllersCompositionRoot>();
+    }   
+}
+
+[UsedImplicitly] public class DizUiCompositionRoot : ICompositionRoot
+{
+    public void Compose(IServiceRegistry serviceRegistry)
+    {
+        serviceRegistry.Register<ICommonGui, CommonGui>();
+        
+        serviceRegistry.Register<IImportRomDialogView, ImportRomDialog>();
+        serviceRegistry.Register<IProgressView, ProgressDialog>();
+        serviceRegistry.Register<ILogCreatorSettingsEditorView, LogCreatorSettingsEditorForm>();
+
+        // coming soon. backported from upcoming 3.0 branch
+        // serviceRegistry.RegisterSingleton<IDizApplication, DizApplication>();
+        // serviceRegistry.Register<IMarkManyView, MarkManyView>();
+        // serviceRegistry.Register(
+        //     typeof(IDataSubsetRomByteDataGridLoader<,>), 
+        //     typeof(DataSubsetRomByteDataGridLoader<,>)
+        //     );
+        //
+        // serviceRegistry.Register<IBytesGridViewer<ByteEntry>, DataGridEditorControl>();
+        // serviceRegistry.Register<IDataGridEditorForm, DataGridEditorForm>();
+        //
+        // serviceRegistry.Register<IStartFormViewer, StartForm>("StartForm");
+        //
+        // serviceRegistry.Register<IDataGridEditorForm, DataGridEditorForm> ("DataGridForm");
     }
 }

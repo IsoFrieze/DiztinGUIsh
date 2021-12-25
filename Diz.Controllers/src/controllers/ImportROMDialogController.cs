@@ -1,18 +1,40 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Diz.Controllers.interfaces;
 using Diz.Core.serialization;
 using Diz.Core.util;
 
 namespace Diz.Controllers.controllers
 {
-    public class ImportRomDialogController
+    public interface IImportRomDialogController
+    {
+        IImportRomDialogView View { get; set; }
+        public ImportRomSettingsBuilder Builder { get; }
+        public event SettingsCreatedEvent OnBuilderInitialized;
+
+        public ImportRomSettings PromptUserForImportOptions(string romFilename);
+        
+        public delegate void SettingsCreatedEvent();
+
+        public bool Submit();
+    }
+    
+    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
+    public class ImportRomDialogController : IImportRomDialogController
     {
         public IImportRomDialogView View { get; set; }
         public ImportRomSettingsBuilder Builder { get; private set; }
+        
+        public event IImportRomDialogController.SettingsCreatedEvent OnBuilderInitialized;
+        
+        private readonly ICommonGui commonGui;
 
-        public delegate void SettingsCreatedEvent();
-        public event SettingsCreatedEvent OnBuilderInitialized;
+        public ImportRomDialogController(ICommonGui commonGui, IImportRomDialogView view)
+        {
+            this.commonGui = commonGui;
+            View = view;
+        }
 
         public ImportRomSettings PromptUserForImportOptions(string romFilename)
         {
@@ -58,7 +80,7 @@ namespace Diz.Controllers.controllers
 
         private bool Warn(string msg)
         {
-            return View.PromptToConfirmAction(msg +
+            return commonGui.PromptToConfirmAction(msg +
                                               "\nIf you proceed with this import, imported data might be wrong.\n" +
                                               "Proceed anyway?\n\n (Experts only, otherwise say No)");
         }

@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using DiztinGUIsh.window.usercontrols;
 
@@ -36,9 +37,9 @@ namespace DiztinGUIsh.window
             romFullVisualizer1.Project = mainWindow.Project;
         }
 
-        private void ProjectController_ProjectChanged(object sender, controller.ProjectController.ProjectChangedEventArgs e)
+        private void ProjectController_ProjectChanged(object sender, IProjectController.ProjectChangedEventArgs e)
         {
-            this.Project = e.Project;
+            Project = e.Project;
         }
 
         private void VisualizerForm_FormClosing(object sender, FormClosingEventArgs e)
