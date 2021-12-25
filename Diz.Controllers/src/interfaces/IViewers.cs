@@ -114,9 +114,13 @@ namespace Diz.Controllers.interfaces
     
     public interface ILabelEditorView
     {
+        public IProjectController? ProjectController { get; set; }
+        
         string PromptForCsvFilename();
         void RepopulateFromData();
         void ShowLineItemError(string exMessage, int errLine);
+        void Show();
+        void RebindProject();
     }
     
     public interface IImportRomDialogView

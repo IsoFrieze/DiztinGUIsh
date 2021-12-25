@@ -16,6 +16,7 @@ namespace DiztinGUIsh.window
         private void RebindProject()
         {
             AliasList?.RebindProject();
+            
             if (visualForm != null) 
                 visualForm.Project = Project;
             

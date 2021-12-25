@@ -23,7 +23,7 @@ namespace DiztinGUIsh.window
             ProgressBarJob.RunAndWaitForCompletion;
         
         // sub windows
-        public AliasList AliasList;
+        public ILabelEditorView AliasList;
         private VisualizerForm visualForm;
 
         // TODO: add a handler so we get notified when CurrentViewOffset changes.

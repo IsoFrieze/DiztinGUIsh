@@ -35,7 +35,8 @@ namespace DiztinGUIsh.window
         {
             InitMainTable();
 
-            AliasList = new AliasList(this);
+            AliasList = Service.Container.GetInstance<ILabelEditorView>();
+            AliasList.ProjectController = ProjectController;
 
             UpdatePanels();
             UpdateUiFromSettings();

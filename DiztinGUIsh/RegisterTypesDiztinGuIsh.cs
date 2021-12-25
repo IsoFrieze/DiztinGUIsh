@@ -1,6 +1,7 @@
 using Diz.Controllers.interfaces;
 using Diz.Controllers.services;
 using Diz.Core.util;
+using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
 using JetBrains.Annotations;
 using LightInject;
@@ -25,6 +26,7 @@ public static class DizAppServices
         serviceRegistry.Register<IImportRomDialogView, ImportRomDialog>();
         serviceRegistry.Register<IProgressView, ProgressDialog>();
         serviceRegistry.Register<ILogCreatorSettingsEditorView, LogCreatorSettingsEditorForm>();
+        serviceRegistry.Register<ILabelEditorView, AliasList>();
 
         // coming soon. backported from upcoming 3.0 branch
         // serviceRegistry.RegisterSingleton<IDizApplication, DizApplication>();
