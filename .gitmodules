@@ -1,0 +1,3 @@
+[submodule "Diz.LogWriter"]
+	path = Diz.LogWriter
+	url = https://github.com/DizTools/Diz.LogWriter
