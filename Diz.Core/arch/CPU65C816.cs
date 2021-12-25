@@ -251,8 +251,15 @@ namespace Diz.Core.arch
             int bank;
             int programCounter;
             
+            #if !DIZ_3_BRANCH
+            // old way
+            var opcode = data.GetRomByte(offset);
+            #else
+            // new way
             var byteEntry = GetByteEntryRom(data, offset);
             var opcode = byteEntry?.Byte;
+            #endif
+            
             if (opcode == null)
                 return -1;
 
@@ -332,6 +339,7 @@ namespace Diz.Core.arch
             return -1;
         }
 
+        #if DIZ_3_BRANCH
         // get a compiled byte entry representing all info at an offset contained in any layer.
         // return null if there's no entries in that index
         // input: ROM offset
@@ -349,6 +357,7 @@ namespace Diz.Core.arch
         {
             return data.BuildFlatByteEntryForSnes(snesAddress);
         }
+        #endif
 
         public override string GetInstruction(Data data, int offset)
         {
