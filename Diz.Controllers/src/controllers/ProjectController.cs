@@ -369,12 +369,9 @@ public class ProjectController : IProjectController
     private LogWriterSettings ShowExportSettingsEditor()
     {
         var exportSettingsController = Project?.CreateExportSettingsEditorController();
-        if (exportSettingsController == null)
-            return null;
-
-        var editedSettings = exportSettingsController.Settings;
-        exportSettingsController.PromptSetupAndValidateExportSettings();
-        return editedSettings;
+        return !(exportSettingsController?.PromptSetupAndValidateExportSettings() ?? false) 
+            ? null 
+            : exportSettingsController.Settings;
     }
 }
 
