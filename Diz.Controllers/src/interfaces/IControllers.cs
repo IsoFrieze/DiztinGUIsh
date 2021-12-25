@@ -88,6 +88,7 @@ namespace Diz.Controllers.interfaces
         void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null);
 
         public bool ConfirmSettingsThenExportAssembly();
+        public bool ExportAssemblyWithCurrentSettings();
 
         public void MarkChanged(); // rename to MarkUnsaved or similar in Diz3.0
     }
