@@ -112,14 +112,13 @@ namespace Diz.Controllers.interfaces
     }
     #endif
     
-    public interface ILabelEditorView
+    public interface ILabelEditorView : IFormViewer
     {
         public IProjectController? ProjectController { get; set; }
         
         string PromptForCsvFilename();
         void RepopulateFromData();
         void ShowLineItemError(string exMessage, int errLine);
-        void Show();
         void RebindProject();
     }
     

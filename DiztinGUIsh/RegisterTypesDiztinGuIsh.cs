@@ -1,6 +1,7 @@
 using Diz.Controllers.interfaces;
 using Diz.Controllers.services;
 using Diz.Core.util;
+using Diz.Ui.Winforms;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
 using JetBrains.Annotations;
@@ -10,11 +11,12 @@ namespace DiztinGUIsh;
 
 public static class DizAppServices
 {
-    public static void RegisterDizServiceTypes()
+    internal static void RegisterDizServiceTypes()
     {
         Service.Container.RegisterFrom<DizUiCompositionRoot>();
         Service.Container.RegisterFrom<DizControllersCompositionRoot>();
-    }   
+        Service.Container.RegisterFrom<DizWinformsCompositionRoot>();
+    }
 }
 
 [UsedImplicitly] public class DizUiCompositionRoot : ICompositionRoot

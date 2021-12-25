@@ -1,4 +1,4 @@
-﻿namespace DiztinGUIsh.window.dialog
+﻿namespace Diz.Ui.Winforms.dialogs
 {
     partial class About
     {
@@ -69,7 +69,7 @@
             // logoPictureBox
             // 
             this.logoPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.logoPictureBox.Image = global::DiztinGUIsh.Properties.Resources.diz_4;
+            // this.logoPictureBox.Image = global::DiztinGUIsh.Properties.Resources.diz_4;
             this.logoPictureBox.Location = new System.Drawing.Point(0, 0);
             this.logoPictureBox.Margin = new System.Windows.Forms.Padding(0);
             this.logoPictureBox.Name = "logoPictureBox";

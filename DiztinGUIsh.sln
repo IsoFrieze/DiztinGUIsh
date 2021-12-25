@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.LogWriter", "Diz.LogWri
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Controllers", "Diz.Controllers\Diz.Controllers.csproj", "{B2213BCE-F70F-423F-BB55-0744243FAD43}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Ui.Winforms", "Diz.Ui.Winforms\Diz.Ui.Winforms.csproj", "{04BBE7C4-4C0C-4155-95A4-062C066B4662}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{B2213BCE-F70F-423F-BB55-0744243FAD43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2213BCE-F70F-423F-BB55-0744243FAD43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2213BCE-F70F-423F-BB55-0744243FAD43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04BBE7C4-4C0C-4155-95A4-062C066B4662}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04BBE7C4-4C0C-4155-95A4-062C066B4662}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04BBE7C4-4C0C-4155-95A4-062C066B4662}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04BBE7C4-4C0C-4155-95A4-062C066B4662}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -22,6 +22,7 @@
     <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
     <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
+    <ProjectReference Include="..\Diz.Ui.Winforms\Diz.Ui.Winforms.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,12 +53,6 @@
     </Compile>
     <Compile Update="window\dialog\BSNESTraceLogBinaryMonitorForm.Designer.cs">
       <DependentUpon>BSNESTraceLogBinaryMonitorForm.cs</DependentUpon>
-    </Compile>
-    <Compile Update="window\dialog\About.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="window\dialog\About.Designer.cs">
-      <DependentUpon>About.cs</DependentUpon>
     </Compile>
     <Compile Update="window\dialog\ProgressDialog.cs">
       <SubType>Form</SubType>
@@ -164,9 +159,6 @@
     </EmbeddedResource>
     <EmbeddedResource Update="window\AliasList.resx">
       <DependentUpon>AliasList.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="window\dialog\About.resx">
-      <DependentUpon>About.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="window\dialog\BSNESTraceLogBinaryMonitorForm.resx">
       <DependentUpon>BSNESTraceLogBinaryMonitorForm.cs</DependentUpon>

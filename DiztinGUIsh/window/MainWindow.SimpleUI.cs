@@ -2,10 +2,12 @@
 
 using System;
 using System.Windows.Forms;
+using Diz.Controllers.interfaces;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
 using DiztinGUIsh.window.dialog;
+using LightInject;
 
 namespace DiztinGUIsh.window
 {
@@ -26,8 +28,11 @@ namespace DiztinGUIsh.window
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e) => 
             SaveProject(askFilenameIfNotSet: true, alwaysAsk: true); // save as
         
-        private void exportLogToolStripMenuItem_Click(object sender, EventArgs e) => ExportAssembly();
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e) => new About().ShowDialog();
+        private void exportLogToolStripMenuItem_Click(object sender, EventArgs e) => 
+            ExportAssembly();
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e) =>
+            Service.Container.GetInstance<IFormViewer>("About").Show();
         private void exitToolStripMenuItem_Click(object sender, EventArgs e) => Application.Exit();
         
         private void decimalToolStripMenuItem_Click(object sender, EventArgs e) => 
