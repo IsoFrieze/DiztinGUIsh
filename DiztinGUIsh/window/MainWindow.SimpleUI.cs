@@ -27,9 +27,12 @@ namespace DiztinGUIsh.window
 
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e) => 
             SaveProject(askFilenameIfNotSet: true, alwaysAsk: true); // save as
-        
-        private void exportLogToolStripMenuItem_Click(object sender, EventArgs e) => 
-            ExportAssembly();
+
+        private void toolStrip_exportDisassemblyUseCurrentSettings_Click(object sender, System.EventArgs e) => 
+            ProjectController?.ExportAssemblyWithCurrentSettings();
+
+        private void toolStrip_exportDisassemblyEditSettingsFirst_Click(object sender, System.EventArgs e) =>
+            ProjectController?.ConfirmSettingsThenExportAssembly();
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e) =>
             Service.Container.GetInstance<IFormViewer>("About").Show();

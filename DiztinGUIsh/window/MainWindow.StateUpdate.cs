@@ -154,7 +154,8 @@ namespace DiztinGUIsh.window
             saveProjectAsToolStripMenuItem.Enabled = saveAsEnabled;
             closeProjectToolStripMenuItem.Enabled = closeEnabled;
 
-            exportLogToolStripMenuItem.Enabled = true;
+            toolStrip_exportDisassemblyUseCurrentSettings.Enabled = true;
+            toolStrip_exportDisassemblyEditSettingsFirst.Enabled = true;
         }
 
         private void UpdateSomeUI2()
