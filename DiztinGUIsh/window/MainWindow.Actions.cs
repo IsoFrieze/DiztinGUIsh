@@ -44,9 +44,6 @@ namespace DiztinGUIsh.window
             ProjectController.ImportRomAndCreateNewProject(openFileDialog.FileName);
         }
 
-        private void ExportAssembly() => 
-            ProjectController?.ConfirmSettingsThenExportAssembly();
-
         private void Step(int offset)
         {
             if (!RomDataPresent()) 
