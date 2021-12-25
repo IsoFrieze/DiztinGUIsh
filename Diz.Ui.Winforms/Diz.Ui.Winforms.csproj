@@ -15,6 +15,11 @@
         <Compile Update="dialogs\About.cs">
             <SubType>Form</SubType>
         </Compile>
+        <Compile Update="Properties\Resources.Designer.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>
@@ -32,7 +37,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj"/>
+        <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Properties\Resources.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
     </ItemGroup>
 
 </Project>
