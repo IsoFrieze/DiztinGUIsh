@@ -8,6 +8,12 @@
         "resolved": "2.1.2",
         "contentHash": "1sO441DFuueysHa9gDWpql+bra1wL9KBHAM823dHUHuBTJjKwnv4Dpr+/+nnZ6cdY3mECtbWoMrYgeTiKwJ8Rg=="
       },
+      "LightInject": {
+        "type": "Direct",
+        "requested": "[6.4.0, )",
+        "resolved": "6.4.0",
+        "contentHash": "WjrY67fnaUJzBSnb7wiaZUOSl7gmxjfg+xo+GrHI55jz0YZR2b5ZB+lDOM5XDu2+2+/OnVT3y4+6BOv6xTqo9w=="
+      },
       "ExtendedXmlSerializer": {
         "type": "Transitive",
         "resolved": "3.7.6",
@@ -24,8 +30,8 @@
       },
       "FluentValidation": {
         "type": "Transitive",
-        "resolved": "10.3.5",
-        "contentHash": "Mt2CnRqNA5+vXVNFY05yLuOG3OLYR7Q/ZcP/rcJZPNPbg95foVUruyQEmKl1GeXVnT2+u6rjGU2ZCdgF//QU2A=="
+        "resolved": "10.3.6",
+        "contentHash": "iMd370ZDx6ydm8t7bIFdRbSKX0e42lpvCtifUSbTSXOk5iKjmgl7HU0PXBhIWQAyIRi3gCwfMI9luj8H6K+byw=="
       },
       "IX.Observable": {
         "type": "Transitive",
@@ -57,16 +63,11 @@
       },
       "JetBrains.Profiler.SelfApi": {
         "type": "Transitive",
-        "resolved": "2.1.2",
-        "contentHash": "MSIKzFkC7lmu0Vz3J5PhNoExz8qdGiOjbU8ugrL73m3XoNThflUXGCV/7B7rBNxZili7NmBHzf45z6x8n3V4HQ==",
+        "resolved": "2.2.0",
+        "contentHash": "WrnwHktJbwW2A4hhW8TwLPJeu+F0Gl8QCmHs8bm+OEggrPk1Rv50lDYH/+8HNtsCOFJcxmbNJ5XzZCYe0EkRrQ==",
         "dependencies": {
           "JetBrains.Profiler.Api": "1.1.8"
         }
-      },
-      "LightInject": {
-        "type": "Transitive",
-        "resolved": "6.3.5",
-        "contentHash": "ri0PjphQnzYeQIXbJj4dCe7wX6/3ZwcKlJO2uz5Y8MjoTAVkTx2V5gDLsVdc1a/6h2oQbapUVrJ74dtU9XsjPQ=="
       },
       "Microsoft.NETCore.Platforms": {
         "type": "Transitive",
@@ -296,10 +297,11 @@
         "type": "Project",
         "dependencies": {
           "ExtendedXmlSerializer": "3.7.6",
-          "FluentValidation": "10.3.5",
+          "FluentValidation": "10.3.6",
           "IX.Observable": "0.7.3",
           "JetBrains.Annotations": "2021.3.0",
-          "JetBrains.Profiler.SelfApi": "2.1.2",
+          "JetBrains.Profiler.SelfApi": "2.2.0",
+          "LightInject": "6.4.0",
           "SharpZipLib": "1.3.3",
           "System.Diagnostics.Tracing": "4.3.0",
           "System.Resources.Extensions": "6.0.0",
