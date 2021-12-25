@@ -19,19 +19,19 @@ namespace Diz.Core.model
         public static int GetRomWordUnsafe(this IReadOnlyByteSource data, int offset)
         {
             // ReSharper disable once PossibleInvalidOperationException
-            return (byte)data.GetRomWord(offset);
+            return (int)data.GetRomWord(offset);
         }
         
         public static int GetRomLongUnsafe(this IReadOnlyByteSource data, int offset)
         {
             // ReSharper disable once PossibleInvalidOperationException
-            return (byte)data.GetRomLong(offset);
+            return (int)data.GetRomLong(offset);
         }
 
         public static int GetRomDoubleWordUnsafe(this IReadOnlyByteSource data, int offset)
         {
             // ReSharper disable once PossibleInvalidOperationException
-            return (byte)data.GetRomDoubleWord(offset);
+            return (int)data.GetRomDoubleWord(offset);
         }
         #endregion
     }
