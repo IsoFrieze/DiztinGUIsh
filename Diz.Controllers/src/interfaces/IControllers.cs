@@ -3,6 +3,7 @@ using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.export;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;

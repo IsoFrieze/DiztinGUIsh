@@ -10,6 +10,7 @@ using System.IO;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
+using Diz.Core.Interfaces;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 using Label = Diz.Core.model.Label;
@@ -98,7 +99,7 @@ public partial class AliasList : Form, ILabelEditorView
         }
     }
 
-    private static void OutputCsvLine(TextWriter sw, int labelSnesAddress, Label label)
+    private static void OutputCsvLine(TextWriter sw, int labelSnesAddress, IReadOnlyLabel label)
     {
         var outputLine = $"{Util.ToHexString6(labelSnesAddress)},{label.Name},{label.Comment}";
         sw.WriteLine(outputLine);
@@ -209,7 +210,7 @@ public partial class AliasList : Form, ILabelEditorView
         dataGridView1.Invalidate();
     }
 
-    private void RawAdd(int address, Label alias)
+    private void RawAdd(int address, IReadOnlyLabel alias)
     {
         dataGridView1.Rows.Add(Util.ToHexString6(address), alias.Name, alias.Comment);
     }
@@ -288,9 +289,9 @@ public partial class AliasList : Form, ILabelEditorView
             return;
 
         // TODO: replace with winforms databinding eventually
-        foreach (var item in Data.Labels.Labels)
+        foreach (var (snesAddress, label) in Data.Labels.Labels)
         {
-            RawAdd(item.Key, item.Value);
+            RawAdd(snesAddress, label);
         }
             
         dataGridView1.Invalidate();

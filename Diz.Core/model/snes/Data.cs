@@ -6,6 +6,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Diz.Core.arch;
 using Diz.Core.export;
+using Diz.Core.Interfaces;
 using Diz.Core.util;
 using IX.Observable;
 
@@ -45,7 +46,7 @@ namespace Diz.Core.model.snes
         // for deserialization/loading in Diz2.0
         // this is kind of a hack needs rework. would be better to ditch this and write some kind of custom
         // deserializer that handles this instead
-        public Dictionary<int, Label> LabelsSerialization
+        public Dictionary<int, IAnnotationLabel> LabelsSerialization
         {
             get => new(Labels.Labels);
             set => Labels.SetAll(value);

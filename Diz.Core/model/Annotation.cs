@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Diz.Core.Interfaces;
 using Diz.Core.util;
 using JetBrains.Annotations;
 
@@ -269,7 +270,7 @@ namespace Diz.Core.model
     // - address: 0x7E0020 (if HiRom, 0x7EXXXX means it's a RAM address)
     // - label:   "character_3_hp"
     // - comment: "this address is only used in RAM during battle sequences"
-    public class Label : Annotation, IReadOnlyLabel, IComparable<Label>, IComparable
+    public class Label : Annotation, IAnnotationLabel, IComparable<Label>, IComparable
     {
         private string comment = "";
         private string name = "";

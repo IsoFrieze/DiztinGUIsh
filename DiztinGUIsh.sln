@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Controllers", "Diz.Cont
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Ui.Winforms", "Diz.Ui.Winforms\Diz.Ui.Winforms.csproj", "{04BBE7C4-4C0C-4155-95A4-062C066B4662}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Core.Interfaces", "Diz.Core.Interfaces\Diz.Core.Interfaces.csproj", "{E5AA827C-2194-4126-A1C2-0A5F9B9F653C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{04BBE7C4-4C0C-4155-95A4-062C066B4662}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{04BBE7C4-4C0C-4155-95A4-062C066B4662}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{04BBE7C4-4C0C-4155-95A4-062C066B4662}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5AA827C-2194-4126-A1C2-0A5F9B9F653C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5AA827C-2194-4126-A1C2-0A5F9B9F653C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5AA827C-2194-4126-A1C2-0A5F9B9F653C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5AA827C-2194-4126-A1C2-0A5F9B9F653C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

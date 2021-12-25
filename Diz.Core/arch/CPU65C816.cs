@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;

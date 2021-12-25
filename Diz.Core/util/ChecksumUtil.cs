@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Diz.Core.model;
 
 namespace Diz.Core.util
 {

@@ -1,4 +1,5 @@
-﻿using Diz.Core.model.snes;
+﻿using Diz.Core.Interfaces;
+using Diz.Core.model.snes;
 
 namespace Diz.Core.arch;
 

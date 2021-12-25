@@ -45,4 +45,10 @@
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Diz.Core.Interfaces\Diz.Core.Interfaces.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="arch\CpuOperations.cs" />
+  </ItemGroup>
 </Project>

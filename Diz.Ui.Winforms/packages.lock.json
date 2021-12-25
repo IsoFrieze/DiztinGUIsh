@@ -305,6 +305,7 @@
       "diz.core": {
         "type": "Project",
         "dependencies": {
+          "Diz.Core.Interfaces": "1.0.0",
           "ExtendedXmlSerializer": "3.7.6",
           "FluentValidation": "10.3.6",
           "IX.Observable": "0.7.3",
@@ -316,6 +317,9 @@
           "System.Resources.Extensions": "6.0.0",
           "System.Text.Encoding.CodePages": "6.0.0"
         }
+      },
+      "diz.core.interfaces": {
+        "type": "Project"
       },
       "diz.logwriter": {
         "type": "Project",

@@ -10,33 +10,6 @@ using JetBrains.Annotations;
 
 namespace Diz.Core.util
 {
-    public enum RomSpeed : byte
-    {
-        SlowRom,
-        FastRom,
-        Unknown
-    }
-    
-    public enum RomMapMode : byte
-    {
-        LoRom,
-
-        HiRom,
-
-        ExHiRom,
-
-        [Description("SA - 1 ROM")] Sa1Rom,
-
-        [Description("SA-1 ROM (FuSoYa's 8MB mapper)")]
-        ExSa1Rom,
-
-        SuperFx,
-
-        [Description("Super MMC")] SuperMmc,
-
-        ExLoRom
-    }
-    
     public static class RomUtil
     {
         public const int LoromSettingOffset = 0x7FD5;

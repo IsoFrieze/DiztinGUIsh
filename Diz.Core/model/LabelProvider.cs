@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml.Serialization;
 using Diz.Core.export;
+using Diz.Core.Interfaces;
 #if DIZ_3_BRANCH
 using Diz.Core.model.byteSources;
 #endif
@@ -23,7 +24,7 @@ namespace Diz.Core.model
     // on top of SnesAddressSpace and add labels to just THAT.
     public abstract class LabelProviderBase
     {
-        public abstract Label GetLabel(int snesAddress);
+        public abstract IAnnotationLabel GetLabel(int snesAddress);
         
         public string GetLabelName(int snesAddress) => 
             GetLabel(snesAddress)?.Name ?? "";
@@ -61,9 +62,9 @@ namespace Diz.Core.model
         public event EventHandler OnLabelChanged;
 
         // returns both real and temporary labels
-        IEnumerable<KeyValuePair<int, Label>> IReadOnlyLabelProvider.Labels => Labels;
+        IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;
 
-        public void AddTemporaryLabel(int snesAddress, Label label)
+        public void AddTemporaryLabel(int snesAddress, IAnnotationLabel label)
         {
             if (NormalProvider.GetLabel(snesAddress) == null && TemporaryProvider.GetLabel(snesAddress) == null)
                 TemporaryProvider.AddLabel(snesAddress, label);
@@ -78,10 +79,10 @@ namespace Diz.Core.model
         // returns both real and temporary labels
         //
         // this method is unordered
-        public IEnumerable<KeyValuePair<int, Label>> Labels => 
+        public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels => 
             NormalProvider.Labels.Concat(TemporaryProvider.Labels);
 
-        public override Label GetLabel(int snesAddress)
+        public override IAnnotationLabel GetLabel(int snesAddress)
         {
             var normalExisting = NormalProvider.GetLabel(snesAddress);
             return normalExisting ?? TemporaryProvider.GetLabel(snesAddress);
@@ -104,7 +105,7 @@ namespace Diz.Core.model
             OnLabelChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite = false)
+        public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
         {
             // we should only operate on real labels here. ignore temporary labels.
             // explicitly use AddTemporaryLabel() for temp stuff.
@@ -114,7 +115,7 @@ namespace Diz.Core.model
             OnLabelChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void SetAll(Dictionary<int, Label> newLabels)
+        public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
         {
             ClearTemporaryLabels();
             NormalProvider.SetAll(newLabels);
@@ -202,8 +203,8 @@ namespace Diz.Core.model
             ByteSource = byteSource;
         }
 
-        public IEnumerable<KeyValuePair<int, Label>> Labels => 
-            ByteSource.GetAnnotationsIncludingChildrenEnumerator<Label>();
+        public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels => 
+            ByteSource.GetAnnotationsIncludingChildrenEnumerator<IAnnotationLabel>();
 
         public static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
         
@@ -217,7 +218,7 @@ namespace Diz.Core.model
             ByteSource.RemoveAllAnnotationsAt(snesAddress, IsLabel);
         }
 
-        public void SetAll(Dictionary<int, Label> newLabels)
+        public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
         {
             DeleteAllLabels();
             foreach (var (key, value) in newLabels)
@@ -228,14 +229,14 @@ namespace Diz.Core.model
 
         public override Label GetLabel(int snesAddress) => ByteSource.GetOneAnnotation<Label>(snesAddress);
 
-        public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite = false)
+        public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
         {
             Debug.Assert(labelToAdd != null);
             
             if (overwrite)
                 RemoveLabel(snesAddress);
 
-            var existing = ByteSource.GetOneAnnotation<Label>(snesAddress);
+            var existing = ByteSource.GetOneAnnotation<IAnnotationLabel>(snesAddress);
             
             if (existing == null)
                 ByteSource.AddAnnotation(snesAddress, labelToAdd);
@@ -246,12 +247,12 @@ namespace Diz.Core.model
     public class LabelsCollection : LabelProviderBase, ILabelService, IEquatable<LabelsCollection>
     {
         // ReSharper disable once MemberCanBePrivate.Global
-        public Dictionary<int, Label> Labels { get; } = new();
+        public Dictionary<int, IAnnotationLabel> Labels { get; } = new();
         
         [XmlIgnore]
-        IEnumerable<KeyValuePair<int, Label>> IReadOnlyLabelProvider.Labels => Labels;
+        IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;
 
-        public void AddLabel(int snesAddress, Label labelToAdd, bool overwrite = false)
+        public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
         {
             Debug.Assert(labelToAdd != null);
             
@@ -274,7 +275,7 @@ namespace Diz.Core.model
             Labels.Remove(snesAddress);
         }
 
-        public void SetAll(Dictionary<int, Label> newLabels)
+        public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
         {
             DeleteAllLabels();
             foreach (var key in newLabels.Keys)
@@ -283,7 +284,7 @@ namespace Diz.Core.model
             }
         }
 
-        public override Label GetLabel(int snesAddress) => 
+        public override IAnnotationLabel GetLabel(int snesAddress) => 
             Labels.TryGetValue(snesAddress, out var label) ? label : null;
         
         #region "Equality"

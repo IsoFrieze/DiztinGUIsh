@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
+using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using DiztinGUIsh.util;

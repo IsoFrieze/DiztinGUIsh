@@ -1,38 +1,42 @@
-﻿using System.Collections.Generic;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using System.ComponentModel;
-using Diz.Core.util;
-
+using Diz.Core.model;
 #if DIZ_3_BRANCH
 using Diz.Core.model.byteSources;
 #endif
 
-namespace Diz.Core.model
+namespace Diz.Core.Interfaces
 {
     public interface IReadOnlyLabel
     {
         string Name { get; }
         string Comment { get; }
     }
+
+    public interface IAnnotationLabel : IReadOnlyLabel
+    {
+        new string Name { get; set; }
+        new string Comment { get; set; }
+    }
     
     public interface IReadOnlyLabelProvider
     {
-        public IEnumerable<KeyValuePair<int, Label>> Labels { get; }
+        public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels { get; }
 
-        Label GetLabel(int snesAddress);
+        IAnnotationLabel GetLabel(int snesAddress);
         string GetLabelName(int snesAddress);
         string GetLabelComment(int snesAddress);
     }
     
     public interface ILabelProvider
     {
-        void AddLabel(int snesAddress, Label label, bool overwrite = false);
+        void AddLabel(int snesAddress, IAnnotationLabel label, bool overwrite = false);
         void DeleteAllLabels();
         
         // if any labels exist at this address, remove them
         void RemoveLabel(int snesAddress);
 
-        void SetAll(Dictionary<int, Label> newLabels);
+        void SetAll(Dictionary<int, IAnnotationLabel> newLabels);
     }
     
     public interface IReadOnlyByteSource
@@ -79,7 +83,6 @@ namespace Diz.Core.model
 
     public interface IReadOnlySnesRom : 
         IReadOnlyByteSource,
-        ISnesAddressConverter,
         IRomMapProvider,
         ICommentTextProvider,
         #if DIZ_3_BRANCH

@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Diz.Core.export;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using JetBrains.Annotations;
 

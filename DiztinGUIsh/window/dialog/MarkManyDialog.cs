@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.commands;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
 

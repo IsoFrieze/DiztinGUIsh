@@ -1,4 +1,5 @@
-﻿using Diz.Core.model;
+﻿using Diz.Core.Interfaces;
+using Diz.Core.model;
 
 namespace Diz.Core.export
 {
@@ -12,7 +13,7 @@ namespace Diz.Core.export
     {
         // add a temporary label which will be cleared out when we are finished the export
         // this should not add a label if a real label already exists.
-        public void AddTemporaryLabel(int snesAddress, Label label);
+        public void AddTemporaryLabel(int snesAddress, IAnnotationLabel label);
         public void ClearTemporaryLabels();
     }
 
