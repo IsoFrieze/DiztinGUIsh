@@ -59,8 +59,6 @@ public record LogWriterSettings
 
     public bool OutputToString { get; init; }
     public string ErrorFilename { get; init; } = "errors.txt";
-    
-    private readonly IFilesystemService fs = Service.Container.GetInstance<IFilesystemService>();
 
     public LogWriterSettings WithPathRelativeTo(string newFileNameAndPath, string? pathToMakeRelativeTo) =>
         this with

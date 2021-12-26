@@ -35,10 +35,10 @@ namespace Diz.Core.export
 
     public class LogWriterSettingsOutputMultipleFiles : AbstractValidator<LogWriterSettings>
     {
-        private readonly IFilesystemService fs;
-
-        private bool DirectoryExists(string path) =>
-            fs.DirectoryExists(Path.GetDirectoryName(path));
+        private static IFilesystemService Fs => Service.Container.GetInstance<IFilesystemService>();
+        
+        private static bool DirectoryExists(string path) =>
+            Fs.DirectoryExists(Path.GetDirectoryName(path));
 
         // this is not the most bulletproof thing in the world.
         // it's hard to validate without hitting the disk, you should follow this with additional checks
@@ -49,8 +49,6 @@ namespace Diz.Core.export
         // runs when OutputToString == false
         public LogWriterSettingsOutputMultipleFiles()
         {
-            fs = Service.Container.GetInstance<IFilesystemService>();
-
             RuleFor(x => x.FileOrFolderOutPath)
                 .NotEmpty()
                 .WithMessage("No file path set")
