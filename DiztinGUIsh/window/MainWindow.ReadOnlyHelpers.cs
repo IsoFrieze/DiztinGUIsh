@@ -1,4 +1,5 @@
 ﻿using Diz.Core.model;
+using Diz.Cpu._65816;
 
 namespace DiztinGUIsh.window
 {
@@ -9,7 +10,7 @@ namespace DiztinGUIsh.window
             if (!RomDataPresent())
                 return -1;
 
-            var ia = Project.Data.GetIntermediateAddressOrPointer(offset);
+            var ia = Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(offset);
             if (ia < 0)
                 return -1;
 
@@ -47,12 +48,12 @@ namespace DiztinGUIsh.window
 
         private bool IsReached(int offset)
         {
-            return Project.Data.GetFlag(offset) != FlagType.Unreached;
+            return Project.Data.GetSnesApi().GetFlag(offset) != FlagType.Unreached;
         }
 
         private bool IsUnreached(int offset)
         {
-            return Project.Data.GetFlag(offset) == FlagType.Unreached;
+            return Project.Data.GetSnesApi().GetFlag(offset) == FlagType.Unreached;
         }
 
         private bool RomDataPresent()

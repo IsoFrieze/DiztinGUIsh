@@ -7,6 +7,8 @@ using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
+using Diz.Cpu._65816;
+using Diz.Test.Utils;
 using FluentAssertions;
 using JetBrains.Annotations;
 using Moq;
@@ -15,29 +17,29 @@ using Xunit;
 namespace Diz.Test.bugs
 {
     // https://github.com/Dotsarecool/DiztinGUIsh/issues/50
-    public static class Bug050_JapaneseText
+    public class Bug050JapaneseText
     {
         public class MemoryProjectFileManager : ProjectFileManager
         {
-            public byte[] RawProjectBytes { get; set; } = { };
+            public byte[] RawProjectBytes { get; set; } = Array.Empty<byte>();
             protected override void WriteBytes(string filename, byte[] data) => RawProjectBytes = data;
             protected override byte[] ReadAllBytes(string filename) => RawProjectBytes;
         }
 
         public class Bug50ProjectFileManager : MemoryProjectFileManager
         {
-            public event ProjectXmlSerializer.SerializeEvent BeforeSerialize;
-            public event ProjectXmlSerializer.SerializeEvent AfterDeserialize;
+            public event IProjectXmlSerializer.SerializeEvent BeforeSerialize;
+            public event IProjectXmlSerializer.SerializeEvent AfterDeserialize;
 
-            protected override (ProjectXmlSerializer.Root xmlRoot, string warning) DeserializeWith(ProjectSerializer serializer, byte[] rawBytes)
+            protected override (ProjectSerializedRoot root, string warning) DeserializeWith(IProjectSerializer serializer, byte[] rawBytes)
             {
-                var xmlSerializer = serializer as ProjectXmlSerializer;
+                var xmlSerializer = serializer as IProjectXmlSerializer;
                 xmlSerializer!.AfterDeserialize += AfterDeserialize;
 
                 return base.DeserializeWith(serializer, rawBytes);
             }
 
-            protected override byte[] SerializeWith(Project project, ProjectSerializer serializer)
+            protected override byte[] SerializeWith(Project project, IProjectSerializer serializer)
             {
                 var xmlSerializer = serializer as ProjectXmlSerializer;
                 xmlSerializer!.BeforeSerialize += BeforeSerialize;
@@ -59,11 +61,16 @@ namespace Diz.Test.bugs
         public class Harness
         {
             public bool ExpectedMitigationApplied = true;
-            public Project Project = LoadSaveTest.BuildSampleProject2();
+            public Project CreateProject() => LoadSaveTest.BuildSampleProject2();
             [CanBeNull] public string OverrideGameName = null;
             public bool ForceOlderSaveVersionWhichShouldFix = true;
         }
-        
+
+        public Bug050JapaneseText()
+        {
+            AppServicesForTests.RegisterNormalAppServices();
+        }
+
         public static IEnumerable<object[]> Harnesses => new List<Harness>
         {
             // we should see the mitigation code fix this scenario up correctly
@@ -73,7 +80,7 @@ namespace Diz.Test.bugs
                 OverrideGameName = "BAD",
             },
             
-            // in a newer save format, there shouldn't be a bug anyomre,
+            // in a newer save format, there shouldn't be a bug anymore,
             // so we don't expect the mitigation code to run.
             new()
             {
@@ -85,9 +92,9 @@ namespace Diz.Test.bugs
         
         [Theory]
         [MemberData(nameof(Harnesses))]
-        public static void TestMitigation(Harness harness)
+        public void TestMitigation(Harness harness)
         {
-            var project = harness.Project;
+            var project = harness.CreateProject();
             var originalGoodGameName = project.InternalRomGameName;
             var badGameName = harness.OverrideGameName == null ? null : 
                 ByteUtil.ReadShiftJisEncodedString(
@@ -112,9 +119,12 @@ namespace Diz.Test.bugs
 
                 // we want to trigger the bug which happens if the saved data in the XML doesn't match the ROM.
                 rootElement.Project.InternalRomGameName = badGameName;
+
+                var snesApi = rootElement.Project.Data.GetSnesApi();
+                snesApi.Should().NotBeNull();
                 
                 if (badGameName != null)
-                    Assert.NotEqual(rootElement.Project.InternalRomGameName, rootElement.Project.Data.CartridgeTitleName);
+                    Assert.NotEqual(rootElement.Project.InternalRomGameName, snesApi?.CartridgeTitleName ?? "");
             };
 
             projectFileManager.Save(project, "IGNORED");

@@ -6,6 +6,7 @@ using System.Linq;
 using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
+using Diz.Cpu._65816;
 
 namespace Diz.Controllers.controllers
 {
@@ -143,7 +144,7 @@ namespace Diz.Controllers.controllers
         private static Project CreateNewSampleProject()
         {
             var project = new Project {
-                Data = SampleRomData.CreateSampleData(),
+                Data = SampleRomData.CreateSampleData().data,
             };
 
             project.Session = new ProjectSession(project, MagicSampleProjectName);

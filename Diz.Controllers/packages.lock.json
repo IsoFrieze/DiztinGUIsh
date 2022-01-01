@@ -310,12 +310,30 @@
         }
       },
       "diz.core.interfaces": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "IX.Observable": "0.7.3"
+        }
+      },
+      "diz.cpu.65816": {
+        "type": "Project",
+        "dependencies": {
+          "Diz.Core": "3.0.0",
+          "Diz.Core.Interfaces": "1.0.0"
+        }
+      },
+      "diz.import": {
+        "type": "Project",
+        "dependencies": {
+          "Diz.Core": "3.0.0",
+          "Diz.Cpu.65816": "1.0.0"
+        }
       },
       "diz.logwriter": {
         "type": "Project",
         "dependencies": {
           "Diz.Core": "3.0.0",
+          "Diz.Cpu.65816": "1.0.0",
           "LightInject": "6.4.0"
         }
       }

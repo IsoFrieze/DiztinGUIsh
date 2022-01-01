@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.model.snes;
+using Diz.Cpu._65816;
 
 // shows a collection of bank controls, so you can visualize the entire ROM
 
@@ -48,12 +49,14 @@ namespace DiztinGUIsh.window.usercontrols
         {
             Debug.Assert(project != null);
 
-            var bankSizeBytes = Data.GetBankSize();
+            var snesApi = project.Data.GetSnesApi(); 
 
-            for (var bank = 0; bank < Data.GetNumberOfBanks(); bank++)
+            var bankSizeBytes = snesApi.GetBankSize();
+
+            for (var bank = 0; bank < snesApi.GetNumberOfBanks(); bank++)
             {
                 var bankOffset = bank * bankSizeBytes;
-                var bankName = Data.GetBankName(bank);
+                var bankName = snesApi.GetBankName(bank);
 
                 var bankControl = new RomBankVisualizer(project, bankOffset, bankSizeBytes, bankName);
 

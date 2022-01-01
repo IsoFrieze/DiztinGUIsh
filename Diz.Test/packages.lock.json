@@ -87,6 +87,16 @@
         "resolved": "6.4.0",
         "contentHash": "WjrY67fnaUJzBSnb7wiaZUOSl7gmxjfg+xo+GrHI55jz0YZR2b5ZB+lDOM5XDu2+2+/OnVT3y4+6BOv6xTqo9w=="
       },
+      "LightInject.xUnit": {
+        "type": "Direct",
+        "requested": "[3.0.0, )",
+        "resolved": "3.0.0",
+        "contentHash": "HeXWVujJcprwQNjudSVBYBAXaXNZARb56TLEJayOEvpiktANN4S8ZcbPCnrnxwBmueq2mAV/YvTWtPmJqfGgHg==",
+        "dependencies": {
+          "LightInject": "5.0.0",
+          "xunit": "2.0.0"
+        }
+      },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
         "requested": "[17.0.0, )",
@@ -1661,6 +1671,7 @@
         "type": "Project",
         "dependencies": {
           "Diz.Core": "3.0.0",
+          "Diz.Import": "1.0.0",
           "Diz.LogWriter": "3.0.0",
           "LightInject": "6.4.0"
         }
@@ -1682,12 +1693,30 @@
         }
       },
       "diz.core.interfaces": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "IX.Observable": "0.7.3"
+        }
+      },
+      "diz.cpu.65816": {
+        "type": "Project",
+        "dependencies": {
+          "Diz.Core": "3.0.0",
+          "Diz.Core.Interfaces": "1.0.0"
+        }
+      },
+      "diz.import": {
+        "type": "Project",
+        "dependencies": {
+          "Diz.Core": "3.0.0",
+          "Diz.Cpu.65816": "1.0.0"
+        }
       },
       "diz.logwriter": {
         "type": "Project",
         "dependencies": {
           "Diz.Core": "3.0.0",
+          "Diz.Cpu.65816": "1.0.0",
           "LightInject": "6.4.0"
         }
       }

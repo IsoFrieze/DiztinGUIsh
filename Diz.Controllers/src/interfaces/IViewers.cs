@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Diz.Controllers.controllers;
 using Diz.Core.commands;
+using Diz.Core.Interfaces;
 
 namespace Diz.Controllers.interfaces
 {
@@ -77,11 +78,12 @@ namespace Diz.Controllers.interfaces
     
     #else
     // diz2 version
-    public interface IMarkManyView : IViewer, IModalDialog
+    public interface IMarkManyView<TDataSource> : IViewer, IModalDialog 
+        where TDataSource : IRomSize
     {
         MarkCommand.MarkManyProperty Property { get; set; }
         object GetPropertyValue();
-        IMarkManyController Controller { get; set; }
+        IMarkManyController<TDataSource> Controller { get; set; }
 
         void AttemptSetSettings(Dictionary<MarkCommand.MarkManyProperty, object> settings);
         Dictionary<MarkCommand.MarkManyProperty, object> SaveCurrentSettings();

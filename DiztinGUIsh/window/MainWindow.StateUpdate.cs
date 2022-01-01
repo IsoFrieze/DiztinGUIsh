@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
+using Diz.Cpu._65816;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window
@@ -102,7 +103,7 @@ namespace DiztinGUIsh.window
         {
             int totalUnreached = 0, size = Project.Data.GetRomSize();
             for (int i = 0; i < size; i++)
-                if (Project.Data.GetFlag(i) == FlagType.Unreached)
+                if (Project.Data.GetSnesApi().GetFlag(i) == FlagType.Unreached)
                     totalUnreached++;
             int reached = size - totalUnreached;
             return reached;

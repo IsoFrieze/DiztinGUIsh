@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Diz.Core.model.project;
+using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using FluentAssertions;
 using Moq;
@@ -119,7 +120,7 @@ namespace Diz.Test
                 .Returns(saveVersion);
 
             mock.Setup(x => x
-                .OnLoadingAfterAddLinkedRom(It.IsAny<AddRomDataCommand>()));
+                .OnLoadingAfterAddLinkedRom(It.IsAny<IAddRomDataCommand>()));
 
             mock.Name += $"--{extraName}-- (v{mock.Object.AppliesToSaveVersion})";
             

@@ -1,4 +1,5 @@
-﻿using Diz.Core.model.project;
+﻿using Diz.Core.Interfaces;
+using Diz.Core.model.project;
 
 namespace Diz.Core.serialization.xml_serializer
 {
@@ -7,8 +8,8 @@ namespace Diz.Core.serialization.xml_serializer
         // add migrations to hook in various places in the code as needed.
         // example: something to pre-process incoming XML text, or modify the XML deserializer before it's used
         
-        void OnLoadingBeforeAddLinkedRom(AddRomDataCommand romAddCmd);
-        void OnLoadingAfterAddLinkedRom(AddRomDataCommand romAddCmd);
+        void OnLoadingBeforeAddLinkedRom(IAddRomDataCommand romAddCmd);
+        void OnLoadingAfterAddLinkedRom(IAddRomDataCommand romAddCmd);
     }
     
     public interface IMigration : IMigrationEvents

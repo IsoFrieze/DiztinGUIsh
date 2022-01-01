@@ -5,6 +5,7 @@ using System.Linq;
 using Diz.Core.export;
 using Diz.Core.model.snes;
 using Diz.LogWriter;
+using Diz.LogWriter.util;
 using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
@@ -118,7 +119,7 @@ namespace Diz.Test.Utils
         {
             var logCreator = new LogCreator
             {
-                Data = inputRom,
+                Data = new LogCreatorByteSource(inputRom),
                 Settings = new LogWriterSettings {
                     OutputToString = true,
                     Structure = LogWriterSettings.FormatStructure.SingleFile

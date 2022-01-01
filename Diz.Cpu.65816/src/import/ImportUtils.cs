@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using Diz.Core.model;
+﻿using Diz.Core.model;
+using Diz.Core.model.project;
 using Diz.Core.model.snes;
 using Diz.Core.serialization;
+using Diz.Core.util;
 using JetBrains.Annotations;
 
-namespace Diz.Core.util
+namespace Diz.Cpu._65816.import
 {
     public class ImportRomSettingsBuilder
     {
-        public ImportRomSettings ImportSettings { get; set; }
+        public ImportRomSettings? ImportSettings { get; set; }
         public RomMapMode? DetectedMapMode { get; set; }
-        public Dictionary<string, bool> VectorTableEntriesEnabled { get; set; }
+        public Dictionary<string, bool>? VectorTableEntriesEnabled { get; set; }
         public bool ShouldCheckHeader { get; set; } = true;
         
         [PublicAPI] 
@@ -45,7 +45,7 @@ namespace Diz.Core.util
             VectorTableEntriesEnabled = GenerateVectors();
         }
 
-        public ImportRomSettings CreateSettings()
+        public ImportRomSettings? CreateSettings()
         {
             ImportSettings.InitialLabels = RomUtil.GenerateVectorLabels(
                 VectorTableEntriesEnabled, ImportSettings.RomSettingsOffset, ImportSettings.RomBytes, ImportSettings.RomMapMode);
@@ -66,7 +66,7 @@ namespace Diz.Core.util
 
         public static string GetVectorName(int i, int j) => VectorNames[i, j];
 
-        public static Dictionary<string, bool> GenerateVectors(Func<int, int, bool> getValue = null)
+        public static Dictionary<string, bool>? GenerateVectors(Func<int, int, bool> getValue = null)
         {
             var newVectors = new Dictionary<string, bool>();
             for (var i = 0; i < VectorNames.GetLength(0); i++)
@@ -83,7 +83,7 @@ namespace Diz.Core.util
 
     public static class ImportUtils
     {
-        public static Project ImportRomAndCreateNewProject(string romFilename)
+        public static Project? ImportRomAndCreateNewProject(string romFilename)
         {
             // automated headless helper method to use all default settings and pray it works
             // no GUI or anything. use with caution, only if you know what you're doing
@@ -92,39 +92,45 @@ namespace Diz.Core.util
                     .CreateSettings());
         }
 
-        public static Project ImportRomAndCreateNewProject(ImportRomSettings importSettings)
+        public static Project? ImportRomAndCreateNewProject(ImportRomSettings? importSettings)
         {
+            if (importSettings == null)
+                return null;
+            
             var project = new Project
             {
                 AttachedRomFilename = importSettings.RomFilename,
-                Data = new Data()
+                Data = DataUtils.FactoryCreate()
             };
 
             project.Session = new ProjectSession(project, "")
             {
                 UnsavedChanges = true
             };
-            
-            #if DIZ_3_BRANCH
+
+            var snesData = new SnesApi(project.Data);
+            project.Data.ArchProvider.AddApiProvider(snesData);
+
+#if DIZ_3_BRANCH
             // new way
             project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
             #else
             // old way
-            project.Data.RomMapMode = importSettings.RomMapMode;
-            project.Data.RomSpeed = importSettings.RomSpeed;
-            project.Data.CreateRomBytesFromRom(importSettings.RomBytes);
+            snesData.RomMapMode = importSettings.RomMapMode;
+            snesData.RomSpeed = importSettings.RomSpeed;
+            project.Data.RomBytes.CreateRomBytesFromRom(importSettings.RomBytes);
             #endif
 
             foreach (var (romOffset, label) in importSettings.InitialLabels)
             {
-                var snesAddress = project.Data.ConvertPCtoSnes(romOffset);
+                var snesAddress = snesData.ConvertPCtoSnes(romOffset);
                 project.Data.Labels.AddLabel(snesAddress, label, true);
             }
 
             foreach (var (offset, flagType) in importSettings.InitialHeaderFlags)
-                project.Data.SetFlag(offset, flagType);
+                snesData.SetFlag(offset, flagType);
 
-            project.CacheVerificationInfo();
+            snesData.CacheVerificationInfoFor(project);
 
             return project;
         }

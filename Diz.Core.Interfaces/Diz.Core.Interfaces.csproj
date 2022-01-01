@@ -10,4 +10,10 @@
       <Compile Remove="Interfaces.cs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="IX.Observable">
+        <Version>0.7.3</Version>
+      </PackageReference>
+    </ItemGroup>
+
 </Project>

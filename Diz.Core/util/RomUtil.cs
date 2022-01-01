@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Diz.Core.export;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using JetBrains.Annotations;
 
@@ -456,13 +457,13 @@ namespace Diz.Core.util
         }
         #endif
         
-        public static bool IsLocationPoint(this ILogCreatorDataSource data, int pointer, InOutPoint mustHaveFlag) =>
+        public static bool IsLocationPoint(this IInOutPointGettable data, int pointer, InOutPoint mustHaveFlag) =>
             (data.GetInOutPoint(pointer) & mustHaveFlag) != 0;
 
-        public static bool IsLocationAnEndPoint(this ILogCreatorDataSource data, int pointer) => 
+        public static bool IsLocationAnEndPoint(this IInOutPointGettable data, int pointer) => 
             IsLocationPoint(data, pointer, InOutPoint.EndPoint);
         
-        public static bool IsLocationAReadPoint(this ILogCreatorDataSource data, int pointer) => 
+        public static bool IsLocationAReadPoint(this IInOutPointGettable data, int pointer) => 
             IsLocationPoint(data, pointer, InOutPoint.ReadPoint);
     }
 }

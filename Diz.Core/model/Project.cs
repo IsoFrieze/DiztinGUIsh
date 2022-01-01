@@ -1,16 +1,17 @@
 ﻿#nullable enable
 
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Xml.Serialization;
 using Diz.Core.export;
+using Diz.Core.Interfaces;
 using Diz.Core.model.snes;
 using Diz.Core.util;
-using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
-    public class Project : INotifyPropertyChanged, IProjectWithSession
+    public class Project : INotifyPropertyChanged, IProjectWithSession, ISnesCachedVerificationInfo
     {
         // Any public properties will be automatically serialized to XML unless noted.
         // They will require a get AND set.
@@ -47,7 +48,7 @@ namespace Diz.Core.model
         // Project = Metadata
         // Rom = The real data
         //
-        // If we load a ROM, and then its checksum and name don't match what we have stored,
+        // If we load a ROM, and then its checksum and name don't match what we have stored in the XML,
         // then we have an issue (i.e. not the same ROM, or it was modified, or missing, etc).
         // The user must either provide a ROM matching these criteria, or abort loading the project.
         public string InternalRomGameName
@@ -168,19 +169,9 @@ namespace Diz.Core.model
         private string attachedRomFilename = "";
         private string internalRomGameName = "";
         private uint internalCheckSum;
-        private Data? data;
+        private Data? data; // TODO: change to IData
         private LogWriterSettings logWriterSettings;
         private IProjectSession? session;
-
-        public void CacheVerificationInfo()
-        {
-            // Save a copy of these identifying ROM bytes with the project file itself, so they'll
-            // be serialized to disk on project save. When we reload, we verify the recreated ROM data still matches both
-            // of these. If either are wrong, then the ROM on disk could be different from the one associated with the 
-            // project.
-            InternalCheckSum = Data.RomCheckSumsFromRomBytes;
-            InternalRomGameName = Data.CartridgeTitleName;
-        }
 
         #region Equality
         protected bool Equals(Project other)

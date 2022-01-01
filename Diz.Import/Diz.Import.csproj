@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+      <ProjectReference Include="..\Diz.Cpu.65816\Diz.Cpu.65816.csproj" />
+    </ItemGroup>
+
+</Project>

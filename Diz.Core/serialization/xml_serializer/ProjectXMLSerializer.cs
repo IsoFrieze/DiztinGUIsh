@@ -7,7 +7,7 @@ using ExtendedXmlSerializer;
 
 namespace Diz.Core.serialization.xml_serializer
 {
-    public class ProjectXmlSerializer : ProjectSerializer
+    public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer 
     {
         public const int FirstSaveFormatVersion = 100;   // NEVER CHANGE THIS ONE.
 
@@ -21,28 +21,11 @@ namespace Diz.Core.serialization.xml_serializer
         // update this if we are dropping support for really old save formats.
         public const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
 
-        public class Root
-        {
-            // XML serializer specific metadata, top-level deserializer.
-            // This is unique to JUST the XML serializer, doesn't affect any other types of serializers.
-            // i.e. there is no global 'save format version' number, it's serializer-specific.
-            //
-            // NOTE: Please try and keep 'Root' unchanged and as generic as possible.  It's way better
-            // to change 'Project'
-            public int SaveVersion { get; set; } = -1;
-            public string Watermark { get; set; }
-            public string Extra1 { get; set; } = ""; // reserved for future use
-            public string Extra2 { get; set; } = ""; // reserved for future use
-
-            // The actual project itself. Almost any change you want to make should go in here.
-            public Project Project { get; set; }
-        };
-
         public override byte[] Save(Project project)
         {
             // Wrap the project in a top-level root element with some info about the XML file
             // format version. Note that each serializer has its own implementation of storing this metadata
-            var rootElement = new Root
+            var rootElement = new ProjectSerializedRoot
             {
                 SaveVersion = CurrentSaveFormatVersion,
                 Watermark = DizWatermark,
@@ -57,12 +40,11 @@ namespace Diz.Core.serialization.xml_serializer
 
             return Encoding.UTF8.GetBytes(xmlStr);
         }
+        
+        public event IProjectXmlSerializer.SerializeEvent BeforeSerialize;
+        public event IProjectXmlSerializer.SerializeEvent AfterDeserialize;
 
-        public delegate void SerializeEvent(ProjectXmlSerializer projectXmlSerializer, Root rootElement);
-        public event SerializeEvent BeforeSerialize;
-        public event SerializeEvent AfterDeserialize;
-
-        public override (Root xmlRoot, string warning) Load(byte[] projectFileRawXmlBytes)
+        public override (ProjectSerializedRoot root, string warning) Load(byte[] projectFileRawXmlBytes)
         {
             // Note: Migrations not yet written for XML itself. ExtendedXmlSerializer has support for this
             // if we need it, put it in a new MigrationRunner.SetupMigrateXml() or similar.
@@ -83,8 +65,8 @@ namespace Diz.Core.serialization.xml_serializer
         }
 
         // finally. this is the real deal.
-        private static Root DeserializeProjectXml(string xmlStr) => 
-            XmlSerializerSupport.GetSerializer().Create().Deserialize<Root>(xmlStr);
+        private static ProjectSerializedRoot DeserializeProjectXml(string xmlStr) => 
+            XmlSerializerSupport.GetSerializer().Create().Deserialize<ProjectSerializedRoot>(xmlStr);
 
         // return the save file version# detected in the raw data
         private static int RunPreDeserializeIntegrityChecks(string rawXml)

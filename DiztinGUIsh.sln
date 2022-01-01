@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Core.Interfaces", "Diz.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Ui.Winforms", "Diz.Ui.Winforms\Diz.Ui.Winforms.csproj", "{CCB93C20-0A89-473A-888A-B8C8D23276E7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Import", "Diz.Import\Diz.Import.csproj", "{A2303006-DBCD-4C5C-8360-C3EBC085C493}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Cpu.65816", "Diz.Cpu.65816\Diz.Cpu.65816.csproj", "{80D19FA4-BD5B-4189-8F0B-8A634A6738DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +61,14 @@ Global
 		{CCB93C20-0A89-473A-888A-B8C8D23276E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CCB93C20-0A89-473A-888A-B8C8D23276E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CCB93C20-0A89-473A-888A-B8C8D23276E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2303006-DBCD-4C5C-8360-C3EBC085C493}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2303006-DBCD-4C5C-8360-C3EBC085C493}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2303006-DBCD-4C5C-8360-C3EBC085C493}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2303006-DBCD-4C5C-8360-C3EBC085C493}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80D19FA4-BD5B-4189-8F0B-8A634A6738DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80D19FA4-BD5B-4189-8F0B-8A634A6738DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80D19FA4-BD5B-4189-8F0B-8A634A6738DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80D19FA4-BD5B-4189-8F0B-8A634A6738DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

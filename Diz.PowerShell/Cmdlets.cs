@@ -3,6 +3,7 @@ using System.Management.Automation;
 using Diz.Core.export;
 using Diz.Core.serialization;
 using Diz.LogWriter;
+using Diz.LogWriter.util;
 
 namespace Diz.PowerShell
 {
@@ -57,7 +58,7 @@ namespace Diz.PowerShell
             var lc = new LogCreator
             {
                 Settings = project.LogWriterSettings,
-                Data = project.Data,
+                Data = new LogCreatorByteSource(project.Data),
             };
 
             WriteCommandDetail("Building....");

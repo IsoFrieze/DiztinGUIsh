@@ -14,8 +14,6 @@ namespace Diz.Controllers.services
     {
         public void Compose(IServiceRegistry serviceRegistry)
         {
-            serviceRegistry.Register<IFilesystemService, FilesystemService>(); // TODO: move all this fs stuff to (possibly new) ICompositionRoot in Diz.core
-            
             serviceRegistry.Register<ILogCreatorSettingsEditorController, LogCreatorSettingsEditorController>();
             serviceRegistry.Register<IImportRomDialogController, ImportRomDialogController>();
 

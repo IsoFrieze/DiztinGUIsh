@@ -2,6 +2,8 @@
 using System.IO;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
+using Diz.Core.util;
+using LightInject;
 
 namespace Diz.Core.serialization
 {
@@ -10,14 +12,14 @@ namespace Diz.Core.serialization
         public const string DizWatermark = "DiztinGUIsh";
 
         public abstract byte[] Save(Project project);
-        public abstract (ProjectXmlSerializer.Root xmlRoot, string warning) Load(byte[] rawBytes);
+        public abstract (ProjectSerializedRoot root, string warning) Load(byte[] rawBytes);
 
         public void SaveToFile(Project project, string filename)
         {
             File.WriteAllBytes(filename, Save(project));
         }
         
-        public (ProjectXmlSerializer.Root xmlRoot, string warning) LoadFromFile(string filename)
+        public (ProjectSerializedRoot root, string warning) LoadFromFile(string filename)
         {
             return Load(File.ReadAllBytes(filename));
         }
@@ -45,7 +47,7 @@ namespace Diz.Core.serialization
             {
                 Migrations =
                 {
-                    new MigrationBugfix050JapaneseText()
+                    Service.Container.GetInstance<IMigration>("MigrationBugfix050JapaneseText"),
                 }
             };
     }

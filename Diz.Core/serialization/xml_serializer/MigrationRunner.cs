@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Diz.Core.Interfaces;
 using Diz.Core.model.project;
 
 namespace Diz.Core.serialization.xml_serializer
@@ -94,12 +95,12 @@ namespace Diz.Core.serialization.xml_serializer
             proposedVersion == currentVersion || 
             proposedVersion == currentVersion + 1;
 
-        public void OnLoadingBeforeAddLinkedRom(AddRomDataCommand romAddCmd)
+        public void OnLoadingBeforeAddLinkedRom(IAddRomDataCommand romAddCmd)
         {
             RunAllMigrations(migration => migration.OnLoadingBeforeAddLinkedRom(romAddCmd));
         }
 
-        public void OnLoadingAfterAddLinkedRom(AddRomDataCommand romAddCmd)
+        public void OnLoadingAfterAddLinkedRom(IAddRomDataCommand romAddCmd)
         {
             RunAllMigrations(migration => migration.OnLoadingAfterAddLinkedRom(romAddCmd));
         }

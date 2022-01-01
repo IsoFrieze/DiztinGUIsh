@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Threading;
+using Diz.Core.Interfaces;
 using Diz.Core.util;
 
 #nullable enable
@@ -124,10 +125,15 @@ namespace Diz.Core.model
     }
 
     // wrap RomByteData with extra helper stuff like locking
-    public class RomByte : RomByteData
+    public class RomByte : RomByteData, IRomByte
     {
         // note: our thread safety isn't comprehensive in this project yet.
         // be careful with this if you're doing anything clever, especially writing.
-        public ReaderWriterLockSlim Lock { get; protected set; } = new();
+        // also, we should kill this and replace the container with a thread-safe one or something.
+        public ReaderWriterLockSlim Lock { get; } = new();
+        bool IRomByte.EqualsButNoRomByte(IRomByte other)
+        {
+            return EqualsButNoRomByte(other as RomByte);
+        }
     }
 }

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Diz.Controllers.interfaces;
 using Diz.Core.serialization;
 using Diz.Core.util;
+using Diz.Cpu._65816.import;
 
 namespace Diz.Controllers.controllers
 {

@@ -8,13 +8,18 @@ using System.Linq;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
 using Diz.Core.export;
-using Diz.Core.import;
 using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
+using Diz.Cpu._65816;
+using Diz.Cpu._65816.import;
+using Diz.Import.bizhawk;
+using Diz.Import.bsnes.usagemap;
 using Diz.LogWriter;
+using Diz.LogWriter.util;
 using JetBrains.Annotations;
 using LightInject;
+using BsnesTraceLogImporter = Diz.Import.bsnes.tracelog.BsnesTraceLogImporter;
 
 namespace Diz.Controllers.controllers;
 
@@ -134,9 +139,9 @@ public class ProjectController : IProjectController
 
     public void ImportBizHawkCdl(string filename)
     {
-        BizHawkCdlImporter.Import(filename, Project.Data);
+        BizHawkCdlImporter.Import(filename, Project.Data.GetSnesApi());
 
-        ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs()
+        ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs
         {
             ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported,
             Filename = filename,
@@ -209,7 +214,7 @@ public class ProjectController : IProjectController
         var lc = new LogCreator
         {
             Settings = settings,
-            Data = Project.Data,
+            Data = new LogCreatorByteSource(Project.Data),
         };
 
         LogCreatorOutput.OutputResult result = null;
@@ -243,7 +248,7 @@ public class ProjectController : IProjectController
 
     public long ImportBsnesUsageMap(string fileName)
     {
-        var linesModified = BsnesUsageMapImporter.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data);
+        var linesModified = BsnesUsageMapImporter.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data.GetSnesApi());
             
         if (linesModified > 0)
             MarkChanged();
@@ -253,7 +258,7 @@ public class ProjectController : IProjectController
 
     public long ImportBsnesTraceLogs(string[] fileNames)
     {
-        var importer = new BsnesTraceLogImporter(Project.Data);
+        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi());
 
         // TODO: differentiate between binary-formatted and text-formatted files
         // probably look for a newline within 80 characters
@@ -275,7 +280,7 @@ public class ProjectController : IProjectController
 
     public long ImportBsnesTraceLogsBinary(IEnumerable<string> filenames)
     {
-        var importer = new BsnesTraceLogImporter(Project.Data);
+        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi());
 
         foreach (var file in filenames)
         {

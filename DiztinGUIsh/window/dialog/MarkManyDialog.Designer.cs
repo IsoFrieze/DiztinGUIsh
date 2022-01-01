@@ -1,6 +1,6 @@
 ﻿namespace DiztinGUIsh.window.dialog
 {
-    partial class MarkManyView
+    partial class MarkManyView<TDataSource>
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MarkManyView));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MarkManyView<TDataSource>));
             this.label1 = new System.Windows.Forms.Label();
             this.comboPropertyType = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();

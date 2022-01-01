@@ -44,11 +44,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Remove="import\**" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core.Interfaces\Diz.Core.Interfaces.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="arch\CpuOperations.cs" />
+    <Compile Remove="import\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="import\**" />
   </ItemGroup>
 </Project>

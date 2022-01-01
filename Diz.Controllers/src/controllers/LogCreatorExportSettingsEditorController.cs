@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 
 namespace Diz.Controllers.controllers;
 
+[UsedImplicitly]
 public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorController
 {
     private enum PromptCreateDirResult

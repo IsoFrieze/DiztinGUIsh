@@ -303,7 +303,10 @@
         "contentHash": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ=="
       },
       "diz.core.interfaces": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "IX.Observable": "0.7.3"
+        }
       }
     }
   }

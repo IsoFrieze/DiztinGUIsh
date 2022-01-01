@@ -1,15 +1,22 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using Diz.Core.Interfaces;
+﻿using Diz.Core.Interfaces;
 using Diz.Core.model;
-using Diz.Core.model.snes;
 using Diz.Core.util;
 
-namespace Diz.Core.arch;
+namespace Diz.Cpu._65816;
 
-public class Cpu65C816 : Cpu
+public class Cpu65C816<TByteSource> : Cpu<TByteSource> 
+    where TByteSource : 
+    IRomByteFlagsGettable, 
+    IRomByteFlagsSettable, 
+    ISnesAddressConverter, 
+    ISteppable, 
+    IReadOnlyByteSource, 
+    ISnesIntermediateAddress,
+    IInOutPointSettable,
+    IInOutPointGettable,
+    IReadOnlyLabels
 {
-    public override int Step(Data data, int offset, bool branch, bool force, int prevOffset = -1)
+    public override int Step(TByteSource data, int offset, bool branch, bool force, int prevOffset = -1)
     {
         var (opcode, directPage, dataBank, xFlag, mFlag) = GetCpuStateFor(data, offset, prevOffset);
         var length = MarkAsOpcodeAt(data, offset, dataBank, directPage, xFlag, mFlag);
@@ -31,7 +38,7 @@ public class Cpu65C816 : Cpu
         return nextOffset;
     }
 
-    private int MarkAsOpcodeAt(Data data, int offset, int dataBank, int directPage, bool xFlag, bool mFlag)
+    private int MarkAsOpcodeAt(TByteSource data, int offset, int dataBank, int directPage, bool xFlag, bool mFlag)
     {
         var numBytesToChange = 1;
         for (var i = 0; i < numBytesToChange; ++i)
@@ -51,7 +58,7 @@ public class Cpu65C816 : Cpu
     }
 
     private static (byte? opcode, int directPage, int dataBank, bool xFlag, bool mFlag) 
-        GetCpuStateFor(IReadOnlySnesRom data, int offset, int prevOffset)
+        GetCpuStateFor(TByteSource data, int offset, int prevOffset)
     {
         int directPage, dataBank;
         bool xFlag, mFlag;
@@ -96,7 +103,7 @@ public class Cpu65C816 : Cpu
     }
 
     private static (int directPage, int dataBank, bool xFlag, bool mFlag) 
-        GetCpuStateAt(IReadOnlySnesRomBase data, int offset)
+        GetCpuStateAt(TByteSource data, int offset)
     {
         return (
             data.GetDirectPage(offset), 
@@ -108,7 +115,7 @@ public class Cpu65C816 : Cpu
 
     // input: ROM offset
     // return: a SNES address
-    public override int GetIntermediateAddress(Data data, int offset, bool resolve)
+    public override int GetIntermediateAddress(TByteSource data, int offset, bool resolve)
     {
         int bank;
         int programCounter;
@@ -128,14 +135,14 @@ public class Cpu65C816 : Cpu
         var mode = GetAddressMode(data, offset);
         switch (mode)
         {
-            case AddressMode.DirectPage:
-            case AddressMode.DirectPageXIndex:
-            case AddressMode.DirectPageYIndex:
-            case AddressMode.DirectPageIndirect:
-            case AddressMode.DirectPageXIndexIndirect:
-            case AddressMode.DirectPageIndirectYIndex:
-            case AddressMode.DirectPageLongIndirect:
-            case AddressMode.DirectPageLongIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPage:
+            case Cpu65C816Constants.AddressMode.DirectPageXIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageLongIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex:
                 if (resolve)
                 {
                     var directPage = data.GetDirectPage(offset);
@@ -146,15 +153,15 @@ public class Cpu65C816 : Cpu
                 }
                 else
                 {
-                    goto case AddressMode.DirectPageSIndex;
+                    goto case Cpu65C816Constants.AddressMode.DirectPageSIndex;
                 }
-            case AddressMode.DirectPageSIndex:
-            case AddressMode.DirectPageSIndexIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageSIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageSIndexIndirectYIndex:
                 return data.GetRomByte(offset + 1) ?? -1;
-            case AddressMode.Address:
-            case AddressMode.AddressXIndex:
-            case AddressMode.AddressYIndex:
-            case AddressMode.AddressXIndexIndirect:
+            case Cpu65C816Constants.AddressMode.Address:
+            case Cpu65C816Constants.AddressMode.AddressXIndex:
+            case Cpu65C816Constants.AddressMode.AddressYIndex:
+            case Cpu65C816Constants.AddressMode.AddressXIndexIndirect:
             {
                 bank = opcode is 0x20 or 0x4C or 0x7C or 0xFC
                     ? data.ConvertPCtoSnes(offset) >> 16
@@ -165,19 +172,19 @@ public class Cpu65C816 : Cpu
                     
                 return (bank << 16) | (int)operand;
             }
-            case AddressMode.AddressIndirect:
-            case AddressMode.AddressLongIndirect:
+            case Cpu65C816Constants.AddressMode.AddressIndirect:
+            case Cpu65C816Constants.AddressMode.AddressLongIndirect:
             {
                 var operand = data.GetRomWord(offset + 1) ?? -1;
                 return operand;
             }
-            case AddressMode.Long:
-            case AddressMode.LongXIndex:
+            case Cpu65C816Constants.AddressMode.Long:
+            case Cpu65C816Constants.AddressMode.LongXIndex:
             {
                 var operand = data.GetRomLong(offset + 1) ?? -1;
                 return operand;
             }
-            case AddressMode.Relative8:
+            case Cpu65C816Constants.AddressMode.Relative8:
             {
                 programCounter = data.ConvertPCtoSnes(offset + 2);
                 bank = programCounter >> 16;
@@ -187,7 +194,7 @@ public class Cpu65C816 : Cpu
                     
                 return (bank << 16) | ((programCounter + (sbyte)romByte) & 0xFFFF);
             }
-            case AddressMode.Relative16:
+            case Cpu65C816Constants.AddressMode.Relative16:
             {
                 programCounter = data.ConvertPCtoSnes(offset + 3);
                 bank = programCounter >> 16;
@@ -201,27 +208,7 @@ public class Cpu65C816 : Cpu
         return -1;
     }
 
-#if DIZ_3_BRANCH
-        // get a compiled byte entry representing all info at an offset contained in any layer.
-        // return null if there's no entries in that index
-        // input: ROM offset
-        // new code should be migrated to use this instead of GetRomByte()
-        private static ByteEntry GetByteEntryRom(Data data, int romOffset)
-        {
-            return GetByteEntrySnes(data, data.ConvertPCtoSnes(romOffset));
-        }
-        
-        // get a compiled byte entry representing all info at an offset contained in any layer.
-        // return null if there's no entries in that index
-        // input: SNES address
-        // new code should be migrated to use this instead of GetSnesByte()
-        private static ByteEntry GetByteEntrySnes(Data data, int snesAddress)
-        {
-            return data.BuildFlatByteEntryForSnes(snesAddress);
-        }
-#endif
-
-    public override string GetInstruction(Data data, int offset)
+    public override string GetInstruction(TByteSource data, int offset)
     {
         var mode = GetAddressMode(data, offset);
         if (mode == null)
@@ -236,19 +223,19 @@ public class Cpu65C816 : Cpu
             
         switch (mode)
         {
-            case AddressMode.BlockMove:
+            case Cpu65C816Constants.AddressMode.BlockMove:
                 identified = true;
                 numDigits1 = numDigits2 = 2;
                 value1 = data.GetRomByte(offset + 1);
                 value2 = data.GetRomByte(offset + 2);
                 break;
-            case AddressMode.Constant8:
-            case AddressMode.Immediate8:
+            case Cpu65C816Constants.AddressMode.Constant8:
+            case Cpu65C816Constants.AddressMode.Immediate8:
                 identified = true;
                 numDigits1 = 2;
                 value1 = data.GetRomByte(offset + 1);
                 break;
-            case AddressMode.Immediate16:
+            case Cpu65C816Constants.AddressMode.Immediate16:
                 identified = true;
                 numDigits1 = 4;
                 value1 = data.GetRomWord(offset + 1);
@@ -272,9 +259,9 @@ public class Cpu65C816 : Cpu
         return string.Format(format, mnemonic, op1, op2);
     }
 
-    public override int AutoStepSafe(ICpuOperableByteSource byteSource, int offset)
+    public override int AutoStepSafe(TByteSource byteSource, int offset)
     {
-        var cmd = new AutoStepper65816(byteSource);
+        var cmd = new AutoStepper65816<TByteSource>(byteSource);
         cmd.Run(offset);
         return cmd.Offset;
     }
@@ -290,7 +277,7 @@ public class Cpu65C816 : Cpu
         return Util.NumberToBaseString((int) v, Util.NumberBase.Hexadecimal, numDigits, true);
     }
 
-    public override int GetInstructionLength(Data data, int offset)
+    public override int GetInstructionLength(TByteSource data, int offset)
     {
         var mode = GetAddressMode(data, offset);
             
@@ -298,7 +285,7 @@ public class Cpu65C816 : Cpu
         return mode == null ? 1 : GetInstructionLength(mode.Value);
     }
 
-    public override void MarkInOutPoints(Data data, int offset)
+    public override void MarkInOutPoints(TByteSource data, int offset)
     {
         var opcode = data.GetRomByte(offset);
         var iaOffsetPc = data.ConvertSnesToPc(data.GetIntermediateAddress(offset, true));
@@ -330,57 +317,60 @@ public class Cpu65C816 : Cpu
         }
     }
 
-    private static int GetInstructionLength(AddressMode mode)
+    private static int GetInstructionLength(Cpu65C816Constants.AddressMode mode)
     {
         switch (mode)
         {
-            case AddressMode.Implied:
-            case AddressMode.Accumulator:
+            case Cpu65C816Constants.AddressMode.Implied:
+            case Cpu65C816Constants.AddressMode.Accumulator:
                 return 1;
-            case AddressMode.Constant8:
-            case AddressMode.Immediate8:
-            case AddressMode.DirectPage:
-            case AddressMode.DirectPageXIndex:
-            case AddressMode.DirectPageYIndex:
-            case AddressMode.DirectPageSIndex:
-            case AddressMode.DirectPageIndirect:
-            case AddressMode.DirectPageXIndexIndirect:
-            case AddressMode.DirectPageIndirectYIndex:
-            case AddressMode.DirectPageSIndexIndirectYIndex:
-            case AddressMode.DirectPageLongIndirect:
-            case AddressMode.DirectPageLongIndirectYIndex:
-            case AddressMode.Relative8:
+            case Cpu65C816Constants.AddressMode.Constant8:
+            case Cpu65C816Constants.AddressMode.Immediate8:
+            case Cpu65C816Constants.AddressMode.DirectPage:
+            case Cpu65C816Constants.AddressMode.DirectPageXIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageSIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageSIndexIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageLongIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.Relative8:
                 return 2;
-            case AddressMode.Immediate16:
-            case AddressMode.Address:
-            case AddressMode.AddressXIndex:
-            case AddressMode.AddressYIndex:
-            case AddressMode.AddressIndirect:
-            case AddressMode.AddressXIndexIndirect:
-            case AddressMode.AddressLongIndirect:
-            case AddressMode.BlockMove:
-            case AddressMode.Relative16:
+            case Cpu65C816Constants.AddressMode.Immediate16:
+            case Cpu65C816Constants.AddressMode.Address:
+            case Cpu65C816Constants.AddressMode.AddressXIndex:
+            case Cpu65C816Constants.AddressMode.AddressYIndex:
+            case Cpu65C816Constants.AddressMode.AddressIndirect:
+            case Cpu65C816Constants.AddressMode.AddressXIndexIndirect:
+            case Cpu65C816Constants.AddressMode.AddressLongIndirect:
+            case Cpu65C816Constants.AddressMode.BlockMove:
+            case Cpu65C816Constants.AddressMode.Relative16:
                 return 3;
-            case AddressMode.Long:
-            case AddressMode.LongXIndex:
+            case Cpu65C816Constants.AddressMode.Long:
+            case Cpu65C816Constants.AddressMode.LongXIndex:
                 return 4;
             default:
                 return 1;
         }
     }
 
-    private string FormatOperandAddress(IReadOnlySnesRom data, int offset, AddressMode mode)
+    private string FormatOperandAddress(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
     {
         var address = data.GetIntermediateAddress(offset);
         if (address < 0) 
             return "";
 
-        var label = data.Labels.GetLabelName(address);
-        if (label != "") 
-            return label;
+        if (data is IReadOnlyLabels labelProvider)
+        {
+            var label = labelProvider.Labels.GetLabelName(address);
+            if (label != "") 
+                return label;   
+        }
 
         var count = BytesToShow(mode);
-        if (mode is AddressMode.Relative8 or AddressMode.Relative16)
+        if (mode is Cpu65C816Constants.AddressMode.Relative8 or Cpu65C816Constants.AddressMode.Relative16)
         {
             var romWord = data.GetRomWord(offset + 1);
             if (!romWord.HasValue)
@@ -393,9 +383,9 @@ public class Cpu65C816 : Cpu
         return Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 2 * count, true);
     }
 
-    private string GetMnemonic(IReadOnlyCpuOperableByteSource data, int offset, bool showHint = true)
+    private string GetMnemonic(TByteSource data, int offset, bool showHint = true)
     {
-        var mn = Mnemonics[data.GetRomByteUnsafe(offset)];
+        var mn = Cpu65C816Constants.Mnemonics[data.GetRomByteUnsafe(offset)];
         if (!showHint) 
             return mn;
 
@@ -405,7 +395,7 @@ public class Cpu65C816 : Cpu
                 
         var count = BytesToShow(mode.Value);
 
-        if (mode is AddressMode.Constant8 or AddressMode.Relative16 or AddressMode.Relative8) 
+        if (mode is Cpu65C816Constants.AddressMode.Constant8 or Cpu65C816Constants.AddressMode.Relative16 or Cpu65C816Constants.AddressMode.Relative8) 
             return mn;
 
         return count switch
@@ -417,35 +407,35 @@ public class Cpu65C816 : Cpu
         };
     }
 
-    private static int BytesToShow(AddressMode mode)
+    private static int BytesToShow(Cpu65C816Constants.AddressMode mode)
     {
         switch (mode)
         {
-            case AddressMode.Constant8:
-            case AddressMode.Immediate8:
-            case AddressMode.DirectPage:
-            case AddressMode.DirectPageXIndex:
-            case AddressMode.DirectPageYIndex:
-            case AddressMode.DirectPageSIndex:
-            case AddressMode.DirectPageIndirect:
-            case AddressMode.DirectPageXIndexIndirect:
-            case AddressMode.DirectPageIndirectYIndex:
-            case AddressMode.DirectPageSIndexIndirectYIndex:
-            case AddressMode.DirectPageLongIndirect:
-            case AddressMode.DirectPageLongIndirectYIndex:
-            case AddressMode.Relative8:
+            case Cpu65C816Constants.AddressMode.Constant8:
+            case Cpu65C816Constants.AddressMode.Immediate8:
+            case Cpu65C816Constants.AddressMode.DirectPage:
+            case Cpu65C816Constants.AddressMode.DirectPageXIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageSIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageSIndexIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageLongIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.Relative8:
                 return 1;
-            case AddressMode.Immediate16:
-            case AddressMode.Address:
-            case AddressMode.AddressXIndex:
-            case AddressMode.AddressYIndex:
-            case AddressMode.AddressIndirect:
-            case AddressMode.AddressXIndexIndirect:
-            case AddressMode.AddressLongIndirect:
-            case AddressMode.Relative16:
+            case Cpu65C816Constants.AddressMode.Immediate16:
+            case Cpu65C816Constants.AddressMode.Address:
+            case Cpu65C816Constants.AddressMode.AddressXIndex:
+            case Cpu65C816Constants.AddressMode.AddressYIndex:
+            case Cpu65C816Constants.AddressMode.AddressIndirect:
+            case Cpu65C816Constants.AddressMode.AddressXIndexIndirect:
+            case Cpu65C816Constants.AddressMode.AddressLongIndirect:
+            case Cpu65C816Constants.AddressMode.Relative16:
                 return 2;
-            case AddressMode.Long:
-            case AddressMode.LongXIndex:
+            case Cpu65C816Constants.AddressMode.Long:
+            case Cpu65C816Constants.AddressMode.LongXIndex:
                 return 3;
         }
         return 0;
@@ -454,56 +444,56 @@ public class Cpu65C816 : Cpu
     // {0} = mnemonic
     // {1} = intermediate address / label OR operand 1 for block move
     // {2} = operand 2 for block move
-    private string GetInstructionFormatString(IReadOnlyCpuOperableByteSource data, int offset)
+    private string GetInstructionFormatString(TByteSource data, int offset)
     {
         var mode = GetAddressMode(data, offset);
         switch (mode)
         {
-            case AddressMode.Implied:
+            case Cpu65C816Constants.AddressMode.Implied:
                 return "{0}";
-            case AddressMode.Accumulator:
+            case Cpu65C816Constants.AddressMode.Accumulator:
                 return "{0} A";
-            case AddressMode.Constant8:
-            case AddressMode.Immediate8:
-            case AddressMode.Immediate16:
+            case Cpu65C816Constants.AddressMode.Constant8:
+            case Cpu65C816Constants.AddressMode.Immediate8:
+            case Cpu65C816Constants.AddressMode.Immediate16:
                 return "{0} #{1}";
-            case AddressMode.DirectPage:
-            case AddressMode.Address:
-            case AddressMode.Long:
-            case AddressMode.Relative8:
-            case AddressMode.Relative16:
+            case Cpu65C816Constants.AddressMode.DirectPage:
+            case Cpu65C816Constants.AddressMode.Address:
+            case Cpu65C816Constants.AddressMode.Long:
+            case Cpu65C816Constants.AddressMode.Relative8:
+            case Cpu65C816Constants.AddressMode.Relative16:
                 return "{0} {1}";
-            case AddressMode.DirectPageXIndex:
-            case AddressMode.AddressXIndex:
-            case AddressMode.LongXIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageXIndex:
+            case Cpu65C816Constants.AddressMode.AddressXIndex:
+            case Cpu65C816Constants.AddressMode.LongXIndex:
                 return "{0} {1},X";
-            case AddressMode.DirectPageYIndex:
-            case AddressMode.AddressYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageYIndex:
+            case Cpu65C816Constants.AddressMode.AddressYIndex:
                 return "{0} {1},Y";
-            case AddressMode.DirectPageSIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageSIndex:
                 return "{0} {1},S";
-            case AddressMode.DirectPageIndirect:
-            case AddressMode.AddressIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageIndirect:
+            case Cpu65C816Constants.AddressMode.AddressIndirect:
                 return "{0} ({1})";
-            case AddressMode.DirectPageXIndexIndirect:
-            case AddressMode.AddressXIndexIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect:
+            case Cpu65C816Constants.AddressMode.AddressXIndexIndirect:
                 return "{0} ({1},X)";
-            case AddressMode.DirectPageIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex:
                 return "{0} ({1}),Y";
-            case AddressMode.DirectPageSIndexIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageSIndexIndirectYIndex:
                 return "{0} ({1},S),Y";
-            case AddressMode.DirectPageLongIndirect:
-            case AddressMode.AddressLongIndirect:
+            case Cpu65C816Constants.AddressMode.DirectPageLongIndirect:
+            case Cpu65C816Constants.AddressMode.AddressLongIndirect:
                 return "{0} [{1}]";
-            case AddressMode.DirectPageLongIndirectYIndex:
+            case Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex:
                 return "{0} [{1}],Y";
-            case AddressMode.BlockMove:
+            case Cpu65C816Constants.AddressMode.BlockMove:
                 return "{0} {1},{2}";
         }
         return "";
     }
         
-    public static AddressMode? GetAddressMode(IReadOnlyCpuOperableByteSource data, int offset)
+    public static Cpu65C816Constants.AddressMode? GetAddressMode(TByteSource data, int offset)
     {
         var opcode = data.GetRomByte(offset);
         if (!opcode.HasValue)
@@ -515,21 +505,24 @@ public class Cpu65C816 : Cpu
         return GetAddressMode(opcode.Value, mFlag, xFlag);
     }
 
-    public static AddressMode GetAddressMode(int opcode, bool mFlag, bool xFlag)
+    public static Cpu65C816Constants.AddressMode GetAddressMode(int opcode, bool mFlag, bool xFlag)
     {
-        var mode = AddressingModes[opcode];
+        var mode = Cpu65C816Constants.AddressingModes[opcode];
         return mode switch
         {
-            AddressMode.ImmediateMFlagDependent => mFlag
-                ? AddressMode.Immediate8
-                : AddressMode.Immediate16,
-            AddressMode.ImmediateXFlagDependent => xFlag
-                ? AddressMode.Immediate8
-                : AddressMode.Immediate16,
+            Cpu65C816Constants.AddressMode.ImmediateMFlagDependent => mFlag
+                ? Cpu65C816Constants.AddressMode.Immediate8
+                : Cpu65C816Constants.AddressMode.Immediate16,
+            Cpu65C816Constants.AddressMode.ImmediateXFlagDependent => xFlag
+                ? Cpu65C816Constants.AddressMode.Immediate8
+                : Cpu65C816Constants.AddressMode.Immediate16,
             _ => mode
         };
     }
+}
 
+public static class Cpu65C816Constants
+{
     public enum AddressMode : byte
     {
         Implied, Accumulator, Constant8, Immediate8, Immediate16,
@@ -543,7 +536,7 @@ public class Cpu65C816 : Cpu
         Long, LongXIndex, BlockMove, Relative8, Relative16
     }
 
-    private static readonly string[] Mnemonics =
+    public static readonly string[] Mnemonics =
     {
         "BRK", "ORA", "COP", "ORA", "TSB", "ORA", "ASL", "ORA", "PHP", "ORA", "ASL", "PHD", "TSB", "ORA", "ASL", "ORA",
         "BPL", "ORA", "ORA", "ORA", "TRB", "ORA", "ASL", "ORA", "CLC", "ORA", "INC", "TCS", "TRB", "ORA", "ASL", "ORA",
@@ -563,7 +556,7 @@ public class Cpu65C816 : Cpu
         "BEQ", "SBC", "SBC", "SBC", "PEA", "SBC", "INC", "SBC", "SED", "SBC", "PLX", "XCE", "JSR", "SBC", "INC", "SBC"
     };
 
-    private static readonly AddressMode[] AddressingModes =
+    public static readonly AddressMode[] AddressingModes =
     {
         AddressMode.Constant8, AddressMode.DirectPageXIndexIndirect, AddressMode.Constant8, AddressMode.DirectPageSIndex,
         AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPage, AddressMode.DirectPageLongIndirect,

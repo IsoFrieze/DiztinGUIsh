@@ -1,4 +1,5 @@
-﻿using Diz.Core.import;
+﻿using Diz.Import;
+using Diz.Import.bsnes.tracelog;
 using Xunit;
 
 namespace Diz.Test

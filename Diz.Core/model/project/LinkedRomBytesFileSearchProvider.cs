@@ -9,7 +9,7 @@ namespace Diz.Core.model.project
     public delegate string? FilenameGetter(string reasonLastFailed);
     public delegate void CompatibilityEnforcer(string filename, byte[] fileContents);
     
-    internal interface ILinkedRomBytesProvider
+    public interface ILinkedRomBytesProvider
     {
         // caller should throw InvalidDataException if it's not compatible
         public CompatibilityEnforcer? EnsureCompatible { get; set; }

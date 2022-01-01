@@ -1,6 +1,8 @@
 using Diz.Controllers.interfaces;
 using Diz.Controllers.services;
+using Diz.Core.services;
 using Diz.Core.util;
+using Diz.Cpu._65816;
 using Diz.Ui.Winforms;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
@@ -11,10 +13,12 @@ namespace DiztinGUIsh;
 
 public static class DizAppServices
 {
-    internal static void RegisterDizServiceTypes()
+    public static void RegisterDizServiceTypes()
     {
-        Service.Container.RegisterFrom<DizUiCompositionRoot>();
+        Service.Container.RegisterFrom<DizCoreServicesCompositionRoot>();
+        Service.Container.RegisterFrom<DizCpu65816ServiceRoot>();
         Service.Container.RegisterFrom<DizControllersCompositionRoot>();
+        Service.Container.RegisterFrom<DizUiCompositionRoot>();
         Service.Container.RegisterFrom<DizWinformsCompositionRoot>();
     }
 }

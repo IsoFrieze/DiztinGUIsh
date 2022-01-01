@@ -104,21 +104,6 @@ namespace Diz.Controllers.interfaces
         Project OpenProject(string filename, bool showPopupAlertOnLoaded);
     }
 
-    public interface I65816CpuOperations
-    {
-        void Step(int offset);
-        void StepIn(int offset);
-        void AutoStepHarsh(int offset);
-        void AutoStepSafe(int offset);
-        void Mark(int offset);
-        public void MarkMany(int offset, int whichIndex);
-        
-        void SetDataBank(int romOffset, int result);
-        void SetDirectPage(int romOffset, int result);
-        void SetMFlag(int romOffset, bool value);
-        void SetXFlag(int romOffset, bool value);
-    }
-
     public interface IExportDisassembly
     {
         void UpdateExportSettings(LogWriterSettings selectedSettings);
@@ -171,10 +156,10 @@ namespace Diz.Controllers.interfaces
     }
     #endif
 
-    public interface IMarkManyController : IController
+    public interface IMarkManyController<out TDataSource> : IController
     {
         IDataRange DataRange { get; }
-        IReadOnlySnesRomBase Data { get; }
+        TDataSource Data { get; }
         MarkCommand GetMarkCommand();
     }
 

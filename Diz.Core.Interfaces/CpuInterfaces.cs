@@ -2,18 +2,14 @@
 
 namespace Diz.Core.Interfaces;
 
-public interface IReadOnlyCpuOperableByteSource : IReadOnlyByteSource
+// wonder if we could ditch this one by using extension methods
+public interface ISteppable
 {
-    public Architecture GetArchitecture(int i);
-    public FlagType GetFlag(int i);
-    int GetMxFlags(int i);
-        
-    bool GetMFlag(int i);
-    bool GetXFlag(int i);
+    int Step(int offset, bool branch, bool force, int prevOffset);
 }
 
-public interface ICpuOperableByteSource : IReadOnlyCpuOperableByteSource
+public interface IAutoSteppable
 {
-    void SetMxFlags(int i, int mx);
-    int Step(int offset, bool branch, bool force, int prevOffset);
+    public int AutoStepSafe(int offset);
+    public int AutoStepHarsh(int offset, int count);
 }

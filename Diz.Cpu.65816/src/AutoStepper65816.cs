@@ -1,20 +1,19 @@
-﻿using System.Collections.Generic;
-using Diz.Core.Interfaces;
+﻿using Diz.Core.Interfaces;
 using Diz.Core.model;
 
-namespace Diz.Core.arch;
+namespace Diz.Cpu._65816;
 
-public class AutoStepper65816
+public class AutoStepper65816<TDataSource> where TDataSource : IRomByteFlagsGettable, IRomByteFlagsSettable, IReadOnlyByteSource, ISteppable
 {
     public int Offset { get; private set; }
     private int prevOffset = -1;
 
-    private readonly ICpuOperableByteSource byteSource;
+    private readonly TDataSource byteSource;
     
     private readonly List<int> seenBranches;
     private readonly Stack<int> stack;
 
-    public AutoStepper65816(ICpuOperableByteSource byteSource)
+    public AutoStepper65816(TDataSource byteSource)
     {
         this.byteSource = byteSource;
         
@@ -43,7 +42,7 @@ public class AutoStepper65816
         if (seenBranches.Contains(Offset))
             return false;
         
-        var opcode = byteSource.GetRomByteUnsafe(Offset);
+        var opcode = (byte)byteSource.GetRomByte(Offset);
         
         RememberIfBranch(opcode);
         
@@ -72,7 +71,7 @@ public class AutoStepper65816
         // 2. mark the next instructions on either side of the branch as opcodes/operands
         
         return (
-            nextOffsetIfNoJump: byteSource.Step(Offset, false, false, prevOffset), 
+            nextOffsetIfNoJump: byteSource.Step(Offset, false, false, prevOffset),
             nextOffsetIfJumped: byteSource.Step(Offset, true, false, prevOffset)
         );
     }

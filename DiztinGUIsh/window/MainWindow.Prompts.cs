@@ -6,6 +6,8 @@ using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 using Diz.Core.commands;
 using Diz.Core.export;
+using Diz.Core.Interfaces;
+using Diz.Cpu._65816;
 using Diz.LogWriter;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
@@ -136,11 +138,11 @@ namespace DiztinGUIsh.window
 
         private Dictionary<MarkCommand.MarkManyProperty, object> SavedMarkManySettings { get; set; } = new();
         
-        private MarkManyController CreateMarkManyController(int offset, MarkCommand.MarkManyProperty property)
+        private MarkManyController<ISnesData> CreateMarkManyController(int offset, MarkCommand.MarkManyProperty property)
         {
             // NOTE: in upstream 3.0 branch, replace this with dependency injection
-            var view = new MarkManyView();
-            var markManyController = new MarkManyController(offset, property, Project.Data, view)
+            var view = new MarkManyView<ISnesData>();
+            var markManyController = new MarkManyController<ISnesData>(offset, property, Project.Data.GetSnesApi(), view)
             {
                 Settings = SavedMarkManySettings
             };

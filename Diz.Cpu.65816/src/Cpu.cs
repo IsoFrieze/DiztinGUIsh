@@ -1,9 +1,8 @@
 ﻿using Diz.Core.Interfaces;
-using Diz.Core.model.snes;
 
-namespace Diz.Core.arch;
+namespace Diz.Cpu._65816;
 
-public class Cpu
+public class Cpu<TByteSource> where TByteSource : IRomByteFlagsGettable, IRomByteFlagsSettable, ISnesAddressConverter, ISteppable 
 {
     /// <summary>
     /// Interpret the bytes at Offset as an opcode + optional operands. Mark them as such,
@@ -21,17 +20,17 @@ public class Cpu
     /// Cpu state data like M,X,DB, and DP flags will be copied from the previous instruction.
     /// </param>
     /// <returns>The offset of the instruction located after this one, or returns the same offset if the Step operation failed or is not supported.</returns>
-    public virtual int Step(Data data, int offset, bool branch, bool force, int prevOffset = -1) => offset;
+    public virtual int Step(TByteSource data, int offset, bool branch, bool force, int prevOffset = -1) => offset;
     
     
-    public virtual int GetInstructionLength(Data data, int offset) => 1;
-    public virtual int GetIntermediateAddress(Data data, int offset, bool resolve) => -1;
-    public virtual void MarkInOutPoints(Data data, int offset) {} // nop
-    public virtual string GetInstruction(Data data, int offset) => "";
+    public virtual int GetInstructionLength(TByteSource data, int offset) => 1;
+    public virtual int GetIntermediateAddress(TByteSource data, int offset, bool resolve) => -1;
+    public virtual void MarkInOutPoints(TByteSource data, int offset) {} // nop
+    public virtual string GetInstruction(TByteSource data, int offset) => "";
 
-    public virtual int AutoStepSafe(ICpuOperableByteSource byteSource, int offset) => offset;
+    public virtual int AutoStepSafe(TByteSource byteSource, int offset) => offset;
 
-    public int AutoStepHarsh(ICpuOperableByteSource byteSource, int offset, int amount)
+    public int AutoStepHarsh(TByteSource byteSource, int offset, int amount)
     {
         var newOffset = offset;
         var prevOffset = offset - 1;
@@ -47,18 +46,12 @@ public class Cpu
     }
 }
 
-// a base Cpu for common things for real but mostly placeholder CPU types.
-public abstract class CpuGenericHelper : Cpu
-{
-    
-}
-
-public class CpuSpc700 : CpuGenericHelper
+public class CpuSpc700<TByteSource> : Cpu<TByteSource> where TByteSource : IRomByteFlagsGettable, IRomByteFlagsSettable, ISnesAddressConverter, ISteppable
 {
     // implement me       
 }
     
-public class CpuSuperFx : CpuGenericHelper
+public class CpuSuperFx<TByteSource> : Cpu<TByteSource> where TByteSource : IRomByteFlagsGettable, IRomByteFlagsSettable, ISnesAddressConverter, ISteppable
 {
     // implement me
 }
