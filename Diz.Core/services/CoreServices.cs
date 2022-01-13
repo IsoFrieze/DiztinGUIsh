@@ -12,6 +12,17 @@ using LightInject;
 
 namespace Diz.Core.services;
 
+public static class DizCoreServicesDllRegistration
+{
+    public static void RegisterServicesInDizDlls(IServiceRegistry serviceRegistry)
+    {
+        // add here as needed
+        // if DLL scanning is ever unreliable for path or other reasons,
+        // client code can use RegisterFrom() with explicit ICompositionRoot  
+        serviceRegistry.RegisterAssembly("Diz*.dll");
+    }
+}
+
 [UsedImplicitly]
 public class DizCoreServicesCompositionRoot : ICompositionRoot
 {

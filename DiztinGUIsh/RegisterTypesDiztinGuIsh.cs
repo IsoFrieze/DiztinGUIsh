@@ -1,4 +1,5 @@
 using Diz.Controllers.interfaces;
+using Diz.Core.services;
 using Diz.Core.util;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
@@ -13,16 +14,16 @@ public static class DizAppServices
     {
         var serviceProvider = DizServiceProvider.CreateServiceContainer();
         
-        // old way
+        // register services in any Diz*dll's present
+        DizCoreServicesDllRegistration.RegisterServicesInDizDlls(serviceProvider);
+        
+        // alternatively, we can be explicit like below, no DLL scanning required
         // serviceProvider.RegisterFrom<DizCoreServicesCompositionRoot>();
         // serviceProvider.RegisterFrom<DizCpu65816ServiceRoot>();
         // serviceProvider.RegisterFrom<DizControllersCompositionRoot>();
         // serviceProvider.RegisterFrom<DizUiCompositionRoot>();
         // serviceProvider.RegisterFrom<DizWinformsCompositionRoot>();
-
-        // new way
-        serviceProvider.RegisterAssembly("Diz*.dll");
-
+        
         return serviceProvider;
     }
 }
