@@ -9,6 +9,7 @@ using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using Diz.Cpu._65816;
+using Diz.Test.Utils;
 using FluentAssertions;
 using LightInject.xUnit2;
 using Xunit;
@@ -16,7 +17,7 @@ using Xunit;
 namespace Diz.Test.bugs;
 
 // https://github.com/Dotsarecool/DiztinGUIsh/issues/50
-public class Bug050JapaneseText
+public class Bug050JapaneseText : ContainerFixture
 {
     // TODO: a lot of this can probably be replaced with mocks now
     
@@ -91,10 +92,14 @@ public class Bug050JapaneseText
             ForceOlderSaveVersionWhichShouldFix = false,
         },
     }.Select(x=>new []{x});
+    
+    // these will be populated by dependency injection 
+    private ISnesSampleProjectFactory sampleData;
+    private Func<IProjectXmlSerializer> fnProjectSerializerCreate;
+    private Func<IAddRomDataCommand> fnAddRomDataCommand;
 
-    [MemberData(nameof(Harnesses))]
-    [Theory, InjectData]
-    public void TestMitigation(Harness harness, ISnesSampleProjectFactory sampleData, Func<IProjectXmlSerializer> fnProjectSerializerCreate, Func<IAddRomDataCommand> fnAddRomDataCommand)
+    [Theory, MemberData(nameof(Harnesses))]
+    public void TestMitigation(Harness harness)
     {
         var project = Harness.CreateProject(sampleData);
         var originalGoodGameName = project.InternalRomGameName;
