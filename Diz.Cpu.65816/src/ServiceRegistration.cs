@@ -20,23 +20,18 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
         serviceRegistry.Register<ISnesData, SnesApi>();
         
         // when we create a IData registration, add a SNES API component to it
-        serviceRegistry.Initialize(
-            registration => registration.ServiceType == typeof(IData),
-            (factory, instance) => InjectSnesApi(factory, (IData)instance));
+        serviceRegistry.Decorate<IDataFactory, DataAddSnesApiDecorator>();
 
         serviceRegistry.Register<ImportRomSettings, IProjectFactoryFromRomImportSettings>((factory, settings) =>
             new SnesProjectFactoryFromRomImportSettings(
                 factory.GetInstance<IProjectFactory>(),
                 settings));
         
-        // TODO: consider using a named service for this instead
-        serviceRegistry.Register<ISnesSampleProjectFactory, SnesSampleProjectFactory>();
-        serviceRegistry.Register<ISampleDataFactory, SnesSampleRomDataFactory>();
-        
         // list migrations (there can be multiple migration classes here, they'll be applied in order)
         serviceRegistry.Register<IMigration, MigrationBugfix050JapaneseText>();
+        
+        // TODO: consider using a named service for this sample instead
+        serviceRegistry.Register<ISnesSampleProjectFactory, SnesSampleProjectFactory>();
+        serviceRegistry.Register<ISampleDataFactory, SnesSampleRomDataFactory>();
     }
-
-    private static void InjectSnesApi(IServiceFactory factory, IData data) => 
-        data.Apis.Add(factory.GetInstance<ISnesData>());
 }
