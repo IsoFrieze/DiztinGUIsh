@@ -7,18 +7,18 @@ using System.IO;
 using System.Linq;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
+using Diz.Core;
 using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.serialization;
+using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using Diz.Cpu._65816;
-using Diz.Cpu._65816.import;
 using Diz.Import.bizhawk;
 using Diz.Import.bsnes.usagemap;
 using Diz.LogWriter;
 using Diz.LogWriter.util;
 using JetBrains.Annotations;
-using LightInject;
 using BsnesTraceLogImporter = Diz.Import.bsnes.tracelog.BsnesTraceLogImporter;
 
 namespace Diz.Controllers.controllers;
@@ -28,12 +28,27 @@ public class ProjectController : IProjectController
 {
     public IProjectView ProjectView { get; set; }
     public Project Project { get; private set; }
-        
-    private readonly ICommonGui commonGui;
+    public IViewFactory ViewFactory { get; }
 
-    public ProjectController(ICommonGui commonGui)
+    private readonly ICommonGui commonGui;
+    private readonly IFilesystemService fs;
+    private readonly IControllerFactory controllerFactory;
+    private readonly Func<IProjectFileManager> projectFileManagerCreate;
+    private readonly Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate;
+
+    public ProjectController(
+        ICommonGui commonGui, 
+        IViewFactory viewFactory, 
+        IFilesystemService fs, 
+        IControllerFactory controllerFactory, 
+        Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate, Func<IProjectFileManager> projectFileManagerCreate)
     {
         this.commonGui = commonGui;
+        this.fs = fs;
+        this.controllerFactory = controllerFactory;
+        this.projectImporterFactoryCreate = projectImporterFactoryCreate;
+        this.projectFileManagerCreate = projectFileManagerCreate;
+        ViewFactory = viewFactory;
     }
 
     public event IProjectController.ProjectChangedEvent ProjectChanged;
@@ -44,52 +59,53 @@ public class ProjectController : IProjectController
     public void DoLongRunningTask(Action task, string description = null)
     {
         if (ProjectView.TaskHandler != null)
-            ProjectView.TaskHandler(task, description);
+            ProjectView.TaskHandler(task, description, (IProgressView)ViewFactory.Get("ProgressBarView"));
         else
             task();
     }
 
     public bool OpenProject(string filename)
     {
-        Project project = null;
+        ProjectOpenResult projectOpenResult = null;
         var errorMsg = "";
-        var warningMsg = "";
 
         DoLongRunningTask(delegate
         {
             try
             {
-                var (project1, warning) = new ProjectFileManager
-                {
-                    RomPromptFn = AskToSelectNewRomFilename
-                }.Open(filename);
-                    
-                project = project1;
-                warningMsg = warning;
+                projectOpenResult = CreateProjectFileManager().Open(filename);
             }
             catch (AggregateException ex)
             {
-                project = null;
+                projectOpenResult = null;
                 errorMsg = ex.InnerExceptions.Select(e => e.Message).Aggregate((line, val) => line += val + "\n");
             }
             catch (Exception ex)
             {
-                project = null;
+                projectOpenResult = null;
                 errorMsg = ex.Message;
             }
         }, $"Opening {Path.GetFileName(filename)}...");
 
-        if (project == null)
+        if (projectOpenResult == null)
         {
             ProjectView.OnProjectOpenFail(errorMsg);
             return false;
         }
 
-        if (warningMsg != "")
-            ProjectView.OnProjectOpenWarning(warningMsg);
+        var warning = projectOpenResult.OpenResult.Warning;
+        if (!string.IsNullOrEmpty(warning))
+            ProjectView.OnProjectOpenWarning(warning);
 
-        OnProjectOpenSuccess(filename, project);
+        OnProjectOpenSuccess(filename, projectOpenResult.Root.Project);
         return true;
+    }
+
+    private IProjectFileManager CreateProjectFileManager()
+    {
+        var projectFileManager = projectFileManagerCreate();
+        projectFileManager.RomPromptFn = AskToSelectNewRomFilename;
+        return projectFileManager;
     }
 
     private void OnProjectOpenSuccess(string filename, Project project)
@@ -121,7 +137,7 @@ public class ProjectController : IProjectController
 
             string err = null;
             DoLongRunningTask(
-                () => err = new ProjectFileManager().Save(Project, filename),
+                () => err = CreateProjectFileManager().Save(Project, filename),
                 $"Saving {Path.GetFileName(filename)}..."
             );
 
@@ -139,7 +155,7 @@ public class ProjectController : IProjectController
 
     public void ImportBizHawkCdl(string filename)
     {
-        BizHawkCdlImporter.Import(filename, Project.Data.GetSnesApi());
+        BizHawkCdlImporter.Import(filename, Project.Data.GetSnesApi() ?? throw new InvalidOperationException("Project has no SNES API Present"));
 
         ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs
         {
@@ -152,34 +168,33 @@ public class ProjectController : IProjectController
     public bool ImportRomAndCreateNewProject(string romFilename)
     {
         var importController = SetupImportController();
-
         var importSettings = importController.PromptUserForImportOptions(romFilename);
-        if (importSettings != null)
-        {
-            CloseProject();
-
-            // actually do the import
-            ImportRomAndCreateNewProject(importSettings);
-            return true;
-        }
-
-        return false;
+        if (importSettings == null) 
+            return false;
+        
+        CloseProject();
+        ImportRomAndCreateNewProject(importSettings);
+        return true;
     }
 
-    private static IImportRomDialogController SetupImportController()
+    private void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
+    {
+        var importer = projectImporterFactoryCreate.Invoke(importSettings);
+        var project = importer.Read();
+        if (project != null)
+        {
+            OnProjectOpenSuccess(project.ProjectFileName, project);   
+        }
+    }
+
+    private IImportRomDialogController SetupImportController()
     {
         // let the user select settings on the GUI
-        var importController = Service.Container.GetInstance<IImportRomDialogController>();
+        var importController = controllerFactory.GetImportRomDialogController();
         importController.View.Controller = importController;
         return importController;
     }
 
-    public void ImportRomAndCreateNewProject(ImportRomSettings importSettings)
-    {
-        var project = ImportUtils.ImportRomAndCreateNewProject(importSettings);
-        OnProjectOpenSuccess(project.ProjectFileName, project);
-    }
-        
     public void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll)
     {
         var importFilename = labelEditor.PromptForCsvFilename();
@@ -348,7 +363,7 @@ public class ProjectController : IProjectController
             if (newlyEditedSettings == null)
                 return null;
                 
-        } while (!newlyEditedSettings.IsValid());
+        } while (!newlyEditedSettings.IsValid(fs));
 
         return newlyEditedSettings;
     }
@@ -361,7 +376,7 @@ public class ProjectController : IProjectController
 
     public bool WriteAssemblyOutputIfSettingsValid(LogWriterSettings settingsToUseAndSave)
     {
-        if (settingsToUseAndSave == null || !settingsToUseAndSave.IsValid())
+        if (settingsToUseAndSave == null || !settingsToUseAndSave.IsValid(fs))
             return false;
 
         UpdateExportSettings(settingsToUseAndSave);
@@ -373,24 +388,21 @@ public class ProjectController : IProjectController
     [CanBeNull]
     private LogWriterSettings ShowExportSettingsEditor()
     {
-        var exportSettingsController = Project?.CreateExportSettingsEditorController();
+        var exportSettingsController = CreateExportSettingsEditorController();
         return !(exportSettingsController?.PromptSetupAndValidateExportSettings() ?? false) 
             ? null 
             : exportSettingsController.Settings;
     }
-}
-
-public static class ProjectExtensions
-{
+    
     [CanBeNull]
-    public static ILogCreatorSettingsEditorController CreateExportSettingsEditorController(this Project @this)
+    private ILogCreatorSettingsEditorController CreateExportSettingsEditorController()
     {
-        if (@this == null)
+        if (Project == null)
             return null;
-            
-        var exportSettingsController = Service.Container.GetInstance<ILogCreatorSettingsEditorController>();
-        exportSettingsController.KeepPathsRelativeToThisPath = @this.Session?.ProjectDirectory;
-        exportSettingsController.Settings = @this.LogWriterSettings with { }; // operate on a new copy of the settings
+        
+        var exportSettingsController = controllerFactory.GetLogCreatorSettingsEditorController();
+        exportSettingsController.KeepPathsRelativeToThisPath = Project.Session?.ProjectDirectory;
+        exportSettingsController.Settings = Project.LogWriterSettings with { }; // operate on a new copy of the settings
         return exportSettingsController;
     }
 }

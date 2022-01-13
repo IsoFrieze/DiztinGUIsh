@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Forms;
-using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 

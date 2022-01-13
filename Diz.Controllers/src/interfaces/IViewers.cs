@@ -53,7 +53,7 @@ namespace Diz.Controllers.interfaces
     }
     
 
-    public interface IProgressView : ICloseable, IModalDialog, IProgress<int> {
+    public interface IProgressView : IFormViewer, ICloseable, IModalDialog, IProgress<int> {
         public bool IsMarquee { get; set; }
         public string TextOverride { get; set; }
         bool Visible { get; set; }
@@ -129,7 +129,7 @@ namespace Diz.Controllers.interfaces
         IImportRomDialogController Controller { get; set; }
         
         bool ShowAndWaitForUserToConfirmSettings();
-        bool GetVectorValue(int i, int j);
+        public List<string> GetEnabledVectorTableEntries();
         void RefreshUi();
     }
 

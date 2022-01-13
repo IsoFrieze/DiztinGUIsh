@@ -6,7 +6,6 @@ using Diz.Core.export;
 using Diz.Core.model.snes;
 using Diz.LogWriter;
 using Diz.LogWriter.util;
-using JetBrains.Annotations;
 using Xunit;
 using Xunit.Abstractions;
 

@@ -2,7 +2,6 @@
 using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window
 {
@@ -17,7 +16,7 @@ namespace DiztinGUIsh.window
         }
 
         // not sure if this will be the final place this lives. OK for now. -Dom
-        public IProjectController ProjectController { get; protected set; }
+        public IProjectController ProjectController { get; }
 
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
             ProgressBarJob.RunAndWaitForCompletion;

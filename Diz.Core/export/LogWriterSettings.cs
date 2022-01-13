@@ -3,7 +3,6 @@
 using System.IO;
 using System.Xml.Serialization;
 using Diz.Core.util;
-using LightInject;
 
 /*
  * TODO:
@@ -87,19 +86,12 @@ public record LogWriterSettings
 
         return Path.Combine(BaseOutputPath ?? "", relativeFolderPath);
     }
-}
-
-public static class LogWriterSettingsExtensions
-{
-    public static LogWriterSettings GetDefaultsIfInvalid(this LogWriterSettings @this) =>
-        @this.IsValid() ? @this : new LogWriterSettings();
-
-    public static string? Validate(this LogWriterSettings @this)
+    
+    public string? Validate(IFilesystemService fs)
     {
-        var results = new LogWriterSettingsValidator().Validate(@this);
+        var results = new LogWriterSettingsValidator(fs).Validate(this);
         return !results.IsValid ? results.ToString() : null;
     }
 
-    public static bool IsValid(this LogWriterSettings @this) => 
-        @this.Validate() == null;
+    public bool IsValid(IFilesystemService fs) => Validate(fs) == null;
 }

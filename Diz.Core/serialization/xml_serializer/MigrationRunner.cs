@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Diz.Core.Interfaces;
-using Diz.Core.model.project;
 
 namespace Diz.Core.serialization.xml_serializer
 {
@@ -16,12 +14,24 @@ namespace Diz.Core.serialization.xml_serializer
         // - multiple of the same version# ARE allowed
         // - items of equal version# will be applied in the order they're in the list
         // - caller must keep this sorted
-        public List<IMigration> Migrations { get; set; } = new();
+        public List<IMigration> Migrations { get; init; } = new();
+
+        IReadOnlyList<IMigration> IMigrationRunner.Migrations => Migrations;
         
         // when run, we'll filter out any migrations not between the Start and Target ranges
         public int StartingSaveVersion { get; set; }
         public int TargetSaveVersion { get; set; }
-        
+
+        public MigrationRunner(IReadOnlyList<IMigration> migrations) : this() 
+        {
+            if (migrations != null)
+                Migrations = migrations.ToList();
+        }
+
+        public MigrationRunner()
+        {
+        }
+
         private void PreMigrationChecks()
         {
             var currentVersion = int.MinValue;

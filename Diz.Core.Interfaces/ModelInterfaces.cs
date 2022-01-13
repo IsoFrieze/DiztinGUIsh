@@ -164,7 +164,12 @@ namespace Diz.Core.Interfaces
     {
         
     }
-
+// TODO: below: #if DIZ_3_BRANCH
+//         ,ICommentProvider,
+//         IAnnotationProvider,
+//         IByteGraphProvider
+// #endif
+    
     public interface IData : 
         INotifyPropertyChanged,
         IReadOnlyByteSource,
@@ -175,8 +180,9 @@ namespace Diz.Core.Interfaces
         IArchitectureGettable,
         ICommentTextProvider
     {
-        IArchitectureApiProvider ArchProvider { get; }
-        
+        IDataStoreProvider<IArchitectureApi> Apis { get; }
+        IDataStoreProvider<IDataTag> Tags { get; }
+
         ILabelServiceWithTempLabels Labels { get; }
         
         // TODO: temp hack for serialization, do this better somehow.
@@ -187,8 +193,10 @@ namespace Diz.Core.Interfaces
 
     public static class DataExtensions
     {
-        public static T? GetApi<T>(this IData @this) where T : class => 
-            @this.ArchProvider.GetApi<T>();
+        public static T? GetApi<T>(this IData @this) where T : class, IArchitectureApi => 
+            @this.Apis.Get<T>();
+        public static T? GetTag<T>(this IData @this) where T : class, IDataTag => 
+            @this.Tags.Get<T>();
     }
     
     public interface ISnesCachedVerificationInfo
@@ -196,36 +204,23 @@ namespace Diz.Core.Interfaces
         public string InternalRomGameName { get; set; }
         public uint InternalCheckSum { get; set; }
     }
-
-    // API for a specific architecture API (like SNES, genesis, etc)
+    
+    public interface IDataStoreProvider<T> : IEnumerable<T> where T : class
+    {
+        bool Add(T type);
+        TSearchFor Get<TSearchFor>() where TSearchFor : class, T;
+    }
+    
+    // // API for a specific architecture API (like SNES, genesis, etc)
     public interface IArchitectureApi
     {
         
     }
-
-    public interface IArchitectureApiProvider
-    {
-        IEnumerable<IArchitectureApi> Apis { get; }
-        bool AddApiProvider(IArchitectureApi provider);
-    }
     
-//     public interface IReadOnlySnesRom :
-//         IInstructionGettable,
-//         IReadOnlyByteSource,
-//         IRomMapProvider,
-//         ICommentTextProvider,
-//         IReadOnlyLabels,
-//         ISnesAddressConverter,
-//         ISnesIntermediateAddress,
-//         IRomSize
-//     
-// #if DIZ_3_BRANCH
-//         ,ICommentProvider,
-//         IAnnotationProvider,
-//         IByteGraphProvider
-// #endif
-//     {
-//     }
+    public interface IDataTag
+    {
+        
+    }
 
     public interface ISnesIntermediateAddress
     {
@@ -237,20 +232,5 @@ namespace Diz.Core.Interfaces
     {
         int ConvertPCtoSnes(int offset);
         int ConvertSnesToPc(int offset);
-    }
-
-    public static class ArchitectureProviderExtensions
-    {
-        public static T GetApi<T>(this IArchitectureApiProvider @this) where T : class
-        {
-            try
-            {
-                return (@this.Apis.Single(x => x is T) as T)!;
-            }
-            catch (InvalidOperationException ex)
-            {
-                throw new InvalidOperationException($"No API found of type {typeof(T).Name}", ex);
-            }
-        }
     }
 }

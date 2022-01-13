@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using Diz.Core.export;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
 using JetBrains.Annotations;
@@ -34,6 +29,9 @@ namespace Diz.Core.util
             return mode == RomMapMode.LoRom ? 0x8000 : 0x10000;
         }
 
+        public static RomSpeed GetRomSpeed(RomMapMode mode, IReadOnlyList<byte> romBytes) =>
+            GetRomSpeed(GetRomSettingOffset(mode), romBytes);
+
         public static RomSpeed GetRomSpeed(int offset, IReadOnlyList<byte> romBytes) =>
             offset < romBytes.Count
                 ? (romBytes[offset] & 0x10) != 0 ? RomSpeed.FastRom : RomSpeed.SlowRom
@@ -46,7 +44,7 @@ namespace Diz.Core.util
         /// <param name="allRomBytes">All the bytes in a ROM</param>
         /// <param name="romSettingOffset">Offset of the start of the SNES header section (title info is before this)</param>
         /// <returns>UTF8 string of the title, padded with spaces</returns>
-        public static string GetCartridgeTitleFromRom(byte[] allRomBytes, int romSettingOffset) => 
+        public static string GetCartridgeTitleFromRom(IReadOnlyList<byte> allRomBytes, int romSettingOffset) => 
             GetCartridgeTitleFromBuffer(allRomBytes, GetCartridgeTitleStartingRomOffset(romSettingOffset));
 
         // input: ROM setting offset (pcOffset, NOT snes address)
@@ -59,7 +57,7 @@ namespace Diz.Core.util
         /// <param name="buffer">Array of bytes</param>
         /// <param name="index">Index into the array to start with</param>
         /// <returns>UTF8 string of the title, padded with spaces</returns>
-        public static string GetCartridgeTitleFromBuffer(byte[] buffer, int index = 0) => 
+        public static string GetCartridgeTitleFromBuffer(IReadOnlyList<byte> buffer, int index = 0) => 
             ByteUtil.ReadShiftJisEncodedString(buffer, index, LengthOfTitleName);
 
         public static int ConvertSnesToPc(int address, RomMapMode mode, int size)
@@ -315,6 +313,13 @@ namespace Diz.Core.util
             return myName;
         }
 
+        /// <summary>
+        /// Read a ROM file from disk. discard the SMC header of 0x200 bytes if it exists.
+        /// </summary>
+        /// <param name="filename">Rom filename to read</param>
+        /// <returns>Raw bytes</returns>
+        /// <exception cref="InvalidDataException"></exception>
+        [NotNull]
         public static byte[] ReadRomFileBytes(string filename)
         {
             var smc = File.ReadAllBytes(filename);
@@ -322,7 +327,7 @@ namespace Diz.Core.util
 
             if ((smc.Length & 0x3FF) == 0x200)
                 // skip and dont include the SMC header
-                for (int i = 0; i < rom.Length; i++)
+                for (var i = 0; i < rom.Length; i++)
                     rom[i] = smc[i + 0x200];
             else if ((smc.Length & 0x3FF) != 0)
                 throw new InvalidDataException("This ROM has an unusual size. It can't be opened.");
@@ -335,85 +340,42 @@ namespace Diz.Core.util
             return rom;
         }
         
-        public static Dictionary<int, FlagType> GenerateHeaderFlags(int romSettingsOffset, byte[] romBytes)
+        public static Dictionary<int, FlagType> GenerateHeaderFlags(int romSettingsOffset, IReadOnlyList<byte> romBytes)
         {
             var flags = new Dictionary<int, FlagType>();
+
+            if (romSettingsOffset == -1)
+                return flags;
             
-            for (int i = 0; i < LengthOfTitleName; i++)
+            for (var i = 0; i < LengthOfTitleName; i++)
                 flags.Add(romSettingsOffset - LengthOfTitleName + i, FlagType.Text);
             
-            for (int i = 0; i < 7; i++) 
+            for (var i = 0; i < 7; i++) 
                 flags.Add(romSettingsOffset + i, FlagType.Data8Bit);
             
-            for (int i = 0; i < 4; i++) 
+            for (var i = 0; i < 4; i++) 
                 flags.Add(romSettingsOffset + 7 + i, FlagType.Data16Bit);
             
-            for (int i = 0; i < 0x20; i++) 
+            for (var i = 0; i < 0x20; i++) 
                 flags.Add(romSettingsOffset + 11 + i, FlagType.Pointer16Bit);
 
             if (romBytes[romSettingsOffset - 1] == 0)
             {
                 flags.Remove(romSettingsOffset - 1);
                 flags.Add(romSettingsOffset - 1, FlagType.Data8Bit);
-                for (int i = 0; i < 0x10; i++) 
+                for (var i = 0; i < 0x10; i++) 
                     flags.Add(romSettingsOffset - 0x25 + i, FlagType.Data8Bit);
             }
             else if (romBytes[romSettingsOffset + 5] == 0x33)
             {
-                for (int i = 0; i < 6; i++) 
+                for (var i = 0; i < 6; i++) 
                     flags.Add(romSettingsOffset - 0x25 + i, FlagType.Text);
 
-                for (int i = 0; i < 10; i++) 
+                for (var i = 0; i < 10; i++) 
                     flags.Add(romSettingsOffset - 0x1F + i, FlagType.Data8Bit);
             }
 
             return flags;
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="vectorNames"></param>
-        /// <param name="romSettingsOffset"></param>
-        /// <param name="romBytes"></param>
-        /// <param name="mode"></param>
-        /// <returns>A list of ROM offsets [NOT snes addresses] to add these labels to</returns>
-        public static Dictionary<int, Label> GenerateVectorLabels(Dictionary<string, bool> vectorNames, int romSettingsOffset, IReadOnlyList<byte> romBytes, RomMapMode mode)
-        {
-            // TODO: probably better to just use a data structure for this instead of generating the 
-            // offsets with table/entry vars
-
-            var labels = new Dictionary<int, Label>();
-
-            var baseOffset = romSettingsOffset + 15;
-
-            var table = 0; const int tableCount = 2;
-            var entry = 0; const int entryCount = 6;
-            foreach (var vectorEntry in vectorNames)
-            {
-                Debug.Assert(table is >= 0 and < tableCount);
-                Debug.Assert(entry is >= 0 and < entryCount);
-                // table = 0,1              // which table of Native vs Emulation
-                // entry = 0,1,2,3,4,5      // which offset
-                //
-                // 16*i = 16,32,
-
-                var index = baseOffset + (16 * table) + (2 * entry);
-                var offset = romBytes[index] + (romBytes[index + 1] << 8);
-                var pc = ConvertSnesToPc(offset, mode, romBytes.Count);
-                if (pc >= 0 && pc < romBytes.Count && !labels.ContainsKey(offset))
-                    labels.Add(offset, new Label { Name = vectorEntry.Key });
-
-                if (++entry < entryCount)
-                    continue;
-
-                entry = 0;
-                if (++table >= tableCount)
-                    break;
-            }
-
-            return labels;
         }
 
         public const int LengthOfTitleName = 0x15;

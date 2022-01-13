@@ -4,9 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Diz.Controllers.interfaces;
+using Diz.Core;
 using Diz.Core.model;
-using Diz.Core.util;
-using Diz.Cpu._65816;
 
 namespace Diz.Controllers.controllers
 {
@@ -117,6 +116,7 @@ namespace Diz.Controllers.controllers
     /// <summary>
     /// A decorator for IProjectLoader that returns a project created from our internal sample data
     /// (instead of data from disk). Pass in the special string constant here to use.
+    /// TODO: integrate this with the other ISnesSampleProjectFactory interface, they duplicate the same functionality.
     /// </summary>
     public class ProjectLoaderWithSampleDataDecorator : IProjectLoader
     {
@@ -127,11 +127,13 @@ namespace Diz.Controllers.controllers
         public const string MagicSampleProjectName = "sampleproject111111112";
         
         private readonly IProjectLoader previous;
+        private readonly ISampleDataFactory sampleDataFactory;
 
-        public ProjectLoaderWithSampleDataDecorator(IProjectLoader previous)
+        public ProjectLoaderWithSampleDataDecorator(IProjectLoader previous, ISampleDataFactory sampleDataFactory)
         {
             Debug.Assert(previous != null);
             this.previous = previous;
+            this.sampleDataFactory = sampleDataFactory;
         } 
 
         public Project LoadProject(string filename)
@@ -141,10 +143,11 @@ namespace Diz.Controllers.controllers
                 : CreateNewSampleProject();
         }
 
-        private static Project CreateNewSampleProject()
+        private Project CreateNewSampleProject()
         {
-            var project = new Project {
-                Data = SampleRomData.CreateSampleData().data,
+            var project = new Project 
+            {
+                Data = sampleDataFactory.Create(),
             };
 
             project.Session = new ProjectSession(project, MagicSampleProjectName);

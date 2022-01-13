@@ -1,5 +1,4 @@
-﻿using Diz.Core.Interfaces;
-using Diz.Core.model;
+﻿using Diz.Core.model;
 using Diz.Core.model.project;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
@@ -21,7 +20,7 @@ public class AddRomDataCommand : IAddRomDataCommand
     public bool ShouldProjectCartTitleMatchRomBytes { get; set; } = true;
     public ProjectSerializedRoot? Root { get; set; } = null;
     public Func<string, string>? GetNextRomFileToTry { get; set; }
-    public MigrationRunner? MigrationRunner { get; set; }
+    public IMigrationRunner? MigrationRunner { get; set; }
 
     private Project? Project => Root?.Project ?? null;
 
@@ -37,24 +36,18 @@ public class AddRomDataCommand : IAddRomDataCommand
 
     private void Populate()
     {
-        if (FillIfOverride()) // unusual non-normal override case 
+        // for copyright reasons, normally, we don't store the actual bytes from the ROM in the XML directly.
+        // we only save metadata about them, and we populate them from the ROM file on disk as the last step
+        // after the project is finished loading.
+        //
+        // However, different project loaders or generators may choose to do this (such as the sample data generator,
+        // or, for test roms). So, don't try and load anything from a ROM file in disk if something else already
+        // populated the bytes in the project.
+        if (Project?.Data?.RomBytesLoaded ?? false)
             return;
 
-        FillIfSearchFoundRom(); // normal case
-    }
-
-    private bool FillIfOverride()
-    {
-        // TODO: move this to an override that overrides Populate()
-        // then, don't call the base method, fail if this doesn't work.
-
-        var bytes = Project?.Data?.RomBytesOverrideProvider?.Invoke();
-        if (bytes == null)
-            return false;
-
-        EnsureProjectCompatibleWithRom(bytes);
-        Project?.Data.RomBytes.CopyRomDataIn(bytes);
-        return true;
+        // Normal case: find a ROM file on disk matching our 
+        FillIfSearchFoundRom();
     }
 
     private void FillIfSearchFoundRom()

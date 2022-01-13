@@ -4,6 +4,7 @@ using Diz.Core.serialization.xml_serializer;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 using IX.Observable;
+using LightInject.xUnit2;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -55,19 +56,18 @@ namespace Diz.Test
             #endregion
         }
 
-        private static IConfigurationContainer GetSerializer()
-        {
-            return XmlSerializerSupport.GetSerializer()
+        private static IConfigurationContainer GetSerializer(IXmlSerializerFactory createSerializer) =>
+            createSerializer
+                .GetSerializer()
                 .EnableImplicitTyping(typeof(TestRoot));
-        }
 
-        [Fact]
-        private void Serializer()
+        [Theory, InjectData]
+        private void Serialize(IXmlSerializerFactory createSerializer)
         {
-            var serializer = GetSerializer().Create();
+            var serializer = GetSerializer(createSerializer).Create();
 
             var xmlStr = serializer.Serialize(
-                new XmlWriterSettings() {},
+                new XmlWriterSettings {},
                 testRootElementGood);
 
             testOutputHelper.WriteLine(xmlStr);
@@ -75,10 +75,11 @@ namespace Diz.Test
             Assert.Equal(xmlShouldBe, xmlStr);
         }
 
-        [Fact]
-        private void DeSerialize()
+        [Theory, InjectData]
+        private void DeSerialize(IXmlSerializerFactory createSerializer)
         {
-            var serializer = GetSerializer().Create();
+            var serializer = GetSerializer(createSerializer).Create();
+            
             var restoredRoot = serializer.Deserialize<TestRoot>(xmlShouldBe);
 
             Assert.Equal(testRootElementGood, restoredRoot);

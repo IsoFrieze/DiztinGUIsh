@@ -1,17 +1,15 @@
-﻿using Diz.Core.model;
+﻿using Diz.Core;
+using Diz.Core.Interfaces;
+using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Cpu._65816;
-using Diz.Test.Utils;
+using LightInject.xUnit2;
 using Xunit;
 
 namespace Diz.Test;
 
 public class RomByteTests
 {
-    public RomByteTests()
-    {
-        AppServicesForTests.RegisterNormalAppServices();
-    }
-
     private static RomByte SampleRomByte1()
     {
         return new RomByte
@@ -35,26 +33,28 @@ public class RomByteTests
         return rb;
     }
         
-    [Fact]
-    public void TestWhenNoIaPresent()
+    [Theory, InjectData]
+    public void TestWhenNoIaPresent(ISampleDataFactory createSampleData)
     {
-        var sampleData = SampleRomData.CreateSampleData();
+        var sampleData = createSampleData.Create();
         const int offset = 0x1C1F;
-        var result = sampleData.data.GetSnesApi()?.GetIntermediateAddressOrPointer(offset);
+        var result = sampleData.GetSnesApi()?.GetIntermediateAddressOrPointer(offset);
         Assert.Equal(result, -1);
     }
         
-    [Fact]
-    public void TestGetAddressMode()
+    [Theory, InjectData]
+    public void TestGetAddressMode(ISampleDataFactory createSampleData)
     {
-        var sampleData = SampleRomData.CreateSampleData();
+        var sampleData = createSampleData.Create();
         const int romOffset1 = 0xEB;
-        var mode1 = Cpu65C816<ISnesData>.GetAddressMode(sampleData.data.GetSnesApi(), romOffset1);
+        var snesApi = sampleData.GetSnesApi();
+        
+        var mode1 = Cpu65C816<ISnesData>.GetAddressMode(snesApi, romOffset1);
         Assert.Equal(Cpu65C816Constants.AddressMode.Constant8, mode1);
 
-        Assert.True(romOffset1 >= sampleData.originalRomSizeBeforePadding);
+        Assert.True(romOffset1 >= sampleData.GetTag<SampleDataGenerationTag>()!.OriginalRomSizeBeforePadding);
 
-        var mode2 = Cpu65C816<ISnesData>.GetAddressMode(sampleData.data.GetSnesApi(), 0x0A);
+        var mode2 = Cpu65C816<ISnesData>.GetAddressMode(snesApi, 0x0A);
         Assert.Equal(Cpu65C816Constants.AddressMode.Constant8, mode2);
     }
 

@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Diz.Core.model;
-using Diz.Core.model.project;
 using Diz.Core.model.snes;
 using Diz.Cpu._65816;
 using Diz.Test.Utils;
@@ -16,29 +15,28 @@ namespace Diz.Test
     {
         private static Data GetSampleData()
         {
-            AppServicesForTests.RegisterNormalAppServices();
-            
-            var data = DataUtils.FactoryCreate();
-            
-            data.RomMapMode = RomMapMode.HiRom;
-            data.RomSpeed = RomSpeed.FastRom;
-            data.RomBytes = new RomBytes
+            var data = new Data
             {
-                // starts at PC=0, which is SNES=0xC00000
-                // STA.W SNES_VMADDL
-                // OR (equivalent)
-                // STA.W $2116
-                new()
+                RomMapMode = RomMapMode.HiRom,
+                RomSpeed = RomSpeed.FastRom,
+                RomBytes = new RomBytes
                 {
-                    Rom = 0x8D, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, DataBank = 0x00,
-                    DirectPage = 0,
+                    // starts at PC=0, which is SNES=0xC00000
+                    // STA.W SNES_VMADDL
+                    // OR (equivalent)
+                    // STA.W $2116
+                    new()
+                    {
+                        Rom = 0x8D, TypeFlag = FlagType.Opcode, MFlag = true, XFlag = true, DataBank = 0x00,
+                        DirectPage = 0,
+                    },
+                    new() { Rom = 0x16, TypeFlag = FlagType.Operand },
+                    new() { Rom = 0x21, TypeFlag = FlagType.Operand },
                 },
-                new() { Rom = 0x16, TypeFlag = FlagType.Operand },
-                new() { Rom = 0x21, TypeFlag = FlagType.Operand },
-            };
-            data.Comments = new ObservableDictionary<int, string>
-            {
-                { 0xC00001, "unused" },
+                Comments = new ObservableDictionary<int, string>
+                {
+                    { 0xC00001, "unused" },
+                }
             };
 
             new Dictionary<int, Label>
@@ -49,7 +47,7 @@ namespace Diz.Test
                 data.Labels.AddLabel(kvp.Key, kvp.Value)
             );
 
-            data.ArchProvider.AddApiProvider(new SnesApi(data));
+            data.Apis.Add(new SnesApi(data));
             
             return data;
         }

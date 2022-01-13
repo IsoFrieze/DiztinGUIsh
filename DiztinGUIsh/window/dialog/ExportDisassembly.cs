@@ -41,8 +41,9 @@ public partial class LogCreatorSettingsEditorForm : Form, ILogCreatorSettingsEdi
         }
     }
 
-    public LogCreatorSettingsEditorForm()
+    public LogCreatorSettingsEditorForm(Func<LogWriterSettings, ISampleAssemblyTextGenerator> sampleAssemblyOutputFactory)
     {
+        this.sampleAssemblyOutputFactory = sampleAssemblyOutputFactory;
         InitializeComponent();
     }
 
@@ -64,11 +65,13 @@ public partial class LogCreatorSettingsEditorForm : Form, ILogCreatorSettingsEdi
         textSample.Text = validFormat ? GetSampleOutput() : "Invalid format!";
     }
 
+    private readonly Func<LogWriterSettings, ISampleAssemblyTextGenerator> sampleAssemblyOutputFactory;
+
     public string GetSampleOutput()
     {
         try
         {
-            return LogUtil.GetSampleAssemblyOutput(Settings).OutputStr;
+            return sampleAssemblyOutputFactory(Settings).GetSampleAssemblyOutput().OutputStr;
         }
         catch (Exception ex)
         {

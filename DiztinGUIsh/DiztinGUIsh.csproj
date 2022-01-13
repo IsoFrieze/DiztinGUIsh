@@ -5,7 +5,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows7.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <RootNamespace>DiztinGUIsh</RootNamespace>
     <AssemblyName>DiztinGUIsh</AssemblyName>
     <ApplicationIcon>resource/diz-icon2-magenta-med32x32.ico</ApplicationIcon>
@@ -13,7 +13,6 @@
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-    <PackageVersion>3.0.0</PackageVersion>
   </PropertyGroup>
   
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />  <!-- import this so our custom targets work -->
@@ -247,7 +246,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="controller" />
     <Folder Include="dist\" />
   </ItemGroup>
   <!--custom build targets for packing up final distribution of files-->

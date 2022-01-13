@@ -3,13 +3,12 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <UseWindowsForms>false</UseWindowsForms>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RootNamespace>Diz.Core</RootNamespace>
     <AssemblyName>Diz.Core</AssemblyName>
-    <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-    <PackageVersion>3.0.0</PackageVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ExtendedXmlSerializer">
@@ -52,6 +51,7 @@
   <ItemGroup>
     <Compile Remove="arch\CpuOperations.cs" />
     <Compile Remove="import\**" />
+    <Compile Remove="export\LogInterfaces.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="import\**" />

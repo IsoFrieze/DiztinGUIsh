@@ -1,7 +1,5 @@
-﻿using System.Collections.ObjectModel;
-using Diz.Core.model;
+﻿using Diz.Core.model;
 using Diz.Core.model.snes;
-using Diz.Core.util;
 
 namespace Diz.Test.Utils
 {

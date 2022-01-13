@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml.Serialization;
-using Diz.Core.export;
 using Diz.Core.Interfaces;
 #if DIZ_3_BRANCH
 using Diz.Core.model.byteSources;

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net6.0": {
+      "IX.Observable": {
+        "type": "Direct",
+        "requested": "[0.7.3, )",
+        "resolved": "0.7.3",
+        "contentHash": "YiOcqYWatb335Jo1lSu6kFd+DFJlc1TZPiUr4o4BtnfBb061YGMfhkAshZCfHL6AWgORWfGYH/kQh7T+jxBUiA==",
+        "dependencies": {
+          "IX.StandardExtensions": "[0.7.3, 0.8.0)",
+          "JetBrains.Annotations": "2020.1.0"
+        }
+      },
+      "IX.StandardExtensions": {
+        "type": "Transitive",
+        "resolved": "0.7.3",
+        "contentHash": "vNDln18OhH5UFThM4kGYLExGQaP0Fu6YtbCMTmHymOBLOjurmmoJEkIm7gRxjPo1F1itOglofuM2LdM5+kMvsw==",
+        "dependencies": {
+          "JetBrains.Annotations": "2020.1.0",
+          "System.ComponentModel.Annotations": "4.7.0"
+        }
+      },
+      "JetBrains.Annotations": {
+        "type": "Transitive",
+        "resolved": "2020.1.0",
+        "contentHash": "kD9D2ey3DGeLbfIzS8PkwLFkcF5vCOLk2rdjgfSxTfpoyovl7gAyoS6yq6T77zo9QgJGaVJ7PO/cSgLopnKlzg=="
+      },
+      "System.ComponentModel.Annotations": {
+        "type": "Transitive",
+        "resolved": "4.7.0",
+        "contentHash": "0YFqjhp/mYkDGpU0Ye1GjE53HMp9UVfGN7seGpAMttAC0C40v5gw598jCgpbBLMmCo0E5YRLBv5Z2doypO49ZQ=="
+      }
+    }
+  }
+}

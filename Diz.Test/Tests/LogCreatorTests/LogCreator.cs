@@ -1,14 +1,11 @@
 ﻿using System.Linq;
+using Diz.Core;
 using Diz.Core.export;
 using Diz.Core.model;
-using Diz.Core.model.project;
 using Diz.Core.model.snes;
-using Diz.Core.util;
 using Diz.Cpu._65816;
 using Diz.Test.Utils;
-using FluentAssertions;
-using LightInject;
-using Moq;
+using LightInject.xUnit2;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -16,10 +13,7 @@ namespace Diz.Test;
 
 public class LogCreatorTests
 {
-    // TODO: re-enable all of this, it was just for testing purposes.
-    // these tests all work.
-    
-    /*private const string ExpectedRaw =
+    private const string ExpectedRaw =
         //          label:       instructions                         ;PC    |rawbytes|ia
         "                        lorom                                ;      |        |      ;  \r\n" +
         "                                                             ;      |        |      ;  \r\n" +
@@ -31,83 +25,57 @@ public class LogCreatorTests
         "           Test22:      DEX                                  ;808006|CA      |      ;  \r\n" +
         "                        BPL CODE_808000                      ;808007|10F7    |808000;  \r\n" +
         "                                                             ;      |        |      ;  \r\n" +
-        "                        Test_Data = $80805B                  ;      |        |      ;  \r\n";*/
+        "                        Test_Data = $80805B                  ;      |        |      ;  \r\n";
 
-    // [Fact(Skip = "need to reset the .asm file")]
-    // public void TestAFewLines()
-    // {
-    //     var data = CreateSampleData();
-    //     LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(data, creator =>
-    //     {
-    //         creator.Settings = new LogWriterSettings
-    //         {
-    //             OutputExtraWhitespace = false    
-    //         };
-    //     }), debugWriter);
-    // }
-
-    [Fact]
-    public void TestServices()
+    [Theory(Skip = "need to reset the .asm file"), InjectData]
+    public void TestAFewLines(IDataFactory dataFactory)
     {
-        Service.Recreate();
-
-        Service.Container.Register<IFilesystemService>(x => new FilesystemService());
-        Service.Container.Register<IFilesystemService>(x => new Mock<IFilesystemService>().Object);
-
-        Service.Container.GetAllInstances(typeof(IFilesystemService)).Count().Should().Be(1);
-
-        var fs = Service.Container.GetInstance<IFilesystemService>();
-        fs.GetType().Name.Should().Contain("Proxy");
-        
-        Service.Container.Register<IFilesystemService>(x => new FilesystemService());
+        var data = CreateSampleData(dataFactory);
+        LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(data, creator =>
+        {
+            creator.Settings = new LogWriterSettings
+            {
+                OutputExtraWhitespace = false    
+            };
+        }), debugWriter);
     }
-        
+
     [Fact]
     public void TestLabelCount()
     {
-        /*Data data = null; // TODO: CreateSampleData();
+        Data data = null; // TODO: CreateSampleData();
             
         // should give us "Test22" and "Test_Data"
-        Assert.Equal(2, data.Labels.Labels.Count());*/
+        Assert.Equal(2, data.Labels.Labels.Count());
+    }
+    
+    [Theory(Skip = "need to reset the .asm file"), InjectData]
+    public void TestOneLine(IDataFactory dataFactory)
+    {
+        var exportAssembly = LogWriterHelper.ExportAssembly(dataFactory.Create());
+        LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, exportAssembly);
     }
         
-    // [Fact(Skip = "need to reset the .asm file")]
-    // public void TestOneLine()
-    // {
-    //     var exportAssembly = LogWriterHelper.ExportAssembly(DataUtils.FactoryCreate());
-    //     LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, exportAssembly);
-    // }
-        
-    // [Theory]
-    // [EmbeddedResourceData("Diz.Test/Resources/emptyrom.asm")]
-    // public void TestEmptyRom(string expectedAsm)
-    // {
-    //     /*var emptyData = DataUtils.FactoryCreate();
-    //     emptyData.ArchProvider.AddApiProvider(new SnesApi(emptyData));
-    //     var result = LogWriterHelper.ExportAssembly(emptyData);
-    //     LogWriterHelper.AssertAssemblyOutputEquals(expectedAsm, result, debugWriter);*/
-    // }
-
-    [Fact]
-    public void Q()
+    [Theory, InjectData]
+    [EmbeddedResourceData("Diz.Test/Resources/emptyrom.asm")]
+    public void TestEmptyRom(string expectedAsm, IDataFactory dataFactory)
     {
-        // var x = true;
-        // x.Should().BeTrue();
-    }
-        
-        
-    /*private readonly ITestOutputHelper debugWriter;*/
-    public LogCreatorTests(/*ITestOutputHelper debugWriter*/)
-    {
-        /*this.debugWriter = debugWriter;*/
-            
-        AppServicesForTests.RegisterNormalAppServices();
+        var emptyData = dataFactory.Create();
+        emptyData.Apis.Add(new SnesApi(emptyData));
+        var result = LogWriterHelper.ExportAssembly(emptyData);
+        LogWriterHelper.AssertAssemblyOutputEquals(expectedAsm, result, debugWriter);
     }
 
-    /*
-    private Data CreateSampleData()
+    private readonly ITestOutputHelper debugWriter;
+    public LogCreatorTests(ITestOutputHelper debugWriter)
     {
-        var data = DataUtils.FactoryCreate();
+        this.debugWriter = debugWriter;
+    }
+    
+    private Data CreateSampleData(IDataFactory dataFactory)
+    {
+        var data = dataFactory.Create();
+        
         data.RomMapMode = RomMapMode.LoRom;
         data.RomSpeed = RomSpeed.FastRom;
         data.RomBytes = new RomBytes
@@ -145,5 +113,5 @@ public class LogCreatorTests
         data.Labels.AddLabel(0x808000 + 0x06, new Label { Name = "Test22" });
         data.Labels.AddLabel(0x808000 + 0x5B, new Label { Name = "Test_Data", Comment = "Pretty cool huh?" });
         return data;
-    }*/
+    }
 }

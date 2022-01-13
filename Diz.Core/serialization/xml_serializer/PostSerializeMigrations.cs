@@ -1,5 +1,4 @@
-﻿using Diz.Core.Interfaces;
-using Diz.Core.model.project;
+﻿using System.Collections.Generic;
 
 namespace Diz.Core.serialization.xml_serializer
 {
@@ -21,6 +20,8 @@ namespace Diz.Core.serialization.xml_serializer
 
     public interface IMigrationRunner : IMigrationEvents
     {
-        
+        public IReadOnlyList<IMigration> Migrations { get; }
+        int StartingSaveVersion { get; set; }
+        int TargetSaveVersion { get; set; }
     }
 }

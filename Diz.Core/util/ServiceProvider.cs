@@ -1,53 +1,19 @@
-﻿using System;
-using LightInject;
+﻿using LightInject;
 
-namespace Diz.Core.util
+namespace Diz.Core.util;
+
+public static class DizServiceProvider
 {
-    // TODO: this is currently horribly broken or stupid.
-    // we're falling into the Service Locator anti-pattern with this,
-    // and the singleton is ok for the app but breaks unit tests.
-    // get rid of this and create one instance at startup, store
-    // in the app main class only.
-    
-    public static class Service
+    // Thou shalt not create a global instance of this class, for verily thine unit tests.....
+    // 
+    // Don't cache this. Use IServiceContainer first thing at app startup to register services.
+    // Then cast it down only to IServiceFactory and don't register anything after the first class is used.
+    public static IServiceContainer CreateServiceContainer()
     {
-        public static ServiceContainer Container
+        var containerOptions = new ContainerOptions
         {
-            get
-            {
-                _serviceContainerInst ??= _Recreate();
-                return _serviceContainerInst.Value;
-            }
-        }
-
-        public static void Recreate()
-        {
-            _serviceContainerInst = _Recreate();
-        }
-
-        private static Lazy<ServiceContainer> _serviceContainerInst = _Recreate();
-        private static Lazy<ServiceContainer> _Recreate()
-        {
-            Shutdown();
-            return new Lazy<ServiceContainer>(CreateServiceContainer);
-        }
-
-        private static void Shutdown()
-        {
-            // not really sure this all works but....
-            if (!_serviceContainerInst.IsValueCreated) 
-                return;
-            
-            _serviceContainerInst.Value.Dispose();
-        }
-
-        private static ServiceContainer CreateServiceContainer()
-        {
-            return new ServiceContainer(
-                new ContainerOptions
-                {
-                    EnablePropertyInjection = false
-                });
-        }
-    }
+            EnablePropertyInjection = false,
+        };
+        return new ServiceContainer(containerOptions);
+    }   
 }

@@ -3,9 +3,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Diz.Controllers.interfaces;
-using Diz.Core.util;
-using ExtendedXmlSerializer.Configuration;
-using LightInject;
 
 namespace Diz.Controllers.controllers
 {
@@ -102,30 +99,30 @@ namespace Diz.Controllers.controllers
     public class ProgressBarJob : ProgressBarWorker
     {
         // a version that keeps calling 'callback' until it returns -1
-        public static void Loop(long maxProgress, NextAction callback, string overrideTxt = null)
+        public ProgressBarJob(IProgressView progressView)
         {
-            var view = Service.Container.GetInstance<IProgressView>();
-            Debug.Assert(view != null);
-            
-            var j = new ProgressBarJob
-            {
-                MaxProgress = maxProgress,
-                Callback = callback,
-                IsMarquee = maxProgress == -1,
-                TextOverride = overrideTxt,
-                View = view,
-            };
-            j.Run();
+            this.progressView = progressView;
         }
 
         // a version that calls action once and exits
         // shows a "marquee" i.e. spinner
-        public static void RunAndWaitForCompletion(Action action, string overrideTxt = null)
+        public static void RunAndWaitForCompletion(Action action, string overrideTxt, IProgressView progressView)
         {
-            Loop(-1, () => {
-                action();
-                return -1;
-            }, overrideTxt);
+            Debug.Assert(progressView != null);
+            
+            var j = new ProgressBarJob(progressView)
+            {
+                MaxProgress = -1,
+                Callback = () =>
+                {
+                    action();
+                    return -1;
+                },
+                IsMarquee = (long)-1 == -1,
+                TextOverride = overrideTxt,
+            };
+            
+            j.Run();
         }
 
         public NextAction Callback { get; set; }
@@ -142,6 +139,7 @@ namespace Diz.Controllers.controllers
         }
 
         private int previousProgress;
+        private readonly IProgressView progressView;
 
         protected void UpdateProgress(long currentProgress)
         {

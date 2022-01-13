@@ -2,7 +2,6 @@
 using System.Windows.Forms;
 // using System.Windows.Media;
 using ByteSizeLib;
-using Diz.Import;
 using Diz.Import.bsnes.tracelog;
 //using LiveCharts;
 //using LiveCharts.Wpf;

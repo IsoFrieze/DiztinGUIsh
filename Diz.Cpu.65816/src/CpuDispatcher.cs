@@ -1,6 +1,4 @@
-﻿using Diz.Core.Interfaces;
-using Diz.Core.model;
-using Diz.Core.model.snes;
+﻿using Diz.Core.model;
 
 namespace Diz.Cpu._65816;
 

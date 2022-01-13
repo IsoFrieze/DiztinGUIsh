@@ -1,19 +1,17 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Diz.Core.util;
 using FluentValidation;
-using LightInject;
 
 namespace Diz.Core.export
 {
     public class LogWriterSettingsValidator : AbstractValidator<LogWriterSettings>
     {
-        public LogWriterSettingsValidator()
+        public LogWriterSettingsValidator(IFilesystemService fs)
         {
             When(x => x.OutputToString, () =>
                     Include(new LogWriterSettingsOutputString()))
                 .Otherwise(() =>
-                    Include(new LogWriterSettingsOutputMultipleFiles()));
+                    Include(new LogWriterSettingsOutputMultipleFiles(fs)));
         }
     }
 
@@ -35,20 +33,22 @@ namespace Diz.Core.export
 
     public class LogWriterSettingsOutputMultipleFiles : AbstractValidator<LogWriterSettings>
     {
-        private static IFilesystemService Fs => Service.Container.GetInstance<IFilesystemService>();
+        private readonly IFilesystemService fs;
         
-        private static bool DirectoryExists(string path) =>
-            Fs.DirectoryExists(Path.GetDirectoryName(path));
+        private bool DirectoryExists(string path) =>
+            fs.DirectoryExists(Path.GetDirectoryName(path));
 
         // this is not the most bulletproof thing in the world.
         // it's hard to validate without hitting the disk, you should follow this with additional checks
-        private static bool PathLooksLikeDirectoryNameOnly(string fileOrFolderPath) =>
+        private bool PathLooksLikeDirectoryNameOnly(string fileOrFolderPath) =>
             Path.GetFileName(fileOrFolderPath) == string.Empty ||
             !Path.HasExtension(fileOrFolderPath);
 
         // runs when OutputToString == false
-        public LogWriterSettingsOutputMultipleFiles()
+        public LogWriterSettingsOutputMultipleFiles(IFilesystemService fs)
         {
+            this.fs = fs;
+            
             RuleFor(x => x.FileOrFolderOutPath)
                 .NotEmpty()
                 .WithMessage("No file path set")

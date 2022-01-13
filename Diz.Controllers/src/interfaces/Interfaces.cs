@@ -1,6 +1,5 @@
 ﻿using System;
-using System.ComponentModel;
-using Diz.Core.datasubset;
+using Diz.Controllers.controllers;
 using Diz.Core.model;
 // using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -61,5 +60,17 @@ namespace Diz.Controllers.interfaces
     {
         Project GetLastOpenedProject();
         void OpenLastLoadedProject();
+    }
+    
+    public interface IViewFactory
+    {
+        IFormViewer Get(string name);
+    }
+    
+    public interface IControllerFactory
+    {
+        IController Get(string name);
+        ILogCreatorSettingsEditorController GetLogCreatorSettingsEditorController();
+        IImportRomDialogController GetImportRomDialogController();
     }
 }

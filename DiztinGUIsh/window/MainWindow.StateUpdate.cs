@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Windows.Forms;
 using Diz.Core.model;
-using Diz.Core.model.snes;
 using Diz.Core.util;
 using Diz.Cpu._65816;
 using DiztinGUIsh.Properties;

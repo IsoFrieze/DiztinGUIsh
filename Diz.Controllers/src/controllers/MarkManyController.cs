@@ -4,7 +4,6 @@ using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.Interfaces;
-using Diz.Core.model;
 using Diz.Core.util;
 
 namespace Diz.Controllers.controllers;

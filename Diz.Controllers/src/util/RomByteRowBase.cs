@@ -1,15 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Drawing;
-using System.Globalization;
-using System.Runtime.CompilerServices;
-using Diz.Controllers.interfaces;
-using Diz.Core.model;
-// using Diz.Core.model.byteSources;
-using Diz.Core.model.snes;
-using Diz.Core.util;
-using JetBrains.Annotations;
+﻿// using Diz.Core.model.byteSources;
 
 #if DIZ_3_BRANCH
 namespace Diz.Controllers.util

@@ -1,138 +1,73 @@
-﻿using Diz.Core.model;
-using Diz.Core.model.project;
-using Diz.Core.model.snes;
+﻿using System.Diagnostics;
+using Diz.Core;
+using Diz.Core.model;
 using Diz.Core.serialization;
-using Diz.Core.util;
-using JetBrains.Annotations;
 
-namespace Diz.Cpu._65816.import
+namespace Diz.Cpu._65816.import;
+
+// TODO: not sure if we still need this?
+// public class SnesDefaultSettingsFactory : IProjectImportSettingsFactory
+// {
+//     private readonly ISnesRomAnalyzer snesRomAnalyzer;
+//     
+//     public ImportRomSettings GetDefaultSettingsFor(string romFilename)
+//     {
+//         // automated headless helper method to use all default settings and pray it works
+//         // no GUI or anything. use with caution, only if you know what you're doing
+//         var importRomSettingsBuilder = new SnesRomAnalyzer();
+//         importRomSettingsBuilder.AnalyzeRomFile(romFilename);
+//         return importRomSettingsBuilder.GenerateSettings();
+//     }
+// }
+
+public class SnesProjectFactoryFromRomImportSettings : IProjectFactoryFromRomImportSettings
 {
-    public class ImportRomSettingsBuilder
+    private readonly IRomImportSettings importSettings;
+    private readonly IProjectFactory baseProjectFactory; 
+
+    public SnesProjectFactoryFromRomImportSettings(IProjectFactory baseProjectFactory, IRomImportSettings importSettings)
     {
-        public ImportRomSettings? ImportSettings { get; set; }
-        public RomMapMode? DetectedMapMode { get; set; }
-        public Dictionary<string, bool>? VectorTableEntriesEnabled { get; set; }
-        public bool ShouldCheckHeader { get; set; } = true;
-        
-        [PublicAPI] 
-        public ImportRomSettingsBuilder()
-        {
-            
-        }
-        
-        [PublicAPI]
-        public ImportRomSettingsBuilder(string romFilenameToAnalyze)
-        {
-            Init(romFilenameToAnalyze);
-        }
-
-        public void Init(string romFilename)
-        {
-            var rawRomBytes = RomUtil.ReadRomFileBytes(romFilename);
-            
-            ImportSettings = new ImportRomSettings
-            {
-                RomFilename = romFilename,
-                RomBytes = rawRomBytes,
-                RomMapMode = RomUtil.DetectRomMapMode(rawRomBytes, out var detectedMapModeSuccess),
-            };
-
-            ImportSettings.RomSpeed = RomUtil.GetRomSpeed(ImportSettings.RomSettingsOffset, rawRomBytes);
-
-            if (detectedMapModeSuccess)
-                DetectedMapMode = ImportSettings.RomMapMode;
-
-            VectorTableEntriesEnabled = GenerateVectors();
-        }
-
-        public ImportRomSettings? CreateSettings()
-        {
-            ImportSettings.InitialLabels = RomUtil.GenerateVectorLabels(
-                VectorTableEntriesEnabled, ImportSettings.RomSettingsOffset, ImportSettings.RomBytes, ImportSettings.RomMapMode);
-
-            if (ShouldCheckHeader)
-                ImportSettings.InitialHeaderFlags =
-                    RomUtil.GenerateHeaderFlags(ImportSettings.RomSettingsOffset, ImportSettings.RomBytes);
-
-            return ImportSettings;
-        }
-
-        // stored like this to match the layout of the checkboxes on the importer GUI form
-        // TODO: this is not a great way to do this, our data shouldn't be dependent on the GUI. should be other way around.
-        public static readonly string[,] VectorNames = {
-            {"Native_COP", "Native_BRK", "Native_ABORT", "Native_NMI", "Native_RESET", "Native_IRQ"},
-            {"Emulation_COP", "Emulation_Unknown", "Emulation_ABORT", "Emulation_NMI", "Emulation_RESET", "Emulation_IRQBRK"}
-        };
-
-        public static string GetVectorName(int i, int j) => VectorNames[i, j];
-
-        public static Dictionary<string, bool>? GenerateVectors(Func<int, int, bool> getValue = null)
-        {
-            var newVectors = new Dictionary<string, bool>();
-            for (var i = 0; i < VectorNames.GetLength(0); i++)
-            {
-                for (var j = 0; j < VectorNames.GetLength(1); j++)
-                {
-                    newVectors.Add(GetVectorName(i, j), getValue?.Invoke(i, j) ?? true);
-                }
-            }
-
-            return newVectors;
-        }
+        this.importSettings = importSettings;
+        this.baseProjectFactory = baseProjectFactory;
     }
 
-    public static class ImportUtils
+    public Project Read()
     {
-        public static Project? ImportRomAndCreateNewProject(string romFilename)
+        var project = baseProjectFactory.Create()
+            as Project; // TODO: after more refactoring, remove cast and use IProject directly 
+        
+        Debug.Assert(project != null);
+
+        project.AttachedRomFilename = importSettings.RomFilename;
+        project.Session = new ProjectSession(project, "")
         {
-            // automated headless helper method to use all default settings and pray it works
-            // no GUI or anything. use with caution, only if you know what you're doing
-            return ImportRomAndCreateNewProject(
-                new ImportRomSettingsBuilder(romFilename)
-                    .CreateSettings());
-        }
+            UnsavedChanges = true
+        };
 
-        public static Project? ImportRomAndCreateNewProject(ImportRomSettings? importSettings)
-        {
-            if (importSettings == null)
-                return null;
-            
-            var project = new Project
-            {
-                AttachedRomFilename = importSettings.RomFilename,
-                Data = DataUtils.FactoryCreate()
-            };
-
-            project.Session = new ProjectSession(project, "")
-            {
-                UnsavedChanges = true
-            };
-
-            var snesData = new SnesApi(project.Data);
-            project.Data.ArchProvider.AddApiProvider(snesData);
+        var snesData = new SnesApi(project.Data);
+        project.Data.Apis.Add(snesData);
 
 #if DIZ_3_BRANCH
-            // new way
-            project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
-            #else
-            // old way
-            snesData.RomMapMode = importSettings.RomMapMode;
-            snesData.RomSpeed = importSettings.RomSpeed;
-            project.Data.RomBytes.CreateRomBytesFromRom(importSettings.RomBytes);
-            #endif
+        // new way, though TODO we want to decouple the SNES stuff from here
+        project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
+#else
+        // old way
+        snesData.RomMapMode = importSettings.RomMapMode;
+        snesData.RomSpeed = importSettings.RomSpeed;
+        project.Data.RomBytes.CreateRomBytesFromRom(importSettings.RomBytes);
+#endif
 
-            foreach (var (romOffset, label) in importSettings.InitialLabels)
-            {
-                var snesAddress = snesData.ConvertPCtoSnes(romOffset);
-                project.Data.Labels.AddLabel(snesAddress, label, true);
-            }
-
-            foreach (var (offset, flagType) in importSettings.InitialHeaderFlags)
-                snesData.SetFlag(offset, flagType);
-
-            snesData.CacheVerificationInfoFor(project);
-
-            return project;
+        foreach (var (romOffset, label) in importSettings.InitialLabels)
+        {
+            var snesAddress = snesData.ConvertPCtoSnes(romOffset);
+            project.Data.Labels.AddLabel(snesAddress, label, true);
         }
+
+        foreach (var (offset, flagType) in importSettings.InitialHeaderFlags)
+            snesData.SetFlag(offset, flagType);
+
+        snesData.CacheVerificationInfoFor(project);
+
+        return project;
     }
 }

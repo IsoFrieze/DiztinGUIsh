@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -16,22 +17,32 @@ namespace DiztinGUIsh.window.dialog;
 [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
 public partial class ImportRomDialog : Form, IImportRomDialogView
 {
+    public record VectorControls(string Name, CheckBox Check, TextBox Text);
+
     // NOTE: all this could be converted to use databinding and be easier to deal with, but,
     // probably more work than its worth. this is fine, if a bit manual. it's unlikely to ever need to change.
-    private CheckBox[,] GetVectorsCheckboxes() => new[,]
+    private List<VectorControls> GetVectorGuiMappings()
     {
-        {checkboxNativeCOP, checkboxNativeBRK, checkboxNativeABORT, checkboxNativeNMI, checkboxNativeRESET, checkboxNativeIRQ},
-        {checkboxEmuCOP, checkboxEmuBRK, checkboxEmuABORT, checkboxEmuNMI, checkboxEmuRESET, checkboxEmuIRQ},
-    };
-    private TextBox[,] GetVectorsTextBoxes() => new[,]
-    {
-        {textNativeCOP, textNativeBRK, textNativeABORT, textNativeNMI, textNativeRESET, textNativeIRQ},
-        {textEmuCOP, textEmuBRK, textEmuABORT, textEmuNMI, textEmuRESET, textEmuIRQ},
-    };
-    private readonly TextBox[,] vectors;
-    private readonly CheckBox[,] checkboxes;
+        return new List<VectorControls>
+        {
+            new(SnesVectorNames.Native_COP, checkboxNativeCOP, textNativeCOP),
+            new(SnesVectorNames.Native_BRK, checkboxNativeBRK, textNativeBRK),
+            new(SnesVectorNames.Native_ABORT, checkboxNativeABORT, textNativeABORT),
+            new(SnesVectorNames.Native_NMI,checkboxNativeNMI, textNativeNMI),
+            new(SnesVectorNames.Native_RESET,checkboxNativeRESET, textNativeRESET),
+            new(SnesVectorNames.Native_IRQ, checkboxNativeIRQ, textNativeIRQ),
+            new(SnesVectorNames.Emulation_COP, checkboxEmuCOP, textEmuCOP),
+            new(SnesVectorNames.Emulation_Unknown, checkboxEmuBRK, textEmuBRK),
+            new(SnesVectorNames.Emulation_ABORT, checkboxEmuABORT, textEmuABORT),
+            new(SnesVectorNames.Emulation_NMI, checkboxEmuNMI, textEmuNMI),
+            new(SnesVectorNames.Emulation_RESET, checkboxEmuRESET, textEmuRESET),
+            new(SnesVectorNames.Emulation_IRQBRK, checkboxEmuIRQ, textEmuIRQ)
+        };
+    }
 
     private IImportRomDialogController controller;
+    private readonly List<VectorControls> vectorTableGui;
+
     public IImportRomDialogController Controller
     {
         get => controller;
@@ -47,29 +58,37 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
         }
     }
 
-    private ImportRomSettings ImportSettings => Controller?.Builder.ImportSettings;
+    private ImportRomSettings ImportSettings => 
+        Controller?.Builder.GenerateSettings();
 
     public ImportRomDialog()
     {
         InitializeComponent();
+        
+        vectorTableGui = GetVectorGuiMappings();
+        foreach (var vector in vectorTableGui)
+        {
+            vector.Check.CheckedChanged += OnVectorCheckboxCheckedChanged;
+            vector.Check.Tag = vector;
+        }
+    }
 
-        vectors = GetVectorsTextBoxes();
-        checkboxes = GetVectorsCheckboxes();
-            
-        // it'd probably be easier to just setup a lookup table for these checkbox values
-        // it's probably also better to databind all this, but might be complex. this works OK for now, but it's fragile
-        // if the GUi or underlying data changes.
-        // TODO: make it stopppp :)
-        Debug.Assert(checkboxes.GetLength(0) == ImportRomSettingsBuilder.VectorNames.GetLength(0));
-        Debug.Assert(checkboxes.GetLength(1) == ImportRomSettingsBuilder.VectorNames.GetLength(1));
+    private void OnVectorCheckboxCheckedChanged(object? sender, EventArgs e)
+    {
+        var vector = sender as VectorControls;
+        Debug.Assert(vector != null);
+        Controller.Builder.OptionSetGenerateVectorTableLabelFor(vector.Name, vector.Check.Checked);
     }
 
     private void DataBind()
     {
-        Debug.Assert(ImportSettings != null);
-        GuiUtil.BindListControlToEnum<RomMapMode>(cmbRomMapMode, ImportSettings, "ROMMapMode");
-
-        checkHeader.Checked = Controller.Builder.ShouldCheckHeader; // todo: databind this instead.
+        Debug.Assert(Controller.Builder.Input.AnalysisResults != null);
+        
+        // this is the better way to do this but... we need better hooks for knowing when stuff changes, it's a mess
+        GuiUtil.BindListControlToEnum<RomMapMode>(cmbRomMapMode,
+            Controller.Builder.OptionSelectedRomMapMode, "ROMMapMode");
+        
+        checkHeader.Checked = Controller.Builder.OptionGenerateHeaderFlags;
     }
 
     public bool ShowAndWaitForUserToConfirmSettings()
@@ -90,87 +109,90 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
     {
         UpdateTextboxes();
         UpdateOkayButtonEnabled();
-        detectMessage.Text = GetDetectionMessage();
+        detectMessage.Text = Controller.GetDetectionMessage();
     }
 
-    private string GetDetectionMessage() => 
-        Controller.Builder.DetectedMapMode.HasValue ? Util.GetEnumDescription(ImportSettings.RomMapMode) : "Couldn't auto detect ROM Map Mode!";
-
-    public bool GetVectorValue(int i, int j) => checkboxes[i,j].Checked;
-
-    private void UpdateOkayButtonEnabled() => okay.Enabled = ImportSettings.RomSpeed != RomSpeed.Unknown;
+    private void UpdateOkayButtonEnabled() => 
+        okay.Enabled = ImportSettings.RomSpeed != RomSpeed.Unknown;
 
     private void UpdateTextboxes()
     {
-        if (UpdateTextboxesIfDetectionWorked()) 
-            return;
+        if (Controller.IsProbablyValidDetection())
+        {
+            try
+            {
+                UpdateUiFromDetectedValues();
+                return;
+            }
+            catch (Exception)
+            {
+                // fall through
+            }
+        }
 
         SetDefaultsIfDetectionFailed();
     }
-
-    private bool UpdateTextboxesIfDetectionWorked()
-    {
-        if (!IsProbablyValidDetection()) 
-            return false;
-            
-        try
-        {
-            UpdateUiFromDetectedValues();
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    private bool IsOffsetInRange(int offset) =>
-        offset > 0 && offset <= ImportSettings.RomBytes.Length;
-
-    private bool IsProbablyValidDetection() => 
-        ImportSettings.RomSpeed != RomSpeed.Unknown && IsOffsetInRange(ImportSettings.RomSettingsOffset);
 
     private void SetDefaultsIfDetectionFailed()
     {
         romspeed.Text = "????";
         romtitle.Text = "?????????????????????";
-        for (var i = 0; i < vectors.GetLength(0); i++)
-        for (var j = 0; j < vectors.GetLength(1); j++)
-            vectors[i, j].Text = "????";
+        
+        foreach (var (_, checkBox, textBox) in vectorTableGui)
+        {
+            checkBox.Checked = true;
+            textBox.Text = "????";
+        }
     }
 
+    public List<string> GetEnabledVectorTableEntries()
+    {
+        var enabledVectors = new List<string>();
+             
+        foreach (var (vectorName, checkBox, _) in vectorTableGui) 
+        {
+            if (checkBox.Checked)
+                enabledVectors.Add(vectorName);
+        }
+
+        return enabledVectors;
+    }
+
+    // caution: things can go wrong here if we didn't guess settings correctly,
+    // you usually want to call this function with a try/catch around it.
     private void UpdateUiFromDetectedValues()
     {
-        // caution: things can go wrong here if we didn't guess settings correctly,
-        // you usually want to call this function with a try/catch around it.
-        for (var i = 0; i < vectors.GetLength(0); i++)
-        {
-            for (var j = 0; j < vectors.GetLength(1); j++)
-            {
-                var index = ImportSettings.RomSettingsOffset + 15 + 0x10 * i + 2 * j;
-                var val = ImportSettings.RomBytes[index] + (ImportSettings.RomBytes[index + 1] << 8);
-                vectors[i, j].Text = Util.NumberToBaseString(val, Util.NumberBase.Hexadecimal, 4);
-
-                if (val < 0x8000)
-                {
-                    checkboxes[i, j].Checked = false;
-                    checkboxes[i, j].Enabled = false;
-                }
-                else
-                {
-                    checkboxes[i, j].Enabled = true;
-                }
-            }
-        }
-        var romSpeedStr = Util.GetEnumDescription(ImportSettings.RomSpeed);
-        var romTitleName = RomUtil.GetCartridgeTitleFromRom(ImportSettings.RomBytes, ImportSettings.RomSettingsOffset);
-
-        romspeed.Text = romSpeedStr;
-        romtitle.Text = romTitleName;
+        SyncGuiVectorTableEntriesFromController();
+        romspeed.Text = Controller.RomSpeedText;
+        romtitle.Text = Controller.CartridgeTitle;
     }
 
-    private void ImportROMDialog_Load(object sender, EventArgs e) => RefreshUi();
+    private void SyncGuiVectorTableEntriesFromController()
+    {
+        var i = 0;
+        foreach (var (_, checkBox, textBox) in vectorTableGui)
+        {
+            Debug.Assert(i is >= 0 and < 12);
+            var whichTable = i / 6;
+            var whichEntry = i % 6;
+            var vectorValue = Controller.GetVectorTableValue(whichTable, whichEntry);
+            SetGuiForVectorEntry(vectorValue, textBox, checkBox);
+            ++i;
+        }
+    }
+
+    private static void SetGuiForVectorEntry(int vectorValue, Control textBox, CheckBox checkBox)
+    {
+        textBox.Text = Util.NumberToBaseString(vectorValue, Util.NumberBase.Hexadecimal, 4);
+
+        var enabled = vectorValue >= 0x8000;
+        checkBox.Enabled = enabled;
+        if (!enabled)
+            checkBox.Checked = false;
+    }
+
+    private void ImportROMDialog_Load(object sender, EventArgs e) => 
+        RefreshUi();
 
     private void okay_Click(object sender, EventArgs e)
     {
@@ -180,13 +202,16 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
         SetFinished();
     }
 
-    private void SetFinished() => DialogResult = DialogResult.OK;
+    private void SetFinished() => 
+        DialogResult = DialogResult.OK;
 
-    private void cancel_Click(object sender, EventArgs e) => Close();
+    private void cancel_Click(object sender, EventArgs e) => 
+        Close();
 
     // todo: databind this instead.
     private void checkHeader_CheckedChanged(object sender, EventArgs e) => 
-        Controller.Builder.ShouldCheckHeader = checkHeader.Checked;
+        Controller.Builder.OptionGenerateHeaderFlags = checkHeader.Checked;
 
-    private void ImportRomDialog_FormClosing(object sender, FormClosingEventArgs e) => Controller = null;
+    private void ImportRomDialog_FormClosing(object sender, FormClosingEventArgs e) => 
+        Controller = null;
 }

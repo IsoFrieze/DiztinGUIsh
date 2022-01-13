@@ -1,9 +1,5 @@
 using Diz.Controllers.interfaces;
-using Diz.Controllers.services;
-using Diz.Core.services;
 using Diz.Core.util;
-using Diz.Cpu._65816;
-using Diz.Ui.Winforms;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
 using JetBrains.Annotations;
@@ -13,13 +9,21 @@ namespace DiztinGUIsh;
 
 public static class DizAppServices
 {
-    public static void RegisterDizServiceTypes()
+    public static IServiceFactory CreateServiceFactoryAndRegisterTypes()
     {
-        Service.Container.RegisterFrom<DizCoreServicesCompositionRoot>();
-        Service.Container.RegisterFrom<DizCpu65816ServiceRoot>();
-        Service.Container.RegisterFrom<DizControllersCompositionRoot>();
-        Service.Container.RegisterFrom<DizUiCompositionRoot>();
-        Service.Container.RegisterFrom<DizWinformsCompositionRoot>();
+        var serviceProvider = DizServiceProvider.CreateServiceContainer();
+        
+        // old way
+        // serviceProvider.RegisterFrom<DizCoreServicesCompositionRoot>();
+        // serviceProvider.RegisterFrom<DizCpu65816ServiceRoot>();
+        // serviceProvider.RegisterFrom<DizControllersCompositionRoot>();
+        // serviceProvider.RegisterFrom<DizUiCompositionRoot>();
+        // serviceProvider.RegisterFrom<DizWinformsCompositionRoot>();
+
+        // new way
+        serviceProvider.RegisterAssembly("Diz*.dll");
+
+        return serviceProvider;
     }
 }
 
@@ -30,9 +34,12 @@ public static class DizAppServices
         serviceRegistry.Register<ICommonGui, CommonGui>();
         
         serviceRegistry.Register<IImportRomDialogView, ImportRomDialog>();
-        serviceRegistry.Register<IProgressView, ProgressDialog>();
+        serviceRegistry.Register<IProgressView, ProgressDialog>("ProgressBarView");
         serviceRegistry.Register<ILogCreatorSettingsEditorView, LogCreatorSettingsEditorForm>();
         serviceRegistry.Register<ILabelEditorView, AliasList>();
+        serviceRegistry.Register<IFormViewer, MainWindow>();
+        
+        serviceRegistry.Register<IDizApp, DizApp>();
 
         // coming soon. backported from upcoming 3.0 branch
         // serviceRegistry.RegisterSingleton<IDizApplication, DizApplication>();

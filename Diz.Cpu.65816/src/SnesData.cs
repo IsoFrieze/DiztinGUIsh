@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Diz.Core;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -306,9 +307,42 @@ public class SnesApi : ISnesData
         // of these. If either are wrong, then the ROM on disk could be different from the one associated with the 
         // project.
 
-        // we need some way to abstract this out of the project itself.
+        // TODO: we need some way to abstract this SNES-specific stuff out of the project itself, while not breaking existing serialization
+        // TODO: consider replacing this with the new IDataTag interface, it's perfect for this.
         verificationCache.InternalCheckSum = RomCheckSumsFromRomBytes;
         verificationCache.InternalRomGameName = CartridgeTitleName;
+    }
+}
+
+public interface ISnesSampleProjectFactory : IProjectFactory
+{
+    
+}
+
+// TODO: probably make this a decorator for IProjectFactory, and get rid of ISnesSampleProjectFactory. just make it implement regular IProjectFactory
+public class SnesSampleProjectFactory : ISnesSampleProjectFactory
+{
+    private readonly IDataFactory createNewData;
+    private readonly IProjectFactory createNewProject;
+    public SnesSampleProjectFactory(IDataFactory createNewData, IProjectFactory createNewProject)
+    {
+        this.createNewData = createNewData;
+        this.createNewProject = createNewProject;
+    }
+
+    public IProject Create()
+    {
+        // TODO: TEMP HACK. don't cast this. refactor IProject so we don't need to do this.
+        var project = createNewProject.Create() as Project;
+        Debug.Assert(project != null);
+        
+        project.Data = createNewData.Create();
+        
+        var snesData = project.Data.GetSnesApi();
+        Debug.Assert(snesData != null);
+        snesData.CacheVerificationInfoFor(project);
+        
+        return project;
     }
 }
 

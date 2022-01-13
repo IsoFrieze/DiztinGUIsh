@@ -1,29 +1,25 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using Diz.Cpu._65816;
-using Diz.Cpu._65816.import;
 using Diz.Test.Utils;
 using Diz.Test.Utils.SuperFamiCheckUtil;
 using ExtendedXmlSerializer;
 using FluentAssertions;
+using JetBrains.Annotations;
+using LightInject;
+using LightInject.xUnit2;
 using Xunit;
 
 namespace Diz.Test.Tests;
 
 public class CartNameTests
 {
-    public CartNameTests()
-    {
-        AppServicesForTests.RegisterNormalAppServices();
-    }
-    
     // Bytes for a Cart Name from a SNES header
     // "Marvelous - Mouhitotsu no Takara-jima (Japan).sfc"
     // StartOffset(h): 00007FC0, EndOffset(h): 00007FD4, Length(h): 00000015
@@ -85,10 +81,10 @@ public class CartNameTests
 
     private static TestRoot Root => new() {CartTitle = ExpectedTitleStr};
 
-    [Fact]
-    public static void TestXmlCycle3()
+    [Theory, InjectData]
+    public static void TestXmlCycle3(IXmlSerializerFactory serializerFactory)
     {
-        var serializer = XmlSerializerSupport.GetSerializer().Create();
+        var serializer = serializerFactory.GetSerializer().Create();
 
         var xmlStr = serializer.Serialize(
             new XmlWriterSettings(),
@@ -101,12 +97,12 @@ public class CartNameTests
         restoredRoot.CartTitle.Should().Be(ExpectedTitleStr);
     }
 
-    [Fact]
-    public static void CartNameInHeader()
+    [Theory, InjectData]
+    public static void CartNameInHeader(ISnesSampleProjectFactory sampleData)
     {
         // use the sample data to fake a project
-        var srcProject = LoadSaveTest.BuildSampleProject2();
-        var expectedTitle = SampleRomData.GetSampleUtf8CartridgeTitle();
+        var srcProject = sampleData.Create() as Project;
+        var expectedTitle = SnesSampleRomDataFactory.GetSampleUtf8CartridgeTitle();
         TestRomCartTitle(srcProject, expectedTitle);
     }
         
@@ -123,11 +119,11 @@ public class CartNameTests
         trimmedTitle.Should().Be(expectedTitle, "SNES headers are padded with spaces at the end to a fixed size");
     }
         
-    [Fact]
-    public static void TestCartChecksumInHeader()
+    [Theory, InjectData]
+    public static void TestCartChecksumInHeader(ISnesSampleProjectFactory sampleData)
     {
         // use the sample data to fake a project
-        var srcProject = LoadSaveTest.BuildSampleProject2();
+        var srcProject = sampleData.Create() as Project;
         srcProject.Data.GetSnesApi().RomChecksum.Should().Be(srcProject.Data.GetSnesApi().ComputeChecksum(),
             "checksum bytes in the ROM should match the computed checksum");
     }
@@ -146,9 +142,10 @@ public class CartNameTests
         // it's stored in the ROM file like this:
         // 73 87 8C 78
     }
-        
-    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
-    public static void TestInternalChecksumVsExternal()
+
+    [InjectData]
+    [TheoryOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
+    public static void TestInternalChecksumVsExternal(IProjectImporter projectImporter)
     {
         var result = SuperFamiCheckTool.Run(RomFileName);
         result.Complement.Should().Be(0x8773);
@@ -157,8 +154,8 @@ public class CartNameTests
             
         const uint expected4ByteChecksums = 0x788C8773;
         result.AllCheckBytes.Should().Be(expected4ByteChecksums);
-            
-        var project = ImportUtils.ImportRomAndCreateNewProject(RomFileName);
+
+        var project = projectImporter.ImportWithDefaultSettings(RomFileName);
         project.Should().NotBeNull("project should have loaded successfully");
         project.Data.GetRomByte(0xFFDC).Should().Be(0x73); // complement 1
         project.Data.GetRomByte(0xFFDD).Should().Be(0x87); // complement 2

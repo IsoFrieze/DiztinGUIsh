@@ -1,15 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using Diz.Core.model;
-using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
-using FluentAssertions;
-using IX.StandardExtensions;
 using Xunit;
 
 namespace Diz.Test

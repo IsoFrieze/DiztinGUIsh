@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Diagnostics;
 using System.Linq;
-using Diz.Core;
 using Diz.Core.model;
-using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
-using Diz.Core.util;
 using Diz.Cpu._65816;
 using Diz.Test.Tests;
-using Diz.Test.Utils;
 using FluentAssertions;
+using LightInject.xUnit2;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -19,13 +15,12 @@ namespace Diz.Test;
 
 public class LoadSaveTest
 {
-    [Fact]
-    private void FullSerializeAndDeserialize()
+    [Theory, InjectData]
+    private void FullSerializeAndDeserialize(IProjectXmlSerializer serializer, ISnesSampleProjectFactory sampleProjectCreator)
     {
-        // use the sample data to fake a project
-        var srcProject = BuildSampleProject2();
+        var srcProject = sampleProjectCreator.Create() as Project;
             
-        var expectedTitle = SampleRomData.GetSampleUtf8CartridgeTitle();
+        var expectedTitle = SnesSampleRomDataFactory.GetSampleUtf8CartridgeTitle();
 
         srcProject.Data.Comments.Count.Should().BeGreaterThan(0);
         srcProject.Data.Labels.Labels.Count().Should().BeGreaterThan(0);
@@ -34,11 +29,13 @@ public class LoadSaveTest
         var romFileBytes = srcProject.Data.GetFileBytes().ToList();
 
         // save it to create an output byte stream, we'd normally write this to the disk
-        var serializer = new ProjectXmlSerializer();
+        
         var outputBytes = serializer.Save(srcProject);
 
         // now do the reverse and load our output back as the input
-        var (deserializedRoot, warning) = serializer.Load(outputBytes);
+        var projectOpenInfo = serializer.Load(outputBytes);
+        var deserializedRoot = projectOpenInfo.Root;
+        var warning = projectOpenInfo.OpenResult.Warning;
             
         // final step, the loading process doesn't save the actual SMC file bytes, so we do it ourselves here
         deserializedRoot.Project.Data.RomBytes.CopyRomDataIn(romFileBytes);
@@ -63,46 +60,32 @@ public class LoadSaveTest
         CartNameTests.TestRomCartTitle(deserializedRoot.Project, expectedTitle);
     }
 
-    public static Project BuildSampleProject2()
-    {
-        var project2 = new Project
-        {
-            Data = SampleRomData.CreateSampleData().data,
-        };
-
-        project2.Data.GetSnesApi().CacheVerificationInfoFor(project2);
-
-        return project2;
-    }
-
     private readonly ITestOutputHelper output;
 
     public LoadSaveTest(ITestOutputHelper output)
     {
         this.output = output;
-        
-        AppServicesForTests.RegisterNormalAppServices();
     }
-        
-    public static Project OpenProject(string openFile)
-    {
-        var projectFileManager = new ProjectFileManager();
-        var (project, warning) = projectFileManager.Open(openFile);
 
-        Assert.Equal("", warning);
+    private static Project OpenProject(string openFile, IProjectFileManager projectFileManager)
+    {
+        var projectOpenResult = projectFileManager.Open(openFile);
+
+        Assert.Equal("", projectOpenResult.OpenResult.Warning);
+        var project = projectOpenResult.Root.Project;
         Assert.True(project.Data.RomBytes.Count >= 0x1000 * 64);
             
         return project;
     }
 
-    [Fact(Skip = "Performance Test")]
-    private void OpenFilePerformanceTest()
+    [Theory(Skip = "Performance Test"), InjectData]
+    private void OpenFilePerformanceTest(IProjectFileManager projectFileManager)
     {
         var s = Stopwatch.StartNew();
         s.Start();
             
-        var openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST.dizraw";
-        var project = OpenProject(openFile);
+        const string openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST.dizraw";
+        var project = OpenProject(openFile, projectFileManager);
 
         s.Stop();
 
@@ -110,16 +93,16 @@ public class LoadSaveTest
     }
 
 
-    [Fact(Skip = "Performance Test")]
-    private void SaveFilePerformanceTest()
+    [Theory(Skip = "Performance Test"), InjectData]
+    private void SaveFilePerformanceTest(IProjectFileManager projectFileManager, IProjectXmlSerializer projectXmlSerializer)
     {
-        var openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST.dizraw";
-        var project = OpenProject(openFile);
+        const string openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST.dizraw";
+        var project = OpenProject(openFile, projectFileManager);
             
         var s = Stopwatch.StartNew();
         s.Start();
 
-        var data = new ProjectXmlSerializer().Save(project);
+        var data = projectXmlSerializer.Save(project);
 
         s.Stop();
             

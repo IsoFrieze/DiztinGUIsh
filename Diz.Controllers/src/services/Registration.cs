@@ -2,8 +2,6 @@
 
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
-using Diz.Core.util;
-// using Diz.Core.model.byteSources;
 using JetBrains.Annotations;
 using LightInject;
 
@@ -14,10 +12,11 @@ namespace Diz.Controllers.services
     {
         public void Compose(IServiceRegistry serviceRegistry)
         {
+            serviceRegistry.Register<IControllerFactory, ControllerFactory>();
+            
+            serviceRegistry.Register<IProjectController, ProjectController>();
             serviceRegistry.Register<ILogCreatorSettingsEditorController, LogCreatorSettingsEditorController>();
             serviceRegistry.Register<IImportRomDialogController, ImportRomDialogController>();
-
-            serviceRegistry.Register<IProjectController, ProjectController>();
 
             // sorry this is all a huge WIP mess, cleanup incoming soon.
 

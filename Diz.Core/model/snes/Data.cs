@@ -11,13 +11,9 @@ namespace Diz.Core.model.snes;
 
 public class Data : IData
 {
-    public static Data CreateNew()
-    {
-        return new Data();
-    }
-    
     [XmlIgnore] 
-    public IArchitectureApiProvider ArchProvider { get; } = new ArchProvider();
+    public IDataStoreProvider<IArchitectureApi> Apis { get; } = new DataStoreProvider<IArchitectureApi>();
+    public IDataStoreProvider<IDataTag> Tags { get; } = new DataStoreProvider<IDataTag>();
 
     private ObservableDictionary<int, string> comments;
     private RomBytes romBytes;
@@ -70,11 +66,11 @@ public class Data : IData
         set => this.SetField(PropertyChanged, ref romBytes, value);
     }
     IRomBytes<IRomByte> IRomBytesProvider.RomBytes => romBytes;
-    
-    [XmlIgnore]
-    public Func<byte[]?>? RomBytesOverrideProvider { get; set; } = null;
 
-    protected Data()
+    [XmlIgnore] 
+    public bool RomBytesLoaded { get; set; } = false;
+
+    public Data()
     {
         comments = new ObservableDictionary<int, string>();
         Labels = new LabelsServiceWithTemp(this);
@@ -223,12 +219,9 @@ public class Data : IData
     }
 
     #endregion
-
-        
+    
     [XmlIgnore] public LabelsServiceWithTemp Labels { get; protected init; }
     [XmlIgnore] ILabelServiceWithTempLabels IData.Labels => Labels;
     
-    
-
     public event PropertyChangedEventHandler PropertyChanged;
 }

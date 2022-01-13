@@ -3,7 +3,6 @@ using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.export;
-using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
@@ -57,8 +56,10 @@ namespace Diz.Controllers.interfaces
     public interface IProjectController : ITraceLogImporters
     {
         // diz3.0 is going to need some major surgery from this one.
-        
+
         public Project Project { get; }
+        
+        IViewFactory ViewFactory { get; }
         
         public class ProjectChangedEventArgs
         {
@@ -79,19 +80,19 @@ namespace Diz.Controllers.interfaces
         delegate void ProjectChangedEvent(object sender, ProjectChangedEventArgs e);
         event ProjectChangedEvent ProjectChanged;
 
-        public IProjectView ProjectView { get; set; }
+        IProjectView ProjectView { get; set; }
 
-        public bool OpenProject(string filename);  // older signature
-        public string SaveProject(string filename); // older signature. new should return void
+        bool OpenProject(string filename);  // older signature
+        string SaveProject(string filename); // older signature. new should return void
 
         bool ImportRomAndCreateNewProject(string romFilename);
         void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
         void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null);
 
-        public bool ConfirmSettingsThenExportAssembly();
-        public bool ExportAssemblyWithCurrentSettings();
+        bool ConfirmSettingsThenExportAssembly();
+        bool ExportAssemblyWithCurrentSettings();
 
-        public void MarkChanged(); // rename to MarkUnsaved or similar in Diz3.0
+        void MarkChanged(); // rename to MarkUnsaved or similar in Diz3.0
     }
     
     public interface IProjectOpenerHandler : ILongRunningTaskHandler

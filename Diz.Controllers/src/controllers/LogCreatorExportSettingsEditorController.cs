@@ -131,4 +131,9 @@ public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorContr
 
     private void OnClosed(object? sender, EventArgs eventArgs) => 
         Closed?.Invoke(sender, eventArgs);
+
+    public bool ValidateExportSettings()
+    {
+        return Settings.IsValid(fs);
+    }
 }

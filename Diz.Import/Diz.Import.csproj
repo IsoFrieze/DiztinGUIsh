@@ -2,13 +2,24 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
       <ProjectReference Include="..\Diz.Cpu.65816\Diz.Cpu.65816.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="GitInfo">
+            <Version>2.1.2</Version>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
 </Project>

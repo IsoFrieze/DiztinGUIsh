@@ -2,12 +2,9 @@
 
 using System;
 using System.Windows.Forms;
-using Diz.Controllers.interfaces;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.window.dialog;
-using LightInject;
 
 namespace DiztinGUIsh.window
 {
@@ -31,12 +28,14 @@ namespace DiztinGUIsh.window
         private void toolStrip_exportDisassemblyUseCurrentSettings_Click(object sender, System.EventArgs e) => 
             ProjectController?.ExportAssemblyWithCurrentSettings();
 
-        private void toolStrip_exportDisassemblyEditSettingsFirst_Click(object sender, System.EventArgs e) =>
+        private void toolStrip_exportDisassemblyEditSettingsFirst_Click(object sender, EventArgs e) =>
             ProjectController?.ConfirmSettingsThenExportAssembly();
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e) =>
-            Service.Container.GetInstance<IFormViewer>("About").Show();
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e) => Application.Exit();
+            ProjectController.ViewFactory.Get("About").Show();
+        
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e) => 
+            Application.Exit();
         
         private void decimalToolStripMenuItem_Click(object sender, EventArgs e) => 
             UpdateBase(Util.NumberBase.Decimal);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Diz.Core.model.project;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using FluentAssertions;
@@ -18,10 +17,9 @@ namespace Diz.Test
         [MemberData(nameof(Harnesses))]
         public void TestMigrationFailsIfOutsideBounds(Harness harness)
         {
-            var runner = new MigrationRunner {
-                StartingSaveVersion = harness.RunnerStart, 
+            var runner = new MigrationRunner(harness.MigrationObjs) {
+                StartingSaveVersion = harness.RunnerStart,
                 TargetSaveVersion = harness.RunnerTarget,
-                Migrations = harness.MigrationObjs
             };
             
             harness.Run(() => runner.OnLoadingAfterAddLinkedRom(null));

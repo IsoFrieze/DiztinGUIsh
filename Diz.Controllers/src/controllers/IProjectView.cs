@@ -7,7 +7,7 @@ namespace Diz.Controllers.controllers
 {
     public interface ILongRunningTaskHandler
     {
-        public delegate void LongRunningTaskHandler(Action task, string description = null);
+        public delegate void LongRunningTaskHandler(Action task, string description, IProgressView progressView);
         LongRunningTaskHandler TaskHandler { get; }
     }
     

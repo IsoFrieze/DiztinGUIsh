@@ -1,24 +1,22 @@
 ﻿using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
-using Diz.Core.util;
 using Diz.LogWriter;
 using DiztinGUIsh.Properties;
-using LightInject;
 
 namespace DiztinGUIsh.window
 {
-    public partial class MainWindow : Form, IProjectView
+    public partial class MainWindow : Form, IProjectView, IFormViewer
     {
-        public MainWindow()
+        public MainWindow(
+            IProjectController projectController)
         {
-            // note: new diz refactor makes this not be the entry point, instead using DizApplication
-            // right now, this is a weird way to initialize this, it should come first
-            var controller = Service.Container.GetInstance<IProjectController>();
-            
-            ProjectController = controller;
+            ProjectController = projectController;
             ProjectController.ProjectView = this;
 
+            AliasList = (ILabelEditorView)projectController.ViewFactory.Get("LabelViewer");
+            AliasList.ProjectController = ProjectController;
+            
             Document.PropertyChanged += Document_PropertyChanged;
             ProjectController.ProjectChanged += ProjectController_ProjectChanged;
 
@@ -34,9 +32,6 @@ namespace DiztinGUIsh.window
         private void Init()
         {
             InitMainTable();
-
-            AliasList = Service.Container.GetInstance<ILabelEditorView>();
-            AliasList.ProjectController = ProjectController;
 
             UpdatePanels();
             UpdateUiFromSettings();
