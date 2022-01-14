@@ -207,7 +207,7 @@ namespace Diz.Core.Interfaces
     
     public interface IDataStoreProvider<T> : IEnumerable<T> where T : class
     {
-        bool Add(T type);
+        bool AddIfDoesntExist(T type);
         TSearchFor Get<TSearchFor>() where TSearchFor : class, T;
     }
     

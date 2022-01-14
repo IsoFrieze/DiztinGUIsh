@@ -91,8 +91,10 @@ public class AddRomDataCommand : IAddRomDataCommand
 
     private static IValidator<RomToProjectAssociation> CreateValidator(bool shouldProjectCartTitleMatchRomBytes)
     {
-        var validator = new AddRomDataCommandValidator();
-        validator.EnsureProjectAndRomCartTitleMatch = shouldProjectCartTitleMatchRomBytes;
+        var validator = new AddRomDataCommandValidator
+        {
+            EnsureProjectAndRomCartTitleMatch = shouldProjectCartTitleMatchRomBytes
+        };
         return validator;
     }
 }

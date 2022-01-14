@@ -11,7 +11,6 @@ using Diz.Core.util;
 using Diz.Cpu._65816;
 using Diz.Test.Utils;
 using FluentAssertions;
-using LightInject.xUnit2;
 using Xunit;
 
 namespace Diz.Test.bugs;
@@ -94,14 +93,14 @@ public class Bug050JapaneseText : ContainerFixture
     }.Select(x=>new []{x});
     
     // these will be populated by dependency injection 
-    private ISnesSampleProjectFactory sampleData;
-    private Func<IProjectXmlSerializer> fnProjectSerializerCreate;
-    private Func<IAddRomDataCommand> fnAddRomDataCommand;
+    private readonly ISnesSampleProjectFactory sampleProjectFactory = null!;
+    private readonly Func<IProjectXmlSerializer> fnProjectSerializerCreate = null!;
+    private readonly Func<IAddRomDataCommand> fnAddRomDataCommand = null!;
 
     [Theory, MemberData(nameof(Harnesses))]
     public void TestMitigation(Harness harness)
     {
-        var project = Harness.CreateProject(sampleData);
+        var project = Harness.CreateProject(sampleProjectFactory);
         var originalGoodGameName = project.InternalRomGameName;
         var badGameName = harness.OverrideGameName == null ? null : 
             ByteUtil.ReadShiftJisEncodedString(

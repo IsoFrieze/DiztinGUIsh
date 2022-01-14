@@ -15,10 +15,7 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
     public void Compose(IServiceRegistry serviceRegistry)
     {
         serviceRegistry.Register<IAddRomDataCommand, AddRomDataCommand>();
-        serviceRegistry.Register<IMigration, MigrationBugfix050JapaneseText>("MigrationBugfix050JapaneseText");
 
-        serviceRegistry.Register<ISnesData, SnesApi>();
-        
         // when we create a IData registration, add a SNES API component to it
         serviceRegistry.Decorate<IDataFactory, DataAddSnesApiDecorator>();
 
@@ -26,12 +23,44 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
             new SnesProjectFactoryFromRomImportSettings(
                 factory.GetInstance<IProjectFactory>(),
                 settings));
+
+        serviceRegistry.Register<IData, ISnesData>(CreateSnesApiWithData);
         
-        // list migrations (there can be multiple migration classes here, they'll be applied in order)
+        RegisterMigrations(serviceRegistry);
+
+        RegisterSampleDataServices(serviceRegistry);
+    }
+
+    private static ISnesData CreateSnesApiWithData(IServiceFactory serviceFactory, IData data) =>
+        new SnesApi(data);
+
+    private static void RegisterMigrations(IServiceRegistry serviceRegistry)
+    {
+        // list all SNES-specific migrations here (there can be multiple migration classes here,
+        // they'll be applied by their internal ordering)
         serviceRegistry.Register<IMigration, MigrationBugfix050JapaneseText>();
         
-        // TODO: consider using a named service for this sample instead
-        serviceRegistry.Register<ISnesSampleProjectFactory, SnesSampleProjectFactory>();
-        serviceRegistry.Register<ISampleDataFactory, SnesSampleRomDataFactory>();
+        // add more as needed, example:
+        // serviceRegistry.Register<IMigration, AnotherMigration>();
+        // serviceRegistry.Register<IMigration, YetAnotherMigration>();
     }
+
+    private static void RegisterSampleDataServices(IServiceRegistry serviceRegistry)
+    {
+        serviceRegistry.Register<ISampleDataFactory, SnesSampleRomDataFactory>();
+        serviceRegistry.Register<IDataFactory, SnesSampleRomDataFactory>("SampleData");
+        
+        // TODO: does the below line work instead of the two above?
+        // serviceRegistry.Register<ISampleDataFactory, SnesSampleRomDataFactory>("SampleData");
+
+        serviceRegistry.Register(CreateSampleProject, "SampleProject");
+
+        serviceRegistry.Register<ISnesSampleProjectFactory>(factory =>
+            new SnesSampleProjectFactory(
+                factory.GetInstance<IProjectFactory>("SampleProject")
+            ));
+    }
+
+    private static IProjectFactory CreateSampleProject(IServiceFactory factory) => 
+        new ProjectFactory(factory.GetInstance<IDataFactory>("SampleData"));
 }

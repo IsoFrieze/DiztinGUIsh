@@ -5,13 +5,12 @@ using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Cpu._65816;
 using Diz.Test.Utils;
-using LightInject.xUnit2;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Diz.Test;
 
-public class LogCreatorTests
+public class LogCreatorTests : ContainerFixture
 {
     private const string ExpectedRaw =
         //          label:       instructions                         ;PC    |rawbytes|ia
@@ -27,10 +26,12 @@ public class LogCreatorTests
         "                                                             ;      |        |      ;  \r\n" +
         "                        Test_Data = $80805B                  ;      |        |      ;  \r\n";
 
-    [Theory(Skip = "need to reset the .asm file"), InjectData]
-    public void TestAFewLines(IDataFactory dataFactory)
+    private readonly IDataFactory dataFactory = null!;
+    
+    [Fact(Skip = "need to reset the .asm file")]
+    public void TestAFewLines()
     {
-        var data = CreateSampleData(dataFactory);
+        var data = CreateSampleData();
         LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, LogWriterHelper.ExportAssembly(data, creator =>
         {
             creator.Settings = new LogWriterSettings
@@ -49,19 +50,19 @@ public class LogCreatorTests
         Assert.Equal(2, data.Labels.Labels.Count());
     }
     
-    [Theory(Skip = "need to reset the .asm file"), InjectData]
-    public void TestOneLine(IDataFactory dataFactory)
+    [Fact(Skip = "need to reset the .asm file")]
+    public void TestOneLine()
     {
         var exportAssembly = LogWriterHelper.ExportAssembly(dataFactory.Create());
         LogWriterHelper.AssertAssemblyOutputEquals(ExpectedRaw, exportAssembly);
     }
         
-    [Theory, InjectData]
+    [Theory]
     [EmbeddedResourceData("Diz.Test/Resources/emptyrom.asm")]
-    public void TestEmptyRom(string expectedAsm, IDataFactory dataFactory)
+    public void TestEmptyRom(string expectedAsm)
     {
         var emptyData = dataFactory.Create();
-        emptyData.Apis.Add(new SnesApi(emptyData));
+        emptyData.Apis.AddIfDoesntExist(new SnesApi(emptyData));
         var result = LogWriterHelper.ExportAssembly(emptyData);
         LogWriterHelper.AssertAssemblyOutputEquals(expectedAsm, result, debugWriter);
     }
@@ -72,7 +73,7 @@ public class LogCreatorTests
         this.debugWriter = debugWriter;
     }
     
-    private Data CreateSampleData(IDataFactory dataFactory)
+    private Data CreateSampleData()
     {
         var data = dataFactory.Create();
         

@@ -10,7 +10,7 @@ public class DataStoreProvider<T> : IDataStoreProvider<T> where T : class
 {
     public List<T> Items { get; set; } = new();
 
-    public bool Add(T type)
+    public bool AddIfDoesntExist(T type)
     {
         if (Items.Exists(x => x.GetType() == type.GetType()))
             return false;

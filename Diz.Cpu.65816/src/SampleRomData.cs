@@ -262,7 +262,7 @@ public class SnesSampleRomDataFactory : ISampleDataFactory
         const int numBytesToPadUpTo = 0x8000;
         var originalRomSizeBeforePadding = PadRomBytesUpTo(data, numBytesToPadUpTo);
         
-        data.Tags.Add(new SampleDataGenerationTag
+        data.Tags.AddIfDoesntExist(new SampleDataGenerationTag
         {
             OriginalRomSizeBeforePadding = originalRomSizeBeforePadding
         });

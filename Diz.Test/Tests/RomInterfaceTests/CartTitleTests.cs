@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -11,14 +10,11 @@ using Diz.Test.Utils;
 using Diz.Test.Utils.SuperFamiCheckUtil;
 using ExtendedXmlSerializer;
 using FluentAssertions;
-using JetBrains.Annotations;
-using LightInject;
-using LightInject.xUnit2;
 using Xunit;
 
 namespace Diz.Test.Tests;
 
-public class CartNameTests
+public class CartNameTests : ContainerFixture
 {
     // Bytes for a Cart Name from a SNES header
     // "Marvelous - Mouhitotsu no Takara-jima (Japan).sfc"
@@ -35,7 +31,7 @@ public class CartNameTests
 
     // bugfix credit: @LuigiBlood and #diztinguish on Discord
     [Fact]
-    public static void TestTitleFilenameConversions()
+    public void TestTitleFilenameConversions()
     {
         RawRomBytes.Length.Should().Be(RomUtil.LengthOfTitleName);
 
@@ -59,7 +55,7 @@ public class CartNameTests
     }
 
     [Fact]
-    public static void TestTitleRead()
+    public void TestTitleRead()
     {
         var fakeRom = Enumerable
             .Range(0, 0x7FC0)
@@ -79,16 +75,17 @@ public class CartNameTests
         public string CartTitle { get; set; }
     }
 
-    private static TestRoot Root => new() {CartTitle = ExpectedTitleStr};
-
-    [Theory, InjectData]
-    public static void TestXmlCycle3(IXmlSerializerFactory serializerFactory)
+    private readonly IXmlSerializerFactory serializerFactory = null!;
+    private readonly ISnesSampleProjectFactory sampleData = null!;
+    
+    [Fact]
+    public void TestXmlCycle3()
     {
         var serializer = serializerFactory.GetSerializer().Create();
 
         var xmlStr = serializer.Serialize(
             new XmlWriterSettings(),
-            Root
+            new TestRoot {CartTitle = ExpectedTitleStr}
         );
         var restoredRoot = serializer.Deserialize<TestRoot>(xmlStr);
 
@@ -97,8 +94,8 @@ public class CartNameTests
         restoredRoot.CartTitle.Should().Be(ExpectedTitleStr);
     }
 
-    [Theory, InjectData]
-    public static void CartNameInHeader(ISnesSampleProjectFactory sampleData)
+    [Fact]
+    public void CartNameInHeader()
     {
         // use the sample data to fake a project
         var srcProject = sampleData.Create() as Project;
@@ -119,8 +116,8 @@ public class CartNameTests
         trimmedTitle.Should().Be(expectedTitle, "SNES headers are padded with spaces at the end to a fixed size");
     }
         
-    [Theory, InjectData]
-    public static void TestCartChecksumInHeader(ISnesSampleProjectFactory sampleData)
+    [Fact]
+    public void TestCartChecksumInHeader()
     {
         // use the sample data to fake a project
         var srcProject = sampleData.Create() as Project;
@@ -133,7 +130,7 @@ public class CartNameTests
     const string RomFileName = @"D:\roms\SNES\ct (U) [!].smc";
         
     [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
-    public static void TestFamicheckTool()
+    public void TestFamicheckTool()
     {
         var result = SuperFamiCheckTool.Run(RomFileName);
         result.Complement.Should().Be(0x8773);
@@ -143,9 +140,10 @@ public class CartNameTests
         // 73 87 8C 78
     }
 
-    [InjectData]
-    [TheoryOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
-    public static void TestInternalChecksumVsExternal(IProjectImporter projectImporter)
+    private readonly IProjectImporter projectImporter = null!;
+    
+    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
+    public void TestInternalChecksumVsExternal()
     {
         var result = SuperFamiCheckTool.Run(RomFileName);
         result.Complement.Should().Be(0x8773);
@@ -155,7 +153,7 @@ public class CartNameTests
         const uint expected4ByteChecksums = 0x788C8773;
         result.AllCheckBytes.Should().Be(expected4ByteChecksums);
 
-        var project = projectImporter.ImportWithDefaultSettings(RomFileName);
+        var project = projectImporter.CreateProjectFromDefaultSettings(RomFileName);
         project.Should().NotBeNull("project should have loaded successfully");
         project.Data.GetRomByte(0xFFDC).Should().Be(0x73); // complement 1
         project.Data.GetRomByte(0xFFDD).Should().Be(0x87); // complement 2

@@ -1,22 +1,23 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Cpu._65816;
 using Diz.Test.Tests;
+using Diz.Test.Utils;
 using FluentAssertions;
-using LightInject.xUnit2;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Diz.Test;
 
-public class LoadSaveTest
+public class LoadSaveTest : ContainerFixture
 {
-    [Theory, InjectData]
-    private void FullSerializeAndDeserialize(IProjectXmlSerializer serializer, ISnesSampleProjectFactory sampleProjectCreator)
+    private readonly IProjectXmlSerializer serializer = null!;
+    private readonly ISnesSampleProjectFactory sampleProjectCreator = null!;
+
+    [Fact]
+    public void FullSerializeAndDeserialize()
     {
         var srcProject = sampleProjectCreator.Create() as Project;
             
@@ -58,56 +59,5 @@ public class LoadSaveTest
         deserializedRoot.Project.Data.Labels.Labels.Count().Should().BePositive();
 
         CartNameTests.TestRomCartTitle(deserializedRoot.Project, expectedTitle);
-    }
-
-    private readonly ITestOutputHelper output;
-
-    public LoadSaveTest(ITestOutputHelper output)
-    {
-        this.output = output;
-    }
-
-    private static Project OpenProject(string openFile, IProjectFileManager projectFileManager)
-    {
-        var projectOpenResult = projectFileManager.Open(openFile);
-
-        Assert.Equal("", projectOpenResult.OpenResult.Warning);
-        var project = projectOpenResult.Root.Project;
-        Assert.True(project.Data.RomBytes.Count >= 0x1000 * 64);
-            
-        return project;
-    }
-
-    [Theory(Skip = "Performance Test"), InjectData]
-    private void OpenFilePerformanceTest(IProjectFileManager projectFileManager)
-    {
-        var s = Stopwatch.StartNew();
-        s.Start();
-            
-        const string openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST.dizraw";
-        var project = OpenProject(openFile, projectFileManager);
-
-        s.Stop();
-
-        output.WriteLine($"runtime: {s.ElapsedMilliseconds:N0}, #bytes={project.Data.RomBytes.Count}");
-    }
-
-
-    [Theory(Skip = "Performance Test"), InjectData]
-    private void SaveFilePerformanceTest(IProjectFileManager projectFileManager, IProjectXmlSerializer projectXmlSerializer)
-    {
-        const string openFile = "INSERT YOUR FILE HERE BEFORE RUNNING THIS TEST.dizraw";
-        var project = OpenProject(openFile, projectFileManager);
-            
-        var s = Stopwatch.StartNew();
-        s.Start();
-
-        var data = projectXmlSerializer.Save(project);
-
-        s.Stop();
-            
-        Assert.True(data.Length != 0);
-
-        output.WriteLine($"runtime: {s.ElapsedMilliseconds:N0}");
     }
 }

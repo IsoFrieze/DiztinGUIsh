@@ -16,7 +16,7 @@ namespace Diz.Cpu._65816.import;
 public interface ISnesRomImportSettingsBuilder : INotifyPropertyChanged
 {
     public ISnesRomAnalyzerData Input { get; }
-    void Analyze(string romFilename);
+    void Analyze(string? romFilename);
     void Analyze(byte[] rawRomBytes);
     
     bool OptionGenerateHeaderFlags { get; set; }
@@ -97,7 +97,7 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
         OptionGenerateHeaderFlags = true;
     }
 
-    public void Analyze(string romFilename)
+    public void Analyze(string? romFilename)
     {
         Reset();
         var rawRomBytes = RomUtil.ReadRomFileBytes(romFilename);

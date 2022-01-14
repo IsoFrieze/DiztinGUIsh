@@ -85,6 +85,7 @@
   <ItemGroup>
     <Folder Include="TestData" />
     <Folder Include="Tests\AsarTests" />
+    <Folder Include="Utils\Vendor" />
   </ItemGroup>
 
 </Project>

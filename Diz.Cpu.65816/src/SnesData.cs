@@ -319,27 +319,22 @@ public interface ISnesSampleProjectFactory : IProjectFactory
     
 }
 
-// TODO: probably make this a decorator for IProjectFactory, and get rid of ISnesSampleProjectFactory. just make it implement regular IProjectFactory
 public class SnesSampleProjectFactory : ISnesSampleProjectFactory
 {
-    private readonly IDataFactory createNewData;
     private readonly IProjectFactory createNewProject;
-    public SnesSampleProjectFactory(IDataFactory createNewData, IProjectFactory createNewProject)
+    public SnesSampleProjectFactory(IProjectFactory createNewProject)
     {
-        this.createNewData = createNewData;
         this.createNewProject = createNewProject;
     }
 
     public IProject Create()
     {
-        // TODO: TEMP HACK. don't cast this. refactor IProject so we don't need to do this.
-        var project = createNewProject.Create() as Project;
-        Debug.Assert(project != null);
-        
-        project.Data = createNewData.Create();
+        var project = createNewProject.Create() as Project; // TODO: don't cast, refactor to use IProject instead
+        Debug.Assert(project?.Data != null);
         
         var snesData = project.Data.GetSnesApi();
         Debug.Assert(snesData != null);
+        
         snesData.CacheVerificationInfoFor(project);
         
         return project;

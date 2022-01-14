@@ -3,12 +3,12 @@ using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Cpu._65816;
-using LightInject.xUnit2;
+using Diz.Test.Utils;
 using Xunit;
 
 namespace Diz.Test;
 
-public class RomByteTests
+public class RomByteTests : ContainerFixture
 {
     private static RomByte SampleRomByte1()
     {
@@ -32,9 +32,11 @@ public class RomByteTests
         rb.Rom = 0x99;
         return rb;
     }
+
+    private readonly ISampleDataFactory createSampleData = null!;
         
-    [Theory, InjectData]
-    public void TestWhenNoIaPresent(ISampleDataFactory createSampleData)
+    [Fact]
+    public void TestWhenNoIaPresent()
     {
         var sampleData = createSampleData.Create();
         const int offset = 0x1C1F;
@@ -42,8 +44,8 @@ public class RomByteTests
         Assert.Equal(result, -1);
     }
         
-    [Theory, InjectData]
-    public void TestGetAddressMode(ISampleDataFactory createSampleData)
+    [Fact]
+    public void TestGetAddressMode()
     {
         var sampleData = createSampleData.Create();
         const int romOffset1 = 0xEB;

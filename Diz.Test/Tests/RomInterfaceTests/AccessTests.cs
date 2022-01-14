@@ -47,7 +47,7 @@ namespace Diz.Test
                 data.Labels.AddLabel(kvp.Key, kvp.Value)
             );
 
-            data.Apis.Add(new SnesApi(data));
+            data.Apis.AddIfDoesntExist(new SnesApi(data));
             
             return data;
         }
