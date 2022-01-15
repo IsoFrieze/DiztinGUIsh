@@ -20,7 +20,7 @@ public static class CpuVectorTable
             new VectorTableEntry(SnesVectorNames.Native_RESET, 0x08),
             new VectorTableEntry(SnesVectorNames.Native_IRQ, 0x10)
         }),
-        new("Emulation", VectorTableBaseOffset + 0x10, new []
+        new("Emulation", VectorTableBaseOffset + 0x12, new [] // prob this is wrong, 0x12?
         {
             new VectorTableEntry(SnesVectorNames.Emulation_COP, 0x00),
             new VectorTableEntry(SnesVectorNames.Emulation_Unknown, 0x02),
