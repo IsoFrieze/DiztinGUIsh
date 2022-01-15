@@ -1,1 +1,4 @@
-﻿// [assembly: CompositionRootType(typeof(DizTestCompositionRoot))]
+﻿using Diz.Test.Utils;
+using LightInject;
+
+[assembly: CompositionRootType(typeof(DizTestCompositionRoot))]

@@ -15,18 +15,23 @@ public class ContainerFixture : IDisposable
     [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
     public ContainerFixture()
     {
-        var container = CreateContainer();
-        
-        Configure(container);
-        RegisterServices(container);
-        
+        var container = ConfigureAndRegisterServiceContainer();
         ServiceFactory = container.BeginScope();
         InjectPrivateFields();
     }
 
-    internal virtual void RegisterServices(IServiceContainer container)
+    public IServiceContainer ConfigureAndRegisterServiceContainer()
+    {
+        var container = CreateContainer();
+        Configure(container);
+        RegisterServices(container);
+        return container;
+    }
+
+    internal static IServiceContainer RegisterServices(IServiceContainer container)
     {
         DizCoreServicesDllRegistration.RegisterServicesInDizDlls(container);
+        return container;
     }
 
     private void InjectPrivateFields()
@@ -56,7 +61,13 @@ public class ContainerFixture : IDisposable
     }
 
     internal virtual IServiceContainer CreateContainer() => 
+        CreateServiceContainer();
+
+    public static IServiceContainer CreateServiceContainer() => 
         DizServiceProvider.CreateServiceContainer();
 
-    internal virtual void Configure(IServiceRegistry serviceRegistry) {}
+    protected virtual void Configure(IServiceRegistry serviceRegistry) {}
+    
+    protected static IServiceContainer CreateAndRegisterServiceContainer() => 
+        RegisterServices(CreateServiceContainer());
 }

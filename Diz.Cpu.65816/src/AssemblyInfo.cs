@@ -1,6 +1,5 @@
-﻿using LightInject;
+﻿using Diz.Cpu._65816;
+using LightInject;
 
-namespace Diz.Cpu._65816;
-
-// [assembly: CompositionRootType(typeof(DizCpu65816ServiceRoot))]
+[assembly: CompositionRootType(typeof(DizCpu65816ServiceRoot))]
 

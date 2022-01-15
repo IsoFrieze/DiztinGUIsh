@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Diz.Core.model;
@@ -124,7 +125,7 @@ public class Bug050JapaneseText : ContainerFixture
             rootElement.SaveVersion = saveVersionToUse;
 
             // we want to trigger the bug which happens if the saved data in the XML doesn't match the ROM.
-            rootElement.Project.InternalRomGameName = badGameName;
+            rootElement.Project.InternalRomGameName = badGameName ?? "";
 
             var snesApi = rootElement.Project.Data.GetSnesApi();
             snesApi.Should().NotBeNull();
@@ -150,6 +151,13 @@ public class Bug050JapaneseText : ContainerFixture
             // outside this callback, it should get fixed up automatically by the migration code.
             if (!string.IsNullOrEmpty(badGameName))
                 root.Project.InternalRomGameName.Should().Be(badGameName, "Migrations to fix the bug haven't run yet.");
+
+            root.Project.Data.RomBytes.Count.Should().BePositive("Expected bytes to be read by this point");
+            root.Project.Data.RomBytesLoaded.Should()
+                .BeFalse("Our mock has loaded bytes but not fixed this setting yet");
+            
+            // now we make sure the loader doesn't attempt to scan for compatible ROMs
+            root.Project.Data.RomBytesLoaded = true;
         };
 
         Project? deserializedProject = null;
@@ -169,7 +177,10 @@ public class Bug050JapaneseText : ContainerFixture
         {
             // this is what it looks like when the bug is it's fixed
             runDeserializer();
-            deserializedProject.Should().NotBeNull("it shold have deserialized correctly.");
+            deserializedProject.Should().NotBeNull("it should have deserialized correctly.");
+            if (deserializedProject == null) 
+                return;
+            
             deserializedProject.InternalRomGameName.Should().NotBe(badGameName,
                 "Migrations should have fixed this");
             deserializedProject.InternalRomGameName.Should().Be(originalGoodGameName,

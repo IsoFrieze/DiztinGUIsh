@@ -28,6 +28,9 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
         
         serviceRegistry.Register<IProjectImportDefaultSettingsFactory, SnesDefaultSettingsFactory>();
         serviceRegistry.Register<ISnesRomImportSettingsBuilder, SnesRomImportSettingsBuilder>();
+
+        serviceRegistry.Register<ISnesRomAnalyzer, SnesRomAnalyzer>();
+        serviceRegistry.Register<IVectorTableCache, CachedVectorTableEntries>();
         
         RegisterMigrations(serviceRegistry);
 
