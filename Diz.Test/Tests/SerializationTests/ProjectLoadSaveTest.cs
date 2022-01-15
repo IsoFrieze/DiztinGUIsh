@@ -43,7 +43,7 @@ public class LoadSaveTest : ContainerFixture
 
         // now we can do a full compare between the original project, and the project which has been cycled through
         // serialization and deserialization
-        warning.Should().Be("");
+        warning.Should().Be(null);
         deserializedRoot.Project.Data.Labels.Labels.Count().Should().Be(srcProject.Data.Labels.Labels.Count());
 
         void TestEquivalent(Func<Project, object> func, ProjectSerializedRoot root, Project project) => 

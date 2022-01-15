@@ -43,8 +43,7 @@ public class DizCoreServicesCompositionRoot : ICompositionRoot
 
         serviceRegistry.Register<IDataFactory, DataFactory>();
 
-        serviceRegistry.Register(factory =>
-            new Func<IDataFactory, ISerializationInterceptor<Data>>(dataFactory =>
-                new XmlSerializerFactory.SnesDataInterceptor(dataFactory)));
+        serviceRegistry.Register<IDataFactory, XmlSerializerFactory.SnesDataInterceptor>((factory, dataFactory) => 
+            new XmlSerializerFactory.SnesDataInterceptor(dataFactory));
     }
 }
