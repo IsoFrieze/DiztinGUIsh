@@ -44,7 +44,7 @@ public class LogCreatorTests : ContainerFixture
     [Fact]
     public void TestLabelCount()
     {
-        Data data = null; // TODO: CreateSampleData();
+        var data = CreateSampleData();
             
         // should give us "Test22" and "Test_Data"
         Assert.Equal(2, data.Labels.Labels.Count());
