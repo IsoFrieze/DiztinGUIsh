@@ -4,6 +4,7 @@ using System.Reflection;
 using Diz.Core.services;
 using Diz.Core.util;
 using LightInject;
+using Xunit.Abstractions;
 
 namespace Diz.Test.Utils;
 
@@ -45,7 +46,14 @@ public class ContainerFixture : IDisposable
         => ServiceFactory.GetInstance<TService>(name);
 
     private object GetInstance(IServiceFactory factory, FieldInfo field)
-        => ServiceFactory.TryGetInstance(field.FieldType) ?? ServiceFactory.GetInstance(field.FieldType, field.Name);
+    {
+        // skip this type of interface so Xunit can populate it:
+        if (field.FieldType.IsAssignableTo(typeof(ITestOutputHelper)))
+            return null;
+
+        return ServiceFactory.TryGetInstance(field.FieldType) ??
+               ServiceFactory.GetInstance(field.FieldType, field.Name);
+    }
 
     internal virtual IServiceContainer CreateContainer() => 
         DizServiceProvider.CreateServiceContainer();
