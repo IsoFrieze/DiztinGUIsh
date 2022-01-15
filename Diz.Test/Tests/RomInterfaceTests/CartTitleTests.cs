@@ -12,10 +12,20 @@ using ExtendedXmlSerializer;
 using FluentAssertions;
 using Xunit;
 
-namespace Diz.Test.Tests;
+namespace Diz.Test.Tests.RomInterfaceTests;
 
+public static class CartNameData
+{
+    // note: you need to put this on your local system for it to work.
+    // gotta figure out how to make this portable without running into weirdness.
+    public const string RomFileName = @"D:\roms\SNES\ct (U) [!].smc";
+}
+    
 public class CartNameTests : ContainerFixture
 {
+    private readonly IXmlSerializerFactory serializerFactory = null!;
+    private readonly ISnesSampleProjectFactory sampleData = null!;
+
     // Bytes for a Cart Name from a SNES header
     // "Marvelous - Mouhitotsu no Takara-jima (Japan).sfc"
     // StartOffset(h): 00007FC0, EndOffset(h): 00007FD4, Length(h): 00000015
@@ -75,9 +85,6 @@ public class CartNameTests : ContainerFixture
         public string CartTitle { get; set; }
     }
 
-    private readonly IXmlSerializerFactory serializerFactory = null!;
-    private readonly ISnesSampleProjectFactory sampleData = null!;
-    
     [Fact]
     public void TestXmlCycle3()
     {
@@ -125,27 +132,26 @@ public class CartNameTests : ContainerFixture
             "checksum bytes in the ROM should match the computed checksum");
     }
 
-    // note: you need to put this on your local system for it to work.
-    // gotta figure out how to make this portable without running into weirdness.
-    const string RomFileName = @"D:\roms\SNES\ct (U) [!].smc";
-        
-    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
+    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, CartNameData.RomFileName})]
     public void TestFamicheckTool()
     {
-        var result = SuperFamiCheckTool.Run(RomFileName);
+        var result = SuperFamiCheckTool.Run(CartNameData.RomFileName);
         result.Complement.Should().Be(0x8773);
         result.Checksum.Should().Be(0x788c);
 
         // it's stored in the ROM file like this:
         // 73 87 8C 78
     }
+}
 
+public class TestChecksums : ContainerFixture
+{
     private readonly IProjectImporter projectImporter = null!;
     
-    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, RomFileName})]
+    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, CartNameData.RomFileName})]
     public void TestInternalChecksumVsExternal()
     {
-        var result = SuperFamiCheckTool.Run(RomFileName);
+        var result = SuperFamiCheckTool.Run(CartNameData.RomFileName);
         result.Complement.Should().Be(0x8773);
         result.Checksum.Should().Be(0x788c);
         (result.Complement + result.Checksum).Should().Be(0xFFFF);
@@ -153,7 +159,7 @@ public class CartNameTests : ContainerFixture
         const uint expected4ByteChecksums = 0x788C8773;
         result.AllCheckBytes.Should().Be(expected4ByteChecksums);
 
-        var project = projectImporter.CreateProjectFromDefaultSettings(RomFileName);
+        var project = projectImporter.CreateProjectFromDefaultSettings(CartNameData.RomFileName);
         project.Should().NotBeNull("project should have loaded successfully");
         project.Data.GetRomByte(0xFFDC).Should().Be(0x73); // complement 1
         project.Data.GetRomByte(0xFFDD).Should().Be(0x87); // complement 2

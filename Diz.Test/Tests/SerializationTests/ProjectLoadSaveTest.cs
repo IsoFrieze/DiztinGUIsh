@@ -5,6 +5,7 @@ using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Cpu._65816;
 using Diz.Test.Tests;
+using Diz.Test.Tests.RomInterfaceTests;
 using Diz.Test.Utils;
 using FluentAssertions;
 using Xunit;

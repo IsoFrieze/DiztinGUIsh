@@ -47,40 +47,33 @@ public interface IProjectImporter
     IProject CreateProjectFromSettings(IRomImportSettings importSettings);
 }
 
+public interface IProjectImportDefaultSettingsFactory : IProjectImportSettingsFactory
+{
+    // we can replace this interface with a named service 
+}
+
 public class ProjectImporter : IProjectImporter
 {
-    // private readonly IProjectImportSettingsFactory createProjectSettings;
-    // private readonly Func<IRomImportSettings, IProjectFactoryFromRomImportSettings> createImporterFromSettings;
-    //
-    // public ProjectImporter(
-    //     Func<IRomImportSettings, IProjectFactoryFromRomImportSettings> createImporterFromSettings, 
-    //     IProjectImportSettingsFactory createProjectSettings)
-    // {
-    //     this.createImporterFromSettings = createImporterFromSettings;
-    //     this.createProjectSettings = createProjectSettings;
-    // }
-    
-    // note: this function is probably pretty useless without other functionality hooked in to populate other
-    // parts of the data.
-    // public IProject Create(string romFilename)
-    // {
-    //     // not helpful var importSettings = createProjectSettings.Create(romFilename);
-    //     
-    //     return CreateProjectFromSettings(importSettings);
-    // }
+    private readonly IProjectImportDefaultSettingsFactory generateDefaultSettingsFromRom;
+    private readonly Func<IRomImportSettings, IProjectFactoryFromRomImportSettings> createImporterFromSettings;
+
+    public ProjectImporter(
+        IProjectImportDefaultSettingsFactory generateDefaultSettingsFromRom, 
+        Func<IRomImportSettings, IProjectFactoryFromRomImportSettings> createImporterFromSettings)
+    {
+        this.generateDefaultSettingsFromRom = generateDefaultSettingsFromRom;
+        this.createImporterFromSettings = createImporterFromSettings;
+    }
     
     public IProject CreateProjectFromDefaultSettings(string romFilename)
     {
-        throw new NotImplementedException();
-        // 1. create default settings from rom filename via SnesDefaultSettingsFactory / IProjectImportSettingsFactory
-        // 2. CreateProjectFromSettings
-        // var settings = // get IProjectImportSettingsFactory.Create
+        var settings = generateDefaultSettingsFromRom.Create(romFilename);
+        return CreateProjectFromSettings(settings);
     }
 
     public IProject CreateProjectFromSettings(IRomImportSettings importSettings)
     {
-        throw new NotImplementedException();
-        // TODO return createImporterFromSettings(importSettings)?.Read();
+        return createImporterFromSettings(importSettings)?.Read();
     }
 }
 

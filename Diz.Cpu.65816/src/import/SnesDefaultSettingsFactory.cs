@@ -1,9 +1,11 @@
 ﻿using Diz.Core.model;
 using Diz.Core.serialization;
+using JetBrains.Annotations;
 
 namespace Diz.Cpu._65816.import;
 
-public class SnesDefaultSettingsFactory : IProjectImportSettingsFactory
+[UsedImplicitly]
+public class SnesDefaultSettingsFactory : IProjectImportDefaultSettingsFactory
 {
     private readonly ISnesRomImportSettingsBuilder snesRomImportSettingsBuilder;
 

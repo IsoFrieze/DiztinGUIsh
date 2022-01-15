@@ -26,6 +26,9 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
 
         serviceRegistry.Register<IData, ISnesData>(CreateSnesApiWithData);
         
+        serviceRegistry.Register<IProjectImportDefaultSettingsFactory, SnesDefaultSettingsFactory>();
+        serviceRegistry.Register<ISnesRomImportSettingsBuilder, SnesRomImportSettingsBuilder>();
+        
         RegisterMigrations(serviceRegistry);
 
         RegisterSampleDataServices(serviceRegistry);
