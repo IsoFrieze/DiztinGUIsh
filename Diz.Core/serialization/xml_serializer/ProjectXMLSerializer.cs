@@ -24,7 +24,7 @@ public class ProjectOpenResult
     /// <summary>
     /// The actual data for the root object that gets deserialized from the project file. Contains the Project
     /// </summary>
-    public ProjectSerializedRoot Root { get; set; }
+    public ProjectXmlSerializer.Root Root { get; set; }
 }
 
 public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
@@ -43,6 +43,24 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     
     public event IProjectXmlSerializer.SerializeEvent BeforeSerialize;
     public event IProjectXmlSerializer.SerializeEvent AfterDeserialize;
+    
+    
+    public class Root
+    {
+        // XML serializer specific metadata, top-level deserializer.
+        // This is unique to JUST the XML serializer, doesn't affect any other types of serializers.
+        // i.e. there is no global 'save format version' number, it's serializer-specific.
+        //
+        // NOTE: Please try and keep 'Root' unchanged and as generic as possible.  It's way better
+        // to change 'Project'
+        public int SaveVersion { get; set; } = -1;
+        public string Watermark { get; set; }
+        public string Extra1 { get; set; } = ""; // reserved for future use
+        public string Extra2 { get; set; } = ""; // reserved for future use
+
+        // The actual project itself. Almost any change you want to make should go in here.
+        public Project Project { get; set; }
+    };
 
     
     private readonly IXmlSerializerFactory xmlSerializerFactory;
@@ -55,7 +73,7 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     {
         // Wrap the project in a top-level root element with some info about the XML file
         // format version. Note that each serializer has its own implementation of storing this metadata
-        var rootElement = new ProjectSerializedRoot
+        var rootElement = new Root
         {
             SaveVersion = CurrentSaveFormatVersion,
             Watermark = DizWatermark,
@@ -100,8 +118,8 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     }
 
     // finally. this is the real deal.
-    private ProjectSerializedRoot DeserializeProjectXml(string xmlStr) => 
-       xmlSerializerFactory.GetSerializer().Create().Deserialize<ProjectSerializedRoot>(xmlStr);
+    private Root DeserializeProjectXml(string xmlStr) => 
+       xmlSerializerFactory.GetSerializer().Create().Deserialize<Root>(xmlStr);
 
     // return the save file version# detected in the raw data
     private static int RunPreDeserializeIntegrityChecks(string rawXml)

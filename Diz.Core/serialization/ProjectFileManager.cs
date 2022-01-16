@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Diz.Core.model;
@@ -19,7 +18,7 @@ public interface IProjectSerializer
 
 public interface IProjectXmlSerializer : IProjectSerializer
 {
-    public delegate void SerializeEvent(IProjectXmlSerializer projectXmlSerializer, ProjectSerializedRoot rootElement);
+    public delegate void SerializeEvent(IProjectXmlSerializer projectXmlSerializer, ProjectXmlSerializer.Root rootElement);
     public event SerializeEvent BeforeSerialize;
     public event SerializeEvent AfterDeserialize;
 }
@@ -27,7 +26,7 @@ public interface IProjectXmlSerializer : IProjectSerializer
 public interface IAddRomDataCommand
 {
     public bool ShouldProjectCartTitleMatchRomBytes { get; set; }
-    public ProjectSerializedRoot? Root { get; set; }
+    public ProjectXmlSerializer.Root? Root { get; set; }
     public Func<string, string>? GetNextRomFileToTry { get; set; }
     public IMigrationRunner? MigrationRunner { get; set; }
 
@@ -84,7 +83,7 @@ public class ProjectFileManager : IProjectFileManager
         return openResult;
     }
 
-    private void PostSerialize(string filename, ProjectSerializedRoot xmlProjectSerializedRoot, IProjectSerializer serializer)
+    private void PostSerialize(string filename, ProjectXmlSerializer.Root xmlProjectSerializedRoot, IProjectSerializer serializer)
     {
         xmlProjectSerializedRoot.Project.ProjectFileName = filename;
 
@@ -106,7 +105,7 @@ public class ProjectFileManager : IProjectFileManager
         romAddCmd.TryReadAttachedProjectRom();
     }
 
-    private static void VerifyIntegrityDeserialized(ProjectSerializedRoot xmlProjectSerializedRoot)
+    private static void VerifyIntegrityDeserialized(ProjectXmlSerializer.Root xmlProjectSerializedRoot)
     {
         var data = xmlProjectSerializedRoot.Project.Data;
         Debug.Assert(data.Labels != null && data.Comments != null);

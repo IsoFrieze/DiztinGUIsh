@@ -47,7 +47,7 @@ public class LoadSaveTest : ContainerFixture
         warning.Should().Be(null);
         deserializedRoot.Project.Data.Labels.Labels.Count().Should().Be(srcProject.Data.Labels.Labels.Count());
 
-        void TestEquivalent(Func<Project, object> func, ProjectSerializedRoot root, Project project) => 
+        void TestEquivalent(Func<Project, object> func, ProjectXmlSerializer.Root root, Project project) => 
             func(root.Project).Should().BeEquivalentTo(func(project));
 
         TestEquivalent(x => x.Data.RomBytes, deserializedRoot, srcProject);

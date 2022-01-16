@@ -25,7 +25,7 @@ public class AddRomDataCommand : IAddRomDataCommand
     }
 
     public bool ShouldProjectCartTitleMatchRomBytes { get; set; } = true;
-    public ProjectSerializedRoot? Root { get; set; } = null;
+    public ProjectXmlSerializer.Root? Root { get; set; } = null;
     public Func<string, string>? GetNextRomFileToTry { get; set; }
     public IMigrationRunner? MigrationRunner { get; set; }
 
