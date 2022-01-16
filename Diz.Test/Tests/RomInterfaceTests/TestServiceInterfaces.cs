@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Diz.Controllers.interfaces;
 using Diz.Test.Utils;
-using ExtendedXmlSerializer.Configuration;
 using FluentAssertions;
 using LightInject;
 using Moq;
@@ -34,7 +33,7 @@ public class TestServiceInterfaces : ContainerFixture
         serviceRegistry.Register(_ => new Mock<IImportRomDialogView>().Object);
     }
 
-    [Theory(Skip = "Useful more for debugging registrations, less so as a comrehensive unit test"), MemberData(nameof(Interfaces))]
+    [Theory(Skip = "Useful more for debugging registrations, less so as a comprehensive unit test"), MemberData(nameof(Interfaces))]
     public void CreateInstance(Type interfaceToTest)
     {
         ServiceFactory.GetInstance(interfaceToTest).Should().NotBeNull();

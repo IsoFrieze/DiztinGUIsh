@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.PowerShell", "Diz.Power
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.LogWriter", "Diz.LogWriter\Diz.LogWriter.csproj", "{96859F8F-5921-409C-A7A2-ECECDE5F70A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Controllers", "Diz.Controllers\Diz.Controllers.csproj", "{B2213BCE-F70F-423F-BB55-0744243FAD43}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Controllers", "Diz.Controllers\Diz.Controllers\Diz.Controllers.csproj", "{B2213BCE-F70F-423F-BB55-0744243FAD43}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Core.Interfaces", "Diz.Core.Interfaces\Diz.Core.Interfaces.csproj", "{E5AA827C-2194-4126-A1C2-0A5F9B9F653C}"
 EndProject

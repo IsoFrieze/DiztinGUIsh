@@ -67,7 +67,7 @@
     <PackageReference Include="System.Resources.Extensions" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj" />
+    <ProjectReference Include="..\Diz.Controllers\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
     <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
     <ProjectReference Include="..\Diz.Cpu.65816\Diz.Cpu.65816.csproj" />
