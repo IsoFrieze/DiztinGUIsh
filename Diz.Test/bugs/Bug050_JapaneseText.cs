@@ -87,6 +87,8 @@ public class Bug050JapaneseText
             bool expectedCartTitleValidationException) : 
             base(injectFieldsOnlyIfNull: true, injectOnlyTaggedFields: true)
         {
+            GetInstance<IReadFromFileBytes>().Should().Match(o => o.GetType().Name.Contains("Proxy"));
+            
             FileIo = new FileIoFixture();
             ProjectFileManager = new Bug50ProjectFileManager(fnProjectSerializerCreate, fnAddRomDataCommand, FileIo.Mock.Object);
             
@@ -155,7 +157,7 @@ public class Bug050JapaneseText
         {
             base.Configure(serviceRegistry);
 
-            serviceRegistry.Register(factory =>
+            serviceRegistry.Register<IReadFromFileBytes>(factory =>
             {
                 var mockLinkedRomBytesProvider = new Mock<IReadFromFileBytes>();
 
