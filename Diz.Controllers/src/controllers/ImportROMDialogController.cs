@@ -8,177 +8,159 @@ using Diz.Core.serialization;
 using Diz.Core.util;
 using Diz.Cpu._65816.import;
 
-namespace Diz.Controllers.controllers
+namespace Diz.Controllers.controllers;
+
+[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
+public class ImportRomDialogController : IImportRomDialogController
 {
-    public interface IImportRomDialogController
+    public IImportRomDialogView View { get; set; }
+    public ISnesRomImportSettingsBuilder Builder { get; }
+        
+    public event IImportRomDialogController.SettingsCreatedEvent OnBuilderInitialized;
+        
+    private readonly ICommonGui commonGui;
+
+    public int RomSettingsOffset
     {
-        IImportRomDialogView View { get; set; }
-        public ISnesRomImportSettingsBuilder Builder { get; }
-        public event SettingsCreatedEvent OnBuilderInitialized;
-        
-        string CartridgeTitle { get; }
-        string RomSpeedText { get; }
+        get
+        {
+            if (Builder.Input.AnalysisResults == null)
+                return -1;
+                
+            return RomUtil.GetRomSettingOffset(Builder.Input.AnalysisResults.RomMapMode);
+        }
+    }
 
-        public ImportRomSettings PromptUserForImportOptions(string romFilename);
-        
-        public delegate void SettingsCreatedEvent();
+    public IReadOnlyList<byte> RomBytes => 
+        Builder.Input.RomBytes;
 
-        public bool Submit();
-        int GetVectorTableValue(int whichTable, int whichEntry);
-        bool IsProbablyValidDetection();
-        string GetDetectionMessage();
+    public RomSpeed RomSpeed =>
+        Builder.Input.AnalysisResults?.RomSpeed ?? RomSpeed.Unknown;
+
+    public RomMapMode RomMapMode => 
+        Builder.Input.AnalysisResults?.RomMapMode ?? default;
+
+    public string CartridgeTitle => 
+        RomUtil.GetCartridgeTitleFromRom(RomBytes, RomSettingsOffset);
+
+    public string RomSpeedText => 
+        Util.GetEnumDescription(RomSpeed);
+        
+    public string GetDetectionMessage() =>
+        Builder.Input.AnalysisResults is { DetectedRomMapModeCorrectly: true }
+            ? RomMapModeText
+            : "Couldn't auto detect ROM Map Mode!";
+
+    public string RomMapModeText => 
+        Util.GetEnumDescription(RomMapMode);
+
+    public ImportRomDialogController(ICommonGui commonGui, IImportRomDialogView view, ISnesRomImportSettingsBuilder builder)
+    {
+        this.commonGui = commonGui;
+        Builder = builder;
+            
+        View = view;
+    }
+
+    public ImportRomSettings PromptUserForImportOptions(string romFilename)
+    {
+        return !PromptUserForOptions(romFilename)
+            ? null 
+            : Builder.GenerateSettings();
+    }
+
+    private bool PromptUserForOptions(string romFilename)
+    {
+        Debug.Assert(Builder != null);
+        
+        Builder.Analyze(romFilename);
+            
+        Builder.PropertyChanged += BuilderOnPropertyChanged;
+        OnBuilderInitialized?.Invoke();
+
+        Refresh();
+        var result = View.ShowAndWaitForUserToConfirmSettings();
+            
+        Builder.PropertyChanged -= BuilderOnPropertyChanged;
+        View = null;
+            
+        return result;
     }
     
-    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
-    public class ImportRomDialogController : IImportRomDialogController
+    private void BuilderOnPropertyChanged(object sender, PropertyChangedEventArgs e) => 
+        Refresh();
+
+    private bool IsOffsetInRange(int offset) => 
+        Builder.Input.RomBytes != null && offset > 0 && offset <= Builder.Input.RomBytes.Count;
+
+    public bool IsProbablyValidDetection() =>
+        Builder.Input.AnalysisResults != null &&
+        Builder.Input.AnalysisResults.RomSpeed != RomSpeed.Unknown &&
+        IsOffsetInRange(Builder.Input.RomSettingsOffset ?? -1);
+    
+    private void Refresh()
     {
-        public IImportRomDialogView View { get; set; }
-        public ISnesRomImportSettingsBuilder Builder { get; }
-        
-        public event IImportRomDialogController.SettingsCreatedEvent OnBuilderInitialized;
-        
-        private readonly ICommonGui commonGui;
+        View?.RefreshUi();
+        SyncVectorTableEntriesFromGui();
+    }
 
-        public int RomSettingsOffset
+    private void SyncVectorTableEntriesFromGui()
+    {
+        Builder.OptionClearGenerateVectorTableLabels();
+        foreach (var vectorEntry in View.GetEnabledVectorTableEntries())
         {
-            get
-            {
-                if (Builder.Input.AnalysisResults == null)
-                    return -1;
-                
-                return RomUtil.GetRomSettingOffset(Builder.Input.AnalysisResults.RomMapMode);
-            }
+            Builder.OptionSetGenerateVectorTableLabelFor(vectorEntry, true);
+        }
+    }
+
+    private bool Warn(string msg)
+    {
+        return commonGui.PromptToConfirmAction(msg +
+                                               "\nIf you proceed with this import, imported data might be wrong.\n" +
+                                               "Proceed anyway?\n\n (Experts only, otherwise say No)");
+    }
+
+    public bool Submit()
+    {
+        if (Builder == null)
+        {
+            Warn("Internal error (couldn't build new ROM import settings). Aborting");
+            return false;
         }
 
-        public IReadOnlyList<byte> RomBytes => 
-            Builder.Input.RomBytes;
-
-        public RomSpeed RomSpeed =>
-            Builder.Input.AnalysisResults?.RomSpeed ?? RomSpeed.Unknown;
-
-        public RomMapMode RomMapMode => 
-            Builder.Input.AnalysisResults?.RomMapMode ?? default;
-
-        public string CartridgeTitle => 
-            RomUtil.GetCartridgeTitleFromRom(RomBytes, RomSettingsOffset);
-
-        public string RomSpeedText => 
-            Util.GetEnumDescription(RomSpeed);
-        
-        public string GetDetectionMessage() =>
-            Builder.Input.AnalysisResults is { DetectedRomMapModeCorrectly: true }
-                ? RomMapModeText
-                : "Couldn't auto detect ROM Map Mode!";
-
-        public string RomMapModeText => 
-            Util.GetEnumDescription(RomMapMode);
-
-        public ImportRomDialogController(ICommonGui commonGui, IImportRomDialogView view, ISnesRomImportSettingsBuilder builder)
+        var analysisResults = Builder.Input.AnalysisResults;
+        if (analysisResults == null)
         {
-            this.commonGui = commonGui;
-            Builder = builder;
+            Warn("Internal error (Rom analysis results were empty). Aborting");
+            return false;
+        }
             
-            View = view;
-        }
-
-        public ImportRomSettings PromptUserForImportOptions(string romFilename)
+        if (!analysisResults.DetectedRomMapModeCorrectly)
         {
-            return !PromptUserForOptions()
-                ? null 
-                : Builder.GenerateSettings();
-        }
-
-        private bool PromptUserForOptions()
-        {
-            Debug.Assert(Builder != null);
-            
-            OnBuilderInitialized?.Invoke();
-            Builder.PropertyChanged += ImportSettingsOnPropertyChanged;
-            Refresh();
-
-            var result = View.ShowAndWaitForUserToConfirmSettings();
-            
-            Builder.PropertyChanged -= ImportSettingsOnPropertyChanged;
-            View = null;
-            
-            return result;
-        }
-        
-        private bool IsOffsetInRange(int offset) => 
-            Builder.Input.RomBytes != null && offset > 0 && offset <= Builder.Input.RomBytes.Count;
-
-        public bool IsProbablyValidDetection() =>
-            Builder.Input.AnalysisResults != null &&
-            Builder.Input.AnalysisResults.RomSpeed != RomSpeed.Unknown &&
-            IsOffsetInRange(Builder.Input.RomSettingsOffset ?? -1);
-
-        private void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e) => 
-            Refresh();
-
-        private void Refresh()
-        {
-            View?.RefreshUi();
-            SyncVectorTableEntriesFromGui();
-        }
-
-        private void SyncVectorTableEntriesFromGui()
-        {
-            Builder.OptionClearGenerateVectorTableLabels();
-            foreach (var vectorEntry in View.GetEnabledVectorTableEntries())
-            {
-                Builder.OptionSetGenerateVectorTableLabelFor(vectorEntry, true);
-            }
-        }
-
-        private bool Warn(string msg)
-        {
-            return commonGui.PromptToConfirmAction(msg +
-                                              "\nIf you proceed with this import, imported data might be wrong.\n" +
-                                              "Proceed anyway?\n\n (Experts only, otherwise say No)");
-        }
-
-        public bool Submit()
-        {
-            if (Builder == null)
-            {
-                Warn("Internal error (couldn't build new ROM import settings). Aborting");
+            if (!Warn("ROM Map type couldn't be detected."))
                 return false;
-            }
-
-            var analysisResults = Builder.Input.AnalysisResults;
-            if (analysisResults == null)
-            {
-                Warn("Internal error (Rom analysis results were empty). Aborting");
-                return false;
-            }
-            
-            if (!analysisResults.DetectedRomMapModeCorrectly)
-            {
-                if (!Warn("ROM Map type couldn't be detected."))
-                    return false;
-            }
-            else if (analysisResults.RomMapMode != Builder.GenerateSettings().RomMapMode)
-            {
-                if (!Warn("The ROM map type selected is different than what was detected."))
-                    return false;
-            }
-
-            return true;
         }
-
-        public int GetVectorTableValue(int whichTable, int whichEntry)
+        else if (analysisResults.RomMapMode != Builder.GenerateSettings().RomMapMode)
         {
-            Debug.Assert(whichTable is 0 or 1);
-            var tableOffset = 0x10 * whichTable;
-
-            Debug.Assert(whichEntry is >= 0 and < 6);
-            var vectorEntry = 2 * whichEntry;
-
-            var baseAddr = RomSettingsOffset + 15;
-            var romOffset = baseAddr + tableOffset + vectorEntry;
-
-            var vectorValue = RomBytes[romOffset] + (RomBytes[romOffset + 1] << 8);
-            return vectorValue;
+            if (!Warn("The ROM map type selected is different than what was detected."))
+                return false;
         }
+
+        return true;
+    }
+
+    public int GetVectorTableValue(int whichTable, int whichEntry)
+    {
+        Debug.Assert(whichTable is 0 or 1);
+        var tableOffset = 0x10 * whichTable;
+
+        Debug.Assert(whichEntry is >= 0 and < 6);
+        var vectorEntry = 2 * whichEntry;
+
+        var baseAddr = RomSettingsOffset + 15;
+        var romOffset = baseAddr + tableOffset + vectorEntry;
+
+        var vectorValue = RomBytes[romOffset] + (RomBytes[romOffset + 1] << 8);
+        return vectorValue;
     }
 }

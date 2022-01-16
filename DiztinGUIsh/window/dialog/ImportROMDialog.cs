@@ -86,8 +86,9 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
         // Debug.Assert(Controller.Builder.Input.AnalysisResults != null); // needed?
         
         // this is the better way to do this but... we need better hooks for knowing when stuff changes, it's a mess
-        GuiUtil.BindListControlToEnum<RomMapMode>(cmbRomMapMode,
-            Controller.Builder, "OptionSelectedRomMapMode");
+        GuiUtil.BindListControlToEnum<RomMapMode>(cmbRomMapMode, 
+            Controller.Builder, 
+            nameof(ISnesRomImportSettingsBuilder.OptionSelectedRomMapMode));
         
         checkHeader.Checked = Controller.Builder.OptionGenerateHeaderFlags;
     }
@@ -102,9 +103,6 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
         DataBind();
         RefreshUi();
     }
-
-    public void ImportSettingsOnPropertyChanged(object sender, PropertyChangedEventArgs e) => 
-        RefreshUi();
 
     public void RefreshUi()
     {
