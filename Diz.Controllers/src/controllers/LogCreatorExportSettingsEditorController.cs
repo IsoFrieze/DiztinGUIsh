@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using Diz.Controllers.interfaces;
 using Diz.Core.export;
 using Diz.Core.util;
+using Diz.LogWriter.util;
 using JetBrains.Annotations;
 
 namespace Diz.Controllers.controllers;
@@ -43,9 +44,10 @@ public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorContr
     private string? keepPathsRelativeToThisPath;
     private readonly IFilesystemService fs;
 
-    public LogCreatorSettingsEditorController(ILogCreatorSettingsEditorView view, IFilesystemService fs)
+    public LogCreatorSettingsEditorController(ILogCreatorSettingsEditorView view, IFilesystemService fs, Func<LogWriterSettings, ISampleAssemblyTextGenerator> sampleAssemblyOutputFactory)
     {
         this.fs = fs;
+        this.sampleAssemblyOutputFactory = sampleAssemblyOutputFactory;
         Debug.Assert(fs != null);
         
         View = view;
@@ -79,6 +81,22 @@ public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorContr
         return PromptToCreateOutputDirIfNeeded() is 
             PromptCreateDirResult.AlreadyExists or 
             PromptCreateDirResult.DidCreateItNow;
+    }
+
+
+    private readonly Func<LogWriterSettings, ISampleAssemblyTextGenerator> sampleAssemblyOutputFactory;
+
+    public string GetSampleOutput()
+    {
+        try
+        {
+            var sampleAssemblyTextGenerator = sampleAssemblyOutputFactory(Settings);
+            return sampleAssemblyTextGenerator.GetSampleAssemblyOutput().OutputStr;
+        }
+        catch (Exception ex)
+        {
+            return $"Invalid format or sample output: {ex.Message}";
+        }
     }
 
     /// <summary>

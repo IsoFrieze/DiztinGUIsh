@@ -13,7 +13,12 @@ using Diz.Core.util;
 
 namespace Diz.Core.export;
 
-public record LogWriterSettings
+
+public interface ILogWriterSettings
+{
+}
+
+public record LogWriterSettings : ILogWriterSettings
 {
     // path to output file or folder
     public const string DefaultStr = "%label:-22% %code:37%;%pc%|%bytes%|%ia%; %comment%";

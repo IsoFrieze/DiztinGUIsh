@@ -47,7 +47,10 @@ public class DizCoreServicesCompositionRoot : ICompositionRoot
         serviceRegistry.Register<IDataFactory, XmlSerializerFactory.SnesDataInterceptor>((factory, dataFactory) => 
             new XmlSerializerFactory.SnesDataInterceptor(dataFactory));
 
-        serviceRegistry.RegisterFallback((type, serviceType) => true, request => new ReadFromFileBytes());
+        serviceRegistry.RegisterFallback((type, serviceType) => 
+            type == typeof(IReadFromFileBytes), 
+            request => new ReadFromFileBytes());
+        
         serviceRegistry.Register<ILinkedRomBytesProvider, LinkedRomBytesFileSearchProvider>();
     }
 }

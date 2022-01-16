@@ -175,5 +175,6 @@ namespace Diz.Controllers.interfaces
         bool PromptSetupAndValidateExportSettings();
 
         bool EnsureSelectRealOutputDirectory(bool forcePrompt = false);
+        string GetSampleOutput();
     }
 }

@@ -5,7 +5,6 @@ using System.Windows.Forms;
 using Diz.Controllers.interfaces;
 using Diz.Core.export;
 using Diz.LogWriter;
-using Diz.LogWriter.util;
 using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog;
@@ -41,9 +40,8 @@ public partial class LogCreatorSettingsEditorForm : Form, ILogCreatorSettingsEdi
         }
     }
 
-    public LogCreatorSettingsEditorForm(Func<LogWriterSettings, ISampleAssemblyTextGenerator> sampleAssemblyOutputFactory)
+    public LogCreatorSettingsEditorForm()
     {
-        this.sampleAssemblyOutputFactory = sampleAssemblyOutputFactory;
         InitializeComponent();
     }
 
@@ -62,21 +60,7 @@ public partial class LogCreatorSettingsEditorForm : Form, ILogCreatorSettingsEdi
         
         disassembleButton.Enabled = validFormat;
 
-        textSample.Text = validFormat ? GetSampleOutput() : "Invalid format!";
-    }
-
-    private readonly Func<LogWriterSettings, ISampleAssemblyTextGenerator> sampleAssemblyOutputFactory;
-
-    public string GetSampleOutput()
-    {
-        try
-        {
-            return sampleAssemblyOutputFactory(Settings).GetSampleAssemblyOutput().OutputStr;
-        }
-        catch (Exception ex)
-        {
-            return $"Invalid format or sample output: {ex.Message}";
-        }
+        textSample.Text = validFormat ? Controller?.GetSampleOutput() : "Invalid format!";
     }
 
     private void ControllerOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
