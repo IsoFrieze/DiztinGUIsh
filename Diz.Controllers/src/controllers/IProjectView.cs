@@ -11,6 +11,11 @@ namespace Diz.Controllers.controllers
         LongRunningTaskHandler TaskHandler { get; }
     }
     
+    public interface IMainGridWindowView : IProjectView, IFormViewer
+    {
+    
+    }
+    
     public interface IProjectView : ILongRunningTaskHandler, ISnesNavigation
     {
         Project Project { get; set; }

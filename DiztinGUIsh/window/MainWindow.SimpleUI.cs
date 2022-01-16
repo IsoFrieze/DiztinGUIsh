@@ -32,7 +32,7 @@ namespace DiztinGUIsh.window
             ProjectController?.ConfirmSettingsThenExportAssembly();
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e) =>
-            ProjectController.ViewFactory.Get("About").Show();
+            ProjectController.ViewFactory.GetAboutView().Show();
         
         private void exitToolStripMenuItem_Click(object sender, EventArgs e) => 
             Application.Exit();

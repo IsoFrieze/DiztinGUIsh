@@ -9,12 +9,17 @@ namespace Diz.Controllers.controllers
     // TODO: replace this with Task and async/await. don't use threads directly.
     public abstract class ProgressBarWorker
     {
-        public IProgressView View { get; set; }
+        public IProgressView View { get; }
         public bool IsMarquee { get; init; }
         public string TextOverride { get; init; }
         
         private bool isRunning;
         private Thread backgroundThread;
+
+        protected ProgressBarWorker(IProgressView view)
+        {
+            View = view;
+        }
 
         protected void UpdateProgress(int i)
         {
@@ -96,14 +101,9 @@ namespace Diz.Controllers.controllers
     }
 
 
+    // a version that keeps calling 'callback' until it returns -1
     public class ProgressBarJob : ProgressBarWorker
     {
-        // a version that keeps calling 'callback' until it returns -1
-        public ProgressBarJob(IProgressView progressView)
-        {
-            this.progressView = progressView;
-        }
-
         // a version that calls action once and exits
         // shows a "marquee" i.e. spinner
         public static void RunAndWaitForCompletion(Action action, string overrideTxt, IProgressView progressView)
@@ -139,7 +139,6 @@ namespace Diz.Controllers.controllers
         }
 
         private int previousProgress;
-        private readonly IProgressView progressView;
 
         protected void UpdateProgress(long currentProgress)
         {
@@ -160,5 +159,9 @@ namespace Diz.Controllers.controllers
 
         // return > 0 to continue. return value will be used to indicate progress in range of [0 -> MaxProgress]
         public delegate long NextAction();
+
+        public ProgressBarJob(IProgressView view) : base(view)
+        {
+        }
     }
 }

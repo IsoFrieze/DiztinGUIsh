@@ -58,9 +58,6 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
         }
     }
 
-    private ImportRomSettings ImportSettings => 
-        Controller?.Builder.GenerateSettings();
-
     public ImportRomDialog()
     {
         InitializeComponent();
@@ -75,18 +72,22 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
 
     private void OnVectorCheckboxCheckedChanged(object? sender, EventArgs e)
     {
-        var vector = sender as VectorControls;
+        if (sender is not CheckBox checkbox)
+            return;
+        
+        var vector = checkbox.Tag as VectorControls;
         Debug.Assert(vector != null);
+        
         Controller.Builder.OptionSetGenerateVectorTableLabelFor(vector.Name, vector.Check.Checked);
     }
 
     private void DataBind()
     {
-        Debug.Assert(Controller.Builder.Input.AnalysisResults != null);
+        // Debug.Assert(Controller.Builder.Input.AnalysisResults != null); // needed?
         
         // this is the better way to do this but... we need better hooks for knowing when stuff changes, it's a mess
         GuiUtil.BindListControlToEnum<RomMapMode>(cmbRomMapMode,
-            Controller.Builder.OptionSelectedRomMapMode, "ROMMapMode");
+            Controller.Builder, "OptionSelectedRomMapMode");
         
         checkHeader.Checked = Controller.Builder.OptionGenerateHeaderFlags;
     }
@@ -113,7 +114,7 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
     }
 
     private void UpdateOkayButtonEnabled() => 
-        okay.Enabled = ImportSettings.RomSpeed != RomSpeed.Unknown;
+        okay.Enabled = (Controller?.Builder?.Input?.AnalysisResults?.RomSpeed ?? RomSpeed.Unknown) != RomSpeed.Unknown;
 
     private void UpdateTextboxes()
     {

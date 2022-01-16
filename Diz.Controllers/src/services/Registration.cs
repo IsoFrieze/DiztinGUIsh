@@ -2,6 +2,7 @@
 
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
+using Diz.Controllers.util;
 using JetBrains.Annotations;
 using LightInject;
 
@@ -12,11 +13,13 @@ public class DizControllersCompositionRoot : ICompositionRoot
 {
     public void Compose(IServiceRegistry serviceRegistry)
     {
-        serviceRegistry.Register<IControllerFactory, ControllerFactory>();
-            
-        serviceRegistry.Register<IProjectController, ProjectController>();
-        serviceRegistry.Register<ILogCreatorSettingsEditorController, LogCreatorSettingsEditorController>();
-        serviceRegistry.Register<IImportRomDialogController, ImportRomDialogController>();
+        serviceRegistry.Register<IProjectController, ProjectController>("ProjectController");
+        serviceRegistry.Register<ILogCreatorSettingsEditorController, LogCreatorSettingsEditorController>("AssemblyExporterSettingsController");
+        serviceRegistry.Register<IImportRomDialogController, ImportRomDialogController>("ImportRomDialogController");
+        serviceRegistry.Register<ILargeFilesReaderController, LargeFilesReader>("LargeFileReaderProgressController");
+        
+        serviceRegistry.EnableAutoFactories();
+        serviceRegistry.RegisterAutoFactory<IControllerFactory>();
 
         // sorry this is all a huge WIP mess, cleanup incoming soon.
 

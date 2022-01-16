@@ -18,11 +18,11 @@ public class DizApp : IDizApp
         // TODO: do less weird janky casting here.
         
         GuiUtil.SetupDpiStuff();
-        var mainWindow = viewFactory.Get("GridEditor") as IProjectView;
+        var mainWindow = viewFactory.GetMainGridWindowView();
 
         // TODO: fix
         // if (!string.IsNullOrEmpty(initialProjectFileToOpen))
-        //     mainWindow.ProjectController.OpenProject(initialProjectFileToOpen);
+        //      mainWindow.ProjectController.OpenProject(initialProjectFileToOpen);
 
         Application.Run(mainWindow as Form);
     }

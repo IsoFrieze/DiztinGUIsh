@@ -4,6 +4,7 @@ using System.ComponentModel;
 using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
+using JetBrains.Annotations;
 
 namespace Diz.Cpu._65816.import;
 
@@ -22,7 +23,7 @@ public interface ISnesRomImportSettingsBuilder : INotifyPropertyChanged
     bool OptionGenerateHeaderFlags { get; set; }
     
     // overrides the detection if necessary, may provide incorrect results
-    RomMapMode OptionSelectedRomMapMode { get; set; }
+    [UsedImplicitly] RomMapMode OptionSelectedRomMapMode { get; set; }
     
     bool OptionGenerateSelectedVectorTableLabels { get; }
     public void OptionClearGenerateVectorTableLabels();
@@ -31,6 +32,7 @@ public interface ISnesRomImportSettingsBuilder : INotifyPropertyChanged
     public ImportRomSettings GenerateSettings();
 }
 
+[UsedImplicitly]
 public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
 {
     private bool optionGenerateHeaderFlags;

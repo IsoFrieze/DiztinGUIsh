@@ -1,5 +1,6 @@
 ﻿using System;
 using Diz.Controllers.controllers;
+using Diz.Controllers.util;
 using Diz.Core.model;
 // using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -62,15 +63,22 @@ namespace Diz.Controllers.interfaces
         void OpenLastLoadedProject();
     }
     
+    // note: this is an autofactory, so the names of the methods map to registrations (strings)
     public interface IViewFactory
     {
-        IFormViewer Get(string name);
+        IImportRomDialogView GetImportRomView();
+        IProgressView GetProgressBarView();
+        ILogCreatorSettingsEditorView GetExportDisassemblyView();
+        ILabelEditorView GetLabelEditorView();
+        IMainGridWindowView GetMainGridWindowView();
+        IFormViewer GetAboutView();
     }
     
     public interface IControllerFactory
     {
-        IController Get(string name);
-        ILogCreatorSettingsEditorController GetLogCreatorSettingsEditorController();
+        ILogCreatorSettingsEditorController GetAssemblyExporterSettingsController();
         IImportRomDialogController GetImportRomDialogController();
+        IImportRomDialogController GetProjectController();
+        ILargeFilesReaderController GetLargeFileReaderProgressController();
     }
 }

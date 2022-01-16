@@ -35,6 +35,7 @@ public class DizCoreServicesCompositionRoot : ICompositionRoot
         serviceRegistry.Register<IProjectFactory, ProjectFactory>();
         serviceRegistry.Register<IProjectImportSettingsFactory, ProjectImportSettingsFactory>();
         serviceRegistry.Register<IProjectImporter, ProjectImporter>();
+        serviceRegistry.Register<IProjectFileManager, ProjectFileManager>();
 
         serviceRegistry.Register<IXmlSerializerFactory, XmlSerializerFactory>();
         serviceRegistry.Register<IProjectXmlSerializer, ProjectXmlSerializer>();

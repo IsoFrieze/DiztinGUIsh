@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.util;
 
 namespace Diz.Controllers.util
 {
-    public class LargeFilesReader : ProgressBarWorker
+    public class LargeFilesReader : ProgressBarWorker, ILargeFilesReaderController
     {
         public IReadOnlyCollection<string> Filenames { get; set; }
         public Action<string> LineReadCallback { get; set; }
@@ -54,14 +55,14 @@ namespace Diz.Controllers.util
 
             previousProgress = progressValue;
         }
-        public static void ReadFilesLines(string[] filenames, Action<string> lineReadCallback)
-        {
-            var lfr = new LargeFilesReader()
-            {
-                Filenames = new List<string>(filenames),
-                LineReadCallback = lineReadCallback,
-            };
-            lfr.Run();
-        }
+
+        public LargeFilesReader(IProgressView view) : base(view) { }
+    }
+
+    public interface ILargeFilesReaderController
+    {
+        IReadOnlyCollection<string> Filenames { get; set; }
+        Action<string> LineReadCallback { get; set; }
+        void Run();
     }
 }

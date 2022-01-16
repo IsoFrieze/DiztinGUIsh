@@ -59,7 +59,7 @@ public class ProjectController : IProjectController
     public void DoLongRunningTask(Action task, string description = null)
     {
         if (ProjectView.TaskHandler != null)
-            ProjectView.TaskHandler(task, description, (IProgressView)ViewFactory.Get("ProgressBarView"));
+            ProjectView.TaskHandler(task, description, ViewFactory.GetProgressBarView());
         else
             task();
     }
@@ -279,13 +279,13 @@ public class ProjectController : IProjectController
         // probably look for a newline within 80 characters
         // call importer.ImportTraceLogLineBinary()
 
+        var largeFilesReader = controllerFactory.GetLargeFileReaderProgressController();
+
         // caution: trace logs can be gigantic, even a few seconds can be > 1GB
         // inside here, performance becomes critical.
-        LargeFilesReader.ReadFilesLines(fileNames,
-            (line) =>
-            {
-                importer.ImportTraceLogLine(line);
-            });
+        largeFilesReader.Filenames = new List<string>(fileNames);
+        largeFilesReader.LineReadCallback = line => importer.ImportTraceLogLine(line);
+        largeFilesReader.Run();
 
         if (importer.CurrentStats.NumRomBytesModified > 0)
             MarkChanged();
@@ -400,7 +400,7 @@ public class ProjectController : IProjectController
         if (Project == null)
             return null;
         
-        var exportSettingsController = controllerFactory.GetLogCreatorSettingsEditorController();
+        var exportSettingsController = controllerFactory.GetAssemblyExporterSettingsController();
         exportSettingsController.KeepPathsRelativeToThisPath = Project.Session?.ProjectDirectory;
         exportSettingsController.Settings = Project.LogWriterSettings with { }; // operate on a new copy of the settings
         return exportSettingsController;
