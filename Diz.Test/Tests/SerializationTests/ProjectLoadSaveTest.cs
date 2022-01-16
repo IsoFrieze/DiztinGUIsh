@@ -14,8 +14,8 @@ namespace Diz.Test;
 
 public class LoadSaveTest : ContainerFixture
 {
-    private readonly IProjectXmlSerializer serializer = null!;
-    private readonly ISnesSampleProjectFactory sampleProjectCreator = null!;
+    [Inject] private readonly IProjectXmlSerializer serializer = null!;
+    [Inject] private readonly ISnesSampleProjectFactory sampleProjectCreator = null!;
 
     [Fact]
     public void FullSerializeAndDeserialize()

@@ -27,8 +27,8 @@ public static class CartNameData
     
 public class CartNameTests : ContainerFixture
 {
-    private readonly IXmlSerializerFactory serializerFactory = null!;
-    private readonly ISnesSampleProjectFactory sampleData = null!;
+    [Inject] private readonly IXmlSerializerFactory serializerFactory = null!;
+    [Inject] private readonly ISnesSampleProjectFactory sampleData = null!;
 
     // Bytes for a Cart Name from a SNES header
     // "Marvelous - Mouhitotsu no Takara-jima (Japan).sfc"
@@ -150,7 +150,7 @@ public class CartNameTests : ContainerFixture
 
 public class TestChecksums : ContainerFixture
 {
-    private readonly IProjectImporter projectImporter = null!;
+    [Inject] private readonly IProjectImporter projectImporter = null!;
 
     [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, CartNameData.RomFileName})]
     public void TestInternalChecksumVsExternal()

@@ -3,6 +3,7 @@ using Diz.Core.model.project;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using FluentValidation;
+using JetBrains.Annotations;
 
 namespace Diz.Cpu._65816;
 
@@ -15,8 +16,14 @@ namespace Diz.Cpu._65816;
 ///
 /// This class is designed to open a ROM file on disk and safely copy it into a Project file, ensuring data integrity.
 /// </summary>
+[UsedImplicitly]
 public class AddRomDataCommand : IAddRomDataCommand
 {
+    public AddRomDataCommand(Func<ILinkedRomBytesProvider> createLinkedProvider)
+    {
+        this.createLinkedProvider = createLinkedProvider;
+    }
+
     public bool ShouldProjectCartTitleMatchRomBytes { get; set; } = true;
     public ProjectSerializedRoot? Root { get; set; } = null;
     public Func<string, string>? GetNextRomFileToTry { get; set; }
@@ -60,12 +67,11 @@ public class AddRomDataCommand : IAddRomDataCommand
         Project.Data.RomBytes.CopyRomDataIn(result.Value.romBytes);
     }
 
-    private static ILinkedRomBytesProvider GetLinkedRomProvider() =>
-        new LinkedRomBytesFileSearchProvider();
+    private readonly Func<ILinkedRomBytesProvider> createLinkedProvider;
 
     private (string filename, byte[] romBytes)? SearchForValidRom()
     {
-        var searchProvider = GetLinkedRomProvider();
+        var searchProvider = createLinkedProvider();
         searchProvider.EnsureCompatible = (romFilename, romBytes) => EnsureProjectCompatibleWithRom(romBytes);
         searchProvider.GetNextFilename = reasonWhyLastFileNotCompatible =>
             GetNextRomFileToTry?.Invoke(reasonWhyLastFileNotCompatible) ?? null;

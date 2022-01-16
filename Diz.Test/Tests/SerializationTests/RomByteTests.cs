@@ -33,7 +33,7 @@ public class RomByteTests : ContainerFixture
         return rb;
     }
 
-    private readonly ISampleDataFactory createSampleData = null!;
+    [Inject] private readonly ISampleDataFactory createSampleData = null!;
         
     [Fact]
     public void TestWhenNoIaPresent()

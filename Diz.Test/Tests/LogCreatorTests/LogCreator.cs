@@ -26,7 +26,7 @@ public class LogCreatorTests : ContainerFixture
         "                                                             ;      |        |      ;  \r\n" +
         "                        Test_Data = $80805B                  ;      |        |      ;  \r\n";
 
-    private readonly IDataFactory dataFactory = null!;
+    [Inject] private readonly IDataFactory dataFactory = null!;
     
     [Fact(Skip = "need to reset the .asm file")]
     public void TestAFewLines()

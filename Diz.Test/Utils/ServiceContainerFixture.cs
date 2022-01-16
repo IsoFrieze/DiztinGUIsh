@@ -8,13 +8,26 @@ using Xunit.Abstractions;
 
 namespace Diz.Test.Utils;
 
+// if tagged with this, inject this field
+// must be a private field on a class derived from ContainerFixture
+[AttributeUsage(AttributeTargets.Field)]
+internal class Inject : Attribute
+{
+    
+}
+
 // based on sample code from https://github.com/seesharper/LightInject under the "Unit Testing" section
 // inject services into any private fields on derived classes
 public class ContainerFixture : IDisposable
 {
+    private readonly bool injectFieldsOnlyIfNull;
+    private readonly bool injectOnlyTaggedFields;
+
     [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
-    public ContainerFixture()
+    public ContainerFixture(bool injectFieldsOnlyIfNull = true, bool injectOnlyTaggedFields = true)
     {
+        this.injectFieldsOnlyIfNull = injectFieldsOnlyIfNull;
+        this.injectOnlyTaggedFields = injectOnlyTaggedFields;
         var container = ConfigureAndRegisterServiceContainer();
         ServiceFactory = container.BeginScope();
         InjectPrivateFields();
@@ -39,6 +52,12 @@ public class ContainerFixture : IDisposable
         var privateInstanceFields = this.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         foreach (var privateInstanceField in privateInstanceFields)
         {
+            if (injectFieldsOnlyIfNull && privateInstanceField.GetValue(this) != null)
+                continue;
+            
+            if (injectOnlyTaggedFields && !Attribute.IsDefined(privateInstanceField, typeof(Inject)))
+                continue;
+            
             privateInstanceField.SetValue(this, GetInstance(ServiceFactory, privateInstanceField));
         }
     }

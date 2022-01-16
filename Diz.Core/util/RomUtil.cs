@@ -320,26 +320,34 @@ namespace Diz.Core.util
         /// <returns>Raw bytes</returns>
         /// <exception cref="InvalidDataException"></exception>
         [NotNull]
-        public static byte[] ReadRomFileBytes(string filename)
-        {
-            var smc = File.ReadAllBytes(filename);
-            var rom = new byte[smc.Length & 0x7FFFFC00];
+        public static byte[] ReadRomFileBytes(string filename) => 
+            RemoveSmcHeader(File.ReadAllBytes(filename));
 
-            if ((smc.Length & 0x3FF) == 0x200)
+        /// <summary>
+        /// Take all ROM file bytes from disk, remove SMC header if present
+        /// </summary>
+        /// <param name="allFileBytes"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidDataException"></exception>
+        private static byte[] RemoveSmcHeader(byte[] allFileBytes)
+        {
+            var rom = new byte[allFileBytes.Length & 0x7FFFFC00];
+
+            if ((allFileBytes.Length & 0x3FF) == 0x200)
                 // skip and dont include the SMC header
                 for (var i = 0; i < rom.Length; i++)
-                    rom[i] = smc[i + 0x200];
-            else if ((smc.Length & 0x3FF) != 0)
+                    rom[i] = allFileBytes[i + 0x200];
+            else if ((allFileBytes.Length & 0x3FF) != 0)
                 throw new InvalidDataException("This ROM has an unusual size. It can't be opened.");
             else
-                rom = smc;
+                rom = allFileBytes;
 
             if (rom.Length < 0x8000)
                 throw new InvalidDataException("This ROM is too small. It can't be opened.");
 
             return rom;
         }
-        
+
         public static Dictionary<int, FlagType> GenerateHeaderFlags(int romSettingsOffset, IReadOnlyList<byte> romBytes)
         {
             var flags = new Dictionary<int, FlagType>();

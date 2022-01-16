@@ -61,7 +61,7 @@ public class SerializerDictionaryTest : ContainerFixture
             .GetSerializer()
             .EnableImplicitTyping(typeof(TestRoot));
 
-    private readonly IXmlSerializerFactory createSerializer = null!;
+    [Inject] private readonly IXmlSerializerFactory createSerializer = null!;
         
     [Fact]
     private void Serialize()
@@ -70,11 +70,11 @@ public class SerializerDictionaryTest : ContainerFixture
 
         var xmlStr = serializer.Serialize(
             new XmlWriterSettings {},
-            testRootElementGood);
+            TestRootElementGood);
 
         testOutputHelper.WriteLine(xmlStr);
 
-        Assert.Equal(xmlShouldBe, xmlStr);
+        Assert.Equal(XmlShouldBe, xmlStr);
     }
 
     [Fact]
@@ -82,12 +82,12 @@ public class SerializerDictionaryTest : ContainerFixture
     {
         var serializer = GetSerializer(createSerializer).Create();
             
-        var restoredRoot = serializer.Deserialize<TestRoot>(xmlShouldBe);
+        var restoredRoot = serializer.Deserialize<TestRoot>(XmlShouldBe);
 
-        Assert.Equal(testRootElementGood, restoredRoot);
+        Assert.Equal(TestRootElementGood, restoredRoot);
     }
 
-    private readonly TestRoot testRootElementGood = new();
+    private static TestRoot TestRootElementGood => new();
 
-    private const string xmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerDictionaryTest-TestRoot xmlns:ns1=\"clr-namespace:IX.Observable;assembly=IX.Observable\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:ns2=\"clr-namespace:Diz.Core.model;assembly=Diz.Core\"><ODW AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"1\" Value=\"Z test1\" /><sys:Item Key=\"2\" Value=\"Z test3\" /></ODW><ODW2 AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"100\"><Value Name=\"location1\" Comment=\"c1\" /></sys:Item><sys:Item Key=\"200\"><Value Name=\"location2\" Comment=\"c2\" /></sys:Item></ODW2></SerializerDictionaryTest-TestRoot>";
+    private const string XmlShouldBe = "<?xml version=\"1.0\" encoding=\"utf-8\"?><SerializerDictionaryTest-TestRoot xmlns:ns1=\"clr-namespace:IX.Observable;assembly=IX.Observable\" xmlns:sys=\"https://extendedxmlserializer.github.io/system\" xmlns:exs=\"https://extendedxmlserializer.github.io/v2\" xmlns:ns2=\"clr-namespace:Diz.Core.model;assembly=Diz.Core\"><ODW AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"1\" Value=\"Z test1\" /><sys:Item Key=\"2\" Value=\"Z test3\" /></ODW><ODW2 AutomaticallyCaptureSubItems=\"false\" HistoryLevels=\"50\"><sys:Item Key=\"100\"><Value Name=\"location1\" Comment=\"c1\" /></sys:Item><sys:Item Key=\"200\"><Value Name=\"location2\" Comment=\"c2\" /></sys:Item></ODW2></SerializerDictionaryTest-TestRoot>";
 }

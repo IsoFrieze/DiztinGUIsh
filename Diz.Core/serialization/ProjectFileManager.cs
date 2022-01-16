@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Diz.Core.model;
@@ -32,21 +33,42 @@ public interface IAddRomDataCommand
 
     public void TryReadAttachedProjectRom();
 }
+
+public interface IFileByteReader
+{
+    byte[] ReadAllBytes(string filename);
+}
+
+public interface IFileByteWriter
+{
+    void WriteBytes(string filename, byte[] data);
+}
+
+public interface IFileByteProvider : IFileByteReader, IFileByteWriter
+{
     
+}
+
+public class FileByteProvider : IFileByteProvider
+{
+    public byte[] ReadAllBytes(string filename) => File.ReadAllBytes(filename);
+    public void WriteBytes(string filename, byte[] data) => File.WriteAllBytes(filename, data);
+}
+
 public class ProjectFileManager : IProjectFileManager
 {
     private readonly Func<IProjectXmlSerializer> projectXmlSerializerCreate;
     private readonly Func<IAddRomDataCommand> addRomDataCommandCreate;
+    private readonly IFileByteProvider fileByteIo;
 
-    public ProjectFileManager(Func<IProjectXmlSerializer> projectXmlSerializerCreate, Func<IAddRomDataCommand> addRomDataCommandCreate)
+    public ProjectFileManager(Func<IProjectXmlSerializer> projectXmlSerializerCreate, Func<IAddRomDataCommand> addRomDataCommandCreate, IFileByteProvider fileByteIo)
     {
         this.projectXmlSerializerCreate = projectXmlSerializerCreate;
         this.addRomDataCommandCreate = addRomDataCommandCreate;
+        this.fileByteIo = fileByteIo;
     }
 
     // TODO: remove this and just do it by passing different stuff in the constructor, or use a decorator
-    protected virtual IProjectXmlSerializer CreateProjectXmlSerializer() =>
-        projectXmlSerializerCreate();
 
     public Func<string, string>? RomPromptFn { get; set; } = null;
 
@@ -101,7 +123,7 @@ public class ProjectFileManager : IProjectFileManager
 
     private byte[] ReadProjectFileBytes(string filename)
     {
-        var projectFileBytes = ReadAllBytes(filename);
+        var projectFileBytes = fileByteIo.ReadAllBytes(filename);
 
         if (IsLikelyCompressed(filename))
             projectFileBytes = Util.TryUnzip(projectFileBytes);
@@ -136,7 +158,7 @@ public class ProjectFileManager : IProjectFileManager
 #endif
         }
 
-        return CreateProjectXmlSerializer();
+        return projectXmlSerializerCreate();
     }
 
     private static bool IsLikelyCompressed(string filename) => 
@@ -148,7 +170,7 @@ public class ProjectFileManager : IProjectFileManager
         {
             // Everything saves in XML format from here on out.
             // Binary format is deprecated.
-            Save(project, filename, CreateProjectXmlSerializer());
+            Save(project, filename, projectXmlSerializerCreate());
         }
         catch (Exception ex)
         {
@@ -162,7 +184,7 @@ public class ProjectFileManager : IProjectFileManager
     {
         var data = DoSave(project, filename, serializer);
 
-        WriteBytes(filename, data);
+        fileByteIo.WriteBytes(filename, data);
         project.ProjectFileName = filename;
             
         // always do this last
@@ -186,12 +208,6 @@ public class ProjectFileManager : IProjectFileManager
 
     protected virtual byte[] SerializeWith(Project project, IProjectSerializer serializer) => 
         serializer.Save(project);
-
-    protected virtual byte[] ReadAllBytes(string filename) => 
-        File.ReadAllBytes(filename);
-
-    protected virtual void WriteBytes(string filename, byte[] data) => 
-        File.WriteAllBytes(filename, data);
 
     #endregion
 }
