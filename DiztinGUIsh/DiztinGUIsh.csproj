@@ -21,7 +21,7 @@
     <ProjectReference Include="..\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
     <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
-    <ProjectReference Include="..\Diz.Ui.Winforms\Diz.Ui.Winforms.csproj" />
+    <ProjectReference Include="..\Diz.Ui.Winforms\Diz.Ui.Winforms\Diz.Ui.Winforms.csproj" />
   </ItemGroup>
 
   <ItemGroup>

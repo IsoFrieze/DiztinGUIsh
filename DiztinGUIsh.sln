@@ -23,6 +23,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Import", "Diz.Import\Di
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Cpu.65816", "Diz.Cpu.65816\Diz.Cpu.65816.csproj", "{80D19FA4-BD5B-4189-8F0B-8A634A6738DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Ui.Winforms.Test", "Diz.Ui.Winforms\Diz.Ui.Winforms.Tests\Diz.Ui.Winforms.Test\Diz.Ui.Winforms.Test.csproj", "{1D02D3F9-DA94-4930-9D2A-8B59CABB13A0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{594DE30A-343F-4C09-828D-65A67626A491} = {594DE30A-343F-4C09-828D-65A67626A491}
+		{CCB93C20-0A89-473A-888A-B8C8D23276E7} = {CCB93C20-0A89-473A-888A-B8C8D23276E7}
+		{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3} = {2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +76,10 @@ Global
 		{80D19FA4-BD5B-4189-8F0B-8A634A6738DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80D19FA4-BD5B-4189-8F0B-8A634A6738DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{80D19FA4-BD5B-4189-8F0B-8A634A6738DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D02D3F9-DA94-4930-9D2A-8B59CABB13A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D02D3F9-DA94-4930-9D2A-8B59CABB13A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D02D3F9-DA94-4930-9D2A-8B59CABB13A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D02D3F9-DA94-4930-9D2A-8B59CABB13A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
