@@ -1,13 +1,11 @@
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
-using Diz.Controllers.util;
 using Diz.Core.services;
 using Diz.Core.util;
 using DiztinGUIsh.window;
 using DiztinGUIsh.window.dialog;
 using JetBrains.Annotations;
 using LightInject;
-using LightInject.AutoFactory;
 
 namespace DiztinGUIsh;
 
@@ -16,20 +14,24 @@ public static class DizAppServices
     public static IServiceFactory CreateServiceFactoryAndRegisterTypes()
     {
         var serviceProvider = DizServiceProvider.CreateServiceContainer();
+        RegisterDizUiServices(serviceProvider);
         
+        return serviceProvider;
+    }
+
+    public static void RegisterDizUiServices(IServiceRegistry serviceRegistry)
+    {
         // register services in any Diz*dll's present
-        DizCoreServicesDllRegistration.RegisterServicesInDizDlls(serviceProvider);
-        
+        DizCoreServicesDllRegistration.RegisterServicesInDizDlls(serviceRegistry);
+
         // alternatively, we can be explicit like below, no DLL scanning required
         // serviceProvider.RegisterFrom<DizCoreServicesCompositionRoot>();
         // serviceProvider.RegisterFrom<DizCpu65816ServiceRoot>();
         // serviceProvider.RegisterFrom<DizControllersCompositionRoot>();
         // serviceProvider.RegisterFrom<DizWinformsCompositionRoot>();
-        
+
         // scan ourselves last
-        serviceProvider.RegisterFrom<DizUiCompositionRoot>();
-        
-        return serviceProvider;
+        serviceRegistry.RegisterFrom<DizUiCompositionRoot>();
     }
 }
 
