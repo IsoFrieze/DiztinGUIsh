@@ -11,7 +11,7 @@ namespace Diz.Test.Utils;
 // if tagged with this, inject this field
 // must be a private field on a class derived from ContainerFixture
 [AttributeUsage(AttributeTargets.Field)]
-internal class Inject : Attribute
+public class Inject : Attribute
 {
     
 }

@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Ui.Winforms.Test", "Diz
 		{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3} = {2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Controllers.Test", "Diz.Controllers\Diz.Controllers.Test\Diz.Controllers.Test\Diz.Controllers.Test.csproj", "{B2B93DFB-BF78-419B-ADD0-9308973ECAC1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -80,6 +82,10 @@ Global
 		{1D02D3F9-DA94-4930-9D2A-8B59CABB13A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D02D3F9-DA94-4930-9D2A-8B59CABB13A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D02D3F9-DA94-4930-9D2A-8B59CABB13A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2B93DFB-BF78-419B-ADD0-9308973ECAC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2B93DFB-BF78-419B-ADD0-9308973ECAC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2B93DFB-BF78-419B-ADD0-9308973ECAC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2B93DFB-BF78-419B-ADD0-9308973ECAC1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

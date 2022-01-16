@@ -11,7 +11,7 @@ using FluentAssertions;
 using Moq;
 using Xunit;
 
-namespace Diz.Test.Tests.Controllers;
+namespace Diz.Controllers.Test;
 
 public class LogCreatorSettingsEditorControllerTests : ContainerFixture
 {
