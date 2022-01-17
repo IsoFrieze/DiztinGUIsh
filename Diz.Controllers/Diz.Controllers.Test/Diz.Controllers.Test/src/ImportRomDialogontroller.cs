@@ -21,11 +21,14 @@ public class ImportRomDialogControllerTest : ContainerFixture
     {
         base.Configure(serviceRegistry);
 
-        serviceRegistry.Register<ISampleRomTestData, SampleRomTestDataFixture>();
+        serviceRegistry.Register<ISampleRomTestData, SampleRomTestDataFixture>(new PerContainerLifetime());
 
         serviceRegistry.Register<IReadFromFileBytes>(factory =>
         {
-            var mockLinkedRomBytesProvider = TestUtil.CreateReadFromFileMock(sampleDataFixture.SampleRomBytes);
+            // can't use sampleDataFixture in here
+            var mockLinkedRomBytesProvider = TestUtil.CreateReadFromFileMock(
+                factory.GetInstance<ISampleRomTestData>().SampleRomBytes
+            );
             return mockLinkedRomBytesProvider.Object;
         });
 
@@ -49,8 +52,8 @@ public class ImportRomDialogControllerTest : ContainerFixture
     public event EventHandler? OnViewShown;
 
     private const string RomFilename = "SAMPLEROM";
-
-    [Fact(Skip="Not working yet, WIP")]
+    
+    [Fact]
     public void TestWorkflowWithDefaultSettings()
     {
         var mockedFileBytes = sampleDataFixture.SampleRomBytes;
