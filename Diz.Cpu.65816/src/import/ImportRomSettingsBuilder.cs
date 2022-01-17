@@ -15,7 +15,7 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
     private bool optionGenerateHeaderFlags;
     private RomMapMode optionSelectedRomMapMode;
     private bool optionGenerateSelectedVectorTableLabels;
-    private IReadFromFileBytes fileReader; 
+    private readonly IReadFromFileBytes fileReader; 
 
     public ISnesRomAnalyzer Input { get; }
 
@@ -82,7 +82,7 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
     {
         Reset();
         var rawRomBytes = fileReader.ReadRomFileBytes(romFilename);
-        Input.Analyze(rawRomBytes);
+        Input.Analyze(rawRomBytes, romFilename);
     }
 
     public void Analyze(byte[] rawRomBytes)

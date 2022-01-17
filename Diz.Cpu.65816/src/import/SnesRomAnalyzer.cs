@@ -23,7 +23,7 @@ public interface ISnesRomAnalyzerData : INotifyPropertyChanged
 public interface ISnesRomAnalyzer : ISnesRomAnalyzerData
 {
     public void Analyze(string romFilename);
-    public void Analyze(IReadOnlyList<byte> romBytes);
+    public void Analyze(IReadOnlyList<byte> romBytes, string? romFilename = null);
 }
 
 
@@ -72,11 +72,12 @@ public class SnesRomAnalyzer : ISnesRomAnalyzer
         Filename = romFilename;
     }
 
-    public void Analyze(IReadOnlyList<byte> rawRomBytes)
+    public void Analyze(IReadOnlyList<byte> rawRomBytes, string? romFilename = null)
     {
         Reset();
         AnalysisResults = DetectSettingsFor(rawRomBytes);
         RomBytes = rawRomBytes;
+        Filename = romFilename;
     }
 
     private static ISnesRomAnalyzer.SnesRomAnalysisResults DetectSettingsFor(IReadOnlyList<byte> romBytes)
