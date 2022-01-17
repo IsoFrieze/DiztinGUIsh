@@ -57,7 +57,7 @@ jobs:
       - name: Publish
         run: dotnet publish --no-build -c Release /p:PublishProfile=FolderProfile .\DiztinGUIsh\
 
-      - uses: papeloto/action-zip@v1
+      - uses: vimtor/action-zip@v1
         with:
           files: DiztinGUIsh\bin\Release\net6.0-windows7.0\publish\
           dest: ${{ steps.ver.outputs.ver }}.zip
