@@ -87,8 +87,6 @@ public class Bug050JapaneseText
             bool expectedCartTitleValidationException) : 
             base(injectFieldsOnlyIfNull: true, injectOnlyTaggedFields: true)
         {
-            GetInstance<IReadFromFileBytes>().Should().Match(o => o.GetType().Name.Contains("Proxy"));
-            
             FileIo = new FileIoFixture();
             ProjectFileManager = new Bug50ProjectFileManager(fnProjectSerializerCreate, fnAddRomDataCommand, FileIo.Mock.Object);
             
@@ -133,6 +131,8 @@ public class Bug050JapaneseText
                 DeserializedSaveVersionBeforeMigrations = root.SaveVersion;
                 DeserializedInternalRomGameNameBeforeMigrations = root.Project.InternalRomGameName;
             };
+            
+            GetInstance<IReadFromFileBytes>().Should().Match(o => o.GetType().Name.Contains("Proxy"));
 
             // SUT
             ProjectFileManager.Save(ProjectToSerialize, "IGNORED");
@@ -159,13 +159,8 @@ public class Bug050JapaneseText
 
             serviceRegistry.Register<IReadFromFileBytes>(factory =>
             {
-                var mockLinkedRomBytesProvider = new Mock<IReadFromFileBytes>();
-
-                mockLinkedRomBytesProvider.Setup(x => x.ReadRomFileBytes(It.IsAny<string>()))
-                    .Returns<string>(filename => 
-                        ProjectToSerialize.Data.GetFileBytes().ToArray()
-                    );
-
+                var mockedFileBytes = ProjectToSerialize.Data.GetFileBytes().ToArray();
+                var mockLinkedRomBytesProvider = TestUtil.CreateReadFromFileMock(mockedFileBytes);
                 return mockLinkedRomBytesProvider.Object;
             });
         }

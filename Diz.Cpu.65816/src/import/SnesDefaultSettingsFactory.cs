@@ -14,7 +14,7 @@ public class SnesDefaultSettingsFactory : IProjectImportDefaultSettingsFactory
         this.snesRomImportSettingsBuilder = snesRomImportSettingsBuilder;
     }
 
-    public IRomImportSettings Create(string? romFilename = null)
+    public IRomImportSettings Create(string romFilename = null)
     {
         // automated headless helper method to use all default settings and pray it works
         // no GUI or anything. use with caution, only if you know what you're doing

@@ -2,35 +2,12 @@
 
 using System.ComponentModel;
 using Diz.Core.model;
+using Diz.Core.model.project;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using JetBrains.Annotations;
 
 namespace Diz.Cpu._65816.import;
-
-
-
-/// <summary>
-/// Analyze a ROM, set some import options.
-/// Then generate settings that allow the rom to be imported (i.e. create a new Project from this ROM)
-/// </summary>
-public interface ISnesRomImportSettingsBuilder : INotifyPropertyChanged
-{
-    public ISnesRomAnalyzerData Input { get; }
-    void Analyze(string? romFilename);
-    void Analyze(byte[] rawRomBytes);
-    
-    bool OptionGenerateHeaderFlags { get; set; }
-    
-    // overrides the detection if necessary, may provide incorrect results
-    [UsedImplicitly] RomMapMode OptionSelectedRomMapMode { get; set; }
-    
-    bool OptionGenerateSelectedVectorTableLabels { get; }
-    public void OptionClearGenerateVectorTableLabels();
-    public void OptionSetGenerateVectorTableLabelFor(string vectorName, bool shouldGenerateLabel);
-
-    public ImportRomSettings GenerateSettings();
-}
 
 [UsedImplicitly]
 public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
@@ -38,6 +15,7 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
     private bool optionGenerateHeaderFlags;
     private RomMapMode optionSelectedRomMapMode;
     private bool optionGenerateSelectedVectorTableLabels;
+    private IReadFromFileBytes fileReader; 
 
     public ISnesRomAnalyzer Input { get; }
 
@@ -66,11 +44,12 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
 
     private IVectorTableCache VectorTableForCurrentMapMode { get; }
 
-    public SnesRomImportSettingsBuilder(ISnesRomAnalyzer snesRomAnalyzer, IVectorTableCache vectorTableCache)
+    public SnesRomImportSettingsBuilder(ISnesRomAnalyzer snesRomAnalyzer, IVectorTableCache vectorTableCache, IReadFromFileBytes fileReader)
     {
         Input = snesRomAnalyzer;
         VectorTableForCurrentMapMode = vectorTableCache;
-        
+        this.fileReader = fileReader;
+
         Input.PropertyChanged += InputOnPropertyChanged;
         
         Reset();
@@ -99,10 +78,10 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
         OptionGenerateHeaderFlags = true;
     }
 
-    public void Analyze(string? romFilename)
+    public void Analyze(string romFilename)
     {
         Reset();
-        var rawRomBytes = RomUtil.ReadRomFileBytes(romFilename);
+        var rawRomBytes = fileReader.ReadRomFileBytes(romFilename);
         Input.Analyze(rawRomBytes);
     }
 

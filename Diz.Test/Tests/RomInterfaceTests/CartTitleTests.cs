@@ -21,8 +21,9 @@ namespace Diz.Test.Tests.RomInterfaceTests;
 public static class CartNameData
 {
     // note: you need to put this on your local system for it to work.
-    // gotta figure out how to make this portable without running into weirdness.
-    public const string RomFileName = @"D:\roms\SNES\ct (U) [!].smc";
+    // TODO: gotta figure out how to make this portable without running into weirdness.
+    public const string ExampleHiRomFile = @"D:\roms\SNES\ct (U) [!].smc";
+    public const string ExampleLoRomFile = @"D:\roms\SNES\Super Mario World (U) [!].smc";
 }
     
 public class CartNameTests : ContainerFixture
@@ -136,10 +137,10 @@ public class CartNameTests : ContainerFixture
             "checksum bytes in the ROM should match the computed checksum");
     }
 
-    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, CartNameData.RomFileName})]
+    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, CartNameData.ExampleHiRomFile})]
     public void TestFamicheckTool()
     {
-        var result = SuperFamiCheckTool.Run(CartNameData.RomFileName);
+        var result = SuperFamiCheckTool.Run(CartNameData.ExampleHiRomFile);
         result.Complement.Should().Be(0x8773);
         result.Checksum.Should().Be(0x788c);
 
@@ -152,10 +153,10 @@ public class TestChecksums : ContainerFixture
 {
     [Inject] private readonly IProjectImporter projectImporter = null!;
 
-    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, CartNameData.RomFileName})]
+    [FactOnlyIfFilePresent(new[]{SuperFamiCheckTool.Exe, CartNameData.ExampleHiRomFile})]
     public void TestInternalChecksumVsExternal()
     {
-        var result = SuperFamiCheckTool.Run(CartNameData.RomFileName);
+        var result = SuperFamiCheckTool.Run(CartNameData.ExampleHiRomFile);
         result.Complement.Should().Be(0x8773);
         result.Checksum.Should().Be(0x788c);
         (result.Complement + result.Checksum).Should().Be(0xFFFF);
@@ -163,7 +164,7 @@ public class TestChecksums : ContainerFixture
         const uint expected4ByteChecksums = 0x788C8773;
         result.AllCheckBytes.Should().Be(expected4ByteChecksums);
 
-        var project = projectImporter.CreateProjectFromDefaultSettings(CartNameData.RomFileName);
+        var project = projectImporter.CreateProjectFromDefaultSettings(CartNameData.ExampleHiRomFile);
         project.Should().NotBeNull("project should have loaded successfully");
         project.Data.GetRomByte(0xFFDC).Should().Be(0x73); // complement 1
         project.Data.GetRomByte(0xFFDD).Should().Be(0x87); // complement 2

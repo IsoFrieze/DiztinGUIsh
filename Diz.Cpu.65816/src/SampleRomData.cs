@@ -2,6 +2,7 @@
 using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.model.snes;
+using Diz.Core.util;
 using IX.Observable;
 
 namespace Diz.Cpu._65816;
@@ -278,10 +279,20 @@ public class SnesSampleRomDataFactory : ISampleDataFactory
         // inject the game name into the bytes
         // This is a UTF8 string that needs to be converted to ShiftJIS (Ascii w/some japanese chars) encoding.
         snesApi.SetCartridgeTitle(GetSampleUtf8CartridgeTitle());
+
+        // initialize some SNES header stuff (this is not complete, feel free to add things that are useful)
+        Debug.Assert(snesApi.RomMapMode == RomMapMode.LoRom);
+        var romSettingsOffset = RomUtil.GetRomSettingOffset(RomMapMode.LoRom);
+        data.RomBytes[romSettingsOffset].Rom = 0x20;
+        // TODO: set a few other useful things like ROM size etc.
+        // we could probably steal some more of this code out of asar
+        // maybe like:
+        //    org $00FFD7
+        //    db $0A ; mark the rom as 512 kb
         
         // do this LAST after all modifications to the ROM bytes have been completed 
         snesApi.FixChecksum();
-        
+
         // NORMALLY when a project is loaded, we have to open the ROM file on disk and read the bytes on disk into RomBytes
         // for this sample data, there is no ROM on disk, so we tell Diz we already took care of it
         data.RomBytesLoaded = true;

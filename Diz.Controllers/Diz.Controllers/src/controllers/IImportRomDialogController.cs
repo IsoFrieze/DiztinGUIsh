@@ -13,11 +13,11 @@ public interface IImportRomDialogController
     string CartridgeTitle { get; }
     string RomSpeedText { get; }
 
-    public ImportRomSettings PromptUserForImportOptions(string romFilename);
+    ImportRomSettings PromptUserForImportOptions(string romFilename);
         
-    public delegate void SettingsCreatedEvent();
+    delegate void SettingsCreatedEvent();
 
-    public bool Submit();
+    bool Submit();
     int GetVectorTableValue(int whichTable, int whichEntry);
     bool IsProbablyValidDetection();
     string GetDetectionMessage();

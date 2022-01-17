@@ -12,7 +12,7 @@ public interface IReadFromFileBytes
     byte[] ReadRomFileBytes(string filename);
 }
 
-class ReadFromFileBytes : IReadFromFileBytes
+public class ReadFromFileBytes : IReadFromFileBytes
 {
     public byte[] ReadRomFileBytes(string filename) => 
         RomUtil.ReadRomFileBytes(filename);
