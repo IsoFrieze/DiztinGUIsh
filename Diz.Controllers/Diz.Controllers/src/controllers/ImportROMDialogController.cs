@@ -80,6 +80,7 @@ public class ImportRomDialogController : IImportRomDialogController
 
         Refresh();
         var result = View.ShowAndWaitForUserToConfirmSettings();
+        Refresh();
             
         Builder.PropertyChanged -= BuilderOnPropertyChanged;
         View = null;
@@ -107,7 +108,7 @@ public class ImportRomDialogController : IImportRomDialogController
     private void SyncVectorTableEntriesFromGui()
     {
         Builder.OptionClearGenerateVectorTableLabels();
-        foreach (var vectorEntry in View.GetEnabledVectorTableEntries())
+        foreach (var vectorEntry in View.EnabledVectorTableEntries)
         {
             Builder.OptionSetGenerateVectorTableLabelFor(vectorEntry, true);
         }

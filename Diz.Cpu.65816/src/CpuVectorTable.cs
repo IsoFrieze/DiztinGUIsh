@@ -31,7 +31,7 @@ public static class CpuVectorTable
         }),
     };
 
-    public record VectorRomEntry(int AbsoluteRomOffset, VectorTableEntry Name, VectorTable ParentTable);
+    public record VectorRomEntry(int AbsoluteRomOffset, VectorTableEntry Entry, VectorTable ParentTable);
     
     public static IEnumerable<VectorRomEntry> ComputeVectorTableNamesAndOffsets(int settingsOffset)
     {

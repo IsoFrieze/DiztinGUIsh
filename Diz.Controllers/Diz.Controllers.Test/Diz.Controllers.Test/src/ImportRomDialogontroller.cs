@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 using Diz.Core.model.project;
+using Diz.Core.serialization;
 using Diz.Cpu._65816.import;
 using Diz.Test.Utils;
 using FluentAssertions;
@@ -17,6 +19,11 @@ public class ImportRomDialogControllerTest : ContainerFixture
     [Inject] private readonly IImportRomDialogController importRomDialogController = null!;
     [Inject] private readonly ISampleRomTestData sampleDataFixture = null!;
     
+    public event EventHandler? SimulateViewActions;
+    private const string RomFilename = "SAMPLEROM";
+    private ImportRomSettings? generatedSettings;
+    private Mock<IImportRomDialogView>? mockView = null!;
+
     protected override void Configure(IServiceRegistry serviceRegistry)
     {
         base.Configure(serviceRegistry);
@@ -25,7 +32,6 @@ public class ImportRomDialogControllerTest : ContainerFixture
 
         serviceRegistry.Register<IReadFromFileBytes>(factory =>
         {
-            // can't use sampleDataFixture in here
             var mockLinkedRomBytesProvider = TestUtil.CreateReadFromFileMock(
                 factory.GetInstance<ISampleRomTestData>().SampleRomBytes
             );
@@ -33,46 +39,65 @@ public class ImportRomDialogControllerTest : ContainerFixture
         });
 
         serviceRegistry.Register(factory => new Mock<ICommonGui>().Object);
-        
+
         serviceRegistry.Register(factory =>
         {
-            var mock = new Mock<IImportRomDialogView>();
-            mock.Setup(x => x.ShowAndWaitForUserToConfirmSettings())
+            mockView = new Mock<IImportRomDialogView>();
+            mockView.Setup(x => x.ShowAndWaitForUserToConfirmSettings())
                 .Callback(
-                    () => OnViewShown?.Invoke(null, EventArgs.Empty)
-                ).Returns(true);
-            
-            mock.Setup(x => x.GetEnabledVectorTableEntries())
-                .Returns(new List<string> { SnesVectorNames.Native_ABORT, SnesVectorNames.Emulation_RESET });
+                    () =>
+                    {
+                        SimulateViewActions?.Invoke(null, EventArgs.Empty);
+                        importRomDialogController.Submit();
+                    }).Returns(true);
 
-            return mock.Object;
+            mockView.SetupGet(x => x.EnabledVectorTableEntries).Returns(new List<string>());
+
+            return mockView.Object;
         });
     }
 
-    public event EventHandler? OnViewShown;
+    private void Run(Action? uiActions = null)
+    {
+        if (uiActions != null)
+            SimulateViewActions += (sender, args) => uiActions();
+        
+        generatedSettings = importRomDialogController.PromptUserForImportOptions(RomFilename);
+    }
 
-    private const string RomFilename = "SAMPLEROM";
+    [Fact]
+    public void Defaults()
+    {
+        Run();
+        generatedSettings!.RomBytes.Should().BeEquivalentTo(sampleDataFixture.SampleRomBytes);
+        generatedSettings.RomFilename.Should().Be(RomFilename);
+    }
+
+    [Fact]
+    public void WithNoLabels()
+    {
+        Run(() => importRomDialogController.Builder.OptionClearGenerateVectorTableLabels());
+        generatedSettings!.InitialLabels.Should().BeEmpty("We cleared them in the UI code");
+    }
+    
     
     [Fact]
-    public void TestWorkflowWithDefaultSettings()
+    public void WithTwoLabels()
     {
-        var mockedFileBytes = sampleDataFixture.SampleRomBytes;
-        var mockLinkedRomBytesProvider = TestUtil.CreateReadFromFileMock(mockedFileBytes);
-
-        // var mockController = new Mock<IImportRomDialogController>();
-        // var controller = mockController.Object;
-        // var generatedSettings = controller.PromptUserForImportOptions("SAMPLE");
-
-        OnViewShown += (sender, args) =>
+        mockView!.SetupGet(x => x.EnabledVectorTableEntries)
+            .Returns(new List<string>
+            {
+                SnesVectorNames.Native_ABORT,
+                SnesVectorNames.Emulation_RESET,
+            });
+        
+        Run(() =>
         {
-            // simulate any UI here. button presses/etc.
-            
-            importRomDialogController.Submit();
-        };
-        var generatedSettings = importRomDialogController.PromptUserForImportOptions(RomFilename);
+            // importRomDialogController.Builder.OptionSetGenerateVectorTableLabelFor(SnesVectorNames.Native_ABORT, true);
+            // importRomDialogController.Builder.OptionSetGenerateVectorTableLabelFor(SnesVectorNames.Emulation_RESET, true);
+        });
 
-        generatedSettings.Should().NotBeNull();
-        generatedSettings.RomBytes.Should().BeEquivalentTo(mockedFileBytes);
-        generatedSettings.RomFilename.Should().Be(RomFilename);
+        var vectorNames = generatedSettings!.InitialLabels.Select(x => x.Value.Name).ToList();
+        vectorNames.Should().HaveCount(2);
     }
 }

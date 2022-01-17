@@ -144,17 +144,20 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
         }
     }
 
-    public List<string> GetEnabledVectorTableEntries()
+    public List<string> EnabledVectorTableEntries 
     {
-        var enabledVectors = new List<string>();
-             
-        foreach (var (vectorName, checkBox, _) in vectorTableGui) 
+        get 
         {
-            if (checkBox.Checked)
-                enabledVectors.Add(vectorName);
-        }
+            var enabledVectors = new List<string>();
 
-        return enabledVectors;
+            foreach (var (vectorName, checkBox, _) in vectorTableGui)
+            {
+                if (checkBox.Checked)
+                    enabledVectors.Add(vectorName);
+            }
+
+            return enabledVectors;
+        }
     }
 
     // caution: things can go wrong here if we didn't guess settings correctly,

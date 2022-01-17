@@ -127,9 +127,9 @@ namespace Diz.Controllers.interfaces
     public interface IImportRomDialogView
     {
         IImportRomDialogController Controller { get; set; }
+        public List<string> EnabledVectorTableEntries { get; }
         
         bool ShowAndWaitForUserToConfirmSettings();
-        public List<string> GetEnabledVectorTableEntries();
         void RefreshUi();
     }
 

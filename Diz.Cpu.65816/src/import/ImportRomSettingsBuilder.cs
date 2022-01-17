@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System.Collections.Immutable;
 using System.ComponentModel;
 using Diz.Core.model;
 using Diz.Core.model.project;
@@ -42,7 +43,11 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
     private int? RomSettingOffset => 
         Input.AnalysisResults == null ? null : RomUtil.GetRomSettingOffset(Input.AnalysisResults.RomMapMode);
 
+    // ALL vector table entries for the currently selected Rom Map Mode
     private IVectorTableCache VectorTableForCurrentMapMode { get; }
+    
+    // a list of enabled vector table entries, varies with the UI.
+    public List<string> EnabledVectorEntries { get; } = new();
 
     public SnesRomImportSettingsBuilder(ISnesRomAnalyzer snesRomAnalyzer, IVectorTableCache vectorTableCache, IReadFromFileBytes fileReader)
     {
@@ -93,12 +98,22 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
 
     public void OptionClearGenerateVectorTableLabels()
     {
-        
+        EnabledVectorEntries.Clear();
     }
 
     public void OptionSetGenerateVectorTableLabelFor(string vectorName, bool shouldGenerateLabel)
     {
-        
+        var exists = EnabledVectorEntries.Contains(vectorName);
+
+        switch (shouldGenerateLabel)
+        {
+            case true when !exists:
+                EnabledVectorEntries.Add(vectorName);
+                break;
+            case false when exists:
+                EnabledVectorEntries.Remove(vectorName);
+                break;
+        }
     }
 
     public ImportRomSettings GenerateSettings()
@@ -125,12 +140,15 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
 
     private Dictionary<int, Label> GenerateVectorLabels()
     {
-        return (VectorTableForCurrentMapMode
-                .Entries ?? new List<CpuVectorTable.VectorRomEntry>())
-           .Select(CreateLabelForVectorEntry)
-           .Where(x => x.HasValue)
-           .Select(x => x!.Value)
-           .ToDictionary(pair => pair.Key, pair => pair.Value);
+        var allEntries = VectorTableForCurrentMapMode
+            .Entries ?? new List<CpuVectorTable.VectorRomEntry>();
+
+        return EnabledVectorEntries
+            .Select(x => allEntries.Single(entry => entry.Entry.Name == x))
+            .Select(CreateLabelForVectorEntry)
+            .Where(x => x.HasValue)
+            .Select(x => x!.Value)
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
     }
 
     private KeyValuePair<int, Label>? CreateLabelForVectorEntry(CpuVectorTable.VectorRomEntry entry)
