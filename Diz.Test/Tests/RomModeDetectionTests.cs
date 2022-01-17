@@ -1,6 +1,7 @@
 ﻿using Diz.Core.model;
 using Diz.Core.model.project;
 using Diz.Core.util;
+using Diz.Cpu._65816.import;
 using Diz.Test.Tests.RomInterfaceTests;
 using Diz.Test.Utils;
 using FluentAssertions;
@@ -13,6 +14,7 @@ public class RomModeDetectionTests : ContainerFixture
 {
     [Inject] private readonly IReadFromFileBytes fileReader = null!;
     [Inject] private readonly ISampleRomTestData sampleDataFixture = null!;
+    [Inject] private readonly ISnesRomAnalyzer snesRomAnalyzer = null!;
 
     protected override void Configure(IServiceRegistry serviceRegistry)
     {
@@ -31,9 +33,25 @@ public class RomModeDetectionTests : ContainerFixture
     [FactOnlyIfFilePresent(new[]{CartNameData.ExampleHiRomFile})]
     public void TestRomDetectionHiRom()
     {
-        var detectRomMapMode = RomUtil.DetectRomMapMode(fileReader.ReadRomFileBytes(CartNameData.ExampleHiRomFile), out var detectedValidRomMapType);
+        var detectRomMapMode = RomUtil.DetectRomMapMode(
+            fileReader.ReadRomFileBytes(CartNameData.ExampleHiRomFile), 
+            out var detectedValidRomMapType);
+        
         detectedValidRomMapType.Should().Be(true);
         detectRomMapMode.Should().Be(RomMapMode.HiRom);
+    }
+    
+    [FactOnlyIfFilePresent(new[]{CartNameData.ExampleHiRomFile})]
+    public void TestRomDetectionFastRom()
+    {
+        var analyzer = new SnesRomAnalyzer();
+        analyzer.Analyze(CartNameData.ExampleHiRomFile);
+
+        analyzer.Filename.Should().Be(CartNameData.ExampleHiRomFile);
+        analyzer.AnalysisResults!.RomMapMode.Should().Be(RomMapMode.HiRom);
+        analyzer.AnalysisResults.RomSpeed.Should().Be(RomSpeed.FastRom);
+        analyzer.RomBytes.Should().HaveCount(0x400000);
+        analyzer.RomSettingsOffset.Should().Be(RomUtil.HiromSettingOffset);
     }
     
     [Fact]

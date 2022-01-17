@@ -20,7 +20,7 @@ public interface ISnesRomImportSettingsBuilder : INotifyPropertyChanged
     // overrides the detection if necessary, may provide incorrect results
     [UsedImplicitly] RomMapMode OptionSelectedRomMapMode { get; set; }
     
-    bool OptionGenerateSelectedVectorTableLabels { get; }
+    bool OptionGenerateSelectedVectorTableLabels { get; set; }
     public void OptionClearGenerateVectorTableLabels();
     public void OptionSetGenerateVectorTableLabelFor(string vectorName, bool shouldGenerateLabel);
 

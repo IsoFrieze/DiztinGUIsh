@@ -52,7 +52,7 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
                 controller.OnBuilderInitialized -= ControllerOnBuilderInitialized;
 
             controller = value;
-                
+
             if (controller != null)
                 controller.OnBuilderInitialized += ControllerOnBuilderInitialized;
         }
@@ -106,6 +106,9 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
 
     public void RefreshUi()
     {
+        if (Controller == null)
+            return;
+        
         UpdateTextboxes();
         UpdateOkayButtonEnabled();
         detectMessage.Text = Controller.GetDetectionMessage();

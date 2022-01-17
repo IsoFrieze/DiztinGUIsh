@@ -7,6 +7,7 @@ using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using Diz.Cpu._65816.import;
+using JetBrains.Annotations;
 
 namespace Diz.Controllers.controllers;
 
@@ -27,7 +28,7 @@ public class ImportRomDialogController : IImportRomDialogController
             if (Builder.Input.AnalysisResults == null)
                 return -1;
                 
-            return RomUtil.GetRomSettingOffset(Builder.Input.AnalysisResults.RomMapMode);
+            return RomUtil.GetRomSettingOffset(Builder.OptionSelectedRomMapMode);
         }
     }
 
@@ -37,22 +38,30 @@ public class ImportRomDialogController : IImportRomDialogController
     public RomSpeed RomSpeed =>
         Builder.Input.AnalysisResults?.RomSpeed ?? RomSpeed.Unknown;
 
-    public RomMapMode RomMapMode => 
-        Builder.Input.AnalysisResults?.RomMapMode ?? default;
-
     public string CartridgeTitle => 
         RomUtil.GetCartridgeTitleFromRom(RomBytes, RomSettingsOffset);
 
     public string RomSpeedText => 
         Util.GetEnumDescription(RomSpeed);
         
-    public string GetDetectionMessage() =>
-        Builder.Input.AnalysisResults is { DetectedRomMapModeCorrectly: true }
-            ? RomMapModeText
-            : "Couldn't auto detect ROM Map Mode!";
+    public string GetDetectionMessage()
+    {
+        string msg = null;
+        if (Builder.Input.AnalysisResults is { DetectedRomMapModeCorrectly: true })
+            msg = RomMapModeText;
+        
+        return msg ?? "Couldn't auto detect ROM Map Mode!";
+    }
 
-    public string RomMapModeText => 
-        Util.GetEnumDescription(RomMapMode);
+    [CanBeNull]
+    public string RomMapModeText
+    {
+        get
+        {
+            var romMapModeTxt = Builder?.Input?.AnalysisResults?.RomMapMode;
+            return romMapModeTxt != null ? Util.GetEnumDescription(romMapModeTxt) : null;
+        }
+    }
 
     public ImportRomDialogController(ICommonGui commonGui, IImportRomDialogView view, ISnesRomImportSettingsBuilder builder)
     {
@@ -69,11 +78,14 @@ public class ImportRomDialogController : IImportRomDialogController
             : Builder.GenerateSettings();
     }
 
+    private string romFileNameAnalyzed = "";
+
     private bool PromptUserForOptions(string romFilename)
     {
         Debug.Assert(Builder != null);
-        
-        Builder.Analyze(romFilename);
+     
+        romFileNameAnalyzed = romFilename;
+        ReAnalyze();
             
         Builder.PropertyChanged += BuilderOnPropertyChanged;
         OnBuilderInitialized?.Invoke();
@@ -87,9 +99,16 @@ public class ImportRomDialogController : IImportRomDialogController
             
         return result;
     }
-    
-    private void BuilderOnPropertyChanged(object sender, PropertyChangedEventArgs e) => 
+
+    private void ReAnalyze()
+    {
+        Builder.Analyze(romFileNameAnalyzed);
+    }
+
+    private void BuilderOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
         Refresh();
+    }
 
     private bool IsOffsetInRange(int offset) => 
         Builder.Input.RomBytes != null && offset > 0 && offset <= Builder.Input.RomBytes.Count;
@@ -141,7 +160,7 @@ public class ImportRomDialogController : IImportRomDialogController
             if (!Warn("ROM Map type couldn't be detected."))
                 return false;
         }
-        else if (analysisResults.RomMapMode != Builder.GenerateSettings().RomMapMode)
+        else if (analysisResults.RomMapMode != Builder.OptionSelectedRomMapMode)
         {
             if (!Warn("The ROM map type selected is different than what was detected."))
                 return false;

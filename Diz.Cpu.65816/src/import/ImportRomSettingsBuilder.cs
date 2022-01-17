@@ -13,9 +13,9 @@ namespace Diz.Cpu._65816.import;
 [UsedImplicitly]
 public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
 {
-    private bool optionGenerateHeaderFlags;
+    private bool optionGenerateHeaderFlags = true;
     private RomMapMode optionSelectedRomMapMode;
-    private bool optionGenerateSelectedVectorTableLabels;
+    private bool optionGenerateSelectedVectorTableLabels = true;
     private readonly IReadFromFileBytes fileReader; 
 
     public ISnesRomAnalyzer Input { get; }
@@ -88,12 +88,24 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
         Reset();
         var rawRomBytes = fileReader.ReadRomFileBytes(romFilename);
         Input.Analyze(rawRomBytes, romFilename);
+        OnAnalyzed();
     }
 
     public void Analyze(byte[] rawRomBytes)
     {
         Reset();
         Input.Analyze(rawRomBytes);
+        OnAnalyzed();
+    }
+
+    private void OnAnalyzed()
+    {
+        SetRomMapModeToAnalyzed();
+    }
+
+    private void SetRomMapModeToAnalyzed()
+    {
+        OptionSelectedRomMapMode = Input.AnalysisResults?.RomMapMode ?? RomMapMode.LoRom;
     }
 
     public void OptionClearGenerateVectorTableLabels()
@@ -125,10 +137,9 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
         {
             RomFilename = Input.Filename,
             RomBytes = Input.RomBytes.ToList(),
-            RomMapMode = Input.AnalysisResults.RomMapMode,
-            InitialLabels = GenerateVectorLabels()
-            
-            // InitialLabels = // OBSOLETE RomUtil.GenerateVectorLabels(VectorTableEntriesEnabled, RomBytes, AnalysisResults.RomMapMode) // old, now replaced?
+            RomMapMode = OptionSelectedRomMapMode,
+            RomSpeed = Input.AnalysisResults.RomSpeed,
+            InitialLabels = OptionGenerateSelectedVectorTableLabels ? GenerateVectorLabels() : new Dictionary<int, Label>()
         };
 
         if (OptionGenerateHeaderFlags)

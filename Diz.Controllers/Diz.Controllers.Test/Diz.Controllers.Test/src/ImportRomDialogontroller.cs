@@ -102,13 +102,38 @@ public class ImportRomDialogControllerTest : ContainerFixture
         var vectorNames = generatedSettings!.InitialLabels.Select(x => x.Value.Name).ToList();
         vectorNames.Should().HaveCount(2);
     }
+    
+    public static TheoryData<bool> EnableDisableLabelGeneration =>
+        new()
+        {
+            true, 
+            false
+        };
+
+    [Theory, MemberData(nameof(EnableDisableLabelGeneration))]
+    public void LabelGenerationDisable(bool labelGenerationEnabled)
+    {
+        mockView!.SetupGet(x => x.EnabledVectorTableEntries)
+            .Returns(new List<string>
+            {
+                SnesVectorNames.Native_ABORT,
+                SnesVectorNames.Emulation_RESET,
+            });
+
+        Run(() =>
+        {
+            importRomDialogController.Builder.OptionGenerateSelectedVectorTableLabels = labelGenerationEnabled;
+        });
+
+        generatedSettings!.InitialLabels.Should().HaveCount(labelGenerationEnabled ? 2 : 0);
+    }
 
     [Fact]
     public void ControllerProperties()
     {
         Run();
         importRomDialogController.CartridgeTitle.Should().Be(sampleDataFixture.Project.InternalRomGameName);
-        
+
         var input = importRomDialogController.Builder.Input;
 
         input.Filename.Should().Be(RomFilename);
