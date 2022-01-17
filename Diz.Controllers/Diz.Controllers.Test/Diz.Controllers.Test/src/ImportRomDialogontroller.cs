@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
+using Diz.Core.model;
 using Diz.Core.model.project;
 using Diz.Core.serialization;
+using Diz.Core.util;
 using Diz.Cpu._65816.import;
 using Diz.Test.Utils;
 using FluentAssertions;
@@ -79,8 +82,7 @@ public class ImportRomDialogControllerTest : ContainerFixture
         Run(() => importRomDialogController.Builder.OptionClearGenerateVectorTableLabels());
         generatedSettings!.InitialLabels.Should().BeEmpty("We cleared them in the UI code");
     }
-    
-    
+
     [Fact]
     public void WithTwoLabels()
     {
@@ -99,5 +101,23 @@ public class ImportRomDialogControllerTest : ContainerFixture
 
         var vectorNames = generatedSettings!.InitialLabels.Select(x => x.Value.Name).ToList();
         vectorNames.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void ControllerProperties()
+    {
+        Run();
+        importRomDialogController.CartridgeTitle.Should().Be(sampleDataFixture.Project.InternalRomGameName);
+        
+        var input = importRomDialogController.Builder.Input;
+
+        input.Filename.Should().Be(RomFilename);
+        input.RomBytes.Should().HaveCountGreaterThan(100);
+        input.RomSettingsOffset!.Value.Should().Be(RomUtil.LoromSettingOffset);
+        
+        var snesRomAnalysisResults = input.AnalysisResults!;
+        snesRomAnalysisResults.RomMapMode.Should().Be(RomMapMode.LoRom);
+        snesRomAnalysisResults.DetectedRomMapModeCorrectly.Should().Be(true);
+        snesRomAnalysisResults.RomSpeed.Should().Be(sampleDataFixture.Project.Data.RomSpeed);
     }
 }

@@ -282,14 +282,11 @@ public class SnesSampleRomDataFactory : ISampleDataFactory
 
         // initialize some SNES header stuff (this is not complete, feel free to add things that are useful)
         Debug.Assert(snesApi.RomMapMode == RomMapMode.LoRom);
+        Debug.Assert(snesApi.RomSpeed == RomSpeed.FastRom);
         var romSettingsOffset = RomUtil.GetRomSettingOffset(RomMapMode.LoRom);
-        data.RomBytes[romSettingsOffset].Rom = 0x20;
-        // TODO: set a few other useful things like ROM size etc.
-        // we could probably steal some more of this code out of asar
-        // maybe like:
-        //    org $00FFD7
-        //    db $0A ; mark the rom as 512 kb
-        
+        const int loromAndFastRom = 0x30;
+        data.RomBytes[romSettingsOffset].Rom = loromAndFastRom;
+
         // do this LAST after all modifications to the ROM bytes have been completed 
         snesApi.FixChecksum();
 

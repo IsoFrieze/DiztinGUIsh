@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Diz.Core.model;
 using Diz.Core.model.project;
 using Diz.Cpu._65816;
 using Moq;
@@ -12,6 +13,7 @@ namespace Diz.Test.Utils;
 public interface ISampleRomTestData
 {
     byte[] SampleRomBytes { get; }
+    public Project Project { get; }
 }
 
 public class SampleRomTestDataFixture : ContainerFixture, ISampleRomTestData
@@ -22,8 +24,14 @@ public class SampleRomTestDataFixture : ContainerFixture, ISampleRomTestData
     private readonly Lazy<byte[]> sampleBytes;
     public SampleRomTestDataFixture()
     {
-        sampleBytes = new Lazy<byte[]>(() => sampleFactory!.Create().Data.GetFileBytes().ToArray());
+        sampleBytes = new Lazy<byte[]>(() =>
+        {
+            Project = sampleFactory!.Create() as Project;
+            return Project!.Data.GetFileBytes().ToArray();
+        });
     }
+
+    public Project Project { get; set; }
 }
 
 
