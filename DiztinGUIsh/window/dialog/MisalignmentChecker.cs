@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
+using Diz.Cpu._65816;
 
 namespace DiztinGUIsh
 {
@@ -27,8 +28,8 @@ namespace DiztinGUIsh
 
             while (found < 500 && offset < Data.GetRomSize())
             {
-                FlagType flag = Data.GetFlag(offset), check = flag == FlagType.Opcode ? FlagType.Operand : flag;
-                var step = flag == FlagType.Opcode ? Data.GetInstructionLength(offset) : RomUtil.GetByteLengthForFlag(flag);
+                FlagType flag = Data.GetSnesApi().GetFlag(offset), check = flag == FlagType.Opcode ? FlagType.Operand : flag;
+                var step = flag == FlagType.Opcode ? Data.GetSnesApi().GetInstructionLength(offset) : RomUtil.GetByteLengthForFlag(flag);
 
                 if (flag == FlagType.Operand)
                 {
@@ -39,10 +40,10 @@ namespace DiztinGUIsh
                 {
                     for (var i = 1; i < step; i++)
                     {
-                        if (Data.GetFlag(offset + i) == check) continue;
+                        if (Data.GetSnesApi().GetFlag(offset + i) == check) continue;
                         found++;
                         textLog.Text +=
-                            $"{Util.NumberToBaseString(Data.ConvertPCtoSnes(offset + i), Util.NumberBase.Hexadecimal, 6, true)} (0x{Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0)}): {Util.GetEnumDescription(Data.GetFlag(offset + i))} is not {Util.GetEnumDescription(check)}\r\n";
+                            $"{Util.NumberToBaseString(Data.ConvertPCtoSnes(offset + i), Util.NumberBase.Hexadecimal, 6, true)} (0x{Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0)}): {Util.GetEnumDescription(Data.GetSnesApi().GetFlag(offset + i))} is not {Util.GetEnumDescription(check)}\r\n";
                     }
                 }
 

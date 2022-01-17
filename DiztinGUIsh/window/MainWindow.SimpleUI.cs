@@ -5,7 +5,6 @@ using System.Windows.Forms;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
 {
@@ -25,10 +24,18 @@ namespace DiztinGUIsh.window
 
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e) => 
             SaveProject(askFilenameIfNotSet: true, alwaysAsk: true); // save as
+
+        private void toolStrip_exportDisassemblyUseCurrentSettings_Click(object sender, System.EventArgs e) => 
+            ProjectController?.ExportAssemblyWithCurrentSettings();
+
+        private void toolStrip_exportDisassemblyEditSettingsFirst_Click(object sender, EventArgs e) =>
+            ProjectController?.ConfirmSettingsThenExportAssembly();
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e) =>
+            ProjectController.ViewFactory.GetAboutView().Show();
         
-        private void exportLogToolStripMenuItem_Click(object sender, EventArgs e) => ExportAssembly();
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e) => new About().ShowDialog();
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e) => Application.Exit();
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e) => 
+            Application.Exit();
         
         private void decimalToolStripMenuItem_Click(object sender, EventArgs e) => 
             UpdateBase(Util.NumberBase.Decimal);

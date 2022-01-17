@@ -3,9 +3,11 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net6.0</TargetFramework>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +15,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Management.Automation" Version="7.2.0" />
+    <PackageReference Include="LightInject" Version="6.4.0" />
+    <PackageReference Include="System.Management.Automation" Version="7.2.1" />
   </ItemGroup>
 
   <ItemGroup>

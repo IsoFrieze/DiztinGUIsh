@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
-using BenchmarkDotNet.Analysers;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Loggers;
-using BenchmarkDotNet.Running;
-using Diz.Core.import;
-using Diz.Core.model;
 using Diz.Core.model.snes;
-using Diz.Core.util;
+using Diz.Cpu._65816;
+using Diz.Import.bsnes.tracelog;
 using Diz.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;
@@ -99,7 +93,7 @@ namespace Diz.Test
             [Benchmark]
             public void Run()
             {
-                capturing.Run(Data);
+                capturing.Run(Data.GetSnesApi());
             }
         }
 

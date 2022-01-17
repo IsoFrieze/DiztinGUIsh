@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
+using Diz.Core.Interfaces;
+using Diz.Core.model;
 
 namespace Diz.Core.model
 {
-    public class RomBytes : IEnumerable<RomByte>, INotifyCollectionChanged, INotifyPropertyChanged
+    public class RomBytes : IRomBytes<RomByte>
     {
         private ObservableCollection<RomByte> bytes;
 
@@ -36,6 +39,8 @@ namespace Diz.Core.model
             get => Bytes[i];
             set => Bytes[i] = value;
         }
+
+        IRomByte IRomBytes<RomByte>.this[int i] => Bytes[i];
 
         public RomBytes()
         {
@@ -130,5 +135,53 @@ namespace Diz.Core.model
             if (SendNotificationChangedEvents)
                 PropertyChanged?.Invoke(sender, e);
         }
+    }
+}
+
+
+public static class RomBytesExtensions
+{
+    public static void CreateRomBytesFromRom(this RomBytes @this, IEnumerable<byte> actualRomBytes)
+    {
+        Debug.Assert(@this.Count == 0);
+            
+        var previousNotificationState = @this.SendNotificationChangedEvents;
+        @this.SendNotificationChangedEvents = false;
+
+        @this.Clear();
+        foreach (var fileByte in actualRomBytes)
+        {
+            @this.Add(new RomByte
+            {
+                Rom = fileByte,
+            });
+        }
+
+        @this.SendNotificationChangedEvents = previousNotificationState;
+    }
+        
+    public static byte[] GetRomBytes(this IData @this, int pcOffset, int count)
+    {
+        var output = new byte[count];
+        for (var i = 0; i < output.Length; i++)
+            output[i] = (byte)@this.GetRomByte(pcOffset + i);
+
+        return output;
+    }
+
+    public static void CopyRomDataIn(this IRomBytes<IRomByte> @this, IEnumerable<byte> trueRomBytes)
+    {
+        var previousNotificationState = @this.SendNotificationChangedEvents;
+        @this.SendNotificationChangedEvents = false;
+            
+        var i = 0;
+        foreach (var b in trueRomBytes)
+        {
+            @this[i].Rom = b;
+            ++i;
+        }
+        Debug.Assert(@this.Count == i);
+
+        @this.SendNotificationChangedEvents = previousNotificationState;
     }
 }

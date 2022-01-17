@@ -2,7 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Diz.Core.import;
+using Diz.Cpu._65816;
+using Diz.Import.bsnes.tracelog;
 using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog
@@ -39,7 +40,7 @@ namespace DiztinGUIsh.window.dialog
         {
             // TODO: error handling is busted here.
             await Task.Run(() => {
-                capturing.Run(mainWindow.Project.Data);
+                capturing.Run(mainWindow.Project.Data.GetSnesApi());
             }).ContinueWith(task => {
                 this.InvokeIfRequired(() => CapturingFinished(task.Exception));
             });

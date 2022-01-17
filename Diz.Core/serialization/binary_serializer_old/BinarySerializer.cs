@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if ENABLE_LEGACY_BINARY_SERIALIZER
+
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -14,136 +16,127 @@ using Diz.Core.util;
 //
 // This is only here for loading older files saved in this format, it shouldn't be used for anything new going forward.
 
-namespace Diz.Core.serialization.binary_serializer_old
+namespace Diz.Core.serialization.binary_serializer_old;
+
+internal class BinarySerializer : ProjectSerializer
 {
-    internal class BinarySerializer : ProjectSerializer
+    public const int HeaderSize = 0x100;
+    private const int LatestFileFormatVersion = 2;
+
+    public override byte[] Save(Project project)
     {
-        public const int HeaderSize = 0x100;
-        private const int LatestFileFormatVersion = 2;
+        const int versionToSave = LatestFileFormatVersion;
+        var data = SaveVersion(project, versionToSave);
 
-        public static bool IsBinaryFileFormat(byte[] data)
-        {
-            for (var i = 0; i < DizWatermark.Length; i++) {
-                if (data[i + 1] != (byte) DizWatermark[i])
-                    return false;
-            }
-            return true;
-        }
+        var everything = new byte[HeaderSize + data.Length];
+        everything[0] = versionToSave;
+        ByteUtil.StringToNullTermByteArray(DizWatermark).CopyTo(everything, 1);
+        data.CopyTo(everything, HeaderSize);
 
-        public override byte[] Save(Project project)
-        {
-            const int versionToSave = LatestFileFormatVersion;
-            var data = SaveVersion(project, versionToSave);
+        return data;
+    }
 
-            var everything = new byte[HeaderSize + data.Length];
-            everything[0] = versionToSave;
-            ByteUtil.StringToNullTermByteArray(DizWatermark).CopyTo(everything, 1);
-            data.CopyTo(everything, HeaderSize);
+    public override (ProjectXmlSerializer.Root xmlRoot, string warning) Load(byte[] rawBytes)
+    {
+        var (project, warning, version) = LoadProject(rawBytes);
 
-            return data;
-        }
-
-        public override (ProjectXmlSerializer.Root xmlRoot, string warning) Load(byte[] rawBytes)
-        {
-            var (project, warning, version) = LoadProject(rawBytes);
-
-            // the binary serializer versions start at "1" and go up to a max of 99.
-            // XML serializers pick up at 100 and go upwards from there.
-            Debug.Assert(version < ProjectXmlSerializer.FirstSaveFormatVersion);
+        // the binary serializer versions start at "1" and go up to a max of 99.
+        // XML serializers pick up at 100 and go upwards from there.
+        Debug.Assert(version < ProjectXmlSerializer.FirstSaveFormatVersion);
             
-            // have to pack this into the new XML root structure.
-            return (new ProjectXmlSerializer.Root
-            {
-                Project = project,
-                SaveVersion = version,
-                Watermark = DizWatermark,
-            }, warning);
-        }
-        private (Project project, string warning, byte version) LoadProject(byte[] data)
+        // have to pack this into the new XML root structure.
+        return (new ProjectXmlSerializer.Root
         {
-            if (!IsBinaryFileFormat(data))
-                throw new InvalidDataException("This is not a binary serialized project file!");
+            Project = project,
+            SaveVersion = version,
+            Watermark = DizWatermark,
+        }, warning);
+    }
+    private (Project project, string warning, byte version) LoadProject(byte[] data)
+    {
+        if (!IsBinaryFileFormat(data))
+            throw new InvalidDataException("This is not a binary serialized project file!");
 
-            var version = data[0];
-            ValidateProjectFileVersion(version);
+        var version = data[0];
+        ValidateProjectFileVersion(version);
 
-            var project = new Project {
-                Data = new Data()
-            };
+        var project = new Project {
+            Data = new Data()
+        };
 
-            #if DIZ_3_BRANCH
+#if DIZ_3_BRANCH
             project.Session = new ProjectSession(project)
             {
                 UnsavedChanges = false
             };
-            #endif
+#endif
 
-            // version 0 needs to convert PC to SNES for some addresses
-            ByteUtil.AddressConverter converter = address => address;
-            if (version == 0)
-                converter = project.Data.ConvertPCtoSnes;
+        // version 0 needs to convert PC to SNES for some addresses
+        ByteUtil.AddressConverter converter = address => address;
+        if (version == 0)
+            converter = project.Data.ConvertPCtoSnes;
 
-            // read mode, speed, size
-            var mode = (RomMapMode) data[HeaderSize];
-            var speed = (RomSpeed) data[HeaderSize + 1];
+        // read mode, speed, size
+        var mode = (RomMapMode) data[HeaderSize];
+        var speed = (RomSpeed) data[HeaderSize + 1];
             
-            #if !DIZ_3_BRANCH
-            project.Data.RomMapMode = mode;
-            project.Data.RomSpeed = speed;
-            #endif
+#if !DIZ_3_BRANCH
+        project.Data.RomMapMode = mode;
+        project.Data.RomSpeed = speed;
+#endif
             
-            var size = ByteUtil.ConvertByteArrayToInt32(data, HeaderSize + 2);
+        var size = ByteUtil.ConvertByteArrayToInt32(data, HeaderSize + 2);
 
-            // read internal title
-            var pointer = HeaderSize + 6;
-            project.InternalRomGameName = ByteUtil.ReadStringFromByteArray(data, pointer, RomUtil.LengthOfTitleName);
-            pointer += RomUtil.LengthOfTitleName;
+        // read internal title
+        var pointer = HeaderSize + 6;
+        project.InternalRomGameName = ByteUtil.ReadStringFromByteArray(data, pointer, RomUtil.LengthOfTitleName);
+        pointer += RomUtil.LengthOfTitleName;
 
-            // read checksums
-            project.InternalCheckSum = ByteUtil.ConvertByteArrayToUInt32(data, pointer);
-            pointer += 4;
+        // read checksums
+        project.InternalCheckSum = ByteUtil.ConvertByteArrayToUInt32(data, pointer);
+        pointer += 4;
 
-            // read full filepath to the ROM .sfc file
-            while (data[pointer] != 0)
-                project.AttachedRomFilename += (char) data[pointer++];
-            pointer++;
+        // read full filepath to the ROM .sfc file
+        while (data[pointer] != 0)
+            project.AttachedRomFilename += (char) data[pointer++];
+        pointer++;
 
-            #if DIZ_3_BRANCH
+#if DIZ_3_BRANCH
             project.Data.InitializeEmptyRomMapping(size, mode, speed);
-            #else
-            project.Data.RomBytes.Create(size);
-            #endif
+#else
+        project.Data.RomBytes.Create(size);
+#endif
 
-            for (int i = 0; i < size; i++) project.Data.SetDataBank(i, data[pointer + i]);
-            for (int i = 0; i < size; i++)
-                project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
-            for (int i = 0; i < size; i++) project.Data.SetXFlag(i, data[pointer + 3 * size + i] != 0);
-            for (int i = 0; i < size; i++) project.Data.SetMFlag(i, data[pointer + 4 * size + i] != 0);
-            for (int i = 0; i < size; i++) project.Data.SetFlag(i, (FlagType) data[pointer + 5 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetArchitecture(i, (Architecture) data[pointer + 6 * size + i]);
-            for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (InOutPoint) data[pointer + 7 * size + i]);
-            pointer += 8 * size;
+        for (int i = 0; i < size; i++) project.Data.SetDataBank(i, data[pointer + i]);
+        for (int i = 0; i < size; i++)
+            project.Data.SetDirectPage(i, data[pointer + size + i] | (data[pointer + 2 * size + i] << 8));
+        for (int i = 0; i < size; i++) project.Data.SetXFlag(i, data[pointer + 3 * size + i] != 0);
+        for (int i = 0; i < size; i++) project.Data.SetMFlag(i, data[pointer + 4 * size + i] != 0);
+        for (int i = 0; i < size; i++) project.Data.SetFlag(i, (FlagType) data[pointer + 5 * size + i]);
+        for (int i = 0; i < size; i++) project.Data.SetArchitecture(i, (Architecture) data[pointer + 6 * size + i]);
+        for (int i = 0; i < size; i++) project.Data.SetInOutPoint(i, (InOutPoint) data[pointer + 7 * size + i]);
+        pointer += 8 * size;
 
-            ReadLabels(project, data, ref pointer, converter, version >= 2);
-            ReadComments(project, data, ref pointer, converter);
+        ReadLabels(project, data, ref pointer, converter, version >= 2);
+        ReadComments(project, data, ref pointer, converter);
 
-            #if !DIZ_3_BRANCH
-            if (project.Session != null) 
-                project.Session.UnsavedChanges = false;
-            #endif
+#if !DIZ_3_BRANCH
+        if (project.Session != null) 
+            project.Session.UnsavedChanges = false;
+#endif
 
-            var warning = "";
-            if (version != LatestFileFormatVersion)
-            {
-                warning = "This project file is in an older format.\n" +
-                              "You may want to back up your work or 'Save As' in case the conversion goes wrong.\n" +
-                              "The project file will be untouched until it is saved again.";
-            }
-
-            return (project, warning, version);
+        var warning = "";
+        if (version != LatestFileFormatVersion)
+        {
+            warning = "This project file is in an older format.\n" +
+                      "You may want to back up your work or 'Save As' in case the conversion goes wrong.\n" +
+                      "The project file will be untouched until it is saved again.";
         }
 
-        #if ALLOW_OLD_SAVE_FORMATS
+        return (project, warning, version);
+    }
+
+#if ALLOW_OLD_SAVE_FORMATS
         private static void SaveStringToBytes(string str, ICollection<byte> bytes)
         {
             // TODO: combine with Util.StringToByteArray() probably.
@@ -154,22 +147,22 @@ namespace Diz.Core.serialization.binary_serializer_old
             }
             bytes.Add(0);
         }
-        #endif
+#endif
 
-        private void VoidTheWarranty()
-        {
-            // comment this out only if you are an expert and know what you're doing. Binary serialization is deprecated.
-            //
-            // How did you even get here, dawg? #yolo
-            throw new NotSupportedException("Binary serializer saving is OLD, please use the XML serializer instead.");
-        }
+    private void VoidTheWarranty()
+    {
+        // comment this out only if you are an expert and know what you're doing. Binary serialization is deprecated.
+        //
+        // How did you even get here, dawg? #yolo
+        throw new NotSupportedException("Binary serializer saving is OLD, please use the XML serializer instead.");
+    }
 
-        [SuppressMessage("ReSharper", "UnusedParameter.Local")]
-        private byte[] SaveVersion(Project project, int version)
-        {
-            VoidTheWarranty();
+    [SuppressMessage("ReSharper", "UnusedParameter.Local")]
+    private byte[] SaveVersion(Project project, int version)
+    {
+        VoidTheWarranty();
             
-            #if ALLOW_OLD_SAVE_FORMATS
+#if ALLOW_OLD_SAVE_FORMATS
             ValidateSaveVersion(version);
 
             int size = project.Data.GetRomSize();
@@ -259,57 +252,58 @@ namespace Diz.Core.serialization.binary_serializer_old
             // ???
 
             return data;
-            #endif
-            return null;
-        }
+#endif
+        return null;
+    }
 
-        #if ALLOW_OLD_SAVE_FORMATS
+#if ALLOW_OLD_SAVE_FORMATS
         private static void ValidateSaveVersion(int version) {
             if (version < 1 || version > LatestFileFormatVersion) {
                 throw new ArgumentException($"Saving: Invalid save version requested for saving: {version}.");
             }
         }
-        #endif
+#endif
 
-        private static void ValidateProjectFileVersion(int version)
+    private static void ValidateProjectFileVersion(int version)
+    {
+        if (version > LatestFileFormatVersion)
         {
-            if (version > LatestFileFormatVersion)
-            {
-                throw new ArgumentException(
-                    "This DiztinGUIsh file uses a newer file format! You'll need to download the newest version of DiztinGUIsh to open it.");
-            }
-
-            if (version < 0)
-            {
-                throw new ArgumentException($"Invalid project file version detected: {version}.");
-            }
+            throw new ArgumentException(
+                "This DiztinGUIsh file uses a newer file format! You'll need to download the newest version of DiztinGUIsh to open it.");
         }
 
-        private void ReadComments(Project project, byte[] bytes, ref int pointer, ByteUtil.AddressConverter converter)
+        if (version < 0)
         {
-            const int stringsPerEntry = 1;
-            pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter, 
-                (offset, strings) =>
-                {
-                    Debug.Assert(strings.Length == 1);
-                    project.Data?.AddComment(offset, strings[0], true);
-                });
-        }
-
-        private void ReadLabels(Project project, byte[] bytes, ref int pointer, ByteUtil.AddressConverter converter, bool readAliasComments)
-        {
-            var stringsPerEntry = readAliasComments ? 2 : 1;
-            pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter,
-                (offset, strings) =>
-                {
-                    Debug.Assert(strings.Length == stringsPerEntry);
-                    var label = new Label
-                    {
-                        Name = strings[0],
-                        Comment = strings.ElementAtOrDefault(1)
-                    };
-                    project.Data.Labels.AddLabel(offset, label, true);
-                });
+            throw new ArgumentException($"Invalid project file version detected: {version}.");
         }
     }
+
+    private void ReadComments(Project project, byte[] bytes, ref int pointer, ByteUtil.AddressConverter converter)
+    {
+        const int stringsPerEntry = 1;
+        pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter, 
+            (offset, strings) =>
+            {
+                Debug.Assert(strings.Length == 1);
+                project.Data?.AddComment(offset, strings[0], true);
+            });
+    }
+
+    private void ReadLabels(Project project, byte[] bytes, ref int pointer, ByteUtil.AddressConverter converter, bool readAliasComments)
+    {
+        var stringsPerEntry = readAliasComments ? 2 : 1;
+        pointer += ByteUtil.ReadStringsTable(bytes, pointer, stringsPerEntry, converter,
+            (offset, strings) =>
+            {
+                Debug.Assert(strings.Length == stringsPerEntry);
+                var label = new Label
+                {
+                    Name = strings[0],
+                    Comment = strings.ElementAtOrDefault(1)
+                };
+                project.Data.Labels.AddLabel(offset, label, true);
+            });
+    }
 }
+
+#endif

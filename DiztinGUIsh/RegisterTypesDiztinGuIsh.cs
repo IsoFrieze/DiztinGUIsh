@@ -1,35 +1,31 @@
-using Diz.Controllers.interfaces;
-using Diz.Core;
-using DiztinGUIsh.controller;
-using DiztinGUIsh.util;
-using DiztinGUIsh.window;
-using DiztinGUIsh.window.dialog;
-using DiztinGUIsh.window.usercontrols;
-using JetBrains.Annotations;
+using Diz.Core.services;
+using Diz.Core.util;
 using LightInject;
 
-namespace DiztinGUIsh
+namespace DiztinGUIsh;
+
+public static class DizAppServices
 {
-    [UsedImplicitly] public class DizUiCompositionRoot : ICompositionRoot
+    public static IServiceFactory CreateServiceFactoryAndRegisterTypes()
     {
-        public void Compose(IServiceRegistry serviceRegistry)
-        {
-            serviceRegistry.Register<IProgressView, ProgressDialog>();
-            
-            // coming soon. backported from upcoming 3.0 branch
-            // serviceRegistry.RegisterSingleton<IDizApplication, DizApplication>();
-            // serviceRegistry.Register<IMarkManyView, MarkManyView>();
-            // serviceRegistry.Register(
-            //     typeof(IDataSubsetRomByteDataGridLoader<,>), 
-            //     typeof(DataSubsetRomByteDataGridLoader<,>)
-            //     );
-            //
-            // serviceRegistry.Register<IBytesGridViewer<ByteEntry>, DataGridEditorControl>();
-            // serviceRegistry.Register<IDataGridEditorForm, DataGridEditorForm>();
-            //
-            // serviceRegistry.Register<IStartFormViewer, StartForm>("StartForm");
-            //
-            // serviceRegistry.Register<IDataGridEditorForm, DataGridEditorForm> ("DataGridForm");
-        }
+        var serviceProvider = DizServiceProvider.CreateServiceContainer();
+        RegisterDizUiServices(serviceProvider);
+        
+        return serviceProvider;
+    }
+
+    public static void RegisterDizUiServices(IServiceRegistry serviceRegistry)
+    {
+        // register services in any Diz*dll's present
+        DizCoreServicesDllRegistration.RegisterServicesInDizDlls(serviceRegistry);
+
+        // alternatively, we can be explicit like below, no DLL scanning required
+        // serviceProvider.RegisterFrom<DizCoreServicesCompositionRoot>();
+        // serviceProvider.RegisterFrom<DizCpu65816ServiceRoot>();
+        // serviceProvider.RegisterFrom<DizControllersCompositionRoot>();
+        // serviceProvider.RegisterFrom<DizWinformsCompositionRoot>();
+
+        // scan ourselves last
+        serviceRegistry.RegisterFrom<DizUiWinformsCompositionRoot>();
     }
 }

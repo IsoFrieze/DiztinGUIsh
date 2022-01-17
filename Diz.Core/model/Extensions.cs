@@ -1,4 +1,4 @@
-﻿using Diz.Core.util;
+﻿using Diz.Core.Interfaces;
 
 namespace Diz.Core.model
 {

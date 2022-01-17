@@ -1,8 +1,7 @@
 ﻿using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
-using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window
 {
@@ -17,13 +16,13 @@ namespace DiztinGUIsh.window
         }
 
         // not sure if this will be the final place this lives. OK for now. -Dom
-        public ProjectController ProjectController { get; protected set; }
+        public IProjectController ProjectController { get; }
 
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
             ProgressBarJob.RunAndWaitForCompletion;
         
         // sub windows
-        public AliasList AliasList;
+        public ILabelEditorView AliasList;
         private VisualizerForm visualForm;
 
         // TODO: add a handler so we get notified when CurrentViewOffset changes.

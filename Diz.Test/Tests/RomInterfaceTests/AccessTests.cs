@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.snes;
-using Diz.Core.util;
+using Diz.Cpu._65816;
 using Diz.Test.Utils;
 using IX.Observable;
 using Xunit;
@@ -33,19 +33,21 @@ namespace Diz.Test
                     new() { Rom = 0x16, TypeFlag = FlagType.Operand },
                     new() { Rom = 0x21, TypeFlag = FlagType.Operand },
                 },
-                Comments = new ObservableDictionary<int, string>()
+                Comments = new ObservableDictionary<int, string>
                 {
                     { 0xC00001, "unused" },
                 }
             };
 
             new Dictionary<int, Label>
-                {
-                    {0x002116, new Label { Name = "SNES_VMADDL", Comment = "SNES hardware register example." }}
-                }
-                .ForEach(kvp =>
-                    data.Labels.AddLabel(kvp.Key, kvp.Value)
-                );
+            {
+                {0x002116, new Label { Name = "SNES_VMADDL", Comment = "SNES hardware register example." }}
+            }
+            .ForEach(kvp =>
+                data.Labels.AddLabel(kvp.Key, kvp.Value)
+            );
+
+            data.Apis.AddIfDoesntExist(new SnesApi(data));
             
             return data;
         }
@@ -79,7 +81,7 @@ namespace Diz.Test
         public static void IA1()
         {
             var data = GetSampleData();
-            Assert.Equal(0x002116, data.GetIntermediateAddressOrPointer(0));
+            Assert.Equal(0x002116, data.GetSnesApi().GetIntermediateAddressOrPointer(0));
         }
 
         [Fact]
@@ -87,7 +89,7 @@ namespace Diz.Test
         {
             var data = GetSampleData();
             data.RomBytes[0].DataBank = 0x7E;
-            Assert.Equal(0x7E2116, data.GetIntermediateAddressOrPointer(0));
+            Assert.Equal(0x7E2116, data.GetSnesApi().GetIntermediateAddressOrPointer(0));
         }
 
         [Fact(Skip = "Relies on external tool that isn't yet setup")]

@@ -2,7 +2,6 @@
 using Diz.Controllers.controllers;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window

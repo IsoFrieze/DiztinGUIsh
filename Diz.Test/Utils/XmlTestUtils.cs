@@ -1,6 +1,4 @@
 ﻿using System;
-using Diz.Core.serialization.xml_serializer;
-using ExtendedXmlSerializer;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -28,10 +26,22 @@ namespace Diz.Test.Utils
         
         public T XmlFullCycle<T>(T objToCycle)
         {
-            var xmlToCycle = XmlSerializerSupport.GetSerializer().Create().Serialize(objToCycle);
-            Output?.WriteLine(xmlToCycle);
-            var deserialized = XmlSerializerSupport.GetSerializer().Create().Deserialize<T>(xmlToCycle);
-            return deserialized;
+            throw new NotImplementedException();
+            
+            // setup. use InjectData now instead of this mess
+            // // TODO: need to inject SNES api, something vaguely like....
+            // var dataFactoryMock = new Mock<IProjectDataFactory>();
+            // dataFactoryMock.Setup(x => x.Create()).Returns(new Data());
+            // var data = dataFactoryMock.Object;
+            //
+            // var factory = new XmlSerializerFactory(dataFactoryMock,
+            //     () => new XmlSerializerFactory.SnesDataInterceptor(this));
+            
+            // actual test below:
+            // var xmlToCycle = XmlSerializerFactory.GetSerializer().Create().Serialize(objToCycle);
+            // Output?.WriteLine(xmlToCycle);
+            // var deserialized = XmlSerializerFactory.GetSerializer().Create().Deserialize<T>(xmlToCycle);
+            // return deserialized;
         }
         
         public void RunFullCycle(Func<object> createFn)

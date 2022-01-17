@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Diz.Core.model;
 
 namespace Diz.Core.util
 {
@@ -10,7 +11,8 @@ namespace Diz.Core.util
     {
         #region Diz interface
         
-        public static uint ComputeChecksumFromRom(IList<byte> romdata) => AsarChecksumUtil.getchecksum(romdata);
+        public static uint ComputeChecksumFromRom(IList<byte> romdata) => 
+            AsarChecksumUtil.getchecksum(romdata);
         public static bool IsRomChecksumValid(IList<byte> romdata, RomMapMode mode, int size) => 
             AsarChecksumUtil.goodchecksum(romdata, mode, size);
         public static void UpdateRomChecksum(IList<byte> romdata, RomMapMode mode, int size) => 

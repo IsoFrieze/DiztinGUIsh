@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Diz.Core.model.project;
+using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using FluentAssertions;
 using Moq;
@@ -17,10 +17,9 @@ namespace Diz.Test
         [MemberData(nameof(Harnesses))]
         public void TestMigrationFailsIfOutsideBounds(Harness harness)
         {
-            var runner = new MigrationRunner {
-                StartingSaveVersion = harness.RunnerStart, 
+            var runner = new MigrationRunner(harness.MigrationObjs) {
+                StartingSaveVersion = harness.RunnerStart,
                 TargetSaveVersion = harness.RunnerTarget,
-                Migrations = harness.MigrationObjs
             };
             
             harness.Run(() => runner.OnLoadingAfterAddLinkedRom(null));
@@ -119,7 +118,7 @@ namespace Diz.Test
                 .Returns(saveVersion);
 
             mock.Setup(x => x
-                .OnLoadingAfterAddLinkedRom(It.IsAny<AddRomDataCommand>()));
+                .OnLoadingAfterAddLinkedRom(It.IsAny<IAddRomDataCommand>()));
 
             mock.Name += $"--{extraName}-- (v{mock.Object.AppliesToSaveVersion})";
             

@@ -236,7 +236,7 @@ namespace Diz.Core.util
             }
         }
 
-        public static string ReadShiftJisEncodedString(byte[] buffer, int index = 0, int count = -1) => 
+        public static string ReadShiftJisEncodedString(IReadOnlyList<byte> buffer, int index = 0, int count = -1) => 
             ReadStringFromByteArray(buffer, index, count, ShiftJisEncoding);
         
         public static byte[] ConvertUtf8ToShiftJisEncodedBytes(string str) => 
@@ -259,14 +259,14 @@ namespace Diz.Core.util
 
         // read a fixed length string from an array of bytes. does not check for null termination.
         // allows using a non-UTF8 encoding
-        public static string ReadStringFromByteArray(byte[] bytes, int index = 0, int count = -1, Encoding srcEncoding = null)
+        public static string ReadStringFromByteArray(IReadOnlyList<byte> bytes, int index = 0, int count = -1, Encoding srcEncoding = null)
         {
             var utfBytes = Encoding.Convert(
                 srcEncoding ?? Encoding.UTF8, 
                 Encoding.UTF8, 
-                bytes, 
+                bytes.ToArray(), 
                 index, 
-                count != -1 ? count : bytes.Length);
+                count != -1 ? count : bytes.Count);
             
             return Encoding.UTF8.GetString(utfBytes);
         }

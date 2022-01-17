@@ -8,15 +8,21 @@
         "resolved": "2.2.0",
         "contentHash": "SKTmjt40sYqoDB3S7HFVUToUN/vl6Zrt+PuSHdjbQDlcBx0JAZBdS7BXVbVKyy+0iaaF3FBd4ZxspIlKQCC9Lw=="
       },
+      "LightInject": {
+        "type": "Direct",
+        "requested": "[6.4.0, )",
+        "resolved": "6.4.0",
+        "contentHash": "WjrY67fnaUJzBSnb7wiaZUOSl7gmxjfg+xo+GrHI55jz0YZR2b5ZB+lDOM5XDu2+2+/OnVT3y4+6BOv6xTqo9w=="
+      },
       "System.Management.Automation": {
         "type": "Direct",
-        "requested": "[7.2.0, )",
-        "resolved": "7.2.0",
-        "contentHash": "Ceu6q9/YkC8jhyIysqaJtOzPDJwc1UoK2KmG5Kn01dRd1HkKm2JBZeAMsZP8ka+Xw/Mn7X+2IWRicZWFah9tHQ==",
+        "requested": "[7.2.1, )",
+        "resolved": "7.2.1",
+        "contentHash": "YlTE+q14vQ1YU//A5+/Jwl5+L5r6uOVIWuB4D/T9r80AaCeUAZMMvTKjgvIr9lwkovwQflVL+1JfBAi9f0q0KA==",
         "dependencies": {
           "Microsoft.ApplicationInsights": "2.18.0",
           "Microsoft.Management.Infrastructure": "2.0.0",
-          "Microsoft.PowerShell.CoreCLR.Eventing": "7.2.0",
+          "Microsoft.PowerShell.CoreCLR.Eventing": "7.2.1",
           "Microsoft.PowerShell.Native": "7.2.0",
           "Microsoft.Win32.Registry.AccessControl": "6.0.0",
           "Newtonsoft.Json": "13.0.1",
@@ -46,8 +52,8 @@
       },
       "FluentValidation": {
         "type": "Transitive",
-        "resolved": "10.3.5",
-        "contentHash": "Mt2CnRqNA5+vXVNFY05yLuOG3OLYR7Q/ZcP/rcJZPNPbg95foVUruyQEmKl1GeXVnT2+u6rjGU2ZCdgF//QU2A=="
+        "resolved": "10.3.6",
+        "contentHash": "iMd370ZDx6ydm8t7bIFdRbSKX0e42lpvCtifUSbTSXOk5iKjmgl7HU0PXBhIWQAyIRi3gCwfMI9luj8H6K+byw=="
       },
       "IX.Observable": {
         "type": "Transitive",
@@ -79,16 +85,11 @@
       },
       "JetBrains.Profiler.SelfApi": {
         "type": "Transitive",
-        "resolved": "2.1.2",
-        "contentHash": "MSIKzFkC7lmu0Vz3J5PhNoExz8qdGiOjbU8ugrL73m3XoNThflUXGCV/7B7rBNxZili7NmBHzf45z6x8n3V4HQ==",
+        "resolved": "2.2.0",
+        "contentHash": "WrnwHktJbwW2A4hhW8TwLPJeu+F0Gl8QCmHs8bm+OEggrPk1Rv50lDYH/+8HNtsCOFJcxmbNJ5XzZCYe0EkRrQ==",
         "dependencies": {
           "JetBrains.Profiler.Api": "1.1.8"
         }
-      },
-      "LightInject": {
-        "type": "Transitive",
-        "resolved": "6.3.5",
-        "contentHash": "ri0PjphQnzYeQIXbJj4dCe7wX6/3ZwcKlJO2uz5Y8MjoTAVkTx2V5gDLsVdc1a/6h2oQbapUVrJ74dtU9XsjPQ=="
       },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
@@ -129,8 +130,8 @@
       },
       "Microsoft.PowerShell.CoreCLR.Eventing": {
         "type": "Transitive",
-        "resolved": "7.2.0",
-        "contentHash": "CaOuk7ml3oLVjOBuVPisUPBqMkwkrDgmSJUgqQG5sKhV2U2sezZAh3D4YC9IiLlyvAKSzZLkdUAMNpadtoCWKg==",
+        "resolved": "7.2.1",
+        "contentHash": "fUz7InjavqKtslkQN828nWbZLnmmJRL9rn4b3e/XXdx0BcN+65x/pSgMnehwDVGIoqUPUMXN54eDo4HRVcLA5g==",
         "dependencies": {
           "System.Diagnostics.EventLog": "6.0.0"
         }
@@ -464,21 +465,38 @@
       "diz.core": {
         "type": "Project",
         "dependencies": {
+          "Diz.Core.Interfaces": "1.0.0",
           "ExtendedXmlSerializer": "3.7.6",
-          "FluentValidation": "10.3.5",
+          "FluentValidation": "10.3.6",
           "IX.Observable": "0.7.3",
           "JetBrains.Annotations": "2021.3.0",
-          "JetBrains.Profiler.SelfApi": "2.1.2",
+          "JetBrains.Profiler.SelfApi": "2.2.0",
+          "LightInject": "6.4.0",
           "SharpZipLib": "1.3.3",
           "System.Diagnostics.Tracing": "4.3.0",
           "System.Resources.Extensions": "6.0.0",
           "System.Text.Encoding.CodePages": "6.0.0"
         }
       },
+      "diz.core.interfaces": {
+        "type": "Project",
+        "dependencies": {
+          "IX.Observable": "0.7.3"
+        }
+      },
+      "diz.cpu.65816": {
+        "type": "Project",
+        "dependencies": {
+          "Diz.Core": "1.0.0",
+          "Diz.Core.Interfaces": "1.0.0"
+        }
+      },
       "diz.logwriter": {
         "type": "Project",
         "dependencies": {
-          "Diz.Core": "3.0.0"
+          "Diz.Core": "1.0.0",
+          "Diz.Cpu.65816": "1.0.0",
+          "LightInject": "6.4.0"
         }
       }
     }

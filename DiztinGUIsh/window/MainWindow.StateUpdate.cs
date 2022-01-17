@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Windows.Forms;
 using Diz.Core.model;
-using Diz.Core.model.snes;
 using Diz.Core.util;
+using Diz.Cpu._65816;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window
@@ -16,6 +16,7 @@ namespace DiztinGUIsh.window
         private void RebindProject()
         {
             AliasList?.RebindProject();
+            
             if (visualForm != null) 
                 visualForm.Project = Project;
             
@@ -101,7 +102,7 @@ namespace DiztinGUIsh.window
         {
             int totalUnreached = 0, size = Project.Data.GetRomSize();
             for (int i = 0; i < size; i++)
-                if (Project.Data.GetFlag(i) == FlagType.Unreached)
+                if (Project.Data.GetSnesApi().GetFlag(i) == FlagType.Unreached)
                     totalUnreached++;
             int reached = size - totalUnreached;
             return reached;
@@ -153,7 +154,8 @@ namespace DiztinGUIsh.window
             saveProjectAsToolStripMenuItem.Enabled = saveAsEnabled;
             closeProjectToolStripMenuItem.Enabled = closeEnabled;
 
-            exportLogToolStripMenuItem.Enabled = true;
+            toolStrip_exportDisassemblyUseCurrentSettings.Enabled = true;
+            toolStrip_exportDisassemblyEditSettingsFirst.Enabled = true;
         }
 
         private void UpdateSomeUI2()

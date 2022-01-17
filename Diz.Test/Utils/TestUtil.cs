@@ -1,46 +1,85 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Diz.Core.model;
+using Diz.Core.model.project;
+using Diz.Cpu._65816;
+using Moq;
 using Xunit;
 
-namespace Diz.Test.Utils
+namespace Diz.Test.Utils;
+
+
+public interface ISampleRomTestData
 {
-    public static class TheoryDataGenerator
-    {
-        public static TheoryData<T> CreateTheoryData<T>(this IEnumerable<Func<T>> data)
-        {
-            return data
-                .Select(fn => fn())
-                .Aggregate(new TheoryData<T>(), (theoryData, item) =>
-                {
-                    theoryData.Add(item);
-                    return theoryData;
-                });
-        }
-    }
+    byte[] SampleRomBytes { get; }
+    public Project Project { get; }
+}
+
+public class SampleRomTestDataFixture : ContainerFixture, ISampleRomTestData
+{
+    public byte[] SampleRomBytes => sampleBytes.Value;
     
-    public static class TestUtil
+    [Inject] private readonly ISnesSampleProjectFactory? sampleFactory = null!;
+    private readonly Lazy<byte[]> sampleBytes;
+    public SampleRomTestDataFixture()
     {
-        public static void AssertCollectionEqual<T>(IReadOnlyList<T> expected, IReadOnlyList<T> actual)
+        sampleBytes = new Lazy<byte[]>(() =>
         {
-            // do some weirdness here to better display the differences in the output window.
-            
-            var largestListCount = Math.Max(expected.Count, actual.Count);
-            for (var i = 0; i < largestListCount; ++i)
+            Project = sampleFactory!.Create() as Project;
+            return Project!.Data.GetFileBytes().ToArray();
+        });
+    }
+
+    public Project Project { get; set; }
+}
+
+
+public static class TheoryDataGenerator
+{
+    public static TheoryData<T> CreateTheoryData<T>(this IEnumerable<Func<T>> data)
+    {
+        return data
+            .Select(fn => fn())
+            .Aggregate(new TheoryData<T>(), (theoryData, item) =>
             {
-                // if this gets hit, lengths of lists are different
-                Assert.True(i < actual.Count);
-                Assert.True(i < expected.Count);
-
-                var expectedItem = expected[i];
-                var actualItem = actual[i];
-                
-                Assert.Equal(expectedItem, actualItem);
-            }
+                theoryData.Add(item);
+                return theoryData;
+            });
+    }
+}
+    
+public static class TestUtil
+{
+    public static void AssertCollectionEqual<T>(IReadOnlyList<T> expected, IReadOnlyList<T> actual)
+    {
+        // do some weirdness here to better display the differences in the output window.
             
-            Assert.Equal(expected.Count, actual.Count);
+        var largestListCount = Math.Max(expected.Count, actual.Count);
+        for (var i = 0; i < largestListCount; ++i)
+        {
+            // if this gets hit, lengths of lists are different
+            Assert.True(i < actual.Count);
+            Assert.True(i < expected.Count);
 
-            Assert.True(expected.SequenceEqual(actual));
+            var expectedItem = expected[i];
+            var actualItem = actual[i];
+                
+            Assert.Equal(expectedItem, actualItem);
         }
+            
+        Assert.Equal(expected.Count, actual.Count);
+
+        Assert.True(expected.SequenceEqual(actual));
+    }
+
+    public static Mock<IReadFromFileBytes> CreateReadFromFileMock(byte[] mockedFileBytes)
+    {
+        var mockLinkedRomBytesProvider = new Mock<IReadFromFileBytes>();
+        mockLinkedRomBytesProvider.Setup(x =>
+                x.ReadRomFileBytes(It.IsAny<string>()))
+            .Returns<string>(filename => mockedFileBytes);
+
+        return mockLinkedRomBytesProvider;
     }
 }

@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.controller;
+using Diz.Cpu._65816;
 
 namespace DiztinGUIsh.window
 {
@@ -141,10 +141,10 @@ namespace DiztinGUIsh.window
                     table.BeginEdit(true);
                     break;
                 case Keys.M:
-                    Project.Data.SetMFlag(offset, !Project.Data.GetMFlag(offset));
+                    Project.Data.GetSnesApi().SetMFlag(offset, !Project.Data.GetSnesApi().GetMFlag(offset));
                     break;
                 case Keys.X:
-                    Project.Data.SetXFlag(offset, !Project.Data.GetXFlag(offset));
+                    Project.Data.GetSnesApi().SetXFlag(offset, !Project.Data.GetSnesApi().GetXFlag(offset));
                     break;
                 case Keys.C:
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
@@ -175,30 +175,30 @@ namespace DiztinGUIsh.window
                     e.Value = Util.NumberToBaseString(Project.Data.GetRomByte(row) ?? 0x0, displayBase);
                     break;
                 case 4:
-                    e.Value = RomUtil.PointToString(Project.Data.GetInOutPoint(row));
+                    e.Value = RomUtil.PointToString(Project.Data.GetSnesApi().GetInOutPoint(row));
                     break;
                 case 5:
-                    var len = Project.Data.GetInstructionLength(row);
-                    e.Value = row + len <= Project.Data.GetRomSize() ? Project.Data.GetInstruction(row) : "";
+                    var len = Project.Data.GetSnesApi().GetInstructionLength(row);
+                    e.Value = row + len <= Project.Data.GetRomSize() ? Project.Data.GetSnesApi().GetInstruction(row) : "";
                     break;
                 case 6:
-                    var ia = Project.Data.GetIntermediateAddressOrPointer(row);
+                    var ia = Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(row);
                     e.Value = ia >= 0 ? Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6) : "";
                     break;
                 case 7:
-                    e.Value = Util.GetEnumDescription(Project.Data.GetFlag(row));
+                    e.Value = Util.GetEnumDescription(Project.Data.GetSnesApi().GetFlag(row));
                     break;
                 case 8:
-                    e.Value = Util.NumberToBaseString(Project.Data.GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
+                    e.Value = Util.NumberToBaseString(Project.Data.GetSnesApi().GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
                     break;
                 case 9:
-                    e.Value = Util.NumberToBaseString(Project.Data.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
+                    e.Value = Util.NumberToBaseString(Project.Data.GetSnesApi().GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
                     break;
                 case 10:
-                    e.Value = RomUtil.BoolToSize(Project.Data.GetMFlag(row));
+                    e.Value = RomUtil.BoolToSize(Project.Data.GetSnesApi().GetMFlag(row));
                     break;
                 case 11:
-                    e.Value = RomUtil.BoolToSize(Project.Data.GetXFlag(row));
+                    e.Value = RomUtil.BoolToSize(Project.Data.GetSnesApi().GetXFlag(row));
                     break;
                 case 12:
                     e.Value = Project.Data.GetCommentText(Project.Data.ConvertPCtoSnes(row));
@@ -218,16 +218,16 @@ namespace DiztinGUIsh.window
                     Project.Data.Labels.AddLabel(Project.Data.ConvertPCtoSnes(row), new Diz.Core.model.Label() { Name = value }, true);
                     break; // todo (validate for valid label characters)
                 case 8:
-                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.SetDataBank(row, result);
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.GetSnesApi().SetDataBank(row, result);
                     break;
                 case 9:
-                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.SetDirectPage(row, result);
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.GetSnesApi().SetDirectPage(row, result);
                     break;
                 case 10:
-                    Project.Data.SetMFlag(row, (value == "8" || value == "M"));
+                    Project.Data.GetSnesApi().SetMFlag(row, (value == "8" || value == "M"));
                     break;
                 case 11:
-                    Project.Data.SetXFlag(row, (value == "8" || value == "X"));
+                    Project.Data.GetSnesApi().SetXFlag(row, (value == "8" || value == "X"));
                     break;
                 case 12:
                     Project.Data.AddComment(Project.Data.ConvertPCtoSnes(row), value, true);
@@ -242,7 +242,7 @@ namespace DiztinGUIsh.window
             // editable cells show up green
             if (column == 0 || column == 8 || column == 9 || column == 12) style.SelectionBackColor = Color.Chartreuse;
 
-            switch (Project.Data.GetFlag(offset))
+            switch (Project.Data.GetSnesApi().GetFlag(offset))
             {
                 case FlagType.Unreached:
                     style.BackColor = Color.LightGray;
@@ -253,7 +253,7 @@ namespace DiztinGUIsh.window
                     switch (column)
                     {
                         case 4: // <*>
-                            InOutPoint point = Project.Data.GetInOutPoint(offset);
+                            InOutPoint point = Project.Data.GetSnesApi().GetInOutPoint(offset);
                             int r = 255, g = 255, b = 255;
                             if ((point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) g -= 50;
                             if ((point & (InOutPoint.InPoint)) != 0) r -= 50;
@@ -321,12 +321,12 @@ namespace DiztinGUIsh.window
             {
                 if (column == 1
                     //&& (Project.Data.GetFlag(selOffset) == Data.FlagType.Opcode || Project.Data.GetFlag(selOffset) == Data.FlagType.Unreached)
-                    && Project.Data.ConvertSnesToPc(Project.Data.GetIntermediateAddressOrPointer(selOffset)) == offset
+                    && Project.Data.ConvertSnesToPc(Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(selOffset)) == offset
                 ) style.BackColor = Color.DeepPink;
 
                 if (column == 6
                     //&& (Project.Data.GetFlag(offset) == Data.FlagType.Opcode || Project.Data.GetFlag(offset) == Data.FlagType.Unreached)
-                    && Project.Data.ConvertSnesToPc(Project.Data.GetIntermediateAddressOrPointer(offset)) == selOffset
+                    && Project.Data.ConvertSnesToPc(Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(offset)) == selOffset
                 ) style.BackColor = Color.DeepPink;
             }
         }

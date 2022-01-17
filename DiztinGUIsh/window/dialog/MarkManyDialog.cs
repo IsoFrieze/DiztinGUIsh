@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.commands;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
 
@@ -13,10 +14,14 @@ using Diz.Core.util;
 
 namespace DiztinGUIsh.window.dialog
 {
-    public partial class MarkManyView : Form, IMarkManyView
+    public partial class MarkManyView<TDataSource> : Form, IMarkManyView<TDataSource> 
+        where TDataSource : 
+        IRomSize, 
+        IRomByteFlagsGettable, 
+        ISnesAddressConverter
     {
-        public IMarkManyController Controller { get; set; }
-        private IReadOnlySnesRomBase Data => Controller.Data;
+        public IMarkManyController<TDataSource> Controller { get; set; }
+        private TDataSource Data => Controller.Data;
         
         private int PropertyMaxIntVal => Property == MarkCommand.MarkManyProperty.DataBank 
             ? 0x100 

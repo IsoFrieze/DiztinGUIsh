@@ -1,32 +1,19 @@
-﻿using System;
-using System.Linq;
-using LightInject;
+﻿using LightInject;
 
-namespace Diz.Core.util
+namespace Diz.Core.util;
+
+public static class DizServiceProvider
 {
-    public static class Service
+    // Thou shalt not create a global instance of this class, for verily thine unit tests.....
+    // 
+    // Don't cache this. Use IServiceContainer first thing at app startup to register services.
+    // Then cast it down only to IServiceFactory and don't register anything after the first class is used.
+    public static IServiceContainer CreateServiceContainer()
     {
-        private static ServiceContainer _serviceContainerInst; 
-        public static ServiceContainer Container => 
-            _serviceContainerInst ??= CreateServiceContainer();
-
-        private static ServiceContainer CreateServiceContainer()
+        var containerOptions = new ContainerOptions
         {
-            return new ServiceContainer(
-                new ContainerOptions
-                {
-                    EnablePropertyInjection = false
-                });
-        }
-        
-        // dont use this anymore
-        [Obsolete]
-        public static void Register(Type klass, Type iface)
-        {
-            // this may not be the most safe implementation. ok for now.
-            Container.RegisterAssembly(klass.Assembly, 
-                (serviceType, implementingType) => 
-                    !serviceType.IsClass && implementingType.GetInterfaces().Contains(iface));   
-        }
-    }
+            EnablePropertyInjection = false,
+        };
+        return new ServiceContainer(containerOptions);
+    }   
 }

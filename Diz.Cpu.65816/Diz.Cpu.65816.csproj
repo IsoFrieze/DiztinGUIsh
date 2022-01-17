@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
+        <RootNamespace>Diz.Cpu._65816</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Diz.Core.Interfaces\Diz.Core.Interfaces.csproj" />
+      <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="GitInfo">
+            <Version>2.1.2</Version>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+</Project>
