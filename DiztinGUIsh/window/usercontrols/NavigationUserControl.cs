@@ -2,16 +2,18 @@
 using System.ComponentModel;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.util;
+using Diz.Ui.Winforms.util;
 
 namespace DiztinGUIsh.window.usercontrols
 {
     public partial class NavigationUserControl : UserControl
     {
-        private DizDocument document;
+        private IDizDocument document;
         private ISnesNavigation snesNavigation;
 
-        public DizDocument Document
+        public IDizDocument Document
         {
             get => document;
             set

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Diz.Cpu._65816;
 using Diz.Import.bsnes.tracelog;
+using Diz.Ui.Winforms.util;
 using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog

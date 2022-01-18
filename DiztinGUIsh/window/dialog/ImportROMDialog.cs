@@ -10,6 +10,7 @@ using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using Diz.Cpu._65816.import;
+using Diz.Ui.Winforms.util;
 using DiztinGUIsh.util;
 
 namespace DiztinGUIsh.window.dialog;

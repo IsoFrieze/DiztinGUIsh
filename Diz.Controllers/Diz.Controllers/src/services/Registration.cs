@@ -21,6 +21,8 @@ public class DizControllersCompositionRoot : ICompositionRoot
         serviceRegistry.EnableAutoFactories();
         serviceRegistry.RegisterAutoFactory<IControllerFactory>();
 
+        serviceRegistry.Register<IDizDocument, DizDocument>();
+
         // sorry this is all a huge WIP mess, cleanup incoming soon.
 
         // serviceRegistry.Register<int, int, IReadOnlySnesRom, IMarkManyController>(

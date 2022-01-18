@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.commands;
@@ -176,5 +177,19 @@ namespace Diz.Controllers.interfaces
 
         bool EnsureSelectRealOutputDirectory(bool forcePrompt = false);
         string GetSampleOutput();
+    }
+    
+    public interface IDizAppSettings : INotifyPropertyChanged
+    {
+        string LastProjectFilename { get; set; }
+        bool OpenLastFileAutomatically { get; set; }
+        string LastOpenedFile { get; set; }
+    }
+
+    public interface IDizDocument : INotifyPropertyChanged
+    {
+        Project Project { get; set; }
+        string LastProjectFilename { get; set; }
+        public BindingList<NavigationEntry> NavigationHistory { get; set; }
     }
 }

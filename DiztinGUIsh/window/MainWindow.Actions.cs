@@ -1,5 +1,6 @@
 ﻿using System.Windows.Forms;
 using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -269,10 +270,11 @@ public partial class MainWindow
         moveWithStepToolStripMenuItem.Checked = moveWithStep;
     }
 
+    private readonly IDizAppSettings appSettings; 
+
     private void ToggleOpenLastProjectEnabled()
     {
-        Settings.Default.OpenLastFileAutomatically = openLastProjectAutomaticallyToolStripMenuItem.Checked;
-        Settings.Default.Save();
+        appSettings.OpenLastFileAutomatically = openLastProjectAutomaticallyToolStripMenuItem.Checked;
         UpdateUiFromSettings();
     }
 }

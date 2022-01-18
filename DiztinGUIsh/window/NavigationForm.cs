@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
+using Diz.Controllers.interfaces;
+using Diz.Ui.Winforms.util;
 
 namespace DiztinGUIsh.window
 {
     public partial class NavigationForm : Form
     {
-        private DizDocument document;
+        private IDizDocument document;
         private ISnesNavigation snesNavigation;
 
-        public DizDocument Document
+        public IDizDocument Document
         {
             get => document;
             set

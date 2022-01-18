@@ -1,16 +1,21 @@
 ﻿using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
+using Diz.Controllers.util;
 using Diz.LogWriter;
-using DiztinGUIsh.Properties;
+using Diz.Ui.Winforms.util;
 
 namespace DiztinGUIsh.window;
 
 public partial class MainWindow : Form, IMainGridWindowView
 {
     public MainWindow(
-        IProjectController projectController)
+        IProjectController projectController, 
+        IDizAppSettings appSettings, 
+        IDizDocument document)
     {
+        Document = document;
+        this.appSettings = appSettings;
         ProjectController = projectController;
         ProjectController.ProjectView = this;
 
@@ -36,7 +41,7 @@ public partial class MainWindow : Form, IMainGridWindowView
         UpdatePanels();
         UpdateUiFromSettings();
 
-        if (Settings.Default.OpenLastFileAutomatically)
+        if (appSettings.OpenLastFileAutomatically)
             OpenLastProject();
     }
 

@@ -43,14 +43,14 @@ namespace DiztinGUIsh.window
 
         private void UpdateUiFromSettings()
         {
-            var lastOpenedFilePresent = Settings.Default.LastOpenedFile != "";
+            var lastOpenedFilePresent = appSettings.LastOpenedFile != "";
 
             toolStripOpenLast.Enabled = lastOpenedFilePresent;
             toolStripOpenLast.Text = "Open Last File";
             if (lastOpenedFilePresent)
-                toolStripOpenLast.Text += $" ({Path.GetFileNameWithoutExtension(Settings.Default.LastOpenedFile)})";
+                toolStripOpenLast.Text += $" ({Path.GetFileNameWithoutExtension(appSettings.LastOpenedFile)})";
 
-            openLastProjectAutomaticallyToolStripMenuItem.Checked = Settings.Default.OpenLastFileAutomatically;
+            openLastProjectAutomaticallyToolStripMenuItem.Checked = appSettings.OpenLastFileAutomatically;
         }
 
         private void RefreshUi()

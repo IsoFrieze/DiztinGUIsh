@@ -6,6 +6,7 @@ using Diz.Controllers.controllers;
 using Diz.Core.commands;
 using Diz.Cpu._65816;
 using Diz.LogWriter;
+using Diz.Ui.Winforms.util;
 using DiztinGUIsh.util;
 using DiztinGUIsh.window.dialog;
 

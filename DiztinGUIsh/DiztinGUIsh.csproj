@@ -53,12 +53,6 @@
     <Compile Update="window\dialog\BSNESTraceLogBinaryMonitorForm.Designer.cs">
       <DependentUpon>BSNESTraceLogBinaryMonitorForm.cs</DependentUpon>
     </Compile>
-    <Compile Update="window\dialog\ProgressDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="window\dialog\ProgressDialog.Designer.cs">
-      <DependentUpon>ProgressDialog.cs</DependentUpon>
-    </Compile>
     <Compile Update="window\dialog\ExportDisassembly.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -162,9 +156,6 @@
     <EmbeddedResource Update="window\dialog\BSNESTraceLogBinaryMonitorForm.resx">
       <DependentUpon>BSNESTraceLogBinaryMonitorForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Update="window\dialog\ProgressDialog.resx">
-      <DependentUpon>ProgressDialog.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Update="window\dialog\ExportDisassembly.resx">
       <DependentUpon>ExportDisassembly.cs</DependentUpon>
     </EmbeddedResource>
@@ -208,26 +199,6 @@
     <EmbeddedResource Update="window\dialog\MisalignmentChecker.resx">
       <DependentUpon>MisalignmentChecker.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    
-    <Compile Update="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
     <None Include="build\TidyPublishDir.targets" />
     <Compile Update="window\usercontrols\DataGridEditorControl.cs">
       <SubType>UserControl</SubType>
@@ -239,6 +210,8 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Remove="util\LargeFilesReader.cs" />
+    <EmbeddedResource Remove="Properties\Resources.resx" />
+    <Compile Remove="Properties\Resources.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\.github\workflows\dotnet.yml">

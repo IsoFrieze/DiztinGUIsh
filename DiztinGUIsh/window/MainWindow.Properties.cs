@@ -2,13 +2,14 @@
 using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
+using Diz.Ui.Winforms.util;
 
 namespace DiztinGUIsh.window
 {
     public partial class MainWindow
     {
-        public DizDocument Document { get; } = new();
-
+        // maybe rethink how document and project are interacted with.
+        public IDizDocument Document { get; }
         public Project Project
         {
             get => Document.Project;
@@ -22,7 +23,7 @@ namespace DiztinGUIsh.window
             ProgressBarJob.RunAndWaitForCompletion;
         
         // sub windows
-        public ILabelEditorView AliasList;
+        private ILabelEditorView AliasList;
         private VisualizerForm visualForm;
 
         // TODO: add a handler so we get notified when CurrentViewOffset changes.
@@ -37,10 +38,7 @@ namespace DiztinGUIsh.window
         private int ViewOffset
         {
             get => Project?.CurrentViewOffset ?? 0;
-            set
-            {
-                Project.CurrentViewOffset = value;
-            }
+            set => Project.CurrentViewOffset = value;
         }
 
         private bool importerMenuItemsEnabled;
