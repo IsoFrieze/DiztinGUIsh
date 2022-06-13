@@ -155,11 +155,17 @@ namespace Diz.Controllers.interfaces
         /// <returns></returns>
         bool PromptEditAndConfirmSettings();
     }
-    
-    #if DIZ_3_BRANCH
-    public interface IDataGridEditorForm : IFormViewer, IProjectView
+
+    public interface IPercentCalculatorView
+    {
+        void UpdatePercent();
+    }
+
+    public interface IDataGridEditorForm : 
+        IFormViewer, 
+        IProjectView,
+        IPercentCalculatorView
     {
         IMainFormController MainFormController { get; set; }
     }
-    #endif
 }

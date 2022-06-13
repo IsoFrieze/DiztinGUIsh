@@ -66,6 +66,10 @@ public class ProjectController : IProjectController
 
     public bool OpenProject(string filename)
     {
+        // this was the old way to do it but might be fully replaced by IProjectFileManager now 
+        // new ProjectOpenerGuiController { Handler = this }
+        //     .OpenProject(filename);
+
         ProjectOpenResult projectOpenResult = null;
         var errorMsg = "";
 
@@ -224,8 +228,13 @@ public class ProjectController : IProjectController
         WriteAssemblyOutput(Project.LogWriterSettings, true);
     }
 
+    protected bool RomDataPresent() => Project?.Data?.GetRomSize() > 0;
+
     private void WriteAssemblyOutput(LogWriterSettings settings, bool showProgressBarUpdates = false)
     {
+        if (!RomDataPresent())
+            return;
+        
         var lc = new LogCreator
         {
             Settings = settings,

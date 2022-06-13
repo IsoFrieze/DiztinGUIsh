@@ -57,8 +57,7 @@ public interface ISnesApi<out TData> :
     where TData : IData
 {
     TData Data { get; }
-
-    public void CacheVerificationInfoFor(ISnesCachedVerificationInfo verificationCache);
+    void CacheVerificationInfoFor(ISnesCachedVerificationInfo verificationCache);
 }
 
 public interface ISnesData : ISnesApi<IData>
@@ -142,6 +141,14 @@ public class SnesApi : ISnesData
 
     public int ConvertSnesToPc(int address) => 
         RomUtil.ConvertSnesToPc(address, Data.RomMapMode, GetRomSize());
+    
+    public bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch)
+    {
+        var intermediateAddressOrPointer = GetIntermediateAddressOrPointer(intermediateAddress);
+        var destinationOfIa = ConvertSnesToPc(intermediateAddressOrPointer);
+
+        return destinationOfIa == addressToMatch;
+    }
 
     public int GetIntermediateAddressOrPointer(int offset)
     {
@@ -371,6 +378,19 @@ public static class SnesApiExtensions
         Debug.Assert(paddedShiftJisBytes.Length == RomUtil.LengthOfTitleName);
 
         @this.Data.RomBytes.SetBytesFrom(paddedShiftJisBytes, @this.CartridgeTitleStartingOffset);
+    }
+    
+    // CAUTION: very expensive method. be careful using in UI performance-critical places
+    public static int CalculateTotalBytesReached(this ISnesData @this)
+    {
+        var totalUnreached = 0;
+        var size = @this.GetRomSize();
+
+        for (var i = 0; i < size; i++)
+            if (@this.GetFlag(i) == FlagType.Unreached)
+                totalUnreached++;
+        
+        return size - totalUnreached;
     }
     
     public static ISnesData? GetSnesApi(this IData @this) => 

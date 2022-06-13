@@ -80,19 +80,6 @@ public partial class MainWindow : Form, IMainGridWindowView
         UpdateSaveOptionStates(saveEnabled: false, saveAsEnabled: false, closeEnabled: false);
     }
 
-    public void OnProjectOpened(string filename)
-    {
-        if (visualForm != null)
-            visualForm.Project = Project;
-
-        // TODO: do this with aliaslist too.
-
-        UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
-        RefreshUi();
-
-        Document.LastProjectFilename = filename; // do this last.
-    }
-
     public void OnProjectOpenFail(string errorMsg)
     {
         Document.LastProjectFilename = "";

@@ -4,6 +4,7 @@ using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.commands;
 using Diz.Core.export;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
@@ -54,7 +55,11 @@ namespace Diz.Controllers.interfaces
         public void OpenNewViewOfLastLoadedProject();
     }
     
-    public interface IProjectController : ITraceLogImporters
+    public interface IProjectController : 
+        ITraceLogImporters, 
+        ILabelImporter,
+        IExportDisassembly,
+        IProjectOpenerHandler
     {
         // diz3.0 is going to need some major surgery from this one.
 
@@ -87,7 +92,6 @@ namespace Diz.Controllers.interfaces
         string SaveProject(string filename); // older signature. new should return void
 
         bool ImportRomAndCreateNewProject(string romFilename);
-        void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
         void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null);
 
         bool ConfirmSettingsThenExportAssembly();
@@ -133,20 +137,20 @@ namespace Diz.Controllers.interfaces
     {
         void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
     }
-
-    #if DIZ_3_BRANCH
+    
     public interface IMainFormController : 
         
         IFormController,
+        
+        // NOTE: don't have this BE a project controller, just USE project controller
         
         // TODO: shouldn't have the word 'Grid' in here for Main Form controller. refactor
         // either naming or functionality.
         // IBytesGridViewerDataController<RomByteDataGridRow>,
         
-        IProjectController,
-        I65816CpuOperations, 
-        IExportDisassembly, 
-        IProjectOpenerHandler, 
+        // IProjectController,
+        ISteppable,
+        IAutoSteppable,
         ITraceLogImporters, 
         IProjectNavigation,
         ILabelImporter
@@ -155,8 +159,10 @@ namespace Diz.Controllers.interfaces
         public bool MoveWithStep { get; set; }
         
         void SetProject(string filename, Project project);
+
+        IProjectController ProjectController { get; }
     }
-    #endif
+
 
     public interface IMarkManyController<out TDataSource> : IController
     {

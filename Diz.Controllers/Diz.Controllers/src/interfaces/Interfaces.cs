@@ -1,6 +1,8 @@
 ﻿using System;
+using System.ComponentModel;
 using Diz.Controllers.controllers;
 using Diz.Controllers.util;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 // using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
@@ -22,13 +24,13 @@ namespace Diz.Controllers.interfaces
         Data Data { get; init; }
         TItem Item { get; }
     }
- 
-#if DIZ_3_BRANCH
-    public interface IDataGridRow : IGridRow<ByteEntry>, INotifyPropertyChanged
+    
+    public interface IDataGridRow : IGridRow<IByteEntry>, INotifyPropertyChanged
     {
         
     }
-
+ 
+#if DIZ_3_BRANCH
     public interface IDataSubsetRomByteDataGridLoader<TRow, TItem> : IDataSubsetLoader<TRow, TItem>
     {
         // probably this needs to be refactored away, this exists for dependency injection resolution only

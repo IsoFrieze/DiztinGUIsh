@@ -53,15 +53,15 @@ namespace DiztinGUIsh.window
             openLastProjectAutomaticallyToolStripMenuItem.Checked = appSettings.OpenLastFileAutomatically;
         }
 
-        private void RefreshUi()
-        {
-            importCDLToolStripMenuItem.Enabled = true;
-            UpdateWindowTitle();
-            UpdateDataGridView();
-            ScheduleUpdatePercentageUncovered();
-            table.Invalidate();
-            EnableSubWindows();
-        }
+        // private void RefreshUi()
+        // {
+        //     importCDLToolStripMenuItem.Enabled = true;
+        //     UpdateWindowTitle();
+        //     UpdateDataGridView();
+        //     ScheduleUpdatePercentageUncovered();
+        //     table.Invalidate();
+        //     EnableSubWindows();
+        // }
 
         private void UpdateBase(Util.NumberBase noBase)
         {

@@ -186,12 +186,33 @@ public class Data : IData
             ? offset + i 
             : size - 1;
     }
+    
+    
+    // NOTE: technically not always correct. banks wrap around so, theoretically we should check what operation
+    // we're doing and wrap to the beginning of the bank. for now.... just glossing over it, bigger fish to fry.
+    // "past me" apologizes to 'future you' for this if you got hung up here.
+    //
+    // returns null if out of bounds
+    public byte? GetNextRomByte(int pcOffset)
+    {
+        #if DIZ_3_BRANCH
+        var newOffset = pcOffset + 1;
+        return newOffset >= 0 && newOffset < RomByteSource.Bytes.Count
+            ? RomByteSource.Bytes[newOffset]?.Byte
+            : null;
+        #else
+        var newOffset = pcOffset + 1;
+        return newOffset >= 0 && newOffset < RomBytes.Count
+            ? RomBytes[newOffset]?.Rom
+            : null;
+        #endif
+    }
 
     // get the actual ROM file bytes (i.e. the contents of the SMC file on the disk)
     // note: don't save these anywhere permanent because ROM data is usually copyrighted.
     public IEnumerable<byte> GetFileBytes() => 
         RomBytes.Select(b => b.Rom);
-    
+
     #region Equality
     protected bool Equals(Data other)
     {

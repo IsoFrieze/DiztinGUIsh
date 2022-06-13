@@ -225,7 +225,8 @@ namespace Diz.Core.Interfaces
     public interface ISnesIntermediateAddress
     {
         int GetIntermediateAddressOrPointer(int offset);
-        int GetIntermediateAddress(int offset, bool resolve = false);   
+        int GetIntermediateAddress(int offset, bool resolve = false);
+        bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch);
     }
     
     public interface ISnesAddressConverter
