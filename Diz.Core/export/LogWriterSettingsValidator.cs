@@ -20,6 +20,7 @@ namespace Diz.Core.export
         public LogWriterSettingsOutputString()
         {
             // runs when OutputToString == true
+            // i.e. when we expect the output to be a single .asm file, and not a directory
 
             RuleFor(x => x.Structure)
                 .NotEqual(LogWriterSettings.FormatStructure.OneBankPerFile)
@@ -30,36 +31,41 @@ namespace Diz.Core.export
                 .WithMessage("Can't use one-bank-per-file output with valid file or path specified");
         }
     }
-
+    
     public class LogWriterSettingsOutputMultipleFiles : AbstractValidator<LogWriterSettings>
     {
         private readonly IFilesystemService fs;
         
-        private bool DirectoryExists(string path) =>
-            fs.DirectoryExists(Path.GetDirectoryName(path));
+        private bool OutputDirReallyExistsOnDisk(LogWriterSettings settings)
+        {
+            var path = settings.BuildFullOutputPath();
+            return fs.DirectoryExists(Path.GetDirectoryName(path));
+        }
 
         // this is not the most bulletproof thing in the world.
         // it's hard to validate without hitting the disk, you should follow this with additional checks
         private bool PathLooksLikeDirectoryNameOnly(string fileOrFolderPath) =>
             Path.GetFileName(fileOrFolderPath) == string.Empty ||
             !Path.HasExtension(fileOrFolderPath);
-
-        // runs when OutputToString == false
+        
         public LogWriterSettingsOutputMultipleFiles(IFilesystemService fs)
         {
+            // runs when OutputToString == false
+            // i.e. we expect the output path to be a directory path and not a file.
+            
             this.fs = fs;
             
             RuleFor(x => x.FileOrFolderOutPath)
-                .NotEmpty()
-                .WithMessage("No file path set")
-                .Must(DirectoryExists)
-                .WithMessage("Directory doesn't exist");
+                .NotEmpty().WithMessage("Disassembly output file directory is empty, but is required");
+                
+            RuleFor(settings => settings)
+                .Must(OutputDirReallyExistsOnDisk).WithMessage("Disassembly output directory doesn't exist on disk.");
 
             // verify what we have appears to be a filename and NOT a directory
             RuleFor(x => x.FileOrFolderOutPath)
                 .Must(PathLooksLikeDirectoryNameOnly)
                 .When(settings => settings.Structure == LogWriterSettings.FormatStructure.OneBankPerFile)
-                .WithMessage("Output directory doesn't appear to be a valid");
+                .WithMessage("Disassembly output directory doesn't appear to be a valid directory name");
         }
     }
 }
