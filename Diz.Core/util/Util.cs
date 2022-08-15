@@ -474,26 +474,72 @@ namespace Diz.Core.util
 
             var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
 
+            // Coming in from BSNES symbol map if it begins with the header
+            var fromBSNES = lines.Length > 0 && lines[0].StartsWith("#SNES65816");
+            var inSection = string.Empty;
+
             errLine = 0;
 
-            // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
-            // section. replace with something better
             for (var i = 0; i < lines.Length; i++)
             {
                 var label = new Label();
 
+                string labelAddress = string.Empty;
+
                 errLine = i + 1;
 
-                Util.SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
-                Util.SplitOnFirstComma(remainder, out var labelName, out var labelComment);
+                if (fromBSNES)
+                {
+                    // Skip the line if it's empty or a comment
+                    if (lines[i].Trim().Length == 0 || lines[i].StartsWith('#')) continue;
 
-                label.Name = labelName.Trim();
-                label.Comment = labelComment;
+                    // Set which INI section we are in
+                    if (lines[i].StartsWith('[') && lines[i].EndsWith(']'))
+                    {
+                        inSection = lines[i];
+                        continue;
+                    }
+
+                    if (inSection == "[SYMBOL]")
+                    {
+                        string[] symbols = lines[i].Trim().Split(' ');
+                        labelAddress = symbols[0].Replace(":", "").ToUpper(); // Remove bank colon
+                        label.Name = symbols[1].Replace(".", "_"); // Replace dots which are valid in BSNES
+                    }
+                    else if (inSection == "[COMMENT]")
+                    {
+                        string[] comments = lines[i].Trim().Split(' ', 2);
+                        labelAddress = comments[0].Replace(":", "").ToUpper(); // Remove bank colon
+                        label.Comment = comments[1].Replace("\"", ""); // Remove quotes
+                    }
+                }
+                // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
+                // section. replace with something better
+                else
+                {
+                    Util.SplitOnFirstComma(lines[i], out labelAddress, out var remainder);
+                    Util.SplitOnFirstComma(remainder, out var labelName, out var labelComment);
+
+                    label.Name = labelName.Trim();
+                    label.Comment = labelComment;
+                }
 
                 if (!validLabelChars.Match(label.Name).Success)
                     throw new InvalidDataException("invalid label name: " + label.Name);
 
-                newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), label);
+                var address = int.Parse(labelAddress, NumberStyles.HexNumber, null);
+                if (newValues.ContainsKey(address))
+                {
+                    // Update empty label properties instead of overwriting the entire object
+                    // if there are multiple definitions (like from BSNES or handmade CSV)
+                    var thisLabel = newValues[address];
+                    if (thisLabel.Name.IsEmpty()) thisLabel.Name = label.Name;
+                    if (thisLabel.Comment.IsEmpty()) thisLabel.Comment = label.Comment;
+                }
+                else
+                {
+                    newValues.Add(address, label);
+                }
             }
 
             errLine = -1;
