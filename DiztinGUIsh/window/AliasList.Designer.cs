@@ -61,13 +61,13 @@
             this.Comment});
             dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
             dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.CornflowerBlue;
             dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle4;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 33);
+            this.dataGridView1.Location = new System.Drawing.Point(0, 29);
             this.dataGridView1.Margin = new System.Windows.Forms.Padding(0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowHeadersVisible = false;
@@ -80,7 +80,7 @@
             this.dataGridView1.ShowCellToolTips = false;
             this.dataGridView1.ShowEditingIcon = false;
             this.dataGridView1.ShowRowErrors = false;
-            this.dataGridView1.Size = new System.Drawing.Size(467, 358);
+            this.dataGridView1.Size = new System.Drawing.Size(400, 310);
             this.dataGridView1.TabIndex = 3;
             this.dataGridView1.TabStop = false;
             this.dataGridView1.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.dataGridView1_CellBeginEdit);
@@ -89,7 +89,7 @@
             // 
             // Address
             // 
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Address.DefaultCellStyle = dataGridViewCellStyle1;
             this.Address.HeaderText = "PC";
             this.Address.MaxInputLength = 6;
@@ -98,7 +98,7 @@
             // 
             // Alias
             // 
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Arial Narrow", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Alias.DefaultCellStyle = dataGridViewCellStyle2;
             this.Alias.HeaderText = "Label";
             this.Alias.MaxInputLength = 60;
@@ -107,7 +107,7 @@
             // 
             // Comment
             // 
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Comment.DefaultCellStyle = dataGridViewCellStyle3;
             this.Comment.HeaderText = "Comment";
             this.Comment.MaxInputLength = 800;
@@ -117,10 +117,9 @@
             // import
             // 
             this.import.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.import.Location = new System.Drawing.Point(82, 3);
-            this.import.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.import.Location = new System.Drawing.Point(70, 3);
             this.import.Name = "import";
-            this.import.Size = new System.Drawing.Size(135, 27);
+            this.import.Size = new System.Drawing.Size(116, 23);
             this.import.TabIndex = 1;
             this.import.Text = "Import (Append) ...";
             this.import.UseVisualStyleBackColor = true;
@@ -128,10 +127,9 @@
             // 
             // export
             // 
-            this.export.Location = new System.Drawing.Point(394, 3);
-            this.export.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.export.Location = new System.Drawing.Point(338, 3);
             this.export.Name = "export";
-            this.export.Size = new System.Drawing.Size(72, 27);
+            this.export.Size = new System.Drawing.Size(62, 23);
             this.export.TabIndex = 2;
             this.export.Text = "Export...";
             this.export.UseVisualStyleBackColor = true;
@@ -141,10 +139,9 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 398);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 342);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(469, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(402, 22);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -155,10 +152,9 @@
             // 
             // jump
             // 
-            this.jump.Location = new System.Drawing.Point(4, 3);
-            this.jump.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.jump.Location = new System.Drawing.Point(3, 3);
             this.jump.Name = "jump";
-            this.jump.Size = new System.Drawing.Size(74, 27);
+            this.jump.Size = new System.Drawing.Size(63, 23);
             this.jump.TabIndex = 0;
             this.jump.Text = "Jump to";
             this.jump.UseVisualStyleBackColor = true;
@@ -166,8 +162,7 @@
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.Filter = "Comma Separated Value Files|*.csv|BSNES Symbols Map|*.cpu.sym|Text Files|*.txt|Al" +
-    "l Files|*.*";
+            this.openFileDialog1.Filter = "Comma Separated Value Files|*.csv|BSNES Symbols Map|*.cpu.sym|Text Files|*.txt|All Files|*.*";
             // 
             // saveFileDialog1
             // 
@@ -176,10 +171,9 @@
             // btnImportReplace
             // 
             this.btnImportReplace.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnImportReplace.Location = new System.Drawing.Point(224, 3);
-            this.btnImportReplace.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.btnImportReplace.Location = new System.Drawing.Point(192, 3);
             this.btnImportReplace.Name = "btnImportReplace";
-            this.btnImportReplace.Size = new System.Drawing.Size(154, 27);
+            this.btnImportReplace.Size = new System.Drawing.Size(132, 23);
             this.btnImportReplace.TabIndex = 5;
             this.btnImportReplace.Text = "Import (Replace) ...";
             this.btnImportReplace.UseVisualStyleBackColor = true;
@@ -187,10 +181,10 @@
             // 
             // AliasList
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.import;
-            this.ClientSize = new System.Drawing.Size(469, 420);
+            this.ClientSize = new System.Drawing.Size(402, 364);
             this.Controls.Add(this.btnImportReplace);
             this.Controls.Add(this.jump);
             this.Controls.Add(this.statusStrip1);
@@ -198,9 +192,8 @@
             this.Controls.Add(this.import);
             this.Controls.Add(this.dataGridView1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.MaximumSize = new System.Drawing.Size(697, 5763);
-            this.MinimumSize = new System.Drawing.Size(250, 282);
+            this.MaximumSize = new System.Drawing.Size(600, 5000);
+            this.MinimumSize = new System.Drawing.Size(217, 250);
             this.Name = "AliasList";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
