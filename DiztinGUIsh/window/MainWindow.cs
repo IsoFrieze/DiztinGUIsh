@@ -21,7 +21,7 @@ public partial class MainWindow : Form, IMainGridWindowView
 
         AliasList = projectController.ViewFactory.GetLabelEditorView();
         AliasList.ProjectController = ProjectController;
-            
+        
         Document.PropertyChanged += Document_PropertyChanged;
         ProjectController.ProjectChanged += ProjectController_ProjectChanged;
 

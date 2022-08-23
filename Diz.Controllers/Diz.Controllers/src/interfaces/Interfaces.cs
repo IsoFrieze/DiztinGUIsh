@@ -74,6 +74,7 @@ namespace Diz.Controllers.interfaces
         ILabelEditorView GetLabelEditorView();
         IMainGridWindowView GetMainGridWindowView();
         IFormViewer GetAboutView();
+        IFormViewer GetVisualizerView();
     }
     
     public interface IControllerFactory

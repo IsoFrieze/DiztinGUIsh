@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.commands;
+using Diz.Core.datasubset;
 using Diz.Core.export;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
@@ -34,15 +35,13 @@ public interface IDataController : IController
 {
     Data Data { get; }
 }
-    
-#if DIZ_3_BRANCH
+
     public interface IBytesGridDataController<TRow, TItem> : IDataController, INotifyPropertyChanged
     {
         IBytesGridViewer<TItem> ViewGrid { get; set; } 
         DataSubsetWithSelection<TRow, TItem> DataSubset { get; }
         void MatchCachedRowsToView();
     }
-#endif
 
 public interface IStartFormController : IFormController
 {

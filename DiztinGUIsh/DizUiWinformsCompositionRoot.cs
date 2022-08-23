@@ -19,6 +19,8 @@ namespace DiztinGUIsh;
         serviceRegistry.Register<ILogCreatorSettingsEditorView, LogCreatorSettingsEditorForm>("ExportDisassemblyView");
         serviceRegistry.Register<ILabelEditorView, AliasList>("LabelEditorView");
         serviceRegistry.Register<IMainGridWindowView, MainWindow>("MainGridWindowView");
+        serviceRegistry.Register<IFormViewer, VisualizerForm>("VisualizerView");
+        
 
         // the (string) names of the views above will be mapped to the method names of the interface below.
         // i.e. calling IViewFactory.GetLabelEditorView() will look for somthing named "LabelEditorView"

@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -7,9 +7,8 @@ using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
 using Diz.Core.commands;
 using Diz.Core.export;
-using Diz.Core.import;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
-using Diz.Core.model.byteSources;
 using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.util;
@@ -17,20 +16,18 @@ using Diz.Cpu._65816;
 using Diz.Import.bizhawk;
 using Diz.Import.bsnes.tracelog;
 using Diz.Import.bsnes.usagemap;
-using Diz.LogWriter;
 
 namespace Diz.Controllers.controllers
 {
     public class MainFormController : IMainFormController
     {
-        private FlagType currentMarkFlag = FlagType.Data8Bit;
         private int selectedSnesOffset;
         public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler => ProgressBarJob.RunAndWaitForCompletion;
 
         public event EventHandler Closed;
 
 
-        private readonly ProjectController ProjectController;
+        private readonly ProjectController projectController;
         
         
         public int SelectedSnesOffset
@@ -56,30 +53,32 @@ namespace Diz.Controllers.controllers
         {
             Debug.Assert(view != null);
             dataGridEditorForm = view;
-            ProjectController = projectController;
+            this.projectController = projectController;
             this.percentCompleteCalculator = percentCompleteCalculator;
 
             dataGridEditorForm.MainFormController = this;
             dataGridEditorForm.Closed += OnClosed;
             
-            percentCompleteCalculator.OnUpdatePercent += OnShouldUpdatePercent;
-            ScheduleUpdatePercentageUncovered();
+            // percentCompleteCalculator.OnUpdatePercent += OnShouldUpdatePercent;
+            // ScheduleUpdatePercentageUncovered();
         }
 
         private void OnShouldUpdatePercent(bool forceRecalculate)
         {
-            var calculationMsg = percentCompleteCalculator.
-            dataGridEditorForm.UpdatePercent();
-            percentComplete.Text = outputText;
+            // TODO
+            // var calculationMsg = percentCompleteCalculator.
+            // dataGridEditorForm.UpdatePercent();
+            // percentComplete.Text = outputText;
         }
 
-        public void ScheduleUpdatePercentageUncovered()
-        {
-            percentCompleteCalculator.StartCooldown(3); // 3 times x 2 seconds = 6 seconds.
-
-            // UpdatePercent() with a force refresh is very expensive so only do it when we're idle for a bit.
-            dataGridEditorForm.UpdatePercent(); // less expensive invocation that just updates UI 
-        }
+        // public void ScheduleUpdatePercentageUncovered()
+        // {
+        //     percentCompleteCalculator.StartCooldown(3); // 3 times x 2 seconds = 6 seconds.
+        //
+        //     // UpdatePercent() with a force refresh is very expensive so only do it when we're idle for a bit.
+        //     dataGridEditorForm.UpdatePercent(); // less expensive invocation that just updates UI 
+        // }
+        
         private void OnClosed(object sender, EventArgs e) => Closed?.Invoke(this, e);
         
         public void Show() => dataGridEditorForm.Show();
@@ -88,18 +87,11 @@ namespace Diz.Controllers.controllers
 
         public bool MoveWithStep { get; set; } = true;
 
-        public FlagType CurrentMarkFlag
-        {
-            get => currentMarkFlag;
-            set
-            {
-                currentMarkFlag = value;
-            }
-        }
-        
+        public FlagType CurrentMarkFlag { get; set; } = FlagType.Data8Bit;
+
         public void OpenProject(string filename)
         {
-            ProjectController.OpenProject(filename);
+            projectController.OpenProject(filename);
         }
         
         public void OnProjectOpenSuccess(string filename, Project project)
@@ -112,13 +104,17 @@ namespace Diz.Controllers.controllers
             Project = project;
             Project.PropertyChanged += Project_PropertyChanged;
             
-            ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs
+            
+            
+            ProjectController.ProjectChanged.Invoke(this, new IProjectController.ProjectChangedEventArgs
             {
                 ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Opened,
                 Filename = filename,
                 Project = project,
             });
         }
+
+        public IProjectController ProjectController { get; }
 
         public void OnProjectOpenWarning(string warnings) => 
             dataGridEditorForm.OnProjectOpenWarning(warnings);
@@ -358,6 +354,11 @@ namespace Diz.Controllers.controllers
                 SelectedSnesOffset = destinationOffset;
         }
 
+        public int AutoStepHarsh(int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+
         public void AutoStepHarsh(int offset)
         {
             if (!RomDataPresent()) 
@@ -474,11 +475,13 @@ namespace Diz.Controllers.controllers
             SelectedSnesOffset = snesOffset;
         }
 
+#if DIZ_3_BRANCH
         public void OnUserChangedSelection(ByteEntry newSelection)
         {
             // when user clicks on a new row in the child data grid editor, this fires
             SelectedSnesOffset = newSelection.ParentIndex;
         }
+#endif
 
         private bool IsOffsetInRange(int offset)
         {
@@ -541,5 +544,15 @@ namespace Diz.Controllers.controllers
                 labelEditor.ShowLineItemError(ex.Message, errLine);
             }
         }
+
+        public int Step(int offset, bool branch, bool force, int prevOffset)
+        {
+            throw new NotImplementedException();
+        }
+
+        int IAutoSteppable.AutoStepSafe(int offset)
+        {
+            throw new NotImplementedException();
+        }
     }
-}
+}*/

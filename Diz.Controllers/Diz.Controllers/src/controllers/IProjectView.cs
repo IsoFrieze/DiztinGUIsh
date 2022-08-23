@@ -15,10 +15,14 @@ namespace Diz.Controllers.controllers
     {
     
     }
-    
-    public interface IProjectView : ILongRunningTaskHandler, ISnesNavigation
+
+    public interface IProjectBaseView
     {
-        Project Project { get; set; }
+        Project Project { get; set; }   
+    }
+    
+    public interface IProjectView : IProjectBaseView, ILongRunningTaskHandler, ISnesNavigation
+    {
         void OnProjectOpenFail(string errorMsg);
         void OnProjectSaved();
         void OnExportFinished(LogCreatorOutput.OutputResult result);

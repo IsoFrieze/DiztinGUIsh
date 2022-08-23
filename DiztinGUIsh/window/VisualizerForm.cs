@@ -4,7 +4,7 @@ using Diz.Core.model;
 
 namespace DiztinGUIsh.window
 {
-    public partial class VisualizerForm : Form
+    public partial class VisualizerForm : Form, IFormViewer
     {
         private readonly MainWindow mainWindow;
         private Project project;

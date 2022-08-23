@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Diz.Controllers.controllers;
+using Diz.Controllers.util;
 using Diz.Core.commands;
 using Diz.Core.Interfaces;
 
@@ -89,8 +90,7 @@ namespace Diz.Controllers.interfaces
         Dictionary<MarkCommand.MarkManyProperty, object> SaveCurrentSettings();
     }
     #endif
-
-    #if DIZ_3_BRANCH
+    
     public interface IBytesGridViewer<TByteItem> : IRowBaseViewer<TByteItem>, IViewer
     {
         public List<TByteItem> DataSource { get; set; }
@@ -112,7 +112,6 @@ namespace Diz.Controllers.interfaces
 
         public event SelectedOffsetChange SelectedOffsetChanged;
     }
-    #endif
     
     public interface ILabelEditorView : IFormViewer
     {

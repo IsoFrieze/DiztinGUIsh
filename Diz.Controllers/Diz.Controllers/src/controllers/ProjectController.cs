@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Diz.Controllers.interfaces;
-using Diz.Controllers.util;
 using Diz.Core;
 using Diz.Core.export;
 using Diz.Core.model;
@@ -125,6 +124,26 @@ public class ProjectController : IProjectController
         });
     }
 
+    public void OnProjectOpenWarning(string warnings)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void OnProjectOpenFail(string fatalError)
+    {
+        throw new NotImplementedException();
+    }
+
+    string IProjectOpenerHandler.AskToSelectNewRomFilename(string error)
+    {
+        return AskToSelectNewRomFilename(error);
+    }
+
+    public Project OpenProject(string filename, bool showPopupAlertOnLoaded)
+    {
+        throw new NotImplementedException();
+    }
+
     private void Project_PropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         // TODO: use this to listen to interesting change events in Project/Data
@@ -217,6 +236,11 @@ public class ProjectController : IProjectController
         }
     }
 
+
+    void IProjectOpenerHandler.OnProjectOpenSuccess(string filename, Project project)
+    {
+        OnProjectOpenSuccess(filename, project);
+    }
 
     private string AskToSelectNewRomFilename(string error)
     {
@@ -417,4 +441,6 @@ public class ProjectController : IProjectController
         exportSettingsController.Settings = Project.LogWriterSettings with { }; // operate on a new copy of the settings
         return exportSettingsController;
     }
+
+    public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler { get; }
 }
