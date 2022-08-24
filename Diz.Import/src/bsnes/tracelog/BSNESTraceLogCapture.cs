@@ -77,15 +77,31 @@ public class BsnesTraceLogCapture
         return new WorkerTaskManager();
     }
 
-    protected virtual Stream GetInputStream()
+    protected virtual Stream? GetInputStream()
     {
         return OpenNetworkStream();
     }
 
-    private static NetworkStream OpenNetworkStream(IPAddress ip = null, int port = 27015)
+    private static NetworkStream? OpenNetworkStream(IPAddress? ip = null, int port = 27015)
     {
         var tcpClient = new TcpClient();
-        tcpClient.Connect(ip ?? IPAddress.Loopback, port);
+
+        var remoteIp = ip;
+        if (ip == null)
+        {
+            // weirdly, it seems we can't just use IPAddress.Loopback anymore because it resolves to a weird IP
+            // that doesn't always work.  we'll DNS lookup localhost instead
+            var localhostAddresses = Dns.GetHostAddresses("localhost");
+            if (localhostAddresses.Length > 0)
+            {
+                remoteIp = localhostAddresses[0]; // just pick the first one.
+            }
+        }
+
+        if (remoteIp == null)
+            return null;
+        
+        tcpClient.Connect(remoteIp, port);
         return tcpClient.GetStream();
     }
 
@@ -110,7 +126,7 @@ public class BsnesTraceLogCapture
     private SemaphoreSlim compressedWorkersLimit = new(4,4);
     private SemaphoreSlim uncompressedWorkersLimit = new(4, 4);
 
-    private void ProcessStreamData(Stream networkStream)
+    private void ProcessStreamData(Stream? networkStream)
     {
         var count = 0;
         
@@ -370,7 +386,7 @@ public class BsnesTraceLogFileCapture : BsnesTraceLogCapture
         bytes = File.ReadAllBytes(dataFile);
     }
 
-    protected override Stream GetInputStream()
+    protected override Stream? GetInputStream()
     {
         return new MemoryStream(bytes);
     }
