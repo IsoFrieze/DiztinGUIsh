@@ -98,7 +98,7 @@ public class BsnesImportStreamProcessor
         CancelToken = null;
     }
 
-    public IEnumerable<CompressedWorkItem> GetCompressedWorkItems(Stream? stream)
+    public IEnumerable<CompressedWorkItem> GetCompressedWorkItems(Stream stream)
     {
         while (!CancelToken.IsCancellationRequested)
         {
@@ -113,7 +113,7 @@ public class BsnesImportStreamProcessor
         }
     }
 
-    private CompressedWorkItem ReadPacketFromStream(Stream? stream)
+    private CompressedWorkItem ReadPacketFromStream(Stream stream)
     {
 #if PROFILING
             var mainSpan = Markers.EnterSpan("BSNES socket read");
