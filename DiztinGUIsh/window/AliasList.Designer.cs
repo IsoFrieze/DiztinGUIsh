@@ -162,7 +162,7 @@
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.Filter = "Comma Separated Value Files|*.csv|Text Files|*.txt|All Files|*.*";
+            this.openFileDialog1.Filter = "Comma Separated Value Files|*.csv|BSNES Symbols Map|*.cpu.sym|Text Files|*.txt|All Files|*.*";
             // 
             // saveFileDialog1
             // 
