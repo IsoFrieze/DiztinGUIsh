@@ -26,7 +26,7 @@ _Demo of basic disassembling:_
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/5413064/97286056-69033900-1819-11eb-925d-67e1bbce95a7.gif)
 ![image](https://user-images.githubusercontent.com/5413064/97133932-ed729080-1721-11eb-894e-4c110787aa75.png)
 
-_Tracelog capturing tutorial_: https://github.com/Dotsarecool/DiztinGUIsh/blob/master/TRACE%20CAPTURE%20INSTRUCTIONS.md
+For more details, visit the [Tracelog capturing tutorial](https://github.com/Dotsarecool/DiztinGUIsh/blob/master/TRACE%20CAPTURE%20INSTRUCTIONS.md)
 
 ## Other useful features
 
