@@ -1,8 +1,8 @@
 # HOWTO: Live tracelog capture with Diz+BSNES+
 
 ## Install Main Tools
-1. Diz: https://github.com/Dotsarecool/DiztinGUIsh/releases/ (any version >= 2.1.X will be ok)
-2. BSNES+ special version: https://github.com/binary1230/bsnes-plus/releases !!! NORMAL BSNES+ WONT WORK, YOU MUST USE THIS LINK !!!
+1. Diz: https://github.com/Dotsarecool/DiztinGUIsh/releases/ (use latest release. must be >= 2.2.1.7)
+2. BSNES+ special version: https://github.com/binary1230/bsnes-plus/releases !!! NORMAL BSNES+ WONT WORK, YOU MUST USE THIS LINK. grab whatever latest version is here !!!
 
 ## Start Capturing
 
@@ -34,6 +34,21 @@ In DiztinGUIsh, before you open the capture dialog, click Tools -> Visual Map. L
 This is a sped up video of about a 1 minute tracelog capture run (full version is here: https://www.youtube.com/watch?v=NCZUESf82Rg&feature=youtu.be)
 
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/5413064/97286056-69033900-1819-11eb-925d-67e1bbce95a7.gif)
+
+## Troubleshooting
+
+First, apologies. The whole capture process is a little unfriendly and finicky. We need to improve user-friendliness here.
+
+For network connectivitiy issues (like "Connection refused"), try this:
+
+1. Are you running iTunes by any chance? it seems to sometimes use Port 27015 (TCP). Disable it if so.
+2. Press Windows Key + X, PowerShell Admin
+3. Close BSNES and Diz, run the following commands:
+4. ```netsh int ip show excludedportrange protocol=tcp``` to show reserved ports on your system. If you see a range of ports that overlaps with 27015, you must address this first.
+5. ```netstat -abn``` to look for other apps using port 27015 (like iTunes).  If you see anything, close that application.
+6. Start just BSNES, Tools -> Debugger, check the 'Trace' box.   Run ```netstat -abn``` and look for port 27015 again, you should see BSNES in that list. If you don't, the issue is something wrong with BSNES not listening.
+7. Check windows firewall for any exclusions for port 27015
+8. If it still doesn't work, vist us in Discord in #diztinguish in the SnesLab discord.
 
 # Extra tech info
 
