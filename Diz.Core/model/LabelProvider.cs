@@ -8,6 +8,7 @@ using Diz.Core.Interfaces;
 using Diz.Core.model.byteSources;
 #endif
 using Diz.Core.model.snes;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
@@ -22,7 +23,7 @@ namespace Diz.Core.model
     // on top of SnesAddressSpace and add labels to just THAT.
     public abstract class LabelProviderBase
     {
-        public abstract IAnnotationLabel GetLabel(int snesAddress);
+        [CanBeNull] public abstract IAnnotationLabel GetLabel(int snesAddress);
         
         public string GetLabelName(int snesAddress) => 
             GetLabel(snesAddress)?.Name ?? "";
@@ -80,6 +81,7 @@ namespace Diz.Core.model
         public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels => 
             NormalProvider.Labels.Concat(TemporaryProvider.Labels);
 
+        [CanBeNull]
         public override IAnnotationLabel GetLabel(int snesAddress)
         {
             var normalExisting = NormalProvider.GetLabel(snesAddress);
@@ -225,7 +227,7 @@ namespace Diz.Core.model
             }
         }
 
-        public override Label GetLabel(int snesAddress) => ByteSource.GetOneAnnotation<Label>(snesAddress);
+        public override Label? GetLabel(int snesAddress) => ByteSource.GetOneAnnotation<Label>(snesAddress);
 
         public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
         {
@@ -282,7 +284,7 @@ namespace Diz.Core.model
             }
         }
 
-        public override IAnnotationLabel GetLabel(int snesAddress) => 
+        [CanBeNull] public override IAnnotationLabel GetLabel(int snesAddress) => 
             Labels.TryGetValue(snesAddress, out var label) ? label : null;
         
         #region "Equality"

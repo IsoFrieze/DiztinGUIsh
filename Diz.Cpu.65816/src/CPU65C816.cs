@@ -169,7 +169,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
                 var operand = data.GetRomWord(offset + 1);
                 if (!operand.HasValue)
                     return -1;
-                    
+                
                 return (bank << 16) | (int)operand;
             }
             case Cpu65C816Constants.AddressMode.AddressIndirect:

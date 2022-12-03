@@ -225,13 +225,13 @@
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.ColumnPC.DefaultCellStyle = dataGridViewCellStyle2;
-            this.ColumnPC.HeaderText = "PC";
+            this.ColumnPC.HeaderText = "SNES Addr";
             this.ColumnPC.MaxInputLength = 6;
-            this.ColumnPC.MinimumWidth = 6;
+            this.ColumnPC.MinimumWidth = 9;
             this.ColumnPC.Name = "ColumnPC";
             this.ColumnPC.ReadOnly = true;
             this.ColumnPC.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.ColumnPC.Width = 58;
+            this.ColumnPC.Width = 70;
             // 
             // ColumnChar
             // 

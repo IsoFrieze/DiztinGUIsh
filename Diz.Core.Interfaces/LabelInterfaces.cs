@@ -16,7 +16,7 @@ public interface IReadOnlyLabelProvider
 {
     public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels { get; }
 
-    IAnnotationLabel GetLabel(int snesAddress);
+    IAnnotationLabel? GetLabel(int snesAddress);
     string GetLabelName(int snesAddress);
     string GetLabelComment(int snesAddress);
 }

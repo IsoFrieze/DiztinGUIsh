@@ -62,6 +62,9 @@ namespace Diz.Core.util
 
         public static int ConvertSnesToPc(int address, RomMapMode mode, int size)
         {
+            if (address == -1)
+                return -1;
+            
             var index = ConvertSnesToPcRaw(address, mode, size);
             return index < 0 ? -1 : index;
         }
@@ -150,6 +153,9 @@ namespace Diz.Core.util
 
         public static int ConvertPCtoSnes(int offset, RomMapMode romMapMode, RomSpeed romSpeed)
         {
+            if (offset == -1)
+                return -1;
+            
             switch (romMapMode)
             {
                 case RomMapMode.LoRom:

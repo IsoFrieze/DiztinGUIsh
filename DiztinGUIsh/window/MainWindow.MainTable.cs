@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
 using Diz.Cpu._65816;
@@ -242,7 +243,8 @@ namespace DiztinGUIsh.window
             // editable cells show up green
             if (column == 0 || column == 8 || column == 9 || column == 12) style.SelectionBackColor = Color.Chartreuse;
 
-            switch (Project.Data.GetSnesApi().GetFlag(offset))
+            var snesData = Project.Data.GetSnesApi();
+            switch (snesData.GetFlag(offset))
             {
                 case FlagType.Unreached:
                     style.BackColor = Color.LightGray;
@@ -253,7 +255,7 @@ namespace DiztinGUIsh.window
                     switch (column)
                     {
                         case 4: // <*>
-                            InOutPoint point = Project.Data.GetSnesApi().GetInOutPoint(offset);
+                            InOutPoint point = snesData.GetInOutPoint(offset);
                             int r = 255, g = 255, b = 255;
                             if ((point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) g -= 50;
                             if ((point & (InOutPoint.InPoint)) != 0) r -= 50;
@@ -316,19 +318,32 @@ namespace DiztinGUIsh.window
                     style.ForeColor = Color.LightGray;
                     break;
             }
+            
+            if (CellReferencesSelection(snesData, column, offset, selOffset))
+                style.BackColor = Color.DeepPink;
+        }
 
-            if (selOffset >= 0 && selOffset < Project.Data.GetRomSize())
+        private bool CellReferencesSelection(ISnesData snesData, int column, int offset, int selOffset)
+        {
+            if (!IsValidSelection(snesData, selOffset))
+                return false;
+
+            return column switch
             {
-                if (column == 1
-                    //&& (Project.Data.GetFlag(selOffset) == Data.FlagType.Opcode || Project.Data.GetFlag(selOffset) == Data.FlagType.Unreached)
-                    && Project.Data.ConvertSnesToPc(Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(selOffset)) == offset
-                ) style.BackColor = Color.DeepPink;
+                1 when IsOffsetIaReferencedBy(snesData, selOffset, offset) => true,
+                6 when IsOffsetIaReferencedBy(snesData, offset, selOffset) => true,
+                _ => false,
+            };
+        }
 
-                if (column == 6
-                    //&& (Project.Data.GetFlag(offset) == Data.FlagType.Opcode || Project.Data.GetFlag(offset) == Data.FlagType.Unreached)
-                    && Project.Data.ConvertSnesToPc(Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(offset)) == selOffset
-                ) style.BackColor = Color.DeepPink;
-            }
+        private static bool IsValidSelection(IRomSize snesData, int selOffset) => 
+            selOffset >= 0 && selOffset < snesData.GetRomSize();
+
+        private bool IsOffsetIaReferencedBy(ISnesIntermediateAddress snesData, int iaOffsetToTest, int offsetToMatch)
+        {
+            var ia = snesData.GetIntermediateAddressOrPointer(iaOffsetToTest);
+            var iaPcAddr = Project.Data.ConvertSnesToPc(ia);
+            return ia != -1 && iaPcAddr != -1 && iaPcAddr == offsetToMatch;
         }
 
         private void table_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)

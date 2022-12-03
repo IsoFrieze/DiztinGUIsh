@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace Diz.Test;
 
-public class LogCreatorTests : ContainerFixture
+public class LogCreatorTests1 : ContainerFixture
 {
     private const string ExpectedRaw =
         //          label:       instructions                         ;PC    |rawbytes|ia
@@ -68,7 +68,7 @@ public class LogCreatorTests : ContainerFixture
     }
 
     private readonly ITestOutputHelper debugWriter;
-    public LogCreatorTests(ITestOutputHelper debugWriter)
+    public LogCreatorTests1(ITestOutputHelper debugWriter)
     {
         this.debugWriter = debugWriter;
     }
