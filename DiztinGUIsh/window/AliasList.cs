@@ -33,7 +33,8 @@ public partial class AliasList : Form, ILabelEditorView
 
     private void LabelsOnOnLabelChanged(object? sender, EventArgs e)
     {
-        // this is a bit hacky for the moment. be careful. better to use property notify change/etc later on.
+        // this is a bit hacky and very costly for lots of labels at the moment.
+        // be careful. better to replace with property notify change/etc later on.
         RepopulateFromData();
     }
 

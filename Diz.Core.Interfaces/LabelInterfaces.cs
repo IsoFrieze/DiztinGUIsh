@@ -30,6 +30,7 @@ public interface ILabelProvider
     void RemoveLabel(int snesAddress);
     
     void SetAll(Dictionary<int, IAnnotationLabel> newLabels);
+    void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels);
 }
 
 public interface IReadOnlyLabels
