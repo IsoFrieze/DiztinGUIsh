@@ -120,7 +120,7 @@ public class Data : IData
 
     public byte? GetRomByte(int pcOffset)
     {
-        return RomBytes[pcOffset].Rom;
+        return pcOffset >= RomBytes.Count ? null : RomBytes[pcOffset].Rom;
     }
         
     public byte? GetSnesByte(int snesAddress)

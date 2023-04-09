@@ -126,13 +126,13 @@ namespace Diz.Core.util
             return int.Parse(data);
         }
 
+        // this function is a little weird and redundant maybe?
         public static IEnumerable<string> ReadLines(string path)
         {
             using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 0x1000, FileOptions.SequentialScan);
             using var sr = new StreamReader(fs, Encoding.UTF8);
 
-            string line;
-            while ((line = sr.ReadLine()) != null)
+            while (sr.ReadLine() is { } line)
             {
                 yield return line;
             }
@@ -467,52 +467,6 @@ namespace Diz.Core.util
 
     public static class ContentUtils
     {
-        public static Dictionary<int, Label> ReadLabelsFromCsv(string importFilename, out int errLine)
-        {
-            var newValues = new Dictionary<int, Label>();
-            var lines = Util.ReadLines(importFilename).ToArray();
-
-            var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
-
-            errLine = 0;
-
-            // NOTE: this is kind of a risky way to parse CSV files, won't deal with weirdness in the comments
-            // section. replace with something better
-            for (var i = 0; i < lines.Length; i++)
-            {
-                var label = new Label();
-
-                errLine = i + 1;
-
-                Util.SplitOnFirstComma(lines[i], out var labelAddress, out var remainder);
-                Util.SplitOnFirstComma(remainder, out var labelName, out var labelComment);
-
-                label.Name = labelName.Trim();
-                label.Comment = labelComment;
-
-                if (!validLabelChars.Match(label.Name).Success)
-                    throw new InvalidDataException("invalid label name: " + label.Name);
-
-                newValues.Add(int.Parse(labelAddress, NumberStyles.HexNumber, null), label);
-            }
-
-            errLine = -1;
-            return newValues;
-        }
-        
-        public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, ref int errLine)
-        {
-            var labelsFromCsv = ReadLabelsFromCsv(importFilename, out errLine);
-            
-            if (replaceAll)
-                labelProvider.DeleteAllLabels();
-            
-            foreach (var (key, value) in labelsFromCsv)
-            {
-                labelProvider.AddLabel(key, value, true);
-            }
-        }
-
         public static object SingleOrDefaultOfType<T>(this IEnumerable<T> enumerable, Type desiredType)
         {
             return enumerable.SingleOrDefault(item => item.GetType() == desiredType);

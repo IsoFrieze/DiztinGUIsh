@@ -13,6 +13,7 @@ using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using Diz.Cpu._65816;
+using Diz.Import;
 using Diz.Import.bizhawk;
 using Diz.Import.bsnes.usagemap;
 using Diz.LogWriter;
@@ -227,7 +228,7 @@ public class ProjectController : IProjectController
         var errLine = 0;
         try
         {
-            Project.Data.Labels.ImportLabelsFromCsv(importFilename, replaceAll, ref errLine);
+            Project.Data.Labels.ImportLabelsFromCsv(importFilename, replaceAll, out errLine);
             labelEditor.RepopulateFromData();
         }
         catch (Exception ex)

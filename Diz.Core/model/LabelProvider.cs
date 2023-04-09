@@ -120,6 +120,13 @@ namespace Diz.Core.model
             
             OnLabelChanged?.Invoke(this, EventArgs.Empty);
         }
+
+        public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels)
+        {
+            NormalProvider.AppendLabels(newLabels);
+            
+            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+        }
         
         #region "Equality"
         public bool Equals(LabelsServiceWithTemp other)
@@ -276,6 +283,11 @@ namespace Diz.Core.model
         public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
         {
             DeleteAllLabels();
+            AppendLabels(newLabels);
+        }
+
+        public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels)
+        {
             foreach (var key in newLabels.Keys)
             {
                 Labels.Add(key, newLabels[key]);
