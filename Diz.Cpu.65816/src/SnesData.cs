@@ -174,14 +174,6 @@ public class SnesApi : ISnesData
         }
         return -1;
     }
-    
-    public bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch)
-    {
-        var intermediateAddressOrPointer = GetIntermediateAddressOrPointer(intermediateAddress);
-        var destinationOfIa = ConvertSnesToPc(intermediateAddressOrPointer);
-
-        return destinationOfIa == addressToMatch;
-    }
 
     public int GetRomSize() => 
         Data.RomBytes?.Count ?? 0;
