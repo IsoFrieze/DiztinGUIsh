@@ -75,6 +75,9 @@ public class BizHawkCdlImporter
             if (cdlFlag == Flag.None)
                 continue;
 
+            if (snesData.GetFlag(offset) != FlagType.Unreached)
+                continue;
+
             var type = FlagType.Unreached;
             if ((cdlFlag & Flag.ExecFirst) != 0)
             {
