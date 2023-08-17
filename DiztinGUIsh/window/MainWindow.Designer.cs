@@ -517,6 +517,7 @@
             // 
             this.toolStrip_exportDisassemblyEditSettingsFirst.Enabled = false;
             this.toolStrip_exportDisassemblyEditSettingsFirst.Name = "toolStrip_exportDisassemblyEditSettingsFirst";
+            this.toolStrip_exportDisassemblyEditSettingsFirst.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.E)));
             this.toolStrip_exportDisassemblyEditSettingsFirst.Size = new System.Drawing.Size(334, 22);
             this.toolStrip_exportDisassemblyEditSettingsFirst.Text = "Export Disassemly (Edit Settings First)";
             this.toolStrip_exportDisassemblyEditSettingsFirst.Click += new System.EventHandler(this.toolStrip_exportDisassemblyEditSettingsFirst_Click);
