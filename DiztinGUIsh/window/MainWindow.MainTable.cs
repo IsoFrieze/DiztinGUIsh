@@ -150,6 +150,12 @@ namespace DiztinGUIsh.window
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
                     table.BeginEdit(true);
                     break;
+                case Keys.Enter:
+                    table.BeginEdit(true);
+                    break;
+                case Keys.Delete:
+                    table.CurrentCell.Value = null;
+                    break;
             }
 
             e.Handled = true;
