@@ -129,15 +129,15 @@ namespace DiztinGUIsh.window
                     Mark(offset);
                     break;
                 case Keys.L:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[0];
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.Label];
                     table.BeginEdit(true);
                     break;
                 case Keys.B:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[8];
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.DataBank];
                     table.BeginEdit(true);
                     break;
                 case Keys.D:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[9];
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.DirectPage];
                     table.BeginEdit(true);
                     break;
                 case Keys.M:
@@ -147,7 +147,7 @@ namespace DiztinGUIsh.window
                     Project.Data.GetSnesApi().SetXFlag(offset, !Project.Data.GetSnesApi().GetXFlag(offset));
                     break;
                 case Keys.C:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
+                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.Comment];
                     table.BeginEdit(true);
                     break;
             }
@@ -160,47 +160,47 @@ namespace DiztinGUIsh.window
         {
             var row = e.RowIndex + ViewOffset;
             if (row >= Project.Data.GetRomSize()) return;
-            switch (e.ColumnIndex)
+            switch ((ColumnType) e.ColumnIndex)
             {
-                case 0:
+                case ColumnType.Label:
                     e.Value = Project.Data.Labels.GetLabelName(Project.Data.ConvertPCtoSnes(row));
                     break;
-                case 1:
+                case ColumnType.Offset:
                     e.Value = Util.NumberToBaseString(Project.Data.ConvertPCtoSnes(row), Util.NumberBase.Hexadecimal, 6);
                     break;
-                case 2:
+                case ColumnType.AsciiCharRep:
                     e.Value = (char)Project.Data.GetRomByte(row);
                     break;
-                case 3:
+                case ColumnType.NumericRep:
                     e.Value = Util.NumberToBaseString(Project.Data.GetRomByte(row) ?? 0x0, displayBase);
                     break;
-                case 4:
+                case ColumnType.Point:
                     e.Value = RomUtil.PointToString(Project.Data.GetSnesApi().GetInOutPoint(row));
                     break;
-                case 5:
+                case ColumnType.Instruction:
                     var len = Project.Data.GetSnesApi().GetInstructionLength(row);
                     e.Value = row + len <= Project.Data.GetRomSize() ? Project.Data.GetSnesApi().GetInstruction(row) : "";
                     break;
-                case 6:
+                case ColumnType.IA:
                     var ia = Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(row);
                     e.Value = ia >= 0 ? Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6) : "";
                     break;
-                case 7:
+                case ColumnType.TypeFlag:
                     e.Value = Util.GetEnumDescription(Project.Data.GetSnesApi().GetFlag(row));
                     break;
-                case 8:
+                case ColumnType.DataBank:
                     e.Value = Util.NumberToBaseString(Project.Data.GetSnesApi().GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
                     break;
-                case 9:
+                case ColumnType.DirectPage:
                     e.Value = Util.NumberToBaseString(Project.Data.GetSnesApi().GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
                     break;
-                case 10:
+                case ColumnType.MFlag:
                     e.Value = RomUtil.BoolToSize(Project.Data.GetSnesApi().GetMFlag(row));
                     break;
-                case 11:
+                case ColumnType.XFlag:
                     e.Value = RomUtil.BoolToSize(Project.Data.GetSnesApi().GetXFlag(row));
                     break;
-                case 12:
+                case ColumnType.Comment:
                     e.Value = Project.Data.GetCommentText(Project.Data.ConvertPCtoSnes(row));
                     break;
             }
@@ -212,24 +212,24 @@ namespace DiztinGUIsh.window
             int result;
             int row = e.RowIndex + ViewOffset;
             if (row >= Project.Data.GetRomSize()) return;
-            switch (e.ColumnIndex)
+            switch ((ColumnType) e.ColumnIndex)
             {
-                case 0:
+                case ColumnType.Label:
                     Project.Data.Labels.AddLabel(Project.Data.ConvertPCtoSnes(row), new Diz.Core.model.Label() { Name = value }, true);
                     break; // todo (validate for valid label characters)
-                case 8:
+                case ColumnType.DataBank:
                     if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.GetSnesApi().SetDataBank(row, result);
                     break;
-                case 9:
+                case ColumnType.DirectPage:
                     if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.GetSnesApi().SetDirectPage(row, result);
                     break;
-                case 10:
+                case ColumnType.MFlag:
                     Project.Data.GetSnesApi().SetMFlag(row, (value == "8" || value == "M"));
                     break;
-                case 11:
+                case ColumnType.XFlag:
                     Project.Data.GetSnesApi().SetXFlag(row, (value == "8" || value == "X"));
                     break;
-                case 12:
+                case ColumnType.Comment:
                     Project.Data.AddComment(Project.Data.ConvertPCtoSnes(row), value, true);
                     break;
             }
@@ -240,7 +240,7 @@ namespace DiztinGUIsh.window
         public void PaintCell(int offset, DataGridViewCellStyle style, int column, int selOffset)
         {
             // editable cells show up green
-            if (column == 0 || column == 8 || column == 9 || column == 12) style.SelectionBackColor = Color.Chartreuse;
+            if (column == (int) ColumnType.Label || column == (int) ColumnType.DataBank || column == (int) ColumnType.DirectPage || column == (int) ColumnType.Comment) style.SelectionBackColor = Color.Chartreuse;
 
             switch (Project.Data.GetSnesApi().GetFlag(offset))
             {
@@ -250,9 +250,9 @@ namespace DiztinGUIsh.window
                     break;
                 case FlagType.Opcode:
                     int opcode = Project.Data.GetRomByte(offset) ?? 0x0;
-                    switch (column)
+                    switch ((ColumnType) column)
                     {
-                        case 4: // <*>
+                        case ColumnType.Point:
                             InOutPoint point = Project.Data.GetSnesApi().GetInOutPoint(offset);
                             int r = 255, g = 255, b = 255;
                             if ((point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) g -= 50;
@@ -260,25 +260,25 @@ namespace DiztinGUIsh.window
                             if ((point & (InOutPoint.ReadPoint)) != 0) b -= 50;
                             style.BackColor = Color.FromArgb(r, g, b);
                             break;
-                        case 5: // Instruction
+                        case ColumnType.Instruction:
                             if (opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 // RTI WAI STP SED
                                 || opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42 // XCE BRK COP WDM
                             ) style.BackColor = Color.Yellow;
                             break;
-                        case 8: // Data Bank
+                        case ColumnType.DataBank:
                             if (opcode == 0xAB || opcode == 0x44 || opcode == 0x54) // PLB MVP MVN
                                 style.BackColor = Color.OrangeRed;
                             else if (opcode == 0x8B) // PHB
                                 style.BackColor = Color.Yellow;
                             break;
-                        case 9: // Direct Page
+                        case ColumnType.DirectPage:
                             if (opcode == 0x2B || opcode == 0x5B) // PLD TCD
                                 style.BackColor = Color.OrangeRed;
                             if (opcode == 0x0B || opcode == 0x7B) // PHD TDC
                                 style.BackColor = Color.Yellow;
                             break;
-                        case 10: // M Flag
-                        case 11: // X Flag
+                        case ColumnType.MFlag:
+                        case ColumnType.XFlag:
                             int mask = column == 10 ? 0x20 : 0x10;
                             if (opcode == 0x28 || ((opcode == 0xC2 || opcode == 0xE2) // PLP SEP REP
                                 && (Project.Data.GetRomByte(offset + 1) & mask) != 0)) // relevant bit set
@@ -319,12 +319,12 @@ namespace DiztinGUIsh.window
 
             if (selOffset >= 0 && selOffset < Project.Data.GetRomSize())
             {
-                if (column == 1
+                if (column == (int) ColumnType.Offset
                     //&& (Project.Data.GetFlag(selOffset) == Data.FlagType.Opcode || Project.Data.GetFlag(selOffset) == Data.FlagType.Unreached)
                     && Project.Data.ConvertSnesToPc(Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(selOffset)) == offset
                 ) style.BackColor = Color.DeepPink;
 
-                if (column == 6
+                if (column == (int) ColumnType.IA
                     //&& (Project.Data.GetFlag(offset) == Data.FlagType.Opcode || Project.Data.GetFlag(offset) == Data.FlagType.Unreached)
                     && Project.Data.ConvertSnesToPc(Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(offset)) == selOffset
                 ) style.BackColor = Color.DeepPink;
@@ -401,13 +401,13 @@ namespace DiztinGUIsh.window
 
         private void BeginEditingComment()
         {
-            table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
+            table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.Comment];
             table.BeginEdit(true);
         }
 
         private void BeginAddingLabel()
         {
-            table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[0];
+            table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.Label];
             table.BeginEdit(true);
         }
     }
