@@ -67,7 +67,7 @@ namespace Diz.Controllers.interfaces
     }
     #if DIZ_3_BRANCH
     
-    // diz3 version
+    // diz3 version (actually... dont use it)
     public interface IMarkManyView : IViewer, IModalDialog
     {
         int Property { get; }
@@ -77,7 +77,7 @@ namespace Diz.Controllers.interfaces
     }
     
     #else
-    // diz2 version
+    // diz2 version (use it)
     public interface IMarkManyView<TDataSource> : IViewer, IModalDialog 
         where TDataSource : IRomSize
     {

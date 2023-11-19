@@ -85,6 +85,8 @@ public partial class AliasList : Form, ILabelEditorView
         try
         {
             using var sw = new StreamWriter(fileName);
+            
+            // TODO: use a better CSV output tool for this. this probably doesn't escape strings properly/etc
             WriteLabelsToCsv(sw);
         } catch (Exception)
         {
