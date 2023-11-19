@@ -42,6 +42,11 @@
         "resolved": "6.0.0",
         "contentHash": "pBnVzNQYd0OHqh0VLu/hi0zFOTtyF8QwtziQBmzX/ZtVOea4+JEVOGu29DHeSOA0a9SFrYjQorBrOLuKLhcMNQ=="
       },
+      "CsvHelper": {
+        "type": "Transitive",
+        "resolved": "30.0.1",
+        "contentHash": "rcZtgbWR+As4G3Vpgx0AMNmShGuQLFjkHAPIIflzrfkJCx8/AOd4m96ZRmiU1Wi39qS5UVjV0P8qdgqOo5Cwyg=="
+      },
       "ExtendedXmlSerializer": {
         "type": "Transitive",
         "resolved": "3.7.6",
@@ -331,62 +336,63 @@
       "diz.controllers": {
         "type": "Project",
         "dependencies": {
-          "Diz.Core": "1.0.0",
-          "Diz.Import": "1.0.0",
-          "Diz.LogWriter": "1.0.0",
-          "LightInject": "6.4.0"
+          "Diz.Core": "[1.0.0, )",
+          "Diz.Import": "[1.0.0, )",
+          "Diz.LogWriter": "[1.0.0, )",
+          "LightInject": "[6.4.0, )"
         }
       },
       "diz.core": {
         "type": "Project",
         "dependencies": {
-          "Diz.Core.Interfaces": "1.0.0",
-          "ExtendedXmlSerializer": "3.7.6",
-          "FluentValidation": "10.3.6",
-          "IX.Observable": "0.7.3",
-          "JetBrains.Annotations": "2021.3.0",
-          "JetBrains.Profiler.SelfApi": "2.2.0",
-          "LightInject": "6.4.0",
-          "SharpZipLib": "1.3.3",
-          "System.Diagnostics.Tracing": "4.3.0",
-          "System.Resources.Extensions": "6.0.0",
-          "System.Text.Encoding.CodePages": "6.0.0"
+          "Diz.Core.Interfaces": "[1.0.0, )",
+          "ExtendedXmlSerializer": "[3.7.6, )",
+          "FluentValidation": "[10.3.6, )",
+          "IX.Observable": "[0.7.3, )",
+          "JetBrains.Annotations": "[2021.3.0, )",
+          "JetBrains.Profiler.SelfApi": "[2.2.0, )",
+          "LightInject": "[6.4.0, )",
+          "SharpZipLib": "[1.3.3, )",
+          "System.Diagnostics.Tracing": "[4.3.0, )",
+          "System.Resources.Extensions": "[6.0.0, )",
+          "System.Text.Encoding.CodePages": "[6.0.0, )"
         }
       },
       "diz.core.interfaces": {
         "type": "Project",
         "dependencies": {
-          "IX.Observable": "0.7.3"
+          "IX.Observable": "[0.7.3, )"
         }
       },
       "diz.cpu.65816": {
         "type": "Project",
         "dependencies": {
-          "Diz.Core": "1.0.0",
-          "Diz.Core.Interfaces": "1.0.0"
+          "Diz.Core": "[1.0.0, )",
+          "Diz.Core.Interfaces": "[1.0.0, )"
         }
       },
       "diz.import": {
         "type": "Project",
         "dependencies": {
-          "Diz.Core": "1.0.0",
-          "Diz.Cpu.65816": "1.0.0"
+          "Diz.Core": "[1.0.0, )",
+          "Diz.Cpu.65816": "[1.0.0, )"
         }
       },
       "diz.logwriter": {
         "type": "Project",
         "dependencies": {
-          "Diz.Core": "1.0.0",
-          "Diz.Cpu.65816": "1.0.0",
-          "LightInject": "6.4.0"
+          "CsvHelper": "[30.0.1, )",
+          "Diz.Core": "[1.0.0, )",
+          "Diz.Cpu.65816": "[1.0.0, )",
+          "LightInject": "[6.4.0, )"
         }
       },
       "diz.ui.winforms": {
         "type": "Project",
         "dependencies": {
-          "Diz.Controllers": "1.0.0",
-          "JetBrains.Annotations": "2021.3.0",
-          "LightInject": "6.4.0"
+          "Diz.Controllers": "[1.0.0, )",
+          "JetBrains.Annotations": "[2021.3.0, )",
+          "LightInject": "[6.4.0, )"
         }
       }
     }
