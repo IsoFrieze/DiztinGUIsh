@@ -15,18 +15,6 @@ public interface IProject :
     IProjectWithSession,
     ISnesCachedVerificationInfo // see if we can get rid of this eventually. only needed for now for serialization
 {
-    // TODO: remove anything from here we don't need on the interface.
-    // TODO: remove snes-specific stuff
-    // a lot of this is for serialization purposes only, we should probably make a serializer class that populates a project class
-    
-    public string ProjectFileName { get; }
-    
-    // TODO: can we get rid of this? projects shouldn't have to know about the logwriter system.
-    // however, we do want to serialize this data with the project.
-    public LogWriterSettings LogWriterSettings { get; }
-
-    public int CurrentViewOffset { get; }
-
     public Data Data { get; }
 }
 
