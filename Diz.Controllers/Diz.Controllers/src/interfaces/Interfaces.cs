@@ -78,7 +78,6 @@ namespace Diz.Controllers.interfaces
     {
         ILogCreatorSettingsEditorController GetAssemblyExporterSettingsController();
         IImportRomDialogController GetImportRomDialogController();
-        IImportRomDialogController GetProjectController();
         ILargeFilesReaderController GetLargeFileReaderProgressController();
     }
 }
