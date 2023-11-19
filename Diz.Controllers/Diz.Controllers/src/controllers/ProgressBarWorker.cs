@@ -9,7 +9,7 @@ namespace Diz.Controllers.controllers
     // TODO: replace this with Task and async/await. don't use threads directly.
     public abstract class ProgressBarWorker
     {
-        public IProgressView View { get; }
+        public IProgressView View { get; set; }
         public bool IsMarquee { get; init; }
         public string TextOverride { get; init; }
         
