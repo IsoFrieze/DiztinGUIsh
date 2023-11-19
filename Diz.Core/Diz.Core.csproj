@@ -51,7 +51,6 @@
   <ItemGroup>
     <Compile Remove="arch\CpuOperations.cs" />
     <Compile Remove="import\**" />
-    <Compile Remove="export\LogInterfaces.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="import\**" />
