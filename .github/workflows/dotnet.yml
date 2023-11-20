@@ -18,7 +18,7 @@ jobs:
 
       - name: Set version string
         id: ver
-        run: echo "::set-output name=ver::DiztinGUIsh-${{ steps.date.outputs.date }}--${{ env.GITHUB_REF_SLUG }}-${{ env.GITHUB_SHA_SHORT }}-${{env.GITHUB_REPOSITORY_OWNER_PART_SLUG != 'dotsarecool' && env.GITHUB_REPOSITORY_OWNER_PART_SLUG || 'official'}}"
+        run: echo "::set-output name=ver::DiztinGUIsh-${{ steps.date.outputs.date }}--${{ env.GITHUB_REF_SLUG }}-${{ env.GITHUB_SHA_SHORT }}-${{env.GITHUB_REPOSITORY_OWNER_PART_SLUG != 'isofrieze' && env.GITHUB_REPOSITORY_OWNER_PART_SLUG || 'official'}}"
 
       - name: Print version
         run: echo "version ${{ steps.ver.outputs.ver }}"
