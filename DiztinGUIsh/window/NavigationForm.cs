@@ -34,6 +34,16 @@ namespace DiztinGUIsh.window
         public NavigationForm()
         {
             InitializeComponent();
+            FormClosing += Navigation_Closing;
+        }
+        
+        private void Navigation_Closing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason != CloseReason.UserClosing) 
+                return;
+            
+            e.Cancel = true;
+            Hide();
         }
 
         private void Navigation_Load(object sender, EventArgs e)
