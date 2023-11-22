@@ -52,7 +52,7 @@ public partial class MainWindow
             
         ProjectController.MarkChanged();
         var newOffset = Project.Data.GetSnesApi().Step(offset, false, false, offset - 1);
-        SelectOffset(newOffset, new ISnesNavigation.HistoryArgs {Description = "Step Over"});
+        SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Step Over"}, overshootAmount: 20);
         UpdateUi_TimerAndPercent();
     }
 
@@ -63,7 +63,7 @@ public partial class MainWindow
             
         ProjectController.MarkChanged();
         var newOffset = Project.Data.GetSnesApi().Step(offset, true, false, offset - 1);
-        SelectOffset(newOffset, new ISnesNavigation.HistoryArgs {Description = "Step Into"});
+        SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Step Into"}, overshootAmount: 20);
         UpdateUi_TimerAndPercent();
     }
 
@@ -75,7 +75,7 @@ public partial class MainWindow
         ProjectController.MarkChanged();
         var destination = Project.Data.GetSnesApi().AutoStepSafe(offset);
         if (moveWithStep) 
-            SelectOffset(destination, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Safe)"});
+            SelectOffset(destination, -1, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Safe)"}, overshootAmount: 20);
             
         UpdateUi_TimerAndPercent();
     }
@@ -92,7 +92,7 @@ public partial class MainWindow
         var destination = Project.Data.GetSnesApi().AutoStepHarsh(newOffset, count);
             
         if (moveWithStep) 
-            SelectOffset(destination, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Harsh)"});
+            SelectOffset(destination, -1, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Harsh)"}, overshootAmount:20);
 
         UpdateUi_TimerAndPercent();
     }
@@ -105,7 +105,7 @@ public partial class MainWindow
         ProjectController.MarkChanged();
         var newOffset = Project.Data.GetSnesApi().MarkTypeFlag(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag));
             
-        SelectOffset(newOffset, new ISnesNavigation.HistoryArgs {Description = "Mark (single)"});
+        SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Mark (single)"}, overshootAmount: 20);
             
         UpdateUi_TimerAndPercent();
     }
@@ -159,7 +159,7 @@ public partial class MainWindow
     public void GoTo(int offset)
     {
         if (IsOffsetInRange(offset))
-            SelectOffset(offset, new ISnesNavigation.HistoryArgs {Description = "Goto"});
+            SelectOffset(offset, -1, new ISnesNavigation.HistoryArgs {Description = "Goto"}, overshootAmount: 20);
         else
             ShowOffsetOutOfRangeMsg();
     }
