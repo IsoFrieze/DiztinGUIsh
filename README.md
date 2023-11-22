@@ -19,6 +19,8 @@ Official support channel is #diztinguish in the https://sneslab.net/ discord
 _Demo of basic disassembling:_
 ![ezgif com-gif-maker](https://i.imgur.com/Tb2H484.gif)
 
+View more docs here: https://github.com/IsoFrieze/DiztinGUIsh/blob/master/DiztinGUIsh/dist/HELP.md
+
 ---
 
 **Realtime tracelog capturing**: We provide a tight integration with a custom BSNES build to capture CPU tracelog data over a socket connection. You don't have to play the game at 2FPS anymore, or deal with wrangling gigabyte-sized tracelog files.  Simply hit 'capture' and Diz will talk directly to a running BSNES CPU, capturing data for as long as you like. Turn the ROM visualizer on and watch this process in realtime.
