@@ -1,21 +1,13 @@
-﻿DiztinGUIsh Help File
-
-DiztinGUIsh Help - v1.0.1.6
-===========================
-
-these docs are a little outdated and need updating for the 2.x branch of Diz. most of it still applies unchanged though.
-
-Introduction
-------------
+﻿DiztinGUIsh Introduction
+------------------------
 
 DiztinGUIsh is a Super NES ROM disassembler. Open a ROM file, flag each byte as code or data, add some extra info like labels and comments, 
 and disassemble. The output will be one or more .asm files that are (idealy) equivalent to the original source code of the game. 
 The assembly files can then be re-assembled with [Asar](https://github.com/RPGHacker/asar/releases) to check for integrity,
 and/or to make simple changes to the code.
 
-As you may guess, tagging every single byte as data or code is a tedious process, so DiztinGUIsh has many tools built in to make the process more bearable. 
-Disassembling 65C816 code can be quite tricky, so some human input is still required to get a 100% accurate disassembly, but most of the job will be done
-automatically.
+As you may guess, tagging every single byte as data or code is a tedious process, so DiztinGUIsh has many tools built in to make the 
+process more bearable. Disassembling 65C816 code can be quite tricky, so some human input is still required to get a 100% accurate disassembly, but most of the job will be done automatically.
 
 Diz works GREAT with Tracelog tools, like BSNES+. We modified a version of BSNES to also support live capture from a running BSNES,
 which means you can run the game at full framerate and grab all the juicy data coming off the CPU. This will mark millions of instructions
