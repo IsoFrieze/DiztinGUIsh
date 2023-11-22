@@ -71,7 +71,10 @@ namespace DiztinGUIsh.window
 
         private void gotoNextUnreachedToolStripMenuItem_Click(object sender, EventArgs e) => 
             GoToUnreached(false, true);
-        
+
+        private void gotoNextUnreachedInPointToolStripMenuItem_Click(object sender, EventArgs e) =>
+            GoToNextUnreachedInPoint(SelectedOffset);
+
         private void markOneToolStripMenuItem_Click(object sender, EventArgs e) => 
             Mark(SelectedOffset);
         

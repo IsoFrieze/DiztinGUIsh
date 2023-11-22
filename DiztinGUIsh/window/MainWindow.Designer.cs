@@ -107,6 +107,7 @@
             this.gotoFirstUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gotoNearUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gotoNextUnreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gotoNextUnreachedInPointToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectMarkerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.unreachedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.opcodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -705,7 +706,8 @@
             this.gotoIntermediateAddressToolStripMenuItem,
             this.gotoFirstUnreachedToolStripMenuItem,
             this.gotoNearUnreachedToolStripMenuItem,
-            this.gotoNextUnreachedToolStripMenuItem});
+            this.gotoNextUnreachedToolStripMenuItem,
+            this.gotoNextUnreachedInPointToolStripMenuItem});
             this.navigateToolStripMenuItem.Name = "navigateToolStripMenuItem";
             this.navigateToolStripMenuItem.Size = new System.Drawing.Size(66, 20);
             this.navigateToolStripMenuItem.Text = "&Navigate";
@@ -784,6 +786,14 @@
             this.gotoNextUnreachedToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
             this.gotoNextUnreachedToolStripMenuItem.Text = "Goto &Next Unreached";
             this.gotoNextUnreachedToolStripMenuItem.Click += new System.EventHandler(this.gotoNextUnreachedToolStripMenuItem_Click);
+            // 
+            // gotoNextUnreachedInPointToolStripMenuItem
+            // 
+            this.gotoNextUnreachedInPointToolStripMenuItem.Name = "gotoNextUnreachedInPointToolStripMenuItem";
+            this.gotoNextUnreachedInPointToolStripMenuItem.ShortcutKeyDisplayString = "F3";
+            this.gotoNextUnreachedInPointToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.gotoNextUnreachedInPointToolStripMenuItem.Text = "Goto Next Unreached InPoint";
+            this.gotoNextUnreachedInPointToolStripMenuItem.Click += new System.EventHandler(this.gotoNextUnreachedInPointToolStripMenuItem_Click);
             // 
             // selectMarkerToolStripMenuItem
             // 
@@ -1260,6 +1270,7 @@
         private System.Windows.Forms.ToolStripMenuItem gotoFirstUnreachedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gotoNearUnreachedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gotoNextUnreachedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gotoNextUnreachedInPointToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectMarkerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem unreachedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem opcodeToolStripMenuItem;

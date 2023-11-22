@@ -77,57 +77,12 @@ namespace DiztinGUIsh.window
             var amount = 0x01;
 
             Console.WriteLine(e.KeyCode);
+
             var snesData = Project.Data.GetSnesApi();
-            
             switch (e.KeyCode)
             {
                 case Keys.F3:
-                    // experimental. jump to next instruction that is an in point (something known jumps to it)
-                    // AND is also marked as "unknown"
-                    // these are often small branches not taken during tracelog runs, 
-                    // and are easy targets for filling them in relatively risk-free since you know the M and X flags of
-                    // the instruction of where you jumped FROM.
-                    var (foundOffset, iaSourceOffsetPc) = snesData.FindNextUnreachedInPointAfter(offset);
-                    if (foundOffset == -1)
-                    {
-                        ShowInfo("Can't jump to next unreached InPoint (none found)", "Woops");
-                        return;
-                    }
-
-                    // now, if we want to get real fancy.... copy the MX flags from the previous place to here so when we step from here, it works.
-                    
-                    // less aggressive way:
-                    // if (iaSource != -1)
-                    // {
-                    //     snesData.SetMxFlags(iaSource, snesData.GetMxFlags(iaSource));
-                    // }
-                    // SelectOffset(foundOffset, -1);
-                    
-                    // more aggressive way (fine, unless your source data is a lie)
-                    // do this instead of SelectOffset so we copy the MX flags from the previous location to here.
-                    //if (iaSource != -1)
-                    //    StepIn(iaSource);
-
-                    if (iaSourceOffsetPc != -1)
-                    {
-                        // this is vaguely doing what Step() does without marking the bytes we're on as opcode+operands.
-                        // we'll set the flags and such but, leave the actual marking to be an explicit action by the user
-                        var (opcode, directPage, dataBank, xFlag, mFlag) = snesData.GetCpuStateFor(iaSourceOffsetPc, -1);
-                        
-                        // set the place we're GOING to with the jump point's MX flags
-                        snesData.SetDataBank(foundOffset, dataBank);
-                        snesData.SetDirectPage(foundOffset, directPage);
-                        snesData.SetXFlag(foundOffset, xFlag);
-                        snesData.SetMFlag(foundOffset, mFlag);
-                        
-                        // very optional. just to create an entry in the history.
-                        // SelectOffset(iaSource, -1, new ISnesNavigation.HistoryArgs {Description = "Find next unreached: origin point"});
-                        MarkHistoryPoint(iaSourceOffsetPc, new ISnesNavigation.HistoryArgs {Description = "Find next unreached: branch origin"}, "origin");
-                    }
-
-                    // now do the real thing
-                    SelectOffset(foundOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Find next unreached in-point"}, overshootAmount: 20);
-                    
+                    GoToNextUnreachedInPoint(offset);
                     break;
                 
                 case Keys.Home:
