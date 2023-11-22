@@ -263,11 +263,14 @@ You can press T to jump to the intermediate address of the currently selected in
 You can press U, H, or N to jump to the first unreached byte of the project, the nearest unreached block behind the selected address, or 
 the nearest unreached block ahead of the selected address. These are useful just to get somewhere you haven't been yet.
 
+The History window is a record of your recent activity in the project.  You probably want to be best friends with ALT+LEFT and ALT+RIGHT while stepping,
+since branches can jump you all over the codebase and you can lose your train of thought
+
 Press F3 to go to the "Next Unreached In Point". Handy when working with tracelog imports, which fill in a LOT of opcodes but leave small branches unmarked 
 that are rarely taken by normal gameplay.
 
-The History window is a record of your recent activity in the project.  You probably want to be best friends with ALT+LEFT and ALT+RIGHT while stepping,
-since branches can jump you all over the codebase and you can lose your train of thought.
+Example:
+![image](https://github.com/IsoFrieze/DiztinGUIsh/assets/5413064/5910ca30-4d54-4d19-8dc8-5c8d292a2e65)
 
 * * *
 
