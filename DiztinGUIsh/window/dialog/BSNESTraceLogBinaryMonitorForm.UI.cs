@@ -106,7 +106,7 @@ public partial class BsnesTraceLogBinaryMonitorForm
         lblModifiedMFlags.Text = ByteSize.FromBytes(stats.NumMFlagsModified).ToString("0.00");
     }
 
-    private void button1_Click(object sender, EventArgs e)
+    private void btnTracelogHelpClick(object sender, EventArgs e)
     {
         MessageBox.Show("What is this? \r\n" +
                         "Connect via socket to a special build of BSNES-plus and capture live tracelog as you play the game " +

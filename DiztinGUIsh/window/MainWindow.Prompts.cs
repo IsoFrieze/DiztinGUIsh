@@ -52,18 +52,20 @@ namespace DiztinGUIsh.window
 
         private void viewHelpToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            var helpUrl = "https://github.com/IsoFrieze/DiztinGUIsh/blob/master/DiztinGUIsh/dist/HELP.md";
             try
             {
-                System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "/help.html");
+                // System.Diagnostics.Process.Start(Directory.GetCurrentDirectory() + "/help.html");
+                GuiUtil.OpenExternalProcess(helpUrl);
             }
             catch (Exception)
             {
-                MessageBox.Show("Can't find the help file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Failed to open help url:\r\n"+helpUrl+"", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void githubToolStripMenuItem_Click(object sender, EventArgs e) =>
-            GuiUtil.OpenExternalProcess("https://github.com/Dotsarecool/DiztinGUIsh");
+            GuiUtil.OpenExternalProcess("https://github.com/Isofrieze/DiztinGUIsh");
 
         private string PromptOpenBizhawkCDLFile()
         {
