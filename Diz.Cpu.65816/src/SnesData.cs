@@ -34,11 +34,17 @@ public interface IFixMisalignedFlags
     int FixMisalignedFlags();
 }
 
+public interface IMiscNavigable
+{
+    public (int unreachedOffsetFound, int iaSourceAddress) FindNextUnreachedInPointAfter(int startingOffset, bool searchForward = true);
+}
+
 public interface ISnesApi<out TData> :
     IRomByteFlagsGettable, 
     IRomByteFlagsSettable, 
     ISnesAddressConverter, 
     ISteppable,
+    IMiscNavigable,
     IAutoSteppable,
     ISnesIntermediateAddress, 
     IInOutPointSettable, 
@@ -209,7 +215,7 @@ public class SnesApi : ISnesData
     public int GetInstructionLength(int offset) => 
         GetCpu(offset).GetInstructionLength(this, offset);
     
-    public int Step(int offset, bool branch, bool force, int prevOffset) =>
+    public int Step(int offset, bool branch, bool force=false, int prevOffset=-1) =>
         GetCpu(offset).Step(this, offset, branch, force, prevOffset);
 
     public int AutoStepSafe(int offset) =>
@@ -217,6 +223,65 @@ public class SnesApi : ISnesData
 
     public int AutoStepHarsh(int offset, int count) =>
         GetCpu(offset).AutoStepHarsh(this, offset, count);
+    
+    public (int unreachedOffsetFound, int iaSourceAddress) FindNextUnreachedInPointAfter(int startingOffset, bool searchForward = true)
+    {
+        var direction = searchForward ? 1 : -1;
+        for (
+            var offsetToTry = startingOffset + direction; 
+            offsetToTry >= 0 && offsetToTry < Data.RomBytes.Count; 
+            offsetToTry += direction
+        ) {
+            var romByte = Data.RomBytes[offsetToTry];
+            
+            // must be unreached, or we don't care about it
+            // (we're trying to quickly uncover new parts of the code we can step through that were missed before) 
+            if (romByte.TypeFlag != FlagType.Unreached)
+                continue;
+            
+            // something must jump to US or we don't care
+            if ((romByte.Point & InOutPoint.InPoint) == 0)
+                continue;
+
+            // this is a legit in point, but, is the place it came FROM legit? return true if at least one legit
+            // opcode from the origin of this point.
+            // (warning: kinda expensive search, we have to scan EVERYTHING top to bottom)
+            // consider some caching of references when we create in/out points to save this.
+            //
+            
+            // search entire ROM for already marked opcodes whose IA jumps land on US.
+            // TODO: this search could form the basis of a "find references to X address" calculator
+            for (var i = 0; i < GetRomSize(); i++)
+            {
+                // we're looking for the OPCODE whose indirect address matches our candidate.
+                if (GetFlag(i) != FlagType.Opcode)
+                    continue;
+                
+                var cpu = GetCpu(i);
+                var iaOffsetPc = cpu.CalculateInOutPointsFromOffset(this, i, out var newIaInOutPoint, out var newOffsetInOutPoint);
+                
+                // does the intermediate address of this other location match the offset we're searching for
+                if (iaOffsetPc == -1 || iaOffsetPc != offsetToTry)
+                    continue;
+
+                var sourceIsOurInPoint = (newOffsetInOutPoint & InOutPoint.OutPoint) != 0 && (newIaInOutPoint & InOutPoint.InPoint) != 0;
+                if (!sourceIsOurInPoint)
+                    continue;
+                
+                // there may be other IAs that are ALSO this instructions inpoint, but, we can stop once we have found the first one.
+                // we could do some other stuff here like set M/X flags on our offset based on where it jumped/branched FROM.
+                // exercise for a later day.
+                // var flag = Data.RomBytes[i].MFlag   ...or...   .XFLag
+                // or could try:   Step(branch: true, offset: i);
+                // or could try:   GetCpuStateFor(offset, i, etc) <-- this probably is best to copy MX flags/etc to here.
+
+                return (offsetToTry, i);
+            }
+        }
+
+        // didn't find any
+        return (-1, -1);
+    }
 
     // FIX ME: log and generation of dp opcodes. search references
     public int GetIntermediateAddress(int offset, bool resolve = false) => 
@@ -379,6 +444,64 @@ public static class SnesApiExtensions
         Debug.Assert(paddedShiftJisBytes.Length == RomUtil.LengthOfTitleName);
 
         @this.Data.RomBytes.SetBytesFrom(paddedShiftJisBytes, @this.CartridgeTitleStartingOffset);
+    }
+    
+    public static (int directPage, int dataBank, bool xFlag, bool mFlag) GetCpuStateAt(this IRomByteFlagsGettable @this, int offset) {
+        return (
+            @this.GetDirectPage(offset), 
+            @this.GetDataBank(offset), 
+            @this.GetXFlag(offset), 
+            @this.GetMFlag(offset)
+        );
+    }
+    
+    public static 
+        (byte? opcode, int directPage, int dataBank, bool xFlag, bool mFlag) 
+        GetCpuStateFor<TByteSource>(this TByteSource @this, int offset, int prevOffset) 
+        where TByteSource : 
+        IReadOnlyByteSource,
+        IRomByteFlagsGettable
+    {
+        int directPage, dataBank;
+        bool xFlag, mFlag;
+        byte? opcode;
+
+        void SetCpuStateFromCurrentOffset()
+        {
+            opcode = @this.GetRomByte(offset);
+            (directPage, dataBank, xFlag, mFlag) = GetCpuStateAt(@this, offset);
+        }
+
+        void SetCpuStateFromPreviousOffset()
+        {
+            // go backwards from previous offset if it's valid but not an opcode
+            while (prevOffset >= 0 && @this.GetFlag(prevOffset) == FlagType.Operand)
+                prevOffset--;
+
+            // if we didn't land on an opcode, forget it
+            if (prevOffset < 0 || @this.GetFlag(prevOffset) != FlagType.Opcode) 
+                return;
+            
+            // set these values to the PREVIOUS instruction
+            (directPage, dataBank, xFlag, mFlag) = GetCpuStateAt(@this, prevOffset);
+        }
+        
+        void SetMxFlagsFromRepSepAtOffset()
+        {
+            if (opcode != 0xC2 && opcode != 0xE2) // REP SEP 
+                return;
+
+            var operand = @this.GetRomByte(offset + 1);
+            
+            xFlag = (operand & 0x10) != 0 ? opcode == 0xE2 : xFlag;
+            mFlag = (operand & 0x20) != 0 ? opcode == 0xE2 : mFlag;
+        }
+        
+        SetCpuStateFromCurrentOffset();     // set from our current position first
+        SetCpuStateFromPreviousOffset();    // if available, set from the previous offset instead.
+        SetMxFlagsFromRepSepAtOffset();
+
+        return (opcode, directPage, dataBank, xFlag, mFlag);
     }
     
     public static ISnesData? GetSnesApi(this IData @this) => 

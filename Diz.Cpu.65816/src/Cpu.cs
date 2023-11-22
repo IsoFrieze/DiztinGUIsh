@@ -1,4 +1,5 @@
 ﻿using Diz.Core.Interfaces;
+using Diz.Core.model;
 
 namespace Diz.Cpu._65816;
 
@@ -26,6 +27,18 @@ public class Cpu<TByteSource> where TByteSource : IRomByteFlagsGettable, IRomByt
     public virtual int GetInstructionLength(TByteSource data, int offset) => 1;
     public virtual int GetIntermediateAddress(TByteSource data, int offset, bool resolve) => -1;
     public virtual void MarkInOutPoints(TByteSource data, int offset) {} // nop
+    public virtual int CalculateInOutPointsFromOffset(
+        TByteSource data,
+        int offset,
+        out InOutPoint newIaInOutPoint,
+        out InOutPoint newOffsetInOutPoint
+    )
+    {
+        newIaInOutPoint = InOutPoint.None;
+        newOffsetInOutPoint = InOutPoint.None;
+        return -1;
+    }
+
     public virtual string GetInstruction(TByteSource data, int offset) => "";
 
     public virtual int AutoStepSafe(TByteSource byteSource, int offset) => offset;

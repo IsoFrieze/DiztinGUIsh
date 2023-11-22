@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.util;
 using Diz.Cpu._65816;
 
@@ -72,12 +73,63 @@ namespace DiztinGUIsh.window
             if (Project?.Data == null || Project.Data.GetRomSize() <= 0) return;
 
             var offset = table.CurrentCell.RowIndex + ViewOffset;
-            var newOffset = offset;
+            int newOffset;
             var amount = 0x01;
 
             Console.WriteLine(e.KeyCode);
+            var snesData = Project.Data.GetSnesApi();
+            
             switch (e.KeyCode)
             {
+                case Keys.F3:
+                    // experimental. jump to next instruction that is an in point (something known jumps to it)
+                    // AND is also marked as "unknown"
+                    // these are often small branches not taken during tracelog runs, 
+                    // and are easy targets for filling them in relatively risk-free since you know the M and X flags of
+                    // the instruction of where you jumped FROM.
+                    var (foundOffset, iaSourceOffsetPc) = snesData.FindNextUnreachedInPointAfter(offset);
+                    if (foundOffset == -1)
+                    {
+                        ShowInfo("Can't jump to next unreached InPoint (none found)", "Woops");
+                        return;
+                    }
+
+                    // now, if we want to get real fancy.... copy the MX flags from the previous place to here so when we step from here, it works.
+                    
+                    // less aggressive way:
+                    // if (iaSource != -1)
+                    // {
+                    //     snesData.SetMxFlags(iaSource, snesData.GetMxFlags(iaSource));
+                    // }
+                    // SelectOffset(foundOffset, -1);
+                    
+                    // more aggressive way (fine, unless your source data is a lie)
+                    // do this instead of SelectOffset so we copy the MX flags from the previous location to here.
+                    //if (iaSource != -1)
+                    //    StepIn(iaSource);
+
+                    if (iaSourceOffsetPc != -1)
+                    {
+                        // this is vaguely doing what Step() does without marking the bytes we're on as opcode+operands.
+                        // we'll set the flags and such but, leave the actual marking to be an explicit action by the user
+                        var (opcode, directPage, dataBank, xFlag, mFlag) = snesData.GetCpuStateFor(iaSourceOffsetPc, -1);
+                        
+                        // set the place we're GOING to with the jump point's MX flags
+                        snesData.SetDataBank(foundOffset, dataBank);
+                        snesData.SetDirectPage(foundOffset, directPage);
+                        snesData.SetXFlag(foundOffset, xFlag);
+                        snesData.SetMFlag(foundOffset, mFlag);
+                        
+                        // very optional. just to create an entry in the history.
+                        // SelectOffset(iaSource, -1, new ISnesNavigation.HistoryArgs {Description = "Find next unreached: origin point"});
+                        MarkHistoryPoint(iaSourceOffsetPc, new ISnesNavigation.HistoryArgs {Description = "Find next unreached: branch origin"}, "origin");
+                    }
+
+                    // now do the real thing
+                    SelectOffset(foundOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Find next unreached in-point"}, overshootAmount: 20);
+                    
+                    break;
+                
                 case Keys.Home:
                 case Keys.PageUp:
                 case Keys.Up:
@@ -141,10 +193,10 @@ namespace DiztinGUIsh.window
                     table.BeginEdit(true);
                     break;
                 case Keys.M:
-                    Project.Data.GetSnesApi().SetMFlag(offset, !Project.Data.GetSnesApi().GetMFlag(offset));
+                    snesData.SetMFlag(offset, !snesData.GetMFlag(offset));
                     break;
                 case Keys.X:
-                    Project.Data.GetSnesApi().SetXFlag(offset, !Project.Data.GetSnesApi().GetXFlag(offset));
+                    snesData.SetXFlag(offset, !snesData.GetXFlag(offset));
                     break;
                 case Keys.C:
                     table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[12];
@@ -357,13 +409,35 @@ namespace DiztinGUIsh.window
         public void SelectOffset(int pcOffset, ISnesNavigation.HistoryArgs historyArgs = null)
             => SelectOffset(pcOffset, -1, historyArgs);
 
-        public void SelectOffset(int pcOffset, int column = -1, ISnesNavigation.HistoryArgs historyArgs = null)
+        public void SelectOffset(int pcOffset, int column = -1, ISnesNavigation.HistoryArgs historyArgs = null, int overshootAmount=0)
         {
             if (pcOffset == -1)
                 return;
             
             MarkHistoryPoint(SelectedOffset, historyArgs, "start");
+
+            // purely visual. allows this offset to appear more in the middle of the screen, instead of at the very bottom
+            // you typically want to be presented with a view that shows stuff of interest you jumped to 
+            // visible and not having to scroll down a bit then back up.
+            //
+            // THIS IS 100% OPTIONAL.
+            if (overshootAmount > 0)
+            {
+                // ideally, we'd calculate this number to be at the center or top.
+                var overshotOffset = Math.Min(Project.Data.GetRomSize()-1, pcOffset + overshootAmount);
+                InternalSelectOffset(overshotOffset, column);
+            }
             
+            // do the real thing
+            InternalSelectOffset(pcOffset, column);
+            
+            MarkHistoryPoint(pcOffset, historyArgs, "end");
+
+            InvalidateTable();
+        }
+
+        private void InternalSelectOffset(int pcOffset, int column)
+        {
             var col = column == -1 ? table.CurrentCell.ColumnIndex : column;
             if (pcOffset < ViewOffset)
             {
@@ -381,17 +455,13 @@ namespace DiztinGUIsh.window
             {
                 table.CurrentCell = table.Rows[pcOffset - ViewOffset].Cells[col];
             }
-
-            MarkHistoryPoint(pcOffset, historyArgs, "end");
-
-            InvalidateTable();
         }
 
         private void InitMainTable()
         {
-            table.CellValueNeeded += new DataGridViewCellValueEventHandler(table_CellValueNeeded);
-            table.CellValuePushed += new DataGridViewCellValueEventHandler(table_CellValuePushed);
-            table.CellPainting += new DataGridViewCellPaintingEventHandler(table_CellPainting);
+            table.CellValueNeeded += table_CellValueNeeded;
+            table.CellValuePushed += table_CellValuePushed;
+            table.CellPainting += table_CellPainting;
 
             rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
 

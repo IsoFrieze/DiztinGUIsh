@@ -18,7 +18,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 {
     public override int Step(TByteSource data, int offset, bool branch, bool force, int prevOffset = -1)
     {
-        var (opcode, directPage, dataBank, xFlag, mFlag) = GetCpuStateFor(data, offset, prevOffset);
+        var (opcode, directPage, dataBank, xFlag, mFlag) = data.GetCpuStateFor(offset, prevOffset);
         var length = MarkAsOpcodeAt(data, offset, dataBank, directPage, xFlag, mFlag);
         MarkInOutPoints(data, offset);
 
@@ -36,6 +36,59 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             return iaNextOffsetPc;
 
         return nextOffset;
+    }
+    
+    public override int CalculateInOutPointsFromOffset(
+        TByteSource data,
+        int offset,
+        out InOutPoint newIaInOutPoint,
+        out InOutPoint newOffsetInOutPoint
+    )
+    {
+        // calculate these from scratch (don't rely on existing in-out data)
+        newIaInOutPoint = InOutPoint.None;
+        newOffsetInOutPoint = InOutPoint.None;
+
+        var opcode = data.GetRomByte(offset);
+        if (opcode == null)
+            return -1;
+
+        var intermediateAddress = data.GetIntermediateAddress(offset, true);
+        var iaOffsetPc = data.ConvertSnesToPc(intermediateAddress);
+
+        // set read point on EA
+        if (iaOffsetPc >= 0 && ( // these are all read/write/math instructions
+                ((opcode & 0x04) != 0) || ((opcode & 0x0F) == 0x01) || ((opcode & 0x0F) == 0x03) ||
+                ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
+            (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
+            (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
+           )
+        {
+            newIaInOutPoint |= InOutPoint.ReadPoint;
+        }
+
+        // set end point on offset
+        if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
+            || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
+            || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC // BRL STP JML
+           )
+        {
+            newOffsetInOutPoint |= InOutPoint.EndPoint;
+        }
+
+        // set out point on offset
+        // set in point on EA
+        if (iaOffsetPc >= 0 && (
+                opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
+                || opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70 // BPL BMI BVC BVS
+                || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0 // BCC BCS BNE BEQ
+                || opcode == 0x20 || opcode == 0x22)) // JSR JSL
+        {
+            newOffsetInOutPoint |= InOutPoint.OutPoint;
+            newIaInOutPoint |= InOutPoint.InPoint;
+        }
+
+        return iaOffsetPc;
     }
 
     private int MarkAsOpcodeAt(TByteSource data, int offset, int dataBank, int directPage, bool xFlag, bool mFlag)
@@ -55,62 +108,6 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         }
 
         return numBytesToChange;
-    }
-
-    private static (byte? opcode, int directPage, int dataBank, bool xFlag, bool mFlag) 
-        GetCpuStateFor(TByteSource data, int offset, int prevOffset)
-    {
-        int directPage, dataBank;
-        bool xFlag, mFlag;
-        byte? opcode;
-
-        void SetCpuStateFromCurrentOffset()
-        {
-            opcode = data.GetRomByte(offset);
-            (directPage, dataBank, xFlag, mFlag) = GetCpuStateAt(data, offset);
-        }
-
-        void SetCpuStateFromPreviousOffset()
-        {
-            // go backwards from previous offset if it's valid but not an opcode
-            while (prevOffset >= 0 && data.GetFlag(prevOffset) == FlagType.Operand)
-                prevOffset--;
-
-            // if we didn't land on an opcode, forget it
-            if (prevOffset < 0 || data.GetFlag(prevOffset) != FlagType.Opcode) 
-                return;
-                
-            // set these values to the PREVIOUS instruction
-            (directPage, dataBank, xFlag, mFlag) = GetCpuStateAt(data, prevOffset);
-        }
-            
-        void SetMxFlagsFromRepSepAtOffset()
-        {
-            if (opcode != 0xC2 && opcode != 0xE2) // REP SEP 
-                return;
-
-            var operand = data.GetRomByte(offset + 1);
-                
-            xFlag = (operand & 0x10) != 0 ? opcode == 0xE2 : xFlag;
-            mFlag = (operand & 0x20) != 0 ? opcode == 0xE2 : mFlag;
-        }
-            
-        SetCpuStateFromCurrentOffset();     // set from our current position first
-        SetCpuStateFromPreviousOffset();    // if available, set from the previous offset instead.
-        SetMxFlagsFromRepSepAtOffset();
-
-        return (opcode, directPage, dataBank, xFlag, mFlag);
-    }
-
-    private static (int directPage, int dataBank, bool xFlag, bool mFlag) 
-        GetCpuStateAt(TByteSource data, int offset)
-    {
-        return (
-            data.GetDirectPage(offset), 
-            data.GetDataBank(offset), 
-            data.GetXFlag(offset), 
-            data.GetMFlag(offset)
-        );
     }
 
     // input: ROM offset
@@ -285,36 +282,15 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return mode == null ? 1 : GetInstructionLength(mode.Value);
     }
 
+    // Find, and append, in/out points to any that current exist at this offset and its IA address
     public override void MarkInOutPoints(TByteSource data, int offset)
     {
-        var opcode = data.GetRomByte(offset);
-        var iaOffsetPc = data.ConvertSnesToPc(data.GetIntermediateAddress(offset, true));
+        var iaOffsetPc = CalculateInOutPointsFromOffset(data, offset, out var newIaInOutPoint, out var newOffsetInOutPoint);
 
-        // set read point on EA
-        if (iaOffsetPc >= 0 && ( // these are all read/write/math instructions
-                ((opcode & 0x04) != 0) || ((opcode & 0x0F) == 0x01) || ((opcode & 0x0F) == 0x03) ||
-                ((opcode & 0x1F) == 0x12) || ((opcode & 0x1F) == 0x19)) &&
-            (opcode != 0x45) && (opcode != 0x55) && (opcode != 0xF5) && (opcode != 0x4C) &&
-            (opcode != 0x5C) && (opcode != 0x6C) && (opcode != 0x7C) && (opcode != 0xDC) && (opcode != 0xFC)
-           ) data.SetInOutPoint(iaOffsetPc, InOutPoint.ReadPoint);
-
-        // set end point on offset
-        if (opcode == 0x40 || opcode == 0x4C || opcode == 0x5C || opcode == 0x60 // RTI JMP JML RTS
-            || opcode == 0x6B || opcode == 0x6C || opcode == 0x7C || opcode == 0x80 // RTL JMP JMP BRA
-            || opcode == 0x82 || opcode == 0xDB || opcode == 0xDC // BRL STP JML
-           ) data.SetInOutPoint(offset, InOutPoint.EndPoint);
-
-        // set out point on offset
-        // set in point on EA
-        if (iaOffsetPc >= 0 && (
-                opcode == 0x4C || opcode == 0x5C || opcode == 0x80 || opcode == 0x82 // JMP JML BRA BRL
-                || opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70  // BPL BMI BVC BVS
-                || opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0  // BCC BCS BNE BEQ
-                || opcode == 0x20 || opcode == 0x22)) // JSR JSL
-        {
-            data.SetInOutPoint(offset, InOutPoint.OutPoint);
-            data.SetInOutPoint(iaOffsetPc, InOutPoint.InPoint);
-        }
+        // these will append the in/out points to existing data that's already there
+        data.SetInOutPoint(offset, newOffsetInOutPoint);
+        if (iaOffsetPc >= 0)
+            data.SetInOutPoint(iaOffsetPc, newIaInOutPoint);
     }
 
     private static int GetInstructionLength(Cpu65C816Constants.AddressMode mode)
