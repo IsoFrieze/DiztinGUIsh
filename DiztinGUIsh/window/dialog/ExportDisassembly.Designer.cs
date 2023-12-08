@@ -49,6 +49,7 @@ namespace DiztinGUIsh.window.dialog
             this.numData = new System.Windows.Forms.NumericUpDown();
             this.chkPrintLabelSpecificComments = new System.Windows.Forms.CheckBox();
             this.chkIncludeUnusedLabels = new System.Windows.Forms.CheckBox();
+            this.chkOutputExtraWhitespace = new System.Windows.Forms.CheckBox();
             this.saveLogSingleFile = new System.Windows.Forms.SaveFileDialog();
             this.chooseLogFolder = new System.Windows.Forms.FolderBrowserDialog();
             this.label7 = new System.Windows.Forms.Label();
@@ -242,6 +243,19 @@ namespace DiztinGUIsh.window.dialog
             this.chkIncludeUnusedLabels.UseVisualStyleBackColor = true;
             this.chkIncludeUnusedLabels.CheckedChanged += new System.EventHandler(this.chkIncludeUnusedLabels_CheckedChanged);
             // 
+            // chkOutputExtraWhitespace
+            // 
+            this.chkOutputExtraWhitespace.AutoSize = true;
+            this.chkOutputExtraWhitespace.Checked = true;
+            this.chkOutputExtraWhitespace.Location = new System.Drawing.Point(350, 97);
+            this.chkOutputExtraWhitespace.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.chkOutputExtraWhitespace.Name = "chkOutputExtraWhitespace";
+            this.chkOutputExtraWhitespace.Size = new System.Drawing.Size(211, 19);
+            this.chkOutputExtraWhitespace.TabIndex = 14;
+            this.chkOutputExtraWhitespace.Text = "Output extra whitespace in assembly code";
+            this.chkOutputExtraWhitespace.UseVisualStyleBackColor = true;
+            this.chkOutputExtraWhitespace.CheckedChanged += new System.EventHandler(this.chkOutputExtraWhitespace_CheckedChanged);
+            // 
             // saveLogSingleFile
             // 
             this.saveLogSingleFile.Filter = "Assembly Files|*.asm|All Files|*.*";
@@ -299,6 +313,7 @@ namespace DiztinGUIsh.window.dialog
             this.Controls.Add(this.txtExportPath);
             this.Controls.Add(this.chkIncludeUnusedLabels);
             this.Controls.Add(this.chkPrintLabelSpecificComments);
+            this.Controls.Add(this.chkOutputExtraWhitespace);
             this.Controls.Add(this.numData);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
@@ -342,6 +357,7 @@ namespace DiztinGUIsh.window.dialog
         private NumericUpDown numData;
         private CheckBox chkPrintLabelSpecificComments;
         private CheckBox chkIncludeUnusedLabels;
+        private CheckBox chkOutputExtraWhitespace;
         private SaveFileDialog saveLogSingleFile;
         private FolderBrowserDialog chooseLogFolder;
         private Label label7;

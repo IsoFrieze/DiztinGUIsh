@@ -55,6 +55,7 @@ public partial class LogCreatorSettingsEditorForm : Form, ILogCreatorSettingsEdi
         comboStructure.SelectedIndex = (int)Settings.Structure;
         chkIncludeUnusedLabels.Checked = Settings.IncludeUnusedLabels;
         chkPrintLabelSpecificComments.Checked = Settings.PrintLabelSpecificComments;
+        chkOutputExtraWhitespace.Checked = Settings.OutputExtraWhitespace;
         txtExportPath.Text = Settings.FileOrFolderOutPath;
         
         var validFormat = LogCreatorLineFormatter.Validate(Settings.Format);
@@ -126,6 +127,9 @@ public partial class LogCreatorSettingsEditorForm : Form, ILogCreatorSettingsEdi
 
     private void chkIncludeUnusedLabels_CheckedChanged(object sender, EventArgs e) => 
         Settings = Settings with {IncludeUnusedLabels = chkIncludeUnusedLabels.Checked};
+
+    private void chkOutputExtraWhitespace_CheckedChanged(object sender, EventArgs e) => 
+        Settings = Settings with {OutputExtraWhitespace = chkOutputExtraWhitespace.Checked};
     
     private void txtExportPath_TextChanged(object sender, EventArgs e) => 
         Settings = Settings with {FileOrFolderOutPath = txtExportPath.Text};
