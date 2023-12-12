@@ -50,6 +50,7 @@ namespace DiztinGUIsh.window.dialog
             this.chkPrintLabelSpecificComments = new System.Windows.Forms.CheckBox();
             this.chkIncludeUnusedLabels = new System.Windows.Forms.CheckBox();
             this.chkOutputExtraWhitespace = new System.Windows.Forms.CheckBox();
+            this.chkGenerateFullLine = new System.Windows.Forms.CheckBox();
             this.saveLogSingleFile = new System.Windows.Forms.SaveFileDialog();
             this.chooseLogFolder = new System.Windows.Forms.FolderBrowserDialog();
             this.label7 = new System.Windows.Forms.Label();
@@ -66,7 +67,7 @@ namespace DiztinGUIsh.window.dialog
             this.cancel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.cancel.Name = "cancel";
             this.cancel.Size = new System.Drawing.Size(88, 27);
-            this.cancel.TabIndex = 18;
+            this.cancel.TabIndex = 19;
             this.cancel.TabStop = false;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
@@ -78,7 +79,7 @@ namespace DiztinGUIsh.window.dialog
             this.disassembleButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.disassembleButton.Name = "disassembleButton";
             this.disassembleButton.Size = new System.Drawing.Size(132, 27);
-            this.disassembleButton.TabIndex = 19;
+            this.disassembleButton.TabIndex = 20;
             this.disassembleButton.Text = "Start Export!";
             this.disassembleButton.UseVisualStyleBackColor = true;
             this.disassembleButton.Click += new System.EventHandler(this.disassembleButton_Click);
@@ -89,7 +90,7 @@ namespace DiztinGUIsh.window.dialog
             this.textFormat.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.textFormat.Name = "textFormat";
             this.textFormat.Size = new System.Drawing.Size(791, 23);
-            this.textFormat.TabIndex = 15;
+            this.textFormat.TabIndex = 16;
             this.textFormat.TextChanged += new System.EventHandler(this.textFormat_TextChanged);
             // 
             // textSample
@@ -102,7 +103,7 @@ namespace DiztinGUIsh.window.dialog
             this.textSample.ReadOnly = true;
             this.textSample.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textSample.Size = new System.Drawing.Size(881, 358);
-            this.textSample.TabIndex = 17;
+            this.textSample.TabIndex = 18;
             this.textSample.TabStop = false;
             this.textSample.WordWrap = false;
             // 
@@ -140,7 +141,7 @@ namespace DiztinGUIsh.window.dialog
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(87, 15);
-            this.label1.TabIndex = 14;
+            this.label1.TabIndex = 15;
             this.label1.Text = "Output format:";
             // 
             // label2
@@ -150,7 +151,7 @@ namespace DiztinGUIsh.window.dialog
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(90, 15);
-            this.label2.TabIndex = 16;
+            this.label2.TabIndex = 17;
             this.label2.Text = "Sample Output:";
             // 
             // label3
@@ -226,7 +227,7 @@ namespace DiztinGUIsh.window.dialog
             this.chkPrintLabelSpecificComments.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.chkPrintLabelSpecificComments.Name = "chkPrintLabelSpecificComments";
             this.chkPrintLabelSpecificComments.Size = new System.Drawing.Size(255, 19);
-            this.chkPrintLabelSpecificComments.TabIndex = 8;
+            this.chkPrintLabelSpecificComments.TabIndex = 9;
             this.chkPrintLabelSpecificComments.Text = "Print label-specific comments in labels.asm";
             this.chkPrintLabelSpecificComments.UseVisualStyleBackColor = true;
             this.chkPrintLabelSpecificComments.CheckedChanged += new System.EventHandler(this.chkPrintLabelSpecificComments_CheckedChanged);
@@ -234,11 +235,11 @@ namespace DiztinGUIsh.window.dialog
             // chkIncludeUnusedLabels
             // 
             this.chkIncludeUnusedLabels.AutoSize = true;
-            this.chkIncludeUnusedLabels.Location = new System.Drawing.Point(613, 113);
+            this.chkIncludeUnusedLabels.Location = new System.Drawing.Point(613, 114);
             this.chkIncludeUnusedLabels.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.chkIncludeUnusedLabels.Name = "chkIncludeUnusedLabels";
             this.chkIncludeUnusedLabels.Size = new System.Drawing.Size(211, 19);
-            this.chkIncludeUnusedLabels.TabIndex = 9;
+            this.chkIncludeUnusedLabels.TabIndex = 10;
             this.chkIncludeUnusedLabels.Text = "Include unused labels in labels.asm";
             this.chkIncludeUnusedLabels.UseVisualStyleBackColor = true;
             this.chkIncludeUnusedLabels.CheckedChanged += new System.EventHandler(this.chkIncludeUnusedLabels_CheckedChanged);
@@ -256,6 +257,19 @@ namespace DiztinGUIsh.window.dialog
             this.chkOutputExtraWhitespace.UseVisualStyleBackColor = true;
             this.chkOutputExtraWhitespace.CheckedChanged += new System.EventHandler(this.chkOutputExtraWhitespace_CheckedChanged);
             // 
+            // chkGenerateFullLine
+            // 
+            this.chkGenerateFullLine.AutoSize = true;
+            this.chkGenerateFullLine.Checked = true;
+            this.chkGenerateFullLine.Location = new System.Drawing.Point(350, 114);
+            this.chkGenerateFullLine.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.chkGenerateFullLine.Name = "chkGenerateFullLine";
+            this.chkGenerateFullLine.Size = new System.Drawing.Size(211, 19);
+            this.chkGenerateFullLine.TabIndex = 8;
+            this.chkGenerateFullLine.Text = "Generate full line on special lines";
+            this.chkGenerateFullLine.UseVisualStyleBackColor = true;
+            this.chkGenerateFullLine.CheckedChanged += new System.EventHandler(this.chkGenerateFullLine_CheckedChanged);
+            // 
             // saveLogSingleFile
             // 
             this.saveLogSingleFile.Filter = "Assembly Files|*.asm|All Files|*.*";
@@ -267,7 +281,7 @@ namespace DiztinGUIsh.window.dialog
             this.label7.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(57, 45);
-            this.label7.TabIndex = 10;
+            this.label7.TabIndex = 11;
             this.label7.Text = "Output \r\ndirectory \r\nor file:";
             // 
             // txtExportPath
@@ -276,7 +290,7 @@ namespace DiztinGUIsh.window.dialog
             this.txtExportPath.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.txtExportPath.Name = "txtExportPath";
             this.txtExportPath.Size = new System.Drawing.Size(717, 23);
-            this.txtExportPath.TabIndex = 11;
+            this.txtExportPath.TabIndex = 12;
             this.txtExportPath.TextChanged += new System.EventHandler(this.txtExportPath_TextChanged);
             // 
             // btnBrowseOutputPath
@@ -284,7 +298,7 @@ namespace DiztinGUIsh.window.dialog
             this.btnBrowseOutputPath.Location = new System.Drawing.Point(819, 138);
             this.btnBrowseOutputPath.Name = "btnBrowseOutputPath";
             this.btnBrowseOutputPath.Size = new System.Drawing.Size(75, 24);
-            this.btnBrowseOutputPath.TabIndex = 12;
+            this.btnBrowseOutputPath.TabIndex = 13;
             this.btnBrowseOutputPath.Text = "Browse...";
             this.btnBrowseOutputPath.UseVisualStyleBackColor = true;
             this.btnBrowseOutputPath.Click += new System.EventHandler(this.btnBrowseOutputPath_Click);
@@ -296,7 +310,7 @@ namespace DiztinGUIsh.window.dialog
             this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(482, 15);
-            this.label8.TabIndex = 13;
+            this.label8.TabIndex = 14;
             this.label8.Text = "(By default, path is relative to the project file\'s directory. it will be created" +
     " if it doesn\'t exist)";
             // 
@@ -314,6 +328,7 @@ namespace DiztinGUIsh.window.dialog
             this.Controls.Add(this.chkIncludeUnusedLabels);
             this.Controls.Add(this.chkPrintLabelSpecificComments);
             this.Controls.Add(this.chkOutputExtraWhitespace);
+            this.Controls.Add(this.chkGenerateFullLine);
             this.Controls.Add(this.numData);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
@@ -358,6 +373,7 @@ namespace DiztinGUIsh.window.dialog
         private CheckBox chkPrintLabelSpecificComments;
         private CheckBox chkIncludeUnusedLabels;
         private CheckBox chkOutputExtraWhitespace;
+        private CheckBox chkGenerateFullLine;
         private SaveFileDialog saveLogSingleFile;
         private FolderBrowserDialog chooseLogFolder;
         private Label label7;

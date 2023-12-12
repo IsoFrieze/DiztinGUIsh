@@ -43,6 +43,7 @@ public record LogWriterSettings : ILogWriterSettings
     public bool IncludeUnusedLabels  { get; init; }
     public bool PrintLabelSpecificComments { get; init; }
     public bool OutputExtraWhitespace  { get; init; } = true;
+    public bool GenerateFullLine { get; init; } = true;
         
     /// <summary>
     /// specify an override for the # of bytes to assemble. default is to visit every byte in the entire ROM 
