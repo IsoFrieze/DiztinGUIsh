@@ -53,9 +53,11 @@ public partial class LogCreatorSettingsEditorForm : Form, ILogCreatorSettingsEdi
         numData.Value = Settings.DataPerLine;
         comboUnlabeled.SelectedIndex = (int)Settings.Unlabeled;
         comboStructure.SelectedIndex = (int)Settings.Structure;
+        chkNewLine.Checked = Settings.NewLine;
+        chkOutputExtraWhitespace.Checked = Settings.OutputExtraWhitespace;
+        chkGenerateFullLine.Checked = Settings.GenerateFullLine;
         chkIncludeUnusedLabels.Checked = Settings.IncludeUnusedLabels;
         chkPrintLabelSpecificComments.Checked = Settings.PrintLabelSpecificComments;
-        chkOutputExtraWhitespace.Checked = Settings.OutputExtraWhitespace;
         txtExportPath.Text = Settings.FileOrFolderOutPath;
         
         var validFormat = LogCreatorLineFormatter.Validate(Settings.Format);
@@ -121,15 +123,21 @@ public partial class LogCreatorSettingsEditorForm : Form, ILogCreatorSettingsEdi
 
     private void comboStructure_SelectedIndexChanged(object sender, EventArgs e) =>
         Settings = Settings with {Structure = StructureFormat};
+
+    private void chkNewLine_CheckedChanged(object sender, EventArgs e) =>
+        Settings = Settings with {NewLine = chkNewLine.Checked};
+
+    private void chkOutputExtraWhitespace_CheckedChanged(object sender, EventArgs e) => 
+        Settings = Settings with {OutputExtraWhitespace = chkOutputExtraWhitespace.Checked};
+
+    private void chkGenerateFullLine_CheckedChanged(object sender, EventArgs e) =>
+        Settings = Settings with {GenerateFullLine = chkGenerateFullLine.Checked};
         
     private void chkPrintLabelSpecificComments_CheckedChanged(object sender, EventArgs e) => 
         Settings = Settings with {PrintLabelSpecificComments = chkPrintLabelSpecificComments.Checked};
 
     private void chkIncludeUnusedLabels_CheckedChanged(object sender, EventArgs e) => 
         Settings = Settings with {IncludeUnusedLabels = chkIncludeUnusedLabels.Checked};
-
-    private void chkOutputExtraWhitespace_CheckedChanged(object sender, EventArgs e) => 
-        Settings = Settings with {OutputExtraWhitespace = chkOutputExtraWhitespace.Checked};
     
     private void txtExportPath_TextChanged(object sender, EventArgs e) => 
         Settings = Settings with {FileOrFolderOutPath = txtExportPath.Text};

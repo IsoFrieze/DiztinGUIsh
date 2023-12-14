@@ -40,9 +40,11 @@ public record LogWriterSettings : ILogWriterSettings
     public int DataPerLine { get; init; } = 8;
     public FormatUnlabeled Unlabeled { get; init; } = FormatUnlabeled.ShowInPoints;
     public FormatStructure Structure { get; init; } = FormatStructure.OneBankPerFile;
+    public bool NewLine { get; init; } = false;
+    public bool OutputExtraWhitespace  { get; init; } = true;
+    public bool GenerateFullLine { get; init; } = true;
     public bool IncludeUnusedLabels  { get; init; }
     public bool PrintLabelSpecificComments { get; init; }
-    public bool OutputExtraWhitespace  { get; init; } = true;
         
     /// <summary>
     /// specify an override for the # of bytes to assemble. default is to visit every byte in the entire ROM 
