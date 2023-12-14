@@ -346,8 +346,7 @@ public class ProjectController : IProjectController
         if (WriteAssemblyOutputIfSettingsValid())
             return true;
 
-        ConfirmSettingsThenExportAssembly();
-        return false;
+        return ConfirmSettingsThenExportAssembly();
     }
 
     public LogWriterSettings? ShowSettingsEditorUntilValid()
