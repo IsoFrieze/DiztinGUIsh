@@ -75,6 +75,8 @@
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip_exportDisassemblyUseCurrentSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip_exportDisassemblyEditSettingsFirst = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStrip_openExportDirectory = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -500,7 +502,9 @@
             // 
             this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStrip_exportDisassemblyUseCurrentSettings,
-            this.toolStrip_exportDisassemblyEditSettingsFirst});
+            this.toolStrip_exportDisassemblyEditSettingsFirst,
+            this.toolStripSeparator11,
+            this.toolStrip_openExportDirectory});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             this.exportToolStripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.exportToolStripMenuItem.Text = "Export";
@@ -522,6 +526,20 @@
             this.toolStrip_exportDisassemblyEditSettingsFirst.Size = new System.Drawing.Size(334, 22);
             this.toolStrip_exportDisassemblyEditSettingsFirst.Text = "Export Disassemly (Edit Settings First)";
             this.toolStrip_exportDisassemblyEditSettingsFirst.Click += new System.EventHandler(this.toolStrip_exportDisassemblyEditSettingsFirst_Click);
+            // 
+            // toolStripSeparator11
+            // 
+            this.toolStripSeparator11.Name = "toolStripSeparator11";
+            this.toolStripSeparator11.Size = new System.Drawing.Size(215, 6);
+            // 
+            // toolStrip_openExportDirectory
+            // 
+            this.toolStrip_openExportDirectory.Enabled = false;
+            this.toolStrip_openExportDirectory.Name = "toolStrip_openExportDirectory";
+            this.toolStrip_openExportDirectory.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.O)));
+            this.toolStrip_openExportDirectory.Size = new System.Drawing.Size(334, 22);
+            this.toolStrip_openExportDirectory.Text = "Open Export Directory";
+            this.toolStrip_openExportDirectory.Click += new System.EventHandler(this.toolStrip_openExportDirectory_Click);
             // 
             // toolStripSeparator7
             // 
@@ -1289,6 +1307,8 @@
         private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolStrip_exportDisassemblyUseCurrentSettings;
         private System.Windows.Forms.ToolStripMenuItem toolStrip_exportDisassemblyEditSettingsFirst;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;
+        private System.Windows.Forms.ToolStripMenuItem toolStrip_openExportDirectory;
     }
 }
 

@@ -156,6 +156,7 @@ namespace DiztinGUIsh.window
 
             toolStrip_exportDisassemblyUseCurrentSettings.Enabled = true;
             toolStrip_exportDisassemblyEditSettingsFirst.Enabled = true;
+            toolStrip_openExportDirectory.Enabled = true;
         }
 
         private void UpdateSomeUI2()

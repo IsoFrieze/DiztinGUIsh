@@ -31,6 +31,9 @@ namespace DiztinGUIsh.window
         private void toolStrip_exportDisassemblyEditSettingsFirst_Click(object sender, EventArgs e) =>
             ProjectController?.ConfirmSettingsThenExportAssembly();
 
+        private void toolStrip_openExportDirectory_Click(object sender, EventArgs e) =>
+            OpenExportDirectory();
+
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e) =>
             ProjectController.ViewFactory.GetAboutView().Show();
         
