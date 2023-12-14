@@ -100,4 +100,21 @@ namespace Diz.Core.model
 
         ExLoRom
     }
+	
+	public enum ColumnType : int
+	{
+		Label,
+		Offset,
+		AsciiCharRep,
+		NumericRep,
+		Point,
+		Instruction,
+		IA,
+		TypeFlag,
+		DataBank,
+		DirectPage,
+		MFlag,
+		XFlag,
+		Comment
+	}
 }
