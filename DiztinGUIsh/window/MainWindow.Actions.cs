@@ -1,4 +1,6 @@
-﻿using System.Windows.Forms;
+﻿using System.Diagnostics;
+using System.IO;
+using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 using Diz.Core.commands;
@@ -43,6 +45,31 @@ public partial class MainWindow
             return;
 
         ProjectController.ImportRomAndCreateNewProject(openFileDialog.FileName);
+    }
+
+    private void OpenExportDirectory()
+    {
+        var projectSettings = ProjectController.Project.LogWriterSettings;
+        var exportDirectory = Path.Combine(projectSettings.BaseOutputPath, projectSettings.FileOrFolderOutPath);
+
+        OpenDirectory(exportDirectory);
+    }
+
+    private void OpenDirectory(string path)
+    {
+        if (Directory.Exists(path))
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                Arguments = path,
+                FileName = "explorer.exe",
+            };
+            Process.Start(startInfo);
+        }
+        else
+        {
+            MessageBox.Show(string.Format("{0} does not exist!", path));
+        }
     }
 
     private void Step(int offset)
