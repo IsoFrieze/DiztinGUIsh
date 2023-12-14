@@ -346,10 +346,7 @@ public class ProjectController : IProjectController
         if (WriteAssemblyOutputIfSettingsValid())
             return true;
 
-        var errMsg = "Can't export assembly because the project export settings are invalid.\nPlease edit your export settings first. Errors were:";
-
-        errMsg += $"\n{Project.LogWriterSettings.Validate(fs)}";
-        commonGui.ShowError(errMsg);
+        ConfirmSettingsThenExportAssembly();
         return false;
     }
 
