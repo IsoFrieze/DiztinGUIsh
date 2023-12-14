@@ -218,7 +218,7 @@ namespace DiztinGUIsh.window.dialog
             0,
             0});
             this.numData.ValueChanged += new System.EventHandler(this.numData_ValueChanged);
-                        // 
+            // 
             // chkNewLine
             // 
             this.chkNewLine.AutoSize = true;
