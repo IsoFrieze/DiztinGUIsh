@@ -35,8 +35,28 @@ namespace Diz.Core.serialization.xml_serializer
 
         public static RomBytesSerializer Default { get; } = new();
 
-        private const bool CompressGroupBlock = true;
-        private const bool CompressUsingTable1 = true;
+        // These settings control some (ad-hoc / hacky) compression for output text.
+        // The goal is *purely* to reduce the size of the final XML file, but do so in a way that is still [somewhat] mergeable
+        // for team collaboration using tools like 'git merge' etc.
+        //
+        // These settings ONLY affect data that's being serialized (Save project) and whether we attempt to compress it a bit more.
+        // For data that's being deserialized (during Load Project), we need to always be able to deal with these encodings.
+        //
+        // For the most mergeable version (but, at the cost of slightly larger filesize), leave both OFF.
+        //
+        // CompressGroupBlock: Find output lines that are identical, and use run-length encoding to mark how many times a line should be repeated.
+        // Diz projects tend to be FULL of lines like this for huge sections of content/graphics/music/etc.
+        // This is a huge win for filesize, though, it makes merging harder.
+        public const bool CompressGroupBlock = true;
+        //
+        // CompressUsingTable1: Take the output lines, and run some substitutions for the most common patterns we see in Diz files
+        // (as of a few analyzed in 2021). This is like an incredibly crappy gzip-style encoding, but, still outputs readable text that 
+        // preserves line breaks (so it can still be merged).
+        // This won't change the # of output lines (just their content), so it's pretty merge-friendly. Humans won't be able to read the lines well though,
+        // it'll just look like "base64"-ish gibberish.
+        // Still, a pretty nice win and solid tradeoff of filesize and human text merging friendliness.
+        public const bool CompressUsingTable1 = true;
+        
         public int numTasksToUse = 5; // seems like the sweet spot
 
         public RomBytes Get(IFormatReader parameter)
