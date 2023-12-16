@@ -58,7 +58,7 @@ public class SerializerDictionaryTest : ContainerFixture
 
     private static IConfigurationContainer GetSerializer(IXmlSerializerFactory createSerializer) =>
         createSerializer
-            .GetSerializer()
+            .GetSerializer(null)
             .EnableImplicitTyping(typeof(TestRoot));
 
     [Inject] private readonly IXmlSerializerFactory createSerializer = null!;

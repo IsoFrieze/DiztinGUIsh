@@ -93,7 +93,7 @@ public class CartNameTests : ContainerFixture
     [Fact]
     public void TestXmlCycle3()
     {
-        var serializer = serializerFactory.GetSerializer().Create();
+        var serializer = serializerFactory.GetSerializer(null).Create();
 
         var xmlStr = serializer.Serialize(
             new XmlWriterSettings(),

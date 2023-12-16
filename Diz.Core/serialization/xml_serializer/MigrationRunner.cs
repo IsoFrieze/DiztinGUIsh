@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace Diz.Core.serialization.xml_serializer
 {
@@ -38,11 +39,11 @@ namespace Diz.Core.serialization.xml_serializer
             foreach (var migration in Migrations)
             {
                 if (migration == null)
-                    throw new InvalidDataException(
+                    throw new DizMigrationException(
                         "internal: all migrations must be non-null");
 
                 if (migration.AppliesToSaveVersion < currentVersion)
-                    throw new InvalidDataException(
+                    throw new DizMigrationException(
                         "internal: all migrations must >= other migrations in the sequence");
 
                 EnsureVersionIsSameOrNext(migration.AppliesToSaveVersion, currentVersion);
@@ -51,7 +52,7 @@ namespace Diz.Core.serialization.xml_serializer
             }
             
             if (StartingSaveVersion > TargetSaveVersion)
-                throw new InvalidDataException(
+                throw new DizMigrationException(
                     "internal: starting migration version is greater than target version");
         }
 
@@ -81,8 +82,8 @@ namespace Diz.Core.serialization.xml_serializer
         private void FinalChecks(int finalVersionReached)
         {
             if (finalVersionReached != TargetSaveVersion)
-                throw new InvalidDataException(
-                    $"migration failed. upgrade sequence applied ends on version {finalVersionReached} and doesn't reach desired target version number of {TargetSaveVersion}");
+                throw new DizMigrationException(
+                    $"migration failed. we were trying to upgrade to v{TargetSaveVersion}, but the final version# achieved was v{finalVersionReached}");
         }
 
         // throw an exception if anything is out of bounds
@@ -93,7 +94,7 @@ namespace Diz.Core.serialization.xml_serializer
                 return false;
             
             if (!EnsureVersionIsSameOrNext(proposedVersion, currentVersion))
-                throw new InvalidDataException(
+                throw new DizMigrationException(
                     $"internal: migration out of sequence. version {proposedVersion} not valid here. needed to upgrade from {currentVersion}");
 
             return proposedVersion >= StartingSaveVersion && proposedVersion < TargetSaveVersion;
@@ -114,5 +115,16 @@ namespace Diz.Core.serialization.xml_serializer
         {
             RunAllMigrations(migration => migration.OnLoadingAfterAddLinkedRom(romAddCmd));
         }
+    }
+}
+
+public class DizMigrationException : Exception
+{
+    public DizMigrationException([CanBeNull] string message, [CanBeNull] Exception innerException) : base(message, innerException)
+    {
+    }
+
+    public DizMigrationException([CanBeNull] string message) : base(message)
+    {
     }
 }

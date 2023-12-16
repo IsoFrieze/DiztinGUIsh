@@ -6,6 +6,7 @@ using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
 using ExtendedXmlSerializer.ContentModel.Format;
 using ExtendedXmlSerializer.ExtensionModel.Instances;
+using JetBrains.Annotations;
 
 namespace Diz.Core.serialization.xml_serializer;
 
@@ -20,13 +21,13 @@ public class XmlSerializerFactory : IXmlSerializerFactory
         this.snesDataInterceptor = snesDataInterceptor;
     }
 
-    public IConfigurationContainer GetSerializer()
+    public IConfigurationContainer GetSerializer([CanBeNull] RomBytesOutputFormatSettings romBytesOutputFormat)
     {
-        // This configuration changes how parts of the data structures are serialized back/forth to XML.
-        // This is using the ExtendedXmlSerializer library, which has a zillion config options and is 
-        // awesome.
-        //
-        // TODO: would be cool if these were stored as attributes on the classes themselves
+        var romBytesSerializer = new RomBytesSerializer
+        {
+            FormatSettings = romBytesOutputFormat
+        };
+        
         return new ConfigurationContainer()
 
             .WithDefaultMonitor(new SerializationMonitor())
@@ -35,7 +36,7 @@ public class XmlSerializerFactory : IXmlSerializerFactory
             .Member(x => x.ProjectFileName).Ignore()
 
             .Type<RomBytes>()
-            .Register().Serializer().Using(RomBytesSerializer.Default)
+            .Register().Serializer().Using(romBytesSerializer)
 
             .Type<Data>()
             .WithInterceptor(snesDataInterceptor(dataFactory))

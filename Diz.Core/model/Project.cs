@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using Diz.Core.export;
 using Diz.Core.Interfaces;
 using Diz.Core.model.snes;
+using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 
 namespace Diz.Core.model;
@@ -16,6 +17,12 @@ public interface IProject :
     ISnesCachedVerificationInfo // see if we can get rid of this eventually. only needed for now for serialization
 {
     public Data Data { get; }
+}
+
+public record ProjectSettings
+{
+    // random settings for the project.
+    public RomBytesOutputFormatSettings RomBytesOutputFormatSettings { get; init; } = new();
 }
 
 public class Project : IProject
@@ -77,6 +84,12 @@ public class Project : IProject
             BaseOutputPath = Session?.ProjectDirectory ?? "",
         };
         set => this.SetField(PropertyChanged, ref logWriterSettings, value);
+    }
+
+    public ProjectSettings ProjectSettings
+    {
+        get => projectSettings ?? new ProjectSettings();
+        set => this.SetField(PropertyChanged, ref projectSettings, value);
     }
 
     // purely visual. what offset is currently being looked at in the main grid.
@@ -179,6 +192,7 @@ public class Project : IProject
     private Data? data; // TODO: change to IData
     private LogWriterSettings logWriterSettings;
     private IProjectSession? session;
+    private ProjectSettings? projectSettings;
 
     #region Equality
     protected bool Equals(Project other)

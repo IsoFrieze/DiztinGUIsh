@@ -33,7 +33,7 @@ public class ContainerFixture : IDisposable
         InjectPrivateFields();
     }
 
-    public IServiceContainer ConfigureAndRegisterServiceContainer()
+    public virtual IServiceContainer ConfigureAndRegisterServiceContainer()
     {
         var container = CreateContainer();
         Configure(container);
@@ -41,7 +41,7 @@ public class ContainerFixture : IDisposable
         return container;
     }
 
-    internal static IServiceContainer RegisterServices(IServiceContainer container)
+    private static IServiceContainer RegisterServices(IServiceContainer container)
     {
         DizCoreServicesDllRegistration.RegisterServicesInDizDlls(container);
         return container;

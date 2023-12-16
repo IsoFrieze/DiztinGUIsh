@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using Diz.Core.model;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
+using JetBrains.Annotations;
 
 namespace Diz.Core.serialization.xml_serializer;
 
@@ -35,8 +36,10 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     // history:
     // - 100: original XML version for Diz 2.0
     // - 101: no structure changes but, japanese chars in SNES header cartridge title were being saved
-    //        incorrectly, so, allow project XMLs to load IF we can fix up the bad data. 
-    public const int CurrentSaveFormatVersion = 101;
+    //        incorrectly, so, allow project XMLs to load IF we can fix up the bad data.
+    // - 102: added comments support to the special RomBytes data section.
+    //        bumped RomBytes data format from v200 (initial) to v201. 
+    public int CurrentSaveFormatVersion { get; init; } = 102;
 
     // update this if we are dropping support for really old save formats.
     public const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
@@ -64,8 +67,11 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
 
     
     private readonly IXmlSerializerFactory xmlSerializerFactory;
-    public ProjectXmlSerializer(IXmlSerializerFactory xmlSerializerFactory, IMigrationRunner migrationRunner = null) : base(migrationRunner)
+    public ProjectXmlSerializer(IXmlSerializerFactory xmlSerializerFactory, IMigrationRunner migrationRunner = null, int migrateLoadedXmlToVersion = -1) : base(migrationRunner)
     {
+        if (migrateLoadedXmlToVersion != -1)
+            CurrentSaveFormatVersion = migrateLoadedXmlToVersion;
+        
         this.xmlSerializerFactory = xmlSerializerFactory;
     }
 
@@ -82,7 +88,7 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
 
         BeforeSerialize?.Invoke(this, rootElement);
 
-        var serializerConfig = GetSerializerConfig();
+        var serializerConfig = GetSerializerConfig(project.ProjectSettings.RomBytesOutputFormatSettings);
         
         var xmlStr = serializerConfig.Create().Serialize(
             new XmlWriterSettings {Indent = true},
@@ -91,8 +97,10 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
         return Encoding.UTF8.GetBytes(xmlStr);
     }
 
-    private IConfigurationContainer GetSerializerConfig() => 
-        xmlSerializerFactory.GetSerializer();
+    private IConfigurationContainer GetSerializerConfig(
+        [CanBeNull] RomBytesOutputFormatSettings romBytesOutputFormat = null        // only used when saving
+        ) => 
+        xmlSerializerFactory.GetSerializer(romBytesOutputFormat);
     
     public override ProjectOpenResult Load(byte[] projectFileRawXmlBytes)
     {
@@ -101,10 +109,9 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
 
         var xmlStr = Encoding.UTF8.GetString(projectFileRawXmlBytes);
         var versionNumOfData = RunPreDeserializeIntegrityChecks(xmlStr);
-            
-        var migrationRunner = MigrationRunner;
-        migrationRunner.StartingSaveVersion = versionNumOfData;
-        migrationRunner.TargetSaveVersion = CurrentSaveFormatVersion;
+
+        MigrationRunner.StartingSaveVersion = versionNumOfData;
+        MigrationRunner.TargetSaveVersion = CurrentSaveFormatVersion;
 
         var root = DeserializeProjectXml(xmlStr);
         RunIntegrityChecks(root.SaveVersion, root.Watermark);
@@ -119,10 +126,10 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
 
     // finally. this is the real deal.
     private Root DeserializeProjectXml(string xmlStr) => 
-       xmlSerializerFactory.GetSerializer().Create().Deserialize<Root>(xmlStr);
+        GetSerializerConfig().Create().Deserialize<Root>(xmlStr);
 
     // return the save file version# detected in the raw data
-    private static int RunPreDeserializeIntegrityChecks(string rawXml)
+    private int RunPreDeserializeIntegrityChecks(string rawXml)
     {
         // run this check before opening with our real serializer. read a minimal part of the XML
         // manually to verify the root element looks sane.
@@ -143,7 +150,7 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     }
 
     // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-    private static void RunIntegrityChecks(int saveVersion, string watermark)
+    private void RunIntegrityChecks(int saveVersion, string watermark)
     {
         if (watermark != DizWatermark)
             throw new InvalidDataException(

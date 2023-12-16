@@ -44,11 +44,10 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
     {
         // list all SNES-specific migrations here (there can be multiple migration classes here,
         // they'll be applied by their internal ordering)
-        serviceRegistry.Register<IMigration, MigrationBugfix050JapaneseText>();
-        
-        // add more as needed, example:
-        // serviceRegistry.Register<IMigration, AnotherMigration>();
-        // serviceRegistry.Register<IMigration, YetAnotherMigration>();
+        //
+        // note: for registration it's important to give each of these a unique NAME so we can get all of them and apply in order.
+        serviceRegistry.Register<IMigration, MigrationBugfix050JapaneseText>("migrate_100_to_101");
+        serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 101 }, "migrate_101_to_102");
     }
 
     private static void RegisterSampleDataServices(IServiceRegistry serviceRegistry)

@@ -2,6 +2,7 @@
 using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
+using JetBrains.Annotations;
 
 namespace Diz.Cpu._65816.import;
 
@@ -11,9 +12,10 @@ namespace Diz.Cpu._65816.import;
 // checksums are unaffected, so as long as they match, we should able to rely on that to complete our 
 // validation checks.
 // https://github.com/Dotsarecool/DiztinGUIsh/issues/50
+[UsedImplicitly]
 public sealed class MigrationBugfix050JapaneseText : IMigration
 {
-    public int AppliesToSaveVersion { get; } = 100;
+    public int AppliesToSaveVersion => 100;
     private bool previousCartTitleMatchState;
     private bool beforeAddRun;
 
@@ -47,7 +49,7 @@ public sealed class MigrationBugfix050JapaneseText : IMigration
         return romAddCmd.Root?.Project ?? throw new InvalidOperationException();
     }
 
-    private static void ApplyMitigation(Project project)
+    private static void ApplyMitigation(IProject project)
     {
         // if the checksums match, but the internal ROM title doesn't, we'll assume we hit this bug and
         // reset the project cartridge name from the actual bytes in the ROM.
@@ -66,10 +68,10 @@ public sealed class MigrationBugfix050JapaneseText : IMigration
 
         // ok, assume we hit the bug. to fix the broken save data, we will now
         // re-cache the verification info. it will be stored correctly on the next serialize.
-        project.Data.GetSnesApi().CacheVerificationInfoFor(project);
+        snesData.CacheVerificationInfoFor(project);
     }
 
-    private static bool IsMitigationNeeded(Project project)
+    private static bool IsMitigationNeeded(IProject project)
     {
         var cartridgeTitleFromRom = project.InternalRomGameName; // this won't be correct if we hit the bug
         var deserializedRomCartridgeTitle =

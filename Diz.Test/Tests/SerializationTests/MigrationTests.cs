@@ -28,11 +28,11 @@ namespace Diz.Test
 
         [Fact] public static void TestNullElementFails() =>
             new MigrationRunner { Migrations = {null} }.Invoking(r=>r.OnLoadingAfterAddLinkedRom(null))
-                .Should().Throw<InvalidDataException>().WithMessage("*all migrations must be non-null*");
+                .Should().Throw<DizMigrationException>().WithMessage("*all migrations must be non-null*");
         
         [Fact] public static void TestInvalidStartAndTarget() =>
             new MigrationRunner { StartingSaveVersion = 5, TargetSaveVersion = 4}.Invoking(r=>r.OnLoadingAfterAddLinkedRom(null))
-                .Should().Throw<InvalidDataException>().WithMessage("*starting migration version is greater than target version*");
+                .Should().Throw<DizMigrationException>().WithMessage("*starting migration version is greater than target version*");
 
         #region HarnessData
         public static TheoryData<Harness> Harnesses => new()
@@ -52,7 +52,6 @@ namespace Diz.Test
             new Harness
             {
                 ExpectedException = "*migration out of sequence. version 102 not valid here. needed to upgrade from 100*",
-                // ExpectedException = "*doesn't reach desired target version number*",
                 RunnerStart = 100,
                 RunnerTarget = 103,
                 Migrations =
@@ -74,7 +73,7 @@ namespace Diz.Test
                 }
             },
             new Harness {
-                ExpectedException = "*migration failed. upgrade sequence applied ends on version*",
+                ExpectedException = "*migration failed. we were trying to*",
                 RunnerStart = 100, RunnerTarget = 101,
                 Migrations = {
                     CreateMigrationMock(99,  false),
@@ -82,7 +81,7 @@ namespace Diz.Test
                 }
             },
             new Harness {
-                ExpectedException = "*migration failed. upgrade sequence applied ends on version*",
+                ExpectedException = "*migration failed. we were trying to*",
                 RunnerStart = 100, RunnerTarget = 150,
                 Migrations = {
                     CreateMigrationMock(100,  true),
@@ -158,7 +157,7 @@ namespace Diz.Test
                 }
                 else
                 {
-                    action.Should().Throw<InvalidDataException>()
+                    action.Should().Throw<DizMigrationException>()
                         .WithMessage(ExpectedException);
                 }
             }

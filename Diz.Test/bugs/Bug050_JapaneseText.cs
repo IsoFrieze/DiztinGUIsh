@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,8 +11,10 @@ using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 using Diz.Cpu._65816;
+using Diz.Cpu._65816.import;
 using Diz.Test.Utils;
 using FluentAssertions;
+using IX.StandardExtensions.Extensions;
 using LightInject;
 using Moq;
 using Xunit;
@@ -111,7 +114,7 @@ public class Bug050JapaneseText
 
             ProjectFileManager.BeforeSerialize += (serializer, rootElement) =>
             {
-                // force the save version to a specific version, mitigations will only run at v100 and that's most of what we're testing
+                // force the save data we're about use to be a specific version, mitigations will only run at v100 and that's most of what we're testing
                 rootElement.SaveVersion = SaveVersionToUse;
 
                 // if requested, intentionally break the cached cart name data by setting it to an invalid value.
@@ -163,6 +166,31 @@ public class Bug050JapaneseText
                 var mockLinkedRomBytesProvider = TestUtil.CreateReadFromFileMock(mockedFileBytes);
                 return mockLinkedRomBytesProvider.Object;
             });
+        }
+
+        public override IServiceContainer ConfigureAndRegisterServiceContainer()
+        {
+            var container = base.ConfigureAndRegisterServiceContainer();
+            
+            // normally we'd do all this in Configure().
+            // but if we do it here instead, we can override the regular system-level assignments.
+            
+            // overwrite the existing IProjectXmlSerializer instantiation registration so we can do some funny business. 
+            container.Register<IProjectXmlSerializer>(factory =>
+            {
+                const int overriddenTargetSaveVersionForTests = 101;
+                
+                return new ProjectXmlSerializer(
+                    xmlSerializerFactory: factory.GetInstance<IXmlSerializerFactory>(),
+                    migrationRunner: factory.GetInstance<IMigrationRunner>(),
+                    
+                    // this creates a testing version of our migration runner that only tried to upgrade 
+                    // from v100 to v101, and will not run anything else.
+                    migrateLoadedXmlToVersion: overriddenTargetSaveVersionForTests
+                    );
+            });
+            
+            return container;
         }
     }
 

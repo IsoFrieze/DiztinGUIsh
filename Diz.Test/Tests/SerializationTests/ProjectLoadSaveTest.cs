@@ -4,13 +4,12 @@ using Diz.Core.model;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Cpu._65816;
-using Diz.Test.Tests;
 using Diz.Test.Tests.RomInterfaceTests;
 using Diz.Test.Utils;
 using FluentAssertions;
 using Xunit;
 
-namespace Diz.Test;
+namespace Diz.Test.Tests.SerializationTests;
 
 public class LoadSaveTest : ContainerFixture
 {
@@ -24,8 +23,8 @@ public class LoadSaveTest : ContainerFixture
             
         var expectedTitle = SnesSampleRomDataFactory.GetSampleUtf8CartridgeTitle();
 
-        srcProject.Data.Comments.Count.Should().BeGreaterThan(0);
-        srcProject.Data.Labels.Labels.Count().Should().BeGreaterThan(0);
+        srcProject.Data.Comments.Count.Should().BePositive();
+        srcProject.Data.Labels.Labels.Count().Should().BePositive();
 
         // extract the bytes that would normally be in the SMC file (they only exist in code for this sample data)
         var romFileBytes = srcProject.Data.GetFileBytes().ToList();
@@ -47,9 +46,6 @@ public class LoadSaveTest : ContainerFixture
         warning.Should().Be(null);
         deserializedRoot.Project.Data.Labels.Labels.Count().Should().Be(srcProject.Data.Labels.Labels.Count());
 
-        void TestEquivalent(Func<Project, object> func, ProjectXmlSerializer.Root root, Project project) => 
-            func(root.Project).Should().BeEquivalentTo(func(project));
-
         TestEquivalent(x => x.Data.RomBytes, deserializedRoot, srcProject);
         TestEquivalent(x => x.Data.Comments, deserializedRoot, srcProject);
         TestEquivalent(x => x.Data.Labels, deserializedRoot, srcProject);
@@ -61,4 +57,7 @@ public class LoadSaveTest : ContainerFixture
 
         CartNameTests.TestRomCartTitle(deserializedRoot.Project, expectedTitle);
     }
+
+    private static void TestEquivalent(Func<Project, object> func, ProjectXmlSerializer.Root root, Project project) => 
+        func(root.Project).Should().BeEquivalentTo(func(project));
 }
