@@ -18,9 +18,10 @@ public partial class MainWindow
         if (Document.LastProjectFilename == "")
             return;
 
-        // safeguard: if we crash opening this project,
-        // then next time we load make sure we don't try it again.
-        // this will be reset later
+        // safeguard: during automatic loading of projects at startup,
+        // temporarily un-set the "last project opened filename".
+        // this is because, if we crash, the next time the app starts it won't crash again :)
+        // after this is loaded successfully, we'll set the filename again so this loads successfully.
         var projectToOpen = Document.LastProjectFilename;
         Document.LastProjectFilename = "";
 
