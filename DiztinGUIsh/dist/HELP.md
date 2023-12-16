@@ -552,9 +552,14 @@ Project File Format
 
 The default file format is .diz, which is XML compressed with gzip. (you can rename the file to .xml.gz)
 
-You can also save with a .dizraw extension, which is the same thing but without the compression.
+You can also save with a .dizraw extension, which is the same thing but without the gzip the compression. It still has 
+a little bit of run-length and other compression.
 
 Choose this option if you want to easily modify project files in an external program, or for use with git where
 you want to see the diffs.  The underlying format is XML.
+
+In short, what files really are:
+*.diz files are really .xml.gz files
+*.dizraw files are really just .xml files
 
 * * *
