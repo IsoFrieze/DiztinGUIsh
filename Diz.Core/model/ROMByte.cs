@@ -133,7 +133,7 @@ namespace Diz.Core.model
         public ReaderWriterLockSlim Lock { get; } = new();
         bool IRomByte.EqualsButNoRomByte(IRomByte other)
         {
-            return EqualsButNoRomByte(other as RomByte);
+            return other is RomByte romByte && EqualsButNoRomByte(romByte);
         }
     }
 }

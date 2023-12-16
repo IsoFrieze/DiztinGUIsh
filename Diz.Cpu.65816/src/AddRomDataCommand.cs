@@ -76,7 +76,7 @@ public class AddRomDataCommand : IAddRomDataCommand
         searchProvider.GetNextFilename = reasonWhyLastFileNotCompatible =>
             GetNextRomFileToTry?.Invoke(reasonWhyLastFileNotCompatible) ?? null;
 
-        return searchProvider.SearchAndReadFromCompatibleRom(initialRomFile: Project.AttachedRomFilename);
+        return searchProvider.SearchAndReadFromCompatibleRom(initialRomFile: Project?.AttachedRomFilename ?? "");
     }
 
     private void EnsureProjectCompatibleWithRom(byte[] romFileBytes)

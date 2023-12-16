@@ -44,7 +44,7 @@ public sealed class MigrationBugfix050JapaneseText : IMigration
         // we're called now after the romBytes have been loaded and all other checks are clear.
         romAddCmd.ShouldProjectCartTitleMatchRomBytes = previousCartTitleMatchState;
 
-        return romAddCmd.Root?.Project;
+        return romAddCmd.Root?.Project ?? throw new InvalidOperationException();
     }
 
     private static void ApplyMitigation(Project project)
@@ -54,7 +54,8 @@ public sealed class MigrationBugfix050JapaneseText : IMigration
 
         // we're going a little overkill on checking here to make sure everything's good.
         // NOTE: we're not checking for a VALID checksum, only that our various checksums match each other.
-        var snesData = project.Data.GetSnesApi();
+        var snesData = project.Data.GetSnesApi() ?? throw new InvalidDataException("No SNES API for this data during Bugfix050Migration");
+        
         var checksumXmlVsBytesMatch = project.InternalCheckSum == snesData.RomCheckSumsFromRomBytes;
         var checksumXmlVsCalculatedMatch = snesData.ComputeChecksum() == snesData.RomChecksum;
 
@@ -72,7 +73,7 @@ public sealed class MigrationBugfix050JapaneseText : IMigration
     {
         var cartridgeTitleFromRom = project.InternalRomGameName; // this won't be correct if we hit the bug
         var deserializedRomCartridgeTitle =
-            project.Data.GetSnesApi().CartridgeTitleName; // this will be correct, even if we hit the bug
+            project.Data.GetSnesApi()?.CartridgeTitleName; // this will be correct, even if we hit the bug
             
         // we need to mitigate the bug if our titles don't agree with each other.
         return deserializedRomCartridgeTitle != cartridgeTitleFromRom;

@@ -41,8 +41,8 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     // update this if we are dropping support for really old save formats.
     public const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
     
-    public event IProjectXmlSerializer.SerializeEvent BeforeSerialize;
-    public event IProjectXmlSerializer.SerializeEvent AfterDeserialize;
+    [CanBeNull] public event IProjectXmlSerializer.SerializeEvent BeforeSerialize;
+    [CanBeNull] public event IProjectXmlSerializer.SerializeEvent AfterDeserialize;
     
     
     public class Root

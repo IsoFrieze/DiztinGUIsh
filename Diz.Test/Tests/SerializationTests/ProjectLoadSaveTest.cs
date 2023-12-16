@@ -20,7 +20,7 @@ public class LoadSaveTest : ContainerFixture
     [Fact]
     public void FullSerializeAndDeserialize()
     {
-        var srcProject = sampleProjectCreator.Create() as Project;
+        var srcProject = sampleProjectCreator.Create() as Project ?? throw new Exception("can't create sample project data");
             
         var expectedTitle = SnesSampleRomDataFactory.GetSampleUtf8CartridgeTitle();
 
