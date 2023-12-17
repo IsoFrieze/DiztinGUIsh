@@ -32,7 +32,7 @@ public class AddRomDataCommandValidator : AbstractValidator<RomToProjectAssociat
         if (project == null) 
             throw new ArgumentNullException(nameof(project));
 
-        var snesData = project.Data.GetSnesApi();
+        var snesData = project.Data.GetSnesApi() ?? throw new ArgumentNullException();
         var checksumToVerify =
             ByteUtil.ConvertByteArrayToUInt32(container.RomBytes, snesData.RomComplementOffset);
             
@@ -46,10 +46,11 @@ public class AddRomDataCommandValidator : AbstractValidator<RomToProjectAssociat
 
     private static bool HaveValidRomSize(RomToProjectAssociation container, Project? project, ValidationContext<RomToProjectAssociation> validationContext)
     {
-        if (project == null)
+        var snesData = project?.Data.GetSnesApi();
+        if (snesData == null)
             return false;
-            
-        if (container.RomBytes?.Length > project.Data.GetSnesApi().RomSettingsOffset + 10)
+        
+        if (container.RomBytes?.Length > snesData.RomSettingsOffset + 10)
             return true;
 
         validationContext.AddFailure("The linked ROM is too small. It can't be opened.");
@@ -62,10 +63,11 @@ public class AddRomDataCommandValidator : AbstractValidator<RomToProjectAssociat
         if (!EnsureProjectAndRomCartTitleMatch)
             return true;
             
-        if (project == null)
+        var snesData = project?.Data.GetSnesApi();
+        if (project == null || snesData == null)
             return false;
             
-        var gameNameFromRomBytes = RomUtil.GetCartridgeTitleFromRom(container.RomBytes, project.Data.GetSnesApi().RomSettingsOffset);
+        var gameNameFromRomBytes = RomUtil.GetCartridgeTitleFromRom(container.RomBytes, snesData.RomSettingsOffset);
         var requiredGameNameMatch = project.InternalRomGameName;
 
         return MatchCartTitle(requiredGameNameMatch, gameNameFromRomBytes, validationContext);

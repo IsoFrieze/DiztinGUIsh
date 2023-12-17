@@ -41,8 +41,12 @@ public class AutoStepper65816<TDataSource> where TDataSource : IRomByteFlagsGett
     {
         if (seenBranches.Contains(Offset))
             return false;
+
+        var romByte = byteSource.GetRomByte(Offset);
+        if (romByte == null)
+            return false;
         
-        var opcode = (byte)byteSource.GetRomByte(Offset);
+        var opcode = (byte)romByte;
         
         RememberIfBranch(opcode);
         

@@ -75,12 +75,7 @@ public partial class BsnesTraceLogImporter
     }
 
     // optimization: save allocations
-    private ObjPool<ModificationData> modificationDataPool;
-
-    private void InitObjectPool()
-    {
-        modificationDataPool = new ObjPool<ModificationData>();
-    }
+    private readonly ObjPool<ModificationData> modificationDataPool;
 
     private void ApplyModification(ModificationData modData)
     {

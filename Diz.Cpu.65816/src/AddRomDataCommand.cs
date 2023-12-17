@@ -59,12 +59,17 @@ public class AddRomDataCommand : IAddRomDataCommand
 
     private void FillIfSearchFoundRom()
     {
-        var result = SearchForValidRom();
-        if (result == null)
+        if (Project == null)
+            throw new InvalidOperationException("Project not allowed to be null here");
+        
+        var romFileData = SearchForValidRom();
+        if (romFileData == null)
             throw new InvalidOperationException("Search failed, couldn't find compatible ROM to link");
 
-        Project.AttachedRomFilename = result.Value.filename;
-        Project.Data.RomBytes.CopyRomDataIn(result.Value.romBytes);
+        var (filename, romBytes) = romFileData.Value;
+        
+        Project.AttachedRomFilename = filename;
+        Project.Data.RomBytes.CopyRomDataIn(romBytes);
     }
 
     private readonly Func<ILinkedRomBytesProvider> createLinkedProvider;

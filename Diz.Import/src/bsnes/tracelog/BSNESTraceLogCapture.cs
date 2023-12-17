@@ -249,7 +249,7 @@ public class BsnesTraceLogCapture
 
             if (nextItem != null)
             {
-                Debug.Assert(nextItem.next == null);
+                Debug.Assert(nextItem.Next == null);
 
                 if (currentHead == null)
                 {
@@ -258,7 +258,7 @@ public class BsnesTraceLogCapture
                 }
                 else
                 {
-                    currentItem.next = nextItem;
+                    currentItem.Next = nextItem;
                 }
                 currentItem = nextItem;
 
@@ -273,7 +273,7 @@ public class BsnesTraceLogCapture
             // finish list
             if (currentHead != null)
             {
-                Debug.Assert(currentItem.next == null);
+                Debug.Assert(currentItem.Next == null);
                 compressedItem.listHeads.Add(currentHead);
             }
             
@@ -308,6 +308,8 @@ public class BsnesTraceLogCapture
 
     private void ProcessWorkItemsLinkedList(BsnesImportStreamProcessor.WorkItem workItemListHead)
     {
+        // performance critical function. be cautious when making changes
+        
         #if PROFILING
         var mainSpan = Markers.EnterSpan("BSNES ProcessWorkItems");
         #endif
@@ -316,9 +318,8 @@ public class BsnesTraceLogCapture
         var current = workItemListHead;
         while (current != null) { 
             ProcessWorkItem(current);
-            var next = current.next;
+            var next = current.Next;
             streamProcessor.FreeWorkItem(ref current);
-            
             current = next;
         }
         

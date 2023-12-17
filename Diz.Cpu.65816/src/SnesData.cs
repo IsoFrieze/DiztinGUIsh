@@ -114,8 +114,8 @@ public class SnesApi : ISnesData
     public bool ComputeIsChecksumValid() =>
         ChecksumUtil.IsRomChecksumValid(Data.RomBytes.CreateListRawRomBytes(), Data.RomMapMode, GetRomSize());
 
-    public uint RomComplement => (uint) Data.GetRomWord(RomComplementOffset);
-    public uint RomChecksum => (uint) Data.GetRomWord(RomChecksumOffset);
+    public uint RomComplement => (uint) Data.GetRomWord(RomComplementOffset)!;
+    public uint RomChecksum => (uint) Data.GetRomWord(RomChecksumOffset)!;
     public uint RomCheckSumsFromRomBytes => (RomChecksum << 16) | RomComplement;
 
     public FlagType GetFlag(int i) => Data.RomBytes[i].TypeFlag;

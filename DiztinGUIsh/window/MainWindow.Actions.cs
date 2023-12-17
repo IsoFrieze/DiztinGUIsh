@@ -77,9 +77,13 @@ public partial class MainWindow
     {
         if (!RomDataPresent()) 
             return;
+        
+        var snesData = Project.Data.GetSnesApi();
+        if (snesData == null)
+            return;
             
         ProjectController.MarkChanged();
-        var newOffset = Project.Data.GetSnesApi().Step(offset, false, false, offset - 1);
+        var newOffset = snesData.Step(offset, false, false, offset - 1);
         SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Step Over"}, overshootAmount: 20);
         UpdateUi_TimerAndPercent();
     }
@@ -213,6 +217,9 @@ public partial class MainWindow
         // and are easy targets for filling them in relatively risk-free since you know the M and X flags of
         // the instruction of where you jumped FROM.
         var snesData = Project.Data.GetSnesApi();
+        if (snesData == null)
+            return;
+        
         var (foundOffset, iaSourceOffsetPc) = snesData.FindNextUnreachedInPointAfter(offset);
         if (foundOffset == -1)
         {

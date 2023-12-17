@@ -5,7 +5,7 @@ namespace Diz.Import.bsnes.tracelog;
 
 public partial class BsnesTraceLogImporter
 {
-    private readonly ISnesData snesData;
+    private readonly ISnesData? snesData = null;
 
     // these are cached mostly to save us from having to lock Data.
     // do not allow these to change over the life of the importer
@@ -17,9 +17,9 @@ public partial class BsnesTraceLogImporter
         this.snesData = snesData;
         romSizeCached = this.snesData?.GetRomSize() ?? 0;
         romMapModeCached = this.snesData?.RomMapMode ?? default;
-
+        
+        modificationDataPool = new ObjPool<ModificationData>();
         InitStats();
-        InitObjectPool();
     }
 
     // Mark collected trace data for a RomByte (which should be an opcode) AND any of the operands that follow us.

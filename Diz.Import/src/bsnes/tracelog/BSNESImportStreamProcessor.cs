@@ -74,7 +74,7 @@ public class BsnesImportStreamProcessor
     {
         public byte[] Buffer;
         public bool AbridgedFormat;
-        public WorkItem next;
+        public WorkItem? Next;
     }
 
     private ObjPool<CompressedWorkItem> poolCompressedWorkItems;
@@ -235,7 +235,7 @@ public class BsnesImportStreamProcessor
 
         // don't kill the big buffers. main point of this pool is to hopefully re-use them later.
 
-        workItem.next = null;
+        workItem.Next = null;
 
         poolWorkItems?.Return(ref workItem);
     }
@@ -246,7 +246,7 @@ public class BsnesImportStreamProcessor
 
         // turn this on if you ever think you have a memroy alloc issue
         const bool seriousChecking = false;
-        if (seriousChecking && (workItem.isFree || workItem.next != null))
+        if (seriousChecking && (workItem.isFree || workItem.Next != null))
         {
             Debugger.Break();
         }
