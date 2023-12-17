@@ -121,9 +121,9 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
         // if we need it, put it in a new MigrationRunner.SetupMigrateXml() or similar.
 
         var xmlStr = Encoding.UTF8.GetString(projectFileRawXmlBytes);
-        var versionNumOfData = RunPreDeserializeIntegrityChecks(xmlStr);
+        var versionOnDisk = RunPreDeserializeIntegrityChecks(xmlStr);
 
-        MigrationRunner.StartingSaveVersion = versionNumOfData;
+        MigrationRunner.StartingSaveVersion = versionOnDisk;
         MigrationRunner.TargetSaveVersion = CurrentSaveFormatVersion;
 
         var root = DeserializeProjectXml(xmlStr);
