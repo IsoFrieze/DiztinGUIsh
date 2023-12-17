@@ -277,31 +277,27 @@ public partial class MainWindow
             Description = $"GoTo Unreached: {dirStr} {endStr}"
         };
     }
-
-
-    private void FixMisalignedInstructions()
+    
+    private void UiFixMisalignedInstructions()
     {
         if (!PromptForMisalignmentCheck())
             return;
 
-        var count = Project.Data.GetSnesApi().FixMisalignedFlags();
-
-        if (count > 0)
-            ProjectController.MarkChanged();
-        InvalidateTable();
-            
-        ShowInfo($"Modified {count} flags!", "Done!");
+        var countModified = ProjectController.FixMisalignedFlags();
+        
+        RefreshUi();
+        ShowInfo($"Modified {countModified} flags!", "Done!");
     }
 
-    private void RescanForInOut()
+    private void UiRescanForInOut()
     {
-        if (!PromptForInOutChecking()) 
+        if (!PromptForInOutChecking())
             return;
 
-        Project.Data.GetSnesApi().RescanInOutPoints();
-        ProjectController.MarkChanged();
+        if (!ProjectController.RescanForInOut()) 
+            return;
             
-        InvalidateTable();
+        RefreshUi();
         ShowInfo("Scan complete!", "Done!");
     }
 

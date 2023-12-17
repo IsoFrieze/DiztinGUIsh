@@ -7,6 +7,7 @@ using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
+using Diz.Cpu._65816;
 
 // NOTE: lots of these interfaces were created temporarily for major refactoring.
 // when that process is finished, we should probably take a pass here to simplify anything
@@ -54,7 +55,10 @@ namespace Diz.Controllers.interfaces
         public void OpenNewViewOfLastLoadedProject();
     }
     
-    public interface IProjectController : ITraceLogImporters
+    public interface IProjectController : 
+        ITraceLogImporters, 
+        IFixInstructionUtils, 
+        IFixMisalignedFlags
     {
         // diz3.0 is going to need some major surgery from this one.
 
@@ -110,6 +114,13 @@ namespace Diz.Controllers.interfaces
     {
         void UpdateExportSettings(LogWriterSettings selectedSettings);
         void WriteAssemblyOutput();
+    }
+
+    public interface IFixInstructionUtils
+    {
+        // probably combine this with something else.
+        // not sure this should really be an interface but...
+        bool RescanForInOut();
     }
 
     public interface ITraceLogImporters

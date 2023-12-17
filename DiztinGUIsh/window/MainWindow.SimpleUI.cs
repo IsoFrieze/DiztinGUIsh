@@ -138,7 +138,7 @@ namespace DiztinGUIsh.window
         private void textToolStripMenuItem_Click(object sender, EventArgs e) => SetMarkerLabel(FlagType.Text);
 
         private void fixMisalignedInstructionsToolStripMenuItem_Click(object sender, EventArgs e) =>
-            FixMisalignedInstructions();
+            UiFixMisalignedInstructions();
 
         private void moveWithStepToolStripMenuItem_Click(object sender, EventArgs e) => ToggleMoveWithStep();
         private void labelListToolStripMenuItem_Click(object sender, EventArgs e) => ShowCommentList();
@@ -166,8 +166,8 @@ namespace DiztinGUIsh.window
             OpenLastProject();
         }
 
-        private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e) => RescanForInOut();
-        private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => ImportBSNESUsageMap();
+        private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e) => UiRescanForInOut();
+        private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => UiImportBsnesUsageMap();
         private void table_MouseWheel(object sender, MouseEventArgs e) => ScrollTableBy(e.Delta);
 
         public NavigationForm NavigationForm { get; }

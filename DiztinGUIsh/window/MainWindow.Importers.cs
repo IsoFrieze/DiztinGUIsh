@@ -28,22 +28,27 @@ namespace DiztinGUIsh.window
 
         private void ImportBsnesTraceLogText()
         {
-            if (!PromptForImportBSNESTraceLogFile()) return;
-            var (numModifiedFlags, numFiles) = ImportBSNESTraceLogs();
+            if (!PromptForImportBSNESTraceLogFile()) 
+                return;
+            
+            var (numModifiedFlags, numFiles) = ImportBsnesTraceLogs();
+            
+            RefreshUi();
             ReportNumberFlagsModified(numModifiedFlags, numFiles);
         }
 
-        private void ImportBSNESUsageMap()
+        private void UiImportBsnesUsageMap()
         {
             if (openUsageMapFile.ShowDialog() != DialogResult.OK)
                 return;
 
             var numModifiedFlags = ProjectController.ImportBsnesUsageMap(openUsageMapFile.FileName);
-
+            
+            RefreshUi();
             ShowInfo($"Modified total {numModifiedFlags} flags!", "Done");
         }
 
-        private (long numBytesModified, int numFiles) ImportBSNESTraceLogs()
+        private (long numBytesModified, int numFiles) ImportBsnesTraceLogs()
         {
             var numBytesModified = ProjectController.ImportBsnesTraceLogs(openTraceLogDialog.FileNames);
             return (numBytesModified, openTraceLogDialog.FileNames.Length);

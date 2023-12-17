@@ -58,7 +58,8 @@ public interface ISnesApi<out TData> :
     ISnesCartName,
     IInstructionGettable,
     IFixMisalignedFlags,
-    IArchitectureApi
+    IArchitectureApi,
+    IMarkOperandAndOpcode
 
     where TData : IData
 {
@@ -223,6 +224,14 @@ public class SnesApi : ISnesData
 
     public int AutoStepHarsh(int offset, int count) =>
         GetCpu(offset).AutoStepHarsh(this, offset, count);
+
+    public void MarkAsOpcodeAndOperandsStartingAt(int offset, int? dataBank = null, int? directPage = null, bool? xFlag = null, bool? mFlag = null)
+    {
+        if (GetCpu(offset) is not Cpu65C816<SnesApi> cpu65816)
+            return;
+
+        cpu65816.MarkAsOpcodeAndOperandsStartingAt(this, offset, dataBank, directPage, xFlag, mFlag);
+    }
     
     public (int unreachedOffsetFound, int iaSourceAddress) FindNextUnreachedInPointAfter(int startingOffset, bool searchForward = true)
     {
@@ -306,46 +315,44 @@ public class SnesApi : ISnesData
     
     public int FixMisalignedFlags()
     {
-        int count = 0, size = GetRomSize();
+        int numChanged = 0, romSize = GetRomSize();
 
-        for (var i = 0; i < size; i++)
+        for (var offset = 0; offset < romSize; offset++)
         {
-            var flag = GetFlag(i);
+            var flag = GetFlag(offset);
 
             switch (flag)
             {
                 case FlagType.Opcode:
                 {
-                    int len = GetInstructionLength(i);
-                    for (var j = 1; j < len && i + j < size; j++)
-                    {
-                        if (GetFlag(i + j) != FlagType.Operand)
-                        {
-                            SetFlag(i + j, FlagType.Operand);
-                            count++;
-                        }
-                    }
-                    i += len - 1;
+                    var bytesChanged = 0;
+                    var instructionLength = FixFlagsForOpcodeAndItsOperands(offset, romSize, ref bytesChanged);
+
+                    numChanged += bytesChanged;
+                    var newOffset = instructionLength - 1;
+                    
+                    offset += newOffset;
                     break;
                 }
                 case FlagType.Operand:
-                    SetFlag(i, FlagType.Opcode);
-                    count++;
-                    i--;
+                    SetFlag(offset, FlagType.Opcode);
+                    numChanged++;
+                    offset--;
                     break;
                 default:
                 {
                     if (RomUtil.GetByteLengthForFlag(flag) > 1)
                     {
-                        int step = RomUtil.GetByteLengthForFlag(flag);
-                        for (int j = 1; j < step; j++)
+                        var step = RomUtil.GetByteLengthForFlag(flag);
+                        for (var j = 1; j < step; j++)
                         {
-                            if (GetFlag(i + j) == flag) 
+                            if (GetFlag(offset + j) == flag) 
                                 continue;
-                            SetFlag(i + j, flag);
-                            count++;
+                            
+                            SetFlag(offset + j, flag);
+                            numChanged++;
                         }
-                        i += step - 1;
+                        offset += step - 1;
                     }
 
                     break;
@@ -353,7 +360,22 @@ public class SnesApi : ISnesData
             }
         }
 
-        return count;
+        return numChanged;
+    }
+
+    private int FixFlagsForOpcodeAndItsOperands(int offset, int romSize, ref int bytesChanged)
+    {
+        var instructionLength = GetInstructionLength(offset);
+        for (var j = 1; j < instructionLength && offset + j < romSize; j++)
+        {
+            if (GetFlag(offset + j) == FlagType.Operand)
+                continue;
+                        
+            SetFlag(offset + j, FlagType.Operand);
+            bytesChanged++;
+        }
+
+        return instructionLength;
     }
 
     public byte? GetRomByte(int offset) => Data.GetRomByte(offset);

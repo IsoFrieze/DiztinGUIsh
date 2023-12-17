@@ -8,27 +8,36 @@ public class BsnesUsageMapImporter
     [Flags]
     private enum BsnesPlusUsage : byte
     {
-        UsageRead = 0x80,
-        UsageWrite = 0x40,
-        UsageExec = 0x20,
+        UsageRead   = 0x80,
+        UsageWrite  = 0x40,
+        UsageExec   = 0x20,
+        
         UsageOpcode = 0x10,
-        UsageFlagM = 0x02,
-        UsageFlagX = 0x01,
+        UsageFlagE  = 0x04,
+        UsageFlagM  = 0x02,
+        UsageFlagX  = 0x01,
     }
-        
-    private int prevFlags;
-    private byte[] usageMap;
-    private ISnesData snesData;
 
-    public static int ImportUsageMap(byte[] usageMap, ISnesData data)
+    // the data we're importing from BSNES
+    private readonly byte[] usageMap;
+    
+    // our existing Diz project
+    private readonly ISnesData snesData;
+    
+    // if true, we'll only change things marked already as unreached.
+    // this is the safest way to go but, turning it off has a chance of correcting desync'd manual assembly,
+    // and that's a good thing.
+    private readonly bool onlyMarkIfUnreached;
+
+    public BsnesUsageMapImporter(byte[] usageMap, ISnesData snesData, bool onlyMarkIfUnreached = false)
     {
-        return new BsnesUsageMapImporter { usageMap = usageMap, snesData = data }.Run();
+        this.usageMap = usageMap;
+        this.snesData = snesData;
+        this.onlyMarkIfUnreached = onlyMarkIfUnreached;
     }
-        
-    private int Run()
-    {
-        prevFlags = 0;
 
+    public int Run()
+    {
         var modified = 0;
         for (var snesOffset = 0; snesOffset <= 0xFFFFFF; snesOffset++)
         {
@@ -48,36 +57,55 @@ public class BsnesUsageMapImporter
         if (pc == -1 || pc >= snesData.GetRomSize())
             return false;
 
-        var flags = (BsnesPlusUsage)usageMap[snesOffset];
+        var bsnesByteFlags = (BsnesPlusUsage)usageMap[snesOffset];
 
         // no information available
-        if (flags == 0)
+        if (bsnesByteFlags == 0)
             return false;
 
-        // skip if there is something already set..
-        if (snesData.GetFlag(pc) != FlagType.Unreached)
-            return false;
-
-        // opcode: 0x30, operand: 0x20
-        if (flags.HasFlag(BsnesPlusUsage.UsageExec))
-        {
-            snesData.SetFlag(pc, FlagType.Operand);
-
-            if (flags.HasFlag(BsnesPlusUsage.UsageOpcode))
-            {
-                prevFlags = ((int) flags & 3) << 4;
-                snesData.SetFlag(pc, FlagType.Opcode);
-            }
-
-            snesData.SetMxFlags(pc, prevFlags);
-            return true;
-        }
-
-        if (!flags.HasFlag(BsnesPlusUsage.UsageRead)) 
-            return false;
+        var existingDizByteType = snesData.GetFlag(pc);
         
-        snesData.SetFlag(pc, FlagType.Data8Bit);
-        return true;
+        if (onlyMarkIfUnreached && existingDizByteType != FlagType.Unreached)
+            return false;
 
+        var changed = false;
+        
+        // theoretically, these can overlap too (Read + Exec an opcode)
+        // we prioritize marking bytes as code vs data
+        if (bsnesByteFlags.HasFlag(BsnesPlusUsage.UsageExec))
+        {
+            if (bsnesByteFlags.HasFlag(BsnesPlusUsage.UsageOpcode))
+            {
+                if (existingDizByteType != FlagType.Opcode)
+                    changed = true;
+
+                snesData.MarkAsOpcodeAndOperandsStartingAt(
+                    offset: pc,
+                    xFlag: bsnesByteFlags.HasFlag(BsnesPlusUsage.UsageFlagX),
+                    mFlag: bsnesByteFlags.HasFlag(BsnesPlusUsage.UsageFlagM)
+                );
+            }
+            else
+            {
+                // it's an operand.
+                // theoretically, it should be covered by the previous opcode calling MarkAsOpcodeAndOperandsStartingAt().
+                // we'll set it again just in case.
+                if (existingDizByteType != FlagType.Operand)
+                    changed = true;
+                
+                // note: MX flags not given to use by BSNES for this,
+                // we only get them for the opcode that came before this.
+            }
+        }
+        else if (bsnesByteFlags.HasFlag(BsnesPlusUsage.UsageRead))
+        {
+            if (existingDizByteType == FlagType.Unreached)
+            {
+                snesData.SetFlag(pc, FlagType.Data8Bit);
+                changed = true;
+            }
+        }
+        
+        return changed;
     }
 }

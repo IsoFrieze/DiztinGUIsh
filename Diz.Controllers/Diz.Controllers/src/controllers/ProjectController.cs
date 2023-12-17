@@ -261,11 +261,47 @@ public class ProjectController : IProjectController
 
     public void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null) =>
         ProjectView.SelectOffset(offset, historyArgs);
+    
+    
+    public int FixMisalignedFlags()
+    {
+        var countModified = Project.Data.GetSnesApi()?.FixMisalignedFlags() ?? 0;
+        if (countModified > 0)
+            MarkChanged();
+        
+        return countModified;
+    }
+    
+    public bool RescanForInOut()
+    {
+        var snesData = Project.Data.GetSnesApi();
+        if (snesData == null)
+            return false;
+        
+        snesData.RescanInOutPoints();
+        MarkChanged();
+        return true;
+    }
 
     public long ImportBsnesUsageMap(string fileName)
     {
-        var linesModified = BsnesUsageMapImporter.ImportUsageMap(File.ReadAllBytes(fileName), Project.Data.GetSnesApi());
+        var snesData = Project?.Data.GetSnesApi();
+        if (snesData == null)
+            return 0;
+
+        var linesModified = 0;
+        DoLongRunningTask(() =>
+        {
+            // 1. run the BSNES import usage map
+            var importer = new BsnesUsageMapImporter(File.ReadAllBytes(fileName), snesData);
+            linesModified = importer.Run();
             
+            // 2. to clean it up a little, run our "fixup" stuff.
+            FixMisalignedFlags();
+            RescanForInOut();
+
+        }, "Import usage map + fixup flags + rescan IN/Out");
+        
         if (linesModified > 0)
             MarkChanged();
 

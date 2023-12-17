@@ -19,7 +19,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     public override int Step(TByteSource data, int offset, bool branch, bool force, int prevOffset = -1)
     {
         var (opcode, directPage, dataBank, xFlag, mFlag) = data.GetCpuStateFor(offset, prevOffset);
-        var length = MarkAsOpcodeAt(data, offset, dataBank, directPage, xFlag, mFlag);
+        var length = MarkAsOpcodeAndOperandsStartingAt(data, offset, dataBank, directPage, xFlag, mFlag);
         MarkInOutPoints(data, offset);
 
         var nextOffset = offset + length;
@@ -91,23 +91,46 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return iaOffsetPc;
     }
 
-    private int MarkAsOpcodeAt(TByteSource data, int offset, int dataBank, int directPage, bool xFlag, bool mFlag)
+    public int MarkAsOpcodeAndOperandsStartingAt(
+        TByteSource data, int offsetToMarkAsOpcode, 
+        int? dataBank = null, int? directPage = null, 
+        bool? xFlag = null, bool? mFlag = null              // you pretty much always want to set the MX flags or this function is worthless
+        )
     {
-        var numBytesToChange = 1;
-        for (var i = 0; i < numBytesToChange; ++i)
+        var numBytesToChangeForOpcodesAndOperands = 1;
+        var i = 0;
+        var markedAs = FlagType.Opcode;
+        do
         {
-            var flagType = i == 0 ? FlagType.Opcode : FlagType.Operand;
-            data.SetFlag(offset + i, flagType);
-            data.SetDataBank(offset + i, dataBank);
-            data.SetDirectPage(offset + i, directPage);
-            data.SetXFlag(offset + i, xFlag);
-            data.SetMFlag(offset + i, mFlag);
-                
-            if (i == 0) 
-                numBytesToChange = GetInstructionLength(data, offset);
-        }
+            var currentOffset = offsetToMarkAsOpcode + i;
 
-        return numBytesToChange;
+            if (dataBank != null)
+                data.SetDataBank(currentOffset, dataBank.Value);
+            
+            if (directPage != null)
+                data.SetDirectPage(currentOffset, directPage.Value);
+            
+            if (xFlag != null)
+                data.SetXFlag(currentOffset, xFlag.Value);
+            
+            if (mFlag != null)
+                data.SetMFlag(currentOffset, mFlag.Value);
+            
+            data.SetFlag(currentOffset, markedAs);
+            
+            if (markedAs == FlagType.Opcode)
+            {
+                // call GetInstructionLength() only AFTER setting all the other flags above,
+                // because the data for the instruction will CHANGE based on those flags.
+                // we want to get that, and apply it to the next couple operands
+                numBytesToChangeForOpcodesAndOperands = GetInstructionLength(data, offsetToMarkAsOpcode);
+            }
+
+            markedAs = FlagType.Operand;
+            ++i;
+        } while (i < numBytesToChangeForOpcodesAndOperands);
+
+        return numBytesToChangeForOpcodesAndOperands;
     }
 
     // input: ROM offset
