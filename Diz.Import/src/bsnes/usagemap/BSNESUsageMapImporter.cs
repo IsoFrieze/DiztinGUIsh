@@ -76,6 +76,9 @@ public class BsnesUsageMapImporter
         {
             if (bsnesByteFlags.HasFlag(BsnesPlusUsage.UsageOpcode))
             {
+                // note: BSNES gets MX flags right MOST of the time. it can happen where it reports something that's wrong
+                // and we blow away working data with non-good data. it happens.
+                
                 if (existingDizByteType != FlagType.Opcode)
                     changed = true;
 

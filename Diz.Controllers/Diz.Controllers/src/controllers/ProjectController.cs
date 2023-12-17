@@ -290,7 +290,11 @@ public class ProjectController : IProjectController
         DoLongRunningTask(() =>
         {
             // 1. run the BSNES import usage map
-            var importer = new BsnesUsageMapImporter(File.ReadAllBytes(fileName), snesData);
+            var importer = new BsnesUsageMapImporter(
+                usageMap: File.ReadAllBytes(fileName), 
+                snesData: snesData,
+                onlyMarkIfUnreached: Project.ProjectSettings.BsnesUsageMapImportOnlyChangedUnmarked
+            );
             linesModified = importer.Run();
             
             // 2. to clean it up a little, run our "fixup" stuff.
