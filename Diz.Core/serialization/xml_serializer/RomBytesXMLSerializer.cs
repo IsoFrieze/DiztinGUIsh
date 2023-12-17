@@ -79,8 +79,10 @@ namespace Diz.Core.serialization.xml_serializer
         /// less search area when doing tricky merges.
         /// Comments are ignore on load.
         /// This is only used when saving, not loading.
+        /// Smaller numbers here make easier merges, but, increase the filesize.
+        /// 0x4000 is a nice tradeoff between negligible file increase and much better merge friendliness 
         /// </summary>
-        public int InsertCommentIntoOutputLinesEveryNBytes { get; init; } = 0x4000;
+        public int InsertCommentIntoOutputLinesEveryNBytes { get; init; } = 0x800;
     }
 
     
@@ -328,7 +330,7 @@ namespace Diz.Core.serialization.xml_serializer
                 {
                     // at this lower level we do have all the rom bytes but we don't have bank/mapping info.
                     // so, try to keep InsertCommentIntoOutputLinesEveryNBytes a multiple of something that lines up on every bank length on the SNES.
-                    lines.Add($";offset={romOffset:X6}");
+                    lines.Add($";pos={romOffset:X6}");
                 }
 
                 // debug check, optional:
