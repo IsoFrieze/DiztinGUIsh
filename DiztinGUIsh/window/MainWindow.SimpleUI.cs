@@ -143,6 +143,8 @@ namespace DiztinGUIsh.window
         private void moveWithStepToolStripMenuItem_Click(object sender, EventArgs e) => ToggleMoveWithStep();
         private void labelListToolStripMenuItem_Click(object sender, EventArgs e) => ShowCommentList();
 
+        private void projectSettingsToolStripMenuItem_Click(object sender, EventArgs e) => ShowProjectSettings();
+
         private void openLastProjectAutomaticallyToolStripMenuItem_Click(object sender, EventArgs e) =>
             ToggleOpenLastProjectEnabled();
 

@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -27,7 +29,8 @@ using ExtendedXmlSerializer.ContentModel.Format;
 // It's not.. super-pretty code, but it compresses well.
 namespace Diz.Core.serialization.xml_serializer
 {
-    public record RomBytesOutputFormatSettings
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public class RomBytesOutputFormatSettings
     {
         // note: some of these will only do anything the NEXT time a file is saved to disk.
         // this struct will also be serialized with the project.
@@ -54,7 +57,14 @@ namespace Diz.Core.serialization.xml_serializer
         /// <value>
         /// <c>true</c> if the group block should be compressed on save; otherwise, <c>false</c>.
         /// </value>
-        public bool CompressGroupBlock { get; init; } = true;
+        [DisplayName("Project file: Enable Run-Length Encoding compression")]
+        [Description(
+            "ADVANCED: Defaults to ON. If disabled, don't apply run-length encoding to your .diz/.dizraw save file. " +
+            "Disable this if you want to keep all lines in your save file 1:1 with bytes from the original ROM." +
+            "The only reason you care about this is if you are working on a team and want to merge .dizraw files together in git more easily." +
+            "This option will take the save file and increase it to about 10x the size on average (still not a big deal though)"
+            )]
+        public bool CompressGroupBlock { get; set; } = true;
         
         /// <summary>
         /// CompressUsingTable1: Take the output lines, and run some substitutions for the most common patterns we see in Diz files
@@ -71,18 +81,29 @@ namespace Diz.Core.serialization.xml_serializer
         /// <value>
         /// <c>true</c> if the text should be substituted for common patterns on save
         /// </value>
-        public bool CompressUsingTable1 { get; init; } = true;
+        [DisplayName("Project file: Enable per-line substitution")]
+        [Description(
+            "ADVANCED: Defaults to ON. Disable to make the .dizraw file a bit more readable, at the expense of file size. No real reason to turn this off."
+        )]
+        public bool CompressUsingTable1 { get; set; } = true;
 
         /// <summary>
         /// Optional. if not zero, then every N output lines in the XML file's RomBytes section we'll output a comment
         /// with the ROM offset.  this is 100% optional, it's purely for humans and merge tools to be able to deal with
         /// less search area when doing tricky merges.
-        /// Comments are ignore on load.
+        /// Comments are ignored on load.
         /// This is only used when saving, not loading.
         /// Smaller numbers here make easier merges, but, increase the filesize.
         /// 0x4000 is a nice tradeoff between negligible file increase and much better merge friendliness 
         /// </summary>
-        public int InsertCommentIntoOutputLinesEveryNBytes { get; init; } = 0x800;
+        [DisplayName("Project file: Break up lines in .diz file with offset comments")]
+        [Description(
+            "If non-zero, in the .diz/.dizraw project file, add comments every N bytes in the .dizraw file. " +
+            "Lower this number to increase mergability or diff viewing when usig git/other text merge tools."
+        )]
+        public int InsertCommentIntoOutputLinesEveryNBytes { get; set; } = 0x800;
+        
+        public override string ToString() => "";
     }
 
     

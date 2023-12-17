@@ -136,6 +136,7 @@
             this.moveWithStepToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openLastProjectAutomaticallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.labelListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.projectSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importCaptureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importTraceLogBinary = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -954,6 +955,7 @@
             this.constantsToolStripMenuItem,
             this.optionsToolStripMenuItem,
             this.labelListToolStripMenuItem,
+            this.projectSettingsToolStripMenuItem,
             this.importCaptureToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
@@ -1044,6 +1046,14 @@
             this.labelListToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.labelListToolStripMenuItem.Text = "Label List";
             this.labelListToolStripMenuItem.Click += new System.EventHandler(this.labelListToolStripMenuItem_Click);
+            // 
+            // projectSettingsToolStripMenuItem
+            // 
+            this.projectSettingsToolStripMenuItem.Enabled = false;
+            this.projectSettingsToolStripMenuItem.Name = "projectSettingsToolStripMenuItem";
+            this.projectSettingsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.projectSettingsToolStripMenuItem.Text = "Project Settings";
+            this.projectSettingsToolStripMenuItem.Click += new System.EventHandler(this.projectSettingsToolStripMenuItem_Click);
             // 
             // importCaptureToolStripMenuItem
             // 
@@ -1252,6 +1262,7 @@
         private System.Windows.Forms.OpenFileDialog openUsageMapFile;
         public System.Windows.Forms.OpenFileDialog openTraceLogDialog;
         private System.Windows.Forms.ToolStripMenuItem labelListToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem projectSettingsToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog openCDLDialog;
         private System.Windows.Forms.ToolStripMenuItem toolStripOpenLast;
         private System.Windows.Forms.ToolStripMenuItem openLastProjectAutomaticallyToolStripMenuItem;

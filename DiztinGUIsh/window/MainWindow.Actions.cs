@@ -8,6 +8,7 @@ using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
 using Diz.Cpu._65816;
+using Diz.Ui.Winforms.dialogs;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window;
@@ -337,9 +338,13 @@ public partial class MainWindow
         visualForm.Show();
     }
 
-    private void ShowCommentList()
+    private void ShowCommentList() => aliasList.Show();
+
+    private void ShowProjectSettings()
     {
-        AliasList.Show();
+        // this property grid is generic and can display anything. here we'll use it to show the project settings.
+        var propertyEditorForm = new GenericPropertyEditorForm(ProjectController.Project.ProjectSettings);
+        propertyEditorForm.ShowDialog();
     }
 
     private void SetMarkerLabel(FlagType flagType)
