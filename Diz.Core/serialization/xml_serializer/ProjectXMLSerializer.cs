@@ -13,8 +13,18 @@ public class ProjectOpenResult
 {
     public class Result
     {
-        public string Warning { get; set; }
         public List<string> Warnings { get; set; } = new();
+        
+        /// <summary>
+        /// The project version# of this file on disk before loaded it.
+        /// </summary>
+        public int ProjectFileOriginalVersion { get; set; } = -1;
+
+        /// <summary>
+        /// The project version# of the data after we loaded it from disk
+        /// It may be different from ProjectFileOriginalVersion if we upgraded it.
+        /// </summary>
+        public int ProjectFileUpgradedToVersion { get; set; } = -1;
     }
 
     /// <summary>
@@ -122,10 +132,11 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
 
         var projectOpenResult = new ProjectOpenResult
         {
-            Root = root
             Root = root,
             OpenResult =
             {
+                ProjectFileOriginalVersion = versionOnDisk,
+                ProjectFileUpgradedToVersion = CurrentSaveFormatVersion,   
             }
         };
         
