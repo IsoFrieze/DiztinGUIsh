@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.LogWriter;
@@ -24,7 +25,7 @@ namespace Diz.Controllers.controllers
         void OnExportFinished(LogCreatorOutput.OutputResult result);
         
         string AskToSelectNewRomFilename(string promptSubject, string promptText);
-        void OnProjectOpenWarning(string warningMsg);
+        void OnProjectOpenWarnings(IEnumerable<string> warnings);
     }
 
     public interface ISnesNavigation

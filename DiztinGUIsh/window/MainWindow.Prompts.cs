@@ -180,9 +180,11 @@ namespace DiztinGUIsh.window
             );
         }
 
-        public void OnProjectOpenWarning(string warningMsg)
+        public void OnProjectOpenWarnings(IEnumerable<string> warnings)
         {
-            MessageBox.Show(warningMsg, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            foreach (var warningMsg in warnings) {
+                MessageBox.Show(warningMsg, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
     }
 }

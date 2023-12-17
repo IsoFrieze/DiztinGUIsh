@@ -94,9 +94,9 @@ public class ProjectController : IProjectController
             return false;
         }
 
-        var warning = projectOpenResult.OpenResult.Warning;
-        if (!string.IsNullOrEmpty(warning))
-            ProjectView.OnProjectOpenWarning(warning);
+        var warnings = projectOpenResult.OpenResult.Warnings;
+        if (warnings.Count > 0)
+            ProjectView.OnProjectOpenWarnings(warnings);
 
         OnProjectOpenSuccess(filename, projectOpenResult.Root.Project);
         return true;
@@ -213,12 +213,9 @@ public class ProjectController : IProjectController
             labelEditor.ShowLineItemError(ex.Message, errLine);
         }
     }
-
-
-    private string AskToSelectNewRomFilename(string error)
-    {
-        return ProjectView.AskToSelectNewRomFilename("Error", $"{error} Link a new ROM now?");
-    }
+    
+    private string AskToSelectNewRomFilename(string error) => 
+        ProjectView.AskToSelectNewRomFilename("Error", $"{error} Link a new ROM now?");
 
     public void WriteAssemblyOutput()
     {

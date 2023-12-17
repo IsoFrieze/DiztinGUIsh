@@ -36,14 +36,14 @@ public class LoadSaveTest : ContainerFixture
         // now do the reverse and load our output back as the input
         var projectOpenInfo = serializer.Load(outputBytes);
         var deserializedRoot = projectOpenInfo.Root;
-        var warning = projectOpenInfo.OpenResult.Warning;
+        var warning = projectOpenInfo.OpenResult.Warnings;
             
         // final step, the loading process doesn't save the actual SMC file bytes, so we do it ourselves here
         deserializedRoot.Project.Data.RomBytes.CopyRomDataIn(romFileBytes);
 
         // now we can do a full compare between the original project, and the project which has been cycled through
         // serialization and deserialization
-        warning.Should().Be(null);
+        warning.Should().BeEmpty("there should be no warnings");
         deserializedRoot.Project.Data.Labels.Labels.Count().Should().Be(srcProject.Data.Labels.Labels.Count());
 
         TestEquivalent(x => x.Data.RomBytes, deserializedRoot, srcProject);

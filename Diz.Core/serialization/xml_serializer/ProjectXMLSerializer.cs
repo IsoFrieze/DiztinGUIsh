@@ -14,11 +14,13 @@ public class ProjectOpenResult
     public class Result
     {
         public string Warning { get; set; }
+        public List<string> Warnings { get; set; } = new();
     }
 
     /// <summary>
     /// Contains metadata from the operation of opening the file (not the file contents).
-    /// Contains things like non-fatal warnings, etc, anything we might want communicate to the user.
+    /// Contains things like non-fatal warnings, etc, anything we might want communicate to the user about the act
+    /// Of Loading this project from disk.
     /// </summary>
     public Result OpenResult { get; } = new();
     
@@ -118,10 +120,24 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
             
         AfterDeserialize?.Invoke(this, root);
 
-        return new ProjectOpenResult
+        var projectOpenResult = new ProjectOpenResult
         {
             Root = root
+            Root = root,
+            OpenResult =
+            {
+            }
         };
+        
+        if (versionOnDisk != CurrentSaveFormatVersion)
+        {
+            // this isn't necessarily anything that's an issue, but, we definitely want to tell the user.
+            projectOpenResult.OpenResult.Warnings.Add($"Diz project file format on disk was older: [file version={versionOnDisk}]." +
+                                                      $" When this project is next saved, it will automatically be upgraded to the latest format [file version={CurrentSaveFormatVersion}]." +
+                                                      $" To be safe, please make a backup copy of the project file before saving.");
+        }
+        
+        return projectOpenResult;
     }
 
     // finally. this is the real deal.

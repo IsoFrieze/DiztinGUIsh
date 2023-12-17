@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using Diz.Controllers.controllers;
 using Diz.Core;
@@ -103,7 +104,7 @@ namespace Diz.Controllers.interfaces
     public interface IProjectOpenerHandler : ILongRunningTaskHandler
     {
         public void OnProjectOpenSuccess(string filename, Project project);
-        public void OnProjectOpenWarning(string warnings);
+        public void OnProjectOpenWarnings(IReadOnlyList<string> warnings);
         public void OnProjectOpenFail(string fatalError);
         public string AskToSelectNewRomFilename(string error);
         

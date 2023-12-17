@@ -22,7 +22,7 @@ public class LoadSavePerformanceTests : ContainerFixture
     {
         var projectOpenResult = projectFileManager.Open(openFile);
 
-        Assert.Equal("", projectOpenResult.OpenResult.Warning);
+        Assert.Empty(projectOpenResult.OpenResult.Warnings);
         var project = projectOpenResult.Root.Project;
         Assert.True(project.Data.RomBytes.Count >= 0x1000 * 64);
             
