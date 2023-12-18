@@ -355,6 +355,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         }
     }
 
+    private const bool AttemptTouseDirectPageArithmeticInFinalOutput = true;
+
     private string FormatOperandAddress(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
     {
         var address = data.GetIntermediateAddress(offset);
@@ -365,7 +367,28 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         {
             var label = labelProvider.Labels.GetLabelName(address);
             if (label != "") 
-                return label;   
+                return label;
+            
+            // OPTIONAL:
+            // super-specific variable substitution.  this needs to be heavily generalized.
+            // this MAY NOT COVER EVERY EDGE CASE. feel free to modify or disable it.
+            // this is to try and get more labels in the output by creating a mathematical expression
+            // for ASAR to use. only works if you have accurate 'D' register (direct page) set.
+            // usually only useful after you've done a lot of tracelog capture.
+            if (AttemptTouseDirectPageArithmeticInFinalOutput && mode is Cpu65C816Constants.AddressMode.DirectPage)
+            {
+                var dp = data.GetDirectPage(offset);
+                if (dp != 0)
+                {
+                    label = labelProvider.Labels.GetLabelName(dp + address);
+                    if (label != "")
+                    {
+                        // direct page addressing. we can use an expression to use a variable name for this
+                        // TODO: we can also use asar directive .dbase to set the assumed DB register.
+                        return $"{label}-${dp:X}"; // IMPORTANT: no spaces on that minus sign.
+                    }
+                }
+            }
         }
 
         var count = BytesToShow(mode);
