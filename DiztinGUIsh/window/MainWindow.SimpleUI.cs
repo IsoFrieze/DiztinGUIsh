@@ -170,7 +170,11 @@ namespace DiztinGUIsh.window
 
         private void rescanForInOutPointsToolStripMenuItem_Click(object sender, EventArgs e) => UiRescanForInOut();
         private void importUsageMapToolStripMenuItem_Click_1(object sender, EventArgs e) => UiImportBsnesUsageMap();
-        private void table_MouseWheel(object sender, MouseEventArgs e) => ScrollTableBy(e.Delta);
+        private void table_MouseWheel(object sender, MouseEventArgs e) => 
+            ScrollTableBy(e.Delta != 0 
+                ? e.Delta/0x18 
+                : 0
+            );
 
         public NavigationForm NavigationForm { get; }
 
