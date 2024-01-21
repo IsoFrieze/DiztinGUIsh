@@ -215,7 +215,7 @@ public class SnesSampleRomDataFactory : ISampleDataFactory
             new() { Rom = 0x34, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100 },
             new() { Rom = 0x6D, TypeFlag = FlagType.Data8Bit, DataBank = 0x80, DirectPage = 0x2100 },
         };
-        data.Comments = new ObservableDictionary<int, string>
+        data.Comments = new SortedDictionary<int, string>
         {
             { 0x808000 + 0x03, "this sets FastROM" },
             { 0x808000 + 0x0F, "direct page = $2100" },

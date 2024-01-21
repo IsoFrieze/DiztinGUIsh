@@ -118,21 +118,27 @@ namespace DiztinGUIsh.window
             if (Project?.Data == null || Project.Data.GetRomSize() <= 0)
                 return;
 
-            rowsToShow = ((table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height);
+            rowsToShow = (table.Height - table.ColumnHeadersHeight) / table.RowTemplate.Height;
 
+            ClampViewOffsetToRomSize();
+
+            vScrollBar1.Enabled = true;
+            vScrollBar1.Maximum = Project.Data.GetRomSize() - rowsToShow;
+            vScrollBar1.Value = ViewOffset;
+            
+            table.RowCount = rowsToShow;
+
+            importerMenuItemsEnabled = true;
+            UpdateImporterEnabledStatus();
+        }
+
+        private void ClampViewOffsetToRomSize()
+        {
             if (ViewOffset + rowsToShow > Project.Data.GetRomSize())
                 ViewOffset = Project.Data.GetRomSize() - rowsToShow;
 
             if (ViewOffset < 0)
                 ViewOffset = 0;
-
-            vScrollBar1.Enabled = true;
-            vScrollBar1.Maximum = Project.Data.GetRomSize() - rowsToShow;
-            vScrollBar1.Value = ViewOffset;
-            table.RowCount = rowsToShow;
-
-            importerMenuItemsEnabled = true;
-            UpdateImporterEnabledStatus();
         }
 
         private void UpdateImporterEnabledStatus()

@@ -252,7 +252,7 @@ namespace Diz.Core.model
     public class LabelsCollection : LabelProviderBase, ILabelService, IEquatable<LabelsCollection>
     {
         // ReSharper disable once MemberCanBePrivate.Global
-        public Dictionary<int, IAnnotationLabel> Labels { get; } = new();
+        public SortedDictionary<int, IAnnotationLabel> Labels { get; } = new();
         
         [XmlIgnore]
         IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;

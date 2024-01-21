@@ -5,7 +5,6 @@ using System.Linq;
 using System.Xml.Serialization;
 using Diz.Core.Interfaces;
 using Diz.Core.util;
-using IX.Observable;
 
 namespace Diz.Core.model.snes;
 
@@ -15,7 +14,7 @@ public class Data : IData
     public IDataStoreProvider<IArchitectureApi> Apis { get; } = new DataStoreProvider<IArchitectureApi>();
     public IDataStoreProvider<IDataTag> Tags { get; } = new DataStoreProvider<IDataTag>();
 
-    private ObservableDictionary<int, string> comments;
+    private SortedDictionary<int, string> comments;
     private RomBytes romBytes;
         
     // NOTE: snes specific stuff (rom map mode/speed) should eventually be removed from here.
@@ -44,7 +43,7 @@ public class Data : IData
     }
 
     // next 2 dictionaries store in SNES address format (since memory labels can't be represented as a PC address)
-    public ObservableDictionary<int, string> Comments
+    public SortedDictionary<int, string> Comments
     {
         get => comments;
         set => this.SetField(PropertyChanged, ref comments, value);
@@ -68,11 +67,11 @@ public class Data : IData
     IRomBytes<IRomByte> IRomBytesProvider.RomBytes => romBytes;
 
     [XmlIgnore] 
-    public bool RomBytesLoaded { get; set; } = false;
+    public bool RomBytesLoaded { get; set; }
 
     public Data()
     {
-        comments = new ObservableDictionary<int, string>();
+        comments = new SortedDictionary<int, string>();
         Labels = new LabelsServiceWithTemp(this);
         romBytes = new RomBytes();
     }

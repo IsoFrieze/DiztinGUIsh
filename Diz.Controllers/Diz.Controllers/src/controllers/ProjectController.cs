@@ -38,12 +38,14 @@ public class ProjectController : IProjectController
     private readonly Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate;
 
     public ProjectController(
-        ICommonGui commonGui, 
-        IViewFactory viewFactory, 
-        IFilesystemService fs, 
-        IControllerFactory controllerFactory, 
-        Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate, Func<IProjectFileManager> projectFileManagerCreate)
-    {
+        ICommonGui commonGui,
+        IViewFactory viewFactory,
+        IFilesystemService fs,
+        IControllerFactory controllerFactory,
+        Func<ImportRomSettings,
+        IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate,
+        Func<IProjectFileManager> projectFileManagerCreate
+    ) {
         this.commonGui = commonGui;
         this.fs = fs;
         this.controllerFactory = controllerFactory;

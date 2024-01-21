@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
@@ -48,23 +49,20 @@ public interface IFileByteProvider : IFileByteReader, IFileByteWriter
     
 }
 
-public class FileByteProvider : IFileByteProvider
-{
-    public byte[] ReadAllBytes(string filename) => File.ReadAllBytes(filename);
-    public void WriteBytes(string filename, byte[] data) => File.WriteAllBytes(filename, data);
-}
-
 public class ProjectFileManager : IProjectFileManager
 {
     private readonly Func<IProjectXmlSerializer> projectXmlSerializerCreate;
     private readonly Func<IAddRomDataCommand> addRomDataCommandCreate;
-    private readonly IFileByteProvider fileByteIo;
+    private readonly Func<string, IFileByteProvider> fileByteProviderFactory;
 
-    public ProjectFileManager(Func<IProjectXmlSerializer> projectXmlSerializerCreate, Func<IAddRomDataCommand> addRomDataCommandCreate, IFileByteProvider fileByteIo)
-    {
+    public ProjectFileManager(
+        Func<IProjectXmlSerializer> projectXmlSerializerCreate, 
+        Func<IAddRomDataCommand> addRomDataCommandCreate, 
+        Func<string, IFileByteProvider> fileByteProviderFactory
+        ) {
         this.projectXmlSerializerCreate = projectXmlSerializerCreate;
         this.addRomDataCommandCreate = addRomDataCommandCreate;
-        this.fileByteIo = fileByteIo;
+        this.fileByteProviderFactory = fileByteProviderFactory;
     }
 
     // TODO: remove this and just do it by passing different stuff in the constructor, or use a decorator
@@ -122,6 +120,8 @@ public class ProjectFileManager : IProjectFileManager
 
     private byte[] ReadProjectFileBytes(string filename)
     {
+        var fileByteIo = CreateFileBytesProvider(filename);
+
         var projectFileBytes = fileByteIo.ReadAllBytes(filename);
 
         if (IsLikelyCompressed(filename))
@@ -129,18 +129,21 @@ public class ProjectFileManager : IProjectFileManager
             
         return projectFileBytes;
     }
-        
+    
+    private static bool IsDirectoryBasedProject(string filename) => 
+        Path.GetExtension(filename).Equals(".dizdir", StringComparison.InvariantCultureIgnoreCase);
+
+    private IFileByteProvider CreateFileBytesProvider(string filename)
+    {
+        var projectSaveType = IsDirectoryBasedProject(filename) ? "Multiple" : "Single";
+        return fileByteProviderFactory(projectSaveType);
+    }
+
     public static bool IsBinaryFileFormat(byte[] data)
     {
         try {
-            for (var i = 0; i < ProjectSerializer.DizWatermark.Length; i++) {
-                if (data[i + 1] != (byte) ProjectSerializer.DizWatermark[i])
-                    return false;
-            }
-            return true;
-        } 
-        catch (Exception) 
-        {
+            return !ProjectSerializer.DizWatermark.Where((t, i) => data[i + 1] != (byte)t).Any();
+        } catch (Exception) {
             return false;
         }
     }
@@ -149,19 +152,24 @@ public class ProjectFileManager : IProjectFileManager
     {
         if (IsBinaryFileFormat(data))
         {
-#if ENABLE_LEGACY_BINARY_SERIALIZER
+            #if ENABLE_LEGACY_BINARY_SERIALIZER
                 return new BinarySerializer();
-#else
+            #else
             throw new InvalidDataException(
                 "Legacy binary serializer is no longer supported (use an older version of Diz to update your save file");
-#endif
+            #endif
         }
 
         return projectXmlSerializerCreate();
     }
 
+    private static readonly string[] UncompressedExtensions = {
+        ".dizraw", 
+        ".dizdir"
+    };
+
     private static bool IsLikelyCompressed(string filename) => 
-        !Path.GetExtension(filename).Equals(".dizraw", StringComparison.InvariantCultureIgnoreCase);
+        !UncompressedExtensions.Any(ext => ext.Equals(Path.GetExtension(filename), StringComparison.InvariantCultureIgnoreCase));
 
     public string? Save(Project project, string filename)
     {
@@ -183,7 +191,9 @@ public class ProjectFileManager : IProjectFileManager
     {
         var data = DoSave(project, filename, serializer);
 
+        var fileByteIo = CreateFileBytesProvider(filename);
         fileByteIo.WriteBytes(filename, data);
+        
         project.ProjectFileName = filename;
             
         // always do this last

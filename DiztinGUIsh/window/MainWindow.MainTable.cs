@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Core.model;
-using Diz.Core.model.snes;
 using Diz.Core.util;
 using Diz.Cpu._65816;
 
@@ -26,14 +25,8 @@ namespace DiztinGUIsh.window
         {
             if (Project?.Data == null || Project.Data.GetRomSize() <= 0)
                 return;
-            int selRow = table.CurrentCell.RowIndex + ViewOffset, selCol = table.CurrentCell.ColumnIndex;
-            var amount = delta / 0x18;
-            ViewOffset -= amount;
-            UpdateDataGridView();
-            if (selRow < ViewOffset) selRow = ViewOffset;
-            else if (selRow >= ViewOffset + rowsToShow) selRow = ViewOffset + rowsToShow - 1;
-            table.CurrentCell = table.Rows[selRow - ViewOffset].Cells[selCol];
-            InvalidateTable();
+
+            ScrollToTargetRomOffset(ViewOffset - delta);
         }
 
         private void vScrollBar1_ValueChanged(object sender, EventArgs e)
@@ -41,17 +34,38 @@ namespace DiztinGUIsh.window
             if (table.CurrentCell == null)
                 return;
 
-            int selOffset = table.CurrentCell.RowIndex + ViewOffset;
-            ViewOffset = vScrollBar1.Value;
+            ScrollToTargetRomOffset(vScrollBar1.Value);
+        }
+
+        private void ScrollToTargetRomOffset(int targetOffset)
+        {
+            ViewOffset = targetOffset;
+            
             UpdateDataGridView();
-
-            if (selOffset < ViewOffset) table.CurrentCell = table.Rows[0].Cells[table.CurrentCell.ColumnIndex];
-            else if (selOffset >= ViewOffset + rowsToShow)
-                table.CurrentCell = table.Rows[rowsToShow - 1].Cells[table.CurrentCell.ColumnIndex];
-            else table.CurrentCell = table.Rows[selOffset - ViewOffset].Cells[table.CurrentCell.ColumnIndex];
-
+            var targetRomOffset = table.CurrentCell.RowIndex + ViewOffset;
+            var clampedRow = GetClosestVisibleRowForRomOffset(targetRomOffset);
+            SetRow(clampedRow);
             InvalidateTable();
         }
+
+        private int GetClosestVisibleRowForRomOffset(int targetRomOffset)
+        {
+            if (targetRomOffset < ViewOffset)
+            {
+                targetRomOffset = ViewOffset;
+            } 
+            else if (targetRomOffset >= ViewOffset + rowsToShow)
+            {
+                targetRomOffset = ViewOffset + rowsToShow - 1;
+            }
+
+            var clampedRow = targetRomOffset - ViewOffset;
+            return clampedRow;
+        }
+
+        private void SetRow(int rowIndex) => 
+            table.CurrentCell = table.Rows[rowIndex].Cells[table.CurrentCell.ColumnIndex];
+
 
         private void table_MouseDown(object sender, MouseEventArgs e)
         {
@@ -67,49 +81,83 @@ namespace DiztinGUIsh.window
         {
 
         }
+        
+        private void MoveNextColumn(int direction)
+        {
+            // for moving left/right in the grid
+            
+            var newColumnIndex = table.CurrentCell.ColumnIndex + direction;
+            
+            if (newColumnIndex < 0) {
+                newColumnIndex = 0;
+            } else if (newColumnIndex >= table.ColumnCount) {
+                newColumnIndex = table.ColumnCount - 1;
+            }
+
+            table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[newColumnIndex];
+        }
+        
+        
+        private void BeginEditingColumn(ColumnType columnType)
+        {
+            table.CurrentCell = GetCellByColumnType(columnType);
+            table.BeginEdit(true);
+        }
+
+        private DataGridViewCell GetCellByColumnType(ColumnType columnType) => 
+            table.Rows[table.CurrentCell.RowIndex].Cells[(int) columnType];
+
+        private void ScrollVertically(int offset, int amount)
+        {
+            var romSize = Project.Data.GetRomSize();
+            var newOffset = offset - amount;
+            
+            if (newOffset < 0) 
+                newOffset = 0;
+            
+            if (newOffset >= romSize) 
+                newOffset = romSize - 1;
+            
+            SelectOffset(newOffset, -1);
+        }
 
         private void table_KeyDown(object sender, KeyEventArgs e)
         {
-            if (Project?.Data == null || Project.Data.GetRomSize() <= 0) return;
+            if (Project?.Data == null || Project.Data.GetRomSize() <= 0) 
+                return;
 
             var offset = table.CurrentCell.RowIndex + ViewOffset;
-            int newOffset;
-            var amount = 0x01;
 
             Console.WriteLine(e.KeyCode);
 
             var snesData = Project.Data.GetSnesApi();
+            if (snesData == null)
+                return;
+            
             switch (e.KeyCode)
             {
                 case Keys.F3:
                     GoToNextUnreachedInPoint(offset);
                     break;
                 
-                case Keys.Home:
-                case Keys.PageUp:
-                case Keys.Up:
-                    amount = e.KeyCode == Keys.Up ? 0x01 : e.KeyCode == Keys.PageUp ? 0x10 : 0x100;
-                    newOffset = offset - amount;
-                    if (newOffset < 0) newOffset = 0;
-                    SelectOffset(newOffset, -1);
-                    break;
-                case Keys.End:
-                case Keys.PageDown:
-                case Keys.Down:
-                    amount = e.KeyCode == Keys.Down ? 0x01 : e.KeyCode == Keys.PageDown ? 0x10 : 0x100;
-                    newOffset = offset + amount;
-                    if (newOffset >= Project.Data.GetRomSize()) newOffset = Project.Data.GetRomSize() - 1;
-                    SelectOffset(newOffset, -1);
+                case Keys.Home: case Keys.PageUp: case Keys.Up:
+                case Keys.End: case Keys.PageDown: case Keys.Down:
+                    ScrollVertically(offset, e.KeyCode switch
+                    {
+                        Keys.Up => 1,
+                        Keys.PageUp => 16,
+                        Keys.Home => 256,
+                        Keys.Down => -1,
+                        Keys.PageDown => -16,
+                        Keys.End => -256,
+                        _ => 0,
+                    });
                     break;
                 case Keys.Left:
-                    amount = table.CurrentCell.ColumnIndex;
-                    amount = amount - 1 < 0 ? 0 : amount - 1;
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[amount];
+                    MoveNextColumn(-1);
                     break;
                 case Keys.Right:
-                    amount = table.CurrentCell.ColumnIndex;
-                    amount = amount + 1 >= table.ColumnCount ? table.ColumnCount - 1 : amount + 1;
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[amount];
+                    MoveNextColumn(1);
                     break;
                 case Keys.S:
                     Step(offset);
@@ -132,31 +180,31 @@ namespace DiztinGUIsh.window
                 case Keys.N:
                     GoToUnreached(false, true);
                     break;
+                
                 case Keys.K:
                     Mark(offset);
                     break;
+                
                 case Keys.L:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.Label];
-                    table.BeginEdit(true);
+                    BeginEditingColumn(ColumnType.Label);
                     break;
                 case Keys.B:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.DataBank];
-                    table.BeginEdit(true);
+                    BeginEditingColumn(ColumnType.DataBank);
                     break;
                 case Keys.D:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.DirectPage];
-                    table.BeginEdit(true);
+                    BeginEditingColumn(ColumnType.DirectPage);
                     break;
+                case Keys.C:
+                    BeginEditingColumn(ColumnType.Comment);
+                    break;
+                
                 case Keys.M:
                     snesData.SetMFlag(offset, !snesData.GetMFlag(offset));
                     break;
                 case Keys.X:
                     snesData.SetXFlag(offset, !snesData.GetXFlag(offset));
                     break;
-                case Keys.C:
-                    table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.Comment];
-                    table.BeginEdit(true);
-                    break;
+                
                 case Keys.Enter:
                     table.BeginEdit(true);
                     break;
@@ -172,7 +220,14 @@ namespace DiztinGUIsh.window
         private void table_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
             var row = e.RowIndex + ViewOffset;
-            if (row >= Project.Data.GetRomSize()) return;
+            if (row >= Project.Data.GetRomSize()) 
+                return;
+            
+            var romByte = Project.Data.GetRomByte(row);
+            var snesData = Project.Data.GetSnesApi();
+            if (romByte == null || snesData == null)
+                return;
+            
             switch ((ColumnType) e.ColumnIndex)
             {
                 case ColumnType.Label:
@@ -182,65 +237,74 @@ namespace DiztinGUIsh.window
                     e.Value = Util.NumberToBaseString(Project.Data.ConvertPCtoSnes(row), Util.NumberBase.Hexadecimal, 6);
                     break;
                 case ColumnType.AsciiCharRep:
-                    e.Value = (char)Project.Data.GetRomByte(row);
+                    e.Value = (char)romByte;
                     break;
                 case ColumnType.NumericRep:
-                    e.Value = Util.NumberToBaseString(Project.Data.GetRomByte(row) ?? 0x0, displayBase);
+                    e.Value = Util.NumberToBaseString((int)romByte, displayBase);
                     break;
                 case ColumnType.Point:
-                    e.Value = RomUtil.PointToString(Project.Data.GetSnesApi().GetInOutPoint(row));
+                    e.Value = RomUtil.PointToString(snesData.GetInOutPoint(row));
                     break;
                 case ColumnType.Instruction:
-                    var len = Project.Data.GetSnesApi().GetInstructionLength(row);
-                    e.Value = row + len <= Project.Data.GetRomSize() ? Project.Data.GetSnesApi().GetInstruction(row) : "";
+                    var len = snesData.GetInstructionLength(row);
+                    e.Value = row + len <= Project.Data.GetRomSize() ? snesData.GetInstruction(row) : "";
                     break;
                 case ColumnType.IA:
-                    var ia = Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(row);
+                    var ia = snesData.GetIntermediateAddressOrPointer(row);
                     e.Value = ia >= 0 ? Util.NumberToBaseString(ia, Util.NumberBase.Hexadecimal, 6) : "";
                     break;
                 case ColumnType.TypeFlag:
-                    e.Value = Util.GetEnumDescription(Project.Data.GetSnesApi().GetFlag(row));
+                    e.Value = Util.GetEnumDescription(snesData.GetFlag(row));
                     break;
                 case ColumnType.DataBank:
-                    e.Value = Util.NumberToBaseString(Project.Data.GetSnesApi().GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
+                    e.Value = Util.NumberToBaseString(snesData.GetDataBank(row), Util.NumberBase.Hexadecimal, 2);
                     break;
                 case ColumnType.DirectPage:
-                    e.Value = Util.NumberToBaseString(Project.Data.GetSnesApi().GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
+                    e.Value = Util.NumberToBaseString(snesData.GetDirectPage(row), Util.NumberBase.Hexadecimal, 4);
                     break;
                 case ColumnType.MFlag:
-                    e.Value = RomUtil.BoolToSize(Project.Data.GetSnesApi().GetMFlag(row));
+                    e.Value = RomUtil.BoolToSize(snesData.GetMFlag(row));
                     break;
                 case ColumnType.XFlag:
-                    e.Value = RomUtil.BoolToSize(Project.Data.GetSnesApi().GetXFlag(row));
+                    e.Value = RomUtil.BoolToSize(snesData.GetXFlag(row));
                     break;
                 case ColumnType.Comment:
                     e.Value = Project.Data.GetCommentText(Project.Data.ConvertPCtoSnes(row));
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
         private void table_CellValuePushed(object sender, DataGridViewCellValueEventArgs e)
         {
-            string value = e.Value as string;
+            var value = e.Value as string;
             int result;
-            int row = e.RowIndex + ViewOffset;
-            if (row >= Project.Data.GetRomSize()) return;
+            var row = e.RowIndex + ViewOffset;
+            if (row >= Project.Data.GetRomSize()) 
+                return;
+            
+            var romByte = Project.Data.GetRomByte(row);
+            var snesData = Project.Data.GetSnesApi();
+            if (romByte == null || snesData == null)
+                return;
+            
             switch ((ColumnType) e.ColumnIndex)
             {
                 case ColumnType.Label:
-                    Project.Data.Labels.AddLabel(Project.Data.ConvertPCtoSnes(row), new Diz.Core.model.Label() { Name = value }, true);
+                    Project.Data.Labels.AddLabel(Project.Data.ConvertPCtoSnes(row), new Diz.Core.model.Label { Name = value ?? "" }, true);
                     break; // todo (validate for valid label characters)
                 case ColumnType.DataBank:
-                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.GetSnesApi().SetDataBank(row, result);
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) snesData.SetDataBank(row, result);
                     break;
                 case ColumnType.DirectPage:
-                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) Project.Data.GetSnesApi().SetDirectPage(row, result);
+                    if (int.TryParse(value, NumberStyles.HexNumber, null, out result)) snesData.SetDirectPage(row, result);
                     break;
                 case ColumnType.MFlag:
-                    Project.Data.GetSnesApi().SetMFlag(row, (value == "8" || value == "M"));
+                    snesData.SetMFlag(row, value is "8" or "M");
                     break;
                 case ColumnType.XFlag:
-                    Project.Data.GetSnesApi().SetXFlag(row, (value == "8" || value == "X"));
+                    snesData.SetXFlag(row, value is "8" or "X");
                     break;
                 case ColumnType.Comment:
                     Project.Data.AddComment(Project.Data.ConvertPCtoSnes(row), value, true);
@@ -250,56 +314,26 @@ namespace DiztinGUIsh.window
             table.InvalidateRow(e.RowIndex);
         }
 
-        public void PaintCell(int offset, DataGridViewCellStyle style, int column, int selOffset)
+        private void PaintCell(int offset, DataGridViewCellStyle style, int column, int selOffset)
         {
             // editable cells show up green
-            if (column == (int) ColumnType.Label || column == (int) ColumnType.DataBank || column == (int) ColumnType.DirectPage || column == (int) ColumnType.Comment) style.SelectionBackColor = Color.Chartreuse;
+            if (column is (int) ColumnType.Label or (int) ColumnType.DataBank or (int) ColumnType.DirectPage or (int) ColumnType.Comment) 
+                style.SelectionBackColor = Color.Chartreuse;
+            
+            var snesData = Project.Data.GetSnesApi();
+            if (snesData == null)
+                return;
 
-            switch (Project.Data.GetSnesApi().GetFlag(offset))
+            switch (snesData.GetFlag(offset))
             {
                 case FlagType.Unreached:
                     style.BackColor = Color.LightGray;
                     style.ForeColor = Color.DarkSlateGray;
                     break;
-                case FlagType.Opcode:
-                    int opcode = Project.Data.GetRomByte(offset) ?? 0x0;
-                    switch ((ColumnType) column)
-                    {
-                        case ColumnType.Point:
-                            InOutPoint point = Project.Data.GetSnesApi().GetInOutPoint(offset);
-                            int r = 255, g = 255, b = 255;
-                            if ((point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) g -= 50;
-                            if ((point & (InOutPoint.InPoint)) != 0) r -= 50;
-                            if ((point & (InOutPoint.ReadPoint)) != 0) b -= 50;
-                            style.BackColor = Color.FromArgb(r, g, b);
-                            break;
-                        case ColumnType.Instruction:
-                            if (opcode == 0x40 || opcode == 0xCB || opcode == 0xDB || opcode == 0xF8 // RTI WAI STP SED
-                                || opcode == 0xFB || opcode == 0x00 || opcode == 0x02 || opcode == 0x42 // XCE BRK COP WDM
-                            ) style.BackColor = Color.Yellow;
-                            break;
-                        case ColumnType.DataBank:
-                            if (opcode == 0xAB || opcode == 0x44 || opcode == 0x54) // PLB MVP MVN
-                                style.BackColor = Color.OrangeRed;
-                            else if (opcode == 0x8B) // PHB
-                                style.BackColor = Color.Yellow;
-                            break;
-                        case ColumnType.DirectPage:
-                            if (opcode == 0x2B || opcode == 0x5B) // PLD TCD
-                                style.BackColor = Color.OrangeRed;
-                            if (opcode == 0x0B || opcode == 0x7B) // PHD TDC
-                                style.BackColor = Color.Yellow;
-                            break;
-                        case ColumnType.MFlag:
-                        case ColumnType.XFlag:
-                            int mask = column == 10 ? 0x20 : 0x10;
-                            if (opcode == 0x28 || ((opcode == 0xC2 || opcode == 0xE2) // PLP SEP REP
-                                && (Project.Data.GetRomByte(offset + 1) & mask) != 0)) // relevant bit set
-                                style.BackColor = Color.OrangeRed;
-                            if (opcode == 0x08) // PHP
-                                style.BackColor = Color.Yellow;
-                            break;
-                    }
+                case FlagType.Opcode: ;
+                    var color = GetDisplayColorForRowFlaggedAsOpcode(offset, column, snesData);
+                    if (color != null)
+                        style.BackColor = color.Value;
                     break;
                 case FlagType.Operand:
                     style.ForeColor = Color.LightGray;
@@ -330,24 +364,101 @@ namespace DiztinGUIsh.window
                     break;
             }
 
-            if (selOffset >= 0 && selOffset < Project.Data.GetRomSize())
+            if (selOffset < 0 || selOffset >= Project.Data.GetRomSize()) 
+                return;
+            
+            switch (column)
             {
-                if (column == (int) ColumnType.Offset
-                    //&& (Project.Data.GetFlag(selOffset) == Data.FlagType.Opcode || Project.Data.GetFlag(selOffset) == Data.FlagType.Unreached)
-                    && Project.Data.ConvertSnesToPc(Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(selOffset)) == offset
-                ) style.BackColor = Color.DeepPink;
-
-                if (column == (int) ColumnType.IA
-                    //&& (Project.Data.GetFlag(offset) == Data.FlagType.Opcode || Project.Data.GetFlag(offset) == Data.FlagType.Unreached)
-                    && Project.Data.ConvertSnesToPc(Project.Data.GetSnesApi().GetIntermediateAddressOrPointer(offset)) == selOffset
-                ) style.BackColor = Color.DeepPink;
+                //&& (Project.Data.GetFlag(selOffset) == Data.FlagType.Opcode || Project.Data.GetFlag(selOffset) == Data.FlagType.Unreached)
+                case (int) ColumnType.Offset 
+                    when Project.Data.ConvertSnesToPc(snesData.GetIntermediateAddressOrPointer(selOffset)) == offset:
+                    
+                //&& (Project.Data.GetFlag(offset) == Data.FlagType.Opcode || Project.Data.GetFlag(offset) == Data.FlagType.Unreached)
+                case (int) ColumnType.IA
+                    when Project.Data.ConvertSnesToPc(snesData.GetIntermediateAddressOrPointer(offset)) == selOffset:
+                    
+                    style.BackColor = Color.DeepPink;
+                    break;
             }
+        }
+
+        private Color? GetDisplayColorForRowFlaggedAsOpcode(int offset, int column, ISnesData snesData)
+        {
+            int opcode = Project.Data.GetRomByte(offset) ?? 0x0;
+            var whichColumn = (ColumnType)column;
+            switch (whichColumn)
+            {
+                case ColumnType.Point:
+                    var point = snesData.GetInOutPoint(offset);
+                    int r = 255, g = 255, b = 255;
+                    if ((point & (InOutPoint.EndPoint | InOutPoint.OutPoint)) != 0) 
+                        g -= 50;
+                    if ((point & InOutPoint.InPoint) != 0) 
+                        r -= 50;
+                    if ((point & InOutPoint.ReadPoint) != 0) 
+                        b -= 50;
+                    
+                    return Color.FromArgb(r, g, b);
+                case ColumnType.Instruction:
+                    if (opcode is 
+                        0x40 or 0xCB or 0xDB or 0xF8 or  // RTI WAI STP SED 
+                        0xFB or 0x00 or 0x02 or 0x42     // XCE BRK COP WDM
+                       ) 
+                        return Color.Yellow;
+                    break;
+                case ColumnType.DataBank:
+                    switch (opcode)
+                    {
+                        case 0xAB:
+                        case 0x44:
+                        // PLB MVP MVN
+                        case 0x54:
+                            return Color.OrangeRed;
+                            break;
+                        // PHB
+                        case 0x8B:
+                            return Color.Yellow;
+                            break;
+                    }
+                    break;
+                case ColumnType.DirectPage:
+                    switch (opcode)
+                    {
+                        case 0x2B:
+                        case 0x5B: // PLD TCD
+                            return Color.OrangeRed;
+                        case 0x0B:
+                        case 0x7B: // PHD TDC
+                            return Color.Yellow;
+                    }
+
+                    break;
+                case ColumnType.MFlag:
+                case ColumnType.XFlag:
+                    var mask = column == 10 ? 0x20 : 0x10;
+                    switch (opcode)
+                    {
+                        // PLP SEP REP
+                        case 0x28:
+                        case 0xC2 or 0xE2 when (Project.Data.GetRomByte(offset + 1) & mask) != 0: // if: relevant bit set
+                            return Color.OrangeRed;
+                        // PHP
+                        case 0x08:
+                            return Color.Yellow;
+                    }
+
+                    break;
+            }
+
+            return null;
         }
 
         private void table_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            int row = e.RowIndex + ViewOffset;
-            if (row < 0 || row >= Project.Data.GetRomSize()) return;
+            var row = e.RowIndex + ViewOffset;
+            if (row < 0 || row >= Project.Data.GetRomSize()) 
+                return;
+            
             PaintCell(row, e.CellStyle, e.ColumnIndex, table.CurrentCell.RowIndex + ViewOffset);
         }
 
@@ -378,9 +489,12 @@ namespace DiztinGUIsh.window
             // THIS IS 100% OPTIONAL.
             if (overshootAmount > 0)
             {
-                // ideally, we'd calculate this number to be at the center or top.
+                // ideally, we'd calculate this number to be at the center or top. for now, we'll just pick an arbitrary amount
                 var overshotOffset = Math.Min(Project.Data.GetRomSize()-1, pcOffset + overshootAmount);
                 InternalSelectOffset(overshotOffset, column);
+                
+                // now, the view is scrolled so we've overshot where we really want to go.
+                // when we next call InternalSelectOffset() with the real address, it won't need to scroll, it'll just select something already in view.
             }
             
             // do the real thing
@@ -432,14 +546,12 @@ namespace DiztinGUIsh.window
 
         private void BeginEditingComment()
         {
-            table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.Comment];
-            table.BeginEdit(true);
+            BeginEditingColumn(ColumnType.Comment);
         }
 
         private void BeginAddingLabel()
         {
-            table.CurrentCell = table.Rows[table.CurrentCell.RowIndex].Cells[(int) ColumnType.Label];
-            table.BeginEdit(true);
+            BeginEditingColumn(ColumnType.Label);
         }
     }
 }
