@@ -188,7 +188,7 @@ namespace Diz.Core.Interfaces
         // TODO: temp hack for serialization, do this better somehow.
         Dictionary<int, IAnnotationLabel> LabelsSerialization { get; }
         
-        public ObservableDictionary<int, string> Comments { get; }
+        public SortedDictionary<int, string> Comments { get; }
     }
 
     public static class DataExtensions
