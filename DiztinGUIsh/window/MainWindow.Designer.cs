@@ -1143,11 +1143,11 @@
             // 
             // openProjectFile
             // 
-            this.openProjectFile.Filter = "DiztinGUIsh Project Files|*.diz;*.dizraw|All Files|*.*";
+            this.openProjectFile.Filter = "DiztinGUIsh Project Files|*.diz;*.dizraw;*.dizdir|All Files|*.*";
             // 
             // saveProjectFile
             // 
-            this.saveProjectFile.Filter = "DiztinGUIsh Project Files|*.diz;*.dizraw|All Files|*.*";
+            this.saveProjectFile.Filter = "DiztinGUIsh Project Files|*.diz;*.dizraw;*.dizdir|All Files|*.*";
             this.saveProjectFile.Title = "New Project.diz";
             // 
             // vScrollBar1

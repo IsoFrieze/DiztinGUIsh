@@ -46,7 +46,21 @@ public class DizCoreServicesCompositionRoot : ICompositionRoot
 
         serviceRegistry.Register<IDataFactory, DataFactory>();
 
-        serviceRegistry.Register<IFileByteProvider, FileByteProvider>();
+        // default one that reads 1:1 from a file
+        serviceRegistry.Register<IFileByteProvider, FileByteProviderSingleFile>();
+        
+        serviceRegistry.Register<Func<string, IFileByteProvider>>(c => type =>
+        {
+            return type switch
+            {
+                "Single" => c.GetInstance<FileByteProviderSingleFile>(),
+                "Multiple" => c.GetInstance<FileByteProviderMultipleFiles>(),
+                _ => throw new InvalidOperationException($"No file bytes type handler found for type: {type}")
+            };
+        });
+        
+        serviceRegistry.Register<FileByteProviderSingleFile>();
+        serviceRegistry.Register<FileByteProviderMultipleFiles>();
 
         serviceRegistry.Register<IDataFactory, XmlSerializerFactory.SnesDataInterceptor>((factory, dataFactory) => 
             new XmlSerializerFactory.SnesDataInterceptor(dataFactory));

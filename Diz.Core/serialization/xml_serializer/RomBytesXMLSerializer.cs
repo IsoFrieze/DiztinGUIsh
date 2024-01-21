@@ -217,8 +217,8 @@ namespace Diz.Core.serialization.xml_serializer
             if (encodedWithCompressGroupBlocks)
                 RepeaterCompression.Decompress(ref lines);
             
-            // comments
-            for(var i = 0; i < lines.Count; i++)
+            // remove comments and extra whitespace (comments start with ";" and extend to the rest of the line) 
+            for (var i = 0; i < lines.Count; i++)
             {
                 // remove any comments (semicolon) from lines
                 var indexSemiColon = lines[i].IndexOf(';');
@@ -226,7 +226,8 @@ namespace Diz.Core.serialization.xml_serializer
                     lines[i] = lines[i][..indexSemiColon].TrimEnd();
                 }
                 
-                // remove any blank lines
+                // after that, remove any blank lines (this removes lines where it was ONLY a comment, and there's nothing else on it)
+                // this is also important for merging/etc to cull lines with just whitespace.
                 if (string.IsNullOrWhiteSpace(lines[i]))
                     lines.RemoveAt(i--);
             }
