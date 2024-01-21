@@ -14,7 +14,6 @@ public class RomModeDetectionTests : ContainerFixture
 {
     [Inject] private readonly IReadFromFileBytes fileReader = null!;
     [Inject] private readonly ISampleRomTestData sampleDataFixture = null!;
-    [Inject] private readonly ISnesRomAnalyzer snesRomAnalyzer = null!;
 
     protected override void Configure(IServiceRegistry serviceRegistry)
     {

@@ -33,7 +33,7 @@ namespace Diz.Test
                     new() { Rom = 0x16, TypeFlag = FlagType.Operand },
                     new() { Rom = 0x21, TypeFlag = FlagType.Operand },
                 },
-                Comments = new ObservableDictionary<int, string>
+                Comments = new SortedDictionary<int, string>
                 {
                     { 0xC00001, "unused" },
                 }

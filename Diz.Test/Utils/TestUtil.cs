@@ -20,7 +20,7 @@ public class SampleRomTestDataFixture : ContainerFixture, ISampleRomTestData
 {
     public byte[] SampleRomBytes => sampleBytes.Value;
     
-    [Inject] private readonly ISnesSampleProjectFactory? sampleFactory = null!;
+    [Inject] private readonly ISnesSampleProjectFactory sampleFactory = null!;
     private readonly Lazy<byte[]> sampleBytes;
     public SampleRomTestDataFixture()
     {

@@ -1,8 +1,8 @@
 ﻿<component name="ProjectRunConfigurationManager">
   <configuration default="false" name="DiztinGUIsh - WinForms Desktop (Main App)" type="DotNetProject" factoryName=".NET Project">
-    <option name="EXE_PATH" value="$PROJECT_DIR$/DiztinGUIsh/bin/Debug/net6.0-windows7.0/DiztinGUIsh.exe" />
+    <option name="EXE_PATH" value="$PROJECT_DIR$/DiztinGUIsh/bin/Release/net6.0-windows7.0/DiztinGUIsh.exe" />
     <option name="PROGRAM_PARAMETERS" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/DiztinGUIsh/bin/Debug/net6.0-windows7.0" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/DiztinGUIsh/bin/Release/net6.0-windows7.0" />
     <option name="PASS_PARENT_ENVS" value="1" />
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
     <option name="USE_MONO" value="0" />

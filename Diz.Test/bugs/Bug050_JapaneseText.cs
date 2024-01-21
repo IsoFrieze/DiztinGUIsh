@@ -18,6 +18,7 @@ using IX.StandardExtensions.Extensions;
 using LightInject;
 using Moq;
 using Xunit;
+using IFileByteProvider = Diz.Core.serialization.IFileByteProvider;
 
 namespace Diz.Test.bugs;
 
@@ -45,11 +46,11 @@ public class Bug50ProjectFileManager : ProjectFileManager
     public Bug50ProjectFileManager(
         Func<IProjectXmlSerializer> projectXmlSerializerCreate,
         Func<IAddRomDataCommand> addRomDataCommandCreate,
-        IFileByteProvider fileByteIo) 
+        Func<string, IFileByteProvider> fileByteProviderFactory) 
         : base(
             projectXmlSerializerCreate, 
             addRomDataCommandCreate,
-            fileByteIo)
+            fileByteProviderFactory)
     {
     }
 }
@@ -91,7 +92,12 @@ public class Bug050JapaneseText
             base(injectFieldsOnlyIfNull: true, injectOnlyTaggedFields: true)
         {
             FileIo = new FileIoFixture();
-            ProjectFileManager = new Bug50ProjectFileManager(fnProjectSerializerCreate, fnAddRomDataCommand, FileIo.Mock.Object);
+
+            ProjectFileManager = new Bug50ProjectFileManager(
+                fnProjectSerializerCreate, 
+                fnAddRomDataCommand, 
+                _ => FileIo.Mock.Object
+            );
             
             ExpectedCartTitleValidationException = expectedCartTitleValidationException;
             SaveVersionToUse = forceOlderVersion100 ? 100 : 101;
