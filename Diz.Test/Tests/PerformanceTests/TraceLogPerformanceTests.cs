@@ -64,45 +64,45 @@ namespace Diz.Test
             output.WriteLine($"runtime: {s.ElapsedMilliseconds:N0}ms");
         }
 
-        public class ImportTraceLogStreamTestHarness
-        {
-            const string datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
-            readonly Data Data = new EmptyRom();
-            private readonly BsnesTraceLogDebugBenchmarkFileCapture capturing;
-            private readonly Stopwatch stopWatch = new();
-            private readonly ITestOutputHelper output;
+        // public class ImportTraceLogStreamTestHarness
+        // {
+        //     const string datafile = "..\\..\\testdata\\ct-binary-tracelog7.758s-60fps-locked.bin";
+        //     readonly Data Data = new EmptyRom();
+        //     private readonly BsnesTraceLogDebugBenchmarkFileCapture capturing;
+        //     private readonly Stopwatch stopWatch = new();
+        //     private readonly ITestOutputHelper output;
+        //
+        //     public ImportTraceLogStreamTestHarness(ITestOutputHelper output)
+        //     {
+        //         this.output = output;
+        //
+        //         var cwd = Directory.GetCurrentDirectory();
+        //         var fullPath = Path.Combine(cwd, datafile);
+        //
+        //         capturing = new BsnesTraceLogDebugBenchmarkFileCapture(fullPath, 1)
+        //         {
+        //             OnStart = () => { stopWatch.Reset(); stopWatch.Start(); },
+        //             OnStop = () =>
+        //             {
+        //                 stopWatch.Stop();
+        //                 this.output.WriteLine($"runtime: {stopWatch.ElapsedMilliseconds:N0}ms");
+        //             }
+        //         };
+        //     }
+        //
+        //     [Benchmark]
+        //     public void Run()
+        //     {
+        //         capturing.Run(Data.GetSnesApi());
+        //     }
+        // }
 
-            public ImportTraceLogStreamTestHarness(ITestOutputHelper output)
-            {
-                this.output = output;
-
-                var cwd = Directory.GetCurrentDirectory();
-                var fullPath = Path.Combine(cwd, datafile);
-
-                capturing = new BsnesTraceLogDebugBenchmarkFileCapture(fullPath, 1)
-                {
-                    OnStart = () => { stopWatch.Reset(); stopWatch.Start(); },
-                    OnStop = () =>
-                    {
-                        stopWatch.Stop();
-                        this.output.WriteLine($"runtime: {stopWatch.ElapsedMilliseconds:N0}ms");
-                    }
-                };
-            }
-
-            [Benchmark]
-            public void Run()
-            {
-                capturing.Run(Data.GetSnesApi());
-            }
-        }
-
-        [Fact(Skip="skipping b/c external dependency")]
-        public void TestTraceLogPerformance()
-        {
-            var test = new ImportTraceLogStreamTestHarness(output);
-            test.Run();
-            // XunitBenchmark.Run<ImportTraceLogStream>(output);
-        }
+        // [Fact(Skip="skipping b/c external dependency")]
+        // public void TestTraceLogPerformance()
+        // {
+        //     var test = new ImportTraceLogStreamTestHarness(output);
+        //     test.Run();
+        //     // XunitBenchmark.Run<ImportTraceLogStream>(output);
+        // }
     }
 }

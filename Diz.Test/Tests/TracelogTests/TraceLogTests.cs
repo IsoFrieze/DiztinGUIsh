@@ -1,4 +1,5 @@
-﻿using Diz.Import.bsnes.tracelog;
+﻿using System.Threading;
+using Diz.Import.bsnes.tracelog;
 using Xunit;
 
 namespace Diz.Test
@@ -84,7 +85,7 @@ namespace Diz.Test
         public static void TestParseText1()
         {
             var modData = new BsnesTraceLogImporter.ModificationData();
-            var importer = new BsnesTraceLogImporter(null);
+            var importer = new BsnesTraceLogImporter(null, new ReaderWriterLockSlim());
             
             importer.ParseTextLine(example1, modData);
             
@@ -99,7 +100,7 @@ namespace Diz.Test
         public static void TestParseText2()
         {
             var modData = new BsnesTraceLogImporter.ModificationData();
-            var importer = new BsnesTraceLogImporter(null);
+            var importer = new BsnesTraceLogImporter(null, new ReaderWriterLockSlim());
             
             importer.ParseTextLine(example2, modData);
             Assert.Equal(0xc3091a, modData.SnesAddress);
@@ -113,7 +114,7 @@ namespace Diz.Test
         public static void TestParseText3()
         {
             var modData = new BsnesTraceLogImporter.ModificationData();
-            var importer = new BsnesTraceLogImporter(null);
+            var importer = new BsnesTraceLogImporter(null, new ReaderWriterLockSlim());
             
             importer.ParseTextLine(example3, modData);
 

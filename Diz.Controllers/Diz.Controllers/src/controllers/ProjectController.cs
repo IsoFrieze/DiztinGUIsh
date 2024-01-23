@@ -5,8 +5,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Diz.Controllers.interfaces;
-using Diz.Controllers.util;
 using Diz.Core;
 using Diz.Core.export;
 using Diz.Core.model;
@@ -16,11 +16,11 @@ using Diz.Core.util;
 using Diz.Cpu._65816;
 using Diz.Import;
 using Diz.Import.bizhawk;
+using Diz.Import.bsnes.tracelog;
 using Diz.Import.bsnes.usagemap;
 using Diz.LogWriter;
 using Diz.LogWriter.util;
 using JetBrains.Annotations;
-using BsnesTraceLogImporter = Diz.Import.bsnes.tracelog.BsnesTraceLogImporter;
 
 namespace Diz.Controllers.controllers;
 
@@ -313,7 +313,7 @@ public class ProjectController : IProjectController
 
     public long ImportBsnesTraceLogs(string[] fileNames)
     {
-        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi());
+        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi(), new ReaderWriterLockSlim());
 
         // TODO: differentiate between binary-formatted and text-formatted files
         // probably look for a newline within 80 characters
@@ -333,9 +333,10 @@ public class ProjectController : IProjectController
         return importer.CurrentStats.NumRomBytesModified;
     }
 
-    public long ImportBsnesTraceLogsBinary(IEnumerable<string> filenames)
+    public long ImportBsnesTraceLogsBinary(IEnumerable<string> filenames,
+        BsnesTraceLogCapture.TraceLogCaptureSettings workItemCaptureSettings)
     {
-        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi());
+        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi(), new ReaderWriterLockSlim());
 
         foreach (var file in filenames)
         {
@@ -346,7 +347,7 @@ public class ProjectController : IProjectController
             while ((bytesRead = source.Read(buffer, 0, bytesPerPacket)) > 0)
             {
                 Debug.Assert(bytesRead == 22);
-                importer.ImportTraceLogLineBinary(buffer);
+                importer.ImportTraceLogLineBinary(buffer, true, workItemCaptureSettings);
             }
         }
 
@@ -380,13 +381,8 @@ public class ProjectController : IProjectController
     /// Export assembly using current project settings (fails if settings not currently valid) 
     /// </summary>
     /// <returns>True if we exported assembly, false if we didn't / aborted.</returns>
-    public bool ExportAssemblyWithCurrentSettings()
-    {
-        if (WriteAssemblyOutputIfSettingsValid())
-            return true;
-
-        return ConfirmSettingsThenExportAssembly();
-    }
+    public bool ExportAssemblyWithCurrentSettings() => 
+        WriteAssemblyOutputIfSettingsValid() || ConfirmSettingsThenExportAssembly();
 
     public LogWriterSettings? ShowSettingsEditorUntilValid()
     {

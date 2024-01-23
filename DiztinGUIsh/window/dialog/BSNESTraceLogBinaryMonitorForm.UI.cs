@@ -104,6 +104,14 @@ public partial class BsnesTraceLogBinaryMonitorForm
         lblModifiedFlags.Text = ByteSize.FromBytes(stats.NumMarksModified).ToString("0.00");
         lblModifiedXFlags.Text = ByteSize.FromBytes(stats.NumXFlagsModified).ToString("0.00");
         lblModifiedMFlags.Text = ByteSize.FromBytes(stats.NumMFlagsModified).ToString("0.00");
+
+        capturing.CaptureSettings = new BsnesTraceLogCapture.TraceLogCaptureSettings
+        {
+            RemoveTracelogLabels = chkRemoveTLComments.Checked,
+            AddTracelogLabel = chkAddTLComments.Checked,
+            CommentTextToAdd = !chkAddTLComments.Checked ? "" : txtTracelogComment.Text,
+            CaptureLabelsOnly = chkCaptureLabelsOnly.Checked
+        };
     }
 
     private void btnTracelogHelpClick(object sender, EventArgs e)

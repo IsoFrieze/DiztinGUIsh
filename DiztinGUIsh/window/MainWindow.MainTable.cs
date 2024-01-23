@@ -414,11 +414,9 @@ namespace DiztinGUIsh.window
                         // PLB MVP MVN
                         case 0x54:
                             return Color.OrangeRed;
-                            break;
                         // PHB
                         case 0x8B:
                             return Color.Yellow;
-                            break;
                     }
                     break;
                 case ColumnType.DirectPage:

@@ -31,9 +31,9 @@ public class ProjectSettings
     public RomBytesOutputFormatSettings RomBytesOutputFormatSettings { get; set; } = new();
 
     [Category("BSNES Import Options")]
-    [DisplayName("Usage map import only changes unmarked Rom Bytes")]
+    [DisplayName("Usage map / tracelog import only changes unmarked Rom Bytes")]
     [Description(
-        "If true, usage map imports won't change anything you already marked. If False, your data will be overwritten from BSNES's usage map. " +
+        "If true, usage map and tracelog imports/capture won't change anything you already marked. If False, your data will be overwritten from BSNES's usage map. " +
         "(useful if you manually marked a lot of instructions incorrectly and they're desync'd. BSNES's marking is really good but not foolproof, " +
         "and it has been known to get M/X flags incorrect rarely). Safest option is to leave this OFF")]
     public bool BsnesUsageMapImportOnlyChangedUnmarked { get; set; } = true;

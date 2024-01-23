@@ -28,6 +28,8 @@ public partial class BsnesTraceLogImporter
         public bool changed;
         public bool mDb, mMarks, mDp, mX, mM;
 
+        public BsnesTraceLogCapture.TraceLogCaptureSettings CaptureSettings;
+
         // precondition: rombyte (minimum of) read lock already acquired
         private void CompareToExisting(ISnesRomByte romByte)
         {
@@ -80,13 +82,12 @@ public partial class BsnesTraceLogImporter
     private void ApplyModification(ModificationData modData)
     {
         ApplyModificationIfNeeded(modData);
-
         UpdateStats(modData);
     }
 
     private void ApplyModificationIfNeeded(ModificationData modData)
     {
-        var romByte = snesData.Data.RomBytes[modData.Pc];
+        var romByte = snesData!.Data.RomBytes[modData.Pc];
         modData.ApplyModificationIfNeeded(romByte);
     }
 
