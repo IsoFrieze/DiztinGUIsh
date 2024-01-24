@@ -146,8 +146,7 @@ namespace Diz.Core.model
         {
             unchecked
             {
-                var hashCode = (Data != null ? Data.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (NormalProvider != null ? NormalProvider.GetHashCode() : 0);
+                var hashCode = NormalProvider != null ? NormalProvider.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ (TemporaryProvider != null ? TemporaryProvider.GetHashCode() : 0);
                 return hashCode;
             }
