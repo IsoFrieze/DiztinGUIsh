@@ -17,7 +17,6 @@ namespace Diz.Import.bsnes.tracelog;
 public class BsnesTraceLogCapture
 {
     public bool Running { get; private set; }
-    private readonly ReaderWriterLockSlim commentLock = new();
     
     private readonly IWorkerTaskManager taskManager;
     private readonly BsnesImportStreamProcessor streamProcessor;
@@ -38,7 +37,7 @@ public class BsnesTraceLogCapture
         // taskManager = new WorkerTaskManagerSynchronous(); // single-threaded version (for testing/debug only)
         taskManager = new WorkerTaskManager(); // multi-threaded version
         
-        importer = new BsnesTraceLogImporter(data, commentLock);
+        importer = new BsnesTraceLogImporter(data);
     }
     
     public void Run()
@@ -96,11 +95,16 @@ public class BsnesTraceLogCapture
         #endif
 
         var networkStream = GetInputStream();
+        
+        // process incoming stream data until there's none left or we cancel
         ProcessStreamData(networkStream);
 
-        #if PROFILING
+        // finally, copy any comments generated into snesData
+        importer.CopyTempGeneratedCommentsIntoMainSnesData();
+
+#if PROFILING
         mainSpan.Leave();
-        #endif
+#endif
     }
 
     private const int MaxNumCompressedItemsToProcess = -1; // debug only.
@@ -388,8 +392,6 @@ public class BsnesTraceLogCapture
         #if PROFILING
         var mainSpan = Markers.EnterSpan("BSNES ProcessWorkItem");
         #endif
-        
-        importer.CommentLock = commentLock;
 
         if (workItemSnesTrace.Buffer != null) // should always be non-null but
         {

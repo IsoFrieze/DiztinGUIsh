@@ -5,6 +5,8 @@ namespace Diz.Import.bsnes.tracelog;
 
 public partial class BsnesTraceLogImporter
 {
+    private CachedTraceLineTextIndex TextImportFormatCached { get; } = new();
+    
     public ModificationData AllocateModificationData()
     {
         var modData = modificationDataPool.Get();
@@ -49,8 +51,6 @@ public partial class BsnesTraceLogImporter
         // note: frees modData and returns to the pool. don't use modData after this call.
         ConsumeAndFreeTraceData(ref modData, opcodeLen);
     }
-
-    private CachedTraceLineTextIndex TextImportFormatCached { get; } = new();
 
     public bool ParseTextLine(string line, ModificationData modData)
     {

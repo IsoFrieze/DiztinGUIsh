@@ -312,7 +312,7 @@ public class ProjectController : IProjectController
 
     public long ImportBsnesTraceLogs(string[] fileNames)
     {
-        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi(), new ReaderWriterLockSlim());
+        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi());
 
         // TODO: differentiate between binary-formatted and text-formatted files
         // probably look for a newline within 80 characters
@@ -332,10 +332,9 @@ public class ProjectController : IProjectController
         return importer.CurrentStats.NumRomBytesModified;
     }
 
-    public long ImportBsnesTraceLogsBinary(IEnumerable<string> filenames,
-        BsnesTraceLogCapture.TraceLogCaptureSettings workItemCaptureSettings)
+    public long ImportBsnesTraceLogsBinary(IEnumerable<string> filenames, BsnesTraceLogCapture.TraceLogCaptureSettings workItemCaptureSettings)
     {
-        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi(), new ReaderWriterLockSlim());
+        var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi());
 
         foreach (var file in filenames)
         {
@@ -349,6 +348,8 @@ public class ProjectController : IProjectController
                 importer.ImportTraceLogLineBinary(buffer, true, workItemCaptureSettings);
             }
         }
+        
+        importer.CopyTempGeneratedCommentsIntoMainSnesData();
 
         return importer.CurrentStats.NumRomBytesModified;
     }

@@ -95,7 +95,7 @@ public class BsnesImportStreamProcessor
     private ObjPool<WorkItemDecompressSnesTraces>? poolCompressedWorkItems;
     private ObjPool<WorkItemSnesTrace>? poolWorkItems;
 
-    public CancellationTokenSource CancelToken { get; } = new();
+    public CancellationTokenSource CancelToken { get; set; } = new();
 
     public BsnesImportStreamProcessor(bool poolAllocations = true)
     {
@@ -110,8 +110,9 @@ public class BsnesImportStreamProcessor
     {
         poolWorkItems = null;
         poolCompressedWorkItems = null;
-        
-        CancelToken.TryReset();
+
+        // reset for next time around
+        CancelToken = new CancellationTokenSource();
     }
 
     public IEnumerable<WorkItemDecompressSnesTraces> GetCompressedWorkItems(Stream? stream)
@@ -139,6 +140,7 @@ public class BsnesImportStreamProcessor
         #endif
 
         var item = AllocateCompressedWorkItem();
+        Debug.Assert(item.Header != null);
 
         try
         {

@@ -85,7 +85,7 @@ namespace Diz.Test
         public static void TestParseText1()
         {
             var modData = new BsnesTraceLogImporter.ModificationData();
-            var importer = new BsnesTraceLogImporter(null, new ReaderWriterLockSlim());
+            var importer = new BsnesTraceLogImporter(null);
             
             importer.ParseTextLine(example1, modData);
             
@@ -100,7 +100,7 @@ namespace Diz.Test
         public static void TestParseText2()
         {
             var modData = new BsnesTraceLogImporter.ModificationData();
-            var importer = new BsnesTraceLogImporter(null, new ReaderWriterLockSlim());
+            var importer = new BsnesTraceLogImporter(null);
             
             importer.ParseTextLine(example2, modData);
             Assert.Equal(0xc3091a, modData.SnesAddress);
@@ -114,7 +114,7 @@ namespace Diz.Test
         public static void TestParseText3()
         {
             var modData = new BsnesTraceLogImporter.ModificationData();
-            var importer = new BsnesTraceLogImporter(null, new ReaderWriterLockSlim());
+            var importer = new BsnesTraceLogImporter(null);
             
             importer.ParseTextLine(example3, modData);
 
