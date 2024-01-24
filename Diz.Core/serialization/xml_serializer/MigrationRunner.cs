@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 
@@ -15,7 +14,7 @@ namespace Diz.Core.serialization.xml_serializer
         // - multiple of the same version# ARE allowed
         // - items of equal version# will be applied in the order they're in the list
         // - caller must keep this sorted
-        public List<IMigration> Migrations { get; init; } = new();
+        public List<IMigration> Migrations { get; init; } = [];
 
         IReadOnlyList<IMigration> IMigrationRunner.Migrations => Migrations;
         
