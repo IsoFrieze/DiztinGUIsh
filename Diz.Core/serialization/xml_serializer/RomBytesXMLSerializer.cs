@@ -217,22 +217,10 @@ namespace Diz.Core.serialization.xml_serializer
             if (encodedWithCompressGroupBlocks)
                 RepeaterCompression.Decompress(ref lines);
             
-            // remove comments and extra whitespace (comments start with ";" and extend to the rest of the line) 
-            for (var i = 0; i < lines.Count; i++)
-            {
-                // remove any comments (semicolon) from lines
-                var indexSemiColon = lines[i].IndexOf(';');
-                if (indexSemiColon != -1) {
-                    lines[i] = lines[i][..indexSemiColon].TrimEnd();
-                }
-                
-                // after that, remove any blank lines (this removes lines where it was ONLY a comment, and there's nothing else on it)
-                // this is also important for merging/etc to cull lines with just whitespace.
-                if (string.IsNullOrWhiteSpace(lines[i]))
-                    lines.RemoveAt(i--);
-            }
-
-            return lines;
+            return lines
+                .Select(line => line.Contains(';') ? line[..line.IndexOf(';')].TrimEnd() : line) // remove any comments
+                .Where(line => !string.IsNullOrWhiteSpace(line)) // remove any blank lines (including newly blanked lines because they used to have a comment in them)
+                .ToList();
         }
 
         private static (List<string> lines, List<string> options) ReadHeader(string allLines)
