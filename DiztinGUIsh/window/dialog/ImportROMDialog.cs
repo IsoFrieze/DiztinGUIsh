@@ -12,6 +12,7 @@ using Diz.Core.util;
 using Diz.Cpu._65816.import;
 using Diz.Ui.Winforms.util;
 using DiztinGUIsh.util;
+using JetBrains.Annotations;
 
 namespace DiztinGUIsh.window.dialog;
 
@@ -71,13 +72,15 @@ public partial class ImportRomDialog : Form, IImportRomDialogView
         }
     }
 
-    private void OnVectorCheckboxCheckedChanged(object? sender, EventArgs e)
+    private void OnVectorCheckboxCheckedChanged([CanBeNull] object sender, EventArgs e)
     {
         if (sender is not CheckBox checkbox)
             return;
         
         var vector = checkbox.Tag as VectorControls;
         Debug.Assert(vector != null);
+        if (vector == null)
+            return;
         
         Controller.Builder.OptionSetGenerateVectorTableLabelFor(vector.Name, vector.Check.Checked);
     }

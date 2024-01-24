@@ -64,10 +64,10 @@ public abstract class LabelImporter
             // if there are multiple definitions (like from BSNES or handmade CSV)
             var thisLabel = newLabels[address];
 
-            if (thisLabel.Name.IsEmpty())
+            if (thisLabel.Name.Length > 0)
                 thisLabel.Name = label.Name;
 
-            if (thisLabel.Comment.IsEmpty())
+            if (thisLabel.Comment.Length > 0)
                 thisLabel.Comment = label.Comment;
         }
     }

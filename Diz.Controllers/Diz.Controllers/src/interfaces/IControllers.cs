@@ -9,6 +9,7 @@ using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 using Diz.Cpu._65816;
+using JetBrains.Annotations;
 
 // NOTE: lots of these interfaces were created temporarily for major refactoring.
 // when that process is finished, we should probably take a pass here to simplify anything
@@ -182,8 +183,8 @@ namespace Diz.Controllers.interfaces
         ILogCreatorSettingsEditorView View { get; set; }
     
         LogWriterSettings Settings { get; set; }
-        
-        public string? KeepPathsRelativeToThisPath { get; set; }
+
+        public string KeepPathsRelativeToThisPath { get; set; }
 
         bool PromptSetupAndValidateExportSettings();
 
