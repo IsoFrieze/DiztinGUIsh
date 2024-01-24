@@ -23,7 +23,7 @@ namespace Diz.Core.serialization.xml_serializer
         public int StartingSaveVersion { get; set; }
         public int TargetSaveVersion { get; set; }
 
-        public MigrationRunner(IReadOnlyList<IMigration> migrations) : this() 
+        public MigrationRunner(IEnumerable<IMigration> migrations) : this() 
         {
             if (migrations != null)
                 Migrations = migrations.ToList();
