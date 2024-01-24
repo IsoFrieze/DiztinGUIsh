@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.export;
@@ -384,9 +383,10 @@ public class ProjectController : IProjectController
     public bool ExportAssemblyWithCurrentSettings() => 
         WriteAssemblyOutputIfSettingsValid() || ConfirmSettingsThenExportAssembly();
 
-    public LogWriterSettings? ShowSettingsEditorUntilValid()
+    [CanBeNull]
+    public LogWriterSettings ShowSettingsEditorUntilValid()
     {
-        LogWriterSettings? newlyEditedSettings = null;
+        LogWriterSettings newlyEditedSettings = null;
 
         do
         {
@@ -436,7 +436,7 @@ public class ProjectController : IProjectController
             return null;
         
         var exportSettingsController = controllerFactory.GetAssemblyExporterSettingsController();
-        exportSettingsController.KeepPathsRelativeToThisPath = Project.Session?.ProjectDirectory;
+        exportSettingsController.KeepPathsRelativeToThisPath = Project.Session?.ProjectDirectory ?? "";
         exportSettingsController.Settings = Project.LogWriterSettings with { }; // operate on a new copy of the settings
         return exportSettingsController;
     }

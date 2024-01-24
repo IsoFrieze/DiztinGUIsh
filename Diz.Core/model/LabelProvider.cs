@@ -132,16 +132,14 @@ namespace Diz.Core.model
         public bool Equals(LabelsServiceWithTemp other)
         {
             if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Labels.SequenceEqual(other.Labels); // expensive, allocates memory for copy. probably ok though.
+            return ReferenceEquals(this, other) || Labels.SequenceEqual(other.Labels); // expensive, allocates memory for copy. probably ok though.
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((LabelsServiceWithTemp)obj);
+            return obj.GetType() == GetType() && Equals((LabelsServiceWithTemp)obj);
         }
 
         public override int GetHashCode()
@@ -315,7 +313,7 @@ namespace Diz.Core.model
 
         public override int GetHashCode()
         {
-            return (Labels != null ? Labels.GetHashCode() : 0);
+            return Labels != null ? Labels.GetHashCode() : 0;
         }
 
         public static bool operator ==(LabelsCollection left, LabelsCollection right)
