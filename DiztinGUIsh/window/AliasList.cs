@@ -156,14 +156,14 @@ public partial class AliasList : Form, ILabelEditorView
         {
             case 0: // label's address
             {
-                if (!int.TryParse(e.FormattedValue.ToString(), NumberStyles.HexNumber, null, out newSnesAddress))
+                if (!int.TryParse(e.FormattedValue?.ToString() ?? "", NumberStyles.HexNumber, null, out newSnesAddress))
                 {
                     e.Cancel = true;
                     toolStripStatusLabel1.Text = "Must enter a valid hex address.";
                     break;
                 }
                         
-                if (existingSnesAddress == -1 && Data.Labels.GetLabel(newSnesAddress) != null)
+                if (existingSnesAddress == -1 && Data.Labels?.GetLabel(newSnesAddress) != null)
                 {
                     e.Cancel = true;
                     toolStripStatusLabel1.Text = "This address already has a label.";
@@ -179,14 +179,14 @@ public partial class AliasList : Form, ILabelEditorView
             case 1: // label name
             {
                 newSnesAddress = existingSnesAddress;
-                newLabel.Name = e.FormattedValue.ToString();
+                newLabel.Name = e.FormattedValue?.ToString() ?? "";
                 // todo (validate for valid label characters)
                 break;
             }
             case 2: // label comment
             {
                 newSnesAddress = existingSnesAddress;
-                newLabel.Comment = e.FormattedValue.ToString();
+                newLabel.Comment = e.FormattedValue?.ToString() ?? "";
                 // todo (validate for valid comment characters, if any)
                 break;
             }
@@ -196,9 +196,9 @@ public partial class AliasList : Form, ILabelEditorView
         if (currentlyEditing >= 0)
         {
             if (newSnesAddress >= 0) 
-                Data.Labels.RemoveLabel(existingSnesAddress);
+                Data.Labels?.RemoveLabel(existingSnesAddress);
                 
-            Data.Labels.AddLabel(newSnesAddress, newLabel, true);
+            Data.Labels?.AddLabel(newSnesAddress, newLabel, true);
         }
         locked = false;
 
@@ -270,7 +270,7 @@ public partial class AliasList : Form, ILabelEditorView
 
     public void RebindProject()
     {
-        if (Data?.Labels != null) 
+        if (Data.Labels != null) 
             Data.Labels.OnLabelChanged += LabelsOnOnLabelChanged;
             
         RepopulateFromData();
