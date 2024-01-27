@@ -95,7 +95,7 @@ public partial class BsnesTraceLogBinaryMonitorForm
 
         lblQueueSize.Text = $"{qByteCount} (num groups: {qItemCount})";
 
-        // TODO: use databinding
+        // TODO: use databinding?
 
         lblTotalProcessed.Text = ByteSize.FromBytes(stats.NumRomBytesAnalyzed).ToString("0.00");
         lblNumberModified.Text = ByteSize.FromBytes(stats.NumRomBytesModified).ToString("0.00");
@@ -104,6 +104,18 @@ public partial class BsnesTraceLogBinaryMonitorForm
         lblModifiedFlags.Text = ByteSize.FromBytes(stats.NumMarksModified).ToString("0.00");
         lblModifiedXFlags.Text = ByteSize.FromBytes(stats.NumXFlagsModified).ToString("0.00");
         lblModifiedMFlags.Text = ByteSize.FromBytes(stats.NumMFlagsModified).ToString("0.00");
+        
+        // TODO: implement me. this one will also go up and down.
+        // lblNumCommentsMarked.Text = ByteSize.FromBytes(stats.NumCommentsMarked).ToString("0.00");
+        
+
+        capturing.CaptureSettings = new BsnesTraceLogCapture.TraceLogCaptureSettings
+        {
+            RemoveTracelogLabels = chkRemoveTLComments.Checked,
+            AddTracelogLabel = chkAddTLComments.Checked,
+            CommentTextToAdd = !chkAddTLComments.Checked ? "" : txtTracelogComment.Text,
+            CaptureLabelsOnly = chkCaptureLabelsOnly.Checked
+        };
     }
 
     private void btnTracelogHelpClick(object sender, EventArgs e)

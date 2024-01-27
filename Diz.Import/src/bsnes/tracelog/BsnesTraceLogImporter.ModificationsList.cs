@@ -28,6 +28,8 @@ public partial class BsnesTraceLogImporter
         public bool changed;
         public bool mDb, mMarks, mDp, mX, mM;
 
+        public BsnesTraceLogCapture.TraceLogCaptureSettings CaptureSettings;
+
         // precondition: rombyte (minimum of) read lock already acquired
         private void CompareToExisting(ISnesRomByte romByte)
         {
@@ -77,19 +79,6 @@ public partial class BsnesTraceLogImporter
     // optimization: save allocations
     private readonly ObjPool<ModificationData> modificationDataPool;
 
-    private void ApplyModification(ModificationData modData)
-    {
-        ApplyModificationIfNeeded(modData);
-
-        UpdateStats(modData);
-    }
-
-    private void ApplyModificationIfNeeded(ModificationData modData)
-    {
-        var romByte = snesData.Data.RomBytes[modData.Pc];
-        modData.ApplyModificationIfNeeded(romByte);
-    }
-
     private void UpdateStats(ModificationData modData)
     {
         if (!modData.changed)
@@ -105,6 +94,8 @@ public partial class BsnesTraceLogImporter
             currentStats.NumDpModified += modData.mDp ? 1 : 0;
             currentStats.NumXFlagsModified += modData.mX ? 1 : 0;
             currentStats.NumMFlagsModified += modData.mM ? 1 : 0;
+
+            currentStats.NumCommentsMarked = tracelogCommentsGenerated.Count;
         }
         finally
         {

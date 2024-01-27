@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
@@ -15,7 +15,7 @@
 
     <ItemGroup>
       <PackageReference Include="IX.Observable">
-        <Version>0.7.3</Version>
+        <Version>1.0.1</Version>
       </PackageReference>
     </ItemGroup>
 

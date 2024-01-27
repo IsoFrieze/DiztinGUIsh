@@ -1,4 +1,5 @@
-﻿using Diz.Import.bsnes.tracelog;
+﻿using System.Threading;
+using Diz.Import.bsnes.tracelog;
 using Xunit;
 
 namespace Diz.Test

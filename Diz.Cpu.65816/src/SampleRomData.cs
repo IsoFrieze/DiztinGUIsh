@@ -3,7 +3,7 @@ using Diz.Core;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
-using IX.Observable;
+using IX.Library.Collections;
 
 namespace Diz.Cpu._65816;
 

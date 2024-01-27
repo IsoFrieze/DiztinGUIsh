@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -16,7 +16,7 @@
 
     <ItemGroup>
         <PackageReference Include="GitInfo">
-            <Version>2.1.2</Version>
+            <Version>3.3.3</Version>
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

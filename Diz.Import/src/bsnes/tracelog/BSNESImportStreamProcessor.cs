@@ -9,7 +9,7 @@ namespace Diz.Import.bsnes.tracelog;
 
 public abstract class PoolItem
 {
-    public bool isFree = true;
+    public bool IsFree = true;
 }
 
 public class ObjPool<T> where T : PoolItem, new()
@@ -24,8 +24,8 @@ public class ObjPool<T> where T : PoolItem, new()
     public T Get()
     {
         var item = Alloc();
-        Debug.Assert(item.isFree);
-        item.isFree = false;
+        Debug.Assert(item.IsFree);
+        item.IsFree = false;
         return item;
     }
 
@@ -34,13 +34,13 @@ public class ObjPool<T> where T : PoolItem, new()
         return freeObjects.TryPop(out var item) ? item : new T();
     }
 
-    public void Return(ref T item)
+    public void Return(ref T? item)
     {
         if (item == null)
             return;
             
-        Debug.Assert(!item.isFree);
-        item.isFree = true;
+        Debug.Assert(!item.IsFree);
+        item.IsFree = true;
         DeAlloc(item);
 
         item = null;
@@ -54,51 +54,68 @@ public class ObjPool<T> where T : PoolItem, new()
 
 public class BsnesImportStreamProcessor
 {
-    public class CompressedWorkItem : PoolItem
+    public class WorkItemDecompressSnesTraces : PoolItem
     {
-        public byte[] Header;
-        public const int headerSize = 9;
-
-        public byte[] CompressedBuffer;
+        // input: a compressed buffer sent to us by BSNES with hundreds of tracelog instructions
+        public const int HeaderSize = 9;
+        public byte[]? Header;                  // 1 byte ID, 4 bytes CompressedBufferSize (which is gzip'd) to follow. 4 bytes: length of uncompressed data 
+        public byte[]? CompressedBuffer;
         public int CompressedSize;
-
-        public byte[] UncompressedBuffer;
+        
+        // output: a buffer where the compressed buffer input will be extracted to.
+        public byte[]? UncompressedBuffer;
         public int UncompressedSize;
-        public bool wasDecompressed;
+        public bool WasDecompressed;
 
-        public byte[] tmpHeader;
-        public List<WorkItem> listHeads = new();
+        public byte[]? ScratchBuffer;
+        
+        public readonly List<WorkItemSnesTrace?>? ListHeads = new();
+
+        // copy of the settings as they existed at the moment of capture
+        public BsnesTraceLogCapture.TraceLogCaptureSettings CaptureSettings { get; set;  } = new();
     }
 
-    public class WorkItem : PoolItem
+    // represents both a SNES trace item.
+    // performance: this is ALSO stored as a linked list that can be traversed by a worker thread
+    // to act as a work queue.
+    // performance note: we need to process an extremely high volume of these. at this level,
+    // every memory allocation and CPU operation counts.
+    public class WorkItemSnesTrace : PoolItem
     {
-        public byte[] Buffer;
+        public byte[]? Buffer;
         public bool AbridgedFormat;
-        public WorkItem? Next;
+        
+        // copy of the settings as they existed at the moment of original capture
+        public BsnesTraceLogCapture.TraceLogCaptureSettings CaptureSettings { get; } = new();
+        
+        // linked list: reference to the next SNES trace that we should process
+        public WorkItemSnesTrace? Next;
     }
 
-    private ObjPool<CompressedWorkItem> poolCompressedWorkItems;
-    private ObjPool<WorkItem> poolWorkItems;
+    private ObjPool<WorkItemDecompressSnesTraces>? poolCompressedWorkItems;
+    private ObjPool<WorkItemSnesTrace>? poolWorkItems;
 
-    public CancellationTokenSource CancelToken { get; private set; } = new();
+    public CancellationTokenSource CancelToken { get; set; } = new();
 
     public BsnesImportStreamProcessor(bool poolAllocations = true)
     {
         if (!poolAllocations)
             return;
 
-        poolCompressedWorkItems = new ObjPool<CompressedWorkItem>();
-        poolWorkItems = new ObjPool<WorkItem>();
+        poolCompressedWorkItems = new ObjPool<WorkItemDecompressSnesTraces>();
+        poolWorkItems = new ObjPool<WorkItemSnesTrace>();
     }
 
     public void Shutdown()
     {
         poolWorkItems = null;
         poolCompressedWorkItems = null;
-        CancelToken = null;
+
+        // reset for next time around
+        CancelToken = new CancellationTokenSource();
     }
 
-    public IEnumerable<CompressedWorkItem> GetCompressedWorkItems(Stream? stream)
+    public IEnumerable<WorkItemDecompressSnesTraces> GetCompressedWorkItems(Stream? stream)
     {
         while (!CancelToken.IsCancellationRequested)
         {
@@ -108,22 +125,26 @@ public class BsnesImportStreamProcessor
             var compressedWorkItem = ReadPacketFromStream(stream);
             if (compressedWorkItem == null)
                 break;
+            
+            // prob right here, add in the current settings so we capture them.
+            // TODO:
 
             yield return compressedWorkItem;
         }
     }
 
-    private CompressedWorkItem ReadPacketFromStream(Stream? stream)
+    private WorkItemDecompressSnesTraces? ReadPacketFromStream(Stream? stream)
     {
-#if PROFILING
-            var mainSpan = Markers.EnterSpan("BSNES socket read");
-#endif
+        #if PROFILING
+        var mainSpan = Markers.EnterSpan("BSNES socket read");
+        #endif
 
         var item = AllocateCompressedWorkItem();
+        Debug.Assert(item.Header != null);
 
         try
         {
-            Util.ReadNext(stream, item.Header, CompressedWorkItem.headerSize);
+            Util.ReadNext(stream, item.Header, WorkItemDecompressSnesTraces.HeaderSize);
         }
         catch (EndOfStreamException)
         {
@@ -131,11 +152,11 @@ public class BsnesImportStreamProcessor
             return null;
         }
 
-#if PROFILING
-            Markers.WriteFlag("initial read");
-#endif
+        #if PROFILING
+        Markers.WriteFlag("initial read");
+        #endif
 
-        if (item.Header.Length != CompressedWorkItem.headerSize)
+        if (item.Header.Length != WorkItemDecompressSnesTraces.HeaderSize)
             throw new InvalidDataException($"invalid header length for compressed data chunk");
 
         if (item.Header[0] != 'Z')
@@ -151,9 +172,10 @@ public class BsnesImportStreamProcessor
         if (item.CompressedBuffer == null || item.CompressedBuffer.Length < item.CompressedSize)
             item.CompressedBuffer = new byte[(int) (item.CompressedSize * unscientificGuessAtExtraWeShouldAdd)];
 
-#if PROFILING
-            Markers.WriteFlag("big read start");
-#endif
+        #if PROFILING
+        Markers.WriteFlag("big read start");
+        #endif
+        
         int bytesRead;
         try
         {
@@ -165,9 +187,9 @@ public class BsnesImportStreamProcessor
             return null;
         }
 
-#if PROFILING
-            Markers.WriteFlag("big read done");
-#endif
+        #if PROFILING
+        Markers.WriteFlag("big read done");
+        #endif
 
         if (bytesRead != item.CompressedSize)
         {
@@ -175,60 +197,63 @@ public class BsnesImportStreamProcessor
                 $"compressed data: expected {item.CompressedSize} bytes, only got {bytesRead}");
         }
 
-#if PROFILING
-            mainSpan.Leave();
-#endif
+        #if PROFILING
+        mainSpan.Leave();
+        #endif
 
         return item;
     }
 
-    private CompressedWorkItem AllocateCompressedWorkItem()
+    private WorkItemDecompressSnesTraces AllocateCompressedWorkItem()
     {
         var item = AllocCompressedWorkItem();
 
         item.CompressedSize = item.UncompressedSize = 0;
-        item.wasDecompressed = false;
+        item.WasDecompressed = false;
 
-        if (item.Header != null && item.Header.Length == CompressedWorkItem.headerSize)
-            return item;
+        // did we already allocate this before, and is it the same size?
+        if (item.Header is { Length: WorkItemDecompressSnesTraces.HeaderSize })
+            return item; // we did! optimized path OK
 
-        item.Header = new byte[CompressedWorkItem.headerSize];
+        // un-optimized path: allocate it so we can use it (happens on first use too)
+        item.Header = new byte[WorkItemDecompressSnesTraces.HeaderSize];
         return item;
     }
 
-    private CompressedWorkItem AllocCompressedWorkItem()
+    private WorkItemDecompressSnesTraces AllocCompressedWorkItem()
     {
-        return poolCompressedWorkItems == null ? new CompressedWorkItem() : poolCompressedWorkItems.Get();
+        return poolCompressedWorkItems == null ? new WorkItemDecompressSnesTraces() : poolCompressedWorkItems.Get();
     }
 
-    private WorkItem AllocWorkItem()
+    private WorkItemSnesTrace AllocWorkItem()
     {
-        return poolWorkItems == null ? new WorkItem() : poolWorkItems.Get();
+        return poolWorkItems == null ? new WorkItemSnesTrace() : poolWorkItems.Get();
     }
 
-    public void FreeCompressedWorkItem(ref CompressedWorkItem compressedItem)
+    public void FreeCompressedWorkItem(ref WorkItemDecompressSnesTraces? compressedItem)
     {
-        // don't kill the big buffers. main point of this pool is to hopefully re-use them later.
+        // performance: remember: we don't want to kill the big buffers.
+        // main point of this pool is to hopefully re-use them later.
 
         if (compressedItem == null)
             return;
 
         // keep the capacity, but kill the contents.
         // also, go a little overkill and kill the references to WorkItem list heads inside the List.
-        if (compressedItem.listHeads != null)
+        if (compressedItem.ListHeads != null)
         {
-            for (var i = 0; i < compressedItem.listHeads.Count; ++i)
+            for (var i = 0; i < compressedItem.ListHeads.Count; ++i)
             {
-                compressedItem.listHeads[0] = null;
+                compressedItem.ListHeads[0] = null;
             }
 
-            compressedItem.listHeads.Clear();
+            compressedItem.ListHeads.Clear();
         }
 
         poolCompressedWorkItems?.Return(ref compressedItem);
     }
 
-    public void FreeWorkItem(ref WorkItem workItem)
+    public void FreeWorkItem(ref WorkItemSnesTrace? workItem)
     {
         if (workItem == null)
             return;
@@ -240,16 +265,17 @@ public class BsnesImportStreamProcessor
         poolWorkItems?.Return(ref workItem);
     }
 
-    private WorkItem AllocateWorkItem(byte workItemLen)
+    private WorkItemSnesTrace AllocateWorkItem(byte workItemLen)
     {
         var workItem = AllocWorkItem();
 
-        // turn this on if you ever think you have a memroy alloc issue
-        const bool seriousChecking = false;
-        if (seriousChecking && (workItem.isFree || workItem.Next != null))
+        // turn this on if you ever think you have a memory allocation issue
+        #if DEBUG_ALLOC_CHECKING
+        if (workItem.isFree || workItem.Next != null)
         {
             Debugger.Break();
         }
+        #endif
 
         workItem.AbridgedFormat = false;
 
@@ -258,20 +284,22 @@ public class BsnesImportStreamProcessor
         if (workItem.Buffer != null && workItem.Buffer.Length == workItemLen)
             return workItem;
 
+        // this is what we're trying to avoid re-allocating
+        // (but we will have to allocate on the first use)
         workItem.Buffer = new byte[workItemLen];
 
         return workItem;
     }
 
-    private static void AllocateUncompressedBuffer(CompressedWorkItem compressedWorkItem)
+    private static void AllocateUncompressedBuffer(WorkItemDecompressSnesTraces workItemDecompressSnesTraces)
     {
-        Debug.Assert(compressedWorkItem.UncompressedSize != 0);
+        Debug.Assert(workItemDecompressSnesTraces.UncompressedSize != 0);
         // remember, our goal is to reduce the # of allocations done for compressedWorkItem.UncompressedBuffer
         // CompressedWorkItems are cached as a pool, and if our buffer size is large enough, we can
         // avoid a re-allocation.
 
-        if (compressedWorkItem.UncompressedBuffer != null &&
-            compressedWorkItem.UncompressedBuffer.Length >= compressedWorkItem.UncompressedSize)
+        if (workItemDecompressSnesTraces.UncompressedBuffer != null &&
+            workItemDecompressSnesTraces.UncompressedBuffer.Length >= workItemDecompressSnesTraces.UncompressedSize)
             return;
 
         // go a little more than we need to avoid
@@ -279,36 +307,46 @@ public class BsnesImportStreamProcessor
         // works because our uncompressedsize shouldn't change much
         const float unscientificMultiplierGuess = 1.2f;
 
-        var size = (int) (compressedWorkItem.UncompressedSize * unscientificMultiplierGuess);
-        compressedWorkItem.UncompressedBuffer = new byte[size];
+        var size = (int) (workItemDecompressSnesTraces.UncompressedSize * unscientificMultiplierGuess);
+        workItemDecompressSnesTraces.UncompressedBuffer = new byte[size];
     }
 
-    public void DecompressWorkItem(CompressedWorkItem compressedWorkItem)
+    // take CompressedBuffer and un-gzip it into UncompressedBuffer
+    public void DecompressWorkItem(WorkItemDecompressSnesTraces workItemDecompressSnesTraces)
     {
-        Debug.Assert(!compressedWorkItem.wasDecompressed);
+        Debug.Assert(!workItemDecompressSnesTraces.WasDecompressed);
 
-        AllocateUncompressedBuffer(compressedWorkItem);
+        AllocateUncompressedBuffer(workItemDecompressSnesTraces);
         var decompressedLength = 0;
+        
+        Debug.Assert(workItemDecompressSnesTraces.CompressedBuffer != null);
+        Debug.Assert(workItemDecompressSnesTraces.UncompressedBuffer != null);
+        if (workItemDecompressSnesTraces.CompressedBuffer == null || workItemDecompressSnesTraces.UncompressedBuffer == null)
+            throw new InvalidOperationException("failed to allocate memory for work item buffers");
 
-        using (var memory = new MemoryStream(compressedWorkItem.CompressedBuffer))
+        using (var memory = new MemoryStream(workItemDecompressSnesTraces.CompressedBuffer))
         {
             using var inflater = new InflaterInputStream(memory);
-            decompressedLength = inflater.Read(compressedWorkItem.UncompressedBuffer, 0,
-                compressedWorkItem.UncompressedSize);
+            decompressedLength = inflater.Read(workItemDecompressSnesTraces.UncompressedBuffer, 0,
+                workItemDecompressSnesTraces.UncompressedSize);
         }
 
-        compressedWorkItem.wasDecompressed = true;
+        workItemDecompressSnesTraces.WasDecompressed = true;
 
-        if (decompressedLength != compressedWorkItem.UncompressedSize)
+        if (decompressedLength != workItemDecompressSnesTraces.UncompressedSize)
             throw new InvalidDataException("incorrect decompressed data size");
 
         // after this function, compressedWorkItem.CompressedBuffer is no longer needed.
         // but, leave it allocated so future runs can re-use that buffer.
     }
 
-    public WorkItem ReadWorkItem(Stream stream, byte workItemId, byte workItemLen)
+    public WorkItemSnesTrace ParseSnesTraceWorkItem(Stream stream, byte workItemId, byte workItemLen)
     {
+        // given 2 bytes already read (in workItemId and workItemLen), read the rest of the SNES trace info from the input stream
+        
         var workItem = AllocateWorkItem(workItemLen);
+        if (workItem.Buffer == null)
+            throw new InvalidOperationException("failed to allocate (or invalid) buffer for WorkItem");
 
         if (workItemId != 0xEE && workItemId != 0xEF)
             throw new InvalidDataException("Missing expected watermark from unzipped data");

@@ -5,6 +5,8 @@ namespace Diz.Import.bsnes.tracelog;
 
 public partial class BsnesTraceLogImporter
 {
+    private CachedTraceLineTextIndex TextImportFormatCached { get; } = new();
+    
     public ModificationData AllocateModificationData()
     {
         var modData = modificationDataPool.Get();
@@ -14,7 +16,7 @@ public partial class BsnesTraceLogImporter
         return modData;
     }
 
-    private void FreeModificationData(ref ModificationData modData)
+    private void FreeModificationData(ref ModificationData? modData)
     {
         if (modData == null)
             return;
@@ -29,21 +31,26 @@ public partial class BsnesTraceLogImporter
             return;
 
         UpdatePCAddress(modData);
-        SetOpcodeAndOperandsFromTraceData(modData); // note: frees modData, don't use after
+        ConsumeAndFreeTraceData(ref modData); // note: frees modData, sets it to null. can't use after this call
     }
         
-    // this function will be called from multiple threads concurrently and MUST REMAIN thread-safe.
-    // for performance-reasons, we're handling our own locking.
-    public void ImportTraceLogLineBinary(byte[] bytes, bool abridgedFormat = true)
+    // PERFORMANCE CRITICAL FUNCTION
+    // WARNING: THREAD SAFETY: this function will be called from multiple threads concurrently and MUST REMAIN thread-safe.
+    // and, for performance-reasons, we're handling our own locking.
+    public void ImportTraceLogLineBinary(byte[] bytes, bool abridgedFormat, BsnesTraceLogCapture.TraceLogCaptureSettings settings)
     {
         var modData = AllocateModificationData();
+        
+        // first, make a copy of all settings.
+        modData.CaptureSettings = settings;
+        
+        // then parse the BSNES data for this opcode+operands, and process it
         ParseBinary(bytes, abridgedFormat, out var opcodeLen, modData);
-            
         UpdatePCAddress(modData);
-        SetOpcodeAndOperandsFromTraceData(modData, opcodeLen);  // note: frees modData, don't use after
+        
+        // note: frees modData and returns to the pool. don't use modData after this call.
+        ConsumeAndFreeTraceData(ref modData, opcodeLen);
     }
-
-    private CachedTraceLineTextIndex TextImportFormatCached { get; } = new();
 
     public bool ParseTextLine(string line, ModificationData modData)
     {

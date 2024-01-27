@@ -12,6 +12,7 @@ public partial class BsnesTraceLogImporter
         public long NumDbModified;
         public long NumDpModified;
         public long NumMarksModified;
+        public int NumCommentsMarked;
     }
 
     private readonly ReaderWriterLockSlim statsLock = new();

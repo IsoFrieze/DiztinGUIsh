@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Diz.Controllers.controllers;
 using Diz.Core.commands;
 using Diz.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Diz.Controllers.interfaces
 {
@@ -116,7 +117,7 @@ namespace Diz.Controllers.interfaces
     
     public interface ILabelEditorView : IFormViewer
     {
-        public IProjectController? ProjectController { get; set; }
+        [CanBeNull] public IProjectController ProjectController { get; set; }
         
         string PromptForCsvFilename();
         void RepopulateFromData();
@@ -146,7 +147,7 @@ namespace Diz.Controllers.interfaces
     {
         ILogCreatorSettingsEditorController Controller { get; set; }
     
-        string? PromptForLogPathFromFileOrFolderDialog(bool askForFile);
+        [CanBeNull] string PromptForLogPathFromFileOrFolderDialog(bool askForFile);
         bool PromptCreatePath(string buildFullOutputPath, string extraMsg);
         
         /// <summary>
