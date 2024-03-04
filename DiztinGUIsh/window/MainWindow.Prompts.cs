@@ -19,9 +19,14 @@ namespace DiztinGUIsh.window
             if (Project == null || !(Project.Session?.UnsavedChanges ?? true))
                 return true;
 
-            return DialogResult.OK == MessageBox.Show(
-                "You have unsaved changes. They will be lost if you continue.",
-                "Unsaved Changes", MessageBoxButtons.OKCancel);
+            var result = MessageBox.Show(
+                "You have unsaved changes; they will be lost if you continue.\nDo you want to save changes?",
+                "Unsaved Changes", MessageBoxButtons.YesNoCancel);
+
+            if (result == DialogResult.Yes)
+                SaveProject(askFilenameIfNotSet: true, alwaysAsk: false);
+            
+            return (result != DialogResult.Cancel);
         }
 
         private string PromptForOpenFilename()
