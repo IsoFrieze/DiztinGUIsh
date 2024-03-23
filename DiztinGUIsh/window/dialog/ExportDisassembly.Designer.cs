@@ -280,7 +280,7 @@ namespace DiztinGUIsh.window.dialog
             this.chkIncludeUnusedLabels.Name = "chkIncludeUnusedLabels";
             this.chkIncludeUnusedLabels.Size = new System.Drawing.Size(211, 19);
             this.chkIncludeUnusedLabels.TabIndex = 11;
-            this.chkIncludeUnusedLabels.Text = "Include unused labels in labels.asm";
+            this.chkIncludeUnusedLabels.Text = "optional: Generate other label metadata (.txt, .csv, .sym)";
             this.chkIncludeUnusedLabels.UseVisualStyleBackColor = true;
             this.chkIncludeUnusedLabels.CheckedChanged += new System.EventHandler(this.chkIncludeUnusedLabels_CheckedChanged);
             // 
