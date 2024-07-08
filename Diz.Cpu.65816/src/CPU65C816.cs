@@ -216,6 +216,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             }
             case Cpu65C816Constants.AddressMode.Relative16:
             {
+                // something may be wrong here with the "PER" instruction (opcode 0x62).
+                // description in https://github.com/IsoFrieze/DiztinGUIsh/issues/102
+                // must fix
+                
                 programCounter = data.ConvertPCtoSnes(offset + 3);
                 bank = programCounter >> 16;
                 var romByte = data.GetRomWord(offset + 1);
