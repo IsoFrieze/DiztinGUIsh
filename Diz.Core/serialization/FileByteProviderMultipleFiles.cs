@@ -52,6 +52,7 @@ public class FileByteProviderMultipleFiles : IFileByteProvider
             .ToList();
 
         // Read all files in the correct order and concatenate their bytes.
+        // we ONLY ORDER BY THE NUMBER IN FRONT, and nothing else.
         var result = new List<byte>();
         foreach (var fileBytes in matchedFiles.Select(File.ReadAllBytes))
         {
@@ -113,7 +114,7 @@ public class FileSplitWriter
             "<Data",
             "<Comments",
             "<Labels",
-            "<RomBytes",
+            "<RomBytes",    // SUPERHACK WARNING: overlaps with <RomBytesOutputFormatSettings too.
             "\r\n;pos=",    // we'll include the newline here to make it easier when merging later.
                             // otherwise, a newline would be required at the END of each text file fragment and if removed would blow things up.
                             // a newline will still be required at the top of the file, but, if removed it'll happen to work out.
