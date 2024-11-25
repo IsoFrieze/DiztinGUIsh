@@ -1,4 +1,4 @@
-name: Build .NET6 Windows Desktop App
+name: Build .NET 8 Windows Desktop App
 
 on: [ push, pull_request ]
 
@@ -31,7 +31,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.0.x
 
 # not currently working consistently, don't cache
 #    - name: Nuget (restore from cache)
@@ -59,11 +59,11 @@ jobs:
 
       - uses: vimtor/action-zip@v1
         with:
-          files: DiztinGUIsh\bin\Release\net6.0-windows7.0\publish\
+          files: DiztinGUIsh\bin\Release\*\publish\
           dest: ${{ steps.ver.outputs.ver }}.zip
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.ver.outputs.ver }}.zip
           path: ${{ steps.ver.outputs.ver }}.zip
