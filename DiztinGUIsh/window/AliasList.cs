@@ -335,4 +335,9 @@ public partial class AliasList : Form, ILabelEditorView
     {
         // if needed, catch any changes to label content here
     }
+
+    public void BringFormToTop()
+    {
+        Focus();
+    }
 }

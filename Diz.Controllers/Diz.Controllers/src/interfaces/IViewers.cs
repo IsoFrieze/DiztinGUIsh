@@ -21,6 +21,11 @@ namespace Diz.Controllers.interfaces
     {
         void Show();
     }
+    
+    public interface IFocusable
+    {
+        void BringFormToTop(); // not the most elegant thing
+    }
 
     public interface IStartFormViewer : IProjectOpenRequester, IFormViewer
     {
@@ -115,7 +120,7 @@ namespace Diz.Controllers.interfaces
     }
     #endif
     
-    public interface ILabelEditorView : IFormViewer
+    public interface ILabelEditorView : IFormViewer, IFocusable
     {
         [CanBeNull] public IProjectController ProjectController { get; set; }
         

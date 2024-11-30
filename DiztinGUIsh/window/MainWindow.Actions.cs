@@ -344,7 +344,11 @@ public partial class MainWindow
         visualForm.Show();
     }
 
-    private void ShowCommentList() => aliasList.Show();
+    private void ShowCommentList()
+    {
+        aliasList.Show();
+        aliasList.BringFormToTop();
+    }
 
     private void ShowProjectSettings()
     {
