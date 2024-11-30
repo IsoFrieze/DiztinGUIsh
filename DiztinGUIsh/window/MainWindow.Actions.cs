@@ -303,7 +303,7 @@ public partial class MainWindow
         ShowInfo("Scan complete!", "Done!");
     }
 
-    private void SaveProject(bool askFilenameIfNotSet = true, bool alwaysAsk = false)
+    private bool SaveProject(bool askFilenameIfNotSet = true, bool alwaysAsk = false)
     {
         var showPrompt = 
             askFilenameIfNotSet && string.IsNullOrEmpty(Project.ProjectFileName) || 
@@ -313,8 +313,13 @@ public partial class MainWindow
         if (showPrompt)
         {
             saveProjectFile.InitialDirectory = Project.AttachedRomFilename;
+            
+            // if it doesn't already have a filename set, make a reasonable guess based on the ROM
+            if (string.IsNullOrEmpty(Project.ProjectFileName))
+                saveProjectFile.FileName = Path.GetFileNameWithoutExtension(Project.AttachedRomFilename) + ".diz";
+            
             if (saveProjectFile.ShowDialog() != DialogResult.OK || string.IsNullOrEmpty(saveProjectFile.FileName))
-                return;
+                return false;
 
             promptedFilename = saveProjectFile.FileName;
         }
@@ -326,10 +331,11 @@ public partial class MainWindow
         var err = ProjectController.SaveProject(Project.ProjectFileName);
 
         if (err == null) 
-            return;
+            return true;
             
         Project.ProjectFileName = origFilename;
         ShowError($"Couldn't save: {err}");
+        return false;
     }
 
     private void ShowVisualizerForm()
