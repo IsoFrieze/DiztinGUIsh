@@ -195,10 +195,13 @@ public class ProjectFileManager : IProjectFileManager
         fileByteIo.WriteBytes(filename, data);
         
         project.ProjectFileName = filename;
-            
-        // always do this last
-        if (project.Session != null) 
-            project.Session.UnsavedChanges = false;
+        
+        if (project.Session == null) 
+            return;
+        project.Session.ProjectFileName = project.ProjectFileName;
+        
+        // only do this at the VERY END
+        project.Session.UnsavedChanges = false;
     }
 
     private byte[] DoSave(Project project, string filename, IProjectSerializer serializer)
