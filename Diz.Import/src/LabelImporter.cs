@@ -49,7 +49,7 @@ public abstract class LabelImporter
 
     private void TryImportLabel(IAnnotationLabel label, string labelAddress)
     {
-        var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-]*)$");
+        var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-+\.\-]*)$");
         if (!validLabelChars.Match(label.Name).Success)
             throw new InvalidDataException("invalid label name: " + label.Name);
 
