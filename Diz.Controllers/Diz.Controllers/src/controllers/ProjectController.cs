@@ -414,6 +414,10 @@ public class ProjectController : IProjectController
     {
         if (settingsToUseAndSave == null || !settingsToUseAndSave.IsValid(fs))
             return false;
+        
+        // must have saved the project first
+        if (Project.Session?.ProjectDirectory.Length == 0)
+            return false;
 
         UpdateExportSettings(settingsToUseAndSave);
         WriteAssemblyOutput();

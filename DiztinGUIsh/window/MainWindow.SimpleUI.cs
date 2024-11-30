@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
+using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
 {
@@ -24,12 +25,35 @@ namespace DiztinGUIsh.window
 
         private void saveProjectAsToolStripMenuItem_Click(object sender, EventArgs e) => 
             SaveProject(askFilenameIfNotSet: true, alwaysAsk: true); // save as
-
-        private void toolStrip_exportDisassemblyUseCurrentSettings_Click(object sender, System.EventArgs e) => 
+        
+        private bool EnsureProjectFileExistsOnDisk()
+        {
+            // must have saved the project at least once first
+            // (otherwise relative export paths can get screwy).
+            // does NOT MEAN we saved recently, just that it was ONCE ever saved.
+            if (!string.IsNullOrEmpty(Project.ProjectFileName)) 
+                return true;
+            
+            MessageBox.Show("Project file must be saved first before exporting. Please save it now.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            
+            return SaveProject(askFilenameIfNotSet: true, alwaysAsk: true);
+        }
+        
+        private void toolStrip_exportDisassemblyUseCurrentSettings_Click(object sender, System.EventArgs e)
+        {
+            if (!EnsureProjectFileExistsOnDisk())
+                return;
+            
             ProjectController?.ExportAssemblyWithCurrentSettings();
+        }
 
-        private void toolStrip_exportDisassemblyEditSettingsFirst_Click(object sender, EventArgs e) =>
+        private void toolStrip_exportDisassemblyEditSettingsFirst_Click(object sender, EventArgs e)
+        {
+            if (!EnsureProjectFileExistsOnDisk())
+                return;
+            
             ProjectController?.ConfirmSettingsThenExportAssembly();
+        }
 
         private void toolStrip_openExportDirectory_Click(object sender, EventArgs e) =>
             OpenExportDirectory();
