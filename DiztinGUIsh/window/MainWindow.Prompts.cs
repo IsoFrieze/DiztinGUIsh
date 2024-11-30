@@ -26,7 +26,7 @@ namespace DiztinGUIsh.window
             if (result == DialogResult.Yes)
                 SaveProject(askFilenameIfNotSet: true, alwaysAsk: false);
             
-            return (result != DialogResult.Cancel);
+            return result != DialogResult.Cancel;
         }
 
         private string PromptForOpenFilename()
@@ -39,10 +39,10 @@ namespace DiztinGUIsh.window
         private static void ShowExportResults(LogCreatorOutput.OutputResult result)
         {
             if (result.ErrorCount > 0)
-                MessageBox.Show("Disassembly created with errors. See errors.txt for details.", "Warning",
+                MessageBox.Show("Disassembly files exported, but contains errors (but... it will probably still assemble correctly. try it). See generated errors.txt for further details.", "Warning",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             else
-                MessageBox.Show("Disassembly created successfully!", "Complete", MessageBoxButtons.OK,
+                MessageBox.Show("Disassembly files exported successfully!", "Complete", MessageBoxButtons.OK,
                     MessageBoxIcon.Asterisk);
         }
 
