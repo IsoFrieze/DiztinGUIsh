@@ -25,7 +25,7 @@ public class Cpu<TByteSource> where TByteSource : IRomByteFlagsGettable, IRomByt
     
     
     public virtual int GetInstructionLength(TByteSource data, int offset) => 1;
-    public virtual int GetIntermediateAddress(TByteSource data, int offset, bool resolve) => -1;
+    public virtual int GetIntermediateAddress(TByteSource data, int offset, bool resolve, int overrideDatabank = -1) => -1;
     public virtual void MarkInOutPoints(TByteSource data, int offset) {} // nop
     public virtual int CalculateInOutPointsFromOffset(
         TByteSource data,

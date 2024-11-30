@@ -140,6 +140,10 @@ namespace DiztinGUIsh.window
                     GoToNextUnreachedInPoint(offset);
                     break;
                 
+                case Keys.F6:
+                    UiNormalizedMirroredAddresses();
+                    break;
+                
                 case Keys.Home: case Keys.PageUp: case Keys.Up:
                 case Keys.End: case Keys.PageDown: case Keys.Down:
                     ScrollVertically(offset, e.KeyCode switch

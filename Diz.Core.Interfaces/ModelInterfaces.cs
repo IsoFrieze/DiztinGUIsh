@@ -227,7 +227,7 @@ namespace Diz.Core.Interfaces
         int GetIntermediateAddressOrPointer(int offset);
         
         // -1 if not found
-        int GetIntermediateAddress(int offset, bool resolve = false);
+        int GetIntermediateAddress(int offset, bool resolve = false, int overrideDatabank = -1);
         
         bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch);
     }

@@ -100,6 +100,7 @@ namespace Diz.Controllers.interfaces
         bool ExportAssemblyWithCurrentSettings();
 
         void MarkChanged(); // rename to MarkUnsaved or similar in Diz3.0
+        int NormalizedMirroredAddresses();
     }
     
     public interface IProjectOpenerHandler : ILongRunningTaskHandler

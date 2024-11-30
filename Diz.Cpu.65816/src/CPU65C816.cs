@@ -135,7 +135,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
     // input: ROM offset
     // return: a SNES address
-    public override int GetIntermediateAddress(TByteSource data, int offset, bool resolve)
+    // if override_databank is not -1, then [if the instruction would look at it] then recorded databank is ignored and this one is used instead.
+    public override int GetIntermediateAddress(TByteSource data, int offset, bool resolve, int overrideDatabank = -1)
     {
         int bank;
         int programCounter;
@@ -183,9 +184,17 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             case Cpu65C816Constants.AddressMode.AddressYIndex:
             case Cpu65C816Constants.AddressMode.AddressXIndexIndirect:
             {
-                bank = opcode is 0x20 or 0x4C or 0x7C or 0xFC
-                    ? data.ConvertPCtoSnes(offset) >> 16
-                    : data.GetDataBank(offset);
+                if (opcode is 0x20 or 0x4C or 0x7C or 0xFC)
+                {
+                    bank = data.ConvertPCtoSnes(offset) >> 16;
+                }
+                else
+                {
+                    bank = overrideDatabank == -1 
+                        ? data.GetDataBank(offset)      // normal
+                        : overrideDatabank;            // special case (not normally used)
+                }
+
                 var operand = data.GetRomWord(offset + 1);
                 if (!operand.HasValue)
                     return -1;

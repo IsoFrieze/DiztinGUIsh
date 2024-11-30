@@ -9,6 +9,7 @@ using Diz.Core.model;
 using Diz.Core.util;
 using Diz.Cpu._65816;
 using Diz.Ui.Winforms.dialogs;
+using Diz.Ui.Winforms.util;
 using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window;
@@ -289,6 +290,19 @@ public partial class MainWindow
         
         RefreshUi();
         ShowInfo($"Modified {countModified} flags!", "Done!");
+    }
+    
+    // Diz3 won't need this. but for us, we want it.
+    private void UiNormalizedMirroredAddresses()
+    {
+        GuiUtil.PromptToConfirmAction("Normalize mirrored databank addresses", 
+            $"WARNING: EXPERIMENTAL: PLEASE SAVE FIRST.\nThis will analyze all recorded databank registers and set to zero if the IA isn't affected. (makes for easier labelling). Please be sure to inspect output data after use for correctness, this is a bit of a guess and could have unforseen side effects.",
+            () => true);
+
+        var countModified = ProjectController.NormalizedMirroredAddresses();
+        
+        RefreshUi();
+        ShowInfo($"Normalized {countModified} instructions!", "Done!");
     }
 
     private void UiRescanForInOut()

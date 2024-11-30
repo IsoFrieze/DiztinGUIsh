@@ -9,6 +9,7 @@ using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.export;
 using Diz.Core.model;
+using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
@@ -19,6 +20,7 @@ using Diz.Import.bsnes.tracelog;
 using Diz.Import.bsnes.usagemap;
 using Diz.LogWriter;
 using Diz.LogWriter.util;
+using IX.Library.Collections;
 using JetBrains.Annotations;
 
 namespace Diz.Controllers.controllers;
@@ -255,6 +257,63 @@ public class ProjectController : IProjectController
     {
         // eventually set this via INotifyPropertyChanged or similar.
         if (Project.Session != null) Project.Session.UnsavedChanges = true;
+    }
+
+    public int NormalizedMirroredAddresses()
+    {
+        // crappy but useful hack to deal with mirroring.
+        // sometimes things like tracelog capture will use mirrored addresses (typically using the DB register)
+        // to access RAM (or ROM) addresses.   if we can detect that is happening, we can switch everything back to
+        // a normlized address and the exported assembly has a better chance of using the labels correctly.
+        // this is a little experimental but, should be OK.
+        //
+        // Diz3 won't need this because we deal with mirroring better.
+        if (Project == null || Project.Data.RomBytes.Count <= 0)
+            return 0;
+
+        var modified = 0;
+        Project.Data.RomBytes
+            .Where(x => x.TypeFlag == FlagType.Opcode)
+            .ForEach(opcode =>
+            {
+                // check #1: is DB register set to non-zero, and, can we set it back to zero but still generate the same IA?
+                if (!DataBankCanBeNormalizedToZero(opcode)) 
+                    return;
+                
+                opcode.DataBank = 0;
+                modified++;
+            });
+
+        return modified;
+    }
+
+    private bool DataBankCanBeNormalizedToZero(RomByteData opcode)
+    {
+        // NOTE: there may be other interactions with the DB register we should check for too.
+        // for now, here's just the one
+        
+        if (opcode.DataBank == 0)
+            return false;   // we're already set to bank 0 so, forget it
+        
+        // what is the IA normally?
+        var iaNormal = Project.Data.GetSnesApi()!.GetIntermediateAddress(opcode.Offset, false);
+        if (iaNormal == -1)
+            return false;
+        
+        // what would be the IA if we acted like the databank was actually set to zero (instead of whatever it is)
+        const int bankZeroOverride = 0;
+        var iaIfBankZero = Project.Data.GetSnesApi()!.GetIntermediateAddress(opcode.Offset, false, bankZeroOverride);
+        if (iaIfBankZero == -1)
+            return false;
+        
+        // see if our 2 IAs are, in fact, mirrors of the same exact address
+        // for instance, in LoRom, $009234, $809234, $7E9234 are all just mirrors of the same address.
+        // we'd prefer then to use $9234 because it would be easier to not have to track a bunch of labels for the same address
+        var unMirroredNormal = RomUtil.UnmirroredOffset(iaNormal, Project.Data.GetRomSize());
+        var unMirroredOverride = RomUtil.UnmirroredOffset(iaIfBankZero, Project.Data.GetRomSize());
+        
+        // if the unmirrored addresses are both valid AND the same, then, it doesn't matter if we set the DB to zero, so, indicate it's OK.
+        return unMirroredNormal != -1 && unMirroredNormal == unMirroredOverride;
     }
 
     public void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null) =>

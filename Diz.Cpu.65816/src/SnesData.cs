@@ -293,8 +293,8 @@ public class SnesApi : ISnesData
     }
 
     // FIX ME: log and generation of dp opcodes. search references
-    public int GetIntermediateAddress(int offset, bool resolve = false) => 
-        GetCpu(offset).GetIntermediateAddress(this, offset, resolve);
+    public int GetIntermediateAddress(int offset, bool resolve = false, int overrideDatabank = -1) => 
+        GetCpu(offset).GetIntermediateAddress(this, offset, resolve, overrideDatabank);
 
     public string GetInstruction(int offset) => 
         GetCpu(offset).GetInstruction(this, offset);
