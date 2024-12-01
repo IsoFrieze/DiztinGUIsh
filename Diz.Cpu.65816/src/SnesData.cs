@@ -611,4 +611,53 @@ public static class SnesApiExtensions
     
     public static ISnesData? GetSnesApi(this IData @this) => 
         @this.GetApi<ISnesData>();
+
+    public static (int found, string outputTextLog) GenerateMisalignmentReport(this ISnesApi<IData> @this)
+    {
+        // note: maybe this can be combined with FixMisalignedFlags() ? 
+        
+        var outputTextLog = "";
+        int numMisalignedFound = 0, offset = 0;
+
+        while (numMisalignedFound < 500 && offset < @this.GetRomSize())
+        {
+            FlagType flag = @this.GetFlag(offset), check = flag == FlagType.Opcode ? FlagType.Operand : flag;
+            var step = flag == FlagType.Opcode
+                ? @this.GetInstructionLength(offset)
+                : RomUtil.GetByteLengthForFlag(flag);
+
+            var snesAddress = @this.ConvertPCtoSnes(offset);
+            
+            if (flag == FlagType.Operand)
+            {
+                numMisalignedFound++;
+                outputTextLog +=
+                    $"{Util.NumberToBaseString(snesAddress, Util.NumberBase.Hexadecimal, 6, true)} " +
+                    $"(0x{Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0)}): Operand without Opcode\r\n";
+            }
+            else if (step > 1)
+            {
+                for (var i = 1; i < step; i++)
+                {
+                    if (@this.GetFlag(offset + i) == check) 
+                        continue;
+                    
+                    numMisalignedFound++;
+                    var expected = Util.GetEnumDescription(check);
+                    var actual = Util.GetEnumDescription(@this.GetFlag(offset + i));
+                    
+                    outputTextLog += $"{Util.NumberToBaseString(snesAddress, Util.NumberBase.Hexadecimal, 6, true)} " +
+                            $"(0x{Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0)}): " +
+                            $"{actual} is not {expected}\r\n";
+                }
+            }
+
+            offset += step;
+        }
+
+        if (numMisalignedFound == 0)
+            outputTextLog = "No misaligned flags found!";
+
+        return (numMisalignedFound, outputTextLog);
+    }
 }
