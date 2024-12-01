@@ -8,12 +8,12 @@ namespace DiztinGUIsh.window.dialog
 {
     public partial class GotoDialog : Form
     {
-        public Data Data { get; set; }
+        private readonly Data data;
         public GotoDialog(int offset, Data data)
         {
             InitializeComponent();
-            Data = data;
-            textROM.Text = Util.NumberToBaseString(Data.ConvertPCtoSnes(offset), Util.NumberBase.Hexadecimal, 6);
+            this.data = data;
+            textROM.Text = Util.NumberToBaseString(data.ConvertPCtoSnes(offset), Util.NumberBase.Hexadecimal, 6);
             textPC.Text = Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0);
         }
 
@@ -25,42 +25,48 @@ namespace DiztinGUIsh.window.dialog
 
         private int ParseOffset(string text)
         {
-            NumberStyles style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-            if (int.TryParse(text, style, null, out int offset)) return offset;
-            return -1;
+            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+            return int.TryParse(text, style, null, out var offset) ? offset : -1;
         }
 
-        public int GetPcOffset()
-        {
-            return ParseOffset(textPC.Text);
-        }
-
-        private void Go()
-        {
-            this.DialogResult = DialogResult.OK;
-        }
+        public int GetPcOffset() => ParseOffset(textPC.Text);
+        
 
         private bool updatingText;
-
-        private bool UpdateTextChanged(string txtChanged, Action<string, int, Util.NumberBase> onSuccess)
+        private bool TryLockText()
         {
-            bool result = false;
-            if (!updatingText)
+            if (updatingText) 
+                return false;
+            
+            updatingText = true;
+            return true;
+        }
+
+        private void UnlockText()
+        {
+            updatingText = false;
+        }
+
+        private void UpdateTextChanged(string txtChanged, Action<string, int, Util.NumberBase> onSuccess)
+        {
+            // don't allow UI callbacks to mess up what we're doing, lock further calls to this function til we're done
+            if (!TryLockText()) 
+                return;
+
+            UpdateTextChangedInternal(txtChanged, onSuccess);
+
+            UnlockText();
+        }
+
+        private void UpdateTextChangedInternal(string txtChanged, Action<string, int, Util.NumberBase> onSuccess)
+        {
+            var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
+            var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
+
+            if (ByteUtil.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
             {
-                updatingText = true;
-
-                var style = radioDec.Checked ? NumberStyles.Number : NumberStyles.HexNumber;
-                var noBase = radioDec.Checked ? Util.NumberBase.Decimal : Util.NumberBase.Hexadecimal;
-
-                if (ByteUtil.StripFormattedAddress(ref txtChanged, style, out var address) && address >= 0)
-                {
-                    onSuccess(txtChanged, address, noBase);
-                    result = true;
-                }
-                updatingText = false;
+                onSuccess(txtChanged, address, noBase);
             }
-
-            return result;
         }
 
         // For both textbox TextChanged events:
@@ -87,33 +93,25 @@ namespace DiztinGUIsh.window.dialog
             go.Enabled = valid;
         }
 
-        private bool IsValidPcAddress(int pc)
-        {
-            return pc >= 0 && pc < Data.GetRomSize();
-        }
+        private bool IsValidPcAddress(int pc) => 
+            pc >= 0 && pc < data.GetRomSize();
 
-        private bool IsPcOffsetValid()
-        {
-            var offset = GetPcOffset();
-            return IsValidPcAddress(offset);
-        }
+        private bool IsPcOffsetValid() => 
+            IsValidPcAddress(GetPcOffset());
 
         private bool IsRomAddressValid()
         {
             var address = ParseOffset(textROM.Text);
-            if (address < 0)
-                return false;
-            
-            return IsValidPcAddress(Data.ConvertSnesToPc(address));
+            return address >= 0 && IsValidPcAddress(data.ConvertSnesToPc(address));
         }
 
         private void textROM_TextChanged(object sender, EventArgs e)
         {
-            UpdateTextChanged(textROM.Text,(finaltext, address, noBase) =>
+            UpdateTextChanged(textROM.Text,(finalText, address, noBase) =>
             {
-                int pc = Data.ConvertSnesToPc(address);
+                var pc = data.ConvertSnesToPc(address);
                 
-                textROM.Text = finaltext;
+                textROM.Text = finalText;
                 textPC.Text = Util.NumberToBaseString(pc, noBase, 0);
             });
 
@@ -122,36 +120,32 @@ namespace DiztinGUIsh.window.dialog
 
         private void textPC_TextChanged(object sender, EventArgs e)
         {
-            UpdateTextChanged(textPC.Text, (finaltext, offset, noBase) =>
+            UpdateTextChanged(textPC.Text, (finalText, offset, noBase) =>
             {
-                int addr = Data.ConvertPCtoSnes(offset);
+                var addr = data.ConvertPCtoSnes(offset);
 
-                textPC.Text = finaltext;
+                textPC.Text = finalText;
                 textROM.Text = Util.NumberToBaseString(addr, noBase, 6);
             });
 
             UpdateUi();
         }
-
-        private void go_Click(object sender, EventArgs e)
+        
+        private void OnTextKeydown(KeyEventArgs e)
         {
-            Go();
+            if (e.KeyCode == Keys.Enter && textROM.Text.Length > 0) 
+                Finish();
         }
+        
+        private void Finish() => DialogResult = DialogResult.OK;
 
-        private void cancel_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
+        private void go_Click(object sender, EventArgs e) => Finish();
 
-        private void textROM_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter && textROM.Text.Length > 0) Go();
-        }
+        private void textROM_KeyDown(object sender, KeyEventArgs e) => OnTextKeydown(e);
 
-        private void textPC_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter && textPC.Text.Length > 0) Go();
-        }
+        private void textPC_KeyDown(object sender, KeyEventArgs e) => OnTextKeydown(e);
+        
+        private void cancel_Click(object sender, EventArgs e) => Close();
 
         private void radioHex_CheckedChanged(object sender, EventArgs e)
         {
