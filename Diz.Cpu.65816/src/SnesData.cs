@@ -500,9 +500,30 @@ public class SnesSampleProjectFactory : ISnesSampleProjectFactory
 
 public static class SnesApiExtensions
 {
-    public static int MarkTypeFlag(this ISnesApi<IData> @this, int offset, FlagType type, int count) =>
-        @this.Data.Mark(i => @this.SetFlag(i, type), offset, count);
-    
+    public static int MarkTypeFlag(this ISnesApi<IData> @this, int offset, FlagType type, int count)
+    {
+        return @this.Data.Mark(MarkAction, offset, count);
+
+        void MarkAction(int i)
+        {
+            // doing ONLY this is 100% fine, and is the original behavior
+            @this.SetFlag(i, type);
+            
+            // but also.... 
+            // if we're marking pointers, it also helps give the LogWriter more hints if
+            // we reset the databank to the bank this byte is in.
+            // this matters most for 16-bit but doesn't hurt for other types.
+            // note: this is not always the best choice but, I think it's a good default.
+            // feel free to modify to suit your preferences
+            if (type is FlagType.Pointer16Bit or FlagType.Pointer24Bit or FlagType.Pointer32Bit)
+            {
+                var snesAddress = @this.ConvertPCtoSnes(i);
+                if (snesAddress != -1)
+                    @this.SetDataBank(i, RomUtil.GetBankFromSnesAddress(snesAddress));
+            }
+        }
+    }
+
     public static int MarkDataBank(this ISnesApi<IData> @this, int offset, int db, int count) =>
         @this.Data.Mark(i => @this.SetDataBank(i, db), offset, count);
     
