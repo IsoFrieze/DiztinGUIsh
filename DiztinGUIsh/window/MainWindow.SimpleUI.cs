@@ -211,10 +211,14 @@ namespace DiztinGUIsh.window
         }
 
         private void goBackToolStripMenuItem_Click(object sender, EventArgs e) => 
-            NavigationForm.Navigate(forwardDirection: false);
+            NavigationForm.Navigate(forwardDirection: false, 
+                overshootAmount: standardOvershootAmount
+            );
 
         private void goForwardToolStripMenuItem_Click(object sender, EventArgs e) => 
-            NavigationForm.Navigate(forwardDirection: true);
+            NavigationForm.Navigate(forwardDirection: true, 
+                overshootAmount: standardOvershootAmount
+            );
 
         private void LabelsOnOnLabelChanged(object? sender, EventArgs e)
         {

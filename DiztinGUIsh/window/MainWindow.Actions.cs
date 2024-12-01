@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
@@ -9,12 +8,17 @@ using Diz.Core.model;
 using Diz.Core.util;
 using Diz.Cpu._65816;
 using Diz.Ui.Winforms.dialogs;
-using DiztinGUIsh.Properties;
 
 namespace DiztinGUIsh.window;
 
 public partial class MainWindow
 {
+    // when navigating near the edge of the grid, this controls how close we'll allow getting to the bottom row before
+    // scrolling the screen a bit (because it's helpful to be able to see where you're going and not always be operating on
+    // the edge of the grid)
+    // arbitrary: increase if using bigger grid sizes. ideally, this would be dynamically generated in the future based on a % of the grid
+    private const int standardOvershootAmount = 12;
+    
     private void OpenLastProject()
     {
         if (Document.LastProjectFilename == "")
@@ -86,7 +90,7 @@ public partial class MainWindow
             
         ProjectController.MarkChanged();
         var newOffset = snesData.Step(offset, false, false, offset - 1);
-        SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Step Over"}, overshootAmount: 20);
+        SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Step Over"}, overshootAmount: standardOvershootAmount);
         UpdateUi_TimerAndPercent();
     }
 
@@ -97,7 +101,7 @@ public partial class MainWindow
             
         ProjectController.MarkChanged();
         var newOffset = Project.Data.GetSnesApi().Step(offset, true, false, offset - 1);
-        SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Step Into"}, overshootAmount: 20);
+        SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Step Into"}, overshootAmount: standardOvershootAmount);
         UpdateUi_TimerAndPercent();
     }
 
@@ -109,7 +113,7 @@ public partial class MainWindow
         ProjectController.MarkChanged();
         var destination = Project.Data.GetSnesApi().AutoStepSafe(offset);
         if (moveWithStep) 
-            SelectOffset(destination, -1, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Safe)"}, overshootAmount: 20);
+            SelectOffset(destination, -1, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Safe)"}, overshootAmount: standardOvershootAmount);
             
         UpdateUi_TimerAndPercent();
     }
@@ -126,7 +130,7 @@ public partial class MainWindow
         var destination = Project.Data.GetSnesApi().AutoStepHarsh(newOffset, count);
             
         if (moveWithStep) 
-            SelectOffset(destination, -1, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Harsh)"}, overshootAmount:20);
+            SelectOffset(destination, -1, new ISnesNavigation.HistoryArgs {Description = "AutoStep (Harsh)"}, overshootAmount: standardOvershootAmount);
 
         UpdateUi_TimerAndPercent();
     }
@@ -139,7 +143,7 @@ public partial class MainWindow
         ProjectController.MarkChanged();
         var newOffset = Project.Data.GetSnesApi().MarkTypeFlag(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag));
             
-        SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Mark (single)"}, overshootAmount: 20);
+        SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Mark (single)"}, overshootAmount: standardOvershootAmount);
             
         UpdateUi_TimerAndPercent();
     }
@@ -193,7 +197,7 @@ public partial class MainWindow
     public void GoTo(int offset)
     {
         if (IsOffsetInRange(offset))
-            SelectOffset(offset, -1, new ISnesNavigation.HistoryArgs {Description = "Goto"}, overshootAmount: 20);
+            SelectOffset(offset, -1, new ISnesNavigation.HistoryArgs {Description = "Goto"}, overshootAmount: standardOvershootAmount);
         else
             ShowOffsetOutOfRangeMsg();
     }
@@ -263,7 +267,7 @@ public partial class MainWindow
         }
 
         // now do the real thing
-        SelectOffset(foundOffset, -1, new ISnesNavigation.HistoryArgs { Description = "Find next unreached in-point" }, overshootAmount: 20);
+        SelectOffset(foundOffset, -1, new ISnesNavigation.HistoryArgs { Description = "Find next unreached in-point" }, overshootAmount: standardOvershootAmount);
     }
 
     private static ISnesNavigation.HistoryArgs BuildUnreachedHistoryArgs(bool fromStartOrEnd, bool forwardDirection)

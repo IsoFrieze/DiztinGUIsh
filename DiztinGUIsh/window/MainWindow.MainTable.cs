@@ -470,6 +470,9 @@ namespace DiztinGUIsh.window
             RememberNavigationPoint(SelectedOffset, historyArgs); // save old position
         }
 
+        public void SelectOffsetWithOvershoot(int pcOffset, int overshootAmount = 0)
+            => SelectOffset(pcOffset, -1, null, overshootAmount);
+
         public void SelectOffset(int pcOffset, ISnesNavigation.HistoryArgs historyArgs = null)
             => SelectOffset(pcOffset, -1, historyArgs);
 
@@ -487,9 +490,23 @@ namespace DiztinGUIsh.window
             // THIS IS 100% OPTIONAL.
             if (overshootAmount > 0)
             {
+                // NEW
+                // which way are we jumping?
+                var direction = SelectedOffset < pcOffset ? 1 : -1; 
+                
                 // ideally, we'd calculate this number to be at the center or top. for now, we'll just pick an arbitrary amount
-                var overshotOffset = Math.Min(Project.Data.GetRomSize()-1, pcOffset + overshootAmount);
+                var proposedNewOffset = pcOffset + overshootAmount * direction; // note: may be out of range
+                
+                // clamp to actual range
+                var overshotOffset = Util.Clamp(proposedNewOffset, 0, Project.Data.GetRomSize() - 1);
                 InternalSelectOffset(overshotOffset, column);
+                
+                // ----
+                
+                // ORIGINAL
+                // ideally, we'd calculate this number to be at the center or top. for now, we'll just pick an arbitrary amount
+                // var overshotOffset = Math.Min(Project.Data.GetRomSize()-1, pcOffset + overshootAmount);
+                // InternalSelectOffset(overshotOffset, column);
                 
                 // now, the view is scrolled so we've overshot where we really want to go.
                 // when we next call InternalSelectOffset() with the real address, it won't need to scroll, it'll just select something already in view.

@@ -61,7 +61,7 @@ namespace DiztinGUIsh.window.usercontrols
 
         public int SelectedIndex => navigationEntryBindingSource.Position; // dataGridView1.SelectedRows[0].Index;
 
-        public void Navigate(bool forwardDirection)
+        public void Navigate(bool forwardDirection, int overshootAmount = 0)
         {
             if (navigationEntryBindingSource == null || navigationEntryBindingSource.Count == 0)
                 return;
@@ -70,16 +70,16 @@ namespace DiztinGUIsh.window.usercontrols
                 Util.ClampIndex(SelectedIndex + (forwardDirection ? 1 : -1),
                 navigationEntryBindingSource.Count);
 
-            NavigateToEntry(navigationEntryToUse);
+            NavigateToEntry(navigationEntryToUse, overshootAmount);
             SelectDataGridRow(navigationEntryToUse);
         }
 
-        private void NavigateToEntry(int indexToUse)
+        private void NavigateToEntry(int indexToUse, int overshootAmount = 0)
         {
-            NavigateToEntry(GetNavigationEntry(indexToUse));
+            NavigateToEntry(GetNavigationEntry(indexToUse), overshootAmount);
         }
 
-        private void NavigateToEntry(NavigationEntry navigationEntry)
+        private void NavigateToEntry(NavigationEntry navigationEntry, int overshootAmount = 0)
         {
             var newSnesAddress = navigationEntry?.SnesOffset ?? -1;
             if (newSnesAddress == -1)
@@ -89,7 +89,7 @@ namespace DiztinGUIsh.window.usercontrols
             if (pcOffset == -1) 
                 return;
             
-            SnesNavigation.SelectOffset(pcOffset);
+            SnesNavigation.SelectOffsetWithOvershoot(pcOffset, overshootAmount);
         }
 
         private NavigationEntry GetNavigationEntry(int index)

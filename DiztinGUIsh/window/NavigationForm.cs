@@ -51,9 +51,9 @@ namespace DiztinGUIsh.window
             
         }
 
-        public void Navigate(bool forwardDirection)
+        public void Navigate(bool forwardDirection, int overshootAmount = 0)
         {
-            navigationCtrl.Navigate(forwardDirection);
+            navigationCtrl.Navigate(forwardDirection, overshootAmount);
         }
 
         private void navigationCtrl_Load(object sender, EventArgs e)
