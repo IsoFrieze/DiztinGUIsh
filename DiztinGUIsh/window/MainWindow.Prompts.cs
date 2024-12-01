@@ -8,6 +8,7 @@ using Diz.LogWriter;
 using Diz.Ui.Winforms;
 using Diz.Ui.Winforms.dialogs;
 using Diz.Ui.Winforms.util;
+using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
 {
