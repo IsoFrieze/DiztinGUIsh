@@ -37,7 +37,7 @@ public partial class BsnesTraceLogImporter
     // PERFORMANCE CRITICAL FUNCTION
     // WARNING: THREAD SAFETY: this function will be called from multiple threads concurrently and MUST REMAIN thread-safe.
     // and, for performance-reasons, we're handling our own locking.
-    public void ImportTraceLogLineBinary(byte[] bytes, bool abridgedFormat, BsnesTraceLogCapture.TraceLogCaptureSettings settings)
+    public void ImportTraceLogLineBinary(byte[] bytes, bool abridgedFormat, BsnesTraceLogCaptureController.TraceLogCaptureSettings settings)
     {
         var modData = AllocateModificationData();
         

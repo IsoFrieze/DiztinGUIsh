@@ -57,8 +57,8 @@ public partial class BsnesTraceLogBinaryMonitorForm
 
     private void UpdateUi()
     {
-        var running = capturing?.Running ?? false;
-        var finishing = capturing?.Finishing ?? false;
+        var running = captureController?.Running ?? false;
+        var finishing = captureController?.Finishing ?? false;
 
         lblStatus.Text = !running ? "Not running" : finishing ? "Stopping..." : "Running";
 
@@ -82,15 +82,15 @@ public partial class BsnesTraceLogBinaryMonitorForm
             lblResultStatus.ForeColor = Color.ForestGreen;
         }
 
-        if (capturing == null)
+        if (captureController == null)
             return;
 
-        var currentStats = capturing.GetStats();
+        var currentStats = captureController.GetStats();
         var (stats, totalQueueBytes) = currentStats;
 
         AppendToChart(currentStats);
 
-        var qItemCount = capturing.BlocksToProcess.ToString();
+        var qItemCount = captureController.BlocksToProcess.ToString();
         var qByteCount = ByteSize.FromBytes(totalQueueBytes).ToString("0.0");
 
         lblQueueSize.Text = $"{qByteCount} (num groups: {qItemCount})";
@@ -109,7 +109,7 @@ public partial class BsnesTraceLogBinaryMonitorForm
         // lblNumCommentsMarked.Text = ByteSize.FromBytes(stats.NumCommentsMarked).ToString("0.00");
         
 
-        capturing.CaptureSettings = new BsnesTraceLogCapture.TraceLogCaptureSettings
+        captureController.CaptureSettings = new BsnesTraceLogCaptureController.TraceLogCaptureSettings
         {
             RemoveTracelogLabels = chkRemoveTLComments.Checked,
             AddTracelogLabel = chkAddTLComments.Checked,
@@ -132,4 +132,21 @@ public partial class BsnesTraceLogBinaryMonitorForm
                         "combination of searching you can do to allow this tool to discover as much as it can.\r\n\r\n" +
                         "When you close this window, try exporting your disassembly and see how much you uncovered!\r\n");
     }
+    
+            
+    private void txtTracelogComment_TextChanged(object sender, EventArgs e)
+    {
+        // as soon as they type anything, disable it so they have to click the checkbox.
+        // prevent half-typed text from spamming up everything.
+        chkAddTLComments.Checked = false;
+        chkRemoveTLComments.Checked = false;
+        UpdateUi();
+    }
+
+    private void chkAddTLComments_CheckedChanged(object sender, EventArgs e) => UpdateUi();
+    private void chkRemoveTLComments_CheckedChanged(object sender, EventArgs e) => UpdateUi();
+    private void chkCaptureLabelsOnly_CheckedChanged(object sender, EventArgs e) => UpdateUi();
+    private void BSNESTraceLogBinaryMonitorForm_Load(object sender, EventArgs e) => UpdateUi();
+    private void BSNESTraceLogBinaryMonitorForm_Shown(object sender, EventArgs e) => UpdateUi();
+    private void timer1_Tick(object sender, EventArgs e) => UpdateUi();
 }

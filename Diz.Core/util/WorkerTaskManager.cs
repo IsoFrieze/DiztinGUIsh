@@ -8,18 +8,18 @@ namespace Diz.Core.util
 {
     public class WorkerTaskManager : IWorkerTaskManager
     {
-        private readonly List<Task> tasks = new();
+        private readonly List<Task> tasks = [];
         private readonly object taskLock = new();
-
         private readonly ManualResetEvent notFinishing = new(false);
-        private volatile bool finished = false;
+        
+        private volatile bool finished;
         private Timer timer;
-        private object timerLock = new();
+        private readonly object timerLock = new();
 
-        public WorkerTaskManager()
+        public void Start()
         {
             var oneSecond = TimeSpan.FromSeconds(1);
-            timer = new Timer(state => Update(), null, oneSecond, oneSecond);
+            timer = new Timer(_ => Update(), null, oneSecond, oneSecond);
         }
 
         public void StartFinishing()
@@ -27,7 +27,7 @@ namespace Diz.Core.util
             notFinishing.Set();
         }
 
-        public void Update()
+        private void Update()
         {
             lock (timerLock)
             {
@@ -44,7 +44,7 @@ namespace Diz.Core.util
                 lock (taskLock)
                 {
                     Debug.Assert(!tasks.Contains(null));
-                    tasks.RemoveAll(IsCompleted);
+                    tasks.RemoveAll(task => task.IsCompleted);
                     Debug.Assert(!tasks.Contains(null));
                 }
             }
@@ -74,8 +74,6 @@ namespace Diz.Core.util
 
             return task;
         }
-
-        public bool IsCompleted(Task task) => task.IsCompleted;
 
         // blocking method
         public void WaitForAllTasksToComplete()
@@ -107,6 +105,8 @@ namespace Diz.Core.util
     // reference implementation that runs synchronously. mostly for benchmarking/etc.
     public class WorkerTaskManagerSynchronous : IWorkerTaskManager
     {
+        public void Start() { }
+        
         public Task Run(Action action, CancellationToken cancelToken)
         {
             var syncTask = new Task(action);
@@ -118,13 +118,15 @@ namespace Diz.Core.util
         {
             return Run(action, new CancellationToken());
         }
-        
+
         public void WaitForAllTasksToComplete() { }
         public void StartFinishing() { }
     }
 
     public interface IWorkerTaskManager
     {
+        void Start();
+        
         void WaitForAllTasksToComplete();
         
         Task Run(Action action, CancellationToken cancelToken);

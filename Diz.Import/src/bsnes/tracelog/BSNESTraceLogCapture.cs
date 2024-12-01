@@ -14,10 +14,11 @@ namespace Diz.Import.bsnes.tracelog;
 
 // TODO: can probably replace this better with Dataflow TPL or newer async/await. investigate
 // Caution: This class is heavily multi-threaded, pay attention to locking/concurrency issues.
-public class BsnesTraceLogCapture
+public class BsnesTraceLogCaptureController
 {
     public bool Running { get; private set; }
-    
+
+    private readonly ISnesData snesData;
     private readonly IWorkerTaskManager taskManager;
     private readonly BsnesImportStreamProcessor streamProcessor;
     private readonly BsnesTraceLogImporter importer;
@@ -29,21 +30,24 @@ public class BsnesTraceLogCapture
     public int BlocksToProcess => statsCompressedBlocksToProcess;
     public bool Finishing => streamProcessor.CancelToken.IsCancellationRequested;
 
-    public BsnesTraceLogCapture(ISnesData data)
+    public BsnesTraceLogCaptureController(ISnesData snesData)
     {
-        Running = true;
+        this.snesData = snesData;
         streamProcessor = new BsnesImportStreamProcessor();
         
         // taskManager = new WorkerTaskManagerSynchronous(); // single-threaded version (for testing/debug only)
         taskManager = new WorkerTaskManager(); // multi-threaded version
         
-        importer = new BsnesTraceLogImporter(data);
+        importer = new BsnesTraceLogImporter(snesData);
     }
     
     public void Run()
     {
         try
         {
+            Running = true;
+            
+            taskManager.Start();
             Main();
             taskManager.StartFinishing();
             taskManager.WaitForAllTasksToComplete();
@@ -60,10 +64,7 @@ public class BsnesTraceLogCapture
         Running = false;
     }
 
-    protected virtual Stream? GetInputStream()
-    {
-        return OpenNetworkStream();
-    }
+    private static Stream? GetInputStream() => OpenNetworkStream();
 
     private static NetworkStream? OpenNetworkStream(IPAddress? ip = null, int port = 27015)
     {
@@ -102,9 +103,9 @@ public class BsnesTraceLogCapture
         // finally, copy any comments generated into snesData
         importer.CopyTempGeneratedCommentsIntoMainSnesData();
 
-#if PROFILING
+        #if PROFILING
         mainSpan.Leave();
-#endif
+        #endif
     }
 
     private const int MaxNumCompressedItemsToProcess = -1; // debug only.

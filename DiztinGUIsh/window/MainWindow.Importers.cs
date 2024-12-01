@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
+using Diz.Cpu._65816;
+using Diz.Import.bsnes.tracelog;
 using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
@@ -56,7 +58,13 @@ namespace DiztinGUIsh.window
 
         private void ImportBsnesBinaryTraceLog()
         {
-            new BsnesTraceLogBinaryMonitorForm(this).ShowDialog();
+            var snesData = Project.Data.GetSnesApi();
+            if (snesData == null)
+                return;
+            
+            var captureController = new BsnesTraceLogCaptureController(snesData);
+            new BsnesTraceLogBinaryMonitorForm(captureController).ShowDialog();
+            
             RefreshUi();
         }
 

@@ -92,7 +92,7 @@ public partial class BsnesTraceLogImporter
     // opcode in the Diz project. that may happen AFTER this function is called.
     //
     // WARNING: Snes address can be ANYTHING including instructions executing in RAM. it may not map to a ROM address.
-    private void UpdateTracelogComments(int snesAddress, in BsnesTraceLogCapture.TraceLogCaptureSettings traceLogCaptureSettings)
+    private void UpdateTracelogComments(int snesAddress, in BsnesTraceLogCaptureController.TraceLogCaptureSettings traceLogCaptureSettings)
     {
         string? commentText = null;
         if (traceLogCaptureSettings is { AddTracelogLabel: true, CommentTextToAdd.Length: > 0 })

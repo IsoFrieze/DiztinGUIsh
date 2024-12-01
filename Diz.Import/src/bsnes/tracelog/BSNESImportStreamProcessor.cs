@@ -72,7 +72,7 @@ public class BsnesImportStreamProcessor
         public readonly List<WorkItemSnesTrace?>? ListHeads = new();
 
         // copy of the settings as they existed at the moment of capture
-        public BsnesTraceLogCapture.TraceLogCaptureSettings CaptureSettings { get; set;  } = new();
+        public BsnesTraceLogCaptureController.TraceLogCaptureSettings CaptureSettings { get; set;  } = new();
     }
 
     // represents both a SNES trace item.
@@ -86,7 +86,7 @@ public class BsnesImportStreamProcessor
         public bool AbridgedFormat;
         
         // copy of the settings as they existed at the moment of original capture
-        public BsnesTraceLogCapture.TraceLogCaptureSettings CaptureSettings { get; } = new();
+        public BsnesTraceLogCaptureController.TraceLogCaptureSettings CaptureSettings { get; } = new();
         
         // linked list: reference to the next SNES trace that we should process
         public WorkItemSnesTrace? Next;
