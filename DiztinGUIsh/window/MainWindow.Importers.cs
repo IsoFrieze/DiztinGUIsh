@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 using Diz.Cpu._65816;
 using Diz.Import.bsnes.tracelog;
-using DiztinGUIsh.window.dialog;
+using Diz.Ui.Winforms.dialogs;
 
 namespace DiztinGUIsh.window
 {

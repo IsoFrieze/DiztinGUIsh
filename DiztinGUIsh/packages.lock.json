@@ -2,12 +2,6 @@
   "version": 1,
   "dependencies": {
     "net8.0-windows7.0": {
-      "ByteSize": {
-        "type": "Direct",
-        "requested": "[2.1.2, )",
-        "resolved": "2.1.2",
-        "contentHash": "dSiH9B0apNU5abV3OVUs3eTfHiidEAa8IMOLGW0eEl5tB8Ba1ngkGC7RT/RGy61ifGcPzCe7DMP78KB8pA5kNg=="
-      },
       "FastBitmapLib": {
         "type": "Direct",
         "requested": "[2.1.0, )",
@@ -44,6 +38,11 @@
         "requested": "[8.0.0, )",
         "resolved": "8.0.0",
         "contentHash": "psnQ6GRQOvt+evda5C4nD5EuV49mz2Tv0DD2JDVDEbE/TKoMukxSkGJcsBJ0pajpPuFRr67syFYlkJ4Wj6A5Zw=="
+      },
+      "ByteSize": {
+        "type": "Transitive",
+        "resolved": "2.1.2",
+        "contentHash": "dSiH9B0apNU5abV3OVUs3eTfHiidEAa8IMOLGW0eEl5tB8Ba1ngkGC7RT/RGy61ifGcPzCe7DMP78KB8pA5kNg=="
       },
       "CsvHelper": {
         "type": "Transitive",
@@ -1167,6 +1166,7 @@
       "diz.ui.winforms": {
         "type": "Project",
         "dependencies": {
+          "ByteSize": "[2.1.2, )",
           "Diz.Controllers": "[1.0.0, )",
           "JetBrains.Annotations": "[2023.3.0, )",
           "LightInject": "[6.6.4, )"
