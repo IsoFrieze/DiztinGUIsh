@@ -5,10 +5,10 @@ using System.Net;
 using System.Net.Sockets;
 using Diz.Core.util;
 using Diz.Cpu._65816;
+
 #if PROFILING
 using Microsoft.ConcurrencyVisualizer.Instrumentation;
 #endif
-
 
 namespace Diz.Import.bsnes.tracelog;
 
