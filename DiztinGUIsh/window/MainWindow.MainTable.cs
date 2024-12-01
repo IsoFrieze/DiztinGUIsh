@@ -137,7 +137,7 @@ namespace DiztinGUIsh.window
             switch (e.KeyCode)
             {
                 case Keys.F3:
-                    GoToNextUnreachedInPoint(offset);
+                    GoToNextUnreachedBranchPoint(offset);
                     break;
                 
                 case Keys.Home: case Keys.PageUp: case Keys.Up:

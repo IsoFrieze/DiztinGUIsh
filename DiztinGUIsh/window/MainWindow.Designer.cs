@@ -811,7 +811,7 @@
             this.gotoNextUnreachedInPointToolStripMenuItem.Name = "gotoNextUnreachedInPointToolStripMenuItem";
             this.gotoNextUnreachedInPointToolStripMenuItem.ShortcutKeyDisplayString = "F3";
             this.gotoNextUnreachedInPointToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
-            this.gotoNextUnreachedInPointToolStripMenuItem.Text = "Goto Next Unreached InPoint";
+            this.gotoNextUnreachedInPointToolStripMenuItem.Text = "Find Next Unreached Branch Point";
             this.gotoNextUnreachedInPointToolStripMenuItem.Click += new System.EventHandler(this.gotoNextUnreachedInPointToolStripMenuItem_Click);
             // 
             // selectMarkerToolStripMenuItem

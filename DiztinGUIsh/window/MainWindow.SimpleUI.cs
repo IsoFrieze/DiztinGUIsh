@@ -100,7 +100,7 @@ namespace DiztinGUIsh.window
             GoToUnreached(false, true);
 
         private void gotoNextUnreachedInPointToolStripMenuItem_Click(object sender, EventArgs e) =>
-            GoToNextUnreachedInPoint(SelectedOffset);
+            GoToNextUnreachedBranchPoint(SelectedOffset);
 
         private void markOneToolStripMenuItem_Click(object sender, EventArgs e) => 
             Mark(SelectedOffset);

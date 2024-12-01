@@ -36,7 +36,13 @@ public interface IFixMisalignedFlags
 
 public interface IMiscNavigable
 {
-    public (int unreachedOffsetFound, int iaSourceAddress) FindNextUnreachedInPointAfter(int startingOffset, bool searchForward = true);
+    public (int unreachedOffsetFound, int iaSourceAddress) 
+        FindNextUnreachedBranchPointAfter(
+            int startingOffset, 
+            bool searchForward = true, 
+            bool includeUntakenBranchPoints = true, 
+            bool requireUnreached = true
+        );
 }
 
 public interface ISnesApi<out TData> :
@@ -233,7 +239,19 @@ public class SnesApi : ISnesData
         cpu65816.MarkAsOpcodeAndOperandsStartingAt(this, offset, dataBank, directPage, xFlag, mFlag);
     }
     
-    public (int unreachedOffsetFound, int iaSourceAddress) FindNextUnreachedInPointAfter(int startingOffset, bool searchForward = true)
+    public (int unreachedOffsetFound, int iaSourceAddress) FindNextUnreachedBranchPointAfter(
+        // where to start searching from
+        int startingOffset, 
+        
+        // direction to search
+        bool searchForward = true,
+        
+        // if true, return opcodes directly following a branch statement
+        bool includeUntakenBranchPoints = true,
+        
+        // if true, require any result to be an unreached point. if false, it can be reached
+        bool requireUnreached = true
+    )
     {
         var direction = searchForward ? 1 : -1;
         for (
@@ -243,12 +261,57 @@ public class SnesApi : ISnesData
         ) {
             var romByte = Data.RomBytes[offsetToTry];
             
-            // must be unreached, or we don't care about it
-            // (we're trying to quickly uncover new parts of the code we can step through that were missed before) 
-            if (romByte.TypeFlag != FlagType.Unreached)
+            // usually: require it to be unreached, or most of the time we don't care about it.
+            // (we're usually trying to quickly uncover new parts of the code we can step through that were missed before) 
+            if (requireUnreached && romByte.TypeFlag != FlagType.Unreached)
                 continue;
             
-            // something must jump to US or we don't care
+            // operation #1: is this an uncovered opcode directly after a branch or jump that returns to this point?
+            if (includeUntakenBranchPoints)
+            {
+                // search backwards up to max of 4 bytes to find a previously marked opcode (if one exists and is already uncovered)
+                for (var i = 1; i <= 4; i++)
+                {
+                    var searchOffset = offsetToTry - i;
+                    
+                    if (searchOffset < 0 && searchOffset >= Data.RomBytes.Count)
+                        break; // out of bounds, bail
+                    
+                    var searchRomByte = Data.RomBytes[searchOffset];
+                    
+                    // if we fid something not fully uncovered yet, it's too risky, so bail
+                    if (searchRomByte.TypeFlag == FlagType.Unreached) 
+                        break;
+                    
+                    // we're looking for something already marked as an opcode
+                    // if we hit operands, we want to keep searching backwards
+                    if (searchRomByte.TypeFlag != FlagType.Opcode)
+                        continue;
+                    
+                    // found our opcode. does it qualify as a conditional branch/subroutine call?
+                    // this isn't going to be foolproof but it should catch 95% of the stuff we most care about
+                    // we're ignoring: JMP JML BRA BRL (because they don't return to this point)
+                    var opcode = searchRomByte.Rom;
+                    var opcode_returns_after_jump = 
+                        opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70 ||     // BPL BMI BVC BVS
+                        opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0 ||     // BCC BCS BNE BEQ
+                        opcode == 0x20 || opcode == 0x22;   // JSR JSL
+
+                    if (opcode_returns_after_jump)
+                    {
+                        // GOT IT! this is our answer, we're done.
+                        return (offsetToTry, -1);
+                    }
+                    else
+                    {
+                        // we found an opcode searching backwards but, it's not a conditional branch / function call,
+                        // which means we should stop this search right here and move on.
+                        break;
+                    }
+                }
+            }
+            
+            // operation #2: does jump to US?
             if ((romByte.Point & InOutPoint.InPoint) == 0)
                 continue;
 
@@ -256,10 +319,9 @@ public class SnesApi : ISnesData
             // opcode from the origin of this point.
             // (warning: kinda expensive search, we have to scan EVERYTHING top to bottom)
             // consider some caching of references when we create in/out points to save this.
-            //
             
             // search entire ROM for already marked opcodes whose IA jumps land on US.
-            // TODO: this search could form the basis of a "find references to X address" calculator
+            // TODO: this search could later be extracted to form the basis of a "find references to X address" calculator
             for (var i = 0; i < GetRomSize(); i++)
             {
                 // we're looking for the OPCODE whose indirect address matches our candidate.

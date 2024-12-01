@@ -215,10 +215,13 @@ public partial class MainWindow
         SelectOffset(unreached, 1, BuildUnreachedHistoryArgs(fromStartOrEnd, forwardDirection));
     }
     
-    private void GoToNextUnreachedInPoint(int offset)
+    private void GoToNextUnreachedBranchPoint(int offset)
     {
-        // experimental. jump to next instruction that is an in point (something known jumps to it)
-        // AND is also marked as "unknown"
+        // experimental.
+        // jump to next instruction, marked "unknown" still, that is meets one of the following conditions:
+        // 1. is an "in point" (meaning something known jumps to it), or
+        // 2. is directly after a branch statement (e.g. it's a branch not yet taken) 
+        
         // these are often small branches not taken during tracelog runs, 
         // and are easy targets for filling them in relatively risk-free since you know the M and X flags of
         // the instruction of where you jumped FROM.
@@ -226,7 +229,7 @@ public partial class MainWindow
         if (snesData == null)
             return;
         
-        var (foundOffset, iaSourceOffsetPc) = snesData.FindNextUnreachedInPointAfter(offset);
+        var (foundOffset, iaSourceOffsetPc) = snesData.FindNextUnreachedBranchPointAfter(offset);
         if (foundOffset == -1)
         {
             ShowInfo("Can't jump to next unreached InPoint (none found)", "Woops");
@@ -246,11 +249,16 @@ public partial class MainWindow
         // do this instead of SelectOffset so we copy the MX flags from the previous location to here.
         //if (iaSource != -1)
         //    StepIn(iaSource);
-
+        
         if (iaSourceOffsetPc != -1)
         {
-            // this is vaguely doing what Step() does without marking the bytes we're on as opcode+operands.
-            // we'll set the flags and such but, leave the actual marking to be an explicit action by the user
+            // in this case,
+            // iaSourceOffsetPc is where we came FROM           (the originating BRA, BEQ, JSR, etc)
+            // foundOffset is where we are jumped/branched TO,  (where we were branched to, the destination)
+
+            // this below actions are vaguely doing what Step() does without marking the bytes we're on as opcode+operands.
+            // we'll set the flags and such but, leave the actual marking to be an explicit decision+action by the user
+            // after all, we can get weird false positives. let the user make this choice
             var (opcode, directPage, dataBank, xFlag, mFlag) =
                 snesData.GetCpuStateFor(iaSourceOffsetPc, -1);
 
@@ -261,13 +269,26 @@ public partial class MainWindow
             snesData.SetMFlag(foundOffset, mFlag);
 
             // very optional. just to create an entry in the history.
-            // SelectOffset(iaSource, -1, new ISnesNavigation.HistoryArgs {Description = "Find next unreached: origin point"});
             MarkHistoryPoint(iaSourceOffsetPc,
                 new ISnesNavigation.HistoryArgs { Description = "Find next unreached: branch origin" }, "origin");
         }
+        else
+        {
+            // in this case,
+            // iaSourceOffsetPc is always -1
+            // foundOffset is the address of what we suspect is the very next instruction for a conditional branch or JSR/JSL
+            //              IF it WASN'T taken
+            
+            // we shouldn't need to set any flags/etc, just position the user in the right spot so they can hit the "Step" button
+            // and keep going.
+            
+            // very optional. just to create an entry in the history.
+            MarkHistoryPoint(foundOffset,
+                new ISnesNavigation.HistoryArgs { Description = "Find next unreached: untaken branch point" }, "origin");
+        }
 
-        // now do the real thing
-        SelectOffset(foundOffset, -1, new ISnesNavigation.HistoryArgs { Description = "Find next unreached in-point" }, overshootAmount: standardOvershootAmount);
+        // now, set the real position
+        SelectOffset(foundOffset, -1, new ISnesNavigation.HistoryArgs { Description = "Find next unreached branch point" }, overshootAmount: standardOvershootAmount);
     }
 
     private static ISnesNavigation.HistoryArgs BuildUnreachedHistoryArgs(bool fromStartOrEnd, bool forwardDirection)
