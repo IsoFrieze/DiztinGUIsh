@@ -57,9 +57,10 @@ jobs:
       - name: Publish
         run: dotnet publish --no-build -c Release /p:PublishProfile=FolderProfile .\DiztinGUIsh\
 
-      - uses: vimtor/action-zip@v1
+      - uses: vimtor/action-zip@v1.2
         with:
-          files: DiztinGUIsh\bin\Release\*\publish\
+          # files: DiztinGUIsh\bin\Release\*\publish\    # would be cooler if we could do this but... alas...
+          files: DiztinGUIsh\bin\Release\net8.0-windows\publish\
           dest: ${{ steps.ver.outputs.ver }}.zip
 
       - name: Upload Artifact
