@@ -44,12 +44,6 @@
 
 
   <ItemGroup>
-    <Compile Update="window\dialog\HarshAutoStep.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="window\dialog\HarshAutoStep.Designer.cs">
-      <DependentUpon>HarshAutoStep.cs</DependentUpon>
-    </Compile>
     <Compile Update="window\dialog\ImportROMDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -125,9 +119,6 @@
     </EmbeddedResource>
     <EmbeddedResource Update="window\AliasList.resx">
       <DependentUpon>AliasList.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="window\dialog\HarshAutoStep.resx">
-      <DependentUpon>HarshAutoStep.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="window\dialog\ImportROMDialog.resx">
       <DependentUpon>ImportROMDialog.cs</DependentUpon>
