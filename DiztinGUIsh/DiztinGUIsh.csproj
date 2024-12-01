@@ -53,12 +53,6 @@
     <Compile Update="window\dialog\BSNESTraceLogBinaryMonitorForm.Designer.cs">
       <DependentUpon>BSNESTraceLogBinaryMonitorForm.cs</DependentUpon>
     </Compile>
-    <Compile Update="window\dialog\ExportDisassembly.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="window\dialog\ExportDisassembly.Designer.cs">
-      <DependentUpon>ExportDisassembly.cs</DependentUpon>
-    </Compile>
     <Compile Update="window\dialog\GotoDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -149,9 +143,6 @@
     </EmbeddedResource>
     <EmbeddedResource Update="window\dialog\BSNESTraceLogBinaryMonitorForm.resx">
       <DependentUpon>BSNESTraceLogBinaryMonitorForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="window\dialog\ExportDisassembly.resx">
-      <DependentUpon>ExportDisassembly.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="window\dialog\GotoDialog.resx">
       <DependentUpon>GotoDialog.cs</DependentUpon>
