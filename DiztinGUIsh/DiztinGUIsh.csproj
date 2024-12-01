@@ -104,12 +104,6 @@
     <Compile Update="window\DataGridEditorForm.Designer.cs">
       <DependentUpon>DataGridEditorForm.cs</DependentUpon>
     </Compile>
-    <Compile Update="window\dialog\MarkManyDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="window\dialog\MarkManyDialog.Designer.cs">
-      <DependentUpon>MarkManyDialog.cs</DependentUpon>
-    </Compile>
     <Compile Update="window\MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -147,9 +141,6 @@
     <EmbeddedResource Update="window\DataGridEditorForm.resx">
       <DependentUpon>DataGridEditorForm.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="window\dialog\MarkManyDialog.resx">
-      <DependentUpon>MarkManyDialog.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="build\TidyPublishDir.targets" />
     <Compile Update="window\usercontrols\DataGridEditorControl.cs">

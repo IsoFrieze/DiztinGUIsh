@@ -89,7 +89,7 @@ namespace Diz.Controllers.interfaces
     {
         MarkCommand.MarkManyProperty Property { get; set; }
         object GetPropertyValue();
-        IMarkManyController<TDataSource> Controller { get; set; }
+        [CanBeNull] IMarkManyController<TDataSource> Controller { get; set; }
 
         void AttemptSetSettings(Dictionary<MarkCommand.MarkManyProperty, object> settings);
         Dictionary<MarkCommand.MarkManyProperty, object> SaveCurrentSettings();

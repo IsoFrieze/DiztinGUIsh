@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Core.commands;
 using Diz.Cpu._65816;
 using Diz.LogWriter;
+using Diz.Ui.Winforms;
 using Diz.Ui.Winforms.dialogs;
 using Diz.Ui.Winforms.util;
-using DiztinGUIsh.util;
-using DiztinGUIsh.window.dialog;
 
 namespace DiztinGUIsh.window
 {
