@@ -53,12 +53,6 @@
     <Compile Update="window\dialog\BSNESTraceLogBinaryMonitorForm.Designer.cs">
       <DependentUpon>BSNESTraceLogBinaryMonitorForm.cs</DependentUpon>
     </Compile>
-    <Compile Update="window\dialog\GotoDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="window\dialog\GotoDialog.Designer.cs">
-      <DependentUpon>GotoDialog.cs</DependentUpon>
-    </Compile>
     <Compile Update="window\dialog\HarshAutoStep.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -143,9 +137,6 @@
     </EmbeddedResource>
     <EmbeddedResource Update="window\dialog\BSNESTraceLogBinaryMonitorForm.resx">
       <DependentUpon>BSNESTraceLogBinaryMonitorForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="window\dialog\GotoDialog.resx">
-      <DependentUpon>GotoDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="window\dialog\HarshAutoStep.resx">
       <DependentUpon>HarshAutoStep.cs</DependentUpon>
