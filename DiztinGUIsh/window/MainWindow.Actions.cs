@@ -139,9 +139,13 @@ public partial class MainWindow
     {
         if (!RomDataPresent()) 
             return;
+        
+        var snesData = Project.Data.GetSnesApi();
+        if (snesData == null)
+            return;
             
         ProjectController.MarkChanged();
-        var newOffset = Project.Data.GetSnesApi().MarkTypeFlag(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag));
+        var newOffset = snesData.MarkTypeFlag(offset, markFlag, RomUtil.GetByteLengthForFlag(markFlag));
             
         SelectOffset(newOffset, -1, new ISnesNavigation.HistoryArgs {Description = "Mark (single)"}, overshootAmount: standardOvershootAmount);
             
