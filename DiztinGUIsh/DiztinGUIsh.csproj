@@ -140,12 +140,6 @@
     <Compile Update="window\MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="window\dialog\MisalignmentChecker.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="window\dialog\MisalignmentChecker.Designer.cs">
-      <DependentUpon>MisalignmentChecker.cs</DependentUpon>
-    </Compile>
 
     <EmbeddedResource Update="window\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
@@ -195,9 +189,6 @@
     </EmbeddedResource>
     <EmbeddedResource Update="window\dialog\MarkManyDialog.resx">
       <DependentUpon>MarkManyDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="window\dialog\MisalignmentChecker.resx">
-      <DependentUpon>MisalignmentChecker.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="build\TidyPublishDir.targets" />
     <Compile Update="window\usercontrols\DataGridEditorControl.cs">
