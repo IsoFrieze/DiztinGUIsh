@@ -361,17 +361,23 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
     private const bool AttemptTouseDirectPageArithmeticInFinalOutput = true;
 
+    // this can print bytes OR labels. it can also deal with SOME mirroring and Direct Page addressing etc/etc
     private string FormatOperandAddress(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
     {
-        var address = data.GetIntermediateAddress(offset);
-        if (address < 0) 
+        var intermediateAddress = data.GetIntermediateAddress(offset);
+        if (intermediateAddress < 0)
             return "";
 
         if (data is IReadOnlyLabels labelProvider)
         {
-            var label = labelProvider.Labels.GetLabelName(address);
-            if (label != "") 
-                return label;
+            // is there a label for this absolute address? if so, lets use that
+            var labelName = labelProvider.Labels.GetLabelName(intermediateAddress);
+            if (labelName != "")
+                return labelName;
+            
+            // otherwise...
+            
+            // TODO: extract some of this label mirroring logic into its own function so other stuff can call it
             
             // OPTIONAL:
             // super-specific variable substitution.  this needs to be heavily generalized.
@@ -384,15 +390,22 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
                 var dp = data.GetDirectPage(offset);
                 if (dp != 0)
                 {
-                    label = labelProvider.Labels.GetLabelName(dp + address);
-                    if (label != "")
+                    labelName = labelProvider.Labels.GetLabelName(dp + intermediateAddress);
+                    if (labelName != "")
                     {
                         // direct page addressing. we can use an expression to use a variable name for this
                         // TODO: we can also use asar directive .dbase to set the assumed DB register.
-                        return $"{label}-${dp:X}"; // IMPORTANT: no spaces on that minus sign.
+                        return $"{labelName}-${dp:X}"; // IMPORTANT: no spaces on that minus sign.
                     }
                 }
             }
+            
+            // OPTIONAL 2: try some crazy hackery to deal with mirroring on RAM labels.
+            // (this is super-hacky, we need to do this better)
+            // also, can the DP address above ALSO interact with this? (probably, right?) if so, we need to keep that in mind
+            var (labelAddressFound, labelEntryFound) = SearchForMirroredLabel(data, intermediateAddress);
+            if (labelEntryFound != null)
+                return $"{labelEntryFound.Name}";
         }
 
         var count = BytesToShow(mode);
@@ -402,11 +415,91 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             if (!romWord.HasValue)
                 return "";
                 
-            address = (int)romWord;
+            intermediateAddress = (int)romWord;
         }
             
-        address &= ~(-1 << (8 * count));
-        return Util.NumberToBaseString(address, Util.NumberBase.Hexadecimal, 2 * count, true);
+        intermediateAddress &= ~(-1 << (8 * count));
+        return Util.NumberToBaseString(intermediateAddress, Util.NumberBase.Hexadecimal, 2 * count, true);
+    }
+
+    private (int labelAddress, IAnnotationLabel? labelEntry) SearchForMirroredLabel(TByteSource data, int snesAddress)
+    {
+        // WARNING: this is an EXTREMELY wasteful and very inefficient search. cache wram addresses in labels if needed for perf
+        foreach (var (labelAddress, labelEntry) in data.Labels.Labels)
+        {
+            if (!AreLabelsSameMirror(data, snesAddress, labelAddress)) 
+                continue;
+
+            // we found a label that's in WRAM and matches the same WRAM address as our IA.
+            // that means, we found a mirrored address we could match here. let's do so now.
+            //
+            // NOTE: this may not cover every case correctly. Whatever we put here needs to assemble
+            // down to the original bytes in the ROM.
+            // we CAN use expressions/etc to make this work if we want.
+            // the point is so humans can see the labels, but the output assembly can be the original bytes
+            // TODO: might need to limit this to cases where there are 2 bytes in the IA only.
+            return (labelAddress, labelEntry);
+        }
+        
+        return (-1, null);
+    }
+
+    private static bool AreLabelsSameMirror(TByteSource data, int snesAddress, int labelAddress)
+    {
+        if (snesAddress == -1 || labelAddress == -1)
+            return false;
+        
+        // this function is a crappy and probably error-prone way to do this. gotta start somewhere.
+        // it would be better to do this by mapping out the memory regions than trying to go backwards
+        // from any arbitrary SNES address back to the mapped region. still, we'll give it a shot.
+        // we MOST care about things affecting labels that humans care about: WRAM mirrors and SNES registers
+        
+        // check WRAM mirroring
+        if (AreSnesAddressesSameMirroredWramAddresses(snesAddress, labelAddress))
+            return true;
+
+        // check other IO mirroring (overlaps with above for LowRAM too, but that's OK)
+        if (AreSnesAddressesSameMirroredIoRegion(snesAddress, labelAddress)) 
+            return true;
+
+        return false;
+    }
+
+    private static bool AreSnesAddressesSameMirroredIoRegion(int snesAddress1, int snesAddress2)
+    {
+        var reducedSnesAddr1 = GetUnmirroredIoRegionFromBank(snesAddress1);
+        var reducedSnesAddr2 = GetUnmirroredIoRegionFromBank(snesAddress2);
+        
+        return reducedSnesAddr1 != -1 && reducedSnesAddr2 == reducedSnesAddr1;
+    }
+
+    private static int GetUnmirroredIoRegionFromBank(int snesAddress)
+    {
+        if (snesAddress == -1)
+            return -1;
+        
+        // Mirrored WRAM range in banks $00-$3F and $80-$BF
+        var bank = (snesAddress >> 16) & 0xFF; // Extract the high byte (bank number)
+
+        // Check if the bank is within WRAM-mirroring ranges: $00-$3F or $80-$BF
+        var bankContainsMirror = bank is (>= 0x00 and <= 0x3F) or (>= 0x80 and <= 0xBF);
+        if (!bankContainsMirror) 
+            return -1;
+        
+        // are we in the mirrored region?
+        var low16Addr = snesAddress & 0xFFFF;
+        if (low16Addr is < 0x0000 or > 0x7FFF) 
+            return -1;
+
+        return low16Addr;
+    }
+
+    private static bool AreSnesAddressesSameMirroredWramAddresses(int snesAddress1, int snesAddress2)
+    {
+        var wramAddress1 = RomUtil.GetWramAddress(snesAddress1);
+        var wramAddress2 = RomUtil.GetWramAddress(snesAddress2);
+        
+        return wramAddress1 != -1 && wramAddress2 == wramAddress1;
     }
 
     private string GetMnemonic(TByteSource data, int offset, bool showHint = true)
