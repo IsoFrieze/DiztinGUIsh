@@ -82,3 +82,9 @@ Planned stuff:
 
 
 ### "Distinguish" but with a 'z' because it's rad. It's also a GUI application so might as well highlight that fact."
+
+
+### Other tips 
+
+- On Win11, if you have DPI or screen issues (fonts messed up or bunched up or too small):
+Right click on Diztinguish.exe, Compatibility, change high dpi settings, Override high DPI scaling behavior and select Scaling performed by System.
