@@ -448,6 +448,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     {
         if (snesAddress == -1 || labelAddress == -1)
             return false;
+
+        // early out shortcut 
+        if ((snesAddress & 0xFFFF) != (labelAddress & 0xFFFF))
+            return false;
         
         // this function is a crappy and probably error-prone way to do this. gotta start somewhere.
         // it would be better to do this by mapping out the memory regions than trying to go backwards
