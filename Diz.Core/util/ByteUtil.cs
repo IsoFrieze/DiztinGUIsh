@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Diz.Core.util
 {
@@ -15,13 +16,25 @@ namespace Diz.Core.util
         // $C0FFFF
         // C7/AAAA
         // $C6/BBBB
+        // CODE_808066
+        // UNREACH_808066 and others
         public static bool StripFormattedAddress(ref string addressTxt, NumberStyles style, out int address)
         {
             address = -1;
 
             if (string.IsNullOrEmpty(addressTxt))
                 return false;
+            
+            // first, strip out some cases like "CODE_xxxxxx" or "UNREACH_xxxxxx"
+            const string regexPattern = @".*_([A-Fa-f0-9]{6})";
+            var match = Regex.Match(addressTxt, regexPattern);
+            if (match.Success)
+            {
+                // Extract the matched six-digit part
+                addressTxt = match.Groups[1].Value;
+            }
 
+            // secondly, strip some extra stuff out
             var inputText = new string(Array.FindAll(addressTxt.ToCharArray(), (c =>
                     (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
                 )));
