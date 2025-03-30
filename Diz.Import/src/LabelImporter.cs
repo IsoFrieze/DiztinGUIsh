@@ -78,7 +78,7 @@ public abstract class LabelImporter
 public static class LabelImporterUtils
 {
     // exception handling/line# stuff needs a little rework, messy.
-    public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, out int errLine)
+    public static void ImportLabelsFromCsv(this ILabelProvider labelProvider, string importFilename, bool replaceAll, bool smartMerge, out int errLine)
     {
         // could probably do this part more elegantly
         errLine = 0;
@@ -108,6 +108,6 @@ public static class LabelImporterUtils
         if (replaceAll)
             labelProvider.DeleteAllLabels();
         
-        labelProvider.AppendLabels(labelsFromFile);
+        labelProvider.AppendLabels(labelsFromFile, smartMerge: smartMerge);
     }
 }

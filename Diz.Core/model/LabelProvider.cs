@@ -121,9 +121,9 @@ namespace Diz.Core.model
             OnLabelChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels)
+        public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels, bool smartMerge = false)
         {
-            NormalProvider.AppendLabels(newLabels);
+            NormalProvider.AppendLabels(newLabels, smartMerge);
             
             OnLabelChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -283,11 +283,31 @@ namespace Diz.Core.model
             AppendLabels(newLabels);
         }
 
-        public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels)
+        public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels, bool smartMerge=false)
         {
-            foreach (var key in newLabels.Keys)
+            foreach (var snesAddress in newLabels.Keys)
             {
-                Labels.Add(key, newLabels[key]);
+                if (!smartMerge) {
+                    Labels.Add(snesAddress, newLabels[snesAddress]);
+                    continue;
+                }
+                
+                // smart merging: try something a little better to preserve/merge existing data
+                if (!Labels.TryGetValue(snesAddress, out var label))
+                {
+                    // doesn't exist so just add normally
+                    Labels.Add(snesAddress, newLabels[snesAddress]);
+                }
+                else
+                {
+                    // does exist, so let's more smartly merge the label content
+                    // prefer incoming data, if it exists, to overwrite existing data
+                    var newLabelName = newLabels[snesAddress].Name;
+                    var newLabelComment = newLabels[snesAddress].Comment;
+                    
+                    label.Name = newLabelName == "" ? label.Name : newLabelName;
+                    label.Comment = newLabelComment == "" ? label.Comment : newLabelComment;
+                }
             }
         }
 

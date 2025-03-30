@@ -206,7 +206,7 @@ public class ProjectController : IProjectController
         var errLine = 0;
         try
         {
-            Project.Data.Labels.ImportLabelsFromCsv(importFilename, replaceAll, out errLine);
+            Project.Data.Labels.ImportLabelsFromCsv(importFilename, replaceAll, smartMerge: true, out errLine);
             labelEditor.RepopulateFromData();
         }
         catch (Exception ex)
