@@ -1,4 +1,6 @@
 ﻿
+using Diz.Ui.Winforms.usercontrols;
+
 namespace DiztinGUIsh.window
 {
     partial class NavigationForm
@@ -29,7 +31,7 @@ namespace DiztinGUIsh.window
         /// </summary>
         private void InitializeComponent()
         {
-            this.navigationCtrl = new DiztinGUIsh.window.usercontrols.NavigationUserControl();
+            this.navigationCtrl = new NavigationUserControl();
             this.SuspendLayout();
             // 
             // navigationCtrl
@@ -58,6 +60,6 @@ namespace DiztinGUIsh.window
 
         #endregion
 
-        private usercontrols.NavigationUserControl navigationCtrl;
+        private NavigationUserControl navigationCtrl;
     }
 }

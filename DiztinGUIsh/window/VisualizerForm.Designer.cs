@@ -1,4 +1,7 @@
-﻿namespace DiztinGUIsh.window
+﻿using Diz.Ui.Winforms.usercontrols.visualizer.graphics;
+using Diz.Ui.Winforms.usercontrols.visualizer.legend;
+
+namespace DiztinGUIsh.window
 {
     partial class VisualizerForm
     {
@@ -30,9 +33,9 @@
         {
             this.panelTop = new System.Windows.Forms.Panel();
             this.panelLegend = new System.Windows.Forms.Panel();
-            this.bankLegend1 = new DiztinGUIsh.window.usercontrols.BankLegend();
+            this.bankLegend1 = new BankLegend();
             this.panelBottom = new System.Windows.Forms.Panel();
-            this.romFullVisualizer1 = new DiztinGUIsh.window.usercontrols.RomFullVisualizer();
+            this.romFullVisualizer1 = new RomFullVisualizer();
             this.panelTop.SuspendLayout();
             this.panelLegend.SuspendLayout();
             this.panelBottom.SuspendLayout();
@@ -115,7 +118,7 @@
         private System.Windows.Forms.Panel panelTop;
         private System.Windows.Forms.Panel panelLegend;
         private System.Windows.Forms.Panel panelBottom;
-        private usercontrols.BankLegend bankLegend1;
-        private usercontrols.RomFullVisualizer romFullVisualizer1;
+        private BankLegend bankLegend1;
+        private RomFullVisualizer romFullVisualizer1;
     }
 }

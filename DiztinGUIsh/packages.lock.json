@@ -2,16 +2,6 @@
   "version": 1,
   "dependencies": {
     "net8.0-windows7.0": {
-      "FastBitmapLib": {
-        "type": "Direct",
-        "requested": "[2.1.0, )",
-        "resolved": "2.1.0",
-        "contentHash": "FOk+mBCg8nenI3V4kJXK/QeHKKjbPTZdebx8CGoMHX9bO4wzlnTSasYCHtl29FYByn+AInl9Dj1ICt29wWaL0w==",
-        "dependencies": {
-          "System.Drawing.Common": "4.5.1",
-          "System.Runtime.CompilerServices.Unsafe": "4.5.2"
-        }
-      },
       "GitInfo": {
         "type": "Direct",
         "requested": "[3.3.3, )",
@@ -58,6 +48,15 @@
           "NReco.LambdaParser": "1.0.12",
           "Sprache": "2.3.1",
           "System.Collections.Immutable": "7.0.0"
+        }
+      },
+      "FastBitmapLib": {
+        "type": "Transitive",
+        "resolved": "2.1.0",
+        "contentHash": "FOk+mBCg8nenI3V4kJXK/QeHKKjbPTZdebx8CGoMHX9bO4wzlnTSasYCHtl29FYByn+AInl9Dj1ICt29wWaL0w==",
+        "dependencies": {
+          "System.Drawing.Common": "4.5.1",
+          "System.Runtime.CompilerServices.Unsafe": "4.5.2"
         }
       },
       "FluentValidation": {
@@ -1168,6 +1167,7 @@
         "dependencies": {
           "ByteSize": "[2.1.2, )",
           "Diz.Controllers": "[1.0.0, )",
+          "FastBitmapLib": "[2.1.0, )",
           "JetBrains.Annotations": "[2023.3.0, )",
           "LightInject": "[6.6.4, )"
         }
