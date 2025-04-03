@@ -2,63 +2,61 @@
 using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
-using Diz.Ui.Winforms.util;
 
-namespace DiztinGUIsh.window
+namespace DiztinGUIsh.window;
+
+public partial class NavigationForm : Form
 {
-    public partial class NavigationForm : Form
+    private IDizDocument document;
+    private ISnesNavigation snesNavigation;
+
+    public IDizDocument Document
     {
-        private IDizDocument document;
-        private ISnesNavigation snesNavigation;
-
-        public IDizDocument Document
+        get => document;
+        set
         {
-            get => document;
-            set
-            {
-                document = value;
-                navigationCtrl.Document = Document;
-            }
+            document = value;
+            navigationCtrl.Document = Document;
         }
+    }
 
-        public ISnesNavigation SnesNavigation
+    public ISnesNavigation SnesNavigation
+    {
+        get => snesNavigation;
+        set
         {
-            get => snesNavigation;
-            set
-            {
-                snesNavigation = value;
-                navigationCtrl.SnesNavigation = snesNavigation;
-            }
+            snesNavigation = value;
+            navigationCtrl.SnesNavigation = snesNavigation;
         }
+    }
 
-        public NavigationForm()
-        {
-            InitializeComponent();
-            FormClosing += Navigation_Closing;
-        }
+    public NavigationForm()
+    {
+        InitializeComponent();
+        FormClosing += Navigation_Closing;
+    }
         
-        private void Navigation_Closing(object sender, FormClosingEventArgs e)
-        {
-            if (e.CloseReason != CloseReason.UserClosing) 
-                return;
+    private void Navigation_Closing(object sender, FormClosingEventArgs e)
+    {
+        if (e.CloseReason != CloseReason.UserClosing) 
+            return;
             
-            e.Cancel = true;
-            Hide();
-        }
+        e.Cancel = true;
+        Hide();
+    }
 
-        private void Navigation_Load(object sender, EventArgs e)
-        {
+    private void Navigation_Load(object sender, EventArgs e)
+    {
             
-        }
+    }
 
-        public void Navigate(bool forwardDirection, int overshootAmount = 0)
-        {
-            navigationCtrl.Navigate(forwardDirection, overshootAmount);
-        }
+    public void Navigate(bool forwardDirection, int overshootAmount = 0)
+    {
+        navigationCtrl.Navigate(forwardDirection, overshootAmount);
+    }
 
-        private void navigationCtrl_Load(object sender, EventArgs e)
-        {
+    private void navigationCtrl_Load(object sender, EventArgs e)
+    {
 
-        }
     }
 }

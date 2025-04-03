@@ -140,9 +140,6 @@
       <Link>diztinguish\.github\workflows\dotnet.yml</Link>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="util\" />
-  </ItemGroup>
   <!--custom build targets for packing up final distribution of files-->
   <Import Project="build/TidyPublishDir.targets" />
   

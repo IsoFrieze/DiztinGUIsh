@@ -4,74 +4,73 @@ using Diz.Cpu._65816;
 using Diz.Import.bsnes.tracelog;
 using Diz.Ui.Winforms.dialogs;
 
-namespace DiztinGUIsh.window
+namespace DiztinGUIsh.window;
+
+public partial class MainWindow
 {
-    public partial class MainWindow
+    private void ImportBizhawkCDL()
     {
-        private void ImportBizhawkCDL()
-        {
-            var filename = PromptOpenBizhawkCDLFile();
-            if (filename != null && filename == "") return;
-            ImportBizHawkCdl(filename);
-            UpdateSomeUI2();
-        }
+        var filename = PromptOpenBizhawkCDLFile();
+        if (filename != null && filename == "") return;
+        ImportBizHawkCdl(filename);
+        UpdateSomeUI2();
+    }
 
-        private void ImportBizHawkCdl(string filename)
+    private void ImportBizHawkCdl(string filename)
+    {
+        try
         {
-            try
-            {
-                ProjectController.ImportBizHawkCdl(filename);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.Message, "Error");
-            }
+            ProjectController.ImportBizHawkCdl(filename);
         }
-
-        private void ImportBsnesTraceLogText()
+        catch (Exception ex)
         {
-            if (!PromptForImportBSNESTraceLogFile()) 
-                return;
+            ShowError(ex.Message, "Error");
+        }
+    }
+
+    private void ImportBsnesTraceLogText()
+    {
+        if (!PromptForImportBSNESTraceLogFile()) 
+            return;
             
-            var (numModifiedFlags, numFiles) = ImportBsnesTraceLogs();
+        var (numModifiedFlags, numFiles) = ImportBsnesTraceLogs();
             
-            RefreshUi();
-            ReportNumberFlagsModified(numModifiedFlags, numFiles);
-        }
+        RefreshUi();
+        ReportNumberFlagsModified(numModifiedFlags, numFiles);
+    }
 
-        private void UiImportBsnesUsageMap()
-        {
-            if (openUsageMapFile.ShowDialog() != DialogResult.OK)
-                return;
+    private void UiImportBsnesUsageMap()
+    {
+        if (openUsageMapFile.ShowDialog() != DialogResult.OK)
+            return;
 
-            var numModifiedFlags = ProjectController.ImportBsnesUsageMap(openUsageMapFile.FileName);
+        var numModifiedFlags = ProjectController.ImportBsnesUsageMap(openUsageMapFile.FileName);
             
-            RefreshUi();
-            ShowInfo($"Modified total {numModifiedFlags} flags!", "Done");
-        }
+        RefreshUi();
+        ShowInfo($"Modified total {numModifiedFlags} flags!", "Done");
+    }
 
-        private (long numBytesModified, int numFiles) ImportBsnesTraceLogs()
-        {
-            var numBytesModified = ProjectController.ImportBsnesTraceLogs(openTraceLogDialog.FileNames);
-            return (numBytesModified, openTraceLogDialog.FileNames.Length);
-        }
+    private (long numBytesModified, int numFiles) ImportBsnesTraceLogs()
+    {
+        var numBytesModified = ProjectController.ImportBsnesTraceLogs(openTraceLogDialog.FileNames);
+        return (numBytesModified, openTraceLogDialog.FileNames.Length);
+    }
 
-        private void ImportBsnesBinaryTraceLog()
-        {
-            var snesData = Project.Data.GetSnesApi();
-            if (snesData == null)
-                return;
+    private void ImportBsnesBinaryTraceLog()
+    {
+        var snesData = Project.Data.GetSnesApi();
+        if (snesData == null)
+            return;
             
-            var captureController = new BsnesTraceLogCaptureController(snesData);
-            new BsnesTraceLogBinaryMonitorForm(captureController).ShowDialog();
+        var captureController = new BsnesTraceLogCaptureController(snesData);
+        new BsnesTraceLogBinaryMonitorForm(captureController).ShowDialog();
             
-            RefreshUi();
-        }
+        RefreshUi();
+    }
 
-        private void OnImportedProjectSuccess()
-        {
-            UpdateSaveOptionStates(saveEnabled: false, saveAsEnabled: true, closeEnabled: true);
-            RefreshUi();
-        }
+    private void OnImportedProjectSuccess()
+    {
+        UpdateSaveOptionStates(saveEnabled: false, saveAsEnabled: true, closeEnabled: true);
+        RefreshUi();
     }
 }
