@@ -41,12 +41,6 @@
 
 
   <ItemGroup>
-    <Compile Update="window\AliasList.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="window\AliasList.Designer.cs">
-      <DependentUpon>AliasList.cs</DependentUpon>
-    </Compile>
     <Compile Update="window\usercontrols\visualizer\legend\BankLegend.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -95,9 +89,6 @@
 
     <EmbeddedResource Update="window\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="window\AliasList.resx">
-      <DependentUpon>AliasList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="window\usercontrols\visualizer\legend\BankLegend.resx">
       <DependentUpon>BankLegend.cs</DependentUpon>
