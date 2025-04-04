@@ -71,12 +71,6 @@
     <Compile Update="window\usercontrols\visualizer\graphics\RomImage.Designer.cs">
       <DependentUpon>RomImage.cs</DependentUpon>
     </Compile>
-    <Compile Update="window\VisualizerForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="window\VisualizerForm.Designer.cs">
-      <DependentUpon>VisualizerForm.cs</DependentUpon>
-    </Compile>
     <Compile Update="window\DataGridEditorForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -104,9 +98,6 @@
     </EmbeddedResource>
     <EmbeddedResource Update="window\usercontrols\visualizer\graphics\RomImage.resx">
       <DependentUpon>RomImage.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="window\VisualizerForm.resx">
-      <DependentUpon>VisualizerForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="window\DataGridEditorForm.resx">
       <DependentUpon>DataGridEditorForm.cs</DependentUpon>

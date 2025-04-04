@@ -3,14 +3,14 @@ using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
 using Diz.LogWriter;
-using Diz.Ui.Winforms.util;
+using Diz.Ui.Winforms.dialogs;
 
 namespace DiztinGUIsh.window;
 
 public partial class MainWindow : Form, IMainGridWindowView
 {
     public MainWindow(
-        IProjectController projectController, 
+        IProjectController projectController,
         IDizAppSettings appSettings, 
         IDizDocument document)
     {
@@ -77,20 +77,27 @@ public partial class MainWindow : Form, IMainGridWindowView
 
     private void OnProjectClosing()
     {
+        CloseAndDisposeVisualizer();
+        
         UpdateSaveOptionStates(saveEnabled: false, saveAsEnabled: false, closeEnabled: false);
     }
 
     public void OnProjectOpened(string filename)
     {
-        if (visualForm != null)
-            visualForm.Project = Project;
-
         // TODO: do this with aliaslist too.
+        CloseAndDisposeVisualizer();
 
         UpdateSaveOptionStates(saveEnabled: true, saveAsEnabled: true, closeEnabled: true);
         RefreshUi();
 
         Document.LastProjectFilename = filename; // do this last.
+    }
+
+    private void CloseAndDisposeVisualizer()
+    {
+        visualForm?.Close();
+        visualForm?.Dispose();
+        visualForm = null;
     }
 
     public void OnProjectOpenFail(string errorMsg)

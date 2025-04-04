@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using Diz.Core.commands;
 using Diz.Core.model;
 using Diz.Core.util;
-using DiztinGUIsh.window.dialog;
+using Diz.Ui.Winforms.dialogs;
 
 namespace DiztinGUIsh.window;
 

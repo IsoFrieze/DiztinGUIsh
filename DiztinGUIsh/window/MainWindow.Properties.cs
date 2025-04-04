@@ -2,7 +2,7 @@
 using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
-using Diz.Ui.Winforms.util;
+using Diz.Ui.Winforms.dialogs;
 
 namespace DiztinGUIsh.window;
 

@@ -2,7 +2,6 @@
 using Diz.Controllers.interfaces;
 using Diz.Ui.Winforms.dialogs;
 using DiztinGUIsh.window;
-using DiztinGUIsh.window.dialog;
 using JetBrains.Annotations;
 using LightInject;
 

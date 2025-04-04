@@ -369,7 +369,7 @@ public partial class MainWindow
 
     private void ShowVisualizerForm()
     {
-        visualForm ??= new VisualizerForm(this);
+        visualForm ??= new VisualizerForm(Project);
         visualForm.Show();
     }
 

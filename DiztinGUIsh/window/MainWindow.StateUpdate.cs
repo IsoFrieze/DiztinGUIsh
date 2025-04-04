@@ -17,9 +17,6 @@ public partial class MainWindow
     {
         aliasList?.RebindProject();
             
-        if (visualForm != null) 
-            visualForm.Project = Project;
-            
         if (Project?.Data.Labels != null) 
             Project.Data.Labels.OnLabelChanged += LabelsOnOnLabelChanged;
     }
