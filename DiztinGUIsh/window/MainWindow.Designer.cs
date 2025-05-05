@@ -1,4 +1,6 @@
-﻿namespace DiztinGUIsh.window;
+﻿using System.Windows.Forms;
+
+namespace DiztinGUIsh.window;
 
 partial class MainWindow
 {
@@ -613,7 +615,7 @@ partial class MainWindow
         // autoStepHarshToolStripMenuItem
         // 
         this.autoStepHarshToolStripMenuItem.Name = "autoStepHarshToolStripMenuItem";
-        this.autoStepHarshToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
+        this.autoStepHarshToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.A)));
         this.autoStepHarshToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
         this.autoStepHarshToolStripMenuItem.Text = "Auto Step (Harsh)";
         this.autoStepHarshToolStripMenuItem.Click += new System.EventHandler(this.autoStepHarshToolStripMenuItem_Click);
@@ -671,7 +673,7 @@ partial class MainWindow
         // toggleAccumulatorSizeMToolStripMenuItem
         // 
         this.toggleAccumulatorSizeMToolStripMenuItem.Name = "toggleAccumulatorSizeMToolStripMenuItem";
-        this.toggleAccumulatorSizeMToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.M)));
+        this.toggleAccumulatorSizeMToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.M)));
         this.toggleAccumulatorSizeMToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
         this.toggleAccumulatorSizeMToolStripMenuItem.Text = "Set Accu&mulator Size...";
         this.toggleAccumulatorSizeMToolStripMenuItem.Click += new System.EventHandler(this.toggleAccumulatorSizeMToolStripMenuItem_Click);
@@ -679,7 +681,7 @@ partial class MainWindow
         // toggleIndexSizeToolStripMenuItem
         // 
         this.toggleIndexSizeToolStripMenuItem.Name = "toggleIndexSizeToolStripMenuItem";
-        this.toggleIndexSizeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
+        this.toggleIndexSizeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.X)));
         this.toggleIndexSizeToolStripMenuItem.Size = new System.Drawing.Size(253, 22);
         this.toggleIndexSizeToolStripMenuItem.Text = "Set Inde&x Size...";
         this.toggleIndexSizeToolStripMenuItem.Click += new System.EventHandler(this.toggleIndexSizeToolStripMenuItem_Click);
