@@ -295,7 +295,37 @@ public partial class MainWindow
         // now, set the real position
         SelectOffset(foundOffset, -1, new ISnesNavigation.HistoryArgs { Description = "Find next unreached branch point" }, overshootAmount: standardOvershootAmount);
     }
+    
+    
+    [UsedImplicitly, MenuItem(menu: "Navigate", name: "Detect Next Unlabelled Pointer Table", shortcutKeys: Keys.Alt | Keys.D)]
+    private void UiFindNextUnlabelledPointerTable() => 
+        GoToNextPotentialPointerTable(SelectedOffset);
+    
+    private void GoToNextPotentialPointerTable(
+        int offset // where to start looking from
+    )
+    {
+        // experimental.
+        // jump to next instruction, marked "unknown" still, that meets one of the following conditions:
+        // 1. is an "in point" (meaning something known jumps to it), or
+        // 2. is directly after a branch statement (e.g. it's a branch not yet taken) 
 
+        // these are often small branches not taken during tracelog runs, 
+        // and are easy targets for filling them in relatively risk-free since you know the M and X flags of
+        // the instruction of where you jumped FROM.
+        var possiblePointerTablePcOffset = Project.Data.GetSnesApi()?.DetectNextPointerTableFromAddressingModeUsageAfter(offset) ?? -1;
+        if (possiblePointerTablePcOffset == -1)
+        {
+            ShowInfo("No unreached pointer table detected (warning: there could still be some, just, our checks aren't detecting any)", "Note");
+            return;
+        }
+        
+        MarkHistoryPoint(possiblePointerTablePcOffset,
+            new ISnesNavigation.HistoryArgs { Description = "Detect next pointer table" }, "origin");
+        
+        SelectOffset(possiblePointerTablePcOffset, -1, new ISnesNavigation.HistoryArgs { Description = "Detect next pointer table" }, overshootAmount: standardOvershootAmount);
+    }
+    
     private static ISnesNavigation.HistoryArgs BuildUnreachedHistoryArgs(bool fromStartOrEnd, bool forwardDirection)
     {
         var dirStr = forwardDirection ? "Forward" : "Previous";

@@ -1,4 +1,7 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Linq;
+using System.Reflection;
+using System.Windows.Forms;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;

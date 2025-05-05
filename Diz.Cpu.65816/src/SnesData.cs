@@ -43,6 +43,11 @@ public interface IMiscNavigable
             bool includeUntakenBranchPoints = true, 
             bool requireUnreached = true
         );
+    
+    public int DetectNextPointerTableFromAddressingModeUsageAfter(
+        int startingOffset, 
+        bool searchForward = true
+    );
 }
 
 public interface ISnesApi<out TData> :
@@ -246,6 +251,89 @@ public class SnesApi : ISnesData
             return;
 
         cpu65816.MarkAsOpcodeAndOperandsStartingAt(this, offset, dataBank, directPage, xFlag, mFlag);
+    }
+
+    // look for instructions using address modes that rely on pointer tables. identify any that may be incorrectly marked
+    // in order to assist the user in manually marking them correctly.
+    //
+    // this is intended for instructions like:
+    // JSR.W (#$81A224,X)       or JMP.W
+    // where we want to mark the IA address [81A224] as a 16-bit pointer.
+    // these are often really useful things to track down in disassembly, and otherwise a ton of manual work.
+    // this is a nice shortcut to uncovering and marking these quickly.
+    //
+    // pointer tables we find will look like this:
+    // PTR16_81A224:
+    //  dw some_function_ptrtable_00
+    //  dw some_function_ptrtable_02
+    //  dw some_function_ptrtable_04
+    //  ... etc ....
+    //
+    // return -1 if none found, or, ROM offset (PC) of possible pointer table located 
+    public int DetectNextPointerTableFromAddressingModeUsageAfter(
+        // where to start searching from
+        int startingOffset, 
+        
+        // direction to search
+        bool searchForward = true)
+    {
+        var snesData = Data.GetSnesApi();
+        if (snesData == null)
+            return -1;
+        
+        var direction = searchForward ? 1 : -1;
+        
+        for (
+            var offsetToTry = startingOffset + direction;
+            offsetToTry >= 0 && offsetToTry < Data.RomBytes.Count;
+            offsetToTry += direction
+        )
+        {
+            var opcodeRomByte = Data.RomBytes[offsetToTry];
+
+            // we want to find only reached opcodes using certain addressing modes. skip anything not matching the criteria 
+            if (opcodeRomByte.TypeFlag != FlagType.Opcode)
+                continue;
+            
+            var addressMode = Cpu65C816<ISnesData>.GetAddressMode(snesData, offsetToTry);
+            
+            // note: feel free to add more address mode checks, if applicable.
+            // this is the main one most pointer table stuff seems to want to use
+            if (addressMode is not Cpu65C816Constants.AddressMode.AddressXIndexIndirect)
+                continue;
+            
+            // note: we could also filter to certain instructions, if we want.  JSR, JMP are going to be the main ones we care about
+            
+            // OK, we are on an instruction that MIGHT be one that uses a pointer table.
+            // let's keep narrowing it down:
+            
+            // does this instruction reference a valid IA? (Indirect address)
+            var iaSnesAddress = snesData.GetIntermediateAddress(offsetToTry);
+            if (iaSnesAddress == -1)
+                continue;
+            
+            // note: this will rule out pointer tables that are in RAM
+            // [which is OK because we're mostly marking ROM, but, could lead to false negatives if we're being thorough]
+            var iaOffsetPc = snesData.ConvertSnesToPc(iaSnesAddress);
+            if (iaOffsetPc == -1)
+                continue;
+            
+            // let's have a look at the destination the IA refers to.
+            // does the intermediate address match our criteria?
+            var iaRomByte = Data.RomBytes[iaOffsetPc];
+            
+            // so ACTUALLY, this destination is already marked correctly, so we can skip it from our search
+            // (remember: our goal is trying to locate INCORRECT or UNREACHED pointer tables)
+            if (iaRomByte.TypeFlag == FlagType.Pointer16Bit)
+                continue; // it's already good, SKIP IT
+            
+            // alright, we have a match! this is likely a pointer table but not marked as one.
+            return iaOffsetPc;
+        }
+
+        // got to the end of the ROM and didn't find anything
+        // this DOESN'T MEAN they don't exist, just, we couldn't detect anything
+        return -1;
     }
     
     public (int unreachedOffsetFound, int iaSourceAddress) FindNextUnreachedBranchPointAfter(
