@@ -8,6 +8,7 @@ using Diz.Core.model;
 using Diz.Core.util;
 using Diz.Cpu._65816;
 using Diz.Ui.Winforms.dialogs;
+using JetBrains.Annotations;
 
 namespace DiztinGUIsh.window;
 
@@ -66,7 +67,7 @@ public partial class MainWindow
     {
         if (Directory.Exists(path))
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
                 Arguments = path,
                 FileName = "explorer.exe",
@@ -75,7 +76,7 @@ public partial class MainWindow
         }
         else
         {
-            MessageBox.Show(string.Format("{0} does not exist!", path));
+            MessageBox.Show($"{path} does not exist!");
         }
     }
 
@@ -222,7 +223,7 @@ public partial class MainWindow
     private void GoToNextUnreachedBranchPoint(int offset)
     {
         // experimental.
-        // jump to next instruction, marked "unknown" still, that is meets one of the following conditions:
+        // jump to next instruction, marked "unknown" still, that meets one of the following conditions:
         // 1. is an "in point" (meaning something known jumps to it), or
         // 2. is directly after a branch statement (e.g. it's a branch not yet taken) 
         
