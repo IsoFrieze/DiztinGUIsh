@@ -34,8 +34,6 @@ public interface IProjectController :
 
     public Project Project { get; }
         
-    IViewFactory ViewFactory { get; }
-        
     public class ProjectChangedEventArgs
     {
         public enum ProjectChangedType

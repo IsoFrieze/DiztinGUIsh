@@ -28,29 +28,28 @@ public class ProjectController : IProjectController
 {
     public IProjectView ProjectView { get; set; }
     public Project Project { get; private set; }
-    public IViewFactory ViewFactory { get; }
 
     private readonly ICommonGui commonGui;
     private readonly IFilesystemService fs;
     private readonly IControllerFactory controllerFactory;
     private readonly Func<IProjectFileManager> projectFileManagerCreate;
     private readonly Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate;
+    private readonly Func<IProgressView> progressViewFactoryCreate;
 
     public ProjectController(
         ICommonGui commonGui,
-        IViewFactory viewFactory,
         IFilesystemService fs,
         IControllerFactory controllerFactory,
-        Func<ImportRomSettings,
-        IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate,
-        Func<IProjectFileManager> projectFileManagerCreate
+        Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate,
+        Func<IProjectFileManager> projectFileManagerCreate,
+        Func<IProgressView> progressViewFactoryCreate
     ) {
         this.commonGui = commonGui;
         this.fs = fs;
         this.controllerFactory = controllerFactory;
         this.projectImporterFactoryCreate = projectImporterFactoryCreate;
         this.projectFileManagerCreate = projectFileManagerCreate;
-        ViewFactory = viewFactory;
+        this.progressViewFactoryCreate = progressViewFactoryCreate;
     }
 
     public event IProjectController.ProjectChangedEvent ProjectChanged;
@@ -60,10 +59,16 @@ public class ProjectController : IProjectController
     // so we can flip up a progress bar and remove it.
     public void DoLongRunningTask(Action task, string description = null)
     {
-        if (ProjectView.TaskHandler != null)
-            ProjectView.TaskHandler(task, description, ViewFactory.GetProgressBarView());
-        else
+        if (ProjectView.TaskHandler == null)
+        {
+            // fallback
             task();
+            return;
+        }
+
+        // normal way to do it:
+        var progressBarView = progressViewFactoryCreate();
+        ProjectView.TaskHandler(task, description, progressBarView);
     }
 
     public bool OpenProject(string filename)
