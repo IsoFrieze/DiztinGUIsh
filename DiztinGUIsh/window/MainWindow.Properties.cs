@@ -1,4 +1,5 @@
-﻿using Diz.Controllers.controllers;
+﻿using System.ComponentModel;
+using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -9,7 +10,9 @@ namespace DiztinGUIsh.window;
 public partial class MainWindow
 {
     // maybe rethink how document and project are interacted with.
-    public IDizDocument Document { get; }
+    private IDizDocument Document { get; }
+    
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Project Project
     {
         get => Document.Project;
