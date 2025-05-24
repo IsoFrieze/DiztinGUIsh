@@ -18,6 +18,7 @@
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />  <!-- import this so our custom targets work -->
   
   <ItemGroup>
+    <ProjectReference Include="..\Diz.App.Common\Diz.App.Common.csproj" />
     <ProjectReference Include="..\Diz.Controllers\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Ui.Winforms\Diz.Ui.Winforms\Diz.Ui.Winforms.csproj" />
   </ItemGroup>

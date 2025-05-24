@@ -1108,6 +1108,14 @@
           "System.Threading.Tasks.Extensions": "4.5.4"
         }
       },
+      "diz.app.common": {
+        "type": "Project",
+        "dependencies": {
+          "Diz.Controllers": "[1.0.0, )",
+          "JetBrains.Annotations": "[2023.3.0, )",
+          "LightInject": "[6.6.4, )"
+        }
+      },
       "diz.controllers": {
         "type": "Project",
         "dependencies": {

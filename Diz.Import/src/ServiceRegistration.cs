@@ -2,7 +2,7 @@
 
 namespace Diz.Import;
 
-public class ServiceRegistration : ICompositionRoot
+public class DizImportServiceRegistration : ICompositionRoot
 {
     public void Compose(IServiceRegistry serviceRegistry)
     {

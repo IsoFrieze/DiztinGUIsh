@@ -1,4 +1,4 @@
-﻿using LightInject;
-using ServiceRegistration = Diz.Import.ServiceRegistration;
+﻿using Diz.Import;
+using LightInject;
 
-[assembly: CompositionRootType(typeof(ServiceRegistration))]
+[assembly: CompositionRootType(typeof(DizImportServiceRegistration))]
