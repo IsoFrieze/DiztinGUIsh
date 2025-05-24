@@ -11,12 +11,14 @@ internal static class Program
     [STAThread]
     static void Main(string[] args)
     {
+        var serviceFactory = DizWinformsRegisterServices.CreateServiceFactoryAndRegisterTypes();
+        
+        var dizApp = serviceFactory.GetInstance<IDizApp>();
+        
         var openFile = "";
         if (args.Length > 0)
             openFile = args[0];
-
-        var serviceFactory = DizAppServices.CreateServiceFactoryAndRegisterTypes();
-
-        serviceFactory.GetInstance<IDizApp>().Run(openFile);
+        
+        dizApp.Run(openFile);
     }
 }

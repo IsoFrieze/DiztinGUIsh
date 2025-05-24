@@ -4,7 +4,7 @@ using LightInject;
 
 namespace Diz.App.Winforms;
 
-public static class DizAppServices
+public static class DizWinformsRegisterServices
 {
     public static IServiceFactory CreateServiceFactoryAndRegisterTypes()
     {
@@ -16,9 +16,11 @@ public static class DizAppServices
 
     public static void RegisterDizUiServices(IServiceRegistry serviceRegistry)
     {
-        // register services in any Diz*dll's present
+        // option #1: we can simply register services in any Diz*dll's that are found in a scan.
+        // this is easy:
         DizCoreServicesDllRegistration.RegisterServicesInDizDlls(serviceRegistry);
 
+        // option #2: register everything by hand
         // alternatively, we can be explicit like below, no DLL scanning required
         // serviceProvider.RegisterFrom<DizCoreServicesCompositionRoot>();
         // serviceProvider.RegisterFrom<DizCpu65816ServiceRoot>();
