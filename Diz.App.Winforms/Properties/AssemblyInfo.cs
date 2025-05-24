@@ -1,4 +1,4 @@
-﻿using DiztinGUIsh;
+﻿using Diz.App.Winforms;
 using LightInject;
 
 [assembly: CompositionRootType(typeof(DizUiWinformsCompositionRoot))]

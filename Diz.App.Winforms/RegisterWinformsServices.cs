@@ -2,7 +2,7 @@ using Diz.Core.services;
 using Diz.Core.util;
 using LightInject;
 
-namespace DiztinGUIsh;
+namespace Diz.App.Winforms;
 
 public static class DizAppServices
 {

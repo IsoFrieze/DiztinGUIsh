@@ -4,7 +4,7 @@ using System;
 using Diz.Controllers.interfaces;
 using LightInject;
 
-namespace DiztinGUIsh;
+namespace Diz.App.Winforms;
 
 internal static class Program
 {

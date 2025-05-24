@@ -4,7 +4,7 @@ using Diz.Ui.Winforms.dialogs;
 using JetBrains.Annotations;
 using LightInject;
 
-namespace DiztinGUIsh;
+namespace Diz.App.Winforms;
 
 [UsedImplicitly] public class DizUiWinformsCompositionRoot : ICompositionRoot
 {
