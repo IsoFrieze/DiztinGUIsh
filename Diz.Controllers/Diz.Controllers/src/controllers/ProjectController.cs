@@ -262,7 +262,7 @@ public class ProjectController : IProjectController
         if (Project.Session != null) Project.Session.UnsavedChanges = true;
     }
 
-    public void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null) =>
+    public void SelectOffset(int offset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs = null) =>
         ProjectView.SelectOffset(offset, historyArgs);
     
     

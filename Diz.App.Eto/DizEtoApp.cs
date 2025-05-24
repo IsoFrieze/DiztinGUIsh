@@ -8,6 +8,8 @@ public class DizEtoApp(IViewFactory viewFactory) : IDizApp
 {
     public void Run(string initialProjectFileToOpen = "")
     {
+        var application = new Application();
+        
         var mainWindow = viewFactory.GetMainGridWindowView();
 
         // janky casting
@@ -15,6 +17,6 @@ public class DizEtoApp(IViewFactory viewFactory) : IDizApp
         var window = mainWindow as Form;
         Debug.Assert(window != null);
         
-        new Application().Run(window);
+        application.Run(window);
     }
 }

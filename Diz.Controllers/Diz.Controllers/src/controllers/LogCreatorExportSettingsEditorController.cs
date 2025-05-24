@@ -52,7 +52,7 @@ public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorContr
         
         View = view;
         View.Controller = this;
-        View.Closed += OnClosed;
+        View.OnFormClosed += OnClosed;
     }
     
     /// <summary>
@@ -146,7 +146,7 @@ public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorContr
 
     private bool DoesOutputDirExist() => 
         fs.DirectoryExists(GetOutputDirectoryName());
-
+    
     private void OnClosed(object? sender, EventArgs eventArgs) => 
         Closed?.Invoke(sender, eventArgs);
 

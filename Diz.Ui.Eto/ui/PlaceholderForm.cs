@@ -1,7 +1,7 @@
 ﻿using Eto.Drawing;
 using Eto.Forms;
 
-namespace Diz.Ui.Eto;
+namespace Diz.Ui.Eto.ui;
 
 public class PlaceholderForm : Form
 {

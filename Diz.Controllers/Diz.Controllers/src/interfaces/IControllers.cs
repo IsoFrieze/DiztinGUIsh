@@ -8,6 +8,7 @@ using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.util;
 using Diz.Cpu._65816;
+using JetBrains.Annotations;
 
 // NOTE: lots of these interfaces were created temporarily for major refactoring.
 // when that process is finished, we should probably take a pass here to simplify anything
@@ -56,7 +57,7 @@ public interface IProjectController :
 
     bool ImportRomAndCreateNewProject(string romFilename);
     void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
-    void SelectOffset(int offset, ISnesNavigation.HistoryArgs historyArgs = null);
+    void SelectOffset(int offset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs = null);
 
     bool ConfirmSettingsThenExportAssembly();
     bool ExportAssemblyWithCurrentSettings();

@@ -9,7 +9,7 @@ namespace Diz.Controllers.interfaces;
 
 public interface IFormViewer
 {
-    public event EventHandler Closed;
+    public event EventHandler OnFormClosed;
     void Show();
     void Close();
     void BringFormToTop();
