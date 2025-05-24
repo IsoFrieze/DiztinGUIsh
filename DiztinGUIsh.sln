@@ -34,7 +34,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Controllers.Test", "Diz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Ui.Eto", "Diz.Ui.Eto\Diz.Ui.Eto.csproj", "{31B6052F-721D-4CBA-87D5-B289B9389D3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Views", "Diz.Views\Diz.Views.csproj", "{42F88470-39F9-493A-95D4-4D90ED486374}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Ui.Views", "Diz.Ui.Views\Diz.Ui.Views.csproj", "{42F88470-39F9-493A-95D4-4D90ED486374}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
