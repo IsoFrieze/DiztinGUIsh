@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Diz.Core.model;
+using Diz.Core.Interfaces;
 using Diz.Core.util;
 using JetBrains.Annotations;
 

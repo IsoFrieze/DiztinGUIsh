@@ -1,4 +1,4 @@
-﻿using Diz.Core.model;
+﻿using Diz.Core.Interfaces;
 using Diz.Core.util;
 
 namespace Diz.Import.bsnes.tracelog;

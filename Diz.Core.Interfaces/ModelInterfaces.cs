@@ -1,7 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.ComponentModel;
-using Diz.Core.model;
-using IX.Observable;
+
 #if DIZ_3_BRANCH
 using Diz.Core.model.byteSources;
 #endif

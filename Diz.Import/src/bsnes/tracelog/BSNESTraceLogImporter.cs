@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using Diz.Core.model;
+using Diz.Core.Interfaces;
 using Diz.Cpu._65816;
 
 namespace Diz.Import.bsnes.tracelog;

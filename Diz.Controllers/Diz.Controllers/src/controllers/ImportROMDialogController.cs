@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Diz.Controllers.interfaces;
-using Diz.Core.model;
+using Diz.Core.Interfaces;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using Diz.Cpu._65816.import;

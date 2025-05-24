@@ -3,7 +3,7 @@ using Diz.LogWriter;
 using FluentAssertions;
 using Xunit;
 
-namespace Diz.Test;
+namespace Diz.Test.Tests.LogCreatorTests;
 
 public class AssemblyStrings
 {

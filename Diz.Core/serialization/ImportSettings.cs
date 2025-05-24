@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
 

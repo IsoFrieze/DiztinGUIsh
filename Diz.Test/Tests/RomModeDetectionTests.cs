@@ -1,4 +1,4 @@
-﻿using Diz.Core.model;
+﻿using Diz.Core.Interfaces;
 using Diz.Core.model.project;
 using Diz.Core.util;
 using Diz.Cpu._65816.import;

@@ -1,4 +1,4 @@
-﻿using Diz.Core.model;
+﻿using Diz.Core.Interfaces;
 
 namespace Diz.Cpu._65816;
 

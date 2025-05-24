@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Diz.Core;
 using Diz.Core.export;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Cpu._65816;
@@ -8,7 +9,7 @@ using Diz.Test.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Diz.Test;
+namespace Diz.Test.Tests.LogCreatorTests;
 
 public class LogCreatorTests : ContainerFixture
 {

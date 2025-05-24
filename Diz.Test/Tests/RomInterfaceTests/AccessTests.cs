@@ -1,16 +1,15 @@
 ﻿// everything here was migrated to AccessTests.cs
 
 using System.Collections.Generic;
-using System.Linq;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Cpu._65816;
 using Diz.Test.Utils;
 using IX.Library.Collections;
-using IX.Observable;
 using Xunit;
 
-namespace Diz.Test
+namespace Diz.Test.Tests.RomInterfaceTests
 {
     public static class CpuTests
     {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
 

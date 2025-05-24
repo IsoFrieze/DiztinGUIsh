@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using Diz.Core.model;
+using Diz.Core.Interfaces;
 using Diz.Core.serialization;
 using JetBrains.Annotations;
 

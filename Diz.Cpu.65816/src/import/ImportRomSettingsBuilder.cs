@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
-using System.Collections.Immutable;
 using System.ComponentModel;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.project;
 using Diz.Core.serialization;

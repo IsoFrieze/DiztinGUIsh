@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Diz.Controllers.controllers;
 using Diz.Controllers.interfaces;
-using Diz.Core.model;
+using Diz.Core.Interfaces;
 using Diz.Core.model.project;
 using Diz.Core.serialization;
 using Diz.Core.util;
