@@ -7,7 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <RootNamespace>DiztinGUIsh</RootNamespace>
-    <PackageId>DiztinGUIsh</PackageId>
+    <PackageId>Diz.App.Winforms</PackageId>
     <ApplicationIcon>resource/diz-icon2-magenta-med32x32.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>

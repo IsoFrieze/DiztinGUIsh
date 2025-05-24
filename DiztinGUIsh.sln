@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30503.244
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiztinGUIsh", "DiztinGUIsh\DiztinGUIsh.csproj", "{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.App.Winforms", "Diz.App.Winforms\Diz.App.Winforms.csproj", "{2A2DD3C1-9E64-4CD7-98A5-310D9FED2CA3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Core", "Diz.Core\Diz.Core.csproj", "{50646B00-03D8-4CEC-9ED1-3EF4CB199E8B}"
 EndProject
