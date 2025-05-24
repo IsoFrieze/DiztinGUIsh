@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using Diz.Controllers.interfaces;
 using LightInject;
 
 namespace DiztinGUIsh;

@@ -1,7 +1,6 @@
-﻿using Diz.Controllers.controllers;
-using Diz.Controllers.interfaces;
+﻿using Diz.Controllers.interfaces;
+using Diz.Ui.Winforms;
 using Diz.Ui.Winforms.dialogs;
-using DiztinGUIsh.window;
 using JetBrains.Annotations;
 using LightInject;
 
@@ -11,14 +10,8 @@ namespace DiztinGUIsh;
 {
     public void Compose(IServiceRegistry serviceRegistry)
     {
-        serviceRegistry.Register<IDizApp, DizApp>();
-        serviceRegistry.Register<ICommonGui, CommonGui>();
-        
-        serviceRegistry.Register<IImportRomDialogView, ImportRomDialog>("ImportRomView");
-        serviceRegistry.Register<IProgressView, ProgressDialog>("ProgressBarView");
-        serviceRegistry.Register<ILogCreatorSettingsEditorView, LogCreatorSettingsEditorForm>("ExportDisassemblyView");
-        serviceRegistry.Register<ILabelEditorView, AliasList>("LabelEditorView");
-        serviceRegistry.Register<IMainGridWindowView, MainWindow>("MainGridWindowView");
+        serviceRegistry.Register<IDizApp, DizWinformsApp>();
+        serviceRegistry.Register<ICommonGui, WinFormsCommonGui>();
 
         // the (string) names of the views above will be mapped to the method names of the interface below.
         // i.e. calling IViewFactory.GetLabelEditorView() will look for somthing named "LabelEditorView"

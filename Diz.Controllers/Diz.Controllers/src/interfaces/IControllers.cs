@@ -192,6 +192,7 @@ namespace Diz.Controllers.interfaces
         string GetSampleOutput();
     }
     
+    
     public interface IDizAppSettings : INotifyPropertyChanged
     {
         string LastProjectFilename { get; set; }
