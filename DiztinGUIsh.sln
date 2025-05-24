@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Core", "Diz.Core\Diz.Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Test", "Diz.Test\Diz.Test.csproj", "{594DE30A-343F-4C09-828D-65A67626A491}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.PowerShell", "Diz.PowerShell\Diz.PowerShell.csproj", "{90309EF0-855F-4B9C-B501-53C5BF1E72BD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.App.PowerShell", "Diz.App.PowerShell\Diz.App.PowerShell.csproj", "{90309EF0-855F-4B9C-B501-53C5BF1E72BD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.LogWriter", "Diz.LogWriter\Diz.LogWriter.csproj", "{96859F8F-5921-409C-A7A2-ECECDE5F70A7}"
 EndProject

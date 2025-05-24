@@ -8,6 +8,7 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <Nullable>enable</Nullable>
+    <RootNamespace>Diz.PowerShell</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
