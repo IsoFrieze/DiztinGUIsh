@@ -1,24 +1,16 @@
 ﻿#nullable enable
 
 using System;
-using Diz.Controllers.interfaces;
-using LightInject;
+using Diz.App.Common;
 
 namespace Diz.App.Winforms;
 
 internal static class Program
 {
     [STAThread]
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
         var serviceFactory = DizWinformsRegisterServices.CreateServiceFactoryAndRegisterTypes();
-        
-        var dizApp = serviceFactory.GetInstance<IDizApp>();
-        
-        var openFile = "";
-        if (args.Length > 0)
-            openFile = args[0];
-        
-        dizApp.Run(openFile);
+        DizAppCommon.StartApp(serviceFactory, args);
     }
 }
