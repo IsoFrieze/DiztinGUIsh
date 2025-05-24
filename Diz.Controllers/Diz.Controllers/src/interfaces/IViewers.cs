@@ -7,40 +7,12 @@ using JetBrains.Annotations;
 
 namespace Diz.Controllers.interfaces;
 
-public interface IFormViewer : ICloseHandler, IShowable
+public interface IFormViewer
 {
-    
-}
-
-public interface IShowable
-{
+    public event EventHandler Closed;
     void Show();
-}
-    
-public interface IFocusable
-{
-    void BringFormToTop(); // not the most elegant thing
-}
-
-public interface IStartFormViewer : IProjectOpenRequester, IFormViewer
-{
-        
-}
-
-public record ProjectOpenEventArgs
-{
-    public string Filename { get; init; }
-    public bool OpenLast { get; init; }
-}
-    
-public interface IProjectOpenRequester
-{
-    public event EventHandler<ProjectOpenEventArgs> ProjectOpenRequested;
-}
-
-public interface ICloseable
-{
     void Close();
+    void BringFormToTop();
 }
 
 public interface IModalDialog
@@ -54,7 +26,7 @@ public interface IModalDialog
 }
     
 
-public interface IProgressView : IFormViewer, ICloseable, IModalDialog, IProgress<int> {
+public interface IProgressView : IFormViewer, IModalDialog, IProgress<int> {
     public bool IsMarquee { get; set; }
     public string TextOverride { get; set; }
     bool Visible { get; set; }
@@ -104,7 +76,7 @@ public interface IMarkManyView<TDataSource> : IModalDialog
     }
 #endif
     
-public interface ILabelEditorView : IFormViewer, IFocusable
+public interface ILabelEditorView : IFormViewer
 {
     [CanBeNull] public IProjectController ProjectController { get; set; }
         

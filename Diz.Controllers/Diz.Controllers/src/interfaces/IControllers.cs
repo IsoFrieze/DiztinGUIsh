@@ -15,16 +15,12 @@ using Diz.Cpu._65816;
 
 namespace Diz.Controllers.interfaces;
 
-public interface ICloseHandler
-{
-    public event EventHandler Closed;
-}
+// public interface IStartFormController : IFormViewer
+// {
+//     public IStartFormViewer View { get; }
+// }
+//     
 
-public interface IStartFormController : IFormViewer
-{
-    public IStartFormViewer View { get; }
-}
-    
 public interface IProjectController : 
     ITraceLogImporters,
     IFixInstructionUtils,
