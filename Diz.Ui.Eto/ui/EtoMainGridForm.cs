@@ -223,15 +223,12 @@ public class EtoMainGridForm : Form, IMainGridWindowView
         
         // Apply the container as the content of the form
         Content = layout;
-    }
-
-    protected override void OnShown(EventArgs e)
-    {
-        // for some reason, this is better done here or we get weird rendering bugs on first showing that are impossible to figure out
+        
+        // hacky nonsense: need to show the form, set the data, then invalidate, or we get weird rendering bugs in
+        // Winforms with black unpainted grid cells etc
+        Show();
         gridView.DataStore = GetGridData();
         Invalidate(true);
-        
-        base.OnShown(e);
     }
 
     private IEnumerable<object> GetGridData()
