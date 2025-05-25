@@ -25,4 +25,9 @@
       <ProjectReference Include="..\Diz.Controllers\Diz.Controllers\Diz.Controllers.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="images\diz-icon2-magenta-med32x32.ico" />
+      <EmbeddedResource Include="resource\diz-icon2-magenta-med32x32.ico" />
+    </ItemGroup>
+
 </Project>
