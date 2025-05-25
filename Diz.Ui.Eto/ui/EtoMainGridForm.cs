@@ -102,8 +102,6 @@ public class EtoMainGridForm : Form, IMainGridWindowView
     private void CreateGui()
     {
         Title = "Diz";
-        // ClientSize = new Size(800, 600); // seems to be bad to do this
-
         CreateMenu();
 
         // Create the grid view
@@ -205,14 +203,14 @@ public class EtoMainGridForm : Form, IMainGridWindowView
             DataCell = new TextBoxCell("Comment")
         });
         
-        gridView.Size = new Size(1000, 600); // needed to set the initial size of the grid or things seem to get weird.
-        
+        // needed to set the initial size of the grid or things seem to get weird.
+        gridView.Size = new Size(1000, 600);
+
         var bottomFooter = new Label
         {
             Text = "[% Complete etc TODO]",
-            Size = new Size {Height = 20}
+            Size = new Size { Height = 20 }
         };
-        
         
         var layout = new DynamicLayout();
         layout.BeginVertical(yscale: true);
@@ -223,39 +221,16 @@ public class EtoMainGridForm : Form, IMainGridWindowView
         layout.AddRow (bottomFooter);
         layout.EndVertical ();
         
-        gridView.Invalidate(true);
-        gridView.UpdateLayout();
-                
-        UpdateLayout();
-        
-        // gridView.DataStore = GetGridData();
-        Invalidate(true);
-        UpdateLayout();
-        
         // Apply the container as the content of the form
         Content = layout;
-        Content.UpdateLayout();
-        Content.Invalidate(true);
-        
-        Visible = false;
-        Visible = true;
-        
-        Application.Instance.AsyncInvoke(() =>
-        {
-            gridView.Invalidate(true);
-        });
-        
-        Width = 1000;
-        Height = 600;
     }
 
     protected override void OnShown(EventArgs e)
     {
         // for some reason, this is better done here or we get weird rendering bugs on first showing that are impossible to figure out
         gridView.DataStore = GetGridData();
-        
-        UpdateLayout();
         Invalidate(true);
+        
         base.OnShown(e);
     }
 
