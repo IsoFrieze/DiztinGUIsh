@@ -97,6 +97,8 @@ public class EtoMainGridForm : Form, IMainGridWindowView
         };
     }
     
+    private GridView gridView;
+    
     private void CreateGui()
     {
         Title = "Diz";
@@ -105,11 +107,10 @@ public class EtoMainGridForm : Form, IMainGridWindowView
         CreateMenu();
 
         // Create the grid view
-        var gridView = new GridView
+        gridView = new GridView
         {
             AllowMultipleSelection = false,
             ShowHeader = true,
-            DataStore = GetGridData(),
         };
 
         // Add columns to the grid
@@ -212,8 +213,6 @@ public class EtoMainGridForm : Form, IMainGridWindowView
             Size = new Size {Height = 20}
         };
         
-        // ------------
-        // var layout = TableLayout.AutoSized(gridView);  // works pretty good too.
         
         var layout = new DynamicLayout();
         layout.BeginVertical(yscale: true);
@@ -224,19 +223,40 @@ public class EtoMainGridForm : Form, IMainGridWindowView
         layout.AddRow (bottomFooter);
         layout.EndVertical ();
         
-        
-        this.BackgroundColor = Colors.Lime; // tmp
-        layout.BackgroundColor = Colors.Chocolate; //. tmp
-
-        // Apply the container as the content of the form
-        Content = layout;
-        
         gridView.Invalidate(true);
         gridView.UpdateLayout();
-        Content.Invalidate(true);
-        Content.UpdateLayout();
                 
         UpdateLayout();
+        
+        // gridView.DataStore = GetGridData();
+        Invalidate(true);
+        UpdateLayout();
+        
+        // Apply the container as the content of the form
+        Content = layout;
+        Content.UpdateLayout();
+        Content.Invalidate(true);
+        
+        Visible = false;
+        Visible = true;
+        
+        Application.Instance.AsyncInvoke(() =>
+        {
+            gridView.Invalidate(true);
+        });
+        
+        Width = 1000;
+        Height = 600;
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        // for some reason, this is better done here or we get weird rendering bugs on first showing that are impossible to figure out
+        gridView.DataStore = GetGridData();
+        
+        UpdateLayout();
+        Invalidate(true);
+        base.OnShown(e);
     }
 
     private IEnumerable<object> GetGridData()
