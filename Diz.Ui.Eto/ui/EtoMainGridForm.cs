@@ -34,8 +34,7 @@ public class EtoMainGridForm : Form, IMainGridWindowView
     private readonly IDizDocument document;
     private readonly IDizAppSettings appSettings;
     private readonly IViewFactory viewFactory;
-    private readonly IProjectController projectController;
-
+    public IProjectController ProjectController { get; }
 
     public EtoMainGridForm(
         IProjectController projectController,
@@ -48,15 +47,15 @@ public class EtoMainGridForm : Form, IMainGridWindowView
         this.document = document;
         this.appSettings = appSettings;
         this.viewFactory = viewFactory;
-        this.projectController = projectController;
-        this.projectController.ProjectView = this;
+        this.ProjectController = projectController;
+        this.ProjectController.ProjectView = this;
 
         // TODO
         // aliasList = viewFactory.GetLabelEditorView();
         // aliasList.ProjectController = this.projectController;
 
         this.document.PropertyChanged += Document_PropertyChanged;
-        this.projectController.ProjectChanged += ProjectController_ProjectChanged;
+        this.ProjectController.ProjectChanged += ProjectController_ProjectChanged;
 
         // NavigationForm = new NavigationForm // TODO
         // {

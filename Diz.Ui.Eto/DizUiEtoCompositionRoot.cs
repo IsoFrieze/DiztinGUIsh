@@ -12,9 +12,9 @@ namespace Diz.Ui.Eto;
     {
         // TODO: register Eto-specific versions of this stuff
         serviceRegistry.Register<IMainGridWindowView, EtoMainGridForm>("MainGridWindowView");
+        serviceRegistry.Register<IProgressView, EtoProgressForm>("ProgressBarView");
         // serviceRegistry.Register<IFormViewer, PlaceholderForm>("AboutView");
         // serviceRegistry.Register<IImportRomDialogView, PlaceholderForm>("ImportRomView");
-        // serviceRegistry.Register<IProgressView, PlaceholderForm>("ProgressBarView");
         // serviceRegistry.Register<ILogCreatorSettingsEditorView, PlaceholderForm>("ExportDisassemblyView");
         // serviceRegistry.Register<ILabelEditorView, PlaceholderForm>("LabelEditorView");
         

@@ -29,7 +29,7 @@ public interface IModalDialog
 public interface IProgressView : IFormViewer, IModalDialog, IProgress<int> {
     public bool IsMarquee { get; set; }
     public string TextOverride { get; set; }
-    bool Visible { get; set; }
+    bool IsVisible();
         
     /// <summary>
     /// Signal that a job (potentially running in another task/thread) has completed.

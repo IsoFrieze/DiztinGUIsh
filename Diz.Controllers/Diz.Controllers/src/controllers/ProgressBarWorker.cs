@@ -81,7 +81,8 @@ namespace Diz.Controllers.controllers
             {
                 // BAD APPROACH. we should instead get an event
                 // I'm too lazy right now. TODO FIXME
-                while (!View.Visible)
+                // TODO: fix: in Eto we can't call .Visible from the non-UI thread 
+                while (!View.IsVisible())
                     Thread.Sleep(50);
 
                 Thread_DoWork();
