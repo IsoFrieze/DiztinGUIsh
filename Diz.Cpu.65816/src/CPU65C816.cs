@@ -385,7 +385,15 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             // this is to try and get more labels in the output by creating a mathematical expression
             // for ASAR to use. only works if you have accurate 'D' register (direct page) set.
             // usually only useful after you've done a lot of tracelog capture.
-            if (AttemptTouseDirectPageArithmeticInFinalOutput && mode is Cpu65C816Constants.AddressMode.DirectPage)
+            if (AttemptTouseDirectPageArithmeticInFinalOutput && mode
+                    is Cpu65C816Constants.AddressMode.DirectPage
+                    or Cpu65C816Constants.AddressMode.DirectPageXIndex
+                    or Cpu65C816Constants.AddressMode.DirectPageYIndex
+                    or Cpu65C816Constants.AddressMode.DirectPageIndirect
+                    or Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect
+                    or Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex
+                    or Cpu65C816Constants.AddressMode.DirectPageLongIndirect
+                    or Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex)
             {
                 var dp = data.GetDirectPage(offset);
                 if (dp != 0)
