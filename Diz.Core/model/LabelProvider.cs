@@ -62,10 +62,22 @@ namespace Diz.Core.model
         // returns both real and temporary labels
         IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;
 
-        public void AddTemporaryLabel(int snesAddress, IAnnotationLabel label)
+        public void AddOrReplaceTemporaryLabel(int snesAddress, IAnnotationLabel label)
         {
-            if (NormalProvider.GetLabel(snesAddress) == null && TemporaryProvider.GetLabel(snesAddress) == null)
+            // never generate a label that overrides a real human-generated label that was created manually
+            if (NormalProvider.GetLabel(snesAddress) != null)
+                return;
+            
+            var existingLabel = TemporaryProvider.GetLabel(snesAddress);
+            if (existingLabel == null)
+            {
                 TemporaryProvider.AddLabel(snesAddress, label);
+            }
+            else
+            {
+                existingLabel.Comment = label.Comment;
+                existingLabel.Name = label.Name;
+            }
         }
 
         public void ClearTemporaryLabels()
@@ -82,6 +94,8 @@ namespace Diz.Core.model
 
         public override IAnnotationLabel GetLabel(int snesAddress)
         {
+            // if there's a real label (like, added in the Diz GUI), prefer that.
+            // if there's not, use an auto-generated label if it exists
             var normalExisting = NormalProvider.GetLabel(snesAddress);
             return normalExisting ?? TemporaryProvider.GetLabel(snesAddress);
         }

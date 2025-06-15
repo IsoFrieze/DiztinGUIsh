@@ -16,12 +16,12 @@ public interface IReadOnlyLabelProvider
 {
     public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels { get; }
 
-    IAnnotationLabel GetLabel(int snesAddress);
+    IAnnotationLabel? GetLabel(int snesAddress);
     string GetLabelName(int snesAddress);
     string GetLabelComment(int snesAddress);
 }
     
-public interface ILabelProvider
+public interface ILabelProvider // : IReadOnlyLabelProvider [if you want, in the future]
 {
     void AddLabel(int snesAddress, IAnnotationLabel label, bool overwrite = false);
     void DeleteAllLabels();
