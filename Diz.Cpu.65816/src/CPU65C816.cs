@@ -368,71 +368,48 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (intermediateAddress < 0)
             return "";
 
-        if (data is IReadOnlyLabels labelProvider)
+        // is there a label for this absolute address? if so, we'll use that
+        var labelName = GetValidatedLabelNameForOffset(data, offset);
+        if (labelName != "")
+            return labelName;
+
+        // otherwise, if no appropriate label found...
+        
+        // OPTIONAL:
+        // super-specific variable substitution.  this needs to be heavily generalized.
+        // this MAY NOT COVER EVERY EDGE CASE. feel free to modify or disable it.
+        // this is to try and get more labels in the output by creating a mathematical expression
+        // for ASAR to use. only works if you have accurate 'D' register (direct page) set.
+        // usually only useful after you've done a lot of tracelog capture.
+        if (AttemptTouseDirectPageArithmeticInFinalOutput && mode
+                is Cpu65C816Constants.AddressMode.DirectPage
+                or Cpu65C816Constants.AddressMode.DirectPageXIndex
+                or Cpu65C816Constants.AddressMode.DirectPageYIndex
+                or Cpu65C816Constants.AddressMode.DirectPageIndirect
+                or Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect
+                or Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex
+                or Cpu65C816Constants.AddressMode.DirectPageLongIndirect
+                or Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex)
         {
-            // is there a label for this absolute address? if so, lets use that
-            var labelName = labelProvider.Labels.GetLabelName(intermediateAddress);
-            if (labelName != "")
+            var dp = data.GetDirectPage(offset);
+            if (dp != 0)
             {
-                // couple of special cases.
-                // we won't return +/- temp labels if this isn't an opcode we want to use with branching.
-                if (!RomUtil.IsValidPlusMinusLabel(labelName)) // "+". "-", "++", "--", etc
-                    return labelName; // not a local label, OK to use 
-                
-                // this is a +/- local label, so, do some extra checks...
-                var opcode = data.GetRomByte(offset); // advance the offset to the next byte
-                var opcodeIsBranch = opcode == 0x80 || // BRA
-                                     opcode == 0x10 || opcode == 0x30 || opcode == 0x50 ||
-                                     opcode == 0x70 || // BPL BMI BVC BVS
-                                     opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 ||
-                                     opcode == 0xF0; // BCC BCS BNE BEQ
-                // NOT going to do this for any JUMPs like JMP, JML, and also not BRL
-
-                // only allow us to use the local label if we're a branch
-                if (opcodeIsBranch)
-                    return labelName;
-            }
-
-            // otherwise...
-            
-            // TODO: extract some of this label mirroring logic into its own function so other stuff can call it
-            
-            // OPTIONAL:
-            // super-specific variable substitution.  this needs to be heavily generalized.
-            // this MAY NOT COVER EVERY EDGE CASE. feel free to modify or disable it.
-            // this is to try and get more labels in the output by creating a mathematical expression
-            // for ASAR to use. only works if you have accurate 'D' register (direct page) set.
-            // usually only useful after you've done a lot of tracelog capture.
-            if (AttemptTouseDirectPageArithmeticInFinalOutput && mode
-                    is Cpu65C816Constants.AddressMode.DirectPage
-                    or Cpu65C816Constants.AddressMode.DirectPageXIndex
-                    or Cpu65C816Constants.AddressMode.DirectPageYIndex
-                    or Cpu65C816Constants.AddressMode.DirectPageIndirect
-                    or Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect
-                    or Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex
-                    or Cpu65C816Constants.AddressMode.DirectPageLongIndirect
-                    or Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex)
-            {
-                var dp = data.GetDirectPage(offset);
-                if (dp != 0)
+                var candidateLabelName = data.Labels.GetLabelName(dp + intermediateAddress);
+                if (candidateLabelName != "")
                 {
-                    labelName = labelProvider.Labels.GetLabelName(dp + intermediateAddress);
-                    if (labelName != "")
-                    {
-                        // direct page addressing. we can use an expression to use a variable name for this
-                        // TODO: we can also use asar directive .dbase to set the assumed DB register.
-                        return $"{labelName}-${dp:X}"; // IMPORTANT: no spaces on that minus sign.
-                    }
+                    // direct page addressing. we can use an expression to use a variable name for this
+                    // TODO: we can also use asar directive .dbase to set the assumed DB register.
+                    return $"{candidateLabelName}-${dp:X}"; // IMPORTANT: no spaces on that minus sign.
                 }
             }
-            
-            // OPTIONAL 2: try some crazy hackery to deal with mirroring on RAM labels.
-            // (this is super-hacky, we need to do this better)
-            // also, can the DP address above ALSO interact with this? (probably, right?) if so, we need to keep that in mind
-            var (labelAddressFound, labelEntryFound) = SearchForMirroredLabel(data, intermediateAddress);
-            if (labelEntryFound != null)
-                return $"{labelEntryFound.Name}";
         }
+        
+        // OPTIONAL 2: try some crazy hackery to deal with mirroring on RAM labels.
+        // (this is super-hacky, we need to do this better)
+        // also, can the DP address above ALSO interact with this? (probably, right?) if so, we need to keep that in mind
+        var (labelAddressFound, labelEntryFound) = SearchForMirroredLabel(data, intermediateAddress);
+        if (labelEntryFound != null)
+            return $"{labelEntryFound.Name}";
 
         var count = BytesToShow(mode);
         if (mode is Cpu65C816Constants.AddressMode.Relative8 or Cpu65C816Constants.AddressMode.Relative16)
@@ -446,6 +423,50 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             
         intermediateAddress &= ~(-1 << (8 * count));
         return Util.NumberToBaseString(intermediateAddress, Util.NumberBase.Hexadecimal, 2 * count, true);
+    }
+
+    private static string GetValidatedLabelNameForOffset(TByteSource data, int srcOffset)
+    {
+        var destinationIa = data.GetIntermediateAddress(srcOffset);
+        if (destinationIa < 0)
+            return "";
+        
+        var candidateLabelName = data.Labels.GetLabelName(destinationIa);
+        if (candidateLabelName == "")
+            return "";
+        
+        // some special cases related to +/- local labels:
+        
+        // is this a local label?  like "+". "-", "++", "--", etc?
+        if (!RomUtil.IsValidPlusMinusLabel(candidateLabelName)) 
+            return candidateLabelName;      // not local label, so we're good
+        
+        // this IS a local +/- label, so let's do some additional validation..
+        
+        var opcode = data.GetRomByte(srcOffset);
+        var opcodeIsBranch = 
+            opcode == 0x80 || // BRA
+            opcode == 0x10 || opcode == 0x30 || opcode == 0x50 || opcode == 0x70 || // BPL BMI BVC BVS
+            opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 || opcode == 0xF0;   // BCC BCS BNE BEQ
+        // NOT going to do this for any JUMPs like JMP, JML, and also not BRL
+        
+        // don't allow local +/- labels unless the opcode is a branch
+        if (!opcodeIsBranch)
+            return "";
+    
+        // finally, if this IS a branch AND a +/- label,
+        // make sure the branch is in the correct direction
+        // (no other checks prevent this except right here).
+        // DIZ doesn't treat local labels special, so it's up
+        // to us to enforce this here:
+        var srcSnesAddress = data.ConvertPCtoSnes(srcOffset);
+        var branchDirectionIsForward = candidateLabelName[0] == '+';
+        
+        var validBranchDirection =
+            srcSnesAddress != destinationIa &&                            // infinite loop (branch to self) 
+            branchDirectionIsForward == (srcSnesAddress < destinationIa); // trying to branch the wrong way
+
+        return validBranchDirection ? candidateLabelName : "";
     }
 
     private (int labelAddress, IAnnotationLabel? labelEntry) SearchForMirroredLabel(TByteSource data, int snesAddress)
