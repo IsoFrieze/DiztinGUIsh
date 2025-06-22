@@ -467,5 +467,25 @@ namespace Diz.Core.util
 	
             return addrNoBank; // in range!
         }
+        
+        
+        // detect if this is a +/- label.  like "+", "-", or "++", "--" etc.
+        public static bool IsValidPlusMinusLabel(string label)
+        {
+            if (string.IsNullOrEmpty(label))
+                return false;
+        
+            var firstChar = label[0];
+            if (firstChar != '+' && firstChar != '-')
+                return false;
+        
+            for (var i = 1; i < label.Length; i++)
+            {
+                if (label[i] != firstChar)
+                    return false;
+            }
+    
+            return true;
+        }
     }
 }
