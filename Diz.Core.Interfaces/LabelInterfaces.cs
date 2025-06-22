@@ -22,10 +22,10 @@ public interface IReadOnlyLabelProvider
     
     // optimization: optional: get a provider that can give a smaller subset
     // of labels for assembly logging output, to reduce search space and improve export speed.
-    public IExporterCache? ExporterCache { get; }
+    public IMirroredLabelCacheSearch? MirroredLabelCacheSearch { get; }
 }
 
-public interface IExporterCache
+public interface IMirroredLabelCacheSearch
 {
     (int labelAddress, IAnnotationLabel? labelEntry) SearchOptimizedForMirroredLabel(int snesAddress);
 }

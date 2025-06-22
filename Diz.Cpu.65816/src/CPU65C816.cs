@@ -407,6 +407,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // OPTIONAL 2: try some crazy hackery to deal with mirroring on RAM labels.
         // (this is super-hacky, we need to do this better)
         // also, can the DP address above ALSO interact with this? (probably, right?) if so, we need to keep that in mind
+        // NOTE: BE REALLY CAREFUL: THIS IS A PERFORMANCE-INTENSE and HEAVILY OPTIMIZED FUNCTION
         var (labelAddressFound, labelEntryFound) = SearchForMirroredLabel(data, intermediateAddress);
         if (labelEntryFound != null)
             return $"{labelEntryFound.Name}";
@@ -471,16 +472,18 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
     private (int labelAddress, IAnnotationLabel? labelEntry) SearchForMirroredLabel(TByteSource data, int snesAddress)
     {
-        // WARNING: this is an EXTREMELY wasteful and very inefficient search. cache wram addresses in labels if needed for perf
+        // WARNING: during assembly text export, this function is EXTREMELY performance intensive.
+        // PLEASE PROFILE before making any serious changes 
 
         // optimization: during exporting, this function is EXTREMELY performance intensive.
         // let's try and use a smaller subset of labels to search.
         // this will only be available in certain contexts, like when exporting assembly text.
-        var exporterCache = data.Labels.ExporterCache;
+        var exporterCache = data.Labels.MirroredLabelCacheSearch;
         if (exporterCache != null)
             return exporterCache.SearchOptimizedForMirroredLabel(snesAddress);
 
-        // less optimized fallback version (does same thing)
+        // less optimized fallback version (does same thing as above, but uses all labels)
+        // this is used during normal operation (like scrolling around the grid)
         foreach (var (labelAddress, labelEntry) in data.Labels.Labels)
         {
             if (!RomUtil.AreLabelsSameMirror(snesAddress, labelAddress)) 

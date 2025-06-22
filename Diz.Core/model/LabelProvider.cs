@@ -14,11 +14,11 @@ using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
-    public class LabelsExporterCache : IExporterCache
+    public class LabelsMirroredLabelCacheSearch : IMirroredLabelCacheSearch
     {
         private readonly Dictionary<int, IAnnotationLabel> exporterLabelsSubset;
 
-        public LabelsExporterCache(IEnumerable<KeyValuePair<int, IAnnotationLabel>> allLabels)
+        public LabelsMirroredLabelCacheSearch(IEnumerable<KeyValuePair<int, IAnnotationLabel>> allLabels)
         {
             exporterLabelsSubset = allLabels
                 .Where(x=> 
@@ -143,13 +143,13 @@ namespace Diz.Core.model
         public void LockLabelsCache()
         {
             cachedLabels = ConcatNormalAndTempLabels().ToDictionary();
-            exporterCache = new LabelsExporterCache(cachedLabels);
+            mirroredLabelCacheSearch = new LabelsMirroredLabelCacheSearch(cachedLabels);
         }
 
         public void UnlockLabelsCache()
         {
             cachedLabels = null;
-            exporterCache = null;
+            mirroredLabelCacheSearch = null;
         }
         
         // performance only: ALL LABELS: cache of combined temp and real labels together,
@@ -157,7 +157,7 @@ namespace Diz.Core.model
         [CanBeNull] private Dictionary<int, IAnnotationLabel> cachedLabels;
         // performance only: SUBSET of LABELS: this is mostly used for reducing the search space for
         // intense label searches for bank mirroring/etc, where complexity is O(N^2) that grows per-label.
-        [CanBeNull] private IExporterCache exporterCache;
+        [CanBeNull] private IMirroredLabelCacheSearch mirroredLabelCacheSearch;
 
         // very expensive method, use sparingly
         // returns both real and temporary labels
@@ -177,7 +177,7 @@ namespace Diz.Core.model
             return normalExisting ?? TemporaryProvider.GetLabel(snesAddress);
         }
 
-        public IExporterCache ExporterCache => exporterCache;
+        public IMirroredLabelCacheSearch MirroredLabelCacheSearch => mirroredLabelCacheSearch;
 
         public void DeleteAllLabels()
         {
@@ -423,7 +423,7 @@ namespace Diz.Core.model
             Labels.GetValueOrDefault(snesAddress);
 
         // non-temp label provider will never use this
-        public IExporterCache ExporterCache => null;
+        public IMirroredLabelCacheSearch MirroredLabelCacheSearch => null;
 
         #region "Equality"
         public bool Equals(LabelsCollection other)
