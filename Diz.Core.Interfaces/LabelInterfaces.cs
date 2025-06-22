@@ -21,7 +21,7 @@ public interface IReadOnlyLabelProvider
     string GetLabelComment(int snesAddress);
 }
     
-public interface ILabelProvider // : IReadOnlyLabelProvider [if you want, in the future]
+public interface ILabelProvider : IReadOnlyLabelProvider
 {
     void AddLabel(int snesAddress, IAnnotationLabel label, bool overwrite = false);
     void DeleteAllLabels();

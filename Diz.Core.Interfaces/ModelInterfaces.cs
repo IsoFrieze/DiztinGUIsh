@@ -142,7 +142,7 @@ namespace Diz.Core.Interfaces
     
 
     // would love to redesign so we can get rid of this class and all this temporary label stuff.
-    public interface ITemporaryLabelProvider // : ILabelProvider [if you want in the future]
+    public interface ITemporaryLabelProvider : ILabelProvider
     {
         // add a temporary label which will be cleared out when we are finished the export
         // this should not add a label if a real label already exists.
