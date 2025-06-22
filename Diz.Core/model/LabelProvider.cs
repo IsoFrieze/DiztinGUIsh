@@ -33,7 +33,13 @@ namespace Diz.Core.model
                     !x.Value.Name.StartsWith("DATA16_") &&
                     !x.Value.Name.StartsWith("DATA24_") &&
                     !x.Value.Name.StartsWith("LOOSE_OP_") &&
-                    !x.Value.Name.StartsWith("TEXT_")
+                    !x.Value.Name.StartsWith("TEXT_") &&
+                    
+                    // exclude labels that can't possibly be mirrors of any WRAM or other stuff
+                    // (note: keep this in-sync with the checks from AreLabelsSameMirror())
+                    (
+                        RomUtil.GetWramAddress(x.Key) != -1 || RomUtil.GetUnmirroredIoRegionFromBank(x.Key) != -1
+                    )
                     
                     // probably more are useful to add here...
                 )
