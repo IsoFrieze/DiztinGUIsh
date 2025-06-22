@@ -453,7 +453,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // WARNING: this is an EXTREMELY wasteful and very inefficient search. cache wram addresses in labels if needed for perf
         foreach (var (labelAddress, labelEntry) in data.Labels.Labels)
         {
-            if (!AreLabelsSameMirror(data, snesAddress, labelAddress)) 
+            if (!AreLabelsSameMirror(snesAddress, labelAddress)) 
                 continue;
 
             // we found a label that's in WRAM and matches the same WRAM address as our IA.
@@ -470,7 +470,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return (-1, null);
     }
 
-    private static bool AreLabelsSameMirror(TByteSource data, int snesAddress, int labelAddress)
+    private static bool AreLabelsSameMirror(int snesAddress, int labelAddress)
     {
         if (snesAddress == -1 || labelAddress == -1)
             return false;
