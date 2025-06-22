@@ -16,7 +16,7 @@ namespace Diz.Core.model
 {
     public class LabelsExporterCache : IExporterCache
     {
-        private readonly ImmutableSortedDictionary<int, IAnnotationLabel> exporterLabelsSubset;
+        private readonly Dictionary<int, IAnnotationLabel> exporterLabelsSubset;
 
         public LabelsExporterCache(IEnumerable<KeyValuePair<int, IAnnotationLabel>> allLabels)
         {
@@ -38,7 +38,7 @@ namespace Diz.Core.model
                     // probably more are useful to add here...
                 )
 
-                .ToImmutableSortedDictionary();
+                .ToDictionary();
         }
 
         public (int labelAddress, IAnnotationLabel labelEntry) SearchOptimizedForMirroredLabel(int snesAddress)
@@ -46,14 +46,17 @@ namespace Diz.Core.model
             if (exporterLabelsSubset == null)
                 return (-1, null);
 
-            // Find just the first key that matches our mirror condition
-            var firstMirrorKey = exporterLabelsSubset.Keys
-                .FirstOrDefault(labelAddress => RomUtil.AreLabelsSameMirror(snesAddress, labelAddress));
+            // do this WITHOUT LINQ for optimization purposes
+            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var kvp in exporterLabelsSubset)
+            {
+                if (RomUtil.AreLabelsSameMirror(snesAddress, kvp.Key))
+                {
+                    return (kvp.Key, kvp.Value);
+                }
+            }
 
-            // If a matching key was found (not default/0), return it with its value
-            return firstMirrorKey != 0 
-                ? (firstMirrorKey, exporterLabelsSubset[firstMirrorKey]) 
-                : (-1, null);
+            return (-1, null);
         }
     }
     
