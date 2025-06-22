@@ -8,6 +8,7 @@ using Diz.Core.Interfaces;
 using Diz.Core.model.byteSources;
 #endif
 using Diz.Core.model.snes;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model
 {
@@ -64,6 +65,9 @@ namespace Diz.Core.model
 
         public void AddOrReplaceTemporaryLabel(int snesAddress, IAnnotationLabel label)
         {
+            if (cachedLabels != null)
+                throw new InvalidOperationException("Cannot modify labels while cache is locked");
+            
             // never generate a label that overrides a real human-generated label that was created manually
             if (NormalProvider.GetLabel(snesAddress) != null)
                 return;
@@ -82,14 +86,34 @@ namespace Diz.Core.model
 
         public void ClearTemporaryLabels()
         {
+            if (cachedLabels != null)
+                throw new InvalidOperationException("Cannot modify labels while cache is locked");
+            
             TemporaryProvider.DeleteAllLabels();
         }
 
-        // probably a very expensive method, use sparingly
+        public void LockLabelsCache()
+        {
+            cachedLabels = ConcatNormalAndTempLabels().ToDictionary();
+        }
+
+        public void UnlockLabelsCache()
+        {
+            cachedLabels = null;
+        }
+        
+        // performance only: cache of combined temp and real labels together,
+        // so that requests don't have to ask for Concat() which is slow.
+        [CanBeNull] private Dictionary<int, IAnnotationLabel> cachedLabels;
+
+        // very expensive method, use sparingly
         // returns both real and temporary labels
         //
-        // this method is unordered
+        // the result is unordered (despite the two sources being sorted dicts)
         public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels => 
+            cachedLabels ?? ConcatNormalAndTempLabels();
+
+        private IEnumerable<KeyValuePair<int, IAnnotationLabel>> ConcatNormalAndTempLabels() => 
             NormalProvider.Labels.Concat(TemporaryProvider.Labels);
 
         public override IAnnotationLabel GetLabel(int snesAddress)
@@ -102,6 +126,9 @@ namespace Diz.Core.model
 
         public void DeleteAllLabels()
         {
+            if (cachedLabels != null)
+                throw new InvalidOperationException("Cannot modify labels while cache is locked");
+            
             NormalProvider.DeleteAllLabels();
             TemporaryProvider.DeleteAllLabels();
             
@@ -110,6 +137,9 @@ namespace Diz.Core.model
 
         public void RemoveLabel(int snesAddress)
         {
+            if (cachedLabels != null)
+                throw new InvalidOperationException("Cannot modify labels while cache is locked");
+            
             // we should only operate on real labels here. ignore temporary labels
             
             NormalProvider.RemoveLabel(snesAddress);
@@ -119,6 +149,9 @@ namespace Diz.Core.model
 
         public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
         {
+            if (cachedLabels != null)
+                throw new InvalidOperationException("Cannot modify labels while cache is locked");
+            
             // we should only operate on real labels here. ignore temporary labels.
             // explicitly use AddTemporaryLabel() for temp stuff.
             
@@ -129,6 +162,9 @@ namespace Diz.Core.model
 
         public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
         {
+            if (cachedLabels != null)
+                throw new InvalidOperationException("Cannot modify labels while cache is locked");
+            
             ClearTemporaryLabels();
             NormalProvider.SetAll(newLabels);
             
@@ -137,6 +173,9 @@ namespace Diz.Core.model
 
         public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels, bool smartMerge = false)
         {
+            if (cachedLabels != null)
+                throw new InvalidOperationException("Cannot modify labels while cache is locked");
+            
             NormalProvider.AppendLabels(newLabels, smartMerge);
             
             OnLabelChanged?.Invoke(this, EventArgs.Empty);

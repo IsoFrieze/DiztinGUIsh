@@ -148,6 +148,8 @@ namespace Diz.Core.Interfaces
         // this should not add a label if a real label already exists.
         public void AddOrReplaceTemporaryLabel(int snesAddress, IAnnotationLabel label);
         public void ClearTemporaryLabels();
+        void LockLabelsCache();
+        void UnlockLabelsCache();
     }
 
     public interface ILabelService : 
