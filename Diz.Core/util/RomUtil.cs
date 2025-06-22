@@ -468,6 +468,68 @@ namespace Diz.Core.util
             return addrNoBank; // in range!
         }
         
+        public static bool AreLabelsSameMirror(int snesAddress, int labelAddress)
+        {
+            if (snesAddress == -1 || labelAddress == -1)
+                return false;
+
+            // early out shortcut 
+            if ((snesAddress & 0xFFFF) != (labelAddress & 0xFFFF))
+                return false;
+            
+            // this function is a crappy and probably error-prone way to do this. gotta start somewhere.
+            // it would be better to do this by mapping out the memory regions than trying to go backwards
+            // from any arbitrary SNES address back to the mapped region. still, we'll give it a shot.
+            // we MOST care about things affecting labels that humans care about: WRAM mirrors and SNES registers
+            
+            // check WRAM mirroring
+            if (AreSnesAddressesSameMirroredWramAddresses(snesAddress, labelAddress))
+                return true;
+
+            // check other IO mirroring (overlaps with above for LowRAM too, but that's OK)
+            if (AreSnesAddressesSameMirroredIoRegion(snesAddress, labelAddress)) 
+                return true;
+
+            return false;
+        }
+
+        public static bool AreSnesAddressesSameMirroredIoRegion(int snesAddress1, int snesAddress2)
+        {
+            var reducedSnesAddr1 = GetUnmirroredIoRegionFromBank(snesAddress1);
+            var reducedSnesAddr2 = GetUnmirroredIoRegionFromBank(snesAddress2);
+            
+            return reducedSnesAddr1 != -1 && reducedSnesAddr2 == reducedSnesAddr1;
+        }
+
+        public static int GetUnmirroredIoRegionFromBank(int snesAddress)
+        {
+            if (snesAddress == -1)
+                return -1;
+            
+            // Mirrored WRAM range in banks $00-$3F and $80-$BF
+            var bank = (snesAddress >> 16) & 0xFF; // Extract the high byte (bank number)
+
+            // Check if the bank is within WRAM-mirroring ranges: $00-$3F or $80-$BF
+            var bankContainsMirror = bank is (>= 0x00 and <= 0x3F) or (>= 0x80 and <= 0xBF);
+            if (!bankContainsMirror) 
+                return -1;
+            
+            // are we in the mirrored region?
+            var low16Addr = snesAddress & 0xFFFF;
+            if (low16Addr is < 0x0000 or > 0x7FFF) 
+                return -1;
+
+            return low16Addr;
+        }
+
+            
+        public static bool AreSnesAddressesSameMirroredWramAddresses(int snesAddress1, int snesAddress2)
+        {
+            var wramAddress1 = GetWramAddress(snesAddress1);
+            var wramAddress2 = GetWramAddress(snesAddress2);
+        
+            return wramAddress1 != -1 && wramAddress2 == wramAddress1;
+        }
         
         // detect if this is a +/- label.  like "+", "-", or "++", "--" etc.
         public static bool IsValidPlusMinusLabel(string label)
