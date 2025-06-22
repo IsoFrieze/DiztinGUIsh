@@ -357,7 +357,7 @@ namespace Diz.Core.model
     public class LabelsCollection : LabelProviderBase, ILabelService, IEquatable<LabelsCollection>
     {
         // ReSharper disable once MemberCanBePrivate.Global
-        public SortedDictionary<int, IAnnotationLabel> Labels { get; } = new();
+        public Dictionary<int, IAnnotationLabel> Labels { get; } = new();
         
         [XmlIgnore]
         IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;
@@ -420,7 +420,7 @@ namespace Diz.Core.model
         }
 
         public override IAnnotationLabel GetLabel(int snesAddress) => 
-            Labels.TryGetValue(snesAddress, out var label) ? label : null;
+            Labels.GetValueOrDefault(snesAddress);
 
         // non-temp label provider will never use this
         public IExporterCache ExporterCache => null;
