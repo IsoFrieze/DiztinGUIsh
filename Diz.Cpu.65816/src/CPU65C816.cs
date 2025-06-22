@@ -373,8 +373,26 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             // is there a label for this absolute address? if so, lets use that
             var labelName = labelProvider.Labels.GetLabelName(intermediateAddress);
             if (labelName != "")
-                return labelName;
-            
+            {
+                // couple of special cases.
+                // we won't return +/- temp labels if this isn't an opcode we want to use with branching.
+                if (!RomUtil.IsValidPlusMinusLabel(labelName)) // "+". "-", "++", "--", etc
+                    return labelName; // not a local label, OK to use 
+                
+                // this is a +/- local label, so, do some extra checks...
+                var opcode = data.GetRomByte(offset); // advance the offset to the next byte
+                var opcodeIsBranch = opcode == 0x80 || // BRA
+                                     opcode == 0x10 || opcode == 0x30 || opcode == 0x50 ||
+                                     opcode == 0x70 || // BPL BMI BVC BVS
+                                     opcode == 0x90 || opcode == 0xB0 || opcode == 0xD0 ||
+                                     opcode == 0xF0; // BCC BCS BNE BEQ
+                // NOT going to do this for any JUMPs like JMP, JML, and also not BRL
+
+                // only allow us to use the local label if we're a branch
+                if (opcodeIsBranch)
+                    return labelName;
+            }
+
             // otherwise...
             
             // TODO: extract some of this label mirroring logic into its own function so other stuff can call it
