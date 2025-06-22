@@ -45,17 +45,15 @@ namespace Diz.Core.model
         {
             if (exporterLabelsSubset == null)
                 return (-1, null);
-            
-            // If you have many labels but few potential mirror addresses, this might be more efficient
-            var potentialMirrorKeys = exporterLabelsSubset.Keys
-                .Where(labelAddress => RomUtil.AreLabelsSameMirror(snesAddress, labelAddress))
-                .ToArray();
 
-            foreach (var key in potentialMirrorKeys) {
-                return (key, exporterLabelsSubset[key]);
-            }
-        
-            return (-1, null);
+            // Find just the first key that matches our mirror condition
+            var firstMirrorKey = exporterLabelsSubset.Keys
+                .FirstOrDefault(labelAddress => RomUtil.AreLabelsSameMirror(snesAddress, labelAddress));
+
+            // If a matching key was found (not default/0), return it with its value
+            return firstMirrorKey != 0 
+                ? (firstMirrorKey, exporterLabelsSubset[firstMirrorKey]) 
+                : (-1, null);
         }
     }
     
