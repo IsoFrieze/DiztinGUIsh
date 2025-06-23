@@ -60,7 +60,7 @@ jobs:
       - uses: vimtor/action-zip@v1.2
         with:
           # files: DiztinGUIsh\bin\Release\*\publish\    # would be cooler if we could do this but... alas...
-          files: DiztinGUIsh\bin\Release\net9.0-windows\publish\
+          files: Diz.App.Winforms\bin\Release\net9.0-windows\publish\
           dest: ${{ steps.ver.outputs.ver }}.zip
 
       - name: Upload Artifact
