@@ -55,7 +55,7 @@ jobs:
         run: dotnet test --no-build --configuration Release
 
       - name: Publish
-        run: dotnet publish --no-build -c Release /p:PublishProfile=FolderProfile .\Diz.Ui.Winforms\Diz.Ui.Winforms
+        run: dotnet publish --no-build -c Release /p:PublishProfile=FolderProfile .\Diz.App.Winforms
 
       - uses: vimtor/action-zip@v1.2
         with:
