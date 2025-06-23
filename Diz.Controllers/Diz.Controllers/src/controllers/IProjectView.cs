@@ -43,5 +43,8 @@ namespace Diz.Controllers.controllers
         /// <param name="historyArgs">if non-null, record this event in the project history</param>
         void SelectOffset(int pcOffset, HistoryArgs historyArgs = null);
         void SelectOffsetWithOvershoot(int pcOffset, int overshootAmount = 0);
+        
+        // get the PC offset of the currently selected row in the view
+        public int SelectedOffset { get; }
     }
 }
