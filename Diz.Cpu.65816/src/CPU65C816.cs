@@ -16,6 +16,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     IInOutPointGettable,
     IReadOnlyLabels
 {
+    // TODO: expose these somehow to the project settings
+    public bool AttemptTouseDirectPageArithmeticInFinalOutput { get; set; } = true;
+    public bool AttemptToUnmirrorLabels { get; set; } = true;
+    
     public override int Step(TByteSource data, int offset, bool branch, bool force, int prevOffset = -1)
     {
         var (opcode, directPage, dataBank, xFlag, mFlag) = data.GetCpuStateFor(offset, prevOffset);
@@ -359,8 +363,6 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         }
     }
 
-    private const bool AttemptTouseDirectPageArithmeticInFinalOutput = true;
-
     // this can print bytes OR labels. it can also deal with SOME mirroring and Direct Page addressing etc/etc
     private string FormatOperandAddress(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
     {
@@ -408,9 +410,12 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // (this is super-hacky, we need to do this better)
         // also, can the DP address above ALSO interact with this? (probably, right?) if so, we need to keep that in mind
         // NOTE: BE REALLY CAREFUL: THIS IS A PERFORMANCE-INTENSE and HEAVILY OPTIMIZED FUNCTION
-        var (labelAddressFound, labelEntryFound) = SearchForMirroredLabel(data, intermediateAddress);
-        if (labelEntryFound != null)
-            return $"{labelEntryFound.Name}";
+        if (AttemptToUnmirrorLabels)
+        {
+            var (labelAddressFound, labelEntryFound) = SearchForMirroredLabel(data, intermediateAddress);
+            if (labelEntryFound != null)
+                return $"{labelEntryFound.Name}";
+        }
 
         var count = BytesToShow(mode);
         if (mode is Cpu65C816Constants.AddressMode.Relative8 or Cpu65C816Constants.AddressMode.Relative16)
