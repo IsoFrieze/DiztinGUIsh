@@ -439,6 +439,8 @@ namespace Diz.Core.util
         // This takes a SNES address and returns the offset into WRAM, if it exists. It deals with mirroring
         // valid return ranges are 0 through 0x1FFFFF (the WRAM offset, NO LONGER in SNES address space)
         // return -1 if it doesn't map to a WRAM offset
+        // NOTE: this is the offset in WRAM, and not it's mirrored value.
+        // i.e. if you give it $0013, this function will return $0013, and **NOT** $7E0013
         public static int GetWramAddress(int snesAddress)
         {
             if (snesAddress == -1)
