@@ -130,7 +130,6 @@ public class ProjectFileManager : IProjectFileManager
     {
         var userPrefsXmlSerializer = new ConfigurationContainer()
             .Type<ProjectUserSettings>()
-            // .Member(x => x.ProjectFileName).Ignore()
             .EnableImplicitTyping();
         return userPrefsXmlSerializer;
     }
