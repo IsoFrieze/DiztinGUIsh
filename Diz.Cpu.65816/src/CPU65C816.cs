@@ -417,6 +417,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
                 return $"{labelEntryFound.Name}";
         }
 
+        // couldn't find ANY label to match. so, let's just print the number:
+        
         var count = BytesToShow(mode);
         if (mode is Cpu65C816Constants.AddressMode.Relative8 or Cpu65C816Constants.AddressMode.Relative16)
         {
