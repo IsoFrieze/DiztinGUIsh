@@ -160,7 +160,6 @@ public interface IDizAppSettings : INotifyPropertyChanged
 {
     string LastProjectFilename { get; set; }
     bool OpenLastFileAutomatically { get; set; }
-    string LastOpenedFile { get; set; }
 }
 
 public interface IDizDocument : INotifyPropertyChanged
