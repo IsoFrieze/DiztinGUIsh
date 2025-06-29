@@ -39,8 +39,7 @@ public class AddRomDataCommandValidator : AbstractValidator<RomToProjectAssociat
         if (checksumToVerify == project.InternalCheckSum)
             return true;
 
-        validationContext.AddFailure($"The linked ROM's checksums '{checksumToVerify:X8}' " +
-                                     $"doesn't match the project's checksums of '{project.InternalCheckSum:X8}'.");
+        validationContext.AddFailure($"Expected checksum: {project.InternalCheckSum:X8}'. found: '{checksumToVerify:X8}'");
         return false;
     }
 
@@ -79,10 +78,13 @@ public class AddRomDataCommandValidator : AbstractValidator<RomToProjectAssociat
         if (requiredGameNameMatch == gameNameFromRomBytes)
             return true;
 
+        // do not rely on this string cleanup for anything important.
+        // it's just trying to kill any non-ascii chars so we can print the message successfully.
+        // real-life encodings can be weird here
+        var cleanName = new string(gameNameFromRomBytes.Where(c => c >= 32 && c <= 126).ToArray());
+
         validationContext.AddFailure(
-            $"Verification check: The project file requires the linked ROM's SNES header " +
-            $"to have a cartridge title name of:'{requiredGameNameMatch}'. \n" +
-            $"But, this doesn't match the title in the ROM file, which is:\n'{gameNameFromRomBytes}'.");
+            $"ROM header title name mismatch. Expected: '{requiredGameNameMatch}', Actual: '{cleanName}'.");
         return false;
     }
 }

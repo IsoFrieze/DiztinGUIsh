@@ -221,7 +221,7 @@ public class ProjectController : IProjectController
     }
     
     private string AskToSelectNewRomFilename(string error) => 
-        ProjectView.AskToSelectNewRomFilename("Error", $"{error} Link a new ROM now?");
+        ProjectView.AskToSelectNewRomFilename("Error", $"{error}\n\nLink a new ROM now?");
 
     public void WriteAssemblyOutput()
     {

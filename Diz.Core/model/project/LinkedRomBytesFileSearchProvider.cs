@@ -29,7 +29,7 @@ public interface ILinkedRomBytesProvider
     // caller will be prompted to provide another filename to try, or return null if search should end
     public FilenameGetter? GetNextFilename { get; set; }
         
-    (string filename, byte[] romBytes)? SearchAndReadFromCompatibleRom(string initialRomFile);
+    (string filename, byte[] romBytes)? SearchAndReadFromCompatibleRom(string initialRomFile, string otherPromptText = "");
 }
     
 [UsedImplicitly]
@@ -45,7 +45,7 @@ public class LinkedRomBytesFileSearchProvider : ILinkedRomBytesProvider
     public CompatibilityEnforcer? EnsureCompatible { get; set; }
     public FilenameGetter? GetNextFilename { get; set; }
 
-    public (string filename, byte[] romBytes)? SearchAndReadFromCompatibleRom(string? initialRomFile)
+    public (string filename, byte[] romBytes)? SearchAndReadFromCompatibleRom(string? initialRomFile, string otherPromptText = "")
     {
         var candidateFile = initialRomFile;
             
@@ -58,7 +58,8 @@ public class LinkedRomBytesFileSearchProvider : ILinkedRomBytesProvider
                 return (candidateFile, bytes);
             }
 
-            candidateFile = GetNextFilename?.Invoke(lastFailureReason);
+            var promptText = $"Project:'{otherPromptText.Trim()}'\n{lastFailureReason}";
+            candidateFile = GetNextFilename?.Invoke(promptText);
         }
 
         return null;
@@ -87,6 +88,15 @@ public class LinkedRomBytesFileSearchProvider : ILinkedRomBytesProvider
     private byte[]? GetRomFileBytesOrFailReason(string romFilename, out string reasonFailed)
     {
         reasonFailed = "";
+
+        if (romFilename == "")
+        {
+            // you can hit this when upgrading from older project files to newer ones which don't store the 
+            // ROM file directly (they store it in the prefs). this is OK and somewhat expected.
+            reasonFailed = "ROM file not yet specified in project data.\nThis is expected if opening a project for the first time, or, upgrading Diz.\nPlease Link a new ROM file to continue.";
+            return null;
+        }
+        
         try
         {
             return romBytesReader.ReadRomFileBytes(romFilename);
