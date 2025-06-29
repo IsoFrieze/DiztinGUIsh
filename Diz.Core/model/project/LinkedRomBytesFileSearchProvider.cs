@@ -88,22 +88,24 @@ public class LinkedRomBytesFileSearchProvider : ILinkedRomBytesProvider
     private byte[]? GetRomFileBytesOrFailReason(string romFilename, out string reasonFailed)
     {
         reasonFailed = "";
-
-        if (romFilename == "")
-        {
-            // you can hit this when upgrading from older project files to newer ones which don't store the 
-            // ROM file directly (they store it in the prefs). this is OK and somewhat expected.
-            reasonFailed = "ROM file not yet specified in project data.\nThis is expected if opening a project for the first time, or, upgrading Diz.\nPlease Link a new ROM file to continue.";
-            return null;
-        }
         
         try
         {
+            // call this even if romFilename is empty, because unit tests mock this reader and rely on it being empty
             return romBytesReader.ReadRomFileBytes(romFilename);
         }
         catch (Exception ex)
         {
             reasonFailed = ex.Message;
+            
+            // provide a better error message in this case:
+            if (romFilename == "")
+            {
+                // you can hit this when upgrading from older project files to newer ones which don't store the 
+                // ROM file directly (they store it in the prefs). this is OK and somewhat expected.
+                reasonFailed = "ROM file not yet specified in project data.\nThis is expected if opening a project for the first time, or, upgrading Diz.\nPlease Link a new ROM file to continue.";
+            }
+            
             return null;
         }
     }
