@@ -41,6 +41,15 @@ public class ProjectSettings
     public override string ToString() => "";
 }
 
+public class ProjectUserSettings
+{
+    // these settings are saved per-project BUT are intended to be user-specific and not shared with all users
+    // i.e. unlike the main project file, the user won't check this into git
+    // (NOTE: there's a different settings file for global Application-specific stuff, and for stuff saved WITH the project intended to be shared) 
+        
+    public int CurrentViewOffset { get; set; }
+}
+
 public class Project : IProject
 {
     // Any public properties will be automatically serialized to XML unless noted.
@@ -102,19 +111,21 @@ public class Project : IProject
         set => this.SetField(PropertyChanged, ref logWriterSettings, value);
     }
 
+    // settings saved WITH the project file.
+    // for things that are expected to get checked into git and shared with all project users
     public ProjectSettings ProjectSettings
     {
         get => projectSettings ?? new ProjectSettings();
         set => this.SetField(PropertyChanged, ref projectSettings, value);
     }
 
-    // purely visual. what offset is currently being looked at in the main grid.
-    // we store it here because we want to save it out with the project file
-    private int currentViewOffset;
-    public int CurrentViewOffset
+    // settings saved WITHOUT the project file.
+    // for things that are not expected to get checked into git and shared with all project users
+    [XmlIgnore]
+    public ProjectUserSettings ProjectUserSettings
     {
-        get => currentViewOffset;
-        set => this.SetField(PropertyChanged, ref currentViewOffset, value);
+        get => projectUserSettings ?? new ProjectUserSettings();
+        set => this.SetField(PropertyChanged, ref projectUserSettings, value);
     }
 
     // needs to come last for serialization. this is the heart of the app, the actual
@@ -209,6 +220,7 @@ public class Project : IProject
     private LogWriterSettings logWriterSettings;
     private IProjectSession? session;
     private ProjectSettings? projectSettings;
+    private ProjectUserSettings? projectUserSettings;
 
     #region Equality
     protected bool Equals(Project other)

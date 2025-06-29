@@ -4,9 +4,12 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Diz.Core.model;
 using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
+using ExtendedXmlSerializer;
+using ExtendedXmlSerializer.Configuration;
 
 namespace Diz.Core.serialization;
 
@@ -76,9 +79,60 @@ public class ProjectFileManager : IProjectFileManager
         var (serializer, openResult) = Deserialize(filename);
         VerifyIntegrityDeserialized(openResult.Root);
         PostSerialize(filename, openResult.Root, serializer);
+        
+        try {
+            LoadUserPreferencesFileForProject(filename, openResult.Root.Project);
+        } catch (Exception e) {
+            // we don't really care about the user prefs that much. just ignore and use the defaults if there's an issue.
+            Console.WriteLine($"Warning: failed to load user project prefs, ignoring them: associated with: {filename}: {e.Message}");
+        }
 
         Trace.WriteLine("Opening Project END");
         return openResult;
+    }
+
+    private static void LoadUserPreferencesFileForProject(string projectFilename, Project newlyOpenedProject)
+    {
+        // load up user prefs
+        // these are project-specific settings/etc that are not saved in the project file
+        // because they're user-specific. i.e. they shouldn't get checked into git/etc for Diz projects
+        // it's OK if these don't exist
+        var userPrefsFilename = BuildUserPrefsFilenameFromProjectName(projectFilename);
+        var userPrefsXmlStr = LoadUserPrefsXmlStrFromFile(userPrefsFilename);
+
+        var userPrefsXmlSerializer = GetUserPrefsXmlSerializerConfigContainer();
+        newlyOpenedProject.ProjectUserSettings = userPrefsXmlSerializer.Create().Deserialize<ProjectUserSettings>(userPrefsXmlStr);
+    }
+
+    private static string LoadUserPrefsXmlStrFromFile(string filename)
+    {
+        var userPrefsXmlStr = Encoding.UTF8.GetString(File.ReadAllBytes(filename));
+        return userPrefsXmlStr;
+    }
+    
+    private static void SaveProjectUserPreferencesFile(string filename, ProjectUserSettings projectUserSettings)
+    {
+        var userPrefsFilename = BuildUserPrefsFilenameFromProjectName(filename);
+        var userPrefsXmlSerializer = GetUserPrefsXmlSerializerConfigContainer();
+        var userPrefsXmlStr = userPrefsXmlSerializer.Create().Serialize(projectUserSettings);
+        File.WriteAllText(userPrefsFilename, userPrefsXmlStr);
+    }
+
+    private static string BuildUserPrefsFilenameFromProjectName(string projectFilename)
+    {
+        var baseFilenameNoExtension = Path.GetFileNameWithoutExtension(projectFilename);
+        var userPrefsFilename =
+            Path.Combine(Path.GetDirectoryName(projectFilename)!, baseFilenameNoExtension + ".dizprefs");
+        return userPrefsFilename;
+    }
+
+    private static IConfigurationContainer GetUserPrefsXmlSerializerConfigContainer()
+    {
+        var userPrefsXmlSerializer = new ConfigurationContainer()
+            .Type<ProjectUserSettings>()
+            // .Member(x => x.ProjectFileName).Ignore()
+            .EnableImplicitTyping();
+        return userPrefsXmlSerializer;
     }
 
     private void PostSerialize(string filename, ProjectXmlSerializer.Root xmlProjectSerializedRoot, IProjectSerializer serializer)
@@ -200,8 +254,20 @@ public class ProjectFileManager : IProjectFileManager
             return;
         project.Session.ProjectFileName = project.ProjectFileName;
         
-        // only do this at the VERY END
+        // only do this at the VERY END once we know the file is safe on disk
         project.Session.UnsavedChanges = false;
+        
+        
+        // finally... unrelated to the main project file, let's save the user preferences 
+        // seperately.  this is for project-specific things that should be persisted to disk, but not shared with multiple users.
+        // i.e. this file should be added to the project's .gitignore.
+        try
+        {
+            SaveProjectUserPreferencesFile(filename, project.ProjectUserSettings);
+        } catch (Exception e) {
+            // we don't really care about the user prefs that much. just ignore and use the defaults if there's an issue.
+            Console.WriteLine($"Warning: failed to save user project prefs, ignoring: associated with: {filename}: {e.Message}");
+        }
     }
 
     private byte[] DoSave(Project project, string filename, IProjectSerializer serializer)
