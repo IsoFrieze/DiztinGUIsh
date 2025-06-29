@@ -47,7 +47,14 @@ public class ProjectUserSettings
     // i.e. unlike the main project file, the user won't check this into git
     // (NOTE: there's a different settings file for global Application-specific stuff, and for stuff saved WITH the project intended to be shared) 
         
+    // current view offset (where are you scrolled in the UI)
     public int CurrentViewOffset { get; set; }
+    
+    // attached ROM filename.
+    // the main project file will store the checksums/etc that this must match, or it'll ask for another rom file.
+    // this is important to keep locally only because we don't want any stored path or ROM filenames to leak into
+    // public git repos, potentially exposing people's sensitive user info/etc.
+    public string AttachedRomFilename { get; set; } = "";
 }
 
 public class Project : IProject
@@ -56,25 +63,31 @@ public class Project : IProject
     // They will require a get AND set.
     // Order is important.
 
-    // not saved in XML
+    [XmlIgnore]
     public string ProjectFileName
     {
         get => projectFileName;
         set => this.SetField(PropertyChanged, ref projectFileName, value);
     }
-
-    // not saved in XML
+    
+    [XmlIgnore]
     public string AttachedRomFilename
     {
-        get => attachedRomFilename;
-        set
+        get => ProjectUserSettings.AttachedRomFilename ?? "";
+        set 
         {
-            if (attachedRomFilename != value)
+            if (ProjectUserSettings.AttachedRomFilename != value)
             {
                 if (Session != null) Session.UnsavedChanges = true;
             }
 
-            this.SetField(PropertyChanged, ref attachedRomFilename, value);
+            // below is same as: this.SetField(PropertyChanged, ProjectUserSettings.AttachedFromFilename, value);
+            
+            if (NotifyPropertyChangedExtensions.FieldIsEqual(ProjectUserSettings.AttachedRomFilename, value)) 
+                return;
+            
+            ProjectUserSettings.AttachedRomFilename = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AttachedRomFilename)));
         }
     }
 
@@ -115,7 +128,7 @@ public class Project : IProject
     // for things that are expected to get checked into git and shared with all project users
     public ProjectSettings ProjectSettings
     {
-        get => projectSettings ?? new ProjectSettings();
+        get => projectSettings;
         set => this.SetField(PropertyChanged, ref projectSettings, value);
     }
 
@@ -124,7 +137,7 @@ public class Project : IProject
     [XmlIgnore]
     public ProjectUserSettings ProjectUserSettings
     {
-        get => projectUserSettings ?? new ProjectUserSettings();
+        get => projectUserSettings;
         set => this.SetField(PropertyChanged, ref projectUserSettings, value);
     }
 
@@ -213,14 +226,13 @@ public class Project : IProject
 
     // don't access these backing fields directly, instead, always use the properties
     private string projectFileName = "";
-    private string attachedRomFilename = "";
     private string internalRomGameName = "";
     private uint internalCheckSum;
     private Data? data; // TODO: change to IData
     private LogWriterSettings logWriterSettings;
     private IProjectSession? session;
-    private ProjectSettings? projectSettings;
-    private ProjectUserSettings? projectUserSettings;
+    private ProjectSettings projectSettings = new();
+    private ProjectUserSettings projectUserSettings = new();
 
     #region Equality
     protected bool Equals(Project other)

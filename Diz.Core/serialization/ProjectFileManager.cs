@@ -78,14 +78,7 @@ public class ProjectFileManager : IProjectFileManager
 
         var (serializer, openResult) = Deserialize(filename);
         VerifyIntegrityDeserialized(openResult.Root);
-        PostSerialize(filename, openResult.Root, serializer);
-        
-        try {
-            LoadUserPreferencesFileForProject(filename, openResult.Root.Project);
-        } catch (Exception e) {
-            // we don't really care about the user prefs that much. just ignore and use the defaults if there's an issue.
-            Console.WriteLine($"Warning: failed to load user project prefs, ignoring them: associated with: {filename}: {e.Message}");
-        }
+        OnPostProjectDeserialized(filename, openResult.Root, serializer);
 
         Trace.WriteLine("Opening Project END");
         return openResult;
@@ -134,13 +127,23 @@ public class ProjectFileManager : IProjectFileManager
         return userPrefsXmlSerializer;
     }
 
-    private void PostSerialize(string filename, ProjectXmlSerializer.Root xmlProjectSerializedRoot, IProjectSerializer serializer)
+    private void OnPostProjectDeserialized(string filename, ProjectXmlSerializer.Root xmlProjectSerializedRoot, IProjectSerializer serializer)
     {
-        xmlProjectSerializedRoot.Project.ProjectFileName = filename;
+        // 1. housekeeping
+        var newlyOpenedProject = xmlProjectSerializedRoot.Project;
+        
+        newlyOpenedProject.ProjectFileName = filename;
+        newlyOpenedProject.Session = new ProjectSession(newlyOpenedProject, filename);
+        
+        // 2. need to load the user prefs next BECAUSE the Rom filename is stored there, and we need it for the next step
+        try {
+            LoadUserPreferencesFileForProject(filename, newlyOpenedProject);
+        } catch (Exception e) {
+            // we don't really care about the user prefs that much. just ignore and use the defaults if there's an issue.
+            Console.WriteLine($"Warning: failed to load user project prefs, ignoring them: associated with: {filename}: {e.Message}");
+        }
 
-        xmlProjectSerializedRoot.Project.Session = new ProjectSession(xmlProjectSerializedRoot.Project, filename);
-
-        // at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
+        // 3. at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
         // It would be easy to store the ROM bytes in the save file, but, for copyright reasons,
         // we leave it out.
         //

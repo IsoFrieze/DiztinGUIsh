@@ -33,8 +33,9 @@ public class XmlSerializerFactory : IXmlSerializerFactory
             .WithDefaultMonitor(new SerializationMonitor())
 
             .Type<Project>()
-            .Member(x => x.ProjectFileName).Ignore()
-            .Member(x => x.ProjectUserSettings).Ignore() // we'll save these manually so they're in a different file
+            
+            // dizprefs: we'll save these manually so they're in a different file
+            .Member(x => x.ProjectUserSettings).Ignore() 
 
             .Type<RomBytes>()
             .Register().Serializer().Using(romBytesSerializer)
