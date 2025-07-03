@@ -419,7 +419,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
         // couldn't find ANY label to match. so, let's just print the number:
         
-        var count = BytesToShow(mode);
+        var numByteDigitsToDisplay = BytesToShow(mode);
         if (mode is Cpu65C816Constants.AddressMode.Relative8 or Cpu65C816Constants.AddressMode.Relative16)
         {
             var romWord = data.GetRomWord(offset + 1);
@@ -429,8 +429,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             intermediateAddress = (int)romWord;
         }
             
-        intermediateAddress &= ~(-1 << (8 * count));
-        return Util.NumberToBaseString(intermediateAddress, Util.NumberBase.Hexadecimal, 2 * count, true);
+        intermediateAddress &= ~(-1 << (8 * numByteDigitsToDisplay));
+        return Util.NumberToBaseString(intermediateAddress, Util.NumberBase.Hexadecimal, 2 * numByteDigitsToDisplay, true);
     }
 
     private static string GetValidatedLabelNameForOffset(TByteSource data, int srcOffset)
