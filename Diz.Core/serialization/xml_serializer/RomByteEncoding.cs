@@ -1,5 +1,6 @@
 ﻿// #define EXTRA_DEBUG_CHECKS
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -96,10 +97,16 @@ namespace Diz.Core.serialization.xml_serializer
 
             return cachedPadSb;
         }
-
-        public string EncodeByte(RomByte instance)
+        
+        private static readonly char[] HexChars = "0123456789ABCDEF".ToCharArray();
+        
+        [ThreadStatic]
+        private static char[] _outBuffer;
+        
+        public static string EncodeByte(RomByte instance)
         {
-            // use a custom formatter here to save space. there are a LOT of ROMBytes.
+            // use a custom formatter here to save disk space, while still being easy to merge with git.
+            // there are a LOT of ROMBytes.
             // despite that we're still going for:
             // 1) text only for slightly human readability
             // 2) mergability in git/etc
@@ -109,6 +116,9 @@ namespace Diz.Core.serialization.xml_serializer
             //
             // sorry, I know the encoding looks insane and weird and specific.  this reduced my
             // save file size from 42MB to less than 13MB
+            //
+            // ALSO: this function is extremely CPU performance-intensive.
+            _outBuffer ??= new char[9];
 
             // NOTE: must be uppercase letter or "=" or "-"
             // if you add things here, make sure you understand the compression settings above.
@@ -143,32 +153,48 @@ namespace Diz.Core.serialization.xml_serializer
 
             // this is basically going to be "0" almost 100% of the time.
             // we'll put it on the end of the string so it's most likely not output
-            byte otherFlags2 = (byte)(
+            var otherFlags2 = (byte)(
                 (byte)instance.Arch << 0 // 2 bits
             );
-            var o2Str = otherFlags2.ToString("X1"); Debug.Assert(o2Str.Length == 1);
 
-            // ordering: put DB and D on the end, they're likely to be zero and compressible
-            var sb = new StringBuilder(9);
-            sb.Append(flagTxt);
-            sb.Append(o1Str);
-            sb.Append(instance.DataBank.ToString("X2"));
-            sb.Append(instance.DirectPage.ToString("X4"));
-            sb.Append(o2Str);
-
-            Debug.Assert(sb.Length == 9);
-            var data = sb.ToString();
-
-            // light compression: chop off any trailing zeroes.
-            // this alone saves a giant amount of space.
-            data = data.TrimEnd(new char[] { '0' });
-
+            // ordering: put DB and D on the end, they're more likely to be zero and compressible
+            
+            // Fill the output buffer.
+            // we're not using strings or stringbuffers here since this code is called in such a tight loop.
+            // also avoid using .ToString() or allocating memory in here as much as we can help it.
+            var pos = 0;
+            _outBuffer[pos++] = flagTxt;
+            _outBuffer[pos++] = o1Str;
+            
+            
+            // Append DataBank (X2)
+            _outBuffer[pos++] = HexChars[instance.DataBank >> 4];
+            _outBuffer[pos++] = HexChars[instance.DataBank & 0xF];
+    
+            // Append DirectPage (X4)
+            _outBuffer[pos++] = HexChars[(instance.DirectPage >> 12) & 0xF];
+            _outBuffer[pos++] = HexChars[(instance.DirectPage >> 8) & 0xF];
+            _outBuffer[pos++] = HexChars[(instance.DirectPage >> 4) & 0xF];
+            _outBuffer[pos++] = HexChars[instance.DirectPage & 0xF];
+            
+            // Append otherFlags2
+            _outBuffer[pos] = HexChars[otherFlags2];
+            
+            // early: light compression: chop off all trailing zeroes.
+            // this alone saves a giant amount of space in the output file
+            //
+            // Find the last non-zero character
+            var lastNonZero = 8;
+            while (lastNonZero > 0 && _outBuffer[lastNonZero] == '0')
+                lastNonZero--;
+            
+            // Create the final string (only up to the last non-zero character)
+            return new string(_outBuffer, 0, lastNonZero + 1);
+            
             // future compression but dilutes readability:
             // if type is opcode or operand with same flags, combine those into 1 type.
             // i.e. take an opcode with 3 operands, represent it using one digit in the file.
             // instead of "=---", we swap with "+" or something. small optimization.
-
-            return data;
         }
     }
 }

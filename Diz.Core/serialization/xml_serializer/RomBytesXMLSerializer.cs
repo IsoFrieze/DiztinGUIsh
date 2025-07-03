@@ -317,16 +317,14 @@ sealed class RomBytesSerializer : ISerializer<RomBytes>
             $"version:{MaxSupportedDataFormatVersion}",
         };
 
-        var romByteEncoding = new RomByteEncoding();
-
-        var lines = new List<string>();
+        var lines = new List<string>(capacity: instance.Count);
             
         // generate all text lines.
         for (var romOffset = 0; romOffset < instance.Count; romOffset++)
         {
             // the important stuff: generate the real data, this is the entire point:
             var rb = instance[romOffset];
-            var encodedTxt = romByteEncoding.EncodeByte(rb);
+            var encodedTxt = RomByteEncoding.EncodeByte(rb);
             lines.Add(encodedTxt);
                 
             // completely optional: output a comment every N bytes. this is purely to make it easier for humans to read and 
@@ -358,7 +356,8 @@ sealed class RomBytesSerializer : ISerializer<RomBytes>
 
         foreach (var line in lines)
         {
-            writer.Content(line + "\n");
+            writer.Content(line);
+            writer.Content("\n");
         }
     }
 
