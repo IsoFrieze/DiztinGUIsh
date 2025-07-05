@@ -170,20 +170,24 @@ public class SnesApi : ISnesData
             case FlagType.Opcode:
                 return GetIntermediateAddress(offset, true);
             case FlagType.Pointer16Bit:
-                // the original way:
-                // int bank = GetDataBank(offset); // allows overriding from the UI, but, you HAVE to set this correctly
-                
-                // new way, assumes the bank is the same as the location of the pointer
-                // more useful as long as it doesn't break anything
-                var snesAddrAtOffset = ConvertPCtoSnes(offset);
-                if (snesAddrAtOffset == -1)
-                    return -1;
-                
-                var bank = RomUtil.GetBankFromSnesAddress(snesAddrAtOffset);
                 var romWord = Data.GetRomWord(offset);
                 if (!romWord.HasValue)
                     return -1;
-                    
+                
+                // the original way: use what is written in the UI
+                var bank = GetDataBank(offset); // allows overriding from the UI, but, you HAVE to set this correctly
+                
+                // but if it's zero (which can be a valid bank but usually won't be
+                // then, autodetect the bank from the bank we're in.
+                if (bank == 0)
+                {
+                    // new way, assumes the bank is the same as the location of the pointer
+                    // more useful as long as it doesn't break anything
+                    var snesAddrAtOffset = ConvertPCtoSnes(offset);
+                    if (snesAddrAtOffset != -1)
+                        bank = RomUtil.GetBankFromSnesAddress(snesAddrAtOffset);
+                }
+
                 return (bank << 16) | (int)romWord;
             case FlagType.Pointer24Bit:
             case FlagType.Pointer32Bit:
