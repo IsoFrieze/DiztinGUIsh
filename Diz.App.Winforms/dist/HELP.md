@@ -563,3 +563,51 @@ In short, what files really are:
 *.dizraw files are really just .xml files
 
 * * *
+
+16Bit Pointers and Banks
+---------------------------------
+By default, data marked as 16bit pointers will use the current bank as the bank for the IA.
+
+If you set the bank on these 16bit pointer rows to a non-zero value, Diz will use that as the override
+
+(Experimental) Comment Special Directives
+---------------------------------
+
+Special directives can be added to comments to alter label generation. All commands start with "!!". You can still put a semicolon in to make a comment.
+
+USE AT YOUR OWN RISK. THESE HAVE MINIMAL CHECKING OR VALIDATION
+
+- ```!!n```
+- Don't generate labels for this line or the destination IA
+- This is great if Diz is making up labels that aren't appropriate for this line (like PEA addresses, or for sections of code that modify the D register to load parts of the game dynamically) 
+
+Example: override the current label for this line and paste the following text in:
+```!!o [whatever you want to show up there] ; [optional comment]```
+
+You can use structs, labels, math, constants, anything you want.  Example: Say you have a line like:
+
+```LDA.W #$0B,X```
+
+type in:
+
+```!!o !num_in_party```
+
+and the new line will be:
+
+```LDA.W #!num_in_party,X```
+
+-----
+
+or let's say you have:
+
+```LDA.W some_label,X```
+
+then you can override with:
+
+```!!o some_address+some_other_address```
+
+```LDA.W some_address+some_other_address,X```
+
+If you use this with an asar define like "!num_players", then Diz will take the original value of $0B and create a define for you in defines.asm.
+
+This let's you annotate constants as you go and re-use them through the project.

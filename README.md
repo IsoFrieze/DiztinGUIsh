@@ -19,7 +19,7 @@ Official support channel is #diztinguish in the https://sneslab.net/ discord
 _Demo of basic disassembling:_
 ![ezgif com-gif-maker](https://i.imgur.com/Tb2H484.gif)
 
-View more docs here: https://github.com/IsoFrieze/DiztinGUIsh/blob/master/DiztinGUIsh/dist/HELP.md
+View more docs here: https://github.com/IsoFrieze/DiztinGUIsh/blob/master/Diz.App.Winforms/dist/HELP.md
 
 ---
 
