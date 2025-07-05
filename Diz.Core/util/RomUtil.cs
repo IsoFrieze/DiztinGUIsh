@@ -436,9 +436,9 @@ namespace Diz.Core.util
         public static bool IsLocationAReadPoint(this IInOutPointGettable data, int pointer) => 
             IsLocationPoint(data, pointer, InOutPoint.ReadPoint);
 
-        // This takes a SNES address and returns the offset into WRAM, if it exists. It deals with mirroring
-        // valid return ranges are 0 through 0x1FFFFF (the WRAM offset, NO LONGER in SNES address space)
-        // return -1 if it doesn't map to a WRAM offset
+        // This takes a SNES address and returns the offset into WRAM address space, if it exists. It deals with mirroring
+        // valid return ranges are 0 through 0x1FFFFF (the offset into WRAM address space, NO LONGER in SNES address space)
+        // return -1 if it doesn't map to any offset in WRAM address space
         // NOTE: this is the offset in WRAM, and not it's mirrored value.
         // i.e. if you give it $0013, this function will return $0013, and **NOT** $7E0013
         public static int GetWramAddress(int snesAddress)
@@ -446,13 +446,16 @@ namespace Diz.Core.util
             if (snesAddress == -1)
                 return -1;
             
-            // Primary WRAM range: 0x7E0000 - 0x7FFFFF
+            // option 1:
+            // Primary WRAM range is mapped directly into SNES address space: 0x7E0000 - 0x7FFFFF
+            // this directly maps 1:1 into WRAM address space
             if (snesAddress is >= 0x7E0000 and <= 0x7FFFFF)
             {
                 return snesAddress - 0x7E0000;
             }
             
-            // Mirrored WRAM range in banks $00-$3F and $80-$BF
+            // option 2:
+            // WRAM is mapped into certain ranges in banks $00-$3F and $80-$BF
             var bank = (snesAddress >> 16) & 0xFF; // Extract the high byte (bank number)
 
             // Check if the bank is within WRAM-mirroring ranges: $00-$3F or $80-$BF
