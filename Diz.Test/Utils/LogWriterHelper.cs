@@ -17,7 +17,7 @@ namespace Diz.Test.Utils
         {
             private bool Equals(ParsedOutput other)
             {
-                return Label == other.Label && Instr == other.Instr && Pc == other.Pc && RawBytes == other.RawBytes && Ia == other.Ia && RealComment == other.RealComment;
+                return Label == other.Label && Instr == other.Instr && CommentPc == other.CommentPc && CommentRawBytes == other.CommentRawBytes && CommentIa == other.CommentIa && CommentActualText == other.CommentActualText;
             }
 
             public override bool Equals(object obj)
@@ -34,10 +34,10 @@ namespace Diz.Test.Utils
                 {
                     var hashCode = Label.GetHashCode();
                     hashCode = (hashCode * 397) ^ Instr.GetHashCode();
-                    hashCode = (hashCode * 397) ^ Pc.GetHashCode();
-                    hashCode = (hashCode * 397) ^ RawBytes.GetHashCode();
-                    hashCode = (hashCode * 397) ^ Ia.GetHashCode();
-                    hashCode = (hashCode * 397) ^ RealComment.GetHashCode();
+                    hashCode = (hashCode * 397) ^ CommentPc.GetHashCode();
+                    hashCode = (hashCode * 397) ^ CommentRawBytes.GetHashCode();
+                    hashCode = (hashCode * 397) ^ CommentIa.GetHashCode();
+                    hashCode = (hashCode * 397) ^ CommentActualText.GetHashCode();
                     return hashCode;
                 }
             }
@@ -45,11 +45,11 @@ namespace Diz.Test.Utils
             public string Label;
             public string Instr;
 
-            public string Pc;
-            public string RawBytes;
-            public string Ia;
+            public string CommentPc;
+            public string CommentRawBytes;
+            public string CommentIa;
 
-            public string RealComment;
+            public string CommentActualText;
         }
 
         private static ParsedOutput ParseLine(string line)
@@ -59,19 +59,27 @@ namespace Diz.Test.Utils
 
             var output = new ParsedOutput();
 
-            var split = line.Split(new[] {';'}, 2,options:StringSplitOptions.None);
+            var split = line.Split([';'], 2,options:StringSplitOptions.None);
             var main = split[0].Trim(); 
             var comment = split[1].Trim();
 
-            var csplit = comment.Split(new[] { '|' }, 3, options: StringSplitOptions.None);
-            output.Pc = csplit[0].Trim();
-            output.RawBytes = csplit[1].Trim();
+            // parse the stuff in the comment (it may or may not be there)
+            var csplit = comment.Split(['|'], 3, options: StringSplitOptions.None);
+            if (csplit.Length <= 3)
+            {
+                output.CommentActualText = comment;
+            }
+            else
+            {
+                output.CommentPc = csplit[0].Trim();
+                output.CommentRawBytes = csplit[1].Trim();
 
-            var iasplit = csplit[2].Split(new[] { ';' }, 2, options: StringSplitOptions.None);
-            output.Ia = iasplit[0].Trim();
-            output.RealComment = iasplit[1].Trim();
+                var iasplit = csplit[2].Split([';'], 2, options: StringSplitOptions.None);
+                output.CommentIa = iasplit[0].Trim();
+                output.CommentActualText = iasplit[1].Trim();
+            }
 
-            var msplit = main.Split(new[] { ':' }, 2, options: StringSplitOptions.None);
+            var msplit = main.Split([':'], 2, options: StringSplitOptions.None);
             var m1 = msplit[0].Trim();
             var m2  = msplit.Length > 1 ? msplit[1].Trim() : "";
 
@@ -110,7 +118,7 @@ namespace Diz.Test.Utils
             AssertAssemblyOutputEqual(expectedOut, actualOut);
             
             // now that the parsed version passed, compare the raw strings
-            // if you hit this and not the above section, your whitespace might be off.
+            // if you hit this and not the above section, your whitespace or newline [CRLF vs LF] might be off.
             Assert.Equal(expectedRaw, result.OutputStr);
         }
 
