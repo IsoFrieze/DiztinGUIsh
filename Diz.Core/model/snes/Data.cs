@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Diz.Core.Interfaces;
 using Diz.Core.util;
+using JetBrains.Annotations;
 
 namespace Diz.Core.model.snes;
 
@@ -82,11 +83,9 @@ public class Data : IData
     public Architecture GetArchitecture(int i) => RomBytes[i].Arch;
     public void SetArchitecture(int i, Architecture arch) => RomBytes[i].Arch = arch;
         
-    public string GetComment(int i)
-    {
-        return Comments.TryGetValue(i, out var val) ? val : null;
-    }
-        
+    [CanBeNull] public string GetComment(int snesAddress) => 
+        Comments.GetValueOrDefault(snesAddress);
+
     public string GetCommentText(int snesAddress)
     {
         // option 1: use the comment text first

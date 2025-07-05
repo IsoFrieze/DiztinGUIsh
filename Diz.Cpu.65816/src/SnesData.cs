@@ -70,7 +70,8 @@ public interface ISnesApi<out TData> :
     IInstructionGettable,
     IFixMisalignedFlags,
     IArchitectureApi,
-    IMarkOperandAndOpcode
+    IMarkOperandAndOpcode,
+    ICommentTextProvider
 
     where TData : IData
 {
@@ -541,7 +542,11 @@ public class SnesApi : ISnesData
     public int? GetRomWord(int offset) => Data.GetRomWord(offset);
     public int? GetRomLong(int offset) => Data.GetRomLong(offset);
     public int? GetRomDoubleWord(int offset) => Data.GetRomDoubleWord(offset);
+    public string GetCommentText(int snesAddress) => Data.GetCommentText(snesAddress);
+    public string? GetComment(int snesAddress) => Data.GetComment(snesAddress);
+    
     public IReadOnlyLabelProvider Labels => Data.Labels;
+
     public RomMapMode RomMapMode
     {
         get => Data.RomMapMode;

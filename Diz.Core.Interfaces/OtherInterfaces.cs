@@ -2,7 +2,11 @@
 
 public interface ICommentTextProvider
 {
+    // search both ROM comments and applicable label comments
     string GetCommentText(int snesAddress);
+    
+    // search just ROM comments
+    string? GetComment(int snesAddress);
 }
 
 #if DIZ_3_BRANCH
