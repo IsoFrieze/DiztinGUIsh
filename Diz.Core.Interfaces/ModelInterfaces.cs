@@ -78,11 +78,30 @@ namespace Diz.Core.Interfaces
         int GetNumberOfBanks();
         string GetBankName(int bankIndex);
     }
-
+    
+    public class CpuInstructionDataFormatted
+    {
+        // the final text that should be printed
+        // (most of the time, this is the main thing you're after)
+        public string FullGeneratedText { get; set; } = "";
+        
+        // stuff below is the info that went into generating the above fully generated text
+        // useful if you need more context. feel free to expose/save more into this struct as you need it
+        
+        // if the operand was overridden, what was the overridden text?
+        public string OverriddenOperand1 { get; set; } = "";
+        public string OverriddenOperand2 { get; set; } = "";
+        
+        // if the operand was overridden, what was the NON-overridden original value?
+        public string OriginalNonOverridenOperand1 { get; set; } = "";
+        public string OriginalNonOverridenOperand2 { get; set; } = "";
+    }
+    
     public interface IInstructionGettable
     {
         int GetInstructionLength(int offset);
-        string GetInstruction(int offset);
+        string GetInstructionStr(int offset);
+        public CpuInstructionDataFormatted GetInstructionData(int offset);
     }
     
     public interface IMarkable

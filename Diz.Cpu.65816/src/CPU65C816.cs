@@ -236,8 +236,11 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         }
         return -1;
     }
+    
+    public override string GetInstructionStr(TByteSource data, int offset) => 
+        GetInstructionData(data, offset).FullGeneratedText; // shortcut
 
-    public override string GetInstruction(TByteSource data, int offset)
+    public override CpuInstructionDataFormatted GetInstructionData(TByteSource data, int offset)
     {
         var mode = GetAddressMode(data, offset);
         if (mode == null)
@@ -247,60 +250,74 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         var mnemonic = GetMnemonic(data, offset);
             
         int numDigitsForOperand1 = 0, numDigitsForOperand2 = 0;
-        int? value1 = null, value2 = null;
+        int? operandValue1 = null, operandValue2 = null;
         var identified = false;
+        var overridesAllowed = false;
             
         switch (mode)
         {
             case Cpu65C816Constants.AddressMode.BlockMove:
                 identified = true;
                 numDigitsForOperand1 = numDigitsForOperand2 = 2;
-                value1 = data.GetRomByte(offset + 1);
-                value2 = data.GetRomByte(offset + 2);
+                operandValue1 = data.GetRomByte(offset + 1);
+                operandValue2 = data.GetRomByte(offset + 2);
                 break;
             case Cpu65C816Constants.AddressMode.Constant8:
             case Cpu65C816Constants.AddressMode.Immediate8:
-                identified = true;
-                numDigitsForOperand1 = 2;
-                value1 = data.GetRomByte(offset + 1);
-                break;
             case Cpu65C816Constants.AddressMode.Immediate16:
                 identified = true;
-                numDigitsForOperand1 = 4;
-                value1 = data.GetRomWord(offset + 1);
+                overridesAllowed = true;
+                numDigitsForOperand1 = mode == Cpu65C816Constants.AddressMode.Immediate16 
+                    ? 4 
+                    : 2;
+                operandValue1 = mode == Cpu65C816Constants.AddressMode.Immediate16 
+                    ? data.GetRomWord(offset + 1) 
+                    : data.GetRomByte(offset + 1);
                 break;
         }
-
-        string operand1 = "", operand2 = "";
+        
+        var operandOriginalStr1 = "";
+        var operandOriginalStr2 = "";
+        
         if (!identified)
         {
             // note: lots of complexity with labels, mirroring, overrides, etc inside here:
-            operand1 = FormatOperandAddress(data, offset, mode.Value);
+            operandOriginalStr1 = FormatOperandAddress(data, offset, mode.Value);
+            operandOriginalStr2 = "";
         }
         else
         {
-            // try a substitution, if any exist. only for opcodes with ONE operand (not going to handle the ones with two)
-            var doNormalWay = true;
-            if (value1 != null && value2 == null)
-            {
-                var specialDirective = GetSpecialDirectiveOverrideFromComments(data, offset);
-                if (!string.IsNullOrEmpty(specialDirective?.TextToOverride))
-                {
-                    doNormalWay = false;
-                    operand1 = specialDirective.TextToOverride; // allow overriding here
-                }
-            }
+            operandOriginalStr1 = operandValue1!=null ? CreateHexStr(operandValue1, numDigitsForOperand1) : "";
+            operandOriginalStr2 = operandValue2!=null ? CreateHexStr(operandValue2, numDigitsForOperand2) : "";
+        }
 
-            // normal way
-            if (doNormalWay)
+        var operandFinalStr1 = operandOriginalStr1;
+        var operandFinalStr2 = operandOriginalStr2;
+        
+        // try a substitution, if any exist. only for opcodes with ONE operand (not going to handle the ones with two)
+        if (overridesAllowed)
+        {
+            var specialDirective = GetSpecialDirectiveOverrideFromComments(data, offset);
+            if (!string.IsNullOrEmpty(specialDirective?.TextToOverride))
             {
-                operand1 = CreateHexStr(value1, numDigitsForOperand1);
-                operand2 = CreateHexStr(value2, numDigitsForOperand2);
+                operandFinalStr1 = specialDirective.TextToOverride; // allow overriding here
             }
         }
 
-        // generate a string like: "LDA.W $01,X" or "JSR.W fn_do_stuff"
-        return string.Format(format, mnemonic, operand1, operand2);
+        var outputInstructionData = new CpuInstructionDataFormatted  {
+            // generate a string like: "LDA.W $01,X" or "JSR.W fn_do_stuff"
+            FullGeneratedText = string.Format(format, mnemonic, operandFinalStr1, operandFinalStr2),
+            
+            // save these in case useful later
+            OriginalNonOverridenOperand1 = operandOriginalStr1,
+            OriginalNonOverridenOperand2 = operandOriginalStr2,
+            OverriddenOperand1 = operandFinalStr1,
+            OverriddenOperand2 = operandFinalStr2,
+            
+            // save other stuff if you want 
+        };
+        
+        return outputInstructionData;
     }
 
     public override int AutoStepSafe(TByteSource byteSource, int offset)
