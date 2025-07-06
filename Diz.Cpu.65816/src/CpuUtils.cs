@@ -11,6 +11,15 @@ public class CpuUtils
         // if true, never print a label (always print the raw hex)
         // useful for things like PEA or PER instructions which may falsely grab labels
         public bool ForceNoLabel { get; set; }
+
+        public enum FormatOverride
+        {
+            None,
+            AsDecimal,
+            // add more as desired
+        }
+
+        public FormatOverride ConstantFormatOverride { get; set; } = FormatOverride.None;
     }
     
     /// <summary>
@@ -54,6 +63,18 @@ public class CpuUtils
             return new OperandOverride {
                 ForceNoLabel = true
             };
+        }
+        
+        // option 3: (if applicable) force this constant to show up as Decimal instead of Hex.
+        // like "!!fd" = format as decimal
+        if (cmd.StartsWith('f') && cmd.Length == 2)
+        {
+            if (cmd[1] == 'd')
+            {
+                return new OperandOverride {
+                    ConstantFormatOverride = OperandOverride.FormatOverride.AsDecimal
+                };   
+            }
         }
 
         return null;

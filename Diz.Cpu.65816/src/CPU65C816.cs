@@ -298,9 +298,16 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (overridesAllowed)
         {
             var specialDirective = GetSpecialDirectiveOverrideFromComments(data, offset);
-            if (!string.IsNullOrEmpty(specialDirective?.TextToOverride))
+            if (specialDirective != null)
             {
-                operandFinalStr1 = specialDirective.TextToOverride; // allow overriding here
+                if (!string.IsNullOrEmpty(specialDirective.TextToOverride))
+                {
+                    operandFinalStr1 = specialDirective.TextToOverride; // allow overriding here
+                }
+                else if (specialDirective.ConstantFormatOverride == CpuUtils.OperandOverride.FormatOverride.AsDecimal && operandValue1!=null)
+                {
+                    operandFinalStr1 = operandValue1.ToString();
+                }
             }
         }
 
