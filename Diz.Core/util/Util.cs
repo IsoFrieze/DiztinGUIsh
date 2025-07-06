@@ -403,6 +403,28 @@ namespace Diz.Core.util
 
             return c1?.SequenceEqual(c2) ?? false;
         }
+
+        /// <summary>
+        /// Chop any leading zeroes from a hex string (must start with '$')
+        /// example: turn "$0004" or "$000004 into "$04"
+        /// </summary>
+        /// <param name="hexString">input hex string</param>
+        /// <returns>if hex string, same string with any pairs of extra leading zeroes removed. if not hex string, return original string</returns>
+        public static string ChopExtraZeroesFromHexStr(string hexString)
+        {
+            // if it's a hex number (prefixed with a $) then, trim the leading zeroes
+            if (!hexString.StartsWith('$')) 
+                return hexString;
+            
+            // remove $
+            var numbersOnly = hexString[1..];
+            
+            while (numbersOnly.Length > 2 && numbersOnly.StartsWith("00")) {
+                numbersOnly = numbersOnly[2..]; // cut leading zeroes
+            }
+
+            return $"${numbersOnly}";
+        }
     }
     
     
