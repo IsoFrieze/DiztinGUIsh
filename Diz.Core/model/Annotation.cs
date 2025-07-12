@@ -330,6 +330,20 @@ namespace Diz.Core.model
 
         public bool IsDefault() => !string.IsNullOrEmpty(Name) && !string.IsNullOrEmpty(Comment);
     }
+
+    // used mostly in the assembly text exporting process for generating temp labels that need extra info.
+    // don't serialize or use outside that context.
+    public class TempLabel : Label
+    {
+        [Flags]
+        public enum TempLabelFlags
+        {
+            None = 0,
+            DisallowPlusMinusGeneration = 0x01,
+        }
+
+        public TempLabelFlags Flags { get; set; } = TempLabelFlags.None;
+    }
     
     public class Comment : Annotation, IComparable<Comment>, IComparable
     {
