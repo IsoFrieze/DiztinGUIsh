@@ -470,45 +470,16 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (intermediateAddress < 0)
             return "";
         
-        // is there a label for this absolute address? if so, we'll use that
-        // this label will include the directpage offset built into the IA.
+        // first and easiest: is there a label for this absolute address AND are we allowed to use it? if so, we'll use that.
+        // this label will include the DirectPage offset built into the IA.
         var candidateLabelName = GetValidatedLabelNameForOffset(data, offset);
 
-        // OPTIONAL 2: we didn't find a label that matches our IA 1:1. BUT, is there a mirrored label that works here?
+        // secondly: if, we didn't find a label that matches our IA 1:1. BUT, is there a mirrored label that works here?
         // example: you have a label defined for 7E0004, and our IA is 000004. those are a mirror of the same data so,
-        // it's OK to use the same label.
-        // NOTE: BE REALLY CAREFUL: THIS IS A PERFORMANCE-INTENSE and HEAVILY OPTIMIZED FUNCTION
-        var unmirrorCorrectedOffset = 0;
-        if (AttemptToUnmirrorLabels && candidateLabelName == "")
-        {
-            var (mirroredLabelSnesAddress, mirrorLabelEntry) = SearchForMirroredLabel(data, intermediateAddress);
-            if (mirrorLabelEntry != null)
-            {
-                // use this label
-                candidateLabelName = mirrorLabelEntry.Name;
-                
-                // but: in some situations, the output instructions needs to generate the un-mirrored address in order to match
-                // the exact bytes in the ROM.  so, we may need to offset back out the difference between the two mirrors.
-                // see https://github.com/IsoFrieze/DiztinGUIsh/issues/117 for an example
-                var numBytesToShow = GetNumBytesToShow(mode);
-                if (mirroredLabelSnesAddress != intermediateAddress && mirroredLabelSnesAddress != -1 && numBytesToShow > 0)
-                {
-                    var mask = numBytesToShow switch
-                    {
-                        1 => 0xFF,
-                        2 => 0xFFFF,
-                        3 => 0xFFFFFF,
-                        _ => -1
-                    };
-                    
-                    if (mask > 0 && (mirroredLabelSnesAddress & mask) != (intermediateAddress & mask))
-                    {
-                        // this can be positive or negative displacement
-                        unmirrorCorrectedOffset = mirroredLabelSnesAddress - intermediateAddress;
-                    }
-                }
-            }
-        }
+        // it's OK to use the 7E label.
+        var unmirrorCorrectedDisplacement = 0;
+        if (AttemptToUnmirrorLabels && candidateLabelName == "") 
+            (unmirrorCorrectedDisplacement, candidateLabelName) = GetUnmirroredLabelNameAndDisplacement(data, mode, intermediateAddress);
 
         if (candidateLabelName == "")
             return "";
@@ -517,9 +488,9 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // for ASAR to use. only works if you have accurate 'D' register (direct page) set.
         // usually only useful after you've done a lot of tracelog capture.
         //
-        // if your Directpage register is set wrong, you'll get weird label names, or miss a label name.
+        // if your Directpage register is set wrong, you'll get wrong/weird label names, or miss a label name.
         // it will still COMPILE byte-identical, it'll just look weird to humans.
-        var dp = 0;
+        var directPageDisplacement = 0;
         if (AttemptTouseDirectPageArithmeticInFinalOutput &&
             mode is Cpu65C816Constants.AddressMode.DirectPage
                 or Cpu65C816Constants.AddressMode.DirectPageXIndex
@@ -542,24 +513,60 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             // so what we'll do here is build an expression for asar that will look like:
             // LDA.B player_health-$100 ; since D=100, player_health-$100 = $20, and $20 is what actually gets assembled here, which is what we want.
 
-            dp = data.GetDirectPage(offset);
+            directPageDisplacement = data.GetDirectPage(offset);
         }
         
-        // everything is figured out, now actually generate the final label text
+        // everything is figured out, now actually render the final label text.
         
-        // IMPORTANT: no spaces on that minus sign.
-        // direct page addressing. we can use an expression to use a variable name for this
-        // can we also use asar directive .dbase to set the assumed DB register? [...probably not for this]
-        var dpOffsetExprStr = dp != 0 ? $"-${dp:X}" : "";
-
-        var unMirrorCorrectedOffsetStr = "";
-        if (unmirrorCorrectedOffset != 0)
-        {
-            var unmirrorSign = unmirrorCorrectedOffset > 0 ? '-' : '+';
-            unMirrorCorrectedOffsetStr = $"{unmirrorSign}${unmirrorCorrectedOffset:X}";
-        }
-
+        // sometimes we need to add expressions to subtract out extra numbers to make the right
+        // final bytes so asar will generate byte-identical output. do that here.
+        // these will return "" if no need for extra math (which is the typical case)
+        var dpOffsetExprStr = GenerateDisplacementString(directPageDisplacement);
+        var unMirrorCorrectedOffsetStr = GenerateDisplacementString(unmirrorCorrectedDisplacement);
+        
         return $"{candidateLabelName}{unMirrorCorrectedOffsetStr}{dpOffsetExprStr}";
+    }
+
+    private (int unmirrorCorrectedDisplacement, string unmirroredLabelName) GetUnmirroredLabelNameAndDisplacement(
+        TByteSource data, Cpu65C816Constants.AddressMode mode, int snesAddress)
+    {
+        // NOTE: BE REALLY CAREFUL: SearchForMirroredLabel() IS A PERFORMANCE-INTENSE and HEAVILY OPTIMIZED FUNCTION
+        var (mirroredLabelSnesAddress, mirrorLabelEntry) = SearchForMirroredLabel(data, snesAddress);
+
+        if (mirrorLabelEntry == null || mirroredLabelSnesAddress == -1)
+            return (0, "");
+
+        // we're good, use this label
+        // BUT: in some situations, the output instructions needs to generate the un-mirrored address in order to match
+        // the exact bytes in the original ROM.  so, we may need to offset back out the difference between the two mirrors.
+        // see https://github.com/IsoFrieze/DiztinGUIsh/issues/117 for an example
+        var numBytesToShow = GetNumBytesToShow(mode);
+        var mask = numBytesToShow switch
+        {
+            1 => 0xFF,
+            2 => 0xFFFF,
+            3 => 0xFFFFFF,
+            _ => -1
+        };
+        
+        // valid for this to be positive or negative
+        var unmirrorCorrectedDisplacement = 0;
+        if (mask > 0 && (mirroredLabelSnesAddress & mask) != (snesAddress & mask)) 
+            unmirrorCorrectedDisplacement = mirroredLabelSnesAddress - snesAddress;
+
+        return (unmirrorCorrectedDisplacement, mirrorLabelEntry.Name);
+    }
+
+    // generate a string suitable for use with Asar expression math.
+    // i.e. "-$FF" or "+$0100", etc
+    private static string GenerateDisplacementString(int amountToDisplace)
+    {
+        if (amountToDisplace == 0) 
+            return "";
+        
+        // IMPORTANT: Asar doesn't allow any whitespace between any of the expression terms
+        var direction = amountToDisplace > 0 ? '-' : '+';
+        return $"{direction}${amountToDisplace:X}";
     }
 
     private static CpuUtils.OperandOverride? GetSpecialDirectiveOverrideFromComments(TByteSource data, int offset)
