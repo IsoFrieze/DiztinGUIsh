@@ -1,4 +1,5 @@
-﻿using Diz.Core.Interfaces;
+﻿using System.Diagnostics;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
 
@@ -406,23 +407,20 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     // this can print bytes OR labels. it can also deal with SOME mirroring and Direct Page addressing etc/etc
     private string FormatOperandAddress(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
     {
-        // important: setting "resolve: true" here bakes the DP offset into the IA.
-        // this is usually what we want for labels BUT we have to build an expression that bakes this back out if so. 
-        var intermediateAddress = data.GetIntermediateAddress(offset, resolve: true);
-        if (intermediateAddress < 0)
-            return "";
-
         var allowLabelUsageHere = true;
+        
         // -------------------------------------------------------------------
-        // OPTION 0: DUMB: THIS IS A DUMB HACK AND SHOULD BE DONE DIFFERENTLY
+        // OPTION 0: SPECIAL DIRECTIVES
+        // we'll let the user do weird special-case things with "!!" directives
         // -------------------------------------------------------------------
-        var hackyOverride = GetSpecialDirectiveOverrideFromComments(data, offset);
-        if (hackyOverride != null)
+        var specialDirective = GetSpecialDirectiveOverrideFromComments(data, offset);
+        if (specialDirective != null)
         {
-            if (!string.IsNullOrEmpty(hackyOverride.TextToOverride))
-                return hackyOverride.TextToOverride;
+            // ZERO VALIDATION OF THIS TEXT. it's up to the user to get it right. have fun
+            if (!string.IsNullOrEmpty(specialDirective.TextToOverride))
+                return specialDirective.TextToOverride;
 
-            if (hackyOverride.ForceNoLabel)
+            if (specialDirective.ForceNoLabel)
                 allowLabelUsageHere = false;
         }
 
@@ -430,75 +428,25 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // OPTION 1: Trying to find a label that is appropriate for
         //           this location, and if so, use it
         // ---------------------------------------------------------------
-
+        
         if (allowLabelUsageHere)
         {
-            // is there a label for this absolute address? if so, we'll use that
-            // this label will include the directpage offset built into the IA.
-            var candidateLabelName = GetValidatedLabelNameForOffset(data, offset);
-
-            // OPTIONAL 2: try some crazy hackery to deal with mirroring on RAM labels.
-            // (this is super-hacky, we need to do this better)
-            // also, can the DP address above ALSO interact with this? (probably, right?) if so, we need to keep that in mind
-            // NOTE: BE REALLY CAREFUL: THIS IS A PERFORMANCE-INTENSE and HEAVILY OPTIMIZED FUNCTION
-            if (AttemptToUnmirrorLabels && candidateLabelName == "")
-            {
-                var (labelAddressFound, labelEntryFound) = SearchForMirroredLabel(data, intermediateAddress);
-                if (labelEntryFound != null)
-                    candidateLabelName = labelEntryFound.Name;
-
-                // note: even if we found a mirrored label, we will still need to potentially deal with the DP addressing below
-            }
-
-            // this is to try and get more labels in the output by creating a mathematical expression
-            // for ASAR to use. only works if you have accurate 'D' register (direct page) set.
-            // usually only useful after you've done a lot of tracelog capture.
-            //
-            // if your Directpage register is set wrong, you'll get weird label names, or miss a label name.
-            // it will still COMPILE byte-identical, it'll just look weird to humans.
-            if (AttemptTouseDirectPageArithmeticInFinalOutput &&
-                candidateLabelName != "" &&
-                mode is Cpu65C816Constants.AddressMode.DirectPage
-                    or Cpu65C816Constants.AddressMode.DirectPageXIndex
-                    or Cpu65C816Constants.AddressMode.DirectPageYIndex
-                    or Cpu65C816Constants.AddressMode.DirectPageIndirect
-                    or Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect
-                    or Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex
-                    or Cpu65C816Constants.AddressMode.DirectPageLongIndirect
-                    or Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex)
-            {
-                // intermediateAddress already has the dp offset baked in at this point.
-                // HOWEVER, we need to build an expression that backs it out now.
-
-                // example:
-                // say we have a line where D = $0100
-                // the instruction says LDA.B $20
-                // the true address the SNES is going to load is at $120 ($100 + $20 = $120)
-                //
-                // if we add a label for Diz like "player_health" for $120, then we want the output line to have the word "player_health" in it.
-                // so what we'll do here is build an expression for asar that will look like:
-                // LDA.B player_health-$100             ; since D=100, player_health-$100 = $20, and $20 is what actually gets assembled here, which is what we want.
-
-                var dp = data.GetDirectPage(offset);
-                if (dp != 0)
-                {
-                    // direct page addressing. we can use an expression to use a variable name for this
-                    // TODO: maybe we can also use asar directive .dbase to set the assumed DB register?
-                    return $"{candidateLabelName}-${dp:X}"; // IMPORTANT: no spaces on that minus sign.
-                }
-            }
-
-            if (candidateLabelName != "")
-                return candidateLabelName;
+            var finalLabelExpressionToUse = GetFinalLabelExpressionToUse(data, offset, mode);
+            if (!string.IsNullOrEmpty(finalLabelExpressionToUse))
+                return finalLabelExpressionToUse;
         }
 
         // ---------------------------------------------------------------
-        // OPTION 2: Couldn't find a deent label to use
+        // OPTION 2: Couldn't find a decent label to use
         //           We'll just print the raw hex number as a constant instead
         // ---------------------------------------------------------------
-        
-        // important: re-fetch the intermediate address, but THIS TIME don't resolve the directpage offset into it.
-        intermediateAddress = data.GetIntermediateAddress(offset);
+        return GetFormattedRawHexIa(data, offset, mode);
+    }
+
+    private static string GetFormattedRawHexIa(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
+    {
+        // don't bake the directpage offset into this
+        var intermediateAddress = data.GetIntermediateAddress(offset);
         
         var numByteDigitsToDisplay = GetNumBytesToShow(mode);
         if (mode is Cpu65C816Constants.AddressMode.Relative8 or Cpu65C816Constants.AddressMode.Relative16)
@@ -512,6 +460,106 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             
         intermediateAddress &= ~(-1 << (8 * numByteDigitsToDisplay));
         return Util.NumberToBaseString(intermediateAddress, Util.NumberBase.Hexadecimal, 2 * numByteDigitsToDisplay, true);
+    }
+
+    private string GetFinalLabelExpressionToUse(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
+    {
+        // important: setting "resolve: true" here bakes the DP offset into the IA.
+        // this is usually what we want for labels BUT we have to build an expression that bakes this back out if so. 
+        var intermediateAddress = data.GetIntermediateAddress(offset, resolve: true);
+        if (intermediateAddress < 0)
+            return "";
+        
+        // is there a label for this absolute address? if so, we'll use that
+        // this label will include the directpage offset built into the IA.
+        var candidateLabelName = GetValidatedLabelNameForOffset(data, offset);
+
+        // OPTIONAL 2: we didn't find a label that matches our IA 1:1. BUT, is there a mirrored label that works here?
+        // example: you have a label defined for 7E0004, and our IA is 000004. those are a mirror of the same data so,
+        // it's OK to use the same label.
+        // NOTE: BE REALLY CAREFUL: THIS IS A PERFORMANCE-INTENSE and HEAVILY OPTIMIZED FUNCTION
+        var unmirrorCorrectedOffset = 0;
+        if (AttemptToUnmirrorLabels && candidateLabelName == "")
+        {
+            var (mirroredLabelSnesAddress, mirrorLabelEntry) = SearchForMirroredLabel(data, intermediateAddress);
+            if (mirrorLabelEntry != null)
+            {
+                // use this label
+                candidateLabelName = mirrorLabelEntry.Name;
+                
+                // but: in some situations, the output instructions needs to generate the un-mirrored address in order to match
+                // the exact bytes in the ROM.  so, we may need to offset back out the difference between the two mirrors.
+                // see https://github.com/IsoFrieze/DiztinGUIsh/issues/117 for an example
+                var numBytesToShow = GetNumBytesToShow(mode);
+                if (mirroredLabelSnesAddress != intermediateAddress && mirroredLabelSnesAddress != -1 && numBytesToShow > 0)
+                {
+                    var mask = numBytesToShow switch
+                    {
+                        1 => 0xFF,
+                        2 => 0xFFFF,
+                        3 => 0xFFFFFF,
+                        _ => -1
+                    };
+                    
+                    if (mask > 0 && (mirroredLabelSnesAddress & mask) != (intermediateAddress & mask))
+                    {
+                        // this can be positive or negative displacement
+                        unmirrorCorrectedOffset = mirroredLabelSnesAddress - intermediateAddress;
+                    }
+                }
+            }
+        }
+
+        if (candidateLabelName == "")
+            return "";
+
+        // this is to try and get more labels in the output by creating a mathematical expression
+        // for ASAR to use. only works if you have accurate 'D' register (direct page) set.
+        // usually only useful after you've done a lot of tracelog capture.
+        //
+        // if your Directpage register is set wrong, you'll get weird label names, or miss a label name.
+        // it will still COMPILE byte-identical, it'll just look weird to humans.
+        var dp = 0;
+        if (AttemptTouseDirectPageArithmeticInFinalOutput &&
+            mode is Cpu65C816Constants.AddressMode.DirectPage
+                or Cpu65C816Constants.AddressMode.DirectPageXIndex
+                or Cpu65C816Constants.AddressMode.DirectPageYIndex
+                or Cpu65C816Constants.AddressMode.DirectPageIndirect
+                or Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect
+                or Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex
+                or Cpu65C816Constants.AddressMode.DirectPageLongIndirect
+                or Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex)
+        {
+            // intermediateAddress already has the dp offset baked in at this point.
+            // HOWEVER, we need to build an expression that backs it out now.
+
+            // example:
+            // say we have a line where D = $0100
+            // the instruction says LDA.B $20
+            // the true address the SNES is going to load is at $120 ($100 + $20 = $120)
+            //
+            // if we add a label for Diz like "player_health" for $120, then we want the output line to have the word "player_health" in it.
+            // so what we'll do here is build an expression for asar that will look like:
+            // LDA.B player_health-$100 ; since D=100, player_health-$100 = $20, and $20 is what actually gets assembled here, which is what we want.
+
+            dp = data.GetDirectPage(offset);
+        }
+        
+        // everything is figured out, now actually generate the final label text
+        
+        // IMPORTANT: no spaces on that minus sign.
+        // direct page addressing. we can use an expression to use a variable name for this
+        // can we also use asar directive .dbase to set the assumed DB register? [...probably not for this]
+        var dpOffsetExprStr = dp != 0 ? $"-${dp:X}" : "";
+
+        var unMirrorCorrectedOffsetStr = "";
+        if (unmirrorCorrectedOffset != 0)
+        {
+            var unmirrorSign = unmirrorCorrectedOffset > 0 ? '-' : '+';
+            unMirrorCorrectedOffsetStr = $"{unmirrorSign}${unmirrorCorrectedOffset:X}";
+        }
+
+        return $"{candidateLabelName}{unMirrorCorrectedOffsetStr}{dpOffsetExprStr}";
     }
 
     private static CpuUtils.OperandOverride? GetSpecialDirectiveOverrideFromComments(TByteSource data, int offset)
