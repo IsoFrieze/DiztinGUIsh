@@ -126,16 +126,7 @@ namespace Diz.Core.model
             if (NormalProvider.GetLabel(snesAddress) != null)
                 return;
             
-            var existingLabel = TemporaryProvider.GetLabel(snesAddress);
-            if (existingLabel == null)
-            {
-                TemporaryProvider.AddLabel(snesAddress, label);
-            }
-            else
-            {
-                existingLabel.Comment = label.Comment;
-                existingLabel.Name = label.Name;
-            }
+            TemporaryProvider.AddLabel(snesAddress, label, true);
         }
 
         public void ClearTemporaryLabels()
