@@ -16,6 +16,7 @@ https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/visual-studio-publi
         <PropertyGroup>
             <LibOutDir>$(PublishDir)lib\</LibOutDir>
             <DocsOutDir>$(PublishDir)docs\</DocsOutDir>
+            <NewExeName>DIZ.exe</NewExeName>
         </PropertyGroup>
 
         <!-- list of *static* files to copy into the root dir -->
@@ -59,6 +60,9 @@ https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/visual-studio-publi
         <!-- copy .md files to the docs folder -->
         <MakeDir Directories="$(DocsOutDir)" Condition="@(MdFiles) != ''" />
         <Copy SourceFiles="%(MdFiles.Identity)" DestinationFolder="$(DocsOutDir)" Condition="@(MdFiles) != ''" />
+
+        <!-- rename the main executable -->
+        <Move SourceFiles="$(PublishDir)$(ProjectName).exe" DestinationFiles="$(PublishDir)$(NewExeName)" Condition="Exists('$(PublishDir)$(ProjectName).exe')" />
 
         <!-- delete unwanted files -->
         <Delete Files="@(FilesToDelete)" ContinueOnError="true" />
