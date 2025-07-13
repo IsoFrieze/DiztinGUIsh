@@ -54,8 +54,17 @@ jobs:
       - name: Test
         run: dotnet test --no-build --configuration Release
 
+      # removed --no-restore on this for simplicity. it's a little more wasteful potentially though
       - name: Publish
-        run: dotnet publish --no-build -c Release /p:PublishProfile=FolderProfile .\Diz.App.Winforms
+        run: dotnet publish -c Release -r win-x64  --self-contained true /p:PublishProfile=FolderProfile /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:DebugType=none .\Diz.App.Winforms
+
+      - name: Clean up publish directory
+        run: |
+          Remove-Item -Path ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\*.config" -Force -ErrorAction SilentlyContinue
+          if (Test-Path ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\*.md") {
+            New-Item -ItemType Directory -Path ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\docs" -Force
+            Move-Item -Path ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\*.md" -Destination ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\docs\" -Force
+          }
 
       - uses: vimtor/action-zip@v1.2
         with:
