@@ -4,7 +4,6 @@
     <TargetFramework>net9.0</TargetFramework>
     <UseWindowsForms>false</UseWindowsForms>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RootNamespace>Diz.Core</RootNamespace>
     <AssemblyName>Diz.Core</AssemblyName>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -13,11 +12,6 @@
   <ItemGroup>
     <PackageReference Include="ExtendedXmlSerializer">
       <Version>3.7.11</Version>
-    </PackageReference>
-    <PackageReference Include="GitInfo">
-      <Version>3.3.3</Version>
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="IX.Observable">
       <Version>1.0.1</Version>

@@ -3,7 +3,6 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-        <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -12,14 +11,6 @@
     <ItemGroup>
       <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
       <ProjectReference Include="..\Diz.Cpu.65816\Diz.Cpu.65816.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="GitInfo">
-            <Version>3.3.3</Version>
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
     </ItemGroup>
 
 </Project>

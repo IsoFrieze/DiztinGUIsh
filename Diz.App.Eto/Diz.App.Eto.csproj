@@ -14,6 +14,11 @@
       <PackageReference Include="LightInject">
         <Version>6.6.4</Version>
       </PackageReference>
+        <PackageReference Include="GitInfo">
+            <Version>3.3.3</Version>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
