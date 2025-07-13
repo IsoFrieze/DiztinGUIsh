@@ -15,24 +15,36 @@ https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/visual-studio-publi
         <!-- where we're going to move DLLs and other root-level things we don't want in the root dir anymore -->
         <PropertyGroup>
             <LibOutDir>$(PublishDir)lib\</LibOutDir>
+            <DocsOutDir>$(PublishDir)docs\</DocsOutDir>
         </PropertyGroup>
 
         <!-- list of *static* files to copy into the root dir -->
         <ItemGroup>
             <ExtraStaticFiles Include="dist\**\*.*"/>
-            <ExtraStaticFiles Include="..\README.md"/>
-            <ExtraStaticFiles Include="..\LICENSE.md"/>
+            <!-- Don't include .md files here anymore, they'll be handled separately -->
+        </ItemGroup>
+
+        <!-- list of .md files to copy into the docs folder -->
+        <ItemGroup>
+            <MdFiles Include="..\README.md"/>
+            <MdFiles Include="..\LICENSE.md"/>
         </ItemGroup>
 
         <!-- create a list of files we want to move in the output lib folder -->
         <ItemGroup>
             <LibFiles Include="$(PublishDir)**\*.dll"/>
             <LibFiles Include="$(PublishDir)**\*.xml"/>
-            <LibFiles Include="$(PublishDir)**\*.pdb"/>
-            <LibFiles Include="$(PublishDir)**\*.config"/>
+<!--   MINIFYING THIS, so, exclude these         <LibFiles Include="$(PublishDir)**\*.pdb"/>-->
+<!--   NORMALLY YES. for Diz, it's OK to not have these as long as our code defaults are OK         <LibFiles Include="$(PublishDir)**\*.config"/>-->
             <LibFiles Remove="$(LibOutDir)\**\*.*"/>
             <LibFiles Remove="$(PublishDir)$(ProjectName)*"/>
             <LibFiles Remove="$(PublishDir)$(ProjectName).exe"/>
+        </ItemGroup>
+
+        <!-- list of files to delete from the publish directory -->
+        <ItemGroup>
+            <FilesToDelete Include="$(PublishDir)**\*.pdb"/>
+            <FilesToDelete Include="$(PublishDir)**\*.config"/>
         </ItemGroup>
 
         <!-- move file to lib/ dir -->
@@ -43,6 +55,13 @@ https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/visual-studio-publi
 
         <!-- copy any static files to the root dir, keep the same folder structure -->
         <Copy SourceFiles="%(ExtraStaticFiles.Identity)" DestinationFolder="$(PublishDir)%(ExtraStaticFiles.RecursiveDir)"/>
+
+        <!-- copy .md files to the docs folder -->
+        <MakeDir Directories="$(DocsOutDir)" Condition="@(MdFiles) != ''" />
+        <Copy SourceFiles="%(MdFiles.Identity)" DestinationFolder="$(DocsOutDir)" Condition="@(MdFiles) != ''" />
+
+        <!-- delete unwanted files -->
+        <Delete Files="@(FilesToDelete)" ContinueOnError="true" />
 
         <!-- done moving stuff. remove any directories that are now-empty left -->
         <ItemGroup>

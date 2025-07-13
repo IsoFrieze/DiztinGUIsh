@@ -50,25 +50,16 @@ jobs:
 
       - name: Build
         run: dotnet build --no-restore --configuration Release
-
+      
       - name: Test
         run: dotnet test --no-build --configuration Release
 
       # removed --no-restore on this for simplicity. it's a little more wasteful potentially though
       - name: Publish
-        run: dotnet publish -c Release -r win-x64  --self-contained true /p:PublishProfile=FolderProfile /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:DebugType=none .\Diz.App.Winforms
-
-      - name: Clean up publish directory
-        run: |
-          Remove-Item -Path ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\*.config" -Force -ErrorAction SilentlyContinue
-          if (Test-Path ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\*.md") {
-            New-Item -ItemType Directory -Path ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\docs" -Force
-            Move-Item -Path ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\*.md" -Destination ".\Diz.App.Winforms\bin\Release\net9.0-windows\win-x64\publish\docs\" -Force
-          }
+        run: dotnet publish -c Release -r win-x64  --self-contained true /p:PublishProfile=FolderProfile /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true .\Diz.App.Winforms
 
       - uses: vimtor/action-zip@v1.2
         with:
-          # files: DiztinGUIsh\bin\Release\*\publish\    # would be cooler if we could do this but... alas...
           files: Diz.App.Winforms\bin\Release\net9.0-windows\publish\
           dest: ${{ steps.ver.outputs.ver }}.zip
 
