@@ -52,7 +52,10 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     //        incorrectly, so, allow project XMLs to load IF we can fix up the bad data.
     // - 102: added comments support to the special RomBytes data section.
     //        bumped RomBytes data format from v200 (initial) to v201. 
-    public int CurrentSaveFormatVersion { get; init; } = 102;
+    public const int LatestSaveFormatVerion = 102;
+    
+    // changes as we run the migrations
+    public int CurrentSaveFormatVersion { get; } = LatestSaveFormatVerion;
 
     // update this if we are dropping support for really old save formats.
     public const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
