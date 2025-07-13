@@ -1,5 +1,6 @@
 ﻿using Diz.App.Common;
 using Diz.Controllers.interfaces;
+using Diz.Core.Interfaces;
 using Diz.Ui.Winforms;
 using Diz.Ui.Winforms.dialogs;
 using JetBrains.Annotations;
@@ -15,5 +16,6 @@ namespace Diz.App.Winforms;
         
         serviceRegistry.Register<IDizApp, DizWinformsApp>();
         serviceRegistry.Register<ICommonGui, WinFormsCommonGui>();
+        serviceRegistry.Register<IAppVersionInfo, AppVersionInfo>();
     }
 }

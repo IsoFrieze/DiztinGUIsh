@@ -21,3 +21,15 @@ public interface ICommentTextProvider
         ByteEntry BuildFlatByteEntryForRom(int snesAddress);
     }
 #endif
+
+// utility for getting info about the running app
+public interface IAppVersionInfo
+{
+    enum AppVersionInfoType
+    {
+        Version,
+        FullDescription,
+    }
+    
+    string GetVersionInfo(AppVersionInfoType type);
+}
