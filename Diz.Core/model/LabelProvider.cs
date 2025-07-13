@@ -38,7 +38,7 @@ namespace Diz.Core.model
                     // exclude labels that can't possibly be mirrors of any WRAM or other stuff
                     // (note: keep this in-sync with the checks from AreLabelsSameMirror())
                     (
-                        RomUtil.GetWramAddress(x.Key) != -1 || RomUtil.GetUnmirroredIoRegionFromBank(x.Key) != -1
+                        RomUtil.GetWramAddressFromSnesAddress(x.Key) != -1 || RomUtil.GetUnmirroredIoRegionFromBank(x.Key) != -1
                     )
                     
                     // probably more are useful to add here...

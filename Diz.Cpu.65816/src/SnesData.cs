@@ -29,9 +29,10 @@ public interface ISnesCartName
     public string CartridgeTitleName { get; }
 }
 
-public interface IFixMisalignedFlags
+public interface IDataUtilities
 {
     int FixMisalignedFlags();
+    void NormalizeWramLabels();
 }
 
 public interface IMiscNavigable
@@ -68,7 +69,7 @@ public interface ISnesApi<out TData> :
     ISnesChecksum,
     ISnesCartName,
     IInstructionGettable,
-    IFixMisalignedFlags,
+    IDataUtilities,
     IArchitectureApi,
     IMarkOperandAndOpcode,
     ICommentTextProvider
@@ -82,7 +83,6 @@ public interface ISnesApi<out TData> :
 
 public interface ISnesData : ISnesApi<IData>
 {
-    
 }
 
 public class SnesApi : ISnesData
@@ -528,6 +528,29 @@ public class SnesApi : ISnesData
         }
 
         return numChanged;
+    }
+
+    public void NormalizeWramLabels()
+    {
+        var wramLabels = Labels.Labels
+            .Where(x => RomUtil.GetWramAddressFromSnesAddress(x.Key) != -1)
+            .ToList();
+        
+        foreach (var label in wramLabels)
+        {
+            var normalizedSnesAddress = RomUtil.GetSnesAddressFromWramAddress(RomUtil.GetWramAddressFromSnesAddress(label.Key));
+
+            // already normalized? skip
+            if (normalizedSnesAddress == label.Key)
+                continue;
+
+            // if there are duplicates or overlaps, we can't proceed, they must be manually cleaned up
+            if (wramLabels.Any(x => x.Key == normalizedSnesAddress))
+                continue;
+
+            Data.Labels.RemoveLabel(label.Key);
+            Data.Labels.AddLabel(normalizedSnesAddress, label.Value, true);
+        }
     }
 
     private int FixFlagsForOpcodeAndItsOperands(int offset, int romSize, ref int bytesChanged)

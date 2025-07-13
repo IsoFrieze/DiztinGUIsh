@@ -264,7 +264,15 @@ public class ProjectController : IProjectController
 
     public void SelectOffset(int offset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs = null) =>
         ProjectView.SelectOffset(offset, historyArgs);
-    
+
+    public void NormalizeWramLabels()
+    {
+        if (!commonGui.PromptToConfirmAction(
+                "This converts all WRAM labels (where possible and non-overlapping) to the $7E/$7F range. Proceed?"))
+            return;
+        
+        Project.Data.GetSnesApi()?.NormalizeWramLabels();
+    }
     
     public int FixMisalignedFlags()
     {

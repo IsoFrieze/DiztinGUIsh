@@ -436,12 +436,22 @@ namespace Diz.Core.util
         public static bool IsLocationAReadPoint(this IInOutPointGettable data, int pointer) => 
             IsLocationPoint(data, pointer, InOutPoint.ReadPoint);
 
+        // Take a WRAM address (from 0x0 to 0x1FFFF) and convert it to the equivalent
+        // main SNES address between $7E0000 through $7FFFFF
+        public static int GetSnesAddressFromWramAddress(int wramAddress)
+        {
+            if (wramAddress is < 0 or > 0x1FFFF)
+                return -1;
+            
+            return wramAddress + 0x7E0000;
+        }
+
         // This takes a SNES address and returns the offset into WRAM address space, if it exists. It deals with mirroring
         // valid return ranges are 0 through 0x1FFFFF (the offset into WRAM address space, NO LONGER in SNES address space)
         // return -1 if it doesn't map to any offset in WRAM address space
         // NOTE: this is the offset in WRAM, and not it's mirrored value.
         // i.e. if you give it $0013, this function will return $0013, and **NOT** $7E0013
-        public static int GetWramAddress(int snesAddress)
+        public static int GetWramAddressFromSnesAddress(int snesAddress)
         {
             if (snesAddress == -1)
                 return -1;
@@ -530,8 +540,8 @@ namespace Diz.Core.util
             
         public static bool AreSnesAddressesSameMirroredWramAddresses(int snesAddress1, int snesAddress2)
         {
-            var wramAddress1 = GetWramAddress(snesAddress1);
-            var wramAddress2 = GetWramAddress(snesAddress2);
+            var wramAddress1 = GetWramAddressFromSnesAddress(snesAddress1);
+            var wramAddress2 = GetWramAddressFromSnesAddress(snesAddress2);
         
             return wramAddress1 != -1 && wramAddress2 == wramAddress1;
         }

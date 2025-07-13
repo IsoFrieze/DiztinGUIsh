@@ -25,7 +25,7 @@ namespace Diz.Controllers.interfaces;
 public interface IProjectController : 
     ITraceLogImporters,
     IFixInstructionUtils,
-    IFixMisalignedFlags
+    IDataUtilities
 {
     // diz3.0 is going to need some major surgery from this one.
 
@@ -61,7 +61,6 @@ public interface IProjectController :
 
     bool ConfirmSettingsThenExportAssembly();
     bool ExportAssemblyWithCurrentSettings();
-
     void MarkChanged(); // rename to MarkUnsaved or similar in Diz3.0
 }
     
