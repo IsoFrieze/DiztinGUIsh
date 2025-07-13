@@ -23,12 +23,6 @@
         "resolved": "6.6.4",
         "contentHash": "xId1F9OpzVvyNu3wcdPR4EcNUihcT5U9wiUJOi0tetuDOia1uAiFJzqmYGdRPsqAsgDb6o8sfoQCx5yMFFDsVw=="
       },
-      "Microsoft.NET.ILLink.Tasks": {
-        "type": "Direct",
-        "requested": "[9.0.6, )",
-        "resolved": "9.0.6",
-        "contentHash": "TXy3SbJzGXQbxxIxCjdrp8bwEyTDImyYNpTpd6v7P3JL2Y7dno8EYG7dPezfYTa5SoWKdhbH9cbnwHHs3BR5gA=="
-      },
       "System.Resources.Extensions": {
         "type": "Direct",
         "requested": "[8.0.0, )",
@@ -1181,6 +1175,7 @@
         "dependencies": {
           "ByteSize": "[2.1.2, )",
           "Diz.Controllers": "[1.0.0, )",
+          "Diz.Core": "[1.0.0, )",
           "FastBitmapLib": "[2.1.0, )",
           "JetBrains.Annotations": "[2023.3.0, )",
           "LightInject": "[6.6.4, )"
