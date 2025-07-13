@@ -13,6 +13,12 @@
           "JetBrains.Annotations": "2023.3.0"
         }
       },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[9.0.6, )",
+        "resolved": "9.0.6",
+        "contentHash": "TXy3SbJzGXQbxxIxCjdrp8bwEyTDImyYNpTpd6v7P3JL2Y7dno8EYG7dPezfYTa5SoWKdhbH9cbnwHHs3BR5gA=="
+      },
       "IX.Library": {
         "type": "Transitive",
         "resolved": "1.0.1",
@@ -49,6 +55,7 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0"
         }
       }
-    }
+    },
+    "net9.0/win-x64": {}
   }
 }
