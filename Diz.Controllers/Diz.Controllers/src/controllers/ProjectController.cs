@@ -431,7 +431,8 @@ public class ProjectController : IProjectController
         // must have saved the project first
         if (Project.Session?.ProjectDirectory.Length == 0)
             return false;
-
+        
+        // save asm exporter settings 
         UpdateExportSettings(settingsToUseAndSave);
         WriteAssemblyOutput();
         
