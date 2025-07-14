@@ -434,6 +434,12 @@ public class ProjectController : IProjectController
         
         // save asm exporter settings 
         UpdateExportSettings(settingsToUseAndSave);
+        
+        // OPTIONAL: save the project file, just in case anything goes wrong during export
+        if (Project?.ProjectFileName != "")
+            SaveProject(Project?.ProjectFileName);
+        
+        // do the real output
         WriteAssemblyOutput();
         
         return true;
