@@ -10,7 +10,14 @@ public class CpuUtils
         
         // if true, never print a label (always print the raw hex)
         // useful for things like PEA or PER instructions which may falsely grab labels
-        public bool ForceNoLabel { get; set; }
+        public bool ForceOnlyShowRawHex { get; set; }
+        
+        // if true, then this particular label WONT create a temporary label
+        // at its original offset (useful for things like PTR_ or DATA_ destinations where
+        // the label value here is used for accessing memory that's really not related to it.
+        // for instance, if a game is doing "LDA.L $C00000, X", and accesisng lots of locations using 
+        // different values in X, then, we might not want to stick a "DATA_" label at $C00000
+        public bool DontGenerateTemporaryLabelAtDestination { get; set; }
 
         public enum FormatOverride
         {
@@ -52,16 +59,26 @@ public class CpuUtils
         if (cmd.StartsWith("o "))
         {
             var textToOverride = cmd[2..]; // skip "o "
-            return new OperandOverride {
+            var directive = new OperandOverride {
                 TextToOverride = textToOverride
             };
+            
+            // normally, we'd be done right here, but, let's see if this seems to contain an expression. if so,
+            // we'll also disable this label from being able to create a temporary destination label (like DATA_xxx or PTR_xxx).
+            // (other uses of the same address might still create that destination temp label though)
+            // if this causes any issues, feel free to turn it off.
+            // feel free to add more expression checks here:
+            if (textToOverride.Contains('!') || textToOverride.Contains('+') || textToOverride.Contains('-'))
+                directive.DontGenerateTemporaryLabelAtDestination = true;
+            
+            return directive;
         }
 
         // option 2: 
         if (cmd.StartsWith('n'))
         {
             return new OperandOverride {
-                ForceNoLabel = true
+                ForceOnlyShowRawHex = true
             };
         }
         

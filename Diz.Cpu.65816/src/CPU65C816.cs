@@ -420,7 +420,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             if (!string.IsNullOrEmpty(specialDirective.TextToOverride))
                 return specialDirective.TextToOverride;
 
-            if (specialDirective.ForceNoLabel)
+            if (specialDirective.ForceOnlyShowRawHex)
                 allowLabelUsageHere = false;
         }
 
