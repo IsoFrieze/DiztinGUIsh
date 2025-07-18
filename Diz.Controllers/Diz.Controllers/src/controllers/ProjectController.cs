@@ -24,33 +24,17 @@ using JetBrains.Annotations;
 namespace Diz.Controllers.controllers;
 
 [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
-public class ProjectController : IProjectController
+public class ProjectController(
+    ICommonGui commonGui,
+    IFilesystemService fs,
+    IControllerFactory controllerFactory,
+    Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate,
+    Func<IProjectFileManager> projectFileManagerCreate,
+    Func<IProgressView> progressViewFactoryCreate)
+    : IProjectController
 {
     public IProjectView ProjectView { get; set; }
     public Project Project { get; private set; }
-
-    private readonly ICommonGui commonGui;
-    private readonly IFilesystemService fs;
-    private readonly IControllerFactory controllerFactory;
-    private readonly Func<IProjectFileManager> projectFileManagerCreate;
-    private readonly Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate;
-    private readonly Func<IProgressView> progressViewFactoryCreate;
-
-    public ProjectController(
-        ICommonGui commonGui,
-        IFilesystemService fs,
-        IControllerFactory controllerFactory,
-        Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate,
-        Func<IProjectFileManager> projectFileManagerCreate,
-        Func<IProgressView> progressViewFactoryCreate
-    ) {
-        this.commonGui = commonGui;
-        this.fs = fs;
-        this.controllerFactory = controllerFactory;
-        this.projectImporterFactoryCreate = projectImporterFactoryCreate;
-        this.projectFileManagerCreate = projectFileManagerCreate;
-        this.progressViewFactoryCreate = progressViewFactoryCreate;
-    }
 
     public event IProjectController.ProjectChangedEvent ProjectChanged;
 
