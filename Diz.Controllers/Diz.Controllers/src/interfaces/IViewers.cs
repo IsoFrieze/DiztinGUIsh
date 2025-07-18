@@ -78,12 +78,14 @@ public interface IMarkManyView<TDataSource> : IModalDialog
     
 public interface ILabelEditorView : IFormViewer
 {
-    [CanBeNull] public IProjectController ProjectController { get; set; }
+    // a lot of these fields/methods shouldn't be done this way
         
-    string PromptForCsvFilename();
-    void RepopulateFromData();
-    void ShowLineItemError(string exMessage, int errLine);
-    void RebindProject();
+    string PromptForCsvFilename(); // get rid of
+    void ShowLineItemError(string exMessage, int errLine);  // get rid of
+    
+    void SetProjectCOntroller([CanBeNull] IProjectController projectController);
+    void RepopulateFromData(); // keep
+    void RebindProject(); // keep
 }
     
 public interface IImportRomDialogView
