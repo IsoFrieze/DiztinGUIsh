@@ -83,9 +83,13 @@ public interface ILabelEditorView : IFormViewer
     string PromptForCsvFilename(); // get rid of
     void ShowLineItemError(string exMessage, int errLine);  // get rid of
     
-    void SetProjectCOntroller([CanBeNull] IProjectController projectController);
+    void SetProjectController([CanBeNull] IProjectController projectController);
     void RepopulateFromData(); // keep
     void RebindProject(); // keep
+
+    void FocusOrCreateLabelAtSelectedRomOffsetIa();
+    void FocusOrCreateLabelAtRomOffsetIa(int selectedOffset);
+    void FocusOrCreateLabelAtSnesAddress(int snesAddress);
 }
     
 public interface IImportRomDialogView

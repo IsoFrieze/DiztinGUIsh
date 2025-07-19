@@ -507,6 +507,15 @@ namespace Diz.Core.util
 
             return false;
         }
+        
+        // if a SNES addres is mapped to WRAM, ensure the address is in the primary mapped region.
+        // if not, or if it's already normalized to that region, just return the original address
+        // example: $0000FE will return $7E00FE
+        public static int NormalizeSnesWramAddress(int snesAddress)
+        {
+            var normalizedSnesAddress = GetSnesAddressFromWramAddress(GetWramAddressFromSnesAddress(snesAddress));
+            return normalizedSnesAddress != -1 ? normalizedSnesAddress : snesAddress;
+        }
 
         public static bool AreSnesAddressesSameMirroredIoRegion(int snesAddress1, int snesAddress2)
         {
