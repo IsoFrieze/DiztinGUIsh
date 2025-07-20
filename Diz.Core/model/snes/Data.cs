@@ -103,16 +103,14 @@ public class Data : IData
     {
         if (v == null)
         {
-            if (Comments.ContainsKey(i)) 
-                Comments.Remove(i);
+            Comments.Remove(i);
         } 
         else
         {
             if (Comments.ContainsKey(i) && overwrite) 
                 Comments.Remove(i);
-            
-            if (!Comments.ContainsKey(i)) 
-                Comments.Add(i, v);
+
+            Comments.TryAdd(i, v);
         }
     }
 
