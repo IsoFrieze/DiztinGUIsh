@@ -10,61 +10,52 @@ using JetBrains.Annotations;
 
 namespace Diz.Core.serialization.xml_serializer;
 
-public class XmlSerializerFactory : IXmlSerializerFactory
+public class XmlSerializerFactory(
+    IDataFactory dataFactory,
+    Func<IDataFactory, XmlSerializerFactory.SnesDataInterceptor> snesDataInterceptor)
+    : IXmlSerializerFactory
 {
-    private readonly IDataFactory dataFactory;
-    private readonly Func<IDataFactory, SnesDataInterceptor> snesDataInterceptor;
-
-    public XmlSerializerFactory(IDataFactory dataFactory, Func<IDataFactory, SnesDataInterceptor> snesDataInterceptor)
-    {
-        this.dataFactory = dataFactory;
-        this.snesDataInterceptor = snesDataInterceptor;
-    }
-
     public IConfigurationContainer GetSerializer([CanBeNull] RomBytesOutputFormatSettings romBytesOutputFormat)
     {
         var romBytesSerializer = new RomBytesSerializer
         {
             FormatSettings = romBytesOutputFormat
         };
-        
+
         return new ConfigurationContainer()
 
             .WithDefaultMonitor(new SerializationMonitor())
 
             .Type<Project>()
-            
-            // dizprefs: we'll save these manually so they're in a different file
-            .Member(x => x.ProjectUserSettings).Ignore() 
+            .Member(x => x.ProjectUserSettings).Ignore()
 
             .Type<RomBytes>()
             .Register().Serializer().Using(romBytesSerializer)
-
+        
             .Type<Data>()
             .WithInterceptor(snesDataInterceptor(dataFactory))
             .Member(x => x.LabelsSerialization)
-
             .Name("Labels")
-            .UseOptimizedNamespaces()
-            .UseAutoFormatting()
-
-#if DIZ_3_BRANCH
-                .EnableReferences()
-#endif
-
-            .EnableImplicitTyping(typeof(Data))
+        
+            .EnableImplicitTyping(typeof(ContextMapping))
 
             .Type<Label>()
-
+            
 #if DIZ_3_BRANCH
                 .Name("L")
                 .Member(x => x.Comment).Name("Cmt").EmitWhen(text => !string.IsNullOrEmpty(text))
                 .Member(x => x.Name).Name("V").EmitWhen(text => !string.IsNullOrEmpty(text))
 #endif
             .EnableImplicitTyping()
-
+        
             .Type<IAnnotationLabel>()
-            .WithInterceptor(AnnotationLabelInterceptor.Default);
+            .WithInterceptor(AnnotationLabelInterceptor.Default)
+
+            .UseOptimizedNamespaces()
+            .UseAutoFormatting();
+#if DIZ_3_BRANCH
+                .EnableReferences()
+#endif
     }
 
     /// <summary>

@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
@@ -51,8 +53,9 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     // - 101: no structure changes but, japanese chars in SNES header cartridge title were being saved
     //        incorrectly, so, allow project XMLs to load IF we can fix up the bad data.
     // - 102: added comments support to the special RomBytes data section.
-    //        bumped RomBytes data format from v200 (initial) to v201. 
-    public const int LatestSaveFormatVerion = 102;
+    //        bumped RomBytes data format from v200 (initial) to v201.
+    // - 103: added "context" fields to labels (no migrations required)
+    public const int LatestSaveFormatVerion = 103;
     
     // changes as we run the migrations
     public int CurrentSaveFormatVersion { get; } = LatestSaveFormatVerion;

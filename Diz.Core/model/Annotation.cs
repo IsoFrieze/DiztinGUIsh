@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Diz.Core.Interfaces;
 using Diz.Core.util;
@@ -11,6 +14,7 @@ using Diz.Core.model.byteSources;
 
 namespace Diz.Core.model
 {
+    
     public abstract class Annotation : AnnotationBase
     #if !DIZ_3_BRANCH
     {}
@@ -262,18 +266,48 @@ namespace Diz.Core.model
         }
         #endregion
     }
+    
+    [Serializable]
+    public class ContextMapping : IContextMapping
+    {
+        private string context = "";
+        private string nameOverride = "";
+
+        public string Context
+        {
+            get => context;
+            set { context = value; OnPropertyChanged(); }
+        }
+
+        public string NameOverride
+        {
+            get => nameOverride;
+            set { nameOverride = value; OnPropertyChanged(); }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+    
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
 
     // represent a label at a particular SNES address
     //
     // Comments here are for the LABEL itself, and not so much about where they're used.
     // i.e. a label for 0x7E0020 might store a character's HP in RAM. It would look like:
-    // - address: 0x7E0020 (if HiRom, 0x7EXXXX means it's a RAM address)
+    // - address: snes address 0x7E0020 (i.e. mapped to a WRAM address)
     // - label:   "character_3_hp"
     // - comment: "this address is only used in RAM during battle sequences"
     public class Label : Annotation, IAnnotationLabel, IComparable<Label>, IComparable
     {
         private string comment = "";
         private string name = "";
+
+        public ObservableCollection<IContextMapping> ContextMappings { get; } = [];
+        IEnumerable<IReadOnlyContextMapping> IReadOnlyLabel.ContextMappings => ContextMappings;
+        ObservableCollection<IContextMapping> IAnnotationLabel.ContextMappings => ContextMappings;
 
         public string Name
         {
@@ -286,12 +320,21 @@ namespace Diz.Core.model
             get => comment;
             set => this.SetField(ref comment, value ?? "");
         }
-        
+
+        public string GetName(string contextName = "")
+        {
+            var mapping = ContextMappings.FirstOrDefault(cm => cm.Context == contextName);
+            var overriddenName = mapping?.NameOverride ?? Name;
+            return string.IsNullOrWhiteSpace(overriddenName) ? Name : overriddenName;
+        }
+
         #region Equality
 
-        protected bool Equals(Label other)
+        private bool Equals(Label other)
         {
-            return Name == other.Name && Comment == other.Comment;
+            return Name == other.Name && 
+                   Comment == other.Comment && 
+                   ContextMappings.Equals(other.ContextMappings);
         }
 
         public override bool Equals(object obj)
@@ -301,8 +344,10 @@ namespace Diz.Core.model
             if (obj.GetType() != GetType()) return false;
             return Equals((Label)obj);
         }
+        
         public override int GetHashCode()
         {
+            // TODO: update to add cotext mappings
             unchecked
             {
                 return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Comment != null ? Comment.GetHashCode() : 0);
@@ -324,8 +369,7 @@ namespace Diz.Core.model
             if (ReferenceEquals(this, obj)) return 0;
             return obj is Label other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(Label)}");
         }
-
-
+        
         #endregion
 
         public bool IsDefault() => !string.IsNullOrEmpty(Name) && !string.IsNullOrEmpty(Comment);

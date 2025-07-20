@@ -205,9 +205,6 @@ namespace Diz.Core.Interfaces
 
         ILabelServiceWithTempLabels Labels { get; }
         
-        // TODO: temp hack for serialization, do this better somehow.
-        Dictionary<int, IAnnotationLabel> LabelsSerialization { get; }
-        
         public SortedDictionary<int, string> Comments { get; }
     }
 

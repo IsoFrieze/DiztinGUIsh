@@ -48,6 +48,7 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
         // note: for registration it's important to give each of these a unique NAME so we can get all of them and apply in order.
         serviceRegistry.Register<IMigration, MigrationBugfix050JapaneseText>("migrate_100_to_101");
         serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 101 }, "migrate_101_to_102");
+        serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 102 }, "migrate_102_to_103");
     }
 
     private static void RegisterSampleDataServices(IServiceRegistry serviceRegistry)

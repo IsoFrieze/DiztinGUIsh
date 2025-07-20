@@ -1,15 +1,41 @@
-﻿namespace Diz.Core.Interfaces;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+
+namespace Diz.Core.Interfaces;
+
+public interface IReadOnlyContextMapping : INotifyPropertyChanged
+{
+    string Context { get; }
+    string NameOverride  { get; }
+}
+
+public interface IContextMapping : IReadOnlyContextMapping
+{
+    new string Context { get; set;  }
+    new string NameOverride  { get; set; }
+}
+
 
 public interface IReadOnlyLabel
 {
     string Name { get; }
     string Comment { get; }
+    IEnumerable<IReadOnlyContextMapping> ContextMappings { get; }
+
 }
 
 public interface IAnnotationLabel : IReadOnlyLabel
 {
+    // name used for default context
     new string Name { get; set; }
     new string Comment { get; set; }
+    
+    // label names can change based on which "context" they're in
+    // by default, this is empty but can be overridden
+    new ObservableCollection<IContextMapping> ContextMappings { get; }
+    
+    // get a label name using a specific context, if it exists. otherwise return the default name
+    string GetName(string contextName = "");
 }
     
 public interface IReadOnlyLabelProvider
