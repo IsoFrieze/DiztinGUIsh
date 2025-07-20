@@ -8,6 +8,7 @@ namespace Diz.Cpu._65816;
 public class Cpu65C816<TByteSource> : Cpu<TByteSource> 
     where TByteSource : 
     IRomByteFlagsGettable, 
+    IRomSize,
     IRomByteFlagsSettable, 
     ISnesAddressConverter, 
     ISteppable, 
@@ -245,7 +246,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     {
         var mode = GetAddressMode(data, offset);
         if (mode == null)
-            throw new InvalidDataException("Expected non-null mode");
+            throw new InvalidDataException("Expected non-null addressing mode");
             
         var format = GetInstructionFormatString(data, offset);
         var mnemonic = GetMnemonic(data, offset);
@@ -283,7 +284,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (!identified)
         {
             // note: lots of complexity with labels, mirroring, overrides, etc inside here:
-            operandOriginalStr1 = FormatOperandAddress(data, offset, mode.Value);
+            operandOriginalStr1 = FormatOperandAddress(data, offset);
             operandOriginalStr2 = "";
         }
         else
@@ -311,10 +312,16 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
                 }
             }
         }
-
+        
+        var finalStr = string.Format(format, mnemonic, operandFinalStr1, operandFinalStr2);
+        
+        var pointerStr = GetPointerStr(data, offset);
+        if (pointerStr != null)
+            finalStr = pointerStr;
+        
         var outputInstructionData = new CpuInstructionDataFormatted  {
             // generate a string like: "LDA.W $01,X" or "JSR.W fn_do_stuff"
-            FullGeneratedText = string.Format(format, mnemonic, operandFinalStr1, operandFinalStr2),
+            FullGeneratedText = finalStr,
             
             // save these in case useful later
             OriginalNonOverridenOperand1 = operandOriginalStr1,
@@ -326,6 +333,80 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         };
         
         return outputInstructionData;
+    }
+
+    private static int SearchForRomOffsetBoundsOfPointerTableFrom(TByteSource data, int offset, bool searchBackwards = true)
+    {
+        // what type of pointer table are we in the middle of?
+        var pointerTableType = data.GetFlag(offset);
+        if (pointerTableType is not (FlagType.Pointer16Bit or FlagType.Pointer24Bit or FlagType.Pointer32Bit))
+            return -1;  // not a pointer table
+
+        var currentBound = offset;
+        while (true)
+        {
+            var candidateOffset = searchBackwards ? currentBound - 1 : currentBound + 1;
+            if (candidateOffset > data.GetRomSize() || candidateOffset < 0)
+                break;
+            
+            // must be marked as a pointer OF THE SAME TYPE
+            if (data.GetFlag(candidateOffset) !=  pointerTableType)
+                break;
+
+            currentBound = candidateOffset;
+        }
+        
+        return currentBound;
+    }
+
+    private static string? GetPointerStr(TByteSource data, int offset)
+    {
+        var pointerType = data.GetFlag(offset);
+        if (pointerType is not (FlagType.Pointer16Bit or FlagType.Pointer24Bit or FlagType.Pointer32Bit))
+            return null;
+
+        var pointerTableStartOffset = SearchForRomOffsetBoundsOfPointerTableFrom(data, offset, searchBackwards: true);
+        if (pointerTableStartOffset == -1)
+            return null;
+        
+        // ok, we're inside a pointer table.
+        // we don't want to display a string for every entry, but only the first of the N bytes of the pointer table
+        var stride = pointerType switch
+        {
+            FlagType.Pointer16Bit => 2,
+            FlagType.Pointer24Bit => 3,
+            FlagType.Pointer32Bit => 4,
+            // ReSharper disable once UnreachableSwitchArmDueToIntegerAnalysis
+            _ => -1,
+        };
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        if (stride == -1)
+            return null; // shouldn't happen but
+        
+        // special: return empty string (NOT null) since we're in the upper bytes of a pointer table. we don't
+        // want to show any text here.
+        var distanceToStartOfTable = offset - pointerTableStartOffset;
+        if (distanceToStartOfTable % stride != 0)
+            return ""; 
+        
+        var ia = data.GetIntermediateAddressOrPointer(offset);
+        if (ia == -1)
+            return null;
+
+        // we're in the middle of a pointer table AND in the right position.
+        // show some useful text, if available.
+        var labelAtIa = data.Labels.GetLabel(ia);
+        if (labelAtIa != null)
+            return labelAtIa.Name;
+        
+        var iaClipped = stride switch
+        {
+            2 => ia & 0xFFFF,
+            3 => ia & 0xFFFFFF,
+            _ => ia // same as 4
+        };
+
+        return ConvertNumToHexStr(iaClipped, stride);
     }
 
     public override int AutoStepSafe(TByteSource byteSource, int offset)
@@ -405,8 +486,12 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     }
 
     // this can print bytes OR labels. it can also deal with SOME mirroring and Direct Page addressing etc/etc
-    private string FormatOperandAddress(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
+    private string FormatOperandAddress(TByteSource data, int offset)
     {
+        var mode = GetAddressMode(data, offset);
+        if (mode == null)
+            throw new InvalidDataException("Expected non-null addressing mode");
+        
         var allowLabelUsageHere = true;
         
         // -------------------------------------------------------------------
@@ -431,7 +516,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         
         if (allowLabelUsageHere)
         {
-            var finalLabelExpressionToUse = GetFinalLabelExpressionToUse(data, offset, mode);
+            var finalLabelExpressionToUse = GetFinalLabelExpressionToUse(data, offset);
             if (!string.IsNullOrEmpty(finalLabelExpressionToUse))
                 return finalLabelExpressionToUse;
         }
@@ -440,35 +525,48 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // OPTION 2: Couldn't find a decent label to use
         //           We'll just print the raw hex number as a constant instead
         // ---------------------------------------------------------------
-        return GetFormattedRawHexIa(data, offset, mode);
+        return GetFormattedRawHexIa(data, offset);
     }
 
-    private static string GetFormattedRawHexIa(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
+    private static string GetFormattedRawHexIa(TByteSource data, int offset)
     {
         // don't bake the directpage offset into this
         var intermediateAddress = data.GetIntermediateAddress(offset);
         
-        var numByteDigitsToDisplay = GetNumBytesToShow(mode);
+        var mode = GetAddressMode(data, offset);
+        if (mode == null)
+            throw new InvalidDataException("Expected non-null addressing mode");
+        
+        var numByteDigitsToDisplay = GetNumBytesToShow(mode.Value);
         if (mode is Cpu65C816Constants.AddressMode.Relative8 or Cpu65C816Constants.AddressMode.Relative16)
         {
             var romWord = data.GetRomWord(offset + 1);
             if (!romWord.HasValue)
                 return "";
-                
+
             intermediateAddress = (int)romWord;
         }
-            
-        intermediateAddress &= ~(-1 << (8 * numByteDigitsToDisplay));
-        return Util.NumberToBaseString(intermediateAddress, Util.NumberBase.Hexadecimal, 2 * numByteDigitsToDisplay, true);
+
+        return ConvertNumToHexStr(intermediateAddress, numByteDigitsToDisplay);
     }
 
-    private string GetFinalLabelExpressionToUse(TByteSource data, int offset, Cpu65C816Constants.AddressMode mode)
+    private static string ConvertNumToHexStr(int num, int numByteDigitsToDisplay)
+    {
+        num &= ~(-1 << (8 * numByteDigitsToDisplay));
+        return Util.NumberToBaseString(num, Util.NumberBase.Hexadecimal, 2 * numByteDigitsToDisplay, true);
+    }
+
+    private string GetFinalLabelExpressionToUse(TByteSource data, int offset)
     {
         // important: setting "resolve: true" here bakes the DP offset into the IA.
         // this is usually what we want for labels BUT we have to build an expression that bakes this back out if so. 
         var intermediateAddress = data.GetIntermediateAddress(offset, resolve: true);
         if (intermediateAddress < 0)
             return "";
+        
+        var mode = GetAddressMode(data, offset);
+        if (mode == null)
+            throw new InvalidDataException("Expected non-null addressing mode");
         
         // first and easiest: is there a label for this absolute address AND are we allowed to use it? if so, we'll use that.
         // this label will include the DirectPage offset built into the IA.
@@ -479,7 +577,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // it's OK to use the 7E label.
         var unmirrorCorrectedDisplacement = 0;
         if (AttemptToUnmirrorLabels && candidateLabelName == "") 
-            (unmirrorCorrectedDisplacement, candidateLabelName) = GetUnmirroredLabelNameAndDisplacement(data, mode, intermediateAddress);
+            (unmirrorCorrectedDisplacement, candidateLabelName) = GetUnmirroredLabelNameAndDisplacement(data, mode.Value, intermediateAddress);
 
         if (candidateLabelName == "")
             return "";
@@ -493,13 +591,13 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         var directPageDisplacement = 0;
         if (AttemptTouseDirectPageArithmeticInFinalOutput &&
             mode is Cpu65C816Constants.AddressMode.DirectPage
-                or Cpu65C816Constants.AddressMode.DirectPageXIndex
-                or Cpu65C816Constants.AddressMode.DirectPageYIndex
-                or Cpu65C816Constants.AddressMode.DirectPageIndirect
-                or Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect
-                or Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex
-                or Cpu65C816Constants.AddressMode.DirectPageLongIndirect
-                or Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex)
+                 or Cpu65C816Constants.AddressMode.DirectPageXIndex
+                 or Cpu65C816Constants.AddressMode.DirectPageYIndex
+                 or Cpu65C816Constants.AddressMode.DirectPageIndirect
+                 or Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect
+                 or Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex
+                 or Cpu65C816Constants.AddressMode.DirectPageLongIndirect
+                 or Cpu65C816Constants.AddressMode.DirectPageLongIndirectYIndex)
         {
             // intermediateAddress already has the dp offset baked in at this point.
             // HOWEVER, we need to build an expression that backs it out now.
