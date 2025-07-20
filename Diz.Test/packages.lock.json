@@ -22,9 +22,9 @@
       },
       "ExtendedXmlSerializer": {
         "type": "Direct",
-        "requested": "[3.7.11, )",
-        "resolved": "3.7.11",
-        "contentHash": "cZt94XoDbHwJAZdU7cNOfi0cDt+dnOxN9X28iZGi0yOa0Yq/ZBwZkHq3VDwgUgsV8vlNlg2UWQqUhhqKURTv8g==",
+        "requested": "[3.9.6, )",
+        "resolved": "3.9.6",
+        "contentHash": "kwnF5RjDwzle4cpUN4AWOCBAbntCkLQez5SIl2cY6hamWL33vEYu5Pp35BKkg/oklXnvaYobzJrFezRi9dl9tA==",
         "dependencies": {
           "LightInject": "6.6.1",
           "NReco.LambdaParser": "1.0.12",
@@ -1450,7 +1450,7 @@
         "type": "Project",
         "dependencies": {
           "Diz.Core.Interfaces": "[1.0.0, )",
-          "ExtendedXmlSerializer": "[3.7.11, )",
+          "ExtendedXmlSerializer": "[3.9.6, )",
           "FluentValidation": "[11.9.0, )",
           "IX.Observable": "[1.0.1, )",
           "JetBrains.Annotations": "[2023.3.0, )",

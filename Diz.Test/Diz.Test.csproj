@@ -15,7 +15,7 @@
       <Version>0.13.12</Version>
     </PackageReference>
     <PackageReference Include="ExtendedXmlSerializer">
-      <Version>3.7.11</Version>
+      <Version>3.9.6</Version>
     </PackageReference>
     <PackageReference Include="FluentAssertions">
       <Version>6.12.0</Version>

@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ExtendedXmlSerializer">
-      <Version>3.7.11</Version>
+      <Version>3.9.6</Version>
     </PackageReference>
     <PackageReference Include="IX.Observable">
       <Version>1.0.1</Version>
