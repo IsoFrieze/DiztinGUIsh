@@ -170,11 +170,11 @@ public class ProjectFileManager : IProjectFileManager
     {
         var projectFileBytes = ReadProjectFileBytes(filename);
         var serializer = GetSerializerForFormat(projectFileBytes);
-        var projectOpenResult = DeserializeWith(serializer, projectFileBytes);
+        var projectOpenResult = DeserializeWith(serializer, projectFileBytes ?? []);
         return (serializer, projectOpenResult);
     }
 
-    private byte[] ReadProjectFileBytes(string filename)
+    private byte[]? ReadProjectFileBytes(string filename)
     {
         var fileByteIo = CreateFileBytesProvider(filename);
 
@@ -195,8 +195,11 @@ public class ProjectFileManager : IProjectFileManager
         return fileByteProviderFactory(projectSaveType);
     }
 
-    public static bool IsBinaryFileFormat(byte[] data)
+    public static bool IsBinaryFileFormat(byte[]? data)
     {
+        if (data == null)
+            return false;
+        
         try {
             return !ProjectSerializer.DizWatermark.Where((t, i) => data[i + 1] != (byte)t).Any();
         } catch (Exception) {
@@ -204,7 +207,7 @@ public class ProjectFileManager : IProjectFileManager
         }
     }
 
-    private IProjectSerializer GetSerializerForFormat(byte[] data)
+    private IProjectSerializer GetSerializerForFormat(byte[]? data)
     {
         if (IsBinaryFileFormat(data))
         {
@@ -246,6 +249,10 @@ public class ProjectFileManager : IProjectFileManager
     private void Save(Project project, string filename, IProjectSerializer serializer)
     {
         var data = DoSave(project, filename, serializer);
+        
+        // failed to create the save bytes to write to disk
+        if (data == null)
+            return;
 
         var fileByteIo = CreateFileBytesProvider(filename);
         fileByteIo.WriteBytes(filename, data);
@@ -272,7 +279,7 @@ public class ProjectFileManager : IProjectFileManager
         }
     }
 
-    private byte[] DoSave(Project project, string filename, IProjectSerializer serializer)
+    private byte[]? DoSave(Project project, string filename, IProjectSerializer serializer)
     {
         var data = SerializeWith(project, serializer);
 
