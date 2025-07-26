@@ -195,7 +195,7 @@ public class Project : IProject
         return Path.Combine(pathToProjectFile, attachedRomFileNoPath);
     }
         
-    private string GetFullBasePathToRomFile(string projFileName)
+    private string? GetFullBasePathToRomFile(string projFileName)
     {
         var projDir = session?.ProjectDirectory ?? "";
         if (projDir != "")
@@ -270,7 +270,7 @@ public interface IProjectWithSession {
     
 public interface IProjectSession : INotifyPropertyChanged
 {
-    public string ProjectDirectory { get; }
+    public string? ProjectDirectory { get; }
     string AttachedRomFileFullPath { get; }
     string ProjectFileName { get; set; }
     bool UnsavedChanges { get; set; }
@@ -299,7 +299,7 @@ public class ProjectSession : IProjectSession
         set => this.SetField(PropertyChanged, ref unsavedChanges, value);
     }
         
-    public string ProjectDirectory =>
+    public string? ProjectDirectory =>
         Util.GetDirNameOrEmpty(projectFileName);
         
     public string AttachedRomFileFullPath =>
