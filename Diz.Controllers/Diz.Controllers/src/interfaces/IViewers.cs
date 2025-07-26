@@ -95,6 +95,7 @@ public interface ILabelEditorView : IFormViewer
 public interface IRegionListView : IFormViewer
 {
     void SetProjectController([CanBeNull] IProjectController projectController);
+    void RebindProject();
 }
     
 public interface IImportRomDialogView

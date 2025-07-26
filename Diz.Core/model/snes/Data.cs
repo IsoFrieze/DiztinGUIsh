@@ -12,18 +12,18 @@ namespace Diz.Core.model.snes;
 
 public class Data : IData
 {
-    [XmlIgnore] 
-    public IDataStoreProvider<IArchitectureApi> Apis { get; } = new DataStoreProvider<IArchitectureApi>();
+    [XmlIgnore] public IDataStoreProvider<IArchitectureApi> Apis { get; } = new DataStoreProvider<IArchitectureApi>();
     public IDataStoreProvider<IDataTag> Tags { get; } = new DataStoreProvider<IDataTag>();
 
     private SortedDictionary<int, string> comments;
+    private ObservableCollection<IRegion> regions = [];
     private RomBytes romBytes;
-        
+
     // NOTE: snes specific stuff (rom map mode/speed) should eventually be removed from here.
     // this class should be a generic base class for all systems (snes, nes, sega, whatever).
     // for now we're in transition.
     // .. also, same thing with log generation stuff.
-        
+
     // don't modify these directly, always go through the public properties so
     // other objects can subscribe to modification notifications
     private RomMapMode romMapMode;
@@ -59,7 +59,7 @@ public class Data : IData
         get => new(Labels.Labels);
         set => Labels.SetAll(value);
     }
-
+    
     // RomBytes stored as PC file offset addresses (since ROM will always be mapped to disk)
     public RomBytes RomBytes
     {
@@ -67,9 +67,16 @@ public class Data : IData
         set => this.SetField(PropertyChanged, ref romBytes, value);
     }
     IRomBytes<IRomByte> IRomBytesProvider.RomBytes => romBytes;
+    
+    public ObservableCollection<IRegion> Regions
+    {
+        get => regions;
+        set => this.SetField(PropertyChanged, ref regions, value);
+    }
+    [XmlIgnore] ObservableCollection<IRegion> IRegionProvider.Regions => Regions;
 
-    [XmlIgnore] 
-    public bool RomBytesLoaded { get; set; }
+
+    [XmlIgnore] public bool RomBytesLoaded { get; set; }
 
     public Data()
     {
@@ -78,13 +85,14 @@ public class Data : IData
         romBytes = new RomBytes();
     }
 
-    public int GetRomSize() => 
+    public int GetRomSize() =>
         RomBytes?.Count ?? 0;
 
     public Architecture GetArchitecture(int i) => RomBytes[i].Arch;
     public void SetArchitecture(int i, Architecture arch) => RomBytes[i].Arch = arch;
-        
-    [CanBeNull] public string GetComment(int snesAddress) => 
+
+    [CanBeNull]
+    public string GetComment(int snesAddress) =>
         Comments.GetValueOrDefault(snesAddress);
 
     public string GetCommentText(int snesAddress)
@@ -105,10 +113,10 @@ public class Data : IData
         if (v == null)
         {
             Comments.Remove(i);
-        } 
+        }
         else
         {
-            if (Comments.ContainsKey(i) && overwrite) 
+            if (Comments.ContainsKey(i) && overwrite)
                 Comments.Remove(i);
 
             Comments.TryAdd(i, v);
@@ -119,7 +127,7 @@ public class Data : IData
     {
         return pcOffset >= RomBytes.Count ? null : RomBytes[pcOffset].Rom;
     }
-        
+
     public byte? GetSnesByte(int snesAddress)
     {
         return GetRomByte(ConvertSnesToPc(snesAddress));
@@ -137,19 +145,20 @@ public class Data : IData
 
         return rb1Null + (rb2Null << 8);
     }
+
     public int? GetRomLong(int offset)
     {
-        if (offset + 2 >= GetRomSize()) 
+        if (offset + 2 >= GetRomSize())
             return null;
 
         var romWord = GetRomWord(offset);
         var rb3Null = GetRomByte(offset + 2);
         if (!romWord.HasValue || !rb3Null.HasValue)
             return null;
-            
+
         return romWord + (rb3Null << 16);
     }
-        
+
     public int? GetRomDoubleWord(int offset)
     {
         if (offset + 3 >= GetRomSize())
@@ -159,10 +168,10 @@ public class Data : IData
         var rb4Null = GetRomByte(offset + 3);
         if (!romLong.HasValue || !rb4Null.HasValue)
             return null;
-            
+
         return romLong + (rb4Null << 24);
     }
-        
+
     public int ConvertPCtoSnes(int offset)
     {
         return RomUtil.ConvertPCtoSnes(offset, RomMapMode, RomSpeed);
@@ -176,23 +185,25 @@ public class Data : IData
     public int Mark(Action<int> markAction, int offset, int count)
     {
         int i, size = GetRomSize();
-        for (i = 0; i < count && offset + i < size; i++) 
+        for (i = 0; i < count && offset + i < size; i++)
             markAction(offset + i);
-            
-        return offset + i < size 
-            ? offset + i 
+
+        return offset + i < size
+            ? offset + i
             : size - 1;
     }
 
     // get the actual ROM file bytes (i.e. the contents of the SMC file on the disk)
     // note: don't save these anywhere permanent because ROM data is usually copyrighted.
-    public IEnumerable<byte> GetFileBytes() => 
+    public IEnumerable<byte> GetFileBytes() =>
         RomBytes.Select(b => b.Rom);
-    
+
     #region Equality
+
     protected bool Equals(Data other)
     {
-        return Labels.Equals(other.Labels) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed && Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
+        return Labels.Equals(other.Labels) && RomMapMode == other.RomMapMode && RomSpeed == other.RomSpeed &&
+               Comments.SequenceEqual(other.Comments) && RomBytes.Equals(other.RomBytes);
     }
 
     public override bool Equals(object obj)
@@ -216,13 +227,9 @@ public class Data : IData
     }
 
     #endregion
-    
+
     [XmlIgnore] public LabelsServiceWithTemp Labels { get; }
     [XmlIgnore] ILabelServiceWithTempLabels IData.Labels => Labels;
-
-
-    public ObservableCollection<IRegion> Regions { get; } = [];
-    [XmlIgnore] ObservableCollection<IRegion> IRegionProvider.Regions => Regions;
 
     [CanBeNull] public IRegion CreateNewRegion() => new Region();
     [CanBeNull]  public IRegion GetRegion(int snesAddress)
