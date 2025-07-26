@@ -3,6 +3,18 @@ using System.ComponentModel;
 
 namespace Diz.Core.Interfaces;
 
+public interface IRegion : INotifyPropertyChanged
+{
+    int StartSnesAddress { get; set; }
+    int EndSnesAddress { get; set; }
+    string RegionName { get; set; }
+    
+    
+    // region effects (if these get more complex, split them out)
+    string ContextToApply { get; set; }
+    int Priority { get; set; } // higher number = higher priority in case of overlapping regions
+}
+
 public interface IReadOnlyContextMapping : INotifyPropertyChanged
 {
     string Context { get; }

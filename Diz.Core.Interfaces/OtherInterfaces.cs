@@ -1,4 +1,15 @@
-﻿namespace Diz.Core.Interfaces;
+﻿using System.Collections.ObjectModel;
+
+namespace Diz.Core.Interfaces;
+
+public interface IRegionProvider
+{
+    ObservableCollection<IRegion> Regions { get; }
+    IRegion? GetRegion(int snesAddress);
+
+    // create a new region (doesn't add it to collection)
+    IRegion? CreateNewRegion();
+}
 
 public interface ICommentTextProvider
 {

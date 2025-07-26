@@ -198,7 +198,8 @@ namespace Diz.Core.Interfaces
         IMarkable,
         IArchitectureSettable,
         IArchitectureGettable,
-        ICommentTextProvider
+        ICommentTextProvider,
+        IRegionProvider
     {
         IDataStoreProvider<IArchitectureApi> Apis { get; }
         IDataStoreProvider<IDataTag> Tags { get; }

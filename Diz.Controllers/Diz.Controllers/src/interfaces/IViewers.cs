@@ -10,8 +10,8 @@ namespace Diz.Controllers.interfaces;
 public interface IFormViewer
 {
     public event EventHandler OnFormClosed;
+    // void Close();
     void Show();
-    void Close();
     void BringFormToTop();
 }
 
@@ -90,6 +90,11 @@ public interface ILabelEditorView : IFormViewer
     void FocusOrCreateLabelAtSelectedRomOffsetIa();
     void FocusOrCreateLabelAtRomOffsetIa(int selectedOffset);
     void FocusOrCreateLabelAtSnesAddress(int snesAddress);
+}
+
+public interface IRegionListView : IFormViewer
+{
+    void SetProjectController([CanBeNull] IProjectController projectController);
 }
     
 public interface IImportRomDialogView

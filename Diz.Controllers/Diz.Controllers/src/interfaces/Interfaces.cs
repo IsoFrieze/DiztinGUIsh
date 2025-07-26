@@ -67,6 +67,7 @@ public interface IViewFactory
     ILabelEditorView GetLabelEditorView();
     IMainGridWindowView GetMainGridWindowView();
     IFormViewer GetAboutView();
+    IRegionListView GetRegionEditorView();
 }
     
 public interface IControllerFactory

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
@@ -216,8 +217,62 @@ public class Data : IData
 
     #endregion
     
-    [XmlIgnore] public LabelsServiceWithTemp Labels { get; protected init; }
+    [XmlIgnore] public LabelsServiceWithTemp Labels { get; }
     [XmlIgnore] ILabelServiceWithTempLabels IData.Labels => Labels;
+
+
+    public ObservableCollection<IRegion> Regions { get; } = [];
+    [XmlIgnore] ObservableCollection<IRegion> IRegionProvider.Regions => Regions;
+
+    [CanBeNull] public IRegion CreateNewRegion() => new Region();
+    [CanBeNull]  public IRegion GetRegion(int snesAddress)
+    {
+        return Regions
+            .Where(region => snesAddress >= region.StartSnesAddress && snesAddress < region.EndSnesAddress)
+            .OrderByDescending(region => region.Priority)
+            .FirstOrDefault();
+    }
     
+    public event PropertyChangedEventHandler PropertyChanged;
+}
+
+public class Region : IRegion
+{
+    private int startSnesAddress;
+    private int endSnesAddress;
+    private string regionName;
+    private string contextToApply;
+    private int priority;
+
+    public int StartSnesAddress
+    {
+        get => startSnesAddress;
+        set => this.SetField(PropertyChanged, ref startSnesAddress, value);
+    }
+
+    public int EndSnesAddress
+    {
+        get => endSnesAddress;
+        set => this.SetField(PropertyChanged, ref endSnesAddress, value);
+    }
+
+    public string RegionName
+    {
+        get => regionName;
+        set => this.SetField(PropertyChanged, ref regionName, value);
+    }
+
+    public string ContextToApply
+    {
+        get => contextToApply;
+        set => this.SetField(PropertyChanged, ref contextToApply, value);
+    }
+
+    public int Priority
+    {
+        get => priority;
+        set => this.SetField(PropertyChanged, ref priority, value);
+    }
+
     public event PropertyChangedEventHandler PropertyChanged;
 }
