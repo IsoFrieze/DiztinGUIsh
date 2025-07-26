@@ -108,17 +108,18 @@ public class FileSplitWriter
         // super-hacky stringsplit. we are NOT parsing XML, just splitting up into files whenever we see any of the following.
         // the entire point of this is for better git merging, so, optimize for that use case.
         // this is a little brittle and specific to the Diz2.0 file format as of 2023. if it gives you any trouble, don't rely on it.
-        
         var tokens = new List<string>
         {
             "<Data",
+            "<Regions",
             "<Comments",
             "<Labels",
             "<RomBytes",    // SUPERHACK WARNING: overlaps with <RomBytesOutputFormatSettings too.
             "\r\n;pos=",    // we'll include the newline here to make it easier when merging later.
                             // otherwise, a newline would be required at the END of each text file fragment and if removed would blow things up.
                             // a newline will still be required at the top of the file, but, if removed it'll happen to work out.
-            "</RomBytes>"
+            "</RomBytes>",
+            "</Data>"
         };
 
         // Step 1: Find indices of every token
