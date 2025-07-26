@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Diz.Core;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
@@ -72,7 +73,8 @@ public interface ISnesApi<out TData> :
     IDataUtilities,
     IArchitectureApi,
     IMarkOperandAndOpcode,
-    ICommentTextProvider
+    ICommentTextProvider,
+    IRegionProvider
 
     where TData : IData
 {
@@ -601,6 +603,10 @@ public class SnesApi : ISnesData
         verificationCache.InternalCheckSum = RomCheckSumsFromRomBytes;
         verificationCache.InternalRomGameName = CartridgeTitleName;
     }
+
+    public ObservableCollection<IRegion> Regions => Data.Regions;
+    public IRegion? GetRegion(int snesAddress) => Data.GetRegion(snesAddress);
+    public IRegion? CreateNewRegion() => Data.CreateNewRegion();
 }
 
 public interface ISnesSampleProjectFactory : IProjectFactory

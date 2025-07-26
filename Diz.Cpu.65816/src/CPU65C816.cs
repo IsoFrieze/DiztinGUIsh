@@ -17,7 +17,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     IInOutPointSettable,
     IInOutPointGettable,
     IReadOnlyLabels,
-    ICommentTextProvider
+    ICommentTextProvider,
+    IRegionProvider
 {
     // TODO: expose these somehow to the project settings
     public bool AttemptTouseDirectPageArithmeticInFinalOutput { get; set; } = true;
@@ -568,18 +569,27 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (mode == null)
             throw new InvalidDataException("Expected non-null addressing mode");
         
+        if (offset == 0x18121)
+        {
+            int x = 3;
+        }
+        
         // first and easiest: is there a label for this absolute address AND are we allowed to use it? if so, we'll use that.
         // this label will include the DirectPage offset built into the IA.
-        var candidateLabelName = GetValidatedLabelNameForOffset(data, offset);
+        var candidateLabel = GetValidatedLabelNameForOffset(data, offset);
 
         // secondly: if, we didn't find a label that matches our IA 1:1. BUT, is there a mirrored label that works here?
         // example: you have a label defined for 7E0004, and our IA is 000004. those are a mirror of the same data so,
         // it's OK to use the 7E label.
         var unmirrorCorrectedDisplacement = 0;
-        if (AttemptToUnmirrorLabels && candidateLabelName == "") 
-            (unmirrorCorrectedDisplacement, candidateLabelName) = GetUnmirroredLabelNameAndDisplacement(data, mode.Value, intermediateAddress);
-
-        if (candidateLabelName == "")
+        if (AttemptToUnmirrorLabels && candidateLabel == null) 
+            (unmirrorCorrectedDisplacement, candidateLabel) = GetUnmirroredLabelNameAndDisplacement(data, mode.Value, intermediateAddress);
+        
+        // got a good label entry for this SNES address.
+        // now, does this label have multiple entries and we have to pick one based on the surrounding context?
+        // if so, do pick one now.
+        var labelName = ResolveLabelNameWithContext(data, candidateLabel, offset);
+        if (labelName == "")
             return "";
 
         // this is to try and get more labels in the output by creating a mathematical expression
@@ -622,17 +632,47 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         var dpOffsetExprStr = GenerateDisplacementString(directPageDisplacement);
         var unMirrorCorrectedOffsetStr = GenerateDisplacementString(unmirrorCorrectedDisplacement);
         
-        return $"{candidateLabelName}{unMirrorCorrectedOffsetStr}{dpOffsetExprStr}";
+        return $"{labelName}{unMirrorCorrectedOffsetStr}{dpOffsetExprStr}";
     }
 
-    private (int unmirrorCorrectedDisplacement, string unmirroredLabelName) GetUnmirroredLabelNameAndDisplacement(
+    private static string ResolveLabelNameWithContext(TByteSource data, IAnnotationLabel? candidateLabel, int offset)
+    {
+        if (candidateLabel == null)
+            return "";
+        
+        var snesAddress = data.ConvertPCtoSnes(offset);
+        if (candidateLabel.ContextMappings.Count <= 0 || snesAddress == -1) 
+            return candidateLabel.Name;
+        
+        // find any applicable regions in the surrounding context of where we are in the ROM offset:
+        var applicableOrderedRegions = data.Regions
+            .Where(x => snesAddress >= x.StartSnesAddress && snesAddress <= x.EndSnesAddress)
+            .OrderBy(x => x.Priority)
+            .ToList();
+
+        foreach (var region in applicableOrderedRegions)
+        {
+            var matchingLabelContext = candidateLabel.ContextMappings
+                .FirstOrDefault(labelContext => labelContext.Context == region.ContextToApply);
+
+            if (matchingLabelContext == null) 
+                continue;
+            
+            return matchingLabelContext.NameOverride;
+        }
+
+        // didn't find a valid override at this context. use the default name
+        return candidateLabel.Name;
+    }
+
+    private (int unmirrorCorrectedDisplacement, IAnnotationLabel? unmirroredLabel) GetUnmirroredLabelNameAndDisplacement(
         TByteSource data, Cpu65C816Constants.AddressMode mode, int snesAddress)
     {
         // NOTE: BE REALLY CAREFUL: SearchForMirroredLabel() IS A PERFORMANCE-INTENSE and HEAVILY OPTIMIZED FUNCTION
         var (mirroredLabelSnesAddress, mirrorLabelEntry) = SearchForMirroredLabel(data, snesAddress);
 
         if (mirrorLabelEntry == null || mirroredLabelSnesAddress == -1)
-            return (0, "");
+            return (0, null);
 
         // we're good, use this label
         // BUT: in some situations, the output instructions needs to generate the un-mirrored address in order to match
@@ -652,7 +692,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (mask > 0 && (mirroredLabelSnesAddress & mask) != (snesAddress & mask)) 
             unmirrorCorrectedDisplacement = mirroredLabelSnesAddress - snesAddress;
 
-        return (unmirrorCorrectedDisplacement, mirrorLabelEntry.Name);
+        return (unmirrorCorrectedDisplacement, mirrorLabelEntry);
     }
 
     // generate a string suitable for use with Asar expression math.
@@ -662,7 +702,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (amountToDisplace == 0) 
             return "";
         
-        // IMPORTANT: Asar doesn't allow any whitespace between any of the expression terms
+        // IMPORTANT: Asar doesn't allow any whitespace between any math expression terms. don't output spaces here,
+        // or anywhere that we use this expression.  i.e. "A+B" is valid, but "A + B" will throw an error.
         var direction = amountToDisplace > 0 ? '-' : '+';
         return $"{direction}${amountToDisplace:X}";
     }
@@ -680,21 +721,21 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return CpuUtils.ParseCommentSpecialDirective(comment);
     }
 
-    private static string GetValidatedLabelNameForOffset(TByteSource data, int srcOffset)
+    private static IAnnotationLabel? GetValidatedLabelNameForOffset(TByteSource data, int srcOffset)
     {
         var destinationIa = data.GetIntermediateAddress(srcOffset, true);
         if (destinationIa < 0)
-            return "";
+            return null;
         
-        var candidateLabelName = data.Labels.GetLabelName(destinationIa);
-        if (candidateLabelName == "")
-            return "";
+        var candidateLabel = data.Labels.GetLabel(destinationIa);
+        if (string.IsNullOrEmpty(candidateLabel?.Name))
+            return null;
         
         // some special cases related to +/- local labels:
         
         // is this a local label?  like "+". "-", "++", "--", etc?
-        if (!RomUtil.IsValidPlusMinusLabel(candidateLabelName)) 
-            return candidateLabelName;      // not local label, so we're good
+        if (!RomUtil.IsValidPlusMinusLabel(candidateLabel.Name)) 
+            return candidateLabel;      // not local label, so we're good
         
         // this IS a local +/- label, so let's do some additional validation..
         
@@ -707,7 +748,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         
         // don't allow local +/- labels unless the opcode is a branch
         if (!opcodeIsBranch)
-            return "";
+            return null;
     
         // finally, if this IS a branch AND a +/- label,
         // make sure the branch is in the correct direction
@@ -715,13 +756,13 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // DIZ doesn't treat local labels special, so it's up
         // to us to enforce this here:
         var srcSnesAddress = data.ConvertPCtoSnes(srcOffset);
-        var branchDirectionIsForward = candidateLabelName[0] == '+';
+        var branchDirectionIsForward = candidateLabel.Name[0] == '+';
         
         var validBranchDirection =
             srcSnesAddress != destinationIa &&                            // infinite loop (branch to self) 
             branchDirectionIsForward == (srcSnesAddress < destinationIa); // trying to branch the wrong way
 
-        return validBranchDirection ? candidateLabelName : "";
+        return validBranchDirection ? candidateLabel : null;
     }
 
     private (int labelAddress, IAnnotationLabel? labelEntry) SearchForMirroredLabel(TByteSource data, int snesAddress)
