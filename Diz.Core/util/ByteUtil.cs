@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-        public static bool StripFormattedAddress(ref string addressTxt, NumberStyles style, out int address)
 namespace Diz.Core.util;
 
 public static class ByteUtil
@@ -19,6 +18,7 @@ public static class ByteUtil
     // $C6/BBBB
     // CODE_808066
     // UNREACH_808066 and others
+    public static bool TryParseNum_Stripped(ref string addressTxt, NumberStyles style, out int address)
     {
         address = -1;
 
