@@ -305,7 +305,7 @@ namespace Diz.Core.model
         private string comment = "";
         private string name = "";
 
-        public ObservableCollection<IContextMapping> ContextMappings { get; } = [];
+        public ObservableCollection<IContextMapping> ContextMappings { get; set; } = [];
         IEnumerable<IReadOnlyContextMapping> IReadOnlyLabel.ContextMappings => ContextMappings;
         ObservableCollection<IContextMapping> IAnnotationLabel.ContextMappings => ContextMappings;
 
