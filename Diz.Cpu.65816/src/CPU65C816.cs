@@ -569,11 +569,6 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (mode == null)
             throw new InvalidDataException("Expected non-null addressing mode");
         
-        if (offset == 0x18121)
-        {
-            int x = 3;
-        }
-        
         // first and easiest: is there a label for this absolute address AND are we allowed to use it? if so, we'll use that.
         // this label will include the DirectPage offset built into the IA.
         var candidateLabel = GetValidatedLabelNameForOffset(data, offset);
