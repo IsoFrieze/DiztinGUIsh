@@ -157,11 +157,16 @@ public class LabelSearchTerms
         // ReSharper disable once InvertIf
         if (mustMatchAllStrings.Length > 0)
         {
-            var allText = $"{Util.ToHexString6(snesAddress)} {label.Name} {label.Comment}";
+            var allContextText = label.ContextMappings
+                .Select(x => x.NameOverride)
+                .Aggregate("", (current, contextName) => current + $"{contextName} ");
 
-            // All string terms must be found somewhere in the combined text
-            return mustMatchAllStrings.All(term => allText.Contains(term, StringComparison.CurrentCultureIgnoreCase)
-            );
+            // build a string with all searchable text from all fields in the label:
+            var allText = $"{Util.ToHexString6(snesAddress)} {label.Name} {label.Comment} {allContextText}";
+            
+            // search through that string, we have to find something in it for all search terms
+            return mustMatchAllStrings
+                .All(term => allText.Contains(term, StringComparison.CurrentCultureIgnoreCase));
         }
 
         return true;
