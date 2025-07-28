@@ -55,7 +55,7 @@ public interface IReadOnlyLabelProvider
     public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels { get; }
 
     IAnnotationLabel? GetLabel(int snesAddress);
-    string GetLabelName(int snesAddress);
+    string? GetLabelName(int snesAddress);
     string GetLabelComment(int snesAddress);
     
     // optimization: optional: get a provider that can give a smaller subset
