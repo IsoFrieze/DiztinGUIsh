@@ -334,7 +334,7 @@ namespace Diz.Core.model
         {
             return Name == other.Name && 
                    Comment == other.Comment && 
-                   ContextMappings.Equals(other.ContextMappings);
+                   ContextMappings.SequenceEqual(other.ContextMappings, new ContextMappingComparer());
         }
 
         public override bool Equals(object obj)
@@ -344,23 +344,67 @@ namespace Diz.Core.model
             if (obj.GetType() != GetType()) return false;
             return Equals((Label)obj);
         }
-        
+
         public override int GetHashCode()
         {
-            // TODO: update to add cotext mappings
             unchecked
             {
-                return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Comment != null ? Comment.GetHashCode() : 0);
+                var hashCode = (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Comment != null ? Comment.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ GetContextMappingsHashCode();
+                return hashCode;
             }
         }
-        
+
+        private int GetContextMappingsHashCode()
+        {
+            unchecked
+            {
+                var hash = 0;
+                foreach (var mapping in ContextMappings)
+                {
+                    hash = (hash * 397) ^ (mapping.Context?.GetHashCode() ?? 0);
+                    hash = (hash * 397) ^ (mapping.NameOverride?.GetHashCode() ?? 0);
+                }
+                return hash;
+            }
+        }
+
         public int CompareTo(Label other)
         {
             if (ReferenceEquals(this, other)) return 0;
             if (ReferenceEquals(null, other)) return 1;
+            
+            var nameComparison = string.Compare(name, other.name, StringComparison.Ordinal);
+            if (nameComparison != 0) return nameComparison;
+            
             var commentComparison = string.Compare(comment, other.comment, StringComparison.Ordinal);
             if (commentComparison != 0) return commentComparison;
-            return string.Compare(name, other.name, StringComparison.Ordinal);
+            
+            return CompareContextMappings(other);
+        }
+
+        private int CompareContextMappings(Label other)
+        {
+            var thisCount = ContextMappings.Count;
+            var otherCount = other.ContextMappings.Count;
+            
+            var countComparison = thisCount.CompareTo(otherCount);
+            if (countComparison != 0) return countComparison;
+            
+            var thisSorted = ContextMappings.OrderBy(cm => cm.Context).ThenBy(cm => cm.NameOverride).ToList();
+            var otherSorted = other.ContextMappings.OrderBy(cm => cm.Context).ThenBy(cm => cm.NameOverride).ToList();
+            
+            for (int i = 0; i < thisCount; i++)
+            {
+                var contextComparison = string.Compare(thisSorted[i].Context, otherSorted[i].Context, StringComparison.Ordinal);
+                if (contextComparison != 0) return contextComparison;
+                
+                var nameOverrideComparison = string.Compare(thisSorted[i].NameOverride, otherSorted[i].NameOverride, StringComparison.Ordinal);
+                if (nameOverrideComparison != 0) return nameOverrideComparison;
+            }
+            
+            return 0;
         }
 
         public int CompareTo(object obj)
@@ -369,9 +413,28 @@ namespace Diz.Core.model
             if (ReferenceEquals(this, obj)) return 0;
             return obj is Label other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(Label)}");
         }
-        
+
         #endregion
 
+        // Helper class for comparing ContextMapping objects
+        private class ContextMappingComparer : IEqualityComparer<IContextMapping>
+        {
+            public bool Equals(IContextMapping x, IContextMapping y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (x is null || y is null) return false;
+                return x.Context == y.Context && x.NameOverride == y.NameOverride;
+            }
+
+            public int GetHashCode(IContextMapping obj)
+            {
+                unchecked
+                {
+                    return ((obj.Context?.GetHashCode() ?? 0) * 397) ^ (obj.NameOverride?.GetHashCode() ?? 0);
+                }
+            }
+        }
+        
         public bool IsDefault() => !string.IsNullOrEmpty(Name) && !string.IsNullOrEmpty(Comment);
     }
 
