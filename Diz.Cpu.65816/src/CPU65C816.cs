@@ -664,7 +664,11 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         
         // IMPORTANT: Asar doesn't allow any whitespace between any of the expression terms
         var direction = amountToDisplace > 0 ? '-' : '+';
-        return $"{direction}${amountToDisplace:X}";
+        
+        // since we're handling the sign ourselves, we only want to print positive numbers
+        var absAmountToDisplace = Math.Abs(amountToDisplace);
+        
+        return $"{direction}${absAmountToDisplace:X}";
     }
 
     private static CpuUtils.OperandOverride? GetSpecialDirectiveOverrideFromComments(TByteSource data, int offset)
