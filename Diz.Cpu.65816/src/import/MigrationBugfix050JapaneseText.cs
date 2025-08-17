@@ -9,7 +9,7 @@ namespace Diz.Cpu._65816.import;
 // check for japanese character encoding bug in game title.
 // this is a result of us not storing XML correctly in earlier version of Diz, meaning we can't rely on
 // this bit of data in the project file to serve as an integrity check.  it's OK though because 
-// checksums are unaffected, so as long as they match, we should able to rely on that to complete our 
+// checksums are unaffected, so as long as they match, we should be able to rely on that to complete our 
 // validation checks.
 // https://github.com/Dotsarecool/DiztinGUIsh/issues/50
 [UsedImplicitly]
