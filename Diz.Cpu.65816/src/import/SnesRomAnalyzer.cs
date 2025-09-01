@@ -83,6 +83,19 @@ public class SnesRomAnalyzer : ISnesRomAnalyzer
     private static ISnesRomAnalyzer.SnesRomAnalysisResults DetectSettingsFor(IReadOnlyList<byte> romBytes)
     {
         var romMapMode = RomUtil.DetectRomMapMode(romBytes, out var detectedRomMapModeCorrectly);
+
+        if (!detectedRomMapModeCorrectly)
+        {
+            // normal detection failed. any cart-specific exceptions?
+            if (RomUtil.DetectRomMapModeBustedGames(romBytes, out var detectedRomMapMode, out var detectedRomSpeed))
+            {
+                return new ISnesRomAnalyzer.SnesRomAnalysisResults(
+                    DetectedRomMapModeCorrectly: true, 
+                    RomMapMode: detectedRomMapMode, 
+                    RomSpeed: detectedRomSpeed
+                );
+            }
+        }
         
         return new ISnesRomAnalyzer.SnesRomAnalysisResults(
             DetectedRomMapModeCorrectly: detectedRomMapModeCorrectly, 

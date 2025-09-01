@@ -254,7 +254,7 @@ namespace Diz.Core.util
 
             if ((romBytes[LoromSettingOffset] & 0xEF) == 0x23)
                 return romBytes.Count > 0x400000 ? RomMapMode.ExSa1Rom : RomMapMode.Sa1Rom;
-
+            
             if ((romBytes[LoromSettingOffset] & 0xEC) == 0x20)
                 return (romBytes[LoromSettingOffset + 1] & 0xF0) == 0x10 ? RomMapMode.SuperFx : RomMapMode.LoRom;
 
@@ -267,9 +267,35 @@ namespace Diz.Core.util
             if (romBytes.Count >= 0x410000 && (romBytes[ExhiromSettingOffset] & 0xEF) == 0x25)
                 return RomMapMode.ExHiRom;
 
-            // detection failed. take our best guess.....
+            // all detection failed. let's pick a reasonable default, this is now jut a guess
             detectedValidRomMapType = false;
             return romBytes.Count > 0x40000 ? RomMapMode.ExLoRom : RomMapMode.LoRom;
+        }
+
+        public static bool DetectRomMapModeBustedGames(IReadOnlyList<byte> romBytes, out RomMapMode detectedRomMapMode, out RomSpeed detectedRomSpeed)
+        {
+            detectedRomMapMode = RomMapMode.LoRom; // default
+            detectedRomSpeed = RomSpeed.Unknown;
+            
+            // ReSharper disable once InvertIf
+            if (romBytes.Count >= 0x7FFF)
+            {
+                var gameNameFromRomBytes = GetCartridgeTitleFromRom(romBytes, LoromSettingOffset);
+                
+                // Contra3 overflowed it's buffer and uses 0x16 chars (1 over the max limit of 0x15).
+                // the final character "S" in "CONTRA3 THE ALIEN WARS" is incorrectly reported as the map ("S" = 0x53).
+                // this is invalid and confuses everything. it SHOULD be 0x20 for LoRom + SlowRom, but, the official 
+                // gamedata has a broken header. wild.
+                // ReSharper disable once InvertIf
+                if (gameNameFromRomBytes == "CONTRA3 THE ALIEN WAR" && romBytes[LoromSettingOffset] == 0x53)
+                {
+                    detectedRomMapMode = RomMapMode.LoRom;
+                    detectedRomSpeed = RomSpeed.SlowRom;    // YES, SlowRom, not fastrom. matches japanese version. fastrom bit being set in 0x53 is a LIE
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static int GetRomSettingOffset(RomMapMode mode)
