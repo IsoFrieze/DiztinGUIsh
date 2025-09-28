@@ -55,7 +55,7 @@ public class ProjectFileAssemblyExporter : IProjectFileAssemblyExporter
 
         if (!result.Success)
         {
-            logger.Error($"Failed to build, error was: {result.OutputStr}");
+            logger.Error($"Failed to build, error was: {result.AssemblyOutputStr}");
             return false;
         }
 

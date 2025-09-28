@@ -108,18 +108,18 @@ namespace Diz.Test.Utils
             testOutputHelper?.WriteLine(expectedRaw);
             
             testOutputHelper?.WriteLine("** ACTUAL **");
-            testOutputHelper?.WriteLine(result.OutputStr);
+            testOutputHelper?.WriteLine(result.AssemblyOutputStr);
             
             AssertGoodOutput(result);
             
             // parse the output so we can better pinpoint where errors are
             var expectedOut = ParseAll(expectedRaw);
-            var actualOut = ParseAll(result.OutputStr);
+            var actualOut = ParseAll(result.AssemblyOutputStr);
             AssertAssemblyOutputEqual(expectedOut, actualOut);
             
             // now that the parsed version passed, compare the raw strings
             // if you hit this and not the above section, your whitespace or newline [CRLF vs LF] might be off.
-            Assert.Equal(expectedRaw, result.OutputStr);
+            Assert.Equal(expectedRaw, result.AssemblyOutputStr);
         }
 
         public static LogCreatorOutput.OutputResult ExportAssembly(Data inputRom, Action<LogCreator> postInitHook = null)

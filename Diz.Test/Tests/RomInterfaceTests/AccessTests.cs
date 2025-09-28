@@ -96,7 +96,7 @@ namespace Diz.Test.Tests.RomInterfaceTests
         public static void RunTestRom()
         {
             // C# ROM -> Assembly Text 
-            var exportAssembly = LogWriterHelper.ExportAssembly(GetSampleData()).OutputStr;
+            var exportAssembly = LogWriterHelper.ExportAssembly(GetSampleData()).AssemblyOutputStr;
             
             // Assembly Text -> Asar -> SFC file
             var bytes = AsarRunner.AssembleToRom(exportAssembly);
