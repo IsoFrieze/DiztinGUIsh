@@ -7,12 +7,29 @@ public interface IRegion : INotifyPropertyChanged
 {
     int StartSnesAddress { get; set; }
     int EndSnesAddress { get; set; }
+    
+    // Must be unique in this project
     string RegionName { get; set; }
     
-    
+    // ------------------------------------------------------------
     // region effects (if these get more complex, split them out)
+    // ------------------------------------------------------------
+    
+    // labels inside this region should look for an alternative label context to apply
+    // if a label has a context that matches this name, it will use THAT as the label name,
+    // instead of its normal name.
+    // i.e. if we define a region called BATTLE with context "Battle", and a label called "tmp50" is within this region
+    // and matches the context name "Battle", it'll use the its alternate label name (say, "player_hp") here.
+    // this is super-useful to help deal with different parts of the game re-using the same address for different things
+    // i.e. menu vs battle vs overworld all using RAM address 0x50 for different stuff depending on which mode the game is in.
     string ContextToApply { get; set; }
-    int Priority { get; set; } // higher number = higher priority in case of overlapping regions
+    
+    // higher number = higher priority in case of overlapping regions
+    int Priority { get; set; } 
+    
+    // if true, when exporting assembly, this region will go into a separate file.
+    // overlapping regions will either be disallowed for this, or go in priority order.
+    bool ExportSeparateFile { get; set; }
 }
 
 public interface IReadOnlyContextMapping : INotifyPropertyChanged
