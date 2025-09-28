@@ -250,6 +250,16 @@ namespace Diz.Core.util
 
         public static RomMapMode DetectRomMapMode(IReadOnlyList<byte> romBytes, out bool detectedValidRomMapType)
         {
+            // this is not bulletproof.
+            // some of these detections may be false positives if you have bad luck.
+            // for instance, if your rom is really HiRom, but, romBytes[LoromSettingOffset] & 0xEC) == 0x20, 
+            // then it will incorrect detect as lorom.
+            //
+            // best to add some other scoring capabilities in here, like, check if the detected settings give you
+            // the offset of a cartridge title that's all ascii (instead of a bunch of garbage).
+            //
+            // maybe steal the detection code from other emulators and paste it in here.
+            
             detectedValidRomMapType = true;
 
             if ((romBytes[LoromSettingOffset] & 0xEF) == 0x23)
