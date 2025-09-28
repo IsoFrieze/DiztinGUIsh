@@ -233,14 +233,8 @@ public partial class BsnesTraceLogImporter
             }
             
             // ADD: add this tracelog value and overwrite anything there
-            if (snesData.Data.Comments.ContainsKey(tlcGenerateComment.Key)) 
-            {
-                snesData.Data.Comments.Add(tlcGenerateComment.Key, tlcGenerateComment.Value);
-            }
-            else
-            {
-                snesData.Data.Comments[tlcGenerateComment.Key] = tlcGenerateComment.Value;
-            }
+            // (This adds the key if it doesn't exist, updates if it already does exist)
+            snesData.Data.Comments[tlcGenerateComment.Key] = tlcGenerateComment.Value;
         }
     }
 }
