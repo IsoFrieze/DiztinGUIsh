@@ -91,7 +91,7 @@ public class LogCreatorSettingsEditorController : ILogCreatorSettingsEditorContr
         try
         {
             var sampleAssemblyTextGenerator = sampleAssemblyOutputFactory(Settings);
-            return sampleAssemblyTextGenerator.GetSampleAssemblyOutput().OutputStr;
+            return sampleAssemblyTextGenerator.GetSampleAssemblyOutput().AssemblyOutputStr;
         }
         catch (Exception ex)
         {

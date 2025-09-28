@@ -142,7 +142,7 @@ namespace Diz.Test.Utils
         private static void AssertGoodOutput(LogCreatorOutput.OutputResult result)
         {
             Assert.True(result.LogCreator != null);
-            Assert.True(result.OutputStr != null);
+            Assert.True(result.AssemblyOutputStr != null);
             Assert.True(result.ErrorCount == 0);
         }
 
