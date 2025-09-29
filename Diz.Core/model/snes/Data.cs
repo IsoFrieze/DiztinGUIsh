@@ -250,6 +250,7 @@ public class Region : IRegion
     private string regionName;
     private string contextToApply;
     private int priority;
+    private bool exportSeparateFile;
 
     public int StartSnesAddress
     {
@@ -279,6 +280,12 @@ public class Region : IRegion
     {
         get => priority;
         set => this.SetField(PropertyChanged, ref priority, value);
+    }
+    
+    public bool ExportSeparateFile
+    {
+        get => exportSeparateFile;
+        set => this.SetField(PropertyChanged, ref exportSeparateFile, value);
     }
 
     public event PropertyChangedEventHandler PropertyChanged;

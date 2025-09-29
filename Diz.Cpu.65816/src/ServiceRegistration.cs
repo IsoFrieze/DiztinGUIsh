@@ -49,6 +49,7 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
         serviceRegistry.Register<IMigration, MigrationBugfix050JapaneseText>("migrate_100_to_101");
         serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 101 }, "migrate_101_to_102");
         serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 102 }, "migrate_102_to_103");
+        serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 103 }, "migrate_103_to_104");
     }
 
     private static void RegisterSampleDataServices(IServiceRegistry serviceRegistry)

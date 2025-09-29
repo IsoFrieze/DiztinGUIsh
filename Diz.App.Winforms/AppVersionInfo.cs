@@ -25,7 +25,7 @@ public class AppVersionInfo : IAppVersionInfo
             $"Git IsDirty: {ThisAssembly.Git.IsDirtyString}\r\n" +
             $"Git Commits on top of base: {ThisAssembly.Git.Commits}\r\n" +
             "\r\n\r\n" +
-            $"Diz app savefile format ver: {ProjectXmlSerializer.LatestSaveFormatVerion}";
+            $"Diz app savefile format ver: {ProjectXmlSerializer.LatestSaveFormatVersion}";
     }
     
     [SuppressMessage("ReSharper", "HeuristicUnreachableCode")]
