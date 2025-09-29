@@ -49,18 +49,32 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
 
     // increment this if you change the XML file format
     // history:
-    // - 100: original XML version for Diz 2.0
+    // - 100: original XML version for Diz 2.0, from <= 2020. [see notes below about earlier now-removed binary save format]
     // - 101: no structure changes but, japanese chars in SNES header cartridge title were being saved
     //        incorrectly, so, allow project XMLs to load IF we can fix up the bad data.
     // - 102: added comments support to the special RomBytes data section.
     //        bumped RomBytes data format from v200 (initial) to v201.
-    // - 103: added "context" fields to labels (no migrations required)
-    public const int LatestSaveFormatVerion = 103;
+    // - 103: added "context" fields to labels, added regions (no migrations required)
+    // - 104: added "ExportSeparateFile" field to regions (no migrations required)
+    public const int LatestSaveFormatVersion = 104;  //  REMEMBER: IF YOU CHANGE THIS YOU MUST ADD A NEW IMigration ENTRY IN RegisterMigrations()
+    
+    // About older project save formats from ancient Diz 1.0:
+    // The older binary savefile format BEFORE v100 in Diz 1.0 is removed, and modern Diz can't open them anymore.
+    // To deal with opening one of these ancient saves:
+    // - grab one of the old Diz 2.0 versions from the Github Releases page
+    //   [around 2021 era likely works. try Diz v2.1.1.2 "ish" - like https://github.com/IsoFrieze/DiztinGUIsh/releases/tag/v2.2.1.2]
+    //   that supported both the old Binary Serialization format, and .diz XML file formats >v100.
+    // - open old project file, re-save as XML-based file format.
+    // - open with latest Diz and it should be able to read any XML-based file format.
+    //
+    // it is unlikely anyone using Diz these days has one of these older file formats that
+    // hasn't already been converted, so shouldn't be a big deal.
+    // reach out in Discord if you need help with this.
     
     // changes as we run the migrations
-    public int CurrentSaveFormatVersion { get; } = LatestSaveFormatVerion;
+    public int CurrentSaveFormatVersion { get; } = LatestSaveFormatVersion;
 
-    // update this if we are dropping support for really old save formats.
+    // update this if we are dropping support for ancient save formats.
     public const int EarliestSupportedSaveFormatVersion = FirstSaveFormatVersion;
     
     [CanBeNull] public event IProjectXmlSerializer.SerializeEvent BeforeSerialize;
@@ -152,7 +166,7 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
             // this isn't necessarily anything that's an issue, but, we definitely want to tell the user.
             projectOpenResult.OpenResult.Warnings.Add($"Diz project file format on disk was older: [file version={versionOnDisk}]." +
                                                       $" When this project is next saved, it will automatically be upgraded to the latest format [file version={CurrentSaveFormatVersion}]." +
-                                                      $" To be safe, please make a backup copy of the project file before saving.");
+                                                      $" To be safe, you take a moment to make a backup copy of your project files before saving or exporting, just in case.");
         }
         
         return projectOpenResult;
