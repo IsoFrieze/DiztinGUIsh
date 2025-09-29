@@ -407,7 +407,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             _ => ia // same as 4
         };
 
-        return ConvertNumToHexStr(iaClipped, stride);
+        return RomUtil.ConvertNumToHexStr(iaClipped, stride);
     }
 
     public override int AutoStepSafe(TByteSource byteSource, int offset)
@@ -548,13 +548,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             intermediateAddress = (int)romWord;
         }
 
-        return ConvertNumToHexStr(intermediateAddress, numByteDigitsToDisplay);
-    }
-
-    private static string ConvertNumToHexStr(int num, int numByteDigitsToDisplay)
-    {
-        num &= ~(-1 << (8 * numByteDigitsToDisplay));
-        return Util.NumberToBaseString(num, Util.NumberBase.Hexadecimal, 2 * numByteDigitsToDisplay, true);
+        return RomUtil.ConvertNumToHexStr(intermediateAddress, numByteDigitsToDisplay);
     }
 
     private string GetFinalLabelExpressionToUse(TByteSource data, int offset)

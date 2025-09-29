@@ -609,5 +609,11 @@ namespace Diz.Core.util
     
             return true;
         }
+        
+        public static string ConvertNumToHexStr(int num, int numByteDigitsToDisplay)
+        {
+            num &= ~(-1 << (8 * numByteDigitsToDisplay));
+            return Util.NumberToBaseString(num, Util.NumberBase.Hexadecimal, 2 * numByteDigitsToDisplay, true);
+        }
     }
 }
