@@ -40,6 +40,10 @@ public record LogWriterSettings : ILogWriterSettings
     public int DataPerLine { get; init; } = 8;
     public FormatUnlabeled Unlabeled { get; init; } = FormatUnlabeled.ShowInPoints;
     public FormatStructure Structure { get; init; } = FormatStructure.OneBankPerFile;
+    
+    // tmp hack until we fix single file mode. allows sample data to still be generated
+    [XmlIgnore] public bool SuppressSingleFileModeDisabledError { get; init; } = false;
+    
     public bool NewLine { get; init; } = false;
     public bool OutputExtraWhitespace  { get; init; } = true;
     public bool GenerateFullLine { get; init; } = true;
