@@ -4,7 +4,6 @@ using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
-using IX.Library.Collections;
 
 namespace Diz.Cpu._65816;
 
@@ -224,7 +223,7 @@ public class SnesSampleRomDataFactory : ISampleDataFactory
             { 0x808000 + 0x44, "this routine copies Test_Data to $7E0100" }
         };
 
-        new Dictionary<int, Label>
+        foreach (var (k, v) in new Dictionary<int, Label>
             {
                 {
                     0x808000 + 0x00, new Label { Name = "Emulation_RESET", Comment = "Sample emulation reset location" }
@@ -234,10 +233,10 @@ public class SnesSampleRomDataFactory : ISampleDataFactory
                 { 0x808000 + 0x3A, new Label { Name = "Pointer_Table" } },
                 { 0x808000 + 0x44, new Label { Name = "First_Routine" } },
                 { 0x808000 + 0x5B, new Label { Name = "Test_Data", Comment = "Pretty cool huh?" } }
-            }
-            .ForEach(kvp =>
-                data.Labels.AddLabel(kvp.Key, kvp.Value)
-            );
+            })
+        {
+            data.Labels.AddLabel(k, v);
+        }
 
         PostProcess(data);
         return data;
