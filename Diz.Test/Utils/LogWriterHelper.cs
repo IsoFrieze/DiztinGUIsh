@@ -129,7 +129,8 @@ namespace Diz.Test.Utils
                 Data = new LogCreatorByteSource(inputRom),
                 Settings = new LogWriterSettings {
                     OutputToString = true,
-                    Structure = LogWriterSettings.FormatStructure.SingleFile
+                    Structure = LogWriterSettings.FormatStructure.SingleFile,
+                    SuppressSingleFileModeDisabledError = true, // hack for now
                 }
             };
             
