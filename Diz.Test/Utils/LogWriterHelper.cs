@@ -6,6 +6,7 @@ using Diz.Core.export;
 using Diz.Core.model.snes;
 using Diz.LogWriter;
 using Diz.LogWriter.util;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -119,7 +120,7 @@ namespace Diz.Test.Utils
             
             // now that the parsed version passed, compare the raw strings
             // if you hit this and not the above section, your whitespace or newline [CRLF vs LF] might be off.
-            Assert.Equal(expectedRaw, result.AssemblyOutputStr);
+            result.AssemblyOutputStr.Should().Be(expectedRaw);
         }
 
         public static LogCreatorOutput.OutputResult ExportAssembly(Data inputRom, Action<LogCreator> postInitHook = null)

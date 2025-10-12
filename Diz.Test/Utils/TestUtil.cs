@@ -4,6 +4,7 @@ using System.Linq;
 using Diz.Core.model;
 using Diz.Core.model.project;
 using Diz.Cpu._65816;
+using FluentAssertions;
 using Moq;
 using Xunit;
 
@@ -59,18 +60,18 @@ public static class TestUtil
         for (var i = 0; i < largestListCount; ++i)
         {
             // if this gets hit, lengths of lists are different
-            Assert.True(i < actual.Count);
-            Assert.True(i < expected.Count);
+            (i < actual.Count).Should().BeTrue();
+            (i < expected.Count).Should().BeTrue();
 
             var expectedItem = expected[i];
             var actualItem = actual[i];
                 
-            Assert.Equal(expectedItem, actualItem);
+            expectedItem.Should().BeEquivalentTo(actualItem);
         }
             
-        Assert.Equal(expected.Count, actual.Count);
+        expected.Count.Should().Be(actual.Count);
 
-        Assert.True(expected.SequenceEqual(actual));
+        expected.Should().BeEquivalentTo(actual);
     }
 
     public static Mock<IReadFromFileBytes> CreateReadFromFileMock(byte[] mockedFileBytes)
