@@ -4,56 +4,52 @@ using System.Drawing;
 namespace Diz.Core.Interfaces;
 
 [AttributeUsage(AttributeTargets.All)]
-public class ColorDescriptionAttribute : Attribute
-{
-	public KnownColor Color { get; }
-
-	public ColorDescriptionAttribute(KnownColor c)
-	{
-		Color = c;
-	}
+public class ColorDescriptionAttribute(uint hexColor) : Attribute {
+	public uint HexColor { get; } = hexColor;
 }
 
 public enum FlagType : byte
 {
-	[ColorDescription(KnownColor.Black)] Unreached = 0x00,
+	[ColorDescription(0xD3D3D3)] // LightGray
+	Unreached = 0x00,
 
-	[ColorDescription(KnownColor.Yellow)] Opcode = 0x10,
+	[ColorDescription(0xFFFF00)] // Yellow
+	Opcode = 0x10,
 
-	[ColorDescription(KnownColor.YellowGreen)]
+	[ColorDescription(0x9ACD32)] // YellowGreen
 	Operand = 0x11,
 
-	[ColorDescription(KnownColor.NavajoWhite)] [Description("Data (8-bit)")]
+	[ColorDescription(0xFFDEAD)] [Description("Data (8-bit)")] // NavajoWhite (base data color)
 	Data8Bit = 0x20,
 
-	[ColorDescription(KnownColor.LightPink)]
+	[ColorDescription(0xFFB6C1)] // LightPink
 	Graphics = 0x21,
 
-	[ColorDescription(KnownColor.PowderBlue)]
+	[ColorDescription(0xB0E0E6)] // PowderBlue
 	Music = 0x22,
 
-	[ColorDescription(KnownColor.DarkSlateGray)]
+	[ColorDescription(0x2F4F4F)] // DarkSlateGray
 	Empty = 0x23,
 
-	[ColorDescription(KnownColor.NavajoWhite)] [Description("Data (16-bit)")]
+	[ColorDescription(0xE6C898)] [Description("Data (16-bit)")] // Slightly darker shade of Data base
 	Data16Bit = 0x30,
 
-	[ColorDescription(KnownColor.Orchid)] [Description("Pointer (16-bit)")]
+	[ColorDescription(0xDA70D6)] [Description("Pointer (16-bit)")] // Orchid (base pointer color)
 	Pointer16Bit = 0x31,
 
-	[ColorDescription(KnownColor.NavajoWhite)] [Description("Data (24-bit)")]
+	[ColorDescription(0xCDB285)] [Description("Data (24-bit)")] // Darker shade of Data base
 	Data24Bit = 0x40,
 
-	[ColorDescription(KnownColor.Orchid)] [Description("Pointer (24-bit)")]
+	[ColorDescription(0xC55DC2)] [Description("Pointer (24-bit)")] // Darker shade of Pointer base
 	Pointer24Bit = 0x41,
 
-	[ColorDescription(KnownColor.NavajoWhite)] [Description("Data (32-bit)")]
+	[ColorDescription(0xB49C72)] [Description("Data (32-bit)")] // Darkest shade of Data base
 	Data32Bit = 0x50,
 
-	[ColorDescription(KnownColor.Orchid)] [Description("Pointer (32-bit)")]
+	[ColorDescription(0xB04AAD)] [Description("Pointer (32-bit)")] // Darkest shade of Pointer base
 	Pointer32Bit = 0x51,
 
-	[ColorDescription(KnownColor.Aquamarine)]
+	[ColorDescription(0x7FFFD4)] // Aquamarine
 	Text = 0x60
 }
 

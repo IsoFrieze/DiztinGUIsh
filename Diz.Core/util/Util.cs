@@ -226,31 +226,31 @@ public static class Util
         ) ?? value.ToString();
     }
 
-    public static TResult GetEnumAttribute<TAttribute, TResult>(object value, Func<TAttribute, TResult> getValueFn) where TAttribute : Attribute
+    public static TResult? GetEnumAttribute<TAttribute, TResult>(object value, Func<TAttribute, TResult> getValueFn) where TAttribute : Attribute
     {
         return GetFieldAttribute(getValueFn, value.GetType(), value.ToString());
     }
 
-    public static TResult GetFieldAttribute<TAttribute, TResult>(Func<TAttribute, TResult> getValueFn, Type type, string memberName)
+    public static TResult? GetFieldAttribute<TAttribute, TResult>(Func<TAttribute, TResult> getValueFn, Type type, string? memberName)
         where TAttribute : Attribute
     {
-        var memberInfo = type.GetField(memberName);
+        var memberInfo = memberName!=null ? type.GetField(memberName) : null;
         if (memberInfo == null)
             return default;
             
-        var attr = (TAttribute) Attribute.GetCustomAttribute(memberInfo, typeof(TAttribute));
-        return getValueFn(attr);
+        var attr = (TAttribute?)Attribute.GetCustomAttribute(memberInfo, typeof(TAttribute));
+        return attr!=null ? getValueFn(attr) : default;
     }
         
-    public static TResult GetPropertyAttribute<TAttribute, TResult>(Func<TAttribute, TResult> getValueFn, Type type, string propertyName)
+    public static TResult? GetPropertyAttribute<TAttribute, TResult>(Func<TAttribute, TResult> getValueFn, Type type, string? propertyName)
         where TAttribute : Attribute
     {
-        var property = type.GetProperty(propertyName);
+        var property = propertyName!=null ? type.GetProperty(propertyName) : null;
         if (property == null)
             return default;
             
-        var attr = (TAttribute) Attribute.GetCustomAttribute(property, typeof(TAttribute));
-        return getValueFn(attr);
+        var attr = (TAttribute?)Attribute.GetCustomAttribute(property, typeof(TAttribute));
+        return attr != null ? getValueFn(attr) : default;
     }
 
     // take a enum type that has [Description] attributes,
@@ -261,17 +261,27 @@ public static class Util
     }
 
     // perf: might be a little slow, caution when in tight loops
-    public static List<KeyValuePair<TEnum, KnownColor>> GetEnumColorDescriptions<TEnum>() where TEnum : Enum
+    public static List<KeyValuePair<TEnum, Color>> GetEnumColorDescriptions<TEnum>() where TEnum : Enum
     {
-        return GetEnumInfo<TEnum, KnownColor>((value) => GetEnumColor(value));
+        return GetEnumInfo<TEnum, Color>((value) => GetEnumColor(value));
     }
-
-    private static KnownColor GetEnumColor(Enum value)
+    
+    private static Color GetEnumColor(Enum value)
     {
-        return GetEnumAttribute(
+        var colorAttr = GetEnumAttribute(
             value,
-            (ColorDescriptionAttribute d) => d?.Color
-        ) ?? KnownColor.Black;
+            (ColorDescriptionAttribute d) => d
+        );
+
+        if (colorAttr == null)
+            return Color.Black;
+
+        var hex = colorAttr.HexColor;
+        var r = (byte)((hex >> 16) & 0xFF);
+        var g = (byte)((hex >> 8) & 0xFF);
+        var b = (byte)(hex & 0xFF);
+    
+        return Color.FromArgb(r, g, b);
     }
 
     public static List<KeyValuePair<TEnum, TType>> GetEnumInfo<TEnum, TType>(Func<TEnum, TType> getValue) where TEnum : Enum
@@ -294,7 +304,7 @@ public static class Util
         if (CachedRomFlagColors.TryGetValue(romFlag, out var color))
             return color;
 
-        color = Color.FromKnownColor(GetEnumColor(romFlag)); // slow (comparatively)
+        color = GetEnumColor(romFlag);
         CachedRomFlagColors[romFlag] = color;
 
         return color;
