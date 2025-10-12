@@ -6,7 +6,6 @@ using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Cpu._65816;
 using Diz.Test.Utils;
-using IX.Library.Collections;
 using Xunit;
 
 namespace Diz.Test.Tests.RomInterfaceTests
@@ -39,14 +38,14 @@ namespace Diz.Test.Tests.RomInterfaceTests
                 }
             };
 
-            new Dictionary<int, Label>
+            foreach (var (k, v) in new Dictionary<int, Label>
             {
                 {0x002116, new Label { Name = "SNES_VMADDL", Comment = "SNES hardware register example." }}
+            })
+            {
+                data.Labels.AddLabel(k, v);
             }
-            .ForEach(kvp =>
-                data.Labels.AddLabel(kvp.Key, kvp.Value)
-            );
-
+            
             data.Apis.AddIfDoesntExist(new SnesApi(data));
             
             return data;

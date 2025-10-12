@@ -64,34 +64,6 @@
         "resolved": "11.9.0",
         "contentHash": "VneVlTvwYDkfHV5av3QrQ0amALgrLX6LV94wlYyEsh0B/klJBW7C8y2eAtj5tOZ3jH6CAVpr4s1ZGgew/QWyig=="
       },
-      "IX.Library": {
-        "type": "Transitive",
-        "resolved": "1.0.1",
-        "contentHash": "CdcWZ8ymoauzNEcq7+Mq5tZl8wVuFAnqqQQ0JuxRn7ThV/GCgscQy4az0PCX4bboK4ZYTSD+yVdD/+lCmSli0Q==",
-        "dependencies": {
-          "JetBrains.Annotations": "2023.3.0",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.0"
-        }
-      },
-      "IX.Observable": {
-        "type": "Transitive",
-        "resolved": "1.0.1",
-        "contentHash": "q+ESigIYNGVq9QRfJpTuSUzHTXY7dpEarVHY5YVomn4fQsCLOE5XKH4JMjZv3p0gvcwXG1m4F0vwGeAcH4kN3g==",
-        "dependencies": {
-          "IX.Library": "1.0.1",
-          "IX.Undoable": "1.0.1",
-          "JetBrains.Annotations": "2023.3.0"
-        }
-      },
-      "IX.Undoable": {
-        "type": "Transitive",
-        "resolved": "1.0.1",
-        "contentHash": "F9AG4JeBb9uBfi/woq1JUIgsiM3FcBhzSUNC4cf7J61ZeWp3ibY0wQUme15raOT+m8QPjozGCRpc0zDcfjXjCA==",
-        "dependencies": {
-          "IX.Library": "1.0.1",
-          "JetBrains.Annotations": "2023.3.0"
-        }
-      },
       "JetBrains.FormatRipper": {
         "type": "Transitive",
         "resolved": "2.0.1",
@@ -129,19 +101,6 @@
         "type": "Transitive",
         "resolved": "4.7.0",
         "contentHash": "pTj+D3uJWyN3My70i2Hqo+OXixq3Os2D1nJ2x92FFo6sk8fYS1m1WLNTs0Dc1uPaViH0YvEEwvzddQ7y4rhXmA=="
-      },
-      "Microsoft.Extensions.DependencyInjection.Abstractions": {
-        "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "cjWrLkJXK0rs4zofsK4bSdg+jhDLTaxrkXu4gS6Y7MAlCvRyNNgwY/lJi5RDlQOnSZweHqoyvgvbdvQsRIW+hg=="
-      },
-      "Microsoft.Extensions.Logging.Abstractions": {
-        "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "arDBqTgFCyS0EvRV7O3MZturChstm50OJ0y9bDJvAcmEPJm0FFpFyjU/JLYyStNGGey081DvnQYlncNX5SJJGA==",
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0"
-        }
       },
       "Microsoft.NETCore.Platforms": {
         "type": "Transitive",
@@ -1131,7 +1090,6 @@
           "Diz.Core.Interfaces": "[1.0.0, )",
           "ExtendedXmlSerializer": "[3.9.6, )",
           "FluentValidation": "[11.9.0, )",
-          "IX.Observable": "[1.0.1, )",
           "JetBrains.Annotations": "[2023.3.0, )",
           "JetBrains.Profiler.SelfApi": "[2.5.0, )",
           "LightInject": "[6.6.4, )",
@@ -1142,10 +1100,7 @@
         }
       },
       "diz.core.interfaces": {
-        "type": "Project",
-        "dependencies": {
-          "IX.Observable": "[1.0.1, )"
-        }
+        "type": "Project"
       },
       "diz.cpu.65816": {
         "type": "Project",
