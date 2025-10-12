@@ -47,29 +47,78 @@ public interface IFileByteWriter
     void WriteBytes(string filename, byte[] data);
 }
 
-public interface IFileByteProvider : IFileByteReader, IFileByteWriter
+public interface IFileByteProvider : IFileByteReader, IFileByteWriter;
+
+public interface IProjectFileUserPrefs
 {
-    
+    void LoadUserPreferences(string projectFilename, Project project);
+    void SaveUserPreferences(string projectFilename, ProjectUserSettings projectUserSettings);
 }
 
-public class ProjectFileManager : IProjectFileManager
+class ProjectFileUserPrefs : IProjectFileUserPrefs
 {
-    private readonly Func<IProjectXmlSerializer> projectXmlSerializerCreate;
-    private readonly Func<IAddRomDataCommand> addRomDataCommandCreate;
-    private readonly Func<string, IFileByteProvider> fileByteProviderFactory;
+    public void LoadUserPreferences(string projectFilename, Project project)
+    {
+        try
+        {
+            var userPrefsFilename = BuildUserPrefsFilenameFromProjectName(projectFilename);
+            var userPrefsXmlStr = LoadUserPrefsXmlStrFromFile(userPrefsFilename);
 
-    public ProjectFileManager(
-        Func<IProjectXmlSerializer> projectXmlSerializerCreate, 
-        Func<IAddRomDataCommand> addRomDataCommandCreate, 
-        Func<string, IFileByteProvider> fileByteProviderFactory
-        ) {
-        this.projectXmlSerializerCreate = projectXmlSerializerCreate;
-        this.addRomDataCommandCreate = addRomDataCommandCreate;
-        this.fileByteProviderFactory = fileByteProviderFactory;
+            var userPrefsXmlSerializer = GetUserPrefsXmlSerializerConfigContainer();
+            project.ProjectUserSettings = userPrefsXmlSerializer.Create().Deserialize<ProjectUserSettings>(userPrefsXmlStr);
+        }
+        catch (Exception e)
+        {
+            // we don't really care about the user prefs that much. just ignore and use the defaults if there's an issue.
+            Console.WriteLine($"Warning: failed to load user project prefs, ignoring them: associated with: {projectFilename}: {e.Message}");
+        }
     }
 
-    // TODO: remove this and just do it by passing different stuff in the constructor, or use a decorator
+    public void SaveUserPreferences(string projectFilename, ProjectUserSettings projectUserSettings)
+    {
+        try
+        {
+            var userPrefsFilename = BuildUserPrefsFilenameFromProjectName(projectFilename);
+            var userPrefsXmlSerializer = GetUserPrefsXmlSerializerConfigContainer();
+            var userPrefsXmlStr = userPrefsXmlSerializer.Create().Serialize(projectUserSettings);
+            File.WriteAllText(userPrefsFilename, userPrefsXmlStr);
+        }
+        catch (Exception e)
+        {
+            // we don't really care about the user prefs that much. just ignore and use the defaults if there's an issue.
+            Console.WriteLine($"Warning: failed to save user project prefs, ignoring: associated with: {projectFilename}: {e.Message}");
+        }
+    }
 
+    private static string LoadUserPrefsXmlStrFromFile(string filename) => 
+        Encoding.UTF8.GetString(File.ReadAllBytes(filename));
+
+    private static string BuildUserPrefsFilenameFromProjectName(string projectFilename)
+    {
+        var baseFilenameNoExtension = Path.GetFileNameWithoutExtension(projectFilename);
+        return Path.Combine(Path.GetDirectoryName(projectFilename)!, baseFilenameNoExtension + ".dizprefs");
+    }
+
+    private static IConfigurationContainer GetUserPrefsXmlSerializerConfigContainer() =>
+        new ConfigurationContainer()
+            .Type<ProjectUserSettings>()
+            .EnableImplicitTyping();
+}
+
+// NOP version (for unit tests or if you don't care about user prefs)
+public class StubProjectFileUserPrefs : IProjectFileUserPrefs {
+    public void LoadUserPreferences(string projectFilename, Project project) {}
+    public void SaveUserPreferences(string projectFilename, ProjectUserSettings projectUserSettings) {}
+}
+
+
+public class ProjectFileManager(
+    Func<IProjectXmlSerializer> projectXmlSerializerCreate,
+    Func<IAddRomDataCommand> addRomDataCommandCreate,
+    Func<string, IFileByteProvider> fileByteProviderFactory,
+    IProjectFileUserPrefs? userPrefsLoader = null
+) : IProjectFileManager
+{
     public Func<string, string>? RomPromptFn { get; set; } = null;
 
     public ProjectOpenResult Open(string filename)
@@ -84,49 +133,6 @@ public class ProjectFileManager : IProjectFileManager
         return openResult;
     }
 
-    private static void LoadUserPreferencesFileForProject(string projectFilename, Project newlyOpenedProject)
-    {
-        // load up user prefs
-        // these are project-specific settings/etc that are not saved in the project file
-        // because they're user-specific. i.e. they shouldn't get checked into git/etc for Diz projects
-        // it's OK if these don't exist
-        var userPrefsFilename = BuildUserPrefsFilenameFromProjectName(projectFilename);
-        var userPrefsXmlStr = LoadUserPrefsXmlStrFromFile(userPrefsFilename);
-
-        var userPrefsXmlSerializer = GetUserPrefsXmlSerializerConfigContainer();
-        newlyOpenedProject.ProjectUserSettings = userPrefsXmlSerializer.Create().Deserialize<ProjectUserSettings>(userPrefsXmlStr);
-    }
-
-    private static string LoadUserPrefsXmlStrFromFile(string filename)
-    {
-        var userPrefsXmlStr = Encoding.UTF8.GetString(File.ReadAllBytes(filename));
-        return userPrefsXmlStr;
-    }
-    
-    private static void SaveProjectUserPreferencesFile(string filename, ProjectUserSettings projectUserSettings)
-    {
-        var userPrefsFilename = BuildUserPrefsFilenameFromProjectName(filename);
-        var userPrefsXmlSerializer = GetUserPrefsXmlSerializerConfigContainer();
-        var userPrefsXmlStr = userPrefsXmlSerializer.Create().Serialize(projectUserSettings);
-        File.WriteAllText(userPrefsFilename, userPrefsXmlStr);
-    }
-
-    private static string BuildUserPrefsFilenameFromProjectName(string projectFilename)
-    {
-        var baseFilenameNoExtension = Path.GetFileNameWithoutExtension(projectFilename);
-        var userPrefsFilename =
-            Path.Combine(Path.GetDirectoryName(projectFilename)!, baseFilenameNoExtension + ".dizprefs");
-        return userPrefsFilename;
-    }
-
-    private static IConfigurationContainer GetUserPrefsXmlSerializerConfigContainer()
-    {
-        var userPrefsXmlSerializer = new ConfigurationContainer()
-            .Type<ProjectUserSettings>()
-            .EnableImplicitTyping();
-        return userPrefsXmlSerializer;
-    }
-
     private void OnPostProjectDeserialized(string filename, ProjectXmlSerializer.Root xmlProjectSerializedRoot, IProjectSerializer serializer)
     {
         // 1. housekeeping
@@ -136,12 +142,7 @@ public class ProjectFileManager : IProjectFileManager
         newlyOpenedProject.Session = new ProjectSession(newlyOpenedProject, filename);
         
         // 2. need to load the user prefs next BECAUSE the Rom filename is stored there, and we need it for the next step
-        try {
-            LoadUserPreferencesFileForProject(filename, newlyOpenedProject);
-        } catch (Exception e) {
-            // we don't really care about the user prefs that much. just ignore and use the defaults if there's an issue.
-            Console.WriteLine($"Warning: failed to load user project prefs, ignoring them: associated with: {filename}: {e.Message}");
-        }
+        userPrefsLoader?.LoadUserPreferences(filename, newlyOpenedProject);
 
         // 3. at this stage, 'Data' is populated with everything EXCEPT the actual ROM bytes.
         // It would be easy to store the ROM bytes in the save file, but, for copyright reasons,
@@ -270,13 +271,7 @@ public class ProjectFileManager : IProjectFileManager
         // finally... unrelated to the main project file, let's save the user preferences 
         // seperately.  this is for project-specific things that should be persisted to disk, but not shared with multiple users.
         // i.e. this file should be added to the project's .gitignore.
-        try
-        {
-            SaveProjectUserPreferencesFile(filename, project.ProjectUserSettings);
-        } catch (Exception e) {
-            // we don't really care about the user prefs that much. just ignore and use the defaults if there's an issue.
-            Console.WriteLine($"Warning: failed to save user project prefs, ignoring: associated with: {filename}: {e.Message}");
-        }
+        userPrefsLoader?.SaveUserPreferences(filename, project.ProjectUserSettings);
     }
 
     private byte[]? DoSave(Project project, string filename, IProjectSerializer serializer)
