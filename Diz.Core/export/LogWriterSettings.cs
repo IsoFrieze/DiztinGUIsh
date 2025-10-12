@@ -50,6 +50,10 @@ public record LogWriterSettings : ILogWriterSettings
     public bool IncludeUnusedLabels  { get; init; }
     public bool PrintLabelSpecificComments { get; init; }
     public bool GeneratePlusMinusLabels { get; init; } = true;
+
+    // this is an experimental option, if useful, remove [XmlIgnore] and add the UI for this
+    [XmlIgnore] public bool AppendFlagTypeToComment { get; init; } = false;
+
         
     /// <summary>
     /// specify an override for the # of bytes to assemble. default is to visit every byte in the entire ROM 
