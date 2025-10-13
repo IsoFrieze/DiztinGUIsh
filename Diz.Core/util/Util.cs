@@ -450,7 +450,7 @@ public static class NotifyPropertyChangedExtensions
     /// Set a field, and if changed, dispatch any events associated with it
     /// </summary>
     /// <returns>true if we set property to a new value and dispatched events</returns>
-    public static bool SetField<T>(this INotifyPropertyChanged sender, [CanBeNull] PropertyChangedEventHandler handler, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
+    public static bool SetField<T>(this INotifyPropertyChanged sender, [CanBeNull] PropertyChangedEventHandler? handler, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null!)
     {
         if (FieldIsEqual(field, value, compareRefOnly)) 
             return false;
@@ -465,7 +465,7 @@ public static class NotifyPropertyChangedExtensions
     /// Set a field, and if changed, dispatch any events associated with it
     /// </summary>
     /// <returns>true if we set property to a new value and dispatched events</returns>
-    public static bool SetField<T>(this INotifyPropertyChangedExt sender, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null)
+    public static bool SetField<T>(this INotifyPropertyChangedExt sender, ref T field, T value, bool compareRefOnly = false, [CallerMemberName] string propertyName = null!)
     {
         if (FieldIsEqual(field, value, compareRefOnly)) 
             return false;

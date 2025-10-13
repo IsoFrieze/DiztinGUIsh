@@ -309,7 +309,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
                 }
                 else if (specialDirective.ConstantFormatOverride == CpuUtils.OperandOverride.FormatOverride.AsDecimal && operandValue1!=null)
                 {
-                    operandFinalStr1 = operandValue1.ToString();
+                    operandFinalStr1 = operandValue1.ToString()!;
                 }
             }
         }
