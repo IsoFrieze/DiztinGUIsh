@@ -1,6 +1,8 @@
 <Project>
     <PropertyGroup>
         <DefineConstants>$(DefineConstants)</DefineConstants>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <LangVersion>13.0</LangVersion>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
