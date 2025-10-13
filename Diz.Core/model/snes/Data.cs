@@ -56,7 +56,7 @@ public class Data : IData
     // deserializer that handles this instead
     public Dictionary<int, IAnnotationLabel> LabelsSerialization
     {
-        get => new(Labels.Labels);
+        get => Labels.Labels.ToDictionary();
         set => Labels.SetAll(value);
     }
     
