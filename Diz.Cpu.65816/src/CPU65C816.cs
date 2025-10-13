@@ -309,7 +309,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
                 }
                 else if (specialDirective.ConstantFormatOverride == CpuUtils.OperandOverride.FormatOverride.AsDecimal && operandValue1!=null)
                 {
-                    operandFinalStr1 = operandValue1.ToString();
+                    operandFinalStr1 = operandValue1.ToString()!;
                 }
             }
         }
@@ -727,7 +727,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // some special cases related to +/- local labels:
         
         // is this a local label?  like "+". "-", "++", "--", etc?
-        if (!RomUtil.IsValidPlusMinusLabel(candidateLabel.Name)) 
+        if (!RomUtil.IsValidPlusMinusLabel(candidateLabel!.Name))
             return candidateLabel;      // not local label, so we're good
         
         // this IS a local +/- label, so let's do some additional validation..

@@ -95,7 +95,7 @@ public class EtoMainGridForm : Form, IMainGridWindowView
         };
     }
     
-    private GridView gridView;
+    private GridView gridView = null!;
     
     private void CreateGui()
     {
@@ -277,7 +277,7 @@ public class EtoMainGridForm : Form, IMainGridWindowView
 
     public int SelectedOffset => -1; // temp, fixme.
 
-    public Project Project { get; set; }
+    public Project? Project { get; set; }
 
     public void OnProjectOpenFail(string errorMsg)
     {
