@@ -41,7 +41,7 @@ public static class Util
     {
         var pathUri = new Uri(fileSpec);
         // Folders must end in a slash
-        if (!string.IsNullOrEmpty(folder) && !folder.EndsWith(Path.DirectorySeparatorChar.ToString()))
+        if (!string.IsNullOrEmpty(folder) && !folder!.EndsWith(Path.DirectorySeparatorChar.ToString()))
         {
             folder += Path.DirectorySeparatorChar;
         }
