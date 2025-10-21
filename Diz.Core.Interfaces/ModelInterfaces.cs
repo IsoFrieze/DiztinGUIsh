@@ -175,7 +175,6 @@ namespace Diz.Core.Interfaces
         ILabelProvider,
         IReadOnlyLabelProvider
     {
-        
     }
     
     public interface ILabelServiceWithTempLabels : 

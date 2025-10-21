@@ -95,6 +95,8 @@ public interface ILabelProvider : IReadOnlyLabelProvider
     
     void SetAll(Dictionary<int, IAnnotationLabel> newLabels);
     void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels, bool smartMerge = false);
+    
+    void SortLabels();
 }
 
 public interface IReadOnlyLabels

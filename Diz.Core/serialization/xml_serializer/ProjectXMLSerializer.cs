@@ -118,6 +118,9 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
             Watermark = DizWatermark,
             Project = project
         };
+        
+        // one silly thing. we'll re-sort labels so they show up in the output file in order.
+        project.Data.Labels.SortLabels();
 
         BeforeSerialize?.Invoke(this, rootElement);
 

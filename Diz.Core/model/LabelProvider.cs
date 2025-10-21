@@ -267,6 +267,14 @@ namespace Diz.Core.model
             return !Equals(left, right);
         }
         #endregion
+
+        public void SortLabels()
+        {
+            if (cachedLabels != null)
+                throw new InvalidOperationException("Cannot modify labels while cache is locked");
+
+            NormalProvider.SortLabels();
+        }
     }
 
     #if DIZ_3_BRANCH
@@ -354,7 +362,7 @@ namespace Diz.Core.model
     public class LabelsCollection : LabelProviderBase, ILabelService, IEquatable<LabelsCollection>
     {
         // ReSharper disable once MemberCanBePrivate.Global
-        public Dictionary<int, IAnnotationLabel> Labels { get; } = new();
+        public Dictionary<int, IAnnotationLabel> Labels { get; private set; } = new();
         
         [XmlIgnore]
         IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;
@@ -414,6 +422,13 @@ namespace Diz.Core.model
                     label.Comment = newLabelComment == "" ? label.Comment : newLabelComment;
                 }
             }
+        }
+        
+        public void SortLabels()
+        {
+            Labels = Labels
+                .OrderBy(x => x.Key)
+                .ToDictionary(x => x.Key, x => x.Value);
         }
 
         public override IAnnotationLabel GetLabel(int snesAddress) => 
