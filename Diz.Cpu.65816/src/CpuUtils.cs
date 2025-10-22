@@ -26,7 +26,15 @@ public class CpuUtils
             // add more as desired
         }
 
+        public enum IncSrcOverride
+        {
+            None,
+            IncSrcStart,
+            IncSrcEnd,
+        }
+
         public FormatOverride ConstantFormatOverride { get; set; } = FormatOverride.None;
+        public IncSrcOverride IncludeSrc { get; set; } = IncSrcOverride.None;
     }
     
     /// <summary>
@@ -74,11 +82,24 @@ public class CpuUtils
             return directive;
         }
 
-        // option 2: 
+        // option 2: force output to never allow a label on this line 
         if (cmd.StartsWith('n'))
         {
             return new OperandOverride {
                 ForceOnlyShowRawHex = true
+            };
+        }
+        
+        // option3: create an incsrc directive from this, as though it's a Region.
+        // must have a "is" and a "ie" tag (include start, include end) and a label on the start, for this to work
+        // this is just a lazier way to define incsrc directives (instead of having to create a Region and use the "export as new file" option)
+        if (cmd.StartsWith('i') && cmd.Length == 2)
+        {
+            return cmd[1] switch
+            {
+                's' => new OperandOverride { IncludeSrc = OperandOverride.IncSrcOverride.IncSrcStart },
+                'e' => new OperandOverride { IncludeSrc = OperandOverride.IncSrcOverride.IncSrcEnd },
+                _ => null
             };
         }
         

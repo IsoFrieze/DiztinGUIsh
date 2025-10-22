@@ -610,4 +610,35 @@ then you can override with:
 
 If you use this with an asar define like "!num_players", then Diz will take the original value of $0B and create a define for you in defines.asm.
 
-This let's you annotate constants as you go and re-use them through the project.
+This lets you annotate constants as you go and re-use them through the project.
+
+----
+
+```!!is``` and - ```!!ie```
+
+"include start" and "include end".
+
+define a label on a line and use the !!is directive to dynamically-defined a region that will generate an "incsrc" directive.
+further down, use the !!ir directive to mark the end of a dynamic region.
+
+example:
+
+```
+STZ $00 ; whatever here, then
+
+some_graphics:      !!is
+...
+...
+...
+                    !!ie
+                    
+STZ $00 ; whatever after
+```
+
+this will generate output like this, with the contents between start and end being in a new file that's included:
+
+```
+STZ $00
+incsrc "some_graphics.asm"
+STZ $00
+```
