@@ -66,7 +66,7 @@ public class LabelSearchTerms
         return false;
     }
 
-    private AddressComparison? TryParseAddressComparison(string term)
+    private AddressComparison/*?*/ TryParseAddressComparison(string term)
     {
         if (term.Length < 2)
             return null;
