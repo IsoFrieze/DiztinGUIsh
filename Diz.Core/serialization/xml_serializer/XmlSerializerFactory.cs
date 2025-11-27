@@ -1,14 +1,52 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.snes;
 using ExtendedXmlSerializer;
 using ExtendedXmlSerializer.Configuration;
+using ExtendedXmlSerializer.ContentModel.Conversion;
 using ExtendedXmlSerializer.ContentModel.Format;
 using ExtendedXmlSerializer.ExtensionModel.Instances;
 using JetBrains.Annotations;
 
 namespace Diz.Core.serialization.xml_serializer;
+
+public class InvalidCharStrippingConverter : IConverter<string>
+{
+    public string Parse(string data) => data; // Handle reading - no changes needed
+
+    public string Format(string instance)
+    {
+        if (string.IsNullOrEmpty(instance)) return instance;
+        
+        // Remove all invalid XML 1.0 characters
+        // Valid XML 1.0 characters are:
+        // #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+        var result = new StringBuilder(instance.Length);
+        foreach (var c in instance.Where(IsValidXmlChar)) {
+            result.Append(c);
+        }
+        
+        return result.ToString();
+    }
+    
+    private static bool IsValidXmlChar(char c)
+    {
+        return c == 0x09 ||          // Tab
+               c == 0x0A ||          // Line Feed
+               c == 0x0D ||          // Carriage Return
+               (c >= 0x20 && c <= 0xD7FF) ||      // Basic Multilingual Plane
+               (c >= 0xE000 && c <= 0xFFFD);      // Private Use Area and others
+    }
+
+    public bool IsSatisfiedBy(TypeInfo parameter)
+    {
+        return parameter.AsType() == typeof(string);
+    }
+}
 
 public class XmlSerializerFactory(
     IDataFactory dataFactory,
@@ -28,6 +66,8 @@ public class XmlSerializerFactory(
 
             .Type<Project>()
             .Member(x => x.ProjectUserSettings).Ignore()
+            .Member(x=>x.InternalRomGameName).Register(new InvalidCharStrippingConverter())
+            
 
             .Type<RomBytes>()
             .Register().Serializer().Using(romBytesSerializer)
