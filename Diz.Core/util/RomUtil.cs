@@ -279,7 +279,8 @@ namespace Diz.Core.util
 
             // all detection failed. let's pick a reasonable default, this is now jut a guess
             detectedValidRomMapType = false;
-            return romBytes.Count > 0x40000 ? RomMapMode.ExLoRom : RomMapMode.LoRom;
+            // return romBytes.Count > 0x40000 ? RomMapMode.ExLoRom : RomMapMode.LoRom; // this is probably fine but, let's just be safe and pick lorom
+            return RomMapMode.LoRom;
         }
 
         public static bool DetectRomMapModeBustedGames(IReadOnlyList<byte> romBytes, out RomMapMode detectedRomMapMode, out RomSpeed detectedRomSpeed)
