@@ -1049,6 +1049,7 @@
           "CsvHelper": "[30.0.3, )",
           "Diz.Core": "[1.0.0, )",
           "Diz.Cpu.65816": "[1.0.0, )",
+          "ExtendedXmlSerializer": "[3.9.6, )",
           "LightInject": "[6.6.4, )"
         }
       }
