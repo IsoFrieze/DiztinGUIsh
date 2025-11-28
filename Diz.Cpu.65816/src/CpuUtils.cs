@@ -48,7 +48,7 @@ public class CpuUtils
     {
         // TODO: allow multiple directives in a line separated by delimiter
         
-        if (string.IsNullOrEmpty(inputText) || !inputText.StartsWith("!!"))
+        if (string.IsNullOrEmpty(inputText) || !inputText!.StartsWith("!!"))
             return null;
         
         // filter anything after a semicolon, which we'll treat like a comment and ignore. trim leftover whitespace

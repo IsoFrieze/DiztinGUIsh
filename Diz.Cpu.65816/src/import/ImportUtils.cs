@@ -25,7 +25,7 @@ public class SnesProjectFactoryFromRomImportSettings : IProjectFactoryFromRomImp
         
         Debug.Assert(project?.Data != null);
 
-        project.AttachedRomFilename = importSettings.RomFilename;
+        project!.AttachedRomFilename = importSettings.RomFilename;
         project.Session = new ProjectSession(project, "")
         {
             UnsavedChanges = true
@@ -39,7 +39,7 @@ public class SnesProjectFactoryFromRomImportSettings : IProjectFactoryFromRomImp
         project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
 #else
         // old way
-        snesApi.RomMapMode = importSettings.RomMapMode;
+        snesApi!.RomMapMode = importSettings.RomMapMode;
         snesApi.RomSpeed = importSettings.RomSpeed;
         project.Data.RomBytes.CreateRomBytesFromRom(importSettings.RomBytes);
 #endif
