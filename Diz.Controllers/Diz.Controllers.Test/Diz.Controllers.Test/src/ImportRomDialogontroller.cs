@@ -86,11 +86,10 @@ public class ImportRomDialogControllerTest : ContainerFixture
     public void WithTwoLabels()
     {
         mockView!.SetupGet(x => x.EnabledVectorTableEntries)
-            .Returns(new List<string>
-            {
+            .Returns([
                 SnesVectorNames.Native_ABORT,
-                SnesVectorNames.Emulation_RESET,
-            });
+                SnesVectorNames.Emulation_RESET
+            ]);
         
         Run(() =>
         {

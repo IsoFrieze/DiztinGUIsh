@@ -43,11 +43,12 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
     private int? RomSettingOffset => 
         Input.AnalysisResults == null ? null : RomUtil.GetRomSettingOffset(Input.AnalysisResults.RomMapMode);
 
-    // ALL vector table entries for the currently selected Rom Map Mode
+    // ALL vector table entries (native and emulation) for the currently selected Rom Map Mode
+    // (including unused/deselected/etc)
     private IVectorTableCache VectorTableForCurrentMapMode { get; }
     
     // a list of enabled vector table entries, varies with the UI.
-    public List<string> EnabledVectorEntries { get; } = new();
+    private List<string> EnabledVectorEntries { get; } = [];
 
     public SnesRomImportSettingsBuilder(ISnesRomAnalyzer snesRomAnalyzer, IVectorTableCache vectorTableCache, IReadFromFileBytes fileReader)
     {
@@ -151,11 +152,10 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
 
     private Dictionary<int, Label> GenerateVectorLabels()
     {
-        var allEntries = VectorTableForCurrentMapMode
-            .Entries ?? new List<CpuVectorTable.VectorRomEntry>();
+        var allEntries = VectorTableForCurrentMapMode.Entries ?? [];
 
         return EnabledVectorEntries
-            .Select(x => allEntries.Single(entry => entry.Entry.Name == x))
+            .Select(x => allEntries.Single(entry => entry.VectorTableEntry.Name == x))
             .Select(CreateLabelForVectorEntry)
             .Where(x => x.HasValue)
             .Select(x => x!.Value)
@@ -169,7 +169,7 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
 
         // note: can also do a SNES address here if we wanted to. benefits to doing both.
         // when mirroring works in labels, this will be useful to have both
-        var (romOffset, vectorTableEntry, _) = entry;
+        var (romOffset, vectorTableEntry) = entry;
 
         return new KeyValuePair<int, Label>(romOffset, new Label {
             Name = vectorTableEntry.Name,

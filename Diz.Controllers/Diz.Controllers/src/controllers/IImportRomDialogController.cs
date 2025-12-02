@@ -18,7 +18,7 @@ public interface IImportRomDialogController
     delegate void SettingsCreatedEvent();
 
     bool Submit();
-    int GetVectorTableValue(int whichTable, int whichEntry);
+    public int ReadRomVectorTableEntryValueWord(int vectorEntryTableStartOffset);
     bool IsProbablyValidDetection();
     string GetDetectionMessage();
 }

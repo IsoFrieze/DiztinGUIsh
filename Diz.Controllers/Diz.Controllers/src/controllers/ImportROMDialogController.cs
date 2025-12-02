@@ -6,6 +6,7 @@ using Diz.Controllers.interfaces;
 using Diz.Core.Interfaces;
 using Diz.Core.serialization;
 using Diz.Core.util;
+using Diz.Cpu._65816;
 using Diz.Cpu._65816.import;
 using JetBrains.Annotations;
 
@@ -123,7 +124,7 @@ public class ImportRomDialogController : IImportRomDialogController
         View?.RefreshUi();
         SyncVectorTableEntriesFromGui();
     }
-
+    
     private void SyncVectorTableEntriesFromGui()
     {
         Builder.OptionClearGenerateVectorTableLabels();
@@ -168,19 +169,14 @@ public class ImportRomDialogController : IImportRomDialogController
 
         return true;
     }
-
-    public int GetVectorTableValue(int whichTable, int whichEntry)
+    
+    public int ReadRomVectorTableEntryValueWord(int vectorEntryTableStartOffset)
     {
-        Debug.Assert(whichTable is 0 or 1);
-        var tableOffset = 0x10 * whichTable;
-
-        Debug.Assert(whichEntry is >= 0 and < 6);
-        var vectorEntry = 2 * whichEntry;
-
-        var baseAddr = RomSettingsOffset + 15;
-        var romOffset = baseAddr + tableOffset + vectorEntry;
-
-        var vectorValue = RomBytes[romOffset] + (RomBytes[romOffset + 1] << 8);
-        return vectorValue;
+        Debug.Assert(vectorEntryTableStartOffset % 2 == 0);
+        var romOffset = RomSettingsOffset + CpuVectorTable.VectorTableSettingsOffset + vectorEntryTableStartOffset;
+        return ReadRomWord(romOffset);
     }
+
+    private int ReadRomWord(int romOffset) => 
+        RomBytes[romOffset] + (RomBytes[romOffset + 1] << 8);
 }

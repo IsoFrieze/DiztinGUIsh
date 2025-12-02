@@ -38,7 +38,6 @@ namespace Diz.Core.serialization
         
         /// <summary>
         /// List of Rom offsets (not SNES addresses) for labels for initial vector tables/etc
-        /// TODO: actually... we probably want these to be SNES addresses after all.
         /// </summary>
         public Dictionary<int, Label> InitialLabels
         {

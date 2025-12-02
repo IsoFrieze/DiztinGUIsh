@@ -379,10 +379,7 @@ namespace Diz.Core.util
             else
                 rom = allFileBytes;
 
-            if (rom.Length < 0x8000)
-                throw new InvalidDataException("This ROM is too small. It can't be opened.");
-
-            return rom;
+            return rom.Length < 0x8000 ? throw new InvalidDataException("This ROM is too small. It can't be opened.") : rom;
         }
 
         public static Dictionary<int, FlagType> GenerateHeaderFlags(int romSettingsOffset, IReadOnlyList<byte> romBytes)
@@ -392,18 +389,22 @@ namespace Diz.Core.util
             if (romSettingsOffset == -1)
                 return flags;
             
+            // cart title: either ASCII or shiftJIS (japanese) encoded    x21 bytes
             for (var i = 0; i < LengthOfTitleName; i++)
                 flags.Add(romSettingsOffset - LengthOfTitleName + i, FlagType.Text);
             
+            // bunch of 1-byte fields   x7 bytes
             for (var i = 0; i < 7; i++) 
                 flags.Add(romSettingsOffset + i, FlagType.Data8Bit);
             
+            // checksum (2 bytes each)  x2 words
             for (var i = 0; i < 4; i++) 
                 flags.Add(romSettingsOffset + 7 + i, FlagType.Data16Bit);
             
+            // vector table entries (we'll add labels to each of these later). 2x bytes each x 16 entries
             for (var i = 0; i < 0x20; i++) 
                 flags.Add(romSettingsOffset + 11 + i, FlagType.Pointer16Bit);
-
+            
             if (romBytes[romSettingsOffset - 1] == 0)
             {
                 flags.Remove(romSettingsOffset - 1);
