@@ -278,10 +278,10 @@ public class SnesSampleRomDataFactory : ISampleDataFactory
 
         // inject the game name into the bytes
         // This is a UTF8 string that needs to be converted to ShiftJIS (Ascii w/some japanese chars) encoding.
-        snesApi.SetCartridgeTitle(GetSampleUtf8CartridgeTitle());
+        snesApi!.SetCartridgeTitle(GetSampleUtf8CartridgeTitle());
 
         // initialize some SNES header stuff (this is not complete, feel free to add things that are useful)
-        Debug.Assert(snesApi.RomMapMode == RomMapMode.LoRom);
+        Debug.Assert(snesApi!.RomMapMode == RomMapMode.LoRom);
         Debug.Assert(snesApi.RomSpeed == RomSpeed.FastRom);
         var romSettingsOffset = RomUtil.GetRomSettingOffset(RomMapMode.LoRom);
         const int loromAndFastRom = 0x30;

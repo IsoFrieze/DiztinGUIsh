@@ -7,7 +7,7 @@ namespace Diz.Ui.Eto.ui;
 public class EtoProgressForm : Dialog, IProgressView
 {
     public event EventHandler? OnFormClosed;
-    private Label mainText;
+    private Label mainText = null!;
 
     public EtoProgressForm()
     {

@@ -10,7 +10,7 @@ namespace Diz.Ui.Eto;
 public class DizEtoAppSettingsProvider : IDizAppSettings
 {
     public event PropertyChangedEventHandler? PropertyChanged;
-    public string LastProjectFilename { get; set; }
+    public string? LastProjectFilename { get; set; }
     public bool OpenLastFileAutomatically { get; set; }
-    public string LastOpenedFile { get; set; }
+    public string? LastOpenedFile { get; set; }
 }
