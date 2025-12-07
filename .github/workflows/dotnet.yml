@@ -27,6 +27,47 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: 'recursive'
+          fetch-depth: 0  # Fetch all history for all tags
+
+      - name: Auto-bump version and create tag on release branch
+        if: github.ref == 'refs/heads/release' && github.event_name == 'push'
+        run: |
+          # Get the latest tag
+          $latestTag = git describe --tags --abbrev=0 2>$null
+          if (-not $latestTag) {
+            $latestTag = "v0.0.0.0"
+          }
+          
+          Write-Host "Latest tag: $latestTag"
+          
+          # Extract version numbers (remove 'v' prefix)
+          $version = $latestTag.Substring(1)
+          $versionParts = $version.Split('.')
+          
+          # Ensure we have 4 parts (major.minor.patch.build)
+          while ($versionParts.Length -lt 4) {
+            $versionParts += "0"
+          }
+          
+          # Bump the patch version (third number)
+          $major = [int]$versionParts[0]
+          $minor = [int]$versionParts[1]
+          $patch = [int]$versionParts[2] + 1
+          $build = [int]$versionParts[3]
+          
+          $newVersion = "$major.$minor.$patch.$build"
+          $newTag = "v$newVersion"
+          
+          Write-Host "New tag: $newTag"
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create and push the new tag
+          git tag $newTag
+          git push origin $newTag
+        shell: powershell
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
