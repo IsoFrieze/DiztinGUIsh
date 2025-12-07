@@ -32,25 +32,25 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 9.0.x
-
-# not currently working consistently, don't cache
-#    - name: Nuget (restore from cache)
-#      uses: actions/cache@v1
-#      id: cache
-#      with:
-#        path: ~/.nuget/packages
-#        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-#    
-#    - name: NuGet (Restore from scratch if needed)
-#      if: steps.cache.outputs.cache-hit != 'true'
-#      run: dotnet restore --locked-mode
+      
+      # not currently working consistently, don't cache
+      #    - name: Nuget (restore from cache)
+      #      uses: actions/cache@v1
+      #      id: cache
+      #      with:
+      #        path: ~/.nuget/packages
+      #        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+      #    
+      #    - name: NuGet (Restore from scratch if needed)
+      #      if: steps.cache.outputs.cache-hit != 'true'
+      #      run: dotnet restore --locked-mode
 
       - name: NuGet (Restore always from scratch)
         run: dotnet restore --locked-mode
 
       - name: Build
         run: dotnet build --no-restore --configuration Release
-      
+
       - name: Test
         run: dotnet test --no-build --configuration Release
 
