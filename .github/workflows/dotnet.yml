@@ -49,11 +49,11 @@ jobs:
             $versionParts += "0"
           }
           
-          # Bump the patch version (third number)
+          # Bump the patch version (third number) and reset build to 0
           $major = [int]$versionParts[0]
           $minor = [int]$versionParts[1]
           $patch = [int]$versionParts[2] + 1
-          $build = [int]$versionParts[3]
+          $build = 0
           
           $newVersion = "$major.$minor.$patch.$build"
           $newTag = "v$newVersion"
