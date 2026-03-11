@@ -90,6 +90,7 @@ public interface IFixInstructionUtils
 public interface ITraceLogImporters
 {
     void ImportBizHawkCdl(string filename);
+    void ImportMesen2Cdl(string filename);
     long ImportBsnesUsageMap(string fileName);
     long ImportBsnesTraceLogs(string[] fileNames);
 }
