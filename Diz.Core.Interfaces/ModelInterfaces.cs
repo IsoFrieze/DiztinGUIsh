@@ -100,8 +100,8 @@ namespace Diz.Core.Interfaces
     public interface IInstructionGettable
     {
         int GetInstructionLength(int offset);
-        string GetInstructionStr(int offset);
-        public CpuInstructionDataFormatted GetInstructionData(int offset);
+        string GetInstructionStr(int offset, bool showMnemonicHint);
+        public CpuInstructionDataFormatted GetInstructionData(int offset, bool showMnemonicHint);
     }
     
     public interface IMarkable

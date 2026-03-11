@@ -39,9 +39,9 @@ public class Cpu<TByteSource> where TByteSource : IRomByteFlagsGettable, IRomByt
         return -1;
     }
 
-    public virtual string GetInstructionStr(TByteSource data, int offset) => "";
+    public virtual string GetInstructionStr(TByteSource data, int offset, bool showMnemonicHint) => "";
     
-    public virtual CpuInstructionDataFormatted GetInstructionData(TByteSource data, int offset) => new();
+    public virtual CpuInstructionDataFormatted GetInstructionData(TByteSource data, int offset, bool showMnemonicHint) => new();
     
     public virtual int AutoStepSafe(TByteSource byteSource, int offset) => offset;
 

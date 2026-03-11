@@ -462,11 +462,11 @@ public class SnesApi : ISnesData
     public int GetIntermediateAddress(int offset, bool resolve = false) => 
         GetCpu(offset).GetIntermediateAddress(this, offset, resolve);
 
-    public string GetInstructionStr(int offset) => 
-        GetCpu(offset).GetInstructionStr(this, offset);
+    public string GetInstructionStr(int offset, bool showMnemonicHint) => 
+        GetCpu(offset).GetInstructionStr(this, offset, showMnemonicHint);
 
-    public CpuInstructionDataFormatted GetInstructionData(int offset) =>
-        GetCpu(offset).GetInstructionData(this, offset);
+    public CpuInstructionDataFormatted GetInstructionData(int offset, bool showMnemonicHint) =>
+        GetCpu(offset).GetInstructionData(this, offset, showMnemonicHint);
     
     public void RescanInOutPoints()
     {

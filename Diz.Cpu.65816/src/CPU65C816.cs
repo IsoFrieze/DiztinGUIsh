@@ -240,17 +240,17 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return -1;
     }
     
-    public override string GetInstructionStr(TByteSource data, int offset) => 
-        GetInstructionData(data, offset).FullGeneratedText; // shortcut
+    public override string GetInstructionStr(TByteSource data, int offset, bool showMnemonicHint) => 
+        GetInstructionData(data, offset, showMnemonicHint).FullGeneratedText; // shortcut
 
-    public override CpuInstructionDataFormatted GetInstructionData(TByteSource data, int offset)
+    public override CpuInstructionDataFormatted GetInstructionData(TByteSource data, int offset, bool showMnemonicHint)
     {
         var mode = GetAddressMode(data, offset);
         if (mode == null)
             throw new InvalidDataException("Expected non-null addressing mode");
             
         var format = GetInstructionFormatString(data, offset);
-        var mnemonic = GetMnemonic(data, offset);
+        var mnemonic = GetMnemonic(data, offset, showMnemonicHint);
             
         int numDigitsForOperand1 = 0, numDigitsForOperand2 = 0;
         int? operandValue1 = null, operandValue2 = null;

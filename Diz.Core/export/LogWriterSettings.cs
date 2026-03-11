@@ -50,6 +50,12 @@ public record LogWriterSettings : ILogWriterSettings
     public bool IncludeUnusedLabels  { get; init; }
     public bool PrintLabelSpecificComments { get; init; }
     public bool GeneratePlusMinusLabels { get; init; } = true;
+    
+    // EXTREMELY EXPERIMENTAL AND NOT COMPLETE:
+    // treat output as NES rom assembly (skips certain directives and avoids banks/etc)
+    public bool NesMode { get; init; }
+    // WHAT WE WANT = false;
+        = true; // DO NOT CHECK THIS IN TODO hook up to GUI or file format
 
     // this is an experimental option, if useful, remove [XmlIgnore] and add the UI for this
     [XmlIgnore] public bool AppendFlagTypeToComment { get; init; } = false;

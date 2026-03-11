@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
@@ -357,8 +358,51 @@ namespace Diz.Core.util
         /// <returns>Raw bytes</returns>
         /// <exception cref="InvalidDataException"></exception>
         [NotNull]
-        public static byte[] ReadRomFileBytes(string filename) => 
-            RemoveSmcHeader(File.ReadAllBytes(filename));
+        public static byte[] ReadRomFileBytes(string filename)
+        {
+            var rawBytes = File.ReadAllBytes(filename);
+
+            if (Path.GetExtension(filename).Equals(".smc", StringComparison.InvariantCultureIgnoreCase) || Path.GetExtension(filename).Equals(".sfc", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // supported path: SNES ROM
+                return RemoveSnesSmcHeader(rawBytes);
+            }
+            
+            if (Path.GetExtension(filename).Equals(".nes", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // hacky unsupported NES ROM path. (experimental)
+                // skips header parsing for now TODO: implement
+                return RemoveINesHeader(rawBytes);
+            }
+            
+            throw new InvalidDataException("Unsupported ROM file format.");
+        }
+        
+        // NES roms only: strip (and don't bother to parse) NES header
+        // TODO: WE NEED THIS DATA when doing it for real. come back and parse the struct
+        public static byte[] RemoveINesHeader(byte[] rawBytes)
+        {
+            if (rawBytes == null || rawBytes.Length < 16)
+                throw new InvalidDataException("File is too small to be a valid .nes ROM.");
+
+            if (rawBytes[0] != (byte)'N' ||
+                rawBytes[1] != (byte)'E' ||
+                rawBytes[2] != (byte)'S' ||
+                rawBytes[3] != 0x1A)
+            {
+                throw new InvalidDataException("Invalid .nes header.");
+            }
+
+            var hasTrainer = (rawBytes[6] & 0x04) != 0;
+            var offset = 16 + (hasTrainer ? 512 : 0);
+
+            if (rawBytes.Length < offset)
+                throw new InvalidDataException("File is too small to contain the declared .nes header/trainer.");
+
+            var romBytes = new byte[rawBytes.Length - offset];
+            Buffer.BlockCopy(rawBytes, offset, romBytes, 0, romBytes.Length);
+            return romBytes;
+        }
 
         /// <summary>
         /// Take all ROM file bytes from disk, remove SMC header if present
@@ -366,7 +410,7 @@ namespace Diz.Core.util
         /// <param name="allFileBytes"></param>
         /// <returns></returns>
         /// <exception cref="InvalidDataException"></exception>
-        private static byte[] RemoveSmcHeader(byte[] allFileBytes)
+        private static byte[] RemoveSnesSmcHeader(byte[] allFileBytes)
         {
             var rom = new byte[allFileBytes.Length & 0x7FFFFC00];
 
