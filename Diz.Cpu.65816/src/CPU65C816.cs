@@ -325,12 +325,60 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         {
             var intermediateAddress = data.GetIntermediateAddress(offset, resolve: true);
             
-            // hack 1: force non-zeropage optimization to preserve byte-identical output
+            var isZeroPageAddr = intermediateAddress is >= 0 and <= 0xFF;
+            
+            var shouldForceZeroPage =
+                !operandIsNumeric &&  // not 100% sure we should check operandIsNumeric. remove to spam z: a little more but is maybe safer.
+                isZeroPageAddr &&
+                mode is Cpu65C816Constants.AddressMode.DirectPage 
+                    or Cpu65C816Constants.AddressMode.DirectPageXIndex 
+                    or Cpu65C816Constants.AddressMode.DirectPageYIndex
+                    or Cpu65C816Constants.AddressMode.DirectPageIndirect 
+                    or Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect 
+                    or Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex;
+
+            var shouldForceAbsolute =
+                isZeroPageAddr &&
+                mode is Cpu65C816Constants.AddressMode.Address 
+                or Cpu65C816Constants.AddressMode.AddressXIndex 
+                or Cpu65C816Constants.AddressMode.AddressYIndex;
+
+            // force working around non-zeropage optimization to preserve byte-identical output
             // (note: not sure how this interacts in all cases with the other mapping hack below, may require better integration with the two)
-            if (intermediateAddress is >= 0 and <= 0xFF && mode is Cpu65C816Constants.AddressMode.Address or Cpu65C816Constants.AddressMode.AddressXIndex or Cpu65C816Constants.AddressMode.AddressYIndex)
-            {
+            if (shouldForceZeroPage) {
+                // explanation: 
+                // take these bytes from the ROM:
+                // 85 A7
+                // that means:
+                // STA $A7
+                // if we replace A7 with a label:
+                // my_var = $0000A7
+                // or 
+                // my_var = $A7
+                // and do this:
+                // STA my_var
+                // ca65 will not know it's being accessed via the zeropage and will use two bytes as the output:
+                // 85 00 A7      *I think. double check.
+                // that's functionally identical code (even if a bit slower), but, it breaks byte-identical compatability with the output (which we care about for ROM disassemblies). 
+                // what we need to do is tell it, no, this is OK to use as a zeropage, and only use one byte. we can prepend "z:" to force that to output as 1 byte:
+                // STA z:my_var
+                operandFinalStr1 = $"z:{operandFinalStr1}";
+            }  else if (shouldForceAbsolute) { 
                 // prefix with "a:" to prevent the assembler from auto-optimizing this to 1 byte
-                // it's wasteful but we're going for whatever the original ROM was doing
+                // it's TECHNICALLY wasteful and a problem with the original ROM code, BUT we're going to replicate it for the sake of byte-identical output.
+                //
+                // explanation: if the original instruction bytes looked like this:
+                // B9 44 00
+                // that means:
+                // LDA $0044,Y
+                // but TECHNICALLY you don't need the leading zeroes to access $44.  so ca65 parses LDA and figures that out and emits THIS instead (which is shorter):
+                // B9 44
+                // which is functionally identical (and faster at runtime).
+                //
+                // but, for us it's bad because it breaks byte-identical compatability with the original ROM.
+                // so instead, what we do is emit this directive in ca65:
+                // LDA a:$0044,Y
+                // that "a:" prefix forces it to use $0044 and NOT optimize it to just $44, which is what WE want.
                 operandFinalStr1 = $"a:{operandFinalStr1}";
             }
             
