@@ -577,38 +577,54 @@ Special directives can be added to comments to alter label generation. All comma
 
 USE AT YOUR OWN RISK. THESE HAVE MINIMAL CHECKING OR VALIDATION
 
-- ```!!n```
+```
+!!n
+```
 - Don't generate labels for this line or the destination IA
 - This is great if Diz is making up labels that aren't appropriate for this line (like PEA addresses, or for sections of code that modify the D register to load parts of the game dynamically) 
 
 Example: override the current label for this line and paste the following text in:
-```!!o [whatever you want to show up there] ; [optional comment]```
+```
+!!o [whatever you want to show up there] ; [optional comment]
+```
 
 You can use structs, labels, math, constants, anything you want.  Example: Say you have a line like:
 
-```LDA.W #$0B,X```
+```asm
+LDA.W #$0B,X
+```
 
 type in:
 
-```!!o !num_in_party```
+```
+!!o !num_in_party
+```
 
 and the new line will be:
 
-```LDA.W #!num_in_party,X```
+```asm
+LDA.W #!num_in_party,X
+```
+
+If you use this with an string that looks like an asar define (i.e. starts with an exclamation point, like "!num_players", "!max_health", "!max_height", etc), then Diz will also automatically create a label for you in defines.asm and assign it to $0B and create a define for you in defines.asm.
 
 -----
 
 or let's say you have:
 
-```LDA.W some_label,X```
+```asm
+LDA.W some_label,X
+```
 
 then you can override with:
 
-```!!o some_address+some_other_address```
+```
+!!o some_address+some_other_address
+```
 
-```LDA.W some_address+some_other_address,X```
-
-If you use this with an asar define like "!num_players", then Diz will take the original value of $0B and create a define for you in defines.asm.
+```asm
+LDA.W some_address+some_other_address,X
+```
 
 This lets you annotate constants as you go and re-use them through the project.
 
@@ -623,7 +639,7 @@ further down, use the !!ir directive to mark the end of a dynamic region.
 
 example:
 
-```
+```asm
 STZ $00 ; whatever here, then
 
 some_graphics:      !!is
@@ -637,7 +653,7 @@ STZ $00 ; whatever after
 
 this will generate output like this, with the contents between start and end being in a new file that's included:
 
-```
+```asm
 STZ $00
 incsrc "some_graphics.asm"
 STZ $00
