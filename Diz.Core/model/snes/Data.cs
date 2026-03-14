@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -107,6 +108,19 @@ public class Data : IData
         // only in views, remove from here.
         return Labels.GetLabelComment(snesAddress) ?? "";
     }
+    
+    public OperandOverride? GetSpecialDirectiveOverrideFromComments(int offset)
+    {
+        // here be dragons.  we'll let the user override anything they ever wanted to in the comments.
+        // there will be, for now, very little validation/etc.
+        var snesAddress = ConvertPCtoSnes(offset);
+        if (snesAddress == -1)
+            return null;
+        
+        // searches both ROM comments and comments from the label list
+        var comment = GetCommentText(snesAddress);
+        return CpuUtils.ParseCommentSpecialDirective(comment);
+    }
 
     public void AddComment(int i, string v, bool overwrite)
     {
@@ -133,7 +147,7 @@ public class Data : IData
         return GetRomByte(ConvertSnesToPc(snesAddress));
     }
 
-    public int? GetRomWord(int offset)
+    public uint? GetRomWord(int offset)
     {
         if (offset + 1 >= GetRomSize())
             return null;
@@ -143,10 +157,10 @@ public class Data : IData
         if (!rb1Null.HasValue || !rb2Null.HasValue)
             return null;
 
-        return rb1Null + (rb2Null << 8);
+        return (uint?)(rb1Null + (rb2Null << 8));
     }
 
-    public int? GetRomLong(int offset)
+    public uint? GetRomLong(int offset)
     {
         if (offset + 2 >= GetRomSize())
             return null;
@@ -156,10 +170,10 @@ public class Data : IData
         if (!romWord.HasValue || !rb3Null.HasValue)
             return null;
 
-        return romWord + (rb3Null << 16);
+        return (uint?)(romWord + (rb3Null << 16));
     }
 
-    public int? GetRomDoubleWord(int offset)
+    public uint? GetRomDoubleWord(int offset)
     {
         if (offset + 3 >= GetRomSize())
             return null;
@@ -169,7 +183,7 @@ public class Data : IData
         if (!romLong.HasValue || !rb4Null.HasValue)
             return null;
 
-        return romLong + (rb4Null << 24);
+        return (uint?)(romLong + (rb4Null << 24));
     }
 
     public int ConvertPCtoSnes(int offset)

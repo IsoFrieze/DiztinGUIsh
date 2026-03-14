@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
-using Diz.Core;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -74,7 +73,8 @@ public interface ISnesApi<out TData> :
     IArchitectureApi,
     IMarkOperandAndOpcode,
     ICommentTextProvider,
-    IRegionProvider
+    IRegionProvider,
+    ICpuDirectiveProvider
 
     where TData : IData
 {
@@ -164,23 +164,26 @@ public class SnesApi : ISnesData
     public int ConvertSnesToPc(int address) => 
         RomUtil.ConvertSnesToPc(address, Data.RomMapMode, GetRomSize());
 
-    public int GetIntermediateAddressOrPointer(int offset)
+    public uint? GetIntermediateAddressOrPointer(int offset)
     {
         switch (GetFlag(offset))
         {
             case FlagType.Unreached:
             case FlagType.Opcode:
-                return GetIntermediateAddress(offset, true);
+                var ia = GetIntermediateAddress(offset, true);
+                return ia == -1 ? null : (uint?)ia;
             case FlagType.Pointer16Bit:
                 var romWord = Data.GetRomWord(offset);
                 if (!romWord.HasValue)
-                    return -1;
+                    return null;
                 
                 // the original way: use what is written in the UI
                 var bank = GetDataBank(offset); // allows overriding from the UI, but, you HAVE to set this correctly
                 
                 // but if it's zero (which can be a valid bank but usually won't be
                 // then, autodetect the bank from the bank we're in.
+                // TODO: BUG: this is a dangerous assumption. we need to add a new value for banks like -1 or "not set" and only use that.
+                //   because bank 0 is often legit and shouldn't be used for other stuff.
                 if (bank == 0)
                 {
                     // new way, assumes the bank is the same as the location of the pointer
@@ -190,22 +193,20 @@ public class SnesApi : ISnesData
                         bank = RomUtil.GetBankFromSnesAddress(snesAddrAtOffset);
                 }
 
-                return (bank << 16) | (int)romWord;
+                return (uint)(bank << 16) | romWord;
             case FlagType.Pointer24Bit:
+                return Data.GetRomLong(offset);
             case FlagType.Pointer32Bit:
-                var romLong = Data.GetRomLong(offset);
-                if (!romLong.HasValue)
-                    return -1;
-                    
-                return (int)romLong;
+                return Data.GetRomDoubleWord(offset);
         }
-        return -1;
+        
+        return null;
     }
     
     public bool IsMatchingIntermediateAddress(int intermediateAddress, int addressToMatch)
     {
         var intermediateAddressOrPointer = GetIntermediateAddressOrPointer(intermediateAddress);
-        var destinationOfIa = ConvertSnesToPc(intermediateAddressOrPointer);
+        var destinationOfIa = intermediateAddressOrPointer != null ? ConvertSnesToPc((int)intermediateAddressOrPointer.Value) : -1;
 
         return destinationOfIa == addressToMatch;
     }
@@ -227,7 +228,7 @@ public class SnesApi : ISnesData
     public string GetBankName(int bankIndex)
     {
         var bankSnesByte = GetSnesBankByte(bankIndex);
-        return Util.NumberToBaseString(bankSnesByte, Util.NumberBase.Hexadecimal, 2);
+        return Util.NumberToBaseString((uint)bankSnesByte, Util.NumberBase.Hexadecimal, 2);
     }
 
     private int GetSnesBankByte(int bankIndex)
@@ -571,9 +572,9 @@ public class SnesApi : ISnesData
     }
 
     public byte? GetRomByte(int offset) => Data.GetRomByte(offset);
-    public int? GetRomWord(int offset) => Data.GetRomWord(offset);
-    public int? GetRomLong(int offset) => Data.GetRomLong(offset);
-    public int? GetRomDoubleWord(int offset) => Data.GetRomDoubleWord(offset);
+    public uint? GetRomWord(int offset) => Data.GetRomWord(offset);
+    public uint? GetRomLong(int offset) => Data.GetRomLong(offset);
+    public uint? GetRomDoubleWord(int offset) => Data.GetRomDoubleWord(offset);
     public string GetCommentText(int snesAddress) => Data.GetCommentText(snesAddress);
     public string? GetComment(int snesAddress) => Data.GetComment(snesAddress);
     
@@ -607,6 +608,7 @@ public class SnesApi : ISnesData
     public ObservableCollection<IRegion> Regions => Data.Regions;
     public IRegion? GetRegion(int snesAddress) => Data.GetRegion(snesAddress);
     public IRegion? CreateNewRegion() => Data.CreateNewRegion();
+    public OperandOverride? GetSpecialDirectiveOverrideFromComments(int offset) => Data.GetSpecialDirectiveOverrideFromComments(offset);
 }
 
 public interface ISnesSampleProjectFactory : IProjectFactory
@@ -770,8 +772,8 @@ public static class SnesApiExtensions
             {
                 numMisalignedFound++;
                 outputTextLog +=
-                    $"{Util.NumberToBaseString(snesAddress, Util.NumberBase.Hexadecimal, 6, true)} " +
-                    $"(0x{Util.NumberToBaseString(offset, Util.NumberBase.Hexadecimal, 0)}): Operand without Opcode\r\n";
+                    $"{Util.NumberToBaseString((uint)snesAddress, Util.NumberBase.Hexadecimal, 6, true)} " +
+                    $"(0x{Util.NumberToBaseString((uint)offset, Util.NumberBase.Hexadecimal, 0)}): Operand without Opcode\r\n";
             }
             else if (step > 1)
             {
@@ -784,8 +786,8 @@ public static class SnesApiExtensions
                     var expected = Util.GetEnumDescription(check);
                     var actual = Util.GetEnumDescription(@this.GetFlag(offset + i));
                     
-                    outputTextLog += $"{Util.NumberToBaseString(snesAddress, Util.NumberBase.Hexadecimal, 6, true)} " +
-                            $"(0x{Util.NumberToBaseString(offset + i, Util.NumberBase.Hexadecimal, 0)}): " +
+                    outputTextLog += $"{Util.NumberToBaseString((uint)snesAddress, Util.NumberBase.Hexadecimal, 6, true)} " +
+                            $"(0x{Util.NumberToBaseString((uint)(offset + i), Util.NumberBase.Hexadecimal, 0)}): " +
                             $"{actual} is not {expected}\r\n";
                 }
             }

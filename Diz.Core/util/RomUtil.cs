@@ -655,10 +655,14 @@ namespace Diz.Core.util
     
             return true;
         }
-        
-        public static string ConvertNumToHexStr(int num, int numByteDigitsToDisplay)
+
+        public static string ConvertNumToHexStr(uint num, int numByteDigitsToDisplay)
         {
-            num &= ~(-1 << (8 * numByteDigitsToDisplay));
+            var mask = numByteDigitsToDisplay >= 4
+                ? uint.MaxValue
+                : (1u << (8 * numByteDigitsToDisplay)) - 1;
+
+            num &= mask;
             return Util.NumberToBaseString(num, Util.NumberBase.Hexadecimal, 2 * numByteDigitsToDisplay, true);
         }
     }

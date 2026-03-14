@@ -72,7 +72,7 @@ public static class Util
         Decimal = 3, Hexadecimal = 2, Binary = 8
     }
 
-    public static string NumberToBaseString(int v, NumberBase noBase, int d = -1, bool showPrefix = false)
+    public static string NumberToBaseString(uint v, NumberBase noBase, int d = -1, bool showPrefix = false)
     {
         var digits = d < 0 ? (int)noBase : d;
         switch (noBase)
@@ -98,7 +98,7 @@ public static class Util
         
     public static string ToHexString6(int i)
     {
-        return NumberToBaseString(i, NumberBase.Hexadecimal, 6);
+        return NumberToBaseString((uint)i, NumberBase.Hexadecimal, 6);
     }
         
     public static int ParseHexOrBase10String(string data)

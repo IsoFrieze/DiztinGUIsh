@@ -80,7 +80,7 @@ namespace Diz.Test.Tests.RomInterfaceTests
         public static void IA1()
         {
             var data = GetSampleData();
-            Assert.Equal(0x002116, data.GetSnesApi().GetIntermediateAddressOrPointer(0));
+            Assert.Equal(0x002116, (int)data.GetSnesApi()!.GetIntermediateAddressOrPointer(0).Value);
         }
 
         [Fact]
@@ -88,7 +88,7 @@ namespace Diz.Test.Tests.RomInterfaceTests
         {
             var data = GetSampleData();
             data.RomBytes[0].DataBank = 0x7E;
-            Assert.Equal(0x7E2116, data.GetSnesApi().GetIntermediateAddressOrPointer(0));
+            Assert.Equal(0x7E2116, (int)data.GetSnesApi()!.GetIntermediateAddressOrPointer(0).Value);
         }
 
         [Fact(Skip = "Relies on external tool that isn't yet setup")]

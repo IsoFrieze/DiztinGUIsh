@@ -4,6 +4,7 @@ using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Cpu._65816;
 using Diz.Test.Utils;
+using FluentAssertions;
 using Xunit;
 
 namespace Diz.Test;
@@ -41,7 +42,7 @@ public class RomByteTests : ContainerFixture
         var sampleData = createSampleData.Create();
         const int offset = 0x1C1F;
         var result = sampleData.GetSnesApi()?.GetIntermediateAddressOrPointer(offset);
-        Assert.Equal(result, -1);
+        result.Should().BeNull();
     }
         
     [Fact]

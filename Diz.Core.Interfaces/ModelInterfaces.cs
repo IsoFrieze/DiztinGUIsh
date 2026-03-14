@@ -10,9 +10,9 @@ namespace Diz.Core.Interfaces
     public interface IReadOnlyByteSource
     {
         byte? GetRomByte(int offset);
-        int? GetRomWord(int offset);
-        int? GetRomLong(int offset);
-        int? GetRomDoubleWord(int offset);
+        uint? GetRomWord(int offset);
+        uint? GetRomLong(int offset);
+        uint? GetRomDoubleWord(int offset);
     }
 
     public interface IInOutPointSettable
@@ -198,7 +198,8 @@ namespace Diz.Core.Interfaces
         IArchitectureSettable,
         IArchitectureGettable,
         ICommentTextProvider,
-        IRegionProvider
+        IRegionProvider,
+        ICpuDirectiveProvider
     {
         IDataStoreProvider<IArchitectureApi> Apis { get; }
         IDataStoreProvider<IDataTag> Tags { get; }
@@ -241,7 +242,7 @@ namespace Diz.Core.Interfaces
 
     public interface ISnesIntermediateAddress
     {
-        int GetIntermediateAddressOrPointer(int offset);
+        uint? GetIntermediateAddressOrPointer(int offset);
         
         // -1 if not found
         int GetIntermediateAddress(int offset, bool resolve = false);
