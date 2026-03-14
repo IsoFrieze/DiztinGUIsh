@@ -47,8 +47,8 @@ public interface IMarkManyView<TDataSource> : IModalDialog
     object GetPropertyValue();
     [CanBeNull] IMarkManyController<TDataSource> Controller { get; set; }
 
-    void AttemptSetSettings(Dictionary<MarkCommand.MarkManyProperty, object> settings);
-    Dictionary<MarkCommand.MarkManyProperty, object> SaveCurrentSettings();
+    void RestoreUiFromSettings(MarkManyViewSettings settings);
+    MarkManyViewSettings BuildSettingsFromUi();
 }
 
 

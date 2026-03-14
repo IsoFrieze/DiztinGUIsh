@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#nullable enable
+
 using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.commands;
@@ -11,45 +11,49 @@ namespace Diz.Controllers.controllers;
 public class MarkManyController<TDataSource> : IMarkManyController<TDataSource> where TDataSource 
     : IRomSize
 {
-    public IDataRange DataRange { get; }
     public TDataSource Data { get; }
-    public IMarkManyView<TDataSource> MarkManyView { get; }
-    public int DesiredStartingCount { get; set; } = 0x10;
+    
+    public IDataRange DataRange { get; private set; }
 
-    public MarkManyController(int offset, MarkCommand.MarkManyProperty initialProperty, TDataSource data, IMarkManyView<TDataSource> view)
+    private readonly IMarkManyView<TDataSource> markManyView;
+
+    public MarkManyController(TDataSource data, IMarkManyView<TDataSource> view)
     {
         Data = data;
-        MarkManyView = view;
-        MarkManyView.Controller = this;
-
+        markManyView = view;
+        markManyView.Controller = this;
+        
         DataRange = new CorrectingRange(Data.GetRomSize());
-
-        DataRange.StartIndex = offset;
-        DataRange.RangeCount = Math.Min(
-            DesiredStartingCount, 
-            DataRange.MaxCount - DataRange.StartIndex
-        );
-
-        MarkManyView.Property = initialProperty;
     }
 
-    private MarkCommand CreateCommandFromView() =>
+    private MarkCommand BuildCommandFromViewValues() =>
         new()
         {
             Start = DataRange.StartIndex,
             Count = DataRange.RangeCount,
-            Value = MarkManyView.GetPropertyValue(),
-            Property = MarkManyView.Property,
+            Value = markManyView.GetPropertyValue(),
+            Property = markManyView.Property,
         };
 
-    public MarkCommand GetMarkCommand()
+    // returns a command that has parameters selected by the user in the GUI
+    // or, null if the user cancels
+    public MarkCommand? Show(int startOffset = 0, int count = 0x10, MarkManyViewSettings? inputSettings = null)
     {
+        var settingsToUse = inputSettings ?? new MarkManyViewSettings();
+        
+        DataRange = new CorrectingRange(Data.GetRomSize())
+        {
+            StartIndex = startOffset,
+            RangeCount = count,          // will be clamped if too big for the rom
+        };
+        
         // attempt to set to previous values from last run, if they are compatible
-        MarkManyView.AttemptSetSettings(Settings);
-        var command = !MarkManyView.PromptDialog() ? null : CreateCommandFromView();
-        Settings = MarkManyView.SaveCurrentSettings();
-        return command;
+        markManyView.RestoreUiFromSettings(settingsToUse);
+        
+        return !markManyView.PromptDialog() 
+            ? null 
+            : BuildCommandFromViewValues();
     }
-
-    public Dictionary<MarkCommand.MarkManyProperty, object> Settings { get; set; } = new();
+    
+    public MarkManyViewSettings GetCurrentSettings() => markManyView.BuildSettingsFromUi();
 }
