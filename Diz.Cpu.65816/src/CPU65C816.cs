@@ -307,6 +307,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
         var operandFinalStr1 = operandOriginalStr1;
         var operandFinalStr2 = operandOriginalStr2;
+
+        var defineNameUsed = "";
         
         // try a substitution, if any exist. only for opcodes with ONE operand (not going to handle the ones with two)
         if (overridesAllowed)
@@ -316,7 +318,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             {
                 if (!string.IsNullOrEmpty(specialDirective.TextToOverride))
                 {
-                    operandFinalStr1 = specialDirective.TextToOverride; // allow overriding here
+                    defineNameUsed = specialDirective.TextToOverride.StartsWith('!') ? specialDirective.TextToOverride : ""; // save with "!" in the name
+                    
+                    // allow overriding here
+                    operandFinalStr1 = specialDirective.GetTextOverrideAsLabel(chopExclamationPoint: !showMnemonicHint); // chop "!" for output if NES
                     operandIsNumeric = false;
                 }
                 else if (specialDirective.ConstantFormatOverride == OperandOverride.FormatOverride.AsDecimal && operandValue1!=null)
@@ -327,7 +332,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         }
         
         // NES hack (this is absolutely terrible)
-        var doNesHacks = !showMnemonicHint;  // TODO: showMnemonicHint arg should probably just be replaced with assemblerflavor
+        var doNesHacks = !showMnemonicHint;  // TODO: showMnemonicHint arg should probably just be replaced with assemblerflavor at this point.
         if (doNesHacks)
         {
             var intermediateAddress = data.GetIntermediateAddress(offset, resolve: true);
@@ -422,6 +427,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         var outputInstructionData = new CpuInstructionDataFormatted  {
             // generated a string like: "LDA.W $01,X" or "JSR.W fn_do_stuff"
             FullGeneratedText = finalStr,
+            
+            DefineNameUsed = defineNameUsed,
             
             // save these in case useful later
             OriginalNonOverridenOperand1 = operandOriginalStr1,

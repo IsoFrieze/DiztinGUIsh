@@ -7,6 +7,14 @@ public class OperandOverride
     // completely override the operand text with this user-specified text
     // this is the complete wild west: no checks will be done, etc.
     public string TextToOverride { get; set; } = "";
+
+    public string GetTextOverrideAsLabel(bool chopExclamationPoint)
+    {
+        if (TextToOverride.Length == 0)
+            return "";
+            
+        return chopExclamationPoint ? TextToOverride.TrimStart('!') : TextToOverride;
+    }
         
     // if true, never print a label (always print the raw hex)
     // useful for things like PEA or PER instructions which may falsely grab labels
