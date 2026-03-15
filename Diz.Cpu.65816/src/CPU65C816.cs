@@ -342,12 +342,9 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             var shouldForceZeroPage =
                 !operandIsNumeric &&  // not 100% sure we should check operandIsNumeric. remove to spam z: a little more but is maybe safer.
                 isZeroPageAddr &&
-                mode is Cpu65C816Constants.AddressMode.DirectPage 
-                    or Cpu65C816Constants.AddressMode.DirectPageXIndex 
-                    or Cpu65C816Constants.AddressMode.DirectPageYIndex
-                    or Cpu65C816Constants.AddressMode.DirectPageIndirect 
-                    or Cpu65C816Constants.AddressMode.DirectPageXIndexIndirect 
-                    or Cpu65C816Constants.AddressMode.DirectPageIndirectYIndex;
+                mode is Cpu65C816Constants.AddressMode.DirectPage
+                    or Cpu65C816Constants.AddressMode.DirectPageXIndex
+                    or Cpu65C816Constants.AddressMode.DirectPageYIndex;
 
             var shouldForceAbsolute =
                 isZeroPageAddr &&
