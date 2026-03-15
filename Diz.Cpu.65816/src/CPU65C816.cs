@@ -331,12 +331,12 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             }
         }
         
+        var intermediateAddress = data.GetIntermediateAddress(offset, resolve: true);
+        
         // NES hack (this is absolutely terrible)
         var doNesHacks = !showMnemonicHint;  // TODO: showMnemonicHint arg should probably just be replaced with assemblerflavor at this point.
         if (doNesHacks)
         {
-            var intermediateAddress = data.GetIntermediateAddress(offset, resolve: true);
-            
             var isZeroPageAddr = intermediateAddress is >= 0 and <= 0xFF;
             
             var shouldForceZeroPage =
@@ -392,35 +392,22 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             }
             
             // hack 1: NES memory mappers
-            if (ShouldLowordOperand1(mode) && !operandIsNumeric && intermediateAddress != -1) {
-                // NES only. we need to hack in some mapper code. this is absolutely horrible beyond all words.
-                // please come after me with a pitchfork for even attempting this.
-                // all this code is bad and I should feel bad. -Dom
-                
-                // attempt 1: clip values to 16-bit or ld65/ca65 will choke on them
-                // this may not always be the right thing to do but it probably is for now.
-                // operandFinalStr1 = $".loword({operandFinalStr1})"; // THIS IS WRONG. WONT HANDLE ALL MAPPINGS
-            
-                // figure out which part of the rom mapping this is for MMC1 - ULTRAHACKY. HANDLE THIS BETTER ELSEWHERE
-                var baseAddr = (intermediateAddress & 0xC000) switch {
-                    0x8000 => "$8000",
-                    0xC000 => "$C000",
-                    _ => ""
-                };
-
-                // we only want to do this math with labels, not with numbers:
-                // TODO: TOTALLY HACKTASTIC. ASSUMES NES MAPPER 1 with 16kb banks which is NOT UNIVERSALLY TRUE ON ALL (most) NES ROMS
-                if (baseAddr.Length > 0)
-                    operandFinalStr1 = $"{baseAddr} | ({operandFinalStr1} & $3FFF)"; // THIS IS WRONG. DOESNT HANDLE ALL MAPPINGS
-            }
+            if (ShouldLowordOperand1(mode) && !operandIsNumeric && intermediateAddress != -1)
+                operandFinalStr1 = RomUtil.NesHackMmc1BankRelativeAddr(intermediateAddress, operandFinalStr1 ?? "");
         }
         
         var finalStr = string.Format(format, mnemonic, operandFinalStr1, operandFinalStr2);
         
         var pointerStr = GetPointerStr(data, offset);
         if (pointerStr != null)
+        { 
             finalStr = pointerStr;
-        
+
+            // NES-specific hacks: (implement better)
+            if (doNesHacks)
+                finalStr = RomUtil.NesHackMmc1BankRelativeAddr(intermediateAddress, finalStr);
+        }
+
         var outputInstructionData = new CpuInstructionDataFormatted  {
             // generated a string like: "LDA.W $01,X" or "JSR.W fn_do_stuff"
             FullGeneratedText = finalStr,
@@ -438,7 +425,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         
         return outputInstructionData;
     }
-    
+
     private bool ShouldLowordOperand1(Cpu65C816Constants.AddressMode addressMode)
     {
         // for NES only. SNES, don't use this.
@@ -482,6 +469,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
     private static string? GetPointerStr(TByteSource data, int offset)
     {
+        // NOTE: update Cpu65816::GetPointerStr() with any changes here (maybe can merge at some point)
+        
         var pointerType = data.GetFlag(offset);
         if (pointerType is not (FlagType.Pointer16Bit or FlagType.Pointer24Bit or FlagType.Pointer32Bit))
             return null;

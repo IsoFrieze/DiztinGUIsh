@@ -665,5 +665,29 @@ namespace Diz.Core.util
             num &= mask;
             return Util.NumberToBaseString(num, Util.NumberBase.Hexadecimal, 2 * numByteDigitsToDisplay, true);
         }
+
+        public static string NesHackMmc1BankRelativeAddr(int intermediateAddress, string originalAddrStr)
+        {
+            // NES only. we need to hack in some mapper code. this is absolutely horrible beyond all words.
+            // please come after me with a pitchfork for even attempting this.
+            // all this code is bad and I should feel bad. -Dom
+                
+            // attempt 1: clip values to 16-bit or ld65/ca65 will choke on them
+            // this may not always be the right thing to do but it probably is for now.
+            // operandFinalStr1 = $".loword({operandFinalStr1})"; // THIS IS WRONG. WONT HANDLE ALL MAPPINGS
+            
+            // figure out which part of the rom mapping this is for MMC1 - ULTRAHACKY. HANDLE THIS BETTER ELSEWHERE
+            var baseAddr = (intermediateAddress & 0xC000) switch {
+                0x8000 => "$8000",
+                0xC000 => "$C000",
+                _ => ""
+            };
+
+            // we only want to do this math with labels, not with numbers:
+            // TODO: TOTALLY HACKTASTIC. ASSUMES NES MAPPER 1 with 16kb banks which is NOT UNIVERSALLY TRUE ON ALL (most) NES ROMS
+            return baseAddr.Length > 0 
+                ? $"{baseAddr} | ({originalAddrStr} & $3FFF)" : // THIS IS WRONG. DOESNT HANDLE ALL MAPPINGS, JUST MMC1
+                originalAddrStr;
+        }
     }
 }
