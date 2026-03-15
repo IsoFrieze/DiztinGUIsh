@@ -261,8 +261,8 @@ public class Region : IRegion
 {
     private int startSnesAddress;
     private int endSnesAddress;
-    private string regionName;
-    private string contextToApply;
+    private string regionName = "";
+    private string contextToApply = "";
     private int priority;
     private bool exportSeparateFile;
 
@@ -302,5 +302,5 @@ public class Region : IRegion
         set => this.SetField(PropertyChanged, ref exportSeparateFile, value);
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 }
