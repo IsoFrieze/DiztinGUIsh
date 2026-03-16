@@ -627,10 +627,10 @@ public class SnesSampleProjectFactory : ISnesSampleProjectFactory
         var project = createNewProject.Create() as Project; // TODO: don't cast, refactor to use IProject instead
         Debug.Assert(project?.Data != null);
         
-        var snesData = project.Data.GetSnesApi();
+        var snesData = project!.Data.GetSnesApi();
         Debug.Assert(snesData != null);
         
-        snesData.CacheVerificationInfoFor(project);
+        snesData!.CacheVerificationInfoFor(project);
         
         return project;
     }

@@ -1,4 +1,5 @@
-﻿using Diz.Core.serialization.xml_serializer;
+﻿using Diz.Core.serialization;
+using Diz.Core.serialization.xml_serializer;
 using JetBrains.Annotations;
 
 namespace Diz.Cpu._65816.import;
@@ -13,4 +14,8 @@ public sealed class MigrationNoOp : IMigration
 {
     // you MUST set this when instantiating though
     public int AppliesToSaveVersion { get; init; } = -1;
+
+    public void OnLoadingBeforeAddLinkedRom(IAddRomDataCommand romAddCmd) {}
+
+    public void OnLoadingAfterAddLinkedRom(IAddRomDataCommand romAddCmd) {}
 }

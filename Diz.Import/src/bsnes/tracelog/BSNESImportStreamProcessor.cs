@@ -135,6 +135,8 @@ public class BsnesImportStreamProcessor
 
     private WorkItemDecompressSnesTraces? ReadPacketFromStream(Stream? stream)
     {
+        if (stream is null) throw new ArgumentNullException(paramName: nameof(stream));
+
         #if PROFILING
         var mainSpan = Markers.EnterSpan("BSNES socket read");
         #endif

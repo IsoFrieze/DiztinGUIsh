@@ -153,7 +153,7 @@ public class ProjectFileManager(
         var romAddCmd = addRomDataCommandCreate();
         Debug.Assert(romAddCmd != null);
         
-        romAddCmd.Root = xmlProjectSerializedRoot;
+        romAddCmd!.Root = xmlProjectSerializedRoot;
         romAddCmd.GetNextRomFileToTry = RomPromptFn;
         romAddCmd.MigrationRunner = serializer.MigrationRunner;
 

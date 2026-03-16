@@ -91,7 +91,7 @@ public record LogWriterSettings : ILogWriterSettings
             path += "\\"; // force it to treat it as a path.
 
         // if it's absolute path, use that first, ignore base path
-        if (Path.IsPathFullyQualified(path))
+        if (PathPolyfill.IsPathFullyQualified(path))
             return path;
 
         // if it's not an absolute path, combine BaseOutputPath and FileOrFolderPath to get the final
