@@ -118,7 +118,14 @@ public static class MesenCdlImporter
         } 
         else if ((cdlFlag & Flag.Data) != 0)
         {
-            // only going to let things be marked as data if not already marked as something else.
+            // 1. set "read point" meaning this data was read by something live
+            // do this for anything that's not code which was actually visited in a CDL:
+            if (snesData.GetFlag(offset) is not FlagType.Opcode and not FlagType.Operand) {
+                // set this byte as "visited"
+                snesData.SetInOutPoint(offset, InOutPoint.ReadPoint);
+            }
+            
+            // 2. only going to let things be marked as data if not already marked as something else.
             // especially NEVER let this mark previously marked code as data (or any more specialized stuff like pointer tables, text, etc)
             if (snesData.GetFlag(offset) != FlagType.Unreached)
                 return;
