@@ -88,36 +88,42 @@ public static class MesenCdlImporter
     {
         if (cdlFlag == Flag.None)
             return;
-
-        // skip if we already marked something there (regardless of whether it's correct. we don't mess with user-marked data)
-        if (snesData.GetFlag(offset) != FlagType.Unreached)
+        
+        // skip anything already marked as operand:
+        if (snesData.GetFlag(offset) == FlagType.Operand)
             return;
         
         // NES doesn't use these, they're always 8-bit
         snesData.MarkMFlag(offset, true, 1);
         snesData.MarkXFlag(offset, true, 1);
         // maybe in the future: snesData.MarkArchitecture(NES_6502)
-        
-        if ((cdlFlag & Flag.Data) != 0)
-        {
-            snesData.MarkTypeFlag(offset, FlagType.Data8Bit, 1);
-            return;
-        }
 
-        if ((cdlFlag & Flag.Code) == 0)
-            return;
-        
-        // NOTE: this isn't quite the full picture:
-        //  Mesen2 marks everything as "CODE" but doesn't give us info on what's an opcode vs operand (which Diz needs or things look weird)
-        //  we are going to need to divine this information.
-        //  first: we're going to mark the first byte here as opcode
-        snesData.MarkTypeFlag(offset, FlagType.Opcode, 1);
-        
-        // then, we're going to mark the rest of the bytes as operands by doing a step:
-        snesData.Step(offset, false, false, offset - 1);
-        
-        // NOTE: this will usually mark the next couple bytes as operands.
-        // when the CDL advances, it'll see the data already marked and SKIP making changes til we get to the next unreached code.
-        // There could be edge cases where this doesn't work, but, it's good enough for now.
+        // NOTE: Mesen marks "Code" as both Code|Data
+        // process code FIRST, and only mark it as data if NOT marked as code.
+        if ((cdlFlag & Flag.Code) != 0)
+        {
+            // NOTE: this isn't quite the full picture:
+            //  Mesen2 marks every byte executed as "CODE" but doesn't give us info on what's an opcode vs operand (which Diz needs or things look weird)
+            //  we are going to need to divine this information.
+            //  first: we're going to mark the first byte here as opcode
+
+            // NOTE: this will usually mark the next couple bytes as operands.
+            // when the CDL advances, it'll see the data already marked and SKIP making changes til we get to the next unreached code.
+            // There could be edge cases where this doesn't work, but, it's good enough for now.
+            
+            snesData.MarkTypeFlag(offset, FlagType.Opcode, 1);
+
+            // then, we're going to mark the rest of the bytes as operands by doing a step:
+            snesData.Step(offset, false, false, offset - 1);
+        } 
+        else if ((cdlFlag & Flag.Data) != 0)
+        {
+            // only going to let things be marked as data if not already marked as something else.
+            // especially NEVER let this mark previously marked code as data (or any more specialized stuff like pointer tables, text, etc)
+            if (snesData.GetFlag(offset) != FlagType.Unreached)
+                return;
+            
+            snesData.MarkTypeFlag(offset, FlagType.Data8Bit, 1);
+        }
     }
 }
