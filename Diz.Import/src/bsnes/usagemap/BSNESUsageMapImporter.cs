@@ -22,14 +22,14 @@ public class BsnesUsageMapImporter
     private readonly byte[] usageMap;
     
     // our existing Diz project
-    private readonly ISnesData snesData;
+    private readonly ISnesApi<IData> snesData;
     
     // if true, we'll only change things marked already as unreached.
     // this is the safest way to go but, turning it off has a chance of correcting desync'd manual assembly,
     // and that's a good thing.
     private readonly bool onlyMarkIfUnreached;
 
-    public BsnesUsageMapImporter(byte[] usageMap, ISnesData snesData, bool onlyMarkIfUnreached = false)
+    public BsnesUsageMapImporter(byte[] usageMap, ISnesApi<IData> snesData, bool onlyMarkIfUnreached = false)
     {
         this.usageMap = usageMap;
         this.snesData = snesData;

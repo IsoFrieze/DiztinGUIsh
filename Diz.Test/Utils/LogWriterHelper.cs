@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Diz.Core.export;
+using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.LogWriter;
 using Diz.LogWriter.util;

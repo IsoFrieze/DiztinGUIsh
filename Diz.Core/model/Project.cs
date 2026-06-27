@@ -1,72 +1,12 @@
 ﻿#nullable enable
 
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Xml.Serialization;
 using Diz.Core.export;
-using Diz.Core.Interfaces;
-using Diz.Core.model.snes;
-using Diz.Core.serialization.xml_serializer;
 using Diz.Core.util;
 
 namespace Diz.Core.model;
-
-public interface IProject : 
-    INotifyPropertyChanged, 
-    IProjectWithSession,
-    ISnesCachedVerificationInfo // see if we can get rid of this eventually. only needed for now for serialization
-{
-    public Data Data { get; }
-}
-
-[TypeConverter(typeof(ExpandableObjectConverter))]
-public class ProjectSettings
-{
-    // any public properties here will be shown in the Tools -> Preferences menu
-    
-    [Category("Project save format settings")]
-    [DisplayName("Project save format options")]
-    [Description("Advanced options for tweaking how your .diz or .dizraw file will be saved (most people never need to mess with this). Takes effect when you save the project.")]
-    public RomBytesOutputFormatSettings RomBytesOutputFormatSettings { get; set; } = new();
-
-    [Category("BSNES Import Options")]
-    [DisplayName("Usage map / tracelog import only changes unmarked Rom Bytes")]
-    [Description(
-        "If true, usage map and tracelog imports/capture won't change anything you already marked. If False, your data will be overwritten from BSNES's usage map. " +
-        "(useful if you manually marked a lot of instructions incorrectly and they're desync'd. BSNES's marking is really good but not foolproof, " +
-        "and it has been known to get M/X flags incorrect rarely). Safest option is to leave this OFF")]
-    public bool BsnesUsageMapImportOnlyChangedUnmarked { get; set; } = true;
-
-    public override string ToString() => "";
-}
-
-// these "User settings" are saved alongside each project BUT are intended to be user-specific and not shared with all users
-// i.e. unlike the main project file, the user shoudn't check their project settings (in a .dizprefs file) into git, it should be gitignore'd
-// (NOTE: there's a different settings file for global Application-specific stuff, and for stuff saved WITH the project intended to be shared)
-public class ProjectUserSettings
-{
-    // if false (default) show SNES memory addresses in the grid under the "PC" column.
-    // if true, show ROM offsets instead. (useful as default on NES)
-    [Category("GUI")]
-    [DisplayName("Main Grid Show ROM Offsets (not SNES addresses)")]
-    [Description("Toggle main grid between showing SNES addresses vs ROM offsets. NES games probably want ROM offsets always")]
-    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
-    public bool DisplayOffsetsInGrid { get; set; } = false;
-    
-    // ----- TODO ---- hide everything below here from the GUI with some kind of tag
-        
-    // current view offset
-    // (where are you scrolled in the UI in the main table.
-    //  changes OFTEN while using the app. save this to pick up your place when re-opening Diz)
-    [Browsable(false)] public int CurrentViewOffset { get; set; }
-    
-    // attached ROM filename.
-    // the main project file will store the checksums/etc that this must match, or it'll ask for another rom file.
-    // this is important to keep locally only because we don't want any stored path or ROM filenames to leak into
-    // public git repos, potentially exposing people's sensitive user info/etc.
-    [Browsable(false)] public string AttachedRomFilename { get; set; } = "";
-}
 
 public class Project : IProject
 {
@@ -152,6 +92,7 @@ public class Project : IProject
         set => this.SetField(PropertyChanged, ref projectUserSettings, value);
     }
 
+    // this represents the ROM itself.
     // needs to come last for serialization. this is the heart of the app, the actual
     // data from the ROM and metadata we add/create.
     public Data Data
@@ -272,60 +213,4 @@ public class Project : IProject
         }
     }
     #endregion
-}
-    
-public interface IProjectWithSession {
-    IProjectSession? Session { get; set; }
-    string AttachedRomFilename { get; }
-}
-    
-public interface IProjectSession : INotifyPropertyChanged
-{
-    public string? ProjectDirectory { get; }
-    string AttachedRomFileFullPath { get; }
-    string ProjectFileName { get; set; }
-    bool UnsavedChanges { get; set; }
-}
-    
-    
-/// <summary>
-/// temporary data stored about the current project "session"
-/// i.e. mostly stuff we don't want serialized to XML that may change
-/// from run to run of the app (like working dir,etc)
-/// stuff in here might want to be saved somewhere else. 
-/// </summary>
-public class ProjectSession : IProjectSession
-{
-    // cache of the last filename this project was saved as.
-    // (This field may require some rework for GUI multi-project support)
-    public string ProjectFileName
-    {
-        get => projectFileName;
-        set => this.SetField(PropertyChanged, ref projectFileName, value);
-    }
-        
-    public bool UnsavedChanges
-    {
-        get => unsavedChanges;
-        set => this.SetField(PropertyChanged, ref unsavedChanges, value);
-    }
-        
-    public string? ProjectDirectory =>
-        Util.GetDirNameOrEmpty(projectFileName);
-        
-    public string AttachedRomFileFullPath =>
-        Path.Combine(ProjectDirectory, project.AttachedRomFilename);
-
-    private readonly IProjectWithSession project;
-        
-    private string projectFileName;
-    private bool unsavedChanges;
-
-    public ProjectSession(IProjectWithSession project, string projectFileName)
-    {
-        this.projectFileName = projectFileName;
-        this.project = project;
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 }

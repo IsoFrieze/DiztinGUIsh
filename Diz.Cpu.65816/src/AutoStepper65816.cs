@@ -3,23 +3,16 @@ using Diz.Core.model;
 
 namespace Diz.Cpu._65816;
 
-public class AutoStepper65816<TDataSource> where TDataSource : IRomByteFlagsGettable, IRomByteFlagsSettable, IReadOnlyByteSource, ISteppable
+public class AutoStepper65816<TDataSource>(TDataSource byteSource)
+    where TDataSource : IRomByteFlagsGettable, IRomByteFlagsSettable, IReadOnlyByteSource, ISteppable
 {
     public int Offset { get; private set; }
     private int prevOffset = -1;
 
-    private readonly TDataSource byteSource;
+    private readonly TDataSource byteSource = byteSource;
     
-    private readonly List<int> seenBranches;
-    private readonly Stack<int> stack;
-
-    public AutoStepper65816(TDataSource byteSource)
-    {
-        this.byteSource = byteSource;
-        
-        stack = new Stack<int>();
-        seenBranches = new List<int>();
-    }
+    private readonly List<int> seenBranches = [];
+    private readonly Stack<int> stack = new();
 
     public void Run(int offset)
     {

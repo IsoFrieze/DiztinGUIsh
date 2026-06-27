@@ -259,7 +259,7 @@ public class ProjectController(
         if (Project.Session != null) Project.Session.UnsavedChanges = true;
     }
 
-    public void SelectOffset(int offset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs = null) =>
+    public void SelectOffset(int offset, [CanBeNull] IProjectNavigation.HistoryArgs historyArgs = null) =>
         ProjectView.SelectOffset(offset, historyArgs);
 
     public void NormalizeWramLabels()

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Diz.Core.model;
 using Diz.Core.model.snes;
 using Diz.Core.util;
 using JetBrains.Annotations;
@@ -14,7 +15,7 @@ namespace Diz.Controllers.controllers
         [Browsable(false)]
         public int SnesOffset { get; }
         
-        public NavigationEntry(int snesOffset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs, Data data)
+        public NavigationEntry(int snesOffset, [CanBeNull] IProjectNavigation.HistoryArgs historyArgs, Data data)
         {
             SnesOffset = snesOffset;
             Description = historyArgs?.Description ?? "";

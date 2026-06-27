@@ -17,7 +17,7 @@ namespace Diz.Controllers.controllers
     
     }
     
-    public interface IProjectView : ILongRunningTaskHandler, ISnesNavigation
+    public interface IProjectView : ILongRunningTaskHandler, IProjectNavigation
     {
         Project Project { get; set; }
         void OnProjectOpenFail(string errorMsg);
@@ -28,7 +28,7 @@ namespace Diz.Controllers.controllers
         void OnProjectOpenWarnings(IEnumerable<string> warnings);
     }
 
-    public interface ISnesNavigation
+    public interface IProjectNavigation
     {
         public class HistoryArgs
         {

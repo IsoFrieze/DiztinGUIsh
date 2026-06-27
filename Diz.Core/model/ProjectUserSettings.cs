@@ -3,6 +3,9 @@ using System.ComponentModel;
 
 namespace Diz.Core.model;
 
+// these "User settings" are saved alongside each project BUT are intended to be user-specific and not shared with all users
+// i.e. unlike the main project file, the user shoudn't check their project settings (in a .dizprefs file) into git, it should be gitignore'd
+// (NOTE: there's a different settings file for global Application-specific stuff, and for stuff saved WITH the project intended to be shared)
 public class ProjectUserSettings
 {
     // if false (default) show SNES memory addresses in the grid under the "PC" column.

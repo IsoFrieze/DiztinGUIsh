@@ -20,7 +20,7 @@ public class BizHawkCdlImporter
         Brr = 0x80
     }
 
-    public static void Import(string filename, ISnesData data)
+    public static void Import(string filename, ISnesApi<IData> data)
     {
         var cdl = new BizHawkCdlImporter();
         cdl.LoadFromFile(filename);
@@ -59,7 +59,7 @@ public class BizHawkCdlImporter
             cdl[key] = data;
         }
     }
-    private void CopyInto(ISnesData snesData)
+    private void CopyInto(ISnesApi<IData> snesData)
     {
         if (!cdl.TryGetValue("CARTROM", out var cdlRomFlags))
         {

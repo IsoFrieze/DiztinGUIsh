@@ -17,7 +17,7 @@ public static class MesenCdlImporter
         SubEntryPoint = 0x08,
     }
 
-    public static void Import(string filename, ISnesData data)
+    public static void Import(string filename, ISnesApi<IData> data)
     {
         var cdlData = LoadFromFile(filename, data.GetRomSize());
         CopyInto(cdlData, data);
@@ -73,7 +73,7 @@ public static class MesenCdlImporter
         return cdlData;
     }
 
-    private static void CopyInto(byte[] cdlData, ISnesData snesData)
+    private static void CopyInto(byte[] cdlData, ISnesApi<IData> snesData)
     {
         var size = Math.Min(cdlData.Length, snesData.GetRomSize());
 
@@ -84,7 +84,7 @@ public static class MesenCdlImporter
         }
     }
 
-    private static void ProcessCdlFlagsAtCdlOffset(ISnesData snesData, Flag cdlFlag, int offset)
+    private static void ProcessCdlFlagsAtCdlOffset(ISnesApi<IData> snesData, Flag cdlFlag, int offset)
     {
         if (cdlFlag == Flag.None)
             return;

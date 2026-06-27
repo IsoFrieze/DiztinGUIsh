@@ -24,7 +24,7 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
                 factory.GetInstance<IProjectFactory>(),
                 settings));
 
-        serviceRegistry.Register<IData, ISnesData>(CreateSnesApiWithData);
+        serviceRegistry.Register<IData, ISnesApi<IData>>(CreateSnesApiWithData);
         
         serviceRegistry.Register<IProjectImportDefaultSettingsFactory, SnesDefaultSettingsFactory>();
         serviceRegistry.Register<ISnesRomImportSettingsBuilder, SnesRomImportSettingsBuilder>();
@@ -37,8 +37,8 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
         RegisterSampleDataServices(serviceRegistry);
     }
 
-    private static ISnesData CreateSnesApiWithData(IServiceFactory serviceFactory, IData data) =>
-        new SnesApi(data);
+    private static ISnesApi<IData> CreateSnesApiWithData(IServiceFactory serviceFactory, IData data) =>
+        new ISnesApi<IData>(data);
 
     private static void RegisterMigrations(IServiceRegistry serviceRegistry)
     {

@@ -267,7 +267,7 @@ public class EtoMainGridForm : Form, IMainGridWindowView
     public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
         ProgressBarJob.RunAndWaitForCompletion;
 
-    public void SelectOffset(int pcOffset, ISnesNavigation.HistoryArgs? historyArgs = null)
+    public void SelectOffset(int pcOffset, IProjectNavigation.HistoryArgs? historyArgs = null)
     {
     }
 

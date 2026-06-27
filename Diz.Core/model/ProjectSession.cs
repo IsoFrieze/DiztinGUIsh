@@ -27,11 +27,8 @@ public class ProjectSession(IProjectWithSession project, string projectFileName)
         set => this.SetField(PropertyChanged, ref unsavedChanges, value);
     }
         
-    public string? ProjectDirectory =>
-        Util.GetDirNameOrEmpty(projectFileName);
-        
-    public string AttachedRomFileFullPath =>
-        Path.Combine(ProjectDirectory ?? "", project.AttachedRomFilename);
+    public string? ProjectDirectory => Util.GetDirNameOrEmpty(projectFileName);
+    public string AttachedRomFileFullPath => Path.Combine(ProjectDirectory ?? "", project.AttachedRomFilename);
 
     private string projectFileName = projectFileName;
     private bool unsavedChanges;

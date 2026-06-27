@@ -1,31 +1,34 @@
-﻿using System.Diagnostics;
-using Diz.Core.Interfaces;
-using Diz.Core.model;
+﻿using Diz.Core.Interfaces;
 using Diz.Core.util;
 
 namespace Diz.Cpu._65816;
 
-public class Cpu65C816<TByteSource> : Cpu<TByteSource> 
-    where TByteSource : 
-    IRomByteFlagsGettable, 
-    IRomSize,
-    IRomByteFlagsSettable, 
-    ISnesAddressConverter, 
-    ISteppable, 
-    IReadOnlyByteSource, 
-    ISnesIntermediateAddress,
-    IInOutPointSettable,
-    IInOutPointGettable,
-    IReadOnlyLabels,
-    ICommentTextProvider,
-    IRegionProvider,
-    ICpuDirectiveProvider
+public class Cpu65C816
 {
     // TODO: expose these somehow to the project settings
-    public bool AttemptTouseDirectPageArithmeticInFinalOutput { get; set; } = true;
-    public bool AttemptToUnmirrorLabels { get; set; } = true;
+    private const bool AttemptTouseDirectPageArithmeticInFinalOutput = true;
+    private const bool AttemptToUnmirrorLabels = true;
     
-    public override int Step(TByteSource data, int offset, bool branch, bool force, int prevOffset = -1)
+    /// <summary>
+    /// Interpret the bytes at Offset as an opcode + optional operands. Mark them as such,
+    /// and return the next offset (which should, if everything went well, be another instruction)
+    /// 
+    /// </summary>
+    /// <param name="data">bytesource to operate on</param>
+    /// <param name="offset">starting offset in bytesource to operate on</param>
+    /// <param name="branch">if true, and the instruction at offset is a branch, take the branch</param>
+    /// <param name="force">
+    /// if true, ignore control flow statements (branches, returns, etc), and set next offset right after.
+    /// DANGEROUS and can cause you to run off the edge of a block of code and into data. usually avoid, unless you know what you're asking for</param>
+    /// <param name="prevOffset">
+    /// If available, set this to the offset of the instruction located before this one.
+    /// Cpu state data like M,X,DB, and DP flags will be copied from the previous instruction.
+    /// </param>
+    /// <returns>The offset of the instruction located after this one, or returns the same offset if the Step operation failed or is not supported.</returns>
+    public int Step<TData>(TData data, int offset, bool branch, bool force, int prevOffset = -1) where TData :
+        IReadOnlyByteSource, IRomByteFlagsGettable, IRomByteFlagsSettable,
+        ISnesAddressConverter, ISnesIntermediateAddress, IInOutPointSettable
+        
     {
         var (opcode, directPage, dataBank, xFlag, mFlag) = data.GetCpuStateFor(offset, prevOffset);
         var length = MarkAsOpcodeAndOperandsStartingAt(data, offset, dataBank, directPage, xFlag, mFlag);
@@ -47,12 +50,12 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return nextOffset;
     }
     
-    public override int CalculateInOutPointsFromOffset(
-        TByteSource data,
+    public int CalculateInOutPointsFromOffset<TData>(
+        TData data,
         int offset,
         out InOutPoint newIaInOutPoint,
         out InOutPoint newOffsetInOutPoint
-    )
+    ) where TData : IRomByteFlagsGettable, ISnesAddressConverter, ISnesIntermediateAddress, IReadOnlyByteSource
     {
         // calculate these from scratch (don't rely on existing in-out data)
         newIaInOutPoint = InOutPoint.None;
@@ -100,11 +103,11 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return iaOffsetPc;
     }
 
-    public int MarkAsOpcodeAndOperandsStartingAt(
-        TByteSource data, int offsetToMarkAsOpcode, 
+    public int MarkAsOpcodeAndOperandsStartingAt<TData>(
+        TData data, int offsetToMarkAsOpcode, 
         int? dataBank = null, int? directPage = null, 
         bool? xFlag = null, bool? mFlag = null              // you pretty much always want to set the MX flags or this function is worthless
-        )
+        ) where TData : IRomByteFlagsSettable, IReadOnlyByteSource, IRomByteFlagsGettable, ISnesAddressConverter
     {
         var numBytesToChangeForOpcodesAndOperands = 1;
         var i = 0;
@@ -144,7 +147,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
     // input: ROM offset
     // return: a SNES address
-    public override int GetIntermediateAddress(TByteSource data, int offset, bool resolve)
+    public int GetIntermediateAddress<TData>(TData data, int offset, bool resolve) where TData :
+        IReadOnlyByteSource, 
+        IRomByteFlagsGettable,
+        ISnesAddressConverter
     {
         int bank;
         int programCounter;
@@ -249,10 +255,30 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return -1;
     }
     
-    public override string GetInstructionStr(TByteSource data, int offset, bool showMnemonicHint) => 
-        GetInstructionData(data, offset, showMnemonicHint).FullGeneratedText; // shortcut
+    public string GetInstructionStr<TData>(TData data, int offset, bool showMnemonicHint)
+        where TData : 
+        IReadOnlyByteSource, 
+        IReadOnlyLabelProvider,
+        IRomByteFlagsGettable, 
+        ISnesAddressConverter, 
+        ICpuDirectiveProvider,
+        ISnesIntermediateAddress,
+        IRegionProvider,
+        IRomSize
+    {
+        return GetInstructionData(data, offset, showMnemonicHint).FullGeneratedText;
+        // shortcut
+    }
 
-    public override CpuInstructionDataFormatted GetInstructionData(TByteSource data, int offset, bool showMnemonicHint)
+    public CpuInstructionDataFormatted GetInstructionData<TData>(TData data, int offset, bool showMnemonicHint) where TData : 
+        IReadOnlyByteSource, 
+        IReadOnlyLabelProvider,
+        IRomByteFlagsGettable, 
+        ISnesAddressConverter, 
+        ICpuDirectiveProvider,
+        ISnesIntermediateAddress,
+        IRegionProvider,
+        IRomSize
     {
         var addrModeNullable = GetAddressMode(data, offset);
         if (addrModeNullable == null)
@@ -443,7 +469,9 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         }
     }
 
-    private static int SearchForRomOffsetBoundsOfPointerTableFrom(TByteSource data, int offset, bool searchBackwards = true)
+    private int SearchForRomOffsetBoundsOfPointerTableFrom<TData>(TData data, int offset, bool searchBackwards = true) where TData :
+        IRomByteFlagsGettable,
+        IRomSize
     {
         // what type of pointer table are we in the middle of?
         var pointerTableType = data.GetFlag(offset);
@@ -467,7 +495,12 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return currentBound;
     }
 
-    private static string? GetPointerStr(TByteSource data, int offset)
+    private string? GetPointerStr<TData>(TData data, int offset) where TData : 
+        IReadOnlyLabelProvider, 
+        IRomByteFlagsGettable, 
+        ISnesIntermediateAddress,
+        IRomSize,
+        ICpuDirectiveProvider
     {
         // NOTE: update Cpu65816::GetPointerStr() with any changes here (maybe can merge at some point)
         
@@ -507,7 +540,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
         // we're in the middle of a pointer table AND in the right position.
         // show some useful text, if available and allowed
-        var labelAtIa = data.Labels.GetLabel((int)ia);
+        var labelAtIa = data.GetLabel((int)ia);
         if (labelAtIa != null) {
             var specialDirective = data.GetSpecialDirectiveOverrideFromComments(offset);
             if (specialDirective is not { ForceOnlyShowRawHex: true })
@@ -524,14 +557,14 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return RomUtil.ConvertNumToHexStr(iaClipped, stride);
     }
 
-    public override int AutoStepSafe(TByteSource byteSource, int offset)
+    public int AutoStepSafe<TData>(TData byteSource, int offset) where TData : IRomByteFlagsGettable, IRomByteFlagsSettable, IReadOnlyByteSource, ISteppable
     {
-        var cmd = new AutoStepper65816<TByteSource>(byteSource);
+        var cmd = new AutoStepper65816<TData>(byteSource);
         cmd.Run(offset);
         return cmd.Offset;
     }
 
-    private static string CreateHexStr(int? v, int numDigits)
+    private string CreateHexStr(int? v, int numDigits)
     {
         if (numDigits == 0)
             return "";
@@ -542,7 +575,9 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return Util.NumberToBaseString((uint)v, Util.NumberBase.Hexadecimal, numDigits, true);
     }
 
-    public override int GetInstructionLength(TByteSource data, int offset)
+    public int GetInstructionLength<TData>(TData data, int offset) where TData :
+        IReadOnlyByteSource,
+        IRomByteFlagsGettable
     {
         var mode = GetAddressMode(data, offset);
             
@@ -551,7 +586,9 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     }
 
     // Find, and append, in/out points to any that current exist at this offset and its IA address
-    public override void MarkInOutPoints(TByteSource data, int offset)
+    public void MarkInOutPoints<TData>(TData data, int offset) where TData : 
+        IRomByteFlagsGettable, ISnesAddressConverter, ISnesIntermediateAddress, 
+        IReadOnlyByteSource, IInOutPointSettable
     {
         var iaOffsetPc = CalculateInOutPointsFromOffset(data, offset, out var newIaInOutPoint, out var newOffsetInOutPoint);
 
@@ -561,7 +598,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             data.SetInOutPoint(iaOffsetPc, newIaInOutPoint);
     }
 
-    private static int GetInstructionLength(Cpu65C816Constants.AddressMode mode)
+    private int GetInstructionLength(Cpu65C816Constants.AddressMode mode)
     {
         switch (mode)
         {
@@ -604,7 +641,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     // returns:
     // finalOperand - the text to print on the line (like, a label or a numeric value, etc)
     // isNumeric - if the operand is a numeric value (vs a label, or an override). not always foolproof
-    private (string finalOperand, bool isNumeric) FormatOperandAddress(TByteSource data, int offset)
+    private (string finalOperand, bool isNumeric) FormatOperandAddress<TData>(TData data, int offset) where TData :
+        ICpuDirectiveProvider, IReadOnlyByteSource, IRomByteFlagsGettable, 
+        ISnesIntermediateAddress, IReadOnlyLabelProvider, ISnesAddressConverter, 
+        IRegionProvider
     {
         var mode = GetAddressMode(data, offset);
         if (mode == null)
@@ -658,7 +698,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         );
     }
 
-    private static string GetFormattedRawHexIa(TByteSource data, int offset)
+    private string GetFormattedRawHexIa<TData>(TData data, int offset) where TData : 
+        ISnesIntermediateAddress, 
+        IReadOnlyByteSource, 
+        IRomByteFlagsGettable
     {
         // don't bake the directpage offset into this
         var intermediateAddress = data.GetIntermediateAddress(offset);
@@ -680,7 +723,9 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return RomUtil.ConvertNumToHexStr((uint)intermediateAddress, numByteDigitsToDisplay);
     }
 
-    private string GetFinalLabelExpressionToUse(TByteSource data, int offset)
+    private string GetFinalLabelExpressionToUse<TData>(TData data, int offset) where TData : 
+        ISnesIntermediateAddress, IReadOnlyByteSource, IRomByteFlagsGettable, 
+        IReadOnlyLabelProvider, ISnesAddressConverter, IRegionProvider
     {
         // important: setting "resolve: true" here bakes the DP offset into the IA.
         // this is usually what we want for labels BUT we have to build an expression that bakes this back out if so. 
@@ -753,7 +798,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return $"{labelName}{unMirrorCorrectedOffsetStr}{dpOffsetExprStr}";
     }
 
-    private static string ResolveLabelNameWithContext(TByteSource data, IAnnotationLabel? candidateLabel, int offset)
+    private string ResolveLabelNameWithContext<TData>(TData data, IAnnotationLabel? candidateLabel, int offset) where TData : 
+        IReadOnlyLabelProvider,
+        ISnesAddressConverter,
+        IRegionProvider
     {
         if (candidateLabel == null)
             return "";
@@ -783,8 +831,9 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return candidateLabel.Name;
     }
 
-    private (int unmirrorCorrectedDisplacement, IAnnotationLabel? unmirroredLabel) GetUnmirroredLabelNameAndDisplacement(
-        TByteSource data, Cpu65C816Constants.AddressMode mode, int snesAddress)
+    private (int unmirrorCorrectedDisplacement, IAnnotationLabel? unmirroredLabel) GetUnmirroredLabelNameAndDisplacement<TData>(
+        TData data, Cpu65C816Constants.AddressMode mode, int snesAddress) where TData : 
+        IReadOnlyLabelProvider
     {
         // NOTE: BE REALLY CAREFUL: SearchForMirroredLabel() IS A PERFORMANCE-INTENSE and HEAVILY OPTIMIZED FUNCTION
         var (mirroredLabelSnesAddress, mirrorLabelEntry) = SearchForMirroredLabel(data, snesAddress);
@@ -815,7 +864,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
     // generate a string suitable for use with Asar expression math.
     // i.e. "-$FF" or "+$0100", etc
-    private static string GenerateDisplacementString(int amountToDisplace)
+    private string GenerateDisplacementString(int amountToDisplace)
     {
         if (amountToDisplace == 0) 
             return "";
@@ -830,13 +879,18 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return $"{direction}${absAmountToDisplace:X}";
     }
 
-    private static IAnnotationLabel? GetValidatedLabelNameForOffset(TByteSource data, int srcOffset)
+    private IAnnotationLabel? GetValidatedLabelNameForOffset<TData>(TData data, int srcOffset) where TData : 
+        ISnesIntermediateAddress,
+        IReadOnlyByteSource, 
+        IRomByteFlagsGettable,
+        IReadOnlyLabelProvider,
+        ISnesAddressConverter
     {
         var destinationIa = data.GetIntermediateAddress(srcOffset, true);
         if (destinationIa < 0)
             return null;
         
-        var candidateLabel = data.Labels.GetLabel(destinationIa);
+        var candidateLabel = data.GetLabel(destinationIa);
         if (string.IsNullOrEmpty(candidateLabel?.Name))
             return null;
         
@@ -874,7 +928,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return validBranchDirection ? candidateLabel : null;
     }
 
-    private (int labelAddress, IAnnotationLabel? labelEntry) SearchForMirroredLabel(TByteSource data, int snesAddress)
+    private (int labelAddress, IAnnotationLabel? labelEntry) SearchForMirroredLabel<TData>(TData data, int snesAddress) where TData :
+        IReadOnlyLabelProvider
     {
         // WARNING: during assembly text export, this function is EXTREMELY performance intensive.
         // PLEASE PROFILE before making any serious changes 
@@ -882,13 +937,13 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // optimization: during exporting, this function is EXTREMELY performance intensive.
         // let's try and use a smaller subset of labels to search.
         // this will only be available in certain contexts, like when exporting assembly text.
-        var exporterCache = data.Labels.MirroredLabelCacheSearch;
+        var exporterCache = data.MirroredLabelCacheSearch;
         if (exporterCache != null)
             return exporterCache.SearchOptimizedForMirroredLabel(snesAddress);
 
         // less optimized fallback version (does same thing as above, but uses all labels)
         // this is used during normal operation (like scrolling around the grid)
-        foreach (var (labelAddress, labelEntry) in data.Labels.Labels)
+        foreach (var (labelAddress, labelEntry) in data.Labels)
         {
             if (!RomUtil.AreLabelsSameMirror(snesAddress, labelAddress)) 
                 continue;
@@ -907,9 +962,15 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return (-1, null);
     }
 
-    private string GetMnemonic(TByteSource data, int offset, bool showHint = true)
+    private string GetMnemonic<TData>(TData data, int offset, bool showHint = true)
+        where TData : IReadOnlyByteSource, IRomByteFlagsGettable
     {
-        var mn = Cpu65C816Constants.Mnemonics[data.GetRomByteUnsafe(offset)];
+        var romByteNullable = data.GetRomByte(offset);
+        if (!romByteNullable.HasValue)
+            return "";
+        var romByte = romByteNullable.Value;
+        
+        var mn = Cpu65C816Constants.Mnemonics[romByte];
         if (!showHint) 
             return mn;
 
@@ -931,7 +992,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         };
     }
 
-    private static int GetNumBytesToShow(Cpu65C816Constants.AddressMode mode)
+    private int GetNumBytesToShow(Cpu65C816Constants.AddressMode mode)
     {
         switch (mode)
         {
@@ -968,13 +1029,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     // {0} = mnemonic
     // {1} = intermediate address / label OR operand 1 for block move
     // {2} = operand 2 for block move
-    private string GetInstructionFormatString(TByteSource data, int offset)
-    {
-        var mode = GetAddressMode(data, offset);
-        return GetInstructionFormatStringForAddressMode(mode);
-    }
-
-    private static string GetInstructionFormatStringForAddressMode(Cpu65C816Constants.AddressMode? mode)
+    private string GetInstructionFormatStringForAddressMode(Cpu65C816Constants.AddressMode? mode)
     {
         switch (mode)
         {
@@ -1023,7 +1078,9 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return "";
     }
 
-    public static Cpu65C816Constants.AddressMode? GetAddressMode(TByteSource data, int offset)
+    public Cpu65C816Constants.AddressMode? GetAddressMode<TData>(TData data, int offset) where TData : 
+        IReadOnlyByteSource, 
+        IRomByteFlagsGettable
     {
         var opcode = data.GetRomByte(offset);
         if (!opcode.HasValue)
@@ -1035,7 +1092,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return GetAddressMode(opcode.Value, mFlag, xFlag);
     }
 
-    public static Cpu65C816Constants.AddressMode GetAddressMode(int opcode, bool mFlag, bool xFlag)
+    public Cpu65C816Constants.AddressMode GetAddressMode(int opcode, bool mFlag, bool xFlag)
     {
         var mode = Cpu65C816Constants.AddressingModes[opcode];
         return mode switch

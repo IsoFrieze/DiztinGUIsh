@@ -70,7 +70,7 @@ public interface ISnesApi<out TData> :
     ISnesCartName,
     IInstructionGettable,
     IDataUtilities,
-    IArchitectureApi,
+    // IArchitectureApi, no
     IMarkOperandAndOpcode,
     ICommentTextProvider,
     IRegionProvider,
@@ -83,18 +83,9 @@ public interface ISnesApi<out TData> :
     public void CacheVerificationInfoFor(ISnesCachedVerificationInfo verificationCache);
 }
 
-public interface ISnesData : ISnesApi<IData>
+public class SnesApi(IData data) : ISnesApi<IData>
 {
-}
-
-public class SnesApi : ISnesData
-{
-    public IData Data { get; }
-    
-    public SnesApi(IData data)
-    {
-        Data = data;
-    }
+    public IData Data { get; } = data;
 
     public int RomSettingsOffset => RomUtil.GetRomSettingOffset(Data.RomMapMode);
     public int RomComplementOffset => RomSettingsOffset + 0x07; // 2 bytes - complement
@@ -161,8 +152,8 @@ public class SnesApi : ISnesData
     public int ConvertPCtoSnes(int offset) => 
         RomUtil.ConvertPCtoSnes(offset, Data.RomMapMode, Data.RomSpeed);
 
-    public int ConvertSnesToPc(int address) => 
-        RomUtil.ConvertSnesToPc(address, Data.RomMapMode, GetRomSize());
+    public int ConvertSnesToPc(int snesAddress) => 
+        RomUtil.ConvertSnesToPc(snesAddress, Data.RomMapMode, GetRomSize());
 
     public uint? GetIntermediateAddressOrPointer(int offset)
     {
@@ -238,11 +229,11 @@ public class SnesApi : ISnesData
         return bankSnesNumber;
     }
     
-    private Cpu<SnesApi> GetCpu(int offset) => 
-        new CpuDispatcher().Cpu(this, offset);
+    // private Cpu<SnesApi> GetCpu(int offset) => 
+    //     new CpuDispatcher().Cpu(this, offset);
 
-    public int GetInstructionLength(int offset) => 
-        GetCpu(offset).GetInstructionLength(this, offset);
+    // public int GetInstructionLength(int offset) => 
+    //     GetCpu(offset).GetInstructionLength(this, offset);
     
     public int Step(int offset, bool branch, bool force=false, int prevOffset=-1) =>
         GetCpu(offset).Step(this, offset, branch, force, prevOffset);
@@ -255,7 +246,7 @@ public class SnesApi : ISnesData
 
     public void MarkAsOpcodeAndOperandsStartingAt(int offset, int? dataBank = null, int? directPage = null, bool? xFlag = null, bool? mFlag = null)
     {
-        if (GetCpu(offset) is not Cpu65C816<SnesApi> cpu65816)
+        if (GetCpu(offset) is not Cpu65C816 cpu65816)
             return;
 
         cpu65816.MarkAsOpcodeAndOperandsStartingAt(this, offset, dataBank, directPage, xFlag, mFlag);
@@ -303,7 +294,7 @@ public class SnesApi : ISnesData
             if (opcodeRomByte.TypeFlag != FlagType.Opcode)
                 continue;
             
-            var addressMode = Cpu65C816<ISnesData>.GetAddressMode(snesData, offsetToTry);
+            var addressMode = Cpu65C816.GetAddressMode(snesData, offsetToTry);
             
             // note: feel free to add more address mode checks, if applicable.
             // this is the main one most pointer table stuff seems to want to use
@@ -496,7 +487,7 @@ public class SnesApi : ISnesData
                 case FlagType.Opcode:
                 {
                     var bytesChanged = 0;
-                    var instructionLength = FixFlagsForOpcodeAndItsOperands(offset, romSize, ref bytesChanged);
+                    var instructionLength = FixFlagsForOpcodeAndItsOperands(Data, offset, romSize, ref bytesChanged);
 
                     numChanged += bytesChanged;
                     var newOffset = instructionLength - 1;
@@ -556,15 +547,19 @@ public class SnesApi : ISnesData
         }
     }
 
-    private int FixFlagsForOpcodeAndItsOperands(int offset, int romSize, ref int bytesChanged)
+    private static int FixFlagsForOpcodeAndItsOperands<TData>(TData data, int offset, int romSize, ref int bytesChanged) where TData :
+        IReadOnlyByteSource,
+        IRomByteFlagsGettable, 
+        IRomByteFlagsSettable
     {
-        var instructionLength = GetInstructionLength(offset);
+        var cpu = new Cpu65C816();
+        var instructionLength = cpu.GetInstructionLength(data, offset);
         for (var j = 1; j < instructionLength && offset + j < romSize; j++)
         {
-            if (GetFlag(offset + j) == FlagType.Operand)
+            if (data.GetFlag(offset + j) == FlagType.Operand)
                 continue;
                         
-            SetFlag(offset + j, FlagType.Operand);
+            data.SetFlag(offset + j, FlagType.Operand);
             bytesChanged++;
         }
 
@@ -676,11 +671,11 @@ public static class SnesApiExtensions
     public static int MarkMFlag(this ISnesApi<IData> @this, int offset, bool m, int count) => 
         @this.Data.Mark(i => @this.SetMFlag(i, m), offset, count);
     
-    public static int MarkArchitecture(this ISnesApi<IData> @this, int offset, Architecture arch, int count) =>
-        @this.Data.Mark(i => @this.Data.SetArchitecture(i, arch), offset, count);
+    // public static int MarkArchitecture(this ISnesApi<IData> @this, int offset, Architecture arch, int count) =>
+    //     @this.Data.Mark(i => @this.Data.SetArchitecture(i, arch), offset, count);
     
     // input can be any length, and will be padded, using spaces, to the right size for SNES header
-    public static void SetCartridgeTitle(this ISnesData @this, string utf8CartridgeTitle)
+    public static void SetCartridgeTitle(this ISnesApi<IData> @this, string utf8CartridgeTitle)
     {
         var rawShiftJisBytes = ByteUtil.GetRawShiftJisBytesFromStr(utf8CartridgeTitle);
         var paddedShiftJisBytes = ByteUtil.PadCartridgeTitleBytes(rawShiftJisBytes);
@@ -710,11 +705,17 @@ public static class SnesApiExtensions
         int directPage, dataBank;
         bool xFlag, mFlag;
         byte? opcode;
+        
+        SetCpuStateFromCurrentOffset();     // set from our current position first
+        SetCpuStateFromPreviousOffset();    // if available, set from the previous offset instead.
+        SetMxFlagsFromRepSepAtOffset();
+
+        return (opcode, directPage, dataBank, xFlag, mFlag);
 
         void SetCpuStateFromCurrentOffset()
         {
             opcode = @this.GetRomByte(offset);
-            (directPage, dataBank, xFlag, mFlag) = GetCpuStateAt(@this, offset);
+            (directPage, dataBank, xFlag, mFlag) = @this.GetCpuStateAt(offset);
         }
 
         void SetCpuStateFromPreviousOffset()
@@ -728,7 +729,7 @@ public static class SnesApiExtensions
                 return;
             
             // set these values to the PREVIOUS instruction
-            (directPage, dataBank, xFlag, mFlag) = GetCpuStateAt(@this, prevOffset);
+            (directPage, dataBank, xFlag, mFlag) = @this.GetCpuStateAt(prevOffset);
         }
         
         void SetMxFlagsFromRepSepAtOffset()
@@ -741,16 +742,10 @@ public static class SnesApiExtensions
             xFlag = (operand & 0x10) != 0 ? opcode == 0xE2 : xFlag;
             mFlag = (operand & 0x20) != 0 ? opcode == 0xE2 : mFlag;
         }
-        
-        SetCpuStateFromCurrentOffset();     // set from our current position first
-        SetCpuStateFromPreviousOffset();    // if available, set from the previous offset instead.
-        SetMxFlagsFromRepSepAtOffset();
-
-        return (opcode, directPage, dataBank, xFlag, mFlag);
     }
     
-    public static ISnesData? GetSnesApi(this IData @this) => 
-        @this.GetApi<ISnesData>();
+    // public static ISnesApi<IData>? GetSnesApi(this IData @this) => 
+    //     @this.GetApi<ISnesApi<IData>>();
 
     public static (int found, string outputTextLog) GenerateMisalignmentReport(this ISnesApi<IData> @this)
     {

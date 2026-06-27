@@ -3,6 +3,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using Diz.Core.Interfaces;
 using Diz.Core.util;
 using Diz.Cpu._65816;
 
@@ -18,7 +19,7 @@ public class BsnesTraceLogCaptureController
 {
     public bool Running { get; private set; }
 
-    private readonly ISnesData snesData;
+    private readonly ISnesApi<IData> snesData;
     private readonly IWorkerTaskManager taskManager;
     private readonly BsnesImportStreamProcessor streamProcessor;
     private readonly BsnesTraceLogImporter importer;
@@ -30,7 +31,7 @@ public class BsnesTraceLogCaptureController
     public int BlocksToProcess => statsCompressedBlocksToProcess;
     public bool Finishing => streamProcessor.CancelToken.IsCancellationRequested;
 
-    public BsnesTraceLogCaptureController(ISnesData snesData)
+    public BsnesTraceLogCaptureController(ISnesApi<IData> snesData)
     {
         this.snesData = snesData;
         streamProcessor = new BsnesImportStreamProcessor();
@@ -429,7 +430,7 @@ public class BsnesTraceLogCaptureController
 // {
 //     private readonly byte[] bytes;
 //
-//     public BsnesTraceLogFileCapture(string dataFile, ISnesData data) : base(data)
+//     public BsnesTraceLogFileCapture(string dataFile, ISnesApi<IData> data) : base(data)
 //     {
 //         bytes = File.ReadAllBytes(dataFile);
 //     }

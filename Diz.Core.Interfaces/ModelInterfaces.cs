@@ -204,7 +204,7 @@ namespace Diz.Core.Interfaces
         IRegionProvider,
         ICpuDirectiveProvider
     {
-        IDataStoreProvider<IArchitectureApi> Apis { get; }
+        // IDataStoreProvider<IArchitectureApi> Apis { get; }
         IDataStoreProvider<IDataTag> Tags { get; }
 
         ILabelServiceWithTempLabels Labels { get; }
@@ -214,8 +214,8 @@ namespace Diz.Core.Interfaces
 
     public static class DataExtensions
     {
-        public static T? GetApi<T>(this IData @this) where T : class, IArchitectureApi => 
-            @this.Apis.Get<T>();
+        // public static T? GetApi<T>(this IData @this) where T : class, IArchitectureApi => 
+        //     @this.Apis.Get<T>();
         public static T? GetTag<T>(this IData @this) where T : class, IDataTag => 
             @this.Tags.Get<T>();
     }
@@ -232,8 +232,8 @@ namespace Diz.Core.Interfaces
         TSearchFor Get<TSearchFor>() where TSearchFor : class, T;
     }
     
-    // // API for a specific architecture API (like SNES, genesis, etc)
-    public interface IArchitectureApi
+    // API for a specific architecture API (like SNES, genesis, etc)
+    public interface IArchitecture
     {
         
     }
@@ -256,6 +256,6 @@ namespace Diz.Core.Interfaces
     public interface ISnesAddressConverter
     {
         int ConvertPCtoSnes(int offset);
-        int ConvertSnesToPc(int offset);
+        int ConvertSnesToPc(int snesAddress);
     }
 }

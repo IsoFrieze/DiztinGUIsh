@@ -52,12 +52,12 @@ public class RomByteTests : ContainerFixture
         const int romOffset1 = 0xEB;
         var snesApi = sampleData.GetSnesApi();
         
-        var mode1 = Cpu65C816<ISnesData>.GetAddressMode(snesApi, romOffset1);
+        var mode1 = Cpu65C816.GetAddressMode(snesApi, romOffset1);
         Assert.Equal(Cpu65C816Constants.AddressMode.Constant8, mode1);
 
         Assert.True(romOffset1 >= sampleData.GetTag<SampleDataGenerationTag>()!.OriginalRomSizeBeforePadding);
 
-        var mode2 = Cpu65C816<ISnesData>.GetAddressMode(snesApi, 0x0A);
+        var mode2 = Cpu65C816.GetAddressMode(snesApi, 0x0A);
         Assert.Equal(Cpu65C816Constants.AddressMode.Constant8, mode2);
     }
 

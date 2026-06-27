@@ -1,4 +1,5 @@
-﻿using Diz.Core.model.snes;
+﻿using Diz.Core.model;
+using Diz.Core.model.snes;
 
 namespace Diz.Test.Utils
 {

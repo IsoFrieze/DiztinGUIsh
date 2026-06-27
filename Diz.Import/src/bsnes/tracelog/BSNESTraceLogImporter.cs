@@ -6,7 +6,7 @@ namespace Diz.Import.bsnes.tracelog;
 
 public partial class BsnesTraceLogImporter
 {
-    private readonly ISnesData? snesData = null;
+    private readonly ISnesApi<IData>? snesData = null;
 
     // note: we could add directly to snesData.Data.Comments BUT locking is too slow on a normal dict,
     // and updating the rest of the app for ConcurrentDictionary is a bit painful at the moment.
@@ -19,7 +19,7 @@ public partial class BsnesTraceLogImporter
     private readonly int romSizeCached;
     private readonly RomMapMode romMapModeCached;
 
-    public BsnesTraceLogImporter(ISnesData? snesData)
+    public BsnesTraceLogImporter(ISnesApi<IData>? snesData)
     {
         this.snesData = snesData;
         romSizeCached = this.snesData?.GetRomSize() ?? 0;

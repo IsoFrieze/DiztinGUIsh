@@ -57,7 +57,7 @@ public interface IProjectController :
 
     bool ImportRomAndCreateNewProject(string romFilename);
     void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
-    void SelectOffset(int offset, ISnesNavigation.HistoryArgs? historyArgs = null);
+    void SelectOffset(int offset, IProjectNavigation.HistoryArgs? historyArgs = null);
 
     bool ConfirmSettingsThenExportAssembly();
     bool ExportAssemblyWithCurrentSettings();
