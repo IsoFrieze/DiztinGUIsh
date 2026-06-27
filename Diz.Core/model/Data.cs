@@ -7,13 +7,12 @@ using System.Linq;
 using System.Xml.Serialization;
 using Diz.Core.Interfaces;
 using Diz.Core.util;
-using JetBrains.Annotations;
 
 namespace Diz.Core.model.snes;
 
 public class Data : IData
 {
-    [XmlIgnore] public IDataStoreProvider<IArchitectureApi> Apis { get; } = new DataStoreProvider<IArchitectureApi>();
+    // [XmlIgnore] public IDataStoreProvider<IArchitectureApi> Apis { get; } = new DataStoreProvider<IArchitectureApi>();
     public IDataStoreProvider<IDataTag> Tags { get; } = new DataStoreProvider<IDataTag>();
 
     private SortedDictionary<int, string> comments;
@@ -91,10 +90,8 @@ public class Data : IData
 
     public Architecture GetArchitecture(int i) => RomBytes[i].Arch;
     public void SetArchitecture(int i, Architecture arch) => RomBytes[i].Arch = arch;
-
-    [CanBeNull]
-    public string GetComment(int snesAddress) =>
-        Comments.GetValueOrDefault(snesAddress);
+    
+    public string? GetComment(int snesAddress) => Comments.GetValueOrDefault(snesAddress);
 
     public string GetCommentText(int snesAddress)
     {
@@ -140,11 +137,6 @@ public class Data : IData
     public byte? GetRomByte(int pcOffset)
     {
         return pcOffset >= RomBytes.Count ? null : RomBytes[pcOffset].Rom;
-    }
-
-    public byte? GetSnesByte(int snesAddress)
-    {
-        return GetRomByte(ConvertSnesToPc(snesAddress));
     }
 
     public uint? GetRomWord(int offset)
@@ -245,8 +237,8 @@ public class Data : IData
     [XmlIgnore] public LabelsServiceWithTemp Labels { get; }
     [XmlIgnore] ILabelServiceWithTempLabels IData.Labels => Labels;
 
-    [CanBeNull] public IRegion CreateNewRegion() => new Region();
-    [CanBeNull]  public IRegion GetRegion(int snesAddress)
+    public IRegion CreateNewRegion() => new Region();
+    public IRegion? GetRegion(int snesAddress)
     {
         return Regions
             .Where(region => snesAddress >= region.StartSnesAddress && snesAddress < region.EndSnesAddress)
@@ -254,53 +246,5 @@ public class Data : IData
             .FirstOrDefault();
     }
     
-    public event PropertyChangedEventHandler PropertyChanged;
-}
-
-public class Region : IRegion
-{
-    private int startSnesAddress;
-    private int endSnesAddress;
-    private string regionName = "";
-    private string contextToApply = "";
-    private int priority;
-    private bool exportSeparateFile;
-
-    public int StartSnesAddress
-    {
-        get => startSnesAddress;
-        set => this.SetField(PropertyChanged, ref startSnesAddress, value);
-    }
-
-    public int EndSnesAddress
-    {
-        get => endSnesAddress;
-        set => this.SetField(PropertyChanged, ref endSnesAddress, value);
-    }
-
-    public string RegionName
-    {
-        get => regionName;
-        set => this.SetField(PropertyChanged, ref regionName, value);
-    }
-
-    public string ContextToApply
-    {
-        get => contextToApply;
-        set => this.SetField(PropertyChanged, ref contextToApply, value);
-    }
-
-    public int Priority
-    {
-        get => priority;
-        set => this.SetField(PropertyChanged, ref priority, value);
-    }
-    
-    public bool ExportSeparateFile
-    {
-        get => exportSeparateFile;
-        set => this.SetField(PropertyChanged, ref exportSeparateFile, value);
-    }
-
     public event PropertyChangedEventHandler? PropertyChanged;
 }
