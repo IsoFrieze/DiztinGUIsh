@@ -3,16 +3,23 @@
 gfxpack — SNES planar graphics <-> indexed PNG, with byte-identical round-trip.
 
 Part of "dizpack", the stock codec toolset that DiztinGUIsh vendors into a game repo
-on export. The game repo must NEVER need Diz at build time, so this is plain
-Python 3 with **stdlib only** (no Pillow/numpy).
+on export. The game repo must NEVER need Diz at build time — only Python 3 and the
+packages in requirements.txt (Pillow, for PNG I/O).
 
 Design invariants (do not break — byte-identity depends on them):
   * The MANIFEST is the authority. The PNG is dumb pixels.
   * COLOR-INDEX PASSTHROUGH: a PNG pixel value IS the raw tile pixel index. The PNG's
-    embedded palette is viewer-only and is IGNORED on compile.
+    embedded palette is viewer-only and is IGNORED on compile. Indices — not PNG
+    bytes — are canonical: the same PNG may be re-encoded to different bytes by a
+    different Pillow version, and that's fine, because compile only reads indices.
   * Assets are addressed by LOGICAL NAME + an ordered list of SEARCH ROOTS
     (first-match-wins). Today that's usually one root; mod overlays later are just
     more roots, in priority order.
+
+PNG input notes: only INDEXED (palette-mode) PNGs are accepted — anything else is
+rejected rather than silently quantized, because quantization would scramble the
+indices, which are the data. Sub-byte bit depths (1/2/4-bit) and interlaced PNGs
+are fine: Pillow decodes both into plain per-pixel indices.
 
 Commands:
   extract  ROM bytes            -> <root>/<name>.png + <root>/<name>.json
@@ -33,9 +40,7 @@ import argparse
 import hashlib
 import json
 import os
-import struct
 import sys
-import zlib
 
 # --------------------------------------------------------------------------------------
 # Versioning
@@ -58,128 +63,54 @@ def die(msg: str) -> "None":
     raise SystemExit(2)
 
 
+try:
+    from PIL import Image, UnidentifiedImageError
+except ImportError:
+    die("Pillow is required for PNG I/O but is not installed. "
+        "Run: pip install -r tools/vendor/dizpack/requirements.txt "
+        "(or: pip install Pillow)")
+
+
 # ======================================================================================
-# Minimal PNG codec (stdlib only) — indexed-color (color type 3) only.
+# PNG I/O (Pillow) — indexed/palette mode ("P") only.
+#
+# Determinism note: for a GIVEN Pillow version, saving the same indices produces the
+# same PNG bytes (no randomized options are used). Different Pillow versions may encode
+# the same image to different bytes — that's accepted, because the pixel INDICES are
+# canonical, not the PNG file bytes.
 # ======================================================================================
-PNG_SIG = b"\x89PNG\r\n\x1a\n"
-
-
-def _chunk(tag: bytes, data: bytes) -> bytes:
-    return (struct.pack(">I", len(data)) + tag + data
-            + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF))
-
-
 def png_write_indexed(path: str, width: int, height: int,
                       indices: bytes, palette_rgb: "list[tuple[int, int, int]]") -> None:
-    """Write an 8-bit indexed PNG. `indices` is width*height raw index bytes."""
+    """Write an indexed PNG. `indices` is width*height raw index bytes."""
     if len(indices) != width * height:
         die(f"internal: index buffer {len(indices)} != {width}*{height}")
-    ihdr = struct.pack(">IIBBBBB", width, height, 8, 3, 0, 0, 0)  # 8-bit, colortype 3
-    plte = b"".join(bytes(c) for c in palette_rgb)
-    raw = bytearray()
-    for y in range(height):
-        raw.append(0)  # filter type 0 (None) — we always write unfiltered
-        raw += indices[y * width:(y + 1) * width]
-    body = (PNG_SIG + _chunk(b"IHDR", ihdr) + _chunk(b"PLTE", plte)
-            + _chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + _chunk(b"IEND", b""))
+    img = Image.frombytes("P", (width, height), bytes(indices))
+    img.putpalette([c for rgb in palette_rgb for c in rgb])
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with open(path, "wb") as f:
-        f.write(body)
-
-
-def _paeth(a: int, b: int, c: int) -> int:
-    p = a + b - c
-    pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
-    if pa <= pb and pa <= pc:
-        return a
-    return b if pb <= pc else c
+    img.save(path, format="PNG")
 
 
 def png_read_indexed(path: str) -> "tuple[int, int, bytes]":
     """Read an indexed PNG -> (width, height, index bytes, one byte per pixel).
 
-    Accepts bit depths 1/2/4/8 (image editors often re-save low-color indexed images at
-    a reduced depth) and all five scanline filters. The palette is deliberately ignored:
-    we return raw indices, which is what makes the round-trip exact.
+    Pillow transparently decodes 1/2/4/8-bit indexed PNGs (image editors often re-save
+    low-color images at a reduced depth) and interlaced PNGs into plain per-pixel
+    indices, so both are accepted. The palette is deliberately ignored: we return raw
+    indices, which is what makes the round-trip exact.
     """
-    with open(path, "rb") as f:
-        data = f.read()
-    if not data.startswith(PNG_SIG):
-        die(f"{path}: not a PNG")
-
-    pos = len(PNG_SIG)
-    width = height = depth = ctype = interlace = None
-    idat = bytearray()
-    while pos + 8 <= len(data):
-        (ln,) = struct.unpack(">I", data[pos:pos + 4])
-        tag = data[pos + 4:pos + 8]
-        chunk = data[pos + 8:pos + 8 + ln]
-        pos += 12 + ln  # length + tag + data + crc
-        if tag == b"IHDR":
-            width, height, depth, ctype, _comp, _filt, interlace = struct.unpack(
-                ">IIBBBBB", chunk)
-        elif tag == b"IDAT":
-            idat += chunk
-        elif tag == b"IEND":
-            break
-
-    if width is None:
-        die(f"{path}: missing IHDR")
-    if ctype != 3:
-        die(f"{path}: color type {ctype}; an INDEXED (palette) PNG is required so that "
-            f"pixel values are raw indices. Re-save as indexed/palette mode.")
-    if interlace != 0:
-        die(f"{path}: interlaced PNGs are not supported; re-save without interlacing")
-    if depth not in (1, 2, 4, 8):
-        die(f"{path}: unsupported bit depth {depth}")
-
-    raw = zlib.decompress(bytes(idat))
-    stride = (width * depth + 7) // 8
-    bpp = 1  # filtering unit for indexed images is 1 byte
-    out = bytearray()
-    prev = bytearray(stride)
-    p = 0
-    for _y in range(height):
-        if p >= len(raw):
-            die(f"{path}: truncated image data")
-        ft = raw[p]
-        p += 1
-        line = bytearray(raw[p:p + stride])
-        p += stride
-        if ft == 1:
-            for i in range(bpp, stride):
-                line[i] = (line[i] + line[i - bpp]) & 0xFF
-        elif ft == 2:
-            for i in range(stride):
-                line[i] = (line[i] + prev[i]) & 0xFF
-        elif ft == 3:
-            for i in range(stride):
-                a = line[i - bpp] if i >= bpp else 0
-                line[i] = (line[i] + ((a + prev[i]) >> 1)) & 0xFF
-        elif ft == 4:
-            for i in range(stride):
-                a = line[i - bpp] if i >= bpp else 0
-                c = prev[i - bpp] if i >= bpp else 0
-                line[i] = (line[i] + _paeth(a, prev[i], c)) & 0xFF
-        elif ft != 0:
-            die(f"{path}: bad filter type {ft}")
-        out += line
-        prev = line
-
-    if depth == 8:
-        pixels = bytes(out)
-    else:  # unpack sub-byte indices, MSB-first within each byte
-        per = 8 // depth
-        mask = (1 << depth) - 1
-        px = bytearray()
-        for y in range(height):
-            row = out[y * stride:(y + 1) * stride]
-            for x in range(width):
-                b = row[x // per]
-                shift = 8 - depth * (x % per + 1)
-                px.append((b >> shift) & mask)
-        pixels = bytes(px)
-    return width, height, pixels
+    try:
+        img = Image.open(path)
+    except UnidentifiedImageError:
+        die(f"{path}: not a PNG (not any recognizable image format)")
+    with img:
+        if img.format != "PNG":
+            die(f"{path}: is a {img.format} file, not a PNG; re-save it as PNG")
+        if img.mode != "P":
+            die(f"{path}: image mode '{img.mode}'; an INDEXED (palette) PNG is required "
+                f"so that pixel values are raw indices. Re-save as indexed/palette mode "
+                f"(auto-converting here could silently scramble the indices).")
+        width, height = img.size
+        return width, height, img.tobytes()
 
 
 # ======================================================================================
@@ -245,22 +176,37 @@ def bytes_to_indices(blob: bytes, bpp: int, tiles: int,
     return width, height, bytes(img)
 
 
+def validate_pixel_indices(img: bytes, width: int, bpp: int, path: str) -> None:
+    """Reject any pixel index that doesn't fit in `bpp` bits.
+
+    Must run before encoding: encode_tile masks each index down to `bpp` bits, so an
+    out-of-range pixel would otherwise be silently truncated into a wrong-but-plausible
+    tile. Reports the first offending pixel in raster order.
+    """
+    maxv = (1 << bpp) - 1
+    if not img or max(img) <= maxv:
+        return
+    i = next(i for i, v in enumerate(img) if v > maxv)
+    x, y = i % width, i // width
+    die(f"{path}: pixel ({x}, {y}) has palette index {img[i]}, but {bpp}bpp only allows "
+        f"indices 0..{maxv}. The edited PNG uses more palette slots than the format "
+        f"has -- repaint that pixel with an in-range palette entry.")
+
+
 def indices_to_bytes(img: bytes, width: int, bpp: int, tiles: int,
                      layout_w: int) -> bytes:
-    """Image indices -> planar tile bytes (inverse of bytes_to_indices)."""
+    """Image indices -> planar tile bytes (inverse of bytes_to_indices).
+
+    Callers feeding user-edited pixels must run validate_pixel_indices first
+    (compile_asset does); encode_tile silently masks out-of-range values.
+    """
     out = bytearray()
-    maxv = (1 << bpp) - 1
     for t in range(tiles):
         tx, ty = (t % layout_w) * TILE_W, (t // layout_w) * TILE_H
         px = []
         for y in range(TILE_H):
             src = (ty + y) * width + tx
-            row = img[src:src + TILE_W]
-            for v in row:
-                if v > maxv:
-                    die(f"pixel index {v} exceeds max {maxv} for {bpp}bpp (tile {t}). "
-                        f"The edited PNG uses more colors than the format allows.")
-            px.extend(row)
+            px.extend(img[src:src + TILE_W])
         out += encode_tile(px, bpp)
     return bytes(out)
 
@@ -344,6 +290,7 @@ def compile_asset(name: str, roots: "list[str]") -> "tuple[bytes, dict, str]":
         die(f"{ppath}: image is {width}x{height} but the manifest requires {exp_w}x{exp_h} "
             f"({tiles} tiles, {layout_w} per row). Keep the canvas size unchanged.")
 
+    validate_pixel_indices(img, width, bpp, ppath)
     blob = indices_to_bytes(img, width, bpp, tiles, layout_w)
 
     expected_len = man.get("source", {}).get("length")

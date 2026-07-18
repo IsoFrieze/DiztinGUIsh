@@ -1,0 +1,3 @@
+# Python dependencies for the dizpack asset tools (gfxpack.py).
+# Install with: pip install -r requirements.txt
+Pillow>=10

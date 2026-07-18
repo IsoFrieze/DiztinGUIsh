@@ -50,6 +50,7 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
         serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 101 }, "migrate_101_to_102");
         serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 102 }, "migrate_102_to_103");
         serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 103 }, "migrate_103_to_104");
+        serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 104 }, "migrate_104_to_105");
     }
 
     private static void RegisterSampleDataServices(IServiceRegistry serviceRegistry)
