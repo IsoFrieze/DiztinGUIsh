@@ -1,3 +1,4 @@
-# Python dependencies for the dizpack asset tools (gfxpack.py).
+# Python dependencies for the asset tools (gfxpack.py) and the build (ninja).
 # Install with: pip install -r requirements.txt
 Pillow>=10
+ninja
