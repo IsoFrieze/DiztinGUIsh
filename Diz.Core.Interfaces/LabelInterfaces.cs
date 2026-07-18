@@ -3,6 +3,24 @@ using System.ComponentModel;
 
 namespace Diz.Core.Interfaces;
 
+// how a region's bytes are emitted when exporting assembly.
+// NOTE: 'Assembly' must stay the zero value. projects saved before this property existed
+// will deserialize to it, which is the original behavior (inline db bytes).
+public enum RegionExportType
+{
+    // normal: bytes are emitted inline in the .asm as `db $xx,$xx,...`
+    Assembly = 0,
+
+    // bytes are written to a sidecar .bin, and the .asm gets `incbin "<file>"` instead.
+    // the .bin is the canonical copy; Diz's stored bytes become a display cache.
+    Binary,
+
+    // like Binary, but also writes an asset manifest describing how to decode the bytes
+    // (e.g. gfx.snes.2bpp). an external tool (gfxpack) turns the .bin into an editable
+    // PNG and back. Diz deliberately does NOT encode the PNG itself -- see AssetType.
+    Asset,
+}
+
 public interface IRegion : INotifyPropertyChanged
 {
     int StartSnesAddress { get; set; }
@@ -30,6 +48,27 @@ public interface IRegion : INotifyPropertyChanged
     // if true, when exporting assembly, this region will go into a separate file.
     // overlapping regions will either be disallowed for this, or go in priority order.
     bool ExportSeparateFile { get; set; }
+
+    // ------------------------------------------------------------
+    // asset export
+    // ------------------------------------------------------------
+
+    // how this region's bytes get emitted. defaults to Assembly (inline db bytes).
+    RegionExportType ExportType { get; set; }
+
+    // for ExportType.Asset: the codec contract, e.g. "gfx.snes.2bpp".
+    // this string is written verbatim into the manifest's "type" field and is what
+    // tells the external tool how to interpret the bytes. Diz never decodes it itself.
+    string AssetType { get; set; }
+
+    // for ExportType.Asset: codec version, e.g. "v1". empty/null means "latest",
+    // which is the default. a mismatch at build time is a hard error, never silent.
+    string AssetVersion { get; set; }
+
+    // logical asset name, used as the path within an asset layer root and as the
+    // .bin/manifest filename stem. e.g. "gfx/font" resolves to
+    // "assets/src/gfx/font.{bin,json}". if empty, RegionName is used.
+    string AssetName { get; set; }
 }
 
 public interface IReadOnlyContextMapping : INotifyPropertyChanged
