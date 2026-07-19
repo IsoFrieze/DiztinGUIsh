@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+      Headless render + interaction harness for the Avalonia label editor.
+      See docs/diz/new-ui-plan.md, "Preview harness (headless iteration loop)".
+
+      This is a DEV TOOL, not shipped with the app. It boots Avalonia headless with REAL
+      Skia rendering (UseHeadlessDrawing=false), builds a dummy ILabelProvider fixture (no
+      project, no ROM, no Data), hosts the real LabelEditorWindow over it, renders named
+      states to PNGs, and runs a scripted keyboard/mouse interaction probe.
+
+      Plain net9.0 (no -windows TFM): the whole point is that Diz.Ui.Avalonia is toolkit-pure.
+    -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <RootNamespace>Diz.Ui.Avalonia.Preview</RootNamespace>
+        <AssemblyName>Diz.Ui.Avalonia.Preview</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Avalonia 12.1.0, matching Diz.Ui.Avalonia. Headless + Skia give real rendered
+             pixels; the Fluent theme comes via the reused DizAvaloniaApp. -->
+        <PackageReference Include="Avalonia" Version="12.1.0" />
+        <PackageReference Include="Avalonia.Headless" Version="12.1.0" />
+        <PackageReference Include="Avalonia.Skia" Version="12.1.0" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Diz.Ui.Avalonia\Diz.Ui.Avalonia.csproj" />
+        <ProjectReference Include="..\Diz.Ui.ViewModels\Diz.Ui.ViewModels.csproj" />
+        <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+        <ProjectReference Include="..\Diz.Core.Interfaces\Diz.Core.Interfaces.csproj" />
+    </ItemGroup>
+
+</Project>
