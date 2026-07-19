@@ -1336,12 +1336,21 @@
           "Avalonia.Win32.Interoperability": "[12.1.0, )"
         }
       },
+      "diz.ui.viewmodels": {
+        "type": "Project",
+        "dependencies": {
+          "Diz.Core": "[1.0.0, )",
+          "Diz.Core.Interfaces": "[1.0.0, )",
+          "Diz.Import": "[1.0.0, )"
+        }
+      },
       "diz.ui.winforms": {
         "type": "Project",
         "dependencies": {
           "ByteSize": "[2.1.2, )",
           "Diz.Controllers": "[1.0.0, )",
           "Diz.Core": "[1.0.0, )",
+          "Diz.Ui.ViewModels": "[1.0.0, )",
           "FastBitmapLib": "[2.1.0, )",
           "JetBrains.Annotations": "[2023.3.0, )",
           "LightInject": "[6.6.4, )"
