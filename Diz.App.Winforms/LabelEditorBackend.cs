@@ -10,6 +10,7 @@ public enum LabelEditorBackendKind
 {
     WinForms,
     Avalonia,
+    Tui,
 }
 
 /// <summary>
@@ -34,10 +35,15 @@ public static class LabelEditorBackend
 {
     public const string EnvVarName = "DIZ_LABEL_EDITOR";
 
-    public static LabelEditorBackendKind Parse(string? value) =>
-        string.Equals(value?.Trim(), "avalonia", StringComparison.OrdinalIgnoreCase)
-            ? LabelEditorBackendKind.Avalonia
-            : LabelEditorBackendKind.WinForms;
+    public static LabelEditorBackendKind Parse(string? value)
+    {
+        var trimmed = value?.Trim();
+        if (string.Equals(trimmed, "avalonia", StringComparison.OrdinalIgnoreCase))
+            return LabelEditorBackendKind.Avalonia;
+        if (string.Equals(trimmed, "tui", StringComparison.OrdinalIgnoreCase))
+            return LabelEditorBackendKind.Tui;
+        return LabelEditorBackendKind.WinForms;
+    }
 
     public static LabelEditorBackendKind FromEnvironment() =>
         Parse(Environment.GetEnvironmentVariable(EnvVarName));

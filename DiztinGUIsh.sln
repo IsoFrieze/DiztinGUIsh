@@ -52,6 +52,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.App.Winforms.Test", "Di
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Ui.Avalonia.Preview", "Diz.Ui.Avalonia.Preview\Diz.Ui.Avalonia.Preview.csproj", "{0A1C01B3-34AA-4806-9BEB-D72BBC9453BC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diz.Ui.Tui", "Diz.Ui.Tui\Diz.Ui.Tui.csproj", "{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Diz.Controllers", "Diz.Controllers", "{E7C7B9F8-72A9-A43E-39BC-07850A0DADAE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -290,6 +294,18 @@ Global
 		{0A1C01B3-34AA-4806-9BEB-D72BBC9453BC}.Release|x64.Build.0 = Release|Any CPU
 		{0A1C01B3-34AA-4806-9BEB-D72BBC9453BC}.Release|x86.ActiveCfg = Release|Any CPU
 		{0A1C01B3-34AA-4806-9BEB-D72BBC9453BC}.Release|x86.Build.0 = Release|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Debug|x64.Build.0 = Debug|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Debug|x86.Build.0 = Debug|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Release|x64.ActiveCfg = Release|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Release|x64.Build.0 = Release|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Release|x86.ActiveCfg = Release|Any CPU
+		{DF348B39-1702-4FEF-ACB6-6324ECAC87AE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

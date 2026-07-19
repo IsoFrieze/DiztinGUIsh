@@ -3,6 +3,7 @@ using Diz.App.Winforms;
 using Diz.Controllers.interfaces;
 using Diz.Core.util;
 using Diz.Ui.Avalonia;
+using Diz.Ui.Tui;
 using Diz.Ui.Winforms.dialogs;
 using Diz.Ui.Winforms.usercontrols;
 using Diz.Ui.Winforms.util;
@@ -67,6 +68,22 @@ public class LabelEditorBackendSwitchTests
     }
 
     [Fact]
+    public void TuiBackend_ResolvesTheTuiEditorAndKeepsWinformsProgressAndFileDialog()
+    {
+        using var container = CreateAppContainer(LabelEditorBackendKind.Tui);
+
+        // TUI backend: only the label editor is TUI...
+        container.GetInstance<ILabelEditorView>("LabelEditorView")
+            .Should().BeOfType<TuiLabelEditorView>();
+        // ...the progress popup and file dialogs stay WinForms (registered explicitly in the
+        // tui branch, not via the WinForms backend root).
+        container.GetInstance<IProgressView>("ProgressBarView")
+            .Should().BeOfType<ProgressDialog>();
+        container.GetInstance<IFileDialogService>()
+            .Should().BeOfType<WinformsFileDialogService>();
+    }
+
+    [Fact]
     public void AvaloniaBackend_DoesNotInitializeAvalonia_JustByResolvingTheView()
     {
         using var container = CreateAppContainer(LabelEditorBackendKind.Avalonia);
@@ -87,6 +104,9 @@ public class LabelEditorBackendSwitchTests
     [InlineData("avalonia", LabelEditorBackendKind.Avalonia)]
     [InlineData("AVALONIA", LabelEditorBackendKind.Avalonia)]
     [InlineData("  Avalonia  ", LabelEditorBackendKind.Avalonia)]
+    [InlineData("tui", LabelEditorBackendKind.Tui)]
+    [InlineData("TUI", LabelEditorBackendKind.Tui)]
+    [InlineData("  Tui  ", LabelEditorBackendKind.Tui)]
     public void Parse_MapsEnvVarValues(string? value, LabelEditorBackendKind expected) =>
         LabelEditorBackend.Parse(value).Should().Be(expected);
 
