@@ -4,9 +4,9 @@
          importantly the runtime label-editor backend switch (DIZ_LABEL_EDITOR). Lives in
          the parent repo (not the Diz.Ui.Winforms submodule's test project) because it must
          reference Diz.App.Winforms, and step-5 changes deliberately stay out of the
-         submodule. net9.0-windows because Diz.App.Winforms is. -->
+         submodule. net10.0-windows because Diz.App.Winforms is. -->
     <PropertyGroup>
-        <TargetFramework>net9.0-windows</TargetFramework>
+        <TargetFramework>net10.0-windows</TargetFramework>
         <UseWindowsForms>true</UseWindowsForms>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>

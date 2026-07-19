@@ -72,7 +72,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       
       # not currently working consistently, don't cache
       #    - name: Nuget (restore from cache)
@@ -101,7 +101,7 @@ jobs:
 
       - uses: vimtor/action-zip@v1.2
         with:
-          files: Diz.App.Winforms\bin\Release\net9.0-windows\publish\
+          files: Diz.App.Winforms\bin\Release\net10.0-windows\publish\
           dest: ${{ steps.ver.outputs.ver }}.zip
 
       - name: Upload Artifact

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
@@ -37,7 +37,7 @@
     </ItemGroup>
 
     <!--
-      This assembly must stay plain net9.0 and WinForms-free: a window is entirely one
+      This assembly must stay plain net10.0 and WinForms-free: a window is entirely one
       toolkit (new-ui plan decision 4), and a '-windows' TFM here is the exact mistake
       Diz.Ui.Eto made (it target-locked the "cross-platform" attempt to Windows).
       A runtime test (Diz.Test/Tests/Avalonia) additionally asserts the compiled assembly

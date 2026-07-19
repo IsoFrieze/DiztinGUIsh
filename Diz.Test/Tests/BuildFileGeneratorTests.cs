@@ -220,14 +220,14 @@ public class BuildFileGeneratorTests : IDisposable
     [Fact]
     public void VendoringFindsToolsByWalkingUpFromABinDirectory()
     {
-        // Running from bin/Debug/net9.0-windows/ must still locate tools/dizpack.
+        // Running from bin/Debug/net10.0-windows/ must still locate tools/dizpack.
         var root = Path.Combine(tempDir, "walkup");
         var tools = Path.Combine(root, "tools", "dizpack");
         Directory.CreateDirectory(tools);
         File.WriteAllText(Path.Combine(tools, "gfxpack.py"), "# stub\n");
         File.WriteAllText(Path.Combine(tools, "requirements.txt"), "Pillow>=10\n");
 
-        var deep = Path.Combine(root, "bin", "Debug", "net9.0-windows");
+        var deep = Path.Combine(root, "bin", "Debug", "net10.0-windows");
         Directory.CreateDirectory(deep);
 
         ToolVendoring.FindSourceToolsDir(deep).Should().Be(tools);
