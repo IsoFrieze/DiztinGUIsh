@@ -61,7 +61,7 @@ public interface IProjectController :
     // path is supplied by the caller (obtained via IFileDialogService in the view layer);
     // this method never prompts. errors are surfaced through ICommonGui.
     void ImportLabelsCsv(string importFilename, bool replaceAll);
-    void SelectOffset(int offset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs = null);
+    void SelectOffset(int offset, ISnesNavigation.HistoryArgs? historyArgs = null);
 
     Task<bool> ConfirmSettingsThenExportAssemblyAsync();
     Task<bool> ExportAssemblyWithCurrentSettingsAsync();
