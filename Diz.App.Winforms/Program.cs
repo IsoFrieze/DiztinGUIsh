@@ -40,7 +40,15 @@ internal static class Program
         // Warm up Avalonia on first idle (never before SetupDpiStuff -- Phase 0 constraint);
         // the view itself would also lazy-initialize on first Show as a safety net.
         if (LabelEditorBackend.FromEnvironment() == LabelEditorBackendKind.Avalonia)
+        {
             LabelEditorBackend.ArmAvaloniaPreInitOnFirstIdle();
+
+            // "Live typing bug" fix: the shared WinForms message loop drops WM_CHAR destined for
+            // Avalonia's (foreign) top-level windows, killing all typing while key handling still
+            // works. This filter re-pumps keyboard messages for Avalonia HWNDs. See
+            // AvaloniaKeyboardMessageFilter for the full evidence trail.
+            System.Windows.Forms.Application.AddMessageFilter(new AvaloniaKeyboardMessageFilter());
+        }
 
         var serviceFactory = DizWinformsRegisterServices.CreateServiceFactoryAndRegisterTypes();
         DizAppCommon.StartApp(serviceFactory, args);
