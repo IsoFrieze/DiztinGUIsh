@@ -82,7 +82,7 @@ public class Data : IData
     {
         comments = new SortedDictionary<int, string>();
         Labels = new LabelsServiceWithTemp(this);
-        romBytes = new RomBytes();
+        romBytes = [];
     }
 
     public int GetRomSize() =>

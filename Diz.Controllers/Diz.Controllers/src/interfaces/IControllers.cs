@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+
 using System.Collections.Generic;
 using System.ComponentModel;
 using Diz.Controllers.controllers;
@@ -8,11 +9,10 @@ using Diz.Core.export;
 using Diz.Core.model;
 using Diz.Core.util;
 using Diz.Cpu._65816;
-using JetBrains.Annotations;
 
 // NOTE: lots of these interfaces were created temporarily for major refactoring.
 // when that process is finished, we should probably take a pass here to simplify anything
-// that ended up being unnecessary or over-complicated
+// that ended up being unnecessary or overcomplicated
 
 namespace Diz.Controllers.interfaces;
 
@@ -43,8 +43,8 @@ public interface IProjectController :
         }
 
         public ProjectChangedType ChangeType;
-        public Project Project;
-        public string Filename;
+        public Project? Project;
+        public string Filename = "";
     }
                 
     delegate void ProjectChangedEvent(object sender, ProjectChangedEventArgs e);
@@ -57,7 +57,7 @@ public interface IProjectController :
 
     bool ImportRomAndCreateNewProject(string romFilename);
     void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
-    void SelectOffset(int offset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs = null);
+    void SelectOffset(int offset, ISnesNavigation.HistoryArgs? historyArgs = null);
 
     bool ConfirmSettingsThenExportAssembly();
     bool ExportAssemblyWithCurrentSettings();
@@ -94,22 +94,22 @@ public interface ITraceLogImporters
     long ImportBsnesTraceLogs(string[] fileNames);
 }
 
-public interface IProjectNavigation
-{
-    public int SelectedSnesOffset { get; set; }
-
-    void GoTo(int offset);
-    void GoToUnreached(bool end, bool direction);
-    void GoToIntermediateAddress(int offset);
-    // void OnUserChangedSelection(ByteEntry newSelection);
-}
-
-public interface ILabelImporter
-{
-    void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
-}
-
 #if DIZ_3_BRANCH
+    public interface IProjectNavigation
+    {
+        public int SelectedSnesOffset { get; set; }
+
+        void GoTo(int offset);
+        void GoToUnreached(bool end, bool direction);
+        void GoToIntermediateAddress(int offset);
+        // void OnUserChangedSelection(ByteEntry newSelection);
+    }
+
+    public interface ILabelImporter
+    {
+        void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
+    }
+
     public interface IMainFormController : 
         
         IFormController,
@@ -133,11 +133,18 @@ public interface ILabelImporter
     }
 #endif
 
+public class MarkManyViewSettings
+{
+    public Dictionary<MarkCommand.MarkManyProperty, object> AllSettings { get; set; } = new();
+    public MarkCommand.MarkManyProperty SelectedProperty { get; set; } = MarkCommand.MarkManyProperty.Flag;
+}
+
 public interface IMarkManyController<out TDataSource>
 {
     IDataRange DataRange { get; }
     TDataSource Data { get; }
-    MarkCommand GetMarkCommand();
+    MarkCommand? Show(int startOffset = 0, int count = 0x10, MarkManyViewSettings? inputSettings = null);
+    MarkManyViewSettings GetCurrentSettings();
 }
 
 public interface ILogCreatorSettingsEditorController : INotifyPropertyChangedExt

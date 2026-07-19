@@ -358,7 +358,7 @@ public class ProjectController(
 
         ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs
         {
-            ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Closing
+            ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Closing,
         });
 
         Project = null;
