@@ -92,12 +92,10 @@ public sealed record ImportResult(
     string? ErrorMessage = null);
 
 /// <summary>
-/// PROVISIONAL outbound port (plan review finding 2 -- routing decision still OPEN, user call):
-/// the only real implementation of WRAM-label normalization is SnesData.NormalizeWramLabels()
-/// in Diz.Cpu.65816, which this assembly is forbidden to reference. Until the user decides
-/// whether that operation moves into Diz.Core (recommended) or stays put, the composition
-/// layer wires this delegate to it. If the operation moves to Diz.Core, this port can be
-/// deleted and the VM can call it directly.
+/// Outbound port for WRAM-label normalization. RESOLVED (plan review finding 2): the
+/// operation moved into Diz.Core (LabelProviderExtensions.NormalizeWramLabels), so the VM
+/// defaults to calling it directly on its label provider -- no wiring needed. The port stays
+/// injectable so tests (or an unusual host) can substitute their own routing.
 /// </summary>
 public delegate void NormalizeWramLabelsPort();
 
@@ -162,8 +160,9 @@ public interface ILabelEditorViewModel : INotifyPropertyChanged, IDisposable
 
     void ClearSearch();
 
-    /// <summary>Runs the injected <see cref="NormalizeWramLabelsPort"/> (see its remarks --
-    /// routing is provisional). If no port was supplied, raises ErrorRaised.</summary>
+    /// <summary>Normalize mirrored WRAM label addresses to the canonical $7E bank. Defaults
+    /// to Diz.Core's LabelProviderExtensions.NormalizeWramLabels on this VM's provider;
+    /// override via the injected <see cref="NormalizeWramLabelsPort"/>.</summary>
     void NormalizeWramLabels();
 
     /// <summary>Select the row at this SNES address, creating a "New Label" there first if

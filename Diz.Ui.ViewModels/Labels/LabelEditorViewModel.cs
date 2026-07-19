@@ -38,7 +38,7 @@ namespace Diz.Ui.ViewModels.Labels;
 public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorViewModel
 {
     private readonly ILabelProvider labels;
-    private readonly NormalizeWramLabelsPort? normalizeWramLabels;
+    private readonly NormalizeWramLabelsPort normalizeWramLabels;
     private readonly ResolveRomOffsetToSnesIaPort? resolveRomOffsetToSnesIa;
 
     // master set: every label, keyed by address. 'visibleRows' is the filtered+sorted subset.
@@ -59,7 +59,8 @@ public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorVi
     /// <param name="notificationMarshaller">runs every notification; a real host passes
     /// "execute on the UI thread" (send-if-off-thread semantics -- see
     /// <see cref="ViewModelNotifierBase"/>). null (unit tests) = invoke inline.</param>
-    /// <param name="normalizeWramLabels">PROVISIONAL port, see <see cref="NormalizeWramLabelsPort"/>.</param>
+    /// <param name="normalizeWramLabels">optional override; defaults to Diz.Core's
+    /// LabelProviderExtensions.NormalizeWramLabels on <paramref name="labelProvider"/>.</param>
     /// <param name="resolveRomOffsetToSnesIa">PROVISIONAL port, see <see cref="ResolveRomOffsetToSnesIaPort"/>.</param>
     public LabelEditorViewModel(
         ILabelProvider labelProvider,
@@ -69,7 +70,8 @@ public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorVi
         : base(notificationMarshaller)
     {
         labels = labelProvider;
-        this.normalizeWramLabels = normalizeWramLabels;
+        // default = the real Core implementation (extension method group -> delegate)
+        this.normalizeWramLabels = normalizeWramLabels ?? labelProvider.NormalizeWramLabels;
         this.resolveRomOffsetToSnesIa = resolveRomOffsetToSnesIa;
 
         Rows = new ReadOnlyObservableCollection<ILabelRowViewModel>(visibleRows);
@@ -399,15 +401,10 @@ public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorVi
 
     public void NormalizeWramLabels()
     {
-        // PROVISIONAL routing -- see NormalizeWramLabelsPort (plan review finding 2, OPEN).
-        if (normalizeWramLabels == null)
-        {
-            RaiseError("WRAM label normalization is not wired up in this host.");
-            return;
-        }
-
-        // the operation mutates the provider label-by-label; each mutation raises a provider
-        // event and the row pipeline applies it incrementally.
+        // default routing is Diz.Core's LabelProviderExtensions.NormalizeWramLabels (plan
+        // review finding 2, RESOLVED: moved to Core). the operation mutates the provider
+        // label-by-label; each mutation raises a provider event and the row pipeline applies
+        // it incrementally.
         normalizeWramLabels();
     }
 

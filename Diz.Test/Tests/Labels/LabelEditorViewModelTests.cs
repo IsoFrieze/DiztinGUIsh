@@ -552,15 +552,19 @@ public class LabelEditorViewModelTests
     }
 
     [Fact]
-    public void NormalizeWramLabels_NoPortWired_RaisesError()
+    public void NormalizeWramLabels_NoPortWired_DefaultsToCoreImplementation()
     {
-        using var vm = NewVm(NewProvider());
-        var errors = new List<string>();
-        vm.ErrorRaised += (_, msg) => errors.Add(msg);
+        // finding 2 RESOLVED: with no port injected, the VM routes to Diz.Core's
+        // LabelProviderExtensions.NormalizeWramLabels on its own provider.
+        // $001234 is a WRAM mirror; canonical is $7E1234.
+        var provider = NewProvider((0x001234, "wram_mirrored", ""));
+        using var vm = NewVm(provider);
 
         vm.NormalizeWramLabels();
 
-        errors.Should().ContainSingle();
+        provider.GetLabel(0x001234).Should().BeNull();
+        provider.GetLabel(0x7E1234).Should().NotBeNull();
+        vm.Rows.Should().ContainSingle().Which.SnesAddress.Should().Be(0x7E1234);
     }
 
     // =====================================================================================

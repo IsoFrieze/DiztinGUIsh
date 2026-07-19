@@ -523,28 +523,10 @@ public class SnesApi : ISnesData
         return numChanged;
     }
 
-    public void NormalizeWramLabels()
-    {
-        var wramLabels = Labels.Labels
-            .Where(x => RomUtil.GetWramAddressFromSnesAddress(x.Key) != -1)
-            .ToList();
-        
-        foreach (var label in wramLabels)
-        {
-            var normalizedSnesAddress = RomUtil.GetSnesAddressFromWramAddress(RomUtil.GetWramAddressFromSnesAddress(label.Key));
-
-            // already normalized? skip
-            if (normalizedSnesAddress == label.Key)
-                continue;
-
-            // if there are duplicates or overlaps, we can't proceed, they must be manually cleaned up
-            if (wramLabels.Any(x => x.Key == normalizedSnesAddress))
-                continue;
-
-            Data.Labels.RemoveLabel(label.Key);
-            Data.Labels.AddLabel(normalizedSnesAddress, label.Value, true);
-        }
-    }
+    // thin delegation: the real implementation moved to Diz.Core
+    // (LabelProviderExtensions.NormalizeWramLabels) so UI-free consumers can reach it.
+    // kept here so IDataUtilities is unchanged.
+    public void NormalizeWramLabels() => Data.Labels.NormalizeWramLabels();
 
     private int FixFlagsForOpcodeAndItsOperands(int offset, int romSize, ref int bytesChanged)
     {
