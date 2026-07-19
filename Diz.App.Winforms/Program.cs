@@ -31,6 +31,11 @@ internal static class Program
         };
         #endif
         
+        // PHASE 0 SPIKE HOOK -- throwaway, delete with the spike/ folder.
+        // Runs only when explicitly asked for, so normal startup is unchanged.
+        if (Array.IndexOf(args, "--avalonia-spike") >= 0)
+            Diz.Spike.Avalonia.SpikeHost.Arm();
+
         var serviceFactory = DizWinformsRegisterServices.CreateServiceFactoryAndRegisterTypes();
         DizAppCommon.StartApp(serviceFactory, args);
     }
