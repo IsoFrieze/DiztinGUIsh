@@ -13,9 +13,18 @@ namespace Diz.Core.serialization
         public RomSpeed RomSpeed  { get; }
         public Dictionary<int, Label> InitialLabels  { get; }
         public Dictionary<int, FlagType> InitialHeaderFlags { get; }
+
+        /// <summary>
+        /// Bank regions to create on import (docs/diz/regions-as-partition-plan.md §A.5).
+        /// Already expressed in SNES addresses (regions are always SNES-address-keyed), unlike
+        /// InitialLabels/InitialHeaderFlags which are keyed by ROM offset -- so these are added
+        /// to Data.Regions directly, with no PC->SNES conversion needed at consume time.
+        /// </summary>
+        public List<IRegion> InitialRegions { get; }
+
         public IReadOnlyList<byte> RomBytes { get; }
         public string RomFilename { get; }
-    } 
+    }
     
     public class ImportRomSettings : IRomImportSettings
     {
@@ -52,6 +61,13 @@ namespace Diz.Core.serialization
             set => this.SetField(PropertyChanged, ref initialHeaderFlags, value);
         }
         private Dictionary<int, FlagType> initialHeaderFlags = new();
+
+        public List<IRegion> InitialRegions
+        {
+            get => initialRegions;
+            set => this.SetField(PropertyChanged, ref initialRegions, value);
+        }
+        private List<IRegion> initialRegions = new();
 
         public List<byte> RomBytes
         {

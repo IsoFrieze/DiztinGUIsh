@@ -4,6 +4,7 @@ using System.ComponentModel;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.model.project;
+using Diz.Core.model.snes;
 using Diz.Core.serialization;
 using Diz.Core.util;
 using JetBrains.Annotations;
@@ -16,7 +17,8 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
     private bool optionGenerateHeaderFlags = true;
     private RomMapMode optionSelectedRomMapMode;
     private bool optionGenerateSelectedVectorTableLabels = true;
-    private readonly IReadFromFileBytes fileReader; 
+    private bool optionGenerateBankRegions = true;
+    private readonly IReadFromFileBytes fileReader;
 
     public ISnesRomAnalyzer Input { get; }
 
@@ -38,6 +40,12 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
     {
         get => optionGenerateSelectedVectorTableLabels;
         set => this.SetField(PropertyChanged, ref optionGenerateSelectedVectorTableLabels, value);
+    }
+
+    public bool OptionGenerateBankRegions
+    {
+        get => optionGenerateBankRegions;
+        set => this.SetField(PropertyChanged, ref optionGenerateBankRegions, value);
     }
 
     private int? RomSettingOffset => 
@@ -147,7 +155,29 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
             settings.InitialHeaderFlags =
                 RomUtil.GenerateHeaderFlags(RomSettingOffset ?? -1, Input.RomBytes);
 
+        if (OptionGenerateBankRegions)
+            settings.InitialRegions = GenerateBankRegions();
+
         return settings;
+    }
+
+    // docs/diz/regions-as-partition-plan.md §A.5: on a brand-new import there are no existing
+    // regions to reconcile against, so this synthesizes one whole-bank region per bank in the
+    // ROM. Uses the same shared helper as the save-format-107 migration and the LogWriter's
+    // export-time synthesis, so all three call sites agree on bank extents/skip rules.
+    private List<IRegion> GenerateBankRegions()
+    {
+        var romMapMode = OptionSelectedRomMapMode;
+        var romSpeed = Input.AnalysisResults!.RomSpeed;
+        var bankSize = RomUtil.GetBankSize(romMapMode);
+
+        return BankRegionSynthesis.SynthesizeMissingBankRegions(
+                existingRegions: [],
+                romSize: Input.RomBytes!.Count,
+                bankSize: bankSize,
+                convertPcToSnes: offset => RomUtil.ConvertPCtoSnes(offset, romMapMode, romSpeed))
+            .Cast<IRegion>()
+            .ToList();
     }
 
     private Dictionary<int, Label> GenerateVectorLabels()
