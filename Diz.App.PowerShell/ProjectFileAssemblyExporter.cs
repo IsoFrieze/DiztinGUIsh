@@ -23,7 +23,10 @@ public class ProjectFileAssemblyExporter : IProjectFileAssemblyExporter
     {
         var project = projectFileSource.ReadProjectFromFile(projectFileName);
         if (project == null)
+        {
+            logger.Error($"couldn't load project file: {projectFileName}");
             return null;
+        }
 
         logger.Debug($"Loaded project, rom is: {project.AttachedRomFilename}");
         return project;
