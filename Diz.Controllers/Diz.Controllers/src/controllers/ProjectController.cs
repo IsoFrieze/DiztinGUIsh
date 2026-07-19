@@ -186,9 +186,10 @@ public class ProjectController(
         return importController;
     }
 
-    public void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll)
+    // step 4 of the new-ui plan: takes a plain path (the view layer prompts via
+    // IFileDialogService) instead of taking the view and calling dialogs back on it.
+    public void ImportLabelsCsv(string importFilename, bool replaceAll)
     {
-        var importFilename = labelEditor.PromptForCsvFilename();
         if (string.IsNullOrEmpty(importFilename))
             return;
 
@@ -196,11 +197,20 @@ public class ProjectController(
         try
         {
             Project.Data.Labels.ImportLabelsFromCsv(importFilename, replaceAll, smartMerge: true, out errLine);
-            labelEditor.RepopulateFromData();
+            // note: no view callback here anymore. the VM-bound label editor (step 3)
+            // re-syncs itself from the provider's LabelsChanged events, which is what the
+            // old labelEditor.RepopulateFromData() call did manually.
         }
         catch (Exception ex)
         {
-            labelEditor.ShowLineItemError(ex.Message, errLine);
+            // same user-visible dialog the old labelEditor.ShowLineItemError produced
+            // (WinformsGuiUtil.ShowLineItemError): identical text, title, icon, button.
+            // errLine is 0 unless ImportLabelsFromCsv assigned it before throwing, which
+            // preserves the historical (quirky) "no line number shown" behavior for
+            // exceptions thrown mid-parse.
+            commonGui.ShowError(
+                "An error occurred while parsing the file.\n" + ex.Message +
+                (errLine > 0 ? $" (Check line {errLine}.)" : ""));
         }
     }
     

@@ -57,7 +57,9 @@ public interface IProjectController :
     string SaveProject(string filename); // older signature. new should return void
 
     bool ImportRomAndCreateNewProject(string romFilename);
-    void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
+    // path is supplied by the caller (obtained via IFileDialogService in the view layer);
+    // this method never prompts. errors are surfaced through ICommonGui.
+    void ImportLabelsCsv(string importFilename, bool replaceAll);
     void SelectOffset(int offset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs = null);
 
     bool ConfirmSettingsThenExportAssembly();

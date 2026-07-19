@@ -55,10 +55,10 @@ public interface IMarkManyView<TDataSource> : IModalDialog
 public interface ILabelEditorView : IFormViewer
 {
     // a lot of these fields/methods shouldn't be done this way
-        
-    string PromptForCsvFilename(); // get rid of
-    void ShowLineItemError(string exMessage, int errLine);  // get rid of
-    
+    // (step 4 of the new-ui plan removed the prompt-shaped members: file paths now come
+    // from IFileDialogService in the view layer, and import errors are surfaced by
+    // ProjectController via ICommonGui.)
+
     void SetProjectController([CanBeNull] IProjectController projectController);
     void RepopulateFromData(); // keep
     void RebindProject(); // keep
