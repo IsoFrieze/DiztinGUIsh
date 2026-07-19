@@ -46,16 +46,6 @@ namespace Diz.Core.Interfaces
         void SetFlag(int offset, FlagType flagType);
     }
 
-    public interface IArchitectureGettable 
-    {
-        public Architecture GetArchitecture(int i);
-    }
-    
-    public interface IArchitectureSettable 
-    {
-        public void SetArchitecture(int i, Architecture arch);
-    }
-
     public interface IRomMapProvider
     {
         // eventually, remove the 'set' if we can just to make this read-only
@@ -100,17 +90,6 @@ namespace Diz.Core.Interfaces
         public CpuInstructionDataFormatted GetInstructionData(int offset);
     }
     
-    public interface IMarkable
-    {
-        int Mark(Action<int> markAction, int offset, int count);
-    }
-
-    public interface IRomByteBase
-    {
-        byte Rom { get; set; }
-        int Offset { get; }
-    }
-
     public interface ISnesRomByte : INotifyPropertyChanged
     {
         byte DataBank { get; set; }
@@ -122,10 +101,12 @@ namespace Diz.Core.Interfaces
         InOutPoint Point { get; set; }
     }
     
-    public interface IRomByte : 
-        IRomByteBase, 
+    public interface IRomByte :
         ISnesRomByte // eventually, need to get the ISnesRomByte out of here.
     {
+        byte Rom { get; set; }
+        int Offset { get; }
+
         public ReaderWriterLockSlim Lock { get; }
         public bool EqualsButNoRomByte(IRomByte other);
     }
@@ -185,9 +166,6 @@ namespace Diz.Core.Interfaces
         IReadOnlyByteSource,
         IRomMapProvider,
         IRomBytesProvider,
-        IMarkable,
-        IArchitectureSettable,
-        IArchitectureGettable,
         ICommentTextProvider,
         IRegionProvider
     {
@@ -195,8 +173,13 @@ namespace Diz.Core.Interfaces
         IDataStoreProvider<IDataTag> Tags { get; }
 
         ILabelServiceWithTempLabels Labels { get; }
-        
+
         public SortedDictionary<int, string> Comments { get; }
+
+        int Mark(Action<int> markAction, int offset, int count);
+
+        public Architecture GetArchitecture(int i);
+        public void SetArchitecture(int i, Architecture arch);
     }
 
     public static class DataExtensions

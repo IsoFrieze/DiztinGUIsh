@@ -7,68 +7,26 @@ using Diz.Core.util;
 
 namespace Diz.Cpu._65816;
 
-public interface ISnesChecksum
-{
-    public int RomSettingsOffset { get; }
-
-    public uint RomComplement { get; }
-    public uint RomChecksum { get; }
-    public uint RomCheckSumsFromRomBytes { get; }
-
-    public int RomComplementOffset { get; }
-    public int RomChecksumOffset { get; }
-    
-    public ushort ComputeChecksum();
-    public bool ComputeIsChecksumValid();
-
-    public void FixChecksum();
-}
-
-public interface ISnesCartName
-{
-    public int CartridgeTitleStartingOffset { get; }
-    public string CartridgeTitleName { get; }
-}
-
 public interface IDataUtilities
 {
     int FixMisalignedFlags();
     void NormalizeWramLabels();
 }
 
-public interface IMiscNavigable
-{
-    public (int unreachedOffsetFound, int iaSourceAddress) 
-        FindNextUnreachedBranchPointAfter(
-            int startingOffset, 
-            bool searchForward = true, 
-            bool includeUntakenBranchPoints = true, 
-            bool requireUnreached = true
-        );
-    
-    public int DetectNextPointerTableFromAddressingModeUsageAfter(
-        int startingOffset, 
-        bool searchForward = true
-    );
-}
-
 public interface ISnesApi<out TData> :
-    IRomByteFlagsGettable, 
-    IRomByteFlagsSettable, 
-    ISnesAddressConverter, 
+    IRomByteFlagsGettable,
+    IRomByteFlagsSettable,
+    ISnesAddressConverter,
     ISteppable,
-    IMiscNavigable,
     IAutoSteppable,
-    ISnesIntermediateAddress, 
-    IInOutPointSettable, 
+    ISnesIntermediateAddress,
+    IInOutPointSettable,
     IInOutPointGettable,
     IReadOnlyByteSource,
     IReadOnlyLabels,
     IRomMapProvider,
     IRomSize,
     ISnesBankInfo,
-    ISnesChecksum,
-    ISnesCartName,
     IInstructionGettable,
     IDataUtilities,
     IArchitectureApi,
@@ -79,6 +37,39 @@ public interface ISnesApi<out TData> :
     where TData : IData
 {
     TData Data { get; }
+
+    // checksums
+    public int RomSettingsOffset { get; }
+
+    public uint RomComplement { get; }
+    public uint RomChecksum { get; }
+    public uint RomCheckSumsFromRomBytes { get; }
+
+    public int RomComplementOffset { get; }
+    public int RomChecksumOffset { get; }
+
+    public ushort ComputeChecksum();
+    public bool ComputeIsChecksumValid();
+
+    public void FixChecksum();
+
+    // cart name
+    public int CartridgeTitleStartingOffset { get; }
+    public string CartridgeTitleName { get; }
+
+    // misc navigation
+    public (int unreachedOffsetFound, int iaSourceAddress)
+        FindNextUnreachedBranchPointAfter(
+            int startingOffset,
+            bool searchForward = true,
+            bool includeUntakenBranchPoints = true,
+            bool requireUnreached = true
+        );
+
+    public int DetectNextPointerTableFromAddressingModeUsageAfter(
+        int startingOffset,
+        bool searchForward = true
+    );
 
     public void CacheVerificationInfoFor(ISnesCachedVerificationInfo verificationCache);
 }

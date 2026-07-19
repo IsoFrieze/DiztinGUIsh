@@ -17,10 +17,17 @@ using JetBrains.Annotations;
 namespace Diz.Controllers.interfaces;
 
 public interface IProjectController :
-    ITraceLogImporters,
-    IFixInstructionUtils,
     IDataUtilities
 {
+    // trace log importers
+    void ImportBizHawkCdl(string filename);
+    long ImportBsnesUsageMap(string fileName);
+    long ImportBsnesTraceLogs(string[] fileNames);
+
+    // fix instruction utils
+    // probably combine this with something else.
+    bool RescanForInOut();
+
     // diz3.0 is going to need some major surgery from this one.
 
     public Project Project { get; }
@@ -66,41 +73,6 @@ public interface IProjectOpenerHandler : ILongRunningTaskHandler
     public string AskToSelectNewRomFilename(string error);
         
     Project OpenProject(string filename, bool showPopupAlertOnLoaded);
-}
-
-public interface IExportDisassembly
-{
-    void UpdateExportSettings(LogWriterSettings selectedSettings);
-    void WriteAssemblyOutput();
-}
-
-public interface IFixInstructionUtils
-{
-    // probably combine this with something else.
-    // not sure that this should really be an interface but...
-    bool RescanForInOut();
-}
-
-public interface ITraceLogImporters
-{
-    void ImportBizHawkCdl(string filename);
-    long ImportBsnesUsageMap(string fileName);
-    long ImportBsnesTraceLogs(string[] fileNames);
-}
-
-public interface IProjectNavigation
-{
-    public int SelectedSnesOffset { get; set; }
-
-    void GoTo(int offset);
-    void GoToUnreached(bool end, bool direction);
-    void GoToIntermediateAddress(int offset);
-    // void OnUserChangedSelection(ByteEntry newSelection);
-}
-
-public interface ILabelImporter
-{
-    void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
 }
 
 public interface IMarkManyController<out TDataSource>

@@ -18,28 +18,20 @@ public interface IGridRow<out TItem>
     TItem Item { get; }
 }
 
-public interface IProjectsManager : IProjects, IProjectLoadListener, ISampleProjectLoader, ILastProjectLoaded { }
-
-public interface IProjectLoadListener
-{
-    public event EventHandler<Project> OnProjectOpened;
-    void OpenProjectFile(string filename);
-}
-
-public interface IProjects
+public interface IProjectsManager : ISampleProjectLoader
 {
     Project GetProject(string filename);
+
+    public event EventHandler<Project> OnProjectOpened;
+    void OpenProjectFile(string filename);
+
+    Project GetLastOpenedProject();
+    void OpenLastLoadedProject();
 }
 
 public interface ISampleProjectLoader
 {
     Project GetSampleProject();
-}
-    
-public interface ILastProjectLoaded
-{
-    Project GetLastOpenedProject();
-    void OpenLastLoadedProject();
 }
     
 // note: this is an autofactory, so the names of the methods map to registrations (strings)
