@@ -1,0 +1,179 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.LabelEditorWindow"
+        x:CompileBindings="False"
+        Title="Label List"
+        Width="1050" Height="640"
+        FontSize="12">
+
+    <!--
+      AXAML conversion of the label editor (new-ui plan step 5b). Replaces the code-built
+      object tree; layout is now diffable markup. Behavior parity documented in the code-behind
+      (LabelEditorWindow.axaml.cs) and in docs/diz/new-ui-plan.md.
+
+      Column model (Address | Name | Comment | Contexts) is shared verbatim between the header
+      row and the row DataTemplate (built in code-behind) so cells align exactly. Widths string:
+      "110,240,*,150" (keep the two in sync: header here, row template in code-behind).
+
+      Reflection bindings (x:CompileBindings="False"): the details pane binds through the
+      possibly-null SelectedRow, which reflection bindings tolerate without an x:DataType.
+      The window's DataContext is the ILabelEditorViewModel (set in AttachViewModel).
+    -->
+
+    <Window.Styles>
+        <!-- compact rows: strip the default ListBoxItem chrome so the row Grid sets the height -->
+        <Style Selector="ListBox#LabelList > ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <!-- inline cell editors: no border/background of their own; the cell Border draws gridlines -->
+        <Style Selector="TextBox.cell">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="4,0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox.mono">
+            <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
+        </Style>
+        <!-- gridline cell wrapper: right + bottom hairline -->
+        <Style Selector="Border.cellframe">
+            <Setter Property="BorderBrush" Value="#E3E3E3" />
+            <Setter Property="BorderThickness" Value="0,0,1,0" />
+        </Style>
+        <Style Selector="Button.header">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+        <!-- toolbar button gaps (WrapPanel has no built-in item spacing in this version) -->
+        <Style Selector="WrapPanel#Toolbar > Button">
+            <Setter Property="Margin" Value="0,0,6,4" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+
+        <!-- ============================= top toolbar (wraps: no clipping) ============================= -->
+        <WrapPanel x:Name="Toolbar" DockPanel.Dock="Top" Margin="8,8,8,4">
+            <Button x:Name="BtnNewFromIa" Content="New Label From IA" Click="BtnNewFromIa_Click" />
+            <Button x:Name="BtnGoTo" Content="Go To" Click="BtnGoTo_Click" />
+            <Button x:Name="BtnImportAppend" Content="Import CSV (Append)..." Click="BtnImportAppend_Click" />
+            <Button x:Name="BtnImportReplace" Content="Import CSV (Replace All)..." Click="BtnImportReplace_Click" />
+            <Button x:Name="BtnExport" Content="Export CSV..." Click="BtnExport_Click" />
+            <Button x:Name="BtnNormalize" Content="Normalize WRAM Labels" Click="BtnNormalize_Click" />
+        </WrapPanel>
+
+        <!-- ============================= status bar (bottom-most) ============================= -->
+        <Border DockPanel.Dock="Bottom" BorderBrush="#C8C8C8" BorderThickness="0,1,0,0" Background="#F3F3F3">
+            <Grid ColumnDefinitions="*,Auto" Margin="8,3">
+                <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center" Foreground="#B00000" />
+                <TextBlock x:Name="CountsText" Grid.Column="1" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- ============================= search / navigate bar (above status) ============================= -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="8,4">
+            <TextBlock Text="Search:" VerticalAlignment="Center" />
+            <TextBox x:Name="SearchBox" PlaceholderText="Search..." MinWidth="260"
+                     VerticalAlignment="Center" TextChanged="SearchBox_TextChanged" />
+            <Button x:Name="BtnClearSearch" Content="Clear Search" Click="BtnClearSearch_Click" />
+        </StackPanel>
+
+        <!-- ============================= main: grid | splitter | details ============================= -->
+        <Grid ColumnDefinitions="*,4,360" Margin="8,0,8,0">
+
+            <!-- header + list share one column so their cells align exactly. Column widths
+                 "110,240,*,150" are duplicated in the code-built row template. -->
+            <DockPanel Grid.Column="0">
+                <Border DockPanel.Dock="Top" BorderBrush="#C8C8C8" BorderThickness="0,1,0,1" Background="#F3F3F3">
+                    <Grid ColumnDefinitions="110,240,*,150">
+                        <Border Grid.Column="0" Classes="cellframe">
+                            <Button x:Name="HeaderAddress" Classes="header" Content="Address" Click="Header_Click" Tag="Address" />
+                        </Border>
+                        <Border Grid.Column="1" Classes="cellframe">
+                            <Button x:Name="HeaderName" Classes="header" Content="Name" Click="Header_Click" Tag="Name" />
+                        </Border>
+                        <Border Grid.Column="2" Classes="cellframe">
+                            <Button x:Name="HeaderComment" Classes="header" Content="Comment" Click="Header_Click" Tag="Comment" />
+                        </Border>
+                        <TextBlock Grid.Column="3" Text="Contexts" FontWeight="Bold"
+                                   VerticalAlignment="Center" Margin="6,3" />
+                    </Grid>
+                </Border>
+
+                <ListBox x:Name="LabelList"
+                         SelectionMode="Single"
+                         SelectionChanged="LabelList_SelectionChanged"
+                         KeyDown="LabelList_KeyDown"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+            </DockPanel>
+
+            <GridSplitter Grid.Column="1" Background="#DDDDDD" ResizeDirection="Columns" />
+
+            <!-- ===== Label Details pane ===== -->
+            <Border Grid.Column="2" BorderBrush="#C8C8C8" BorderThickness="1" Margin="0,2,0,2">
+                <DockPanel Margin="8">
+                    <TextBlock x:Name="DetailsHeader" DockPanel.Dock="Top"
+                               Text="Label Details" FontWeight="Bold" Margin="0,0,0,6" />
+
+                    <StackPanel x:Name="DetailsBody" Spacing="4">
+                        <TextBlock Text="Name" Foreground="#606060" />
+                        <TextBox x:Name="DetailsName" Tag="details-name"
+                                 FontFamily="Consolas, Courier New, monospace"
+                                 Text="{Binding SelectedRow.Name, Mode=OneWay}"
+                                 GotFocus="DetailsName_GotFocus"
+                                 LostFocus="DetailsName_LostFocus"
+                                 KeyDown="DetailsName_KeyDown" />
+
+                        <TextBlock Text="Label Comment" Foreground="#606060" Margin="0,4,0,0" />
+                        <TextBox x:Name="DetailsComment" Tag="details-comment"
+                                 AcceptsReturn="True" TextWrapping="Wrap"
+                                 MinHeight="90" MaxHeight="160"
+                                 VerticalContentAlignment="Top"
+                                 Text="{Binding SelectedRow.Comment, Mode=OneWay}"
+                                 GotFocus="DetailsComment_GotFocus"
+                                 LostFocus="DetailsComment_LostFocus"
+                                 KeyDown="DetailsComment_KeyDown" />
+
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,2">
+                            <TextBlock Grid.Column="0" Text="Alternate Contexts" FontWeight="Bold"
+                                       VerticalAlignment="Center" />
+                            <Button Grid.Column="1" x:Name="BtnAddContext" Content="+ Add"
+                                    Padding="8,2" Click="BtnAddContext_Click" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="140,*,Auto" Margin="0,0,0,2">
+                            <TextBlock Grid.Column="0" Text="Context" FontWeight="Bold" Foreground="#606060" />
+                            <TextBlock Grid.Column="1" Text="Name Override" FontWeight="Bold" Foreground="#606060" />
+                        </Grid>
+
+                        <ItemsControl x:Name="ContextsList" ItemsSource="{Binding SelectedRow.ContextMappings}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="140,*,Auto" Margin="0,1">
+                                        <TextBox Grid.Column="0" Tag="ctx-context"
+                                                 Text="{Binding Context, Mode=TwoWay}"
+                                                 Padding="3,1" MinHeight="0" />
+                                        <TextBox Grid.Column="1" Tag="ctx-override"
+                                                 FontFamily="Consolas, Courier New, monospace"
+                                                 Text="{Binding NameOverride, Mode=TwoWay}"
+                                                 Padding="3,1" MinHeight="0" Margin="3,0" />
+                                        <Button Grid.Column="2" Content="x" Padding="6,1"
+                                                Click="RemoveContext_Click" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

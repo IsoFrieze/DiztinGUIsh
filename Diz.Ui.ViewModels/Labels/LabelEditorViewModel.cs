@@ -397,6 +397,30 @@ public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorVi
         RaiseCountsChanged();
     }
 
+    public IContextMappingViewModel AddContextMapping(
+        ILabelRowViewModel row, string context = "", string nameOverride = "")
+    {
+        var target = (LabelRowViewModel)row;
+
+        // In-place append to the model's own collection (byte-for-byte what the WinForms
+        // details grid's ListChanged handler did). The row observes CollectionChanged and
+        // rebuilds its wrappers in order, so the wrapper for THIS mapping is the last one.
+        var mapping = new ContextMapping { Context = context, NameOverride = nameOverride };
+        target.UnderlyingLabel.ContextMappings.Add(mapping);
+
+        return target.ContextMappings
+                   .OfType<ContextMappingViewModel>()
+                   .LastOrDefault(w => ReferenceEquals(w.Model, mapping))
+               ?? target.ContextMappings[^1];
+    }
+
+    public void RemoveContextMapping(ILabelRowViewModel row, IContextMappingViewModel mapping)
+    {
+        var target = (LabelRowViewModel)row;
+        if (mapping is ContextMappingViewModel wrapper)
+            target.UnderlyingLabel.ContextMappings.Remove(wrapper.Model);
+    }
+
     public void ClearSearch() => SearchTerm = "";
 
     public void NormalizeWramLabels()

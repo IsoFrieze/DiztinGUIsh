@@ -18,6 +18,10 @@ public sealed class ContextMappingViewModel : ViewModelNotifierBase, IContextMap
         model.PropertyChanged += OnModelPropertyChanged;
     }
 
+    /// <summary>The live model mapping this wrapper writes through. Used by the editor VM's
+    /// add/remove commands to locate the underlying entry in Label.ContextMappings.</summary>
+    internal IContextMapping Model => model;
+
     public string Context
     {
         get => model.Context;

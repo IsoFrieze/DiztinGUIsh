@@ -669,4 +669,73 @@ public class LabelEditorViewModelTests
         provider.AddLabel(0x020000, new Label { Name = "late" });
         vm.Rows.Should().BeEmpty();
     }
+
+    // =====================================================================================
+    // step 5b: alternate-context add/remove routed through the VM (details-pane editor)
+    // =====================================================================================
+
+    [Fact]
+    public void AddContextMapping_AppendsToModel_AndRefreshesRowWrappersAndSummary()
+    {
+        var provider = NewProvider((0x7E1400, "tmp50", ""));
+        using var vm = NewVm(provider);
+        var row = vm.Rows.Single();
+
+        var wrapper = vm.AddContextMapping(row, "battle", "player_hp");
+
+        // model got the mapping in place (the same collection a later commit carries over)
+        var modelMappings = provider.GetLabel(0x7E1400)!.ContextMappings;
+        modelMappings.Should().ContainSingle();
+        modelMappings.Single().Context.Should().Be("battle");
+        modelMappings.Single().NameOverride.Should().Be("player_hp");
+
+        // the returned wrapper wraps the new mapping, and the row's wrappers + summary refreshed
+        wrapper.Context.Should().Be("battle");
+        wrapper.NameOverride.Should().Be("player_hp");
+        row.ContextMappings.Should().ContainSingle().Which.Should().BeSameAs(wrapper);
+        row.ContextSummary.Should().Be("battle: player_hp");
+    }
+
+    [Fact]
+    public void AddContextMapping_WhitespaceContext_IsAllowed_ButExcludedFromSummary()
+    {
+        var provider = NewProvider((0x7E1400, "tmp50", ""));
+        using var vm = NewVm(provider);
+        var row = vm.Rows.Single();
+
+        vm.AddContextMapping(row); // empty new-row affordance, mirrors the editable blank row
+
+        provider.GetLabel(0x7E1400)!.ContextMappings.Should().ContainSingle();
+        row.ContextSummary.Should().BeEmpty(); // whitespace context skipped, exactly as before
+    }
+
+    [Fact]
+    public void RemoveContextMapping_RemovesFromModel_AndRefreshesSummary()
+    {
+        var provider = NewProvider((0x7E1400, "tmp50", ""));
+        using var vm = NewVm(provider);
+        var row = vm.Rows.Single();
+        vm.AddContextMapping(row, "battle", "player_hp");
+        vm.AddContextMapping(row, "menu", "cursor");
+
+        vm.RemoveContextMapping(row, row.ContextMappings.First(m => m.Context == "battle"));
+
+        provider.GetLabel(0x7E1400)!.ContextMappings
+            .Select(m => m.Context).Should().Equal("menu");
+        row.ContextSummary.Should().Be("menu: cursor");
+    }
+
+    [Fact]
+    public void RemoveContextMapping_MappingFromAnotherRow_IsANoOp()
+    {
+        var provider = NewProvider((0x7E1400, "a", ""), (0x7E1500, "b", ""));
+        using var vm = NewVm(provider);
+        var rowA = vm.Rows.Single(r => r.SnesAddress == 0x7E1400);
+        var rowB = vm.Rows.Single(r => r.SnesAddress == 0x7E1500);
+        var mappingOnB = vm.AddContextMapping(rowB, "battle", "b_override");
+
+        vm.RemoveContextMapping(rowA, mappingOnB); // wrong row -> must not touch B
+
+        provider.GetLabel(0x7E1500)!.ContextMappings.Should().ContainSingle();
+    }
 }

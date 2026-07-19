@@ -158,6 +158,20 @@ public interface ILabelEditorViewModel : INotifyPropertyChanged, IDisposable
 
     void DeleteLabel(int snesAddress);
 
+    /// <summary>Add a new alternate-context mapping to the given row's label and return its VM
+    /// wrapper. The mapping is appended to the model's ContextMappings in place (the same
+    /// in-place mutation the WinForms details grid did); the row relays the collection change,
+    /// so ContextSummary and the row's ContextMappings wrappers refresh. A whitespace-only
+    /// context is allowed here (mirrors the old editor's editable new-row) but is skipped by
+    /// ContextSummary until named. The label object carrying these mappings is the SAME
+    /// instance a later name/comment CommitEdit carries over by reference, so context edits
+    /// survive those commits.</summary>
+    IContextMappingViewModel AddContextMapping(ILabelRowViewModel row, string context = "", string nameOverride = "");
+
+    /// <summary>Remove an alternate-context mapping from the given row's label (in place).
+    /// No-op if the mapping does not belong to this row.</summary>
+    void RemoveContextMapping(ILabelRowViewModel row, IContextMappingViewModel mapping);
+
     void ClearSearch();
 
     /// <summary>Normalize mirrored WRAM label addresses to the canonical $7E bank. Defaults
