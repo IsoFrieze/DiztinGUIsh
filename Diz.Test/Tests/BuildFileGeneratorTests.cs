@@ -244,4 +244,88 @@ public class BuildFileGeneratorTests : IDisposable
         var missing = Path.Combine(tempDir, "does-not-exist");
         new ToolVendoring().VendorInto(exportRoot, missing).Should().BeEmpty();
     }
+
+    // ---- step 7: generalized codec dispatch (B.3) ------------------------------------------
+
+    [Fact]
+    public void UnknownAssetTypeFailsLoudlyNamingTheType()
+    {
+        // Consistent with step 6's exporter: an Asset region whose type no binding claims must
+        // error loudly (naming the type), not be silently routed to the gfx codec as before.
+        var assets = BuildFileGenerator.CollectAssets([AssetRegion("audio/song", "audio.snes.brr")]);
+
+        var act = () => new BuildFileGenerator().Generate(assets);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*audio.snes.brr*");
+    }
+
+    [Fact]
+    public void PerAssetEdgesDispatchByTypePrefixToTheMatchingBinding()
+    {
+        // Register a second codec binding and prove assets route to it by AssetType prefix,
+        // independently of gfx -- the point of generalizing the hardcoded gfx-only wiring.
+        var bindings = new[]
+        {
+            BuildFileGenerator.DefaultToolBindings[0], // gfx (reuses the shared $gfxpack var)
+            new BuildToolBinding
+            {
+                TypePrefix = "audio.",
+                ToolVar = "binpack",
+                ToolFile = "binpack.py",
+                SourceExtension = ".brr",
+                CompiledExtension = ".bin",
+                CompileRule = "audio_compile",
+                SeedRule = "audio_seed",
+                CompileCommand = "python $binpack compile --name $name $search_roots --out $out",
+                CompileDescription = "binpack compile $name",
+                SeedCommand = "python $binpack seed --name $name $search_roots",
+                SeedDescription = "binpack seed $name",
+            },
+        };
+
+        var ninja = new BuildFileGenerator(toolBindings: bindings).Generate(BuildFileGenerator.CollectAssets([
+            AssetRegion("gfx/font", "gfx.snes.2bpp"),
+            AssetRegion("audio/song", "audio.snes.brr"),
+        ]));
+
+        // the second binding declared its OWN tool var (gfx reuses the shared one, so declares none)
+        ninja.Should().Contain("binpack = tools/vendor/dizpack/binpack.py");
+        ninja.Should().Contain("rule audio_compile");
+        ninja.Should().Contain("rule audio_seed");
+
+        // the audio asset compiles from a .brr via the audio rules + $binpack...
+        ninja.Should().Contain(
+            "build build/assets/audio/song.bin: audio_compile assets/src/audio/song.brr | assets/src/audio/song.json $binpack");
+        // ...while gfx still compiles from .png via gfx_compile + $gfxpack, unchanged.
+        ninja.Should().Contain(
+            "build build/assets/gfx/font.bin: gfx_compile assets/src/gfx/font.png | assets/src/gfx/font.json $gfxpack");
+    }
+
+    [Fact]
+    public void VendoringPicksUpNewlyAddedCodecsAutomatically()
+    {
+        // The vendor list is DISCOVERED, not a hardcoded pair: dropping a new codec (binpack.py)
+        // into the source tools dir ships it without editing ToolVendoring. A stray subdir
+        // (__pycache__) and a non-vendorable file must be skipped.
+        var fakeTools = Path.Combine(tempDir, "src-tools");
+        Directory.CreateDirectory(fakeTools);
+        Directory.CreateDirectory(Path.Combine(fakeTools, "__pycache__"));
+        File.WriteAllText(Path.Combine(fakeTools, "__pycache__", "gfxpack.cpython.pyc"), "junk");
+        File.WriteAllText(Path.Combine(fakeTools, "gfxpack.py"), "# stub\n");
+        File.WriteAllText(Path.Combine(fakeTools, "binpack.py"), "# stub2\n");
+        File.WriteAllText(Path.Combine(fakeTools, "requirements.txt"), "Pillow>=10\n");
+
+        var exportRoot = Path.Combine(tempDir, "vend-export");
+        Directory.CreateDirectory(exportRoot);
+
+        new ToolVendoring().VendorInto(exportRoot, fakeTools);
+
+        var vendored = Path.Combine(exportRoot, "tools", "vendor", "dizpack");
+        File.Exists(Path.Combine(vendored, "gfxpack.py")).Should().BeTrue();
+        File.Exists(Path.Combine(vendored, "binpack.py")).Should()
+            .BeTrue("a new codec must ship without editing ToolVendoring");
+        File.Exists(Path.Combine(vendored, "requirements.txt")).Should().BeTrue();
+        Directory.Exists(Path.Combine(vendored, "__pycache__")).Should()
+            .BeFalse("subdirectories (bytecode caches) must not be vendored");
+    }
 }
