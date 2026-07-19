@@ -26,17 +26,17 @@ public interface IModalDialog
 }
     
 
-public interface IProgressView : IFormViewer, IModalDialog, IProgress<int> {
+// new-ui plan step 6 (threading rewrite): a progress view is now a plain non-modal window
+// the long-running-task handler shows while work runs on a Task and closes on completion.
+// GONE (with ProgressBarWorker): IModalDialog.PromptDialog (the blocking ShowDialog),
+// IsVisible() (the worker's spin-wait predicate), and SignalJobIsDone() (the cross-thread
+// close signal). Report(int) is marshalled to the UI thread by the handler's IProgress<int>.
+public interface IProgressView : IFormViewer, IProgress<int> {
     public bool IsMarquee { get; set; }
     public string TextOverride { get; set; }
-    bool IsVisible();
-        
-    /// <summary>
-    /// Signal that a job (potentially running in another task/thread) has completed.
-    /// CAUTION: Implementers should use thread-safety measures, this may be called
-    /// from a different thread than any other calls 
-    /// </summary>
-    void SignalJobIsDone();
+
+    /// <summary>Close/hide the progress window. Called on the UI thread when the work finishes.</summary>
+    void Close();
 }
 
 // diz2 version (use it)
@@ -52,37 +52,13 @@ public interface IMarkManyView<TDataSource> : IModalDialog
 }
 
 
-#if DIZ_3_BRANCH
-    public interface IBytesGridViewer<TByteItem> : IRowBaseViewer<TByteItem>, IViewer
-    {
-        public List<TByteItem> DataSource { get; set; }
-        int TargetNumberOfRowsToShow { get; }
-
-        void SelectRow(int row);
-        
-
-        void BeginEditingSelectionComment();
-        void BeginEditingSelectionLabel();
-        
-        public class SelectedOffsetChangedEventArgs : EventArgs
-        {
-            public TByteItem Row { get; init; }
-            public int RowIndex { get; init; }
-        }
-
-        public delegate void SelectedOffsetChange(object sender, SelectedOffsetChangedEventArgs e);
-
-        public event SelectedOffsetChange SelectedOffsetChanged;
-    }
-#endif
-    
 public interface ILabelEditorView : IFormViewer
 {
     // a lot of these fields/methods shouldn't be done this way
-        
-    string PromptForCsvFilename(); // get rid of
-    void ShowLineItemError(string exMessage, int errLine);  // get rid of
-    
+    // (step 4 of the new-ui plan removed the prompt-shaped members: file paths now come
+    // from IFileDialogService in the view layer, and import errors are surfaced by
+    // ProjectController via ICommonGui.)
+
     void SetProjectController([CanBeNull] IProjectController projectController);
     void RepopulateFromData(); // keep
     void RebindProject(); // keep
@@ -129,10 +105,3 @@ public interface ILogCreatorSettingsEditorView : IFormViewer
     /// <returns></returns>
     bool PromptEditAndConfirmSettings();
 }
-    
-#if DIZ_3_BRANCH
-    public interface IDataGridEditorForm : IFormViewer, IProjectView
-    {
-        IMainFormController MainFormController { get; set; }
-    }
-#endif

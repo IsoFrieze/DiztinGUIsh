@@ -251,6 +251,10 @@ public class Region : IRegion
     private string contextToApply;
     private int priority;
     private bool exportSeparateFile;
+    private RegionExportType exportType;
+    private string assetType;
+    private string assetVersion;
+    private string assetName;
 
     public int StartSnesAddress
     {
@@ -286,6 +290,30 @@ public class Region : IRegion
     {
         get => exportSeparateFile;
         set => this.SetField(PropertyChanged, ref exportSeparateFile, value);
+    }
+
+    public RegionExportType ExportType
+    {
+        get => exportType;
+        set => this.SetField(PropertyChanged, ref exportType, value);
+    }
+
+    public string AssetType
+    {
+        get => assetType;
+        set => this.SetField(PropertyChanged, ref assetType, value);
+    }
+
+    public string AssetVersion
+    {
+        get => assetVersion;
+        set => this.SetField(PropertyChanged, ref assetVersion, value);
+    }
+
+    public string AssetName
+    {
+        get => assetName;
+        set => this.SetField(PropertyChanged, ref assetName, value);
     }
 
     public event PropertyChangedEventHandler PropertyChanged;

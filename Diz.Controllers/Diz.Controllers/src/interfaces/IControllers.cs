@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.commands;
@@ -16,17 +17,18 @@ using Diz.Cpu._65816;
 
 namespace Diz.Controllers.interfaces;
 
-// public interface IStartFormController : IFormViewer
-// {
-//     public IStartFormViewer View { get; }
-// }
-//     
-
-public interface IProjectController : 
-    ITraceLogImporters,
-    IFixInstructionUtils,
+public interface IProjectController :
     IDataUtilities
 {
+    // trace log importers
+    void ImportBizHawkCdl(string filename);
+    Task<long> ImportBsnesUsageMapAsync(string fileName);
+    Task<long> ImportBsnesTraceLogsAsync(string[] fileNames);
+
+    // fix instruction utils
+    // probably combine this with something else.
+    bool RescanForInOut();
+
     // diz3.0 is going to need some major surgery from this one.
 
     public Project Project { get; }
@@ -52,15 +54,17 @@ public interface IProjectController :
 
     IProjectView ProjectView { get; set; }
 
-    bool OpenProject(string filename);  // older signature
-    string SaveProject(string filename); // older signature. new should return void
+    Task<bool> OpenProjectAsync(string filename);
+    Task<string> SaveProjectAsync(string filename); // null on success, else the error message
 
     bool ImportRomAndCreateNewProject(string romFilename);
-    void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
-    void SelectOffset(int offset, ISnesNavigation.HistoryArgs? historyArgs = null);
+    // path is supplied by the caller (obtained via IFileDialogService in the view layer);
+    // this method never prompts. errors are surfaced through ICommonGui.
+    void ImportLabelsCsv(string importFilename, bool replaceAll);
+    void SelectOffset(int offset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs = null);
 
-    bool ConfirmSettingsThenExportAssembly();
-    bool ExportAssemblyWithCurrentSettings();
+    Task<bool> ConfirmSettingsThenExportAssemblyAsync();
+    Task<bool> ExportAssemblyWithCurrentSettingsAsync();
     void MarkChanged(); // rename to MarkUnsaved or similar in Diz3.0
 }
     
@@ -73,65 +77,6 @@ public interface IProjectOpenerHandler : ILongRunningTaskHandler
         
     Project OpenProject(string filename, bool showPopupAlertOnLoaded);
 }
-
-public interface IExportDisassembly
-{
-    void UpdateExportSettings(LogWriterSettings selectedSettings);
-    void WriteAssemblyOutput();
-}
-
-public interface IFixInstructionUtils
-{
-    // probably combine this with something else.
-    // not sure that this should really be an interface but...
-    bool RescanForInOut();
-}
-
-public interface ITraceLogImporters
-{
-    void ImportBizHawkCdl(string filename);
-    long ImportBsnesUsageMap(string fileName);
-    long ImportBsnesTraceLogs(string[] fileNames);
-}
-
-#if DIZ_3_BRANCH
-    public interface IProjectNavigation
-    {
-        public int SelectedSnesOffset { get; set; }
-
-        void GoTo(int offset);
-        void GoToUnreached(bool end, bool direction);
-        void GoToIntermediateAddress(int offset);
-        // void OnUserChangedSelection(ByteEntry newSelection);
-    }
-
-    public interface ILabelImporter
-    {
-        void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
-    }
-
-    public interface IMainFormController : 
-        
-        IFormController,
-        
-        // TODO: shouldn't have the word 'Grid' in here for Main Form controller. refactor
-        // either naming or functionality.
-        // IBytesGridViewerDataController<RomByteDataGridRow>,
-        
-        IProjectController,
-        I65816CpuOperations, 
-        IExportDisassembly, 
-        IProjectOpenerHandler, 
-        ITraceLogImporters, 
-        IProjectNavigation,
-        ILabelImporter
-    {
-        public FlagType CurrentMarkFlag { get; set; }
-        public bool MoveWithStep { get; set; }
-        
-        void SetProject(string filename, Project project);
-    }
-#endif
 
 public class MarkManyViewSettings
 {

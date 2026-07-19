@@ -36,39 +36,5 @@ public class DizControllersCompositionRoot : ICompositionRoot
         //         return markManyController;
         //     });
 
-        // TODO: might be able to make some of these register using
-        // "open generics" to be more flexible.
-
-#if DIZ_3_BRANCH
-            serviceRegistry.Register(
-                typeof(IDataController), 
-                typeof(RomByteDataBindingController<IGridRow<ByteEntry>>)
-            );
-
-            serviceRegistry.Register<IDataController, RomByteDataBindingGridController>();
-
-            serviceRegistry.Register(
-                typeof(IBytesGridDataController<,>),
-                typeof(RomByteDataBindingController<>)
-            );
-            
-            serviceRegistry.Register(
-                typeof(IBytesGridDataController<IDataGridRow,ByteEntry>),
-                typeof(RomByteDataBindingGridController)
-            );
-            
-            serviceRegistry.Register<IStartFormController, StartFormController>();
-            
-            serviceRegistry.Register<IMainFormController, MainFormController>();
-            
-            serviceRegistry.Register<IProjectLoader, ProjectFileLoader>();
-            serviceRegistry.Decorate(
-                typeof(IProjectLoader), 
-                typeof(ProjectLoaderWithSampleDataDecorator));
-
-            serviceRegistry.Register<IProjectsManager, ProjectsManager>();
-            
-            serviceRegistry.RegisterSingleton<ISampleProjectLoader, ProjectsManager>("SampleProjectLoader");
-#endif
     }
 }

@@ -64,13 +64,6 @@ internal class BinarySerializer : ProjectSerializer
             Data = new Data()
         };
 
-#if DIZ_3_BRANCH
-            project.Session = new ProjectSession(project)
-            {
-                UnsavedChanges = false
-            };
-#endif
-
         // version 0 needs to convert PC to SNES for some addresses
         ByteUtil.AddressConverter converter = address => address;
         if (version == 0)
@@ -80,10 +73,8 @@ internal class BinarySerializer : ProjectSerializer
         var mode = (RomMapMode) data[HeaderSize];
         var speed = (RomSpeed) data[HeaderSize + 1];
             
-#if !DIZ_3_BRANCH
         project.Data.RomMapMode = mode;
         project.Data.RomSpeed = speed;
-#endif
             
         var size = ByteUtil.ConvertByteArrayToInt32(data, HeaderSize + 2);
 
@@ -101,11 +92,7 @@ internal class BinarySerializer : ProjectSerializer
             project.AttachedRomFilename += (char) data[pointer++];
         pointer++;
 
-#if DIZ_3_BRANCH
-            project.Data.InitializeEmptyRomMapping(size, mode, speed);
-#else
         project.Data.RomBytes.Create(size);
-#endif
 
         for (int i = 0; i < size; i++) project.Data.SetDataBank(i, data[pointer + i]);
         for (int i = 0; i < size; i++)
@@ -120,10 +107,8 @@ internal class BinarySerializer : ProjectSerializer
         ReadLabels(project, data, ref pointer, converter, version >= 2);
         ReadComments(project, data, ref pointer, converter);
 
-#if !DIZ_3_BRANCH
-        if (project.Session != null) 
+        if (project.Session != null)
             project.Session.UnsavedChanges = false;
-#endif
 
         var warning = "";
         if (version != LatestFileFormatVersion)

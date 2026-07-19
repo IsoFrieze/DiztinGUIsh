@@ -80,12 +80,6 @@ public class XmlSerializerFactory(
             .EnableImplicitTyping(typeof(ContextMapping))
 
             .Type<Label>()
-            
-#if DIZ_3_BRANCH
-                .Name("L")
-                .Member(x => x.Comment).Name("Cmt").EmitWhen(text => !string.IsNullOrEmpty(text))
-                .Member(x => x.Name).Name("V").EmitWhen(text => !string.IsNullOrEmpty(text))
-#endif
             .EnableImplicitTyping()
         
             .Type<IAnnotationLabel>()
@@ -93,9 +87,6 @@ public class XmlSerializerFactory(
 
             .UseOptimizedNamespaces()
             .UseAutoFormatting();
-#if DIZ_3_BRANCH
-                .EnableReferences()
-#endif
     }
 
     /// <summary>

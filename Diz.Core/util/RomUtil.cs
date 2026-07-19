@@ -426,45 +426,6 @@ namespace Diz.Core.util
 
         public const int LengthOfTitleName = 0x15;
 
-        #if DIZ_3_BRANCH
-        public static ByteSourceMapping CreateRomMappingFromRomByteSource(ByteSource romByteSource, RomMapMode romMapMode, RomSpeed romSpeed)
-        {
-            return new()
-            {
-                ByteSource = romByteSource,
-                RegionMapping = new RegionMappingSnesRom
-                {
-                    RomSpeed = romSpeed,
-                    RomMapMode = romMapMode,
-                }
-            };
-        }
-
-        public static ByteSourceMapping CreateRomMappingFromRomRawBytes(
-            IReadOnlyCollection<byte> actualRomBytes, RomMapMode romMapMode, RomSpeed romSpeed)
-        {
-            var data = actualRomBytes.Select(b => new ByteEntry() {Byte = b}).ToList();
-
-            var romByteSource = new ByteSource
-            {
-                Bytes = new StorageList<ByteEntry>(data),
-                Name = "Snes ROM"
-            };
-            
-            return CreateRomMappingFromRomByteSource(romByteSource, romMapMode, romSpeed);
-        }
-
-        public static ByteSource CreateSnesAddressSpace()
-        {
-            const int snesAddressableBytes = 0x1000000;
-            return new ByteSource
-            {
-                Bytes = new StorageSparse<ByteEntry>(snesAddressableBytes),
-                Name = "SNES Main Cpu BUS",
-            };
-        }
-        #endif
-        
         public static bool IsLocationPoint(this IInOutPointGettable data, int pointer, InOutPoint mustHaveFlag) =>
             (data.GetInOutPoint(pointer) & mustHaveFlag) != 0;
 

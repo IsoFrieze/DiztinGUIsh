@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <!-- PLAIN net10.0 (NOT -windows): the P/Invoke to kernel32 (AllocConsole etc.) works on
+             the plain TFM, and we capture the base System.Threading.SynchronizationContext (not
+             WindowsFormsSynchronizationContext), so no WinForms reference is needed here. Keeping
+             this assembly WinForms-free is deliberate: same discipline as Diz.Ui.Avalonia. -->
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <RootNamespace>Diz.Ui.Tui</RootNamespace>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Terminal.Gui v2 (org moved to github.com/tui-cs/Terminal.Gui, MIT). 2.4.17 is the
+             latest STABLE (non-prerelease) v2 release and targets net10.0 exactly, so no
+             prerelease pin is needed (the handoff allowed one but a stable release is better). -->
+        <PackageReference Include="Terminal.Gui" Version="2.4.17" />
+        <!-- 2026.2.0 (not the repo-wide 2023.3.0): Terminal.Gui 2.4.17 requires
+             JetBrains.Annotations >= 2026.2.0, so this project and its consumer
+             (Diz.App.Winforms) must match it to avoid an NU1605 downgrade. -->
+        <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
+        <PackageReference Include="LightInject" Version="6.6.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Diz.Controllers\Diz.Controllers\Diz.Controllers.csproj" />
+        <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+        <ProjectReference Include="..\Diz.Core.Interfaces\Diz.Core.Interfaces.csproj" />
+        <ProjectReference Include="..\Diz.Cpu.65816\Diz.Cpu.65816.csproj" />
+        <ProjectReference Include="..\Diz.Ui.ViewModels\Diz.Ui.ViewModels.csproj" />
+    </ItemGroup>
+
+    <!--
+      Like Diz.Ui.ViewModels / Diz.Ui.Avalonia, this backend assembly must stay platform-free at
+      the TFM level: it is a plain net10.0 library that talks to the console through P/Invoke, not
+      through WinForms. A '-windows' TFM (or a UI toolkit) here would be the Diz.Ui.Eto mistake.
+    -->
+    <Target Name="AssertDizUiTuiStaysPlatformFree" BeforeTargets="Build">
+        <Error Condition="'$(TargetFramework)' != '' and $(TargetFramework.Contains('windows'))"
+               Text="Diz.Ui.Tui must stay platform-free, but TargetFramework is '$(TargetFramework)'. The console host uses P/Invoke, not WinForms; it may never gain a Windows-specific TFM." />
+        <Error Condition="'$(UseWindowsForms)' == 'true' or '$(UseWPF)' == 'true'"
+               Text="Diz.Ui.Tui must stay platform-free: UseWindowsForms/UseWPF may never be enabled here." />
+    </Target>
+
+</Project>

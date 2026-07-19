@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Text.RegularExpressions;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -49,8 +48,12 @@ public abstract class LabelImporter
 
     private void TryImportLabel(IAnnotationLabel label, string labelAddress)
     {
-        var validLabelChars = new Regex(@"^([a-zA-Z0-9_\-+\.\-]*)$");
-        if (!validLabelChars.Match(label.Name).Success)
+        // NOTE: uses LabelNameRules.Legacy, which is byte-for-byte the rule this line enforced
+        // before (regex ^([a-zA-Z0-9_\-+\.\-]*)$, empty string allowed). Import behaviour is
+        // deliberately UNCHANGED by this swap. New call sites (e.g. the in-grid editor, which
+        // validates nothing today) should use the default LabelNameRules.Strict instead.
+        var nameValidation = LabelNameValidator.Validate(label.Name, LabelNameRules.Legacy);
+        if (!nameValidation.IsValid)
             throw new InvalidDataException("invalid label name: " + label.Name);
 
         var address = int.Parse(labelAddress, NumberStyles.HexNumber, null);

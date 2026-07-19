@@ -17,45 +17,21 @@ public interface IGridRow<out TItem>
     Data Data { get; init; }
     TItem Item { get; }
 }
- 
-#if DIZ_3_BRANCH
-    public interface IDataGridRow : IGridRow<ByteEntry>, INotifyPropertyChanged
-    {
-        
-    }
 
-    public interface IDataSubsetRomByteDataGridLoader<TRow, TItem> : IDataSubsetLoader<TRow, TItem>
-    {
-        // probably this needs to be refactored away, this exists for dependency injection resolution only
-        // across the Controller and Gui layer
-        
-        public IBytesGridViewer<TItem> View { get; set; }
-        public Data Data { get; set; }
-    }
-#endif
-    
-public interface IProjectsManager : IProjects, IProjectLoadListener, ISampleProjectLoader, ILastProjectLoaded { }
-
-public interface IProjectLoadListener
-{
-    public event EventHandler<Project> OnProjectOpened;
-    void OpenProjectFile(string filename);
-}
-
-public interface IProjects
+public interface IProjectsManager : ISampleProjectLoader
 {
     Project GetProject(string filename);
+
+    public event EventHandler<Project> OnProjectOpened;
+    void OpenProjectFile(string filename);
+
+    Project GetLastOpenedProject();
+    void OpenLastLoadedProject();
 }
 
 public interface ISampleProjectLoader
 {
     Project GetSampleProject();
-}
-    
-public interface ILastProjectLoaded
-{
-    Project GetLastOpenedProject();
-    void OpenLastLoadedProject();
 }
     
 // note: this is an autofactory, so the names of the methods map to registrations (strings)

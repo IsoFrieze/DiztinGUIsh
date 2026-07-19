@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <RootNamespace>Diz.App.Winforms</RootNamespace>
@@ -24,11 +24,20 @@
     <ProjectReference Include="..\Diz.App.Common\Diz.App.Common.csproj" />
     <ProjectReference Include="..\Diz.Controllers\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Ui.Winforms\Diz.Ui.Winforms\Diz.Ui.Winforms.csproj" />
+    <!-- new-ui step 5: the Avalonia label-editor backend (see LabelEditorBackend.cs) -->
+    <ProjectReference Include="..\Diz.Ui.Avalonia\Diz.Ui.Avalonia.csproj" />
+    <!-- new-ui TUI PoC: the Terminal.Gui label-viewer backend (DIZ_LABEL_EDITOR=tui) -->
+    <ProjectReference Include="..\Diz.Ui.Tui\Diz.Ui.Tui.csproj" />
+    <!-- PHASE 0 SPIKE (throwaway, remove with the spike/ folder) -->
+    <ProjectReference Include="..\spike\Diz.Spike.Avalonia\Diz.Spike.Avalonia.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- 2026.2.0 (bumped from the repo-wide 2023.3.0): the transitive Terminal.Gui 2.4.17 (via
+         Diz.Ui.Tui) requires JetBrains.Annotations >= 2026.2.0; matching it here avoids an NU1605
+         package-downgrade error. Attributes-only package, backward-compatible. -->
     <PackageReference Include="JetBrains.Annotations">
-      <Version>2023.3.0</Version>
+      <Version>2026.2.0</Version>
     </PackageReference>
     <PackageReference Include="GitInfo">
       <Version>3.3.3</Version>

@@ -5,7 +5,7 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <RootNamespace>Diz.Test</RootNamespace>
     <AssemblyName>Diz.Test</AssemblyName>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
@@ -74,6 +74,7 @@
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
     <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
     <ProjectReference Include="..\Diz.Cpu.65816\Diz.Cpu.65816.csproj" />
+    <ProjectReference Include="..\Diz.Ui.ViewModels\Diz.Ui.ViewModels.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Resources\asartestrun.asm" />

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Diz.Controllers.interfaces;
 using Diz.Core.model;
 using Diz.LogWriter;
@@ -8,7 +10,16 @@ namespace Diz.Controllers.controllers
 {
     public interface ILongRunningTaskHandler
     {
-        public delegate void LongRunningTaskHandler(Action task, string description, IProgressView progressView);
+        // new-ui plan step 6: Task-based, no raw Thread/spin-wait. The handler (a UI edge)
+        // shows its toolkit's progress view, runs `work` OFF the UI thread (Task.Run),
+        // marshals progress back, and completes the returned Task when the work + UI teardown
+        // are done. `work` receives an IProgress<int> (report 0..100 for a determinate bar)
+        // and a CancellationToken; `isMarquee` selects the spinner vs. determinate style.
+        // A null TaskHandler means "no UI" (headless): the caller runs the work inline.
+        public delegate Task LongRunningTaskHandler(
+            Action<IProgress<int>, CancellationToken> work,
+            string description,
+            bool isMarquee);
         LongRunningTaskHandler TaskHandler { get; }
     }
     

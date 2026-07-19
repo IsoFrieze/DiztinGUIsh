@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.ProgressWindow"
+        Title="Working..."
+        Width="440" Height="132"
+        CanResize="False"
+        SizeToContent="Manual"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        FontSize="12">
+
+    <!--
+      new-ui plan step 6, Part C: the Avalonia progress popup. A separate top-level Avalonia
+      window (plan decision 4, never embedded in the WinForms MainWindow), shown non-modally
+      by AvaloniaProgressView while a background Task runs, closed on completion. Styled to match
+      LabelEditorWindow.axaml: light theme (pinned in DizAvaloniaApp), compact, FontSize 12.
+
+      The ProgressBar supports both modes: IsIndeterminate=true = marquee spinner (for the
+      open/save/export tasks that can't report a percentage), IsIndeterminate=false + Value =
+      determinate (trace-log import reports bytes-read %). Toggled from code-behind.
+    -->
+
+    <Border Padding="18,16">
+        <StackPanel Spacing="12" VerticalAlignment="Center">
+            <TextBlock x:Name="StatusText"
+                       Text="Please wait..."
+                       TextWrapping="Wrap"
+                       FontWeight="SemiBold" />
+            <ProgressBar x:Name="Bar"
+                         Minimum="0" Maximum="100"
+                         Height="18"
+                         IsIndeterminate="True" />
+            <TextBlock x:Name="PercentText"
+                       Text=""
+                       Foreground="#606060"
+                       HorizontalAlignment="Right" />
+        </StackPanel>
+    </Border>
+</Window>

@@ -2,13 +2,16 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GitThisAssemblyMetadata>true</GitThisAssemblyMetadata>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <Nullable>enable</Nullable>
     <RootNamespace>Diz.PowerShell</RootNamespace>
+    <!-- PowerShell binary module: copy all dependency dlls into the output dir so
+         Import-Module can resolve them (class libs don't copy NuGet deps by default) -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +25,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+    <!-- needed to OPEN projects, not just export: save-format migrations and the SNES
+         data api live here, and project deserialization fails without them -->
+    <ProjectReference Include="..\Diz.Cpu.65816\Diz.Cpu.65816.csproj" />
     <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
   </ItemGroup>
 

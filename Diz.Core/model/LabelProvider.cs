@@ -5,9 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Xml.Serialization;
 using Diz.Core.Interfaces;
-#if DIZ_3_BRANCH
-using Diz.Core.model.byteSources;
-#endif
 using Diz.Core.model.snes;
 using Diz.Core.util;
 using JetBrains.Annotations;
@@ -91,13 +88,8 @@ namespace Diz.Core.model
         public LabelsServiceWithTemp(Data data)
         {
             Data = data;
-            
-            #if DIZ_3_BRANCH
-            NormalProvider = new ByteSourceLabelProvider(data.SnesAddressSpace);
-            #else
+
             NormalProvider = new LabelsCollection();
-            #endif
-            
             TemporaryProvider = new LabelsCollection();
         }
         
@@ -112,7 +104,23 @@ namespace Diz.Core.model
         
         // this isn't bulletproof, but the best we can do for now.
         // better to replace this with observable collections or something later.
+        //
+        // NOTE: kept exactly as-is for backwards compatibility. every existing subscriber
+        // keeps working unchanged. prefer LabelsChanged below for new code.
         public event EventHandler OnLabelChanged;
+
+        // payloaded version of OnLabelChanged. fires at the same sites, immediately after it.
+        public event EventHandler<LabelChangedEventArgs> LabelsChanged;
+
+        private void RaiseLabelChanged(LabelChangeKind kind, int snesAddress)
+        {
+            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+            LabelsChanged?.Invoke(this, new LabelChangedEventArgs
+            {
+                Kind = kind,
+                SnesAddress = snesAddress,
+            });
+        }
 
         // returns both real and temporary labels
         IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;
@@ -183,8 +191,8 @@ namespace Diz.Core.model
             
             NormalProvider.DeleteAllLabels();
             TemporaryProvider.DeleteAllLabels();
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
 
         public void RemoveLabel(int snesAddress)
@@ -195,8 +203,8 @@ namespace Diz.Core.model
             // we should only operate on real labels here. ignore temporary labels
             
             NormalProvider.RemoveLabel(snesAddress);
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            RaiseLabelChanged(LabelChangeKind.Removed, snesAddress);
         }
 
         public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
@@ -206,10 +214,18 @@ namespace Diz.Core.model
             
             // we should only operate on real labels here. ignore temporary labels.
             // explicitly use AddTemporaryLabel() for temp stuff.
-            
+
+            // capture BEFORE the mutation so we can report Added vs Replaced accurately.
+            var alreadyExisted = NormalProvider.GetLabel(snesAddress) != null;
+
             NormalProvider.AddLabel(snesAddress, labelToAdd, overwrite);
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            // note: if it already existed and overwrite==false, the underlying provider
+            // silently keeps the old label. we still report Replaced there; consumers
+            // re-read the address either way, so this over-reports but never under-reports.
+            RaiseLabelChanged(
+                alreadyExisted ? LabelChangeKind.Replaced : LabelChangeKind.Added,
+                snesAddress);
         }
 
         public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
@@ -219,8 +235,8 @@ namespace Diz.Core.model
             
             ClearTemporaryLabels();
             NormalProvider.SetAll(newLabels);
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
 
         public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels, bool smartMerge = false)
@@ -229,8 +245,9 @@ namespace Diz.Core.model
                 throw new InvalidOperationException("Cannot modify labels while cache is locked");
             
             NormalProvider.AppendLabels(newLabels, smartMerge);
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            // affects many addresses at once, so there is no single meaningful SnesAddress.
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
         
         #region "Equality"
@@ -277,123 +294,59 @@ namespace Diz.Core.model
         }
     }
 
-    #if DIZ_3_BRANCH
-    public class ByteSourceLabelProvider : LabelProviderBase, ILabelService, IEquatable<ByteSourceLabelProvider>
-    {
-        public bool Equals(ByteSourceLabelProvider other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return ReferenceEquals(ByteSource, other.ByteSource);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ByteSourceLabelProvider)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return ByteSource.GetHashCode();
-        }
-
-        public static bool operator ==(ByteSourceLabelProvider left, ByteSourceLabelProvider right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(ByteSourceLabelProvider left, ByteSourceLabelProvider right)
-        {
-            return !Equals(left, right);
-        }
-
-        private ByteSource ByteSource { get; }
-        
-        // pass in topleve (i.e. Data.SnesAddressSpace)
-        public ByteSourceLabelProvider(ByteSource byteSource)
-        {
-            ByteSource = byteSource;
-        }
-
-        public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels => 
-            ByteSource.GetAnnotationsIncludingChildrenEnumerator<IAnnotationLabel>();
-
-        public static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
-        
-        public void DeleteAllLabels()
-        {
-            ByteSource.RemoveAllAnnotations(IsLabel);
-        }
-
-        public void RemoveLabel(int snesAddress)
-        {
-            ByteSource.RemoveAllAnnotationsAt(snesAddress, IsLabel);
-        }
-
-        public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
-        {
-            DeleteAllLabels();
-            foreach (var (key, value) in newLabels)
-            {
-                AddLabel(key, value);
-            }
-        }
-
-        public override Label GetLabel(int snesAddress) => ByteSource.GetOneAnnotation<Label>(snesAddress);
-
-        public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
-        {
-            Debug.Assert(labelToAdd != null);
-            
-            if (overwrite)
-                RemoveLabel(snesAddress);
-
-            var existing = ByteSource.GetOneAnnotation<IAnnotationLabel>(snesAddress);
-            
-            if (existing == null)
-                ByteSource.AddAnnotation(snesAddress, labelToAdd);
-        }
-    } 
-    #endif
-    
     public class LabelsCollection : LabelProviderBase, ILabelService, IEquatable<LabelsCollection>
     {
         // ReSharper disable once MemberCanBePrivate.Global
         public Dictionary<int, IAnnotationLabel> Labels { get; private set; } = new();
-        
+
         [XmlIgnore]
         IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;
+
+        // NOTE: in the current wiring nothing subscribes to this -- LabelsServiceWithTemp holds
+        // its LabelsCollection instances privately and raises its own event instead. it's
+        // implemented faithfully here so the interface contract holds if that ever changes.
+        public event EventHandler<LabelChangedEventArgs> LabelsChanged;
+
+        private void RaiseLabelChanged(LabelChangeKind kind, int snesAddress) =>
+            LabelsChanged?.Invoke(this, new LabelChangedEventArgs
+            {
+                Kind = kind,
+                SnesAddress = snesAddress,
+            });
 
         public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
         {
             Debug.Assert(labelToAdd != null);
-            
+
             if (overwrite)
                 RemoveLabel(snesAddress);
 
             var existing = Labels.ContainsKey(snesAddress);
 
             if (!existing)
+            {
                 Labels.Add(snesAddress, labelToAdd);
+                RaiseLabelChanged(overwrite ? LabelChangeKind.Replaced : LabelChangeKind.Added, snesAddress);
+            }
         }
 
         public void DeleteAllLabels()
         {
             Labels.Clear();
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
-        
+
         public void RemoveLabel(int snesAddress)
         {
-            Labels.Remove(snesAddress);
+            if (Labels.Remove(snesAddress))
+                RaiseLabelChanged(LabelChangeKind.Removed, snesAddress);
         }
 
         public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
         {
             DeleteAllLabels();
             AppendLabels(newLabels);
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
 
         public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels, bool smartMerge=false)
@@ -422,6 +375,8 @@ namespace Diz.Core.model
                     label.Comment = newLabelComment == "" ? label.Comment : newLabelComment;
                 }
             }
+
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
         
         public void SortLabels()

@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <RootNamespace>Diz.Ui.Avalonia</RootNamespace>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Avalonia 12.1.0 per the new-ui plan decision 2. NOTE deliberately absent:
+             Avalonia.Win32.Interoperability (plan decision 4 bans UI interop at any
+             granularity, so this assembly hosts only whole Avalonia windows). -->
+        <PackageReference Include="Avalonia" Version="12.1.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="LightInject" Version="6.6.4" />
+    </ItemGroup>
+
+    <!-- SEAM ONLY (added for the headless preview harness, new-ui plan "Preview harness"):
+         the label-editor window is `internal sealed`, so the out-of-app preview/interaction
+         harness needs friend access to construct it and drive AttachViewModel. This grants
+         visibility only; it changes NO behavior of this assembly. -->
+    <ItemGroup>
+        <InternalsVisibleTo Include="Diz.Ui.Avalonia.Preview" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Diz.Controllers\Diz.Controllers\Diz.Controllers.csproj" />
+        <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
+        <ProjectReference Include="..\Diz.Core.Interfaces\Diz.Core.Interfaces.csproj" />
+        <ProjectReference Include="..\Diz.Cpu.65816\Diz.Cpu.65816.csproj" />
+        <ProjectReference Include="..\Diz.Ui.ViewModels\Diz.Ui.ViewModels.csproj" />
+    </ItemGroup>
+
+    <!--
+      This assembly must stay plain net10.0 and WinForms-free: a window is entirely one
+      toolkit (new-ui plan decision 4), and a '-windows' TFM here is the exact mistake
+      Diz.Ui.Eto made (it target-locked the "cross-platform" attempt to Windows).
+      A runtime test (Diz.Test/Tests/Avalonia) additionally asserts the compiled assembly
+      references no WinForms/Eto/interop assemblies.
+    -->
+    <Target Name="AssertDizUiAvaloniaStaysPlatformFree" BeforeTargets="Build">
+        <Error Condition="'$(TargetFramework)' != '' and $(TargetFramework.Contains('windows'))"
+               Text="Diz.Ui.Avalonia must stay platform-free, but TargetFramework is '$(TargetFramework)'. It may never gain a Windows-specific TFM." />
+        <Error Condition="'$(TargetFrameworks)' != '' and $(TargetFrameworks.Contains('windows'))"
+               Text="Diz.Ui.Avalonia must stay platform-free, but TargetFrameworks is '$(TargetFrameworks)'. It may never gain a Windows-specific TFM." />
+        <Error Condition="'$(UseWindowsForms)' == 'true' or '$(UseWPF)' == 'true'"
+               Text="Diz.Ui.Avalonia must stay platform-free: UseWindowsForms/UseWPF may never be enabled here. A window is entirely one toolkit (new-ui plan decision 4)." />
+    </Target>
+
+</Project>

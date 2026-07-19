@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.export;
@@ -29,8 +31,7 @@ public class ProjectController(
     IFilesystemService fs,
     IControllerFactory controllerFactory,
     Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate,
-    Func<IProjectFileManager> projectFileManagerCreate,
-    Func<IProgressView> progressViewFactoryCreate)
+    Func<IProjectFileManager> projectFileManagerCreate)
     : IProjectController
 {
     public IProjectView ProjectView { get; set; }
@@ -38,29 +39,38 @@ public class ProjectController(
 
     public event IProjectController.ProjectChangedEvent ProjectChanged;
 
-    // there's probably better ways to handle this.
-    // probably replace with a UI like "start task" and "stop task"
-    // so we can flip up a progress bar and remove it.
-    public void DoLongRunningTask(Action task, string description = null)
+    // new-ui plan step 6: the long-running-task contract is now Task-based. The work runs
+    // off the UI thread via the view's TaskHandler (which shows a progress window and marshals
+    // progress); callers `await` and only read results after the returned Task completes -- the
+    // captured-local-plus-blocking anti-pattern is gone. When there is no UI (headless export,
+    // unit tests: TaskHandler == null), the work runs inline and synchronously, so the returned
+    // Task is already completed and needs no message pump.
+    private sealed class NoProgress : IProgress<int> { public void Report(int value) { } }
+    private static readonly IProgress<int> NullProgress = new NoProgress();
+
+    public Task DoLongRunningTaskAsync(Action task, string description = null) =>
+        DoLongRunningTaskAsync((_, _) => task(), description, isMarquee: true);
+
+    public async Task DoLongRunningTaskAsync(
+        Action<IProgress<int>, CancellationToken> work, string description, bool isMarquee)
     {
-        if (ProjectView.TaskHandler == null)
+        var handler = ProjectView?.TaskHandler;
+        if (handler == null)
         {
-            // fallback
-            task();
+            // headless / test fallback: run inline, no UI, no message pump.
+            work(NullProgress, CancellationToken.None);
             return;
         }
 
-        // normal way to do it:
-        var progressBarView = progressViewFactoryCreate();
-        ProjectView.TaskHandler(task, description, progressBarView);
+        await handler(work, description, isMarquee);
     }
 
-    public bool OpenProject(string filename)
+    public async Task<bool> OpenProjectAsync(string filename)
     {
         ProjectOpenResult projectOpenResult = null;
         var errorMsg = "";
 
-        DoLongRunningTask(delegate
+        await DoLongRunningTaskAsync(delegate
         {
             try
             {
@@ -118,7 +128,7 @@ public class ProjectController(
         // so we can react appropriately.
     }
 
-    public string SaveProject(string filename)
+    public async Task<string> SaveProjectAsync(string filename)
     {
         try
         {
@@ -127,7 +137,7 @@ public class ProjectController(
                 throw new ArgumentException("empty filename specified", nameof(filename));
 
             string err = null;
-            DoLongRunningTask(
+            await DoLongRunningTaskAsync(
                 () => err = CreateProjectFileManager().Save(Project, filename),
                 $"Saving {Path.GetFileName(filename)}..."
             );
@@ -186,9 +196,10 @@ public class ProjectController(
         return importController;
     }
 
-    public void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll)
+    // step 4 of the new-ui plan: takes a plain path (the view layer prompts via
+    // IFileDialogService) instead of taking the view and calling dialogs back on it.
+    public void ImportLabelsCsv(string importFilename, bool replaceAll)
     {
-        var importFilename = labelEditor.PromptForCsvFilename();
         if (string.IsNullOrEmpty(importFilename))
             return;
 
@@ -196,23 +207,32 @@ public class ProjectController(
         try
         {
             Project.Data.Labels.ImportLabelsFromCsv(importFilename, replaceAll, smartMerge: true, out errLine);
-            labelEditor.RepopulateFromData();
+            // note: no view callback here anymore. the VM-bound label editor (step 3)
+            // re-syncs itself from the provider's LabelsChanged events, which is what the
+            // old labelEditor.RepopulateFromData() call did manually.
         }
         catch (Exception ex)
         {
-            labelEditor.ShowLineItemError(ex.Message, errLine);
+            // same user-visible dialog the old labelEditor.ShowLineItemError produced
+            // (WinformsGuiUtil.ShowLineItemError): identical text, title, icon, button.
+            // errLine is 0 unless ImportLabelsFromCsv assigned it before throwing, which
+            // preserves the historical (quirky) "no line number shown" behavior for
+            // exceptions thrown mid-parse.
+            commonGui.ShowError(
+                "An error occurred while parsing the file.\n" + ex.Message +
+                (errLine > 0 ? $" (Check line {errLine}.)" : ""));
         }
     }
     
     private string AskToSelectNewRomFilename(string error) => 
         ProjectView.AskToSelectNewRomFilename("Error", $"{error}\n\nLink a new ROM now?");
 
-    public void WriteAssemblyOutput()
+    public Task WriteAssemblyOutputAsync()
     {
-        WriteAssemblyOutput(Project.LogWriterSettings, true);
+        return WriteAssemblyOutputAsync(Project.LogWriterSettings, true);
     }
 
-    private void WriteAssemblyOutput(LogWriterSettings settings, bool showProgressBarUpdates = false)
+    private async Task WriteAssemblyOutputAsync(LogWriterSettings settings, bool showProgressBarUpdates = false)
     {
         var lc = new LogCreator
         {
@@ -221,7 +241,7 @@ public class ProjectController(
         };
 
         LogCreatorOutput.OutputResult result = null;
-        DoLongRunningTask(() => result = lc.CreateLog(), "Exporting assembly source code...");
+        await DoLongRunningTaskAsync(() => result = lc.CreateLog(), "Exporting assembly source code...");
 
         ProjectView.OnExportFinished(result);
     }
@@ -278,14 +298,14 @@ public class ProjectController(
         return true;
     }
 
-    public long ImportBsnesUsageMap(string fileName)
+    public async Task<long> ImportBsnesUsageMapAsync(string fileName)
     {
         var snesData = Project?.Data.GetSnesApi();
         if (snesData == null)
             return 0;
 
         var linesModified = 0;
-        DoLongRunningTask(() =>
+        await DoLongRunningTaskAsync(() =>
         {
             // 1. run the BSNES import usage map
             var importer = new BsnesUsageMapImporter(
@@ -307,7 +327,7 @@ public class ProjectController(
         return linesModified;
     }
 
-    public long ImportBsnesTraceLogs(string[] fileNames)
+    public async Task<long> ImportBsnesTraceLogsAsync(string[] fileNames)
     {
         var importer = new BsnesTraceLogImporter(Project.Data.GetSnesApi());
 
@@ -321,7 +341,11 @@ public class ProjectController(
         // inside here, performance becomes critical.
         largeFilesReader.Filenames = new List<string>(fileNames);
         largeFilesReader.LineReadCallback = line => importer.ImportTraceLogLine(line);
-        largeFilesReader.Run();
+
+        // determinate progress (bytes read / total): the reader reports 0..100 via IProgress.
+        await DoLongRunningTaskAsync(
+            (progress, token) => largeFilesReader.Read(progress, token),
+            "Importing trace logs...", isMarquee: false);
 
         if (importer.CurrentStats.NumRomBytesModified > 0)
             MarkChanged();
@@ -368,18 +392,18 @@ public class ProjectController(
     /// Confirm with user that the project export settings are valid, then start exporting.
     /// </summary>
     /// <returns>True if we exported assembly, false if we didn't / aborted.</returns>
-    public bool ConfirmSettingsThenExportAssembly()
+    public async Task<bool> ConfirmSettingsThenExportAssemblyAsync()
     {
         var newlyEditedSettings = ShowSettingsEditorUntilValid();
-        return WriteAssemblyOutputIfSettingsValid(newlyEditedSettings);
+        return await WriteAssemblyOutputIfSettingsValidAsync(newlyEditedSettings);
     }
 
     /// <summary>
-    /// Export assembly using current project settings (fails if settings not currently valid) 
+    /// Export assembly using current project settings (fails if settings not currently valid)
     /// </summary>
     /// <returns>True if we exported assembly, false if we didn't / aborted.</returns>
-    public bool ExportAssemblyWithCurrentSettings() => 
-        WriteAssemblyOutputIfSettingsValid() || ConfirmSettingsThenExportAssembly();
+    public async Task<bool> ExportAssemblyWithCurrentSettingsAsync() =>
+        await WriteAssemblyOutputIfSettingsValidAsync() || await ConfirmSettingsThenExportAssemblyAsync();
 
     [CanBeNull]
     public LogWriterSettings ShowSettingsEditorUntilValid()
@@ -404,28 +428,28 @@ public class ProjectController(
     private bool PromptUserTryAgainOrAbortExport() => 
         commonGui.PromptToConfirmAction("Can't export assembly because export settings are invalid. Edit now?");
 
-    public bool WriteAssemblyOutputIfSettingsValid() => 
-        WriteAssemblyOutputIfSettingsValid(Project?.LogWriterSettings);
+    public Task<bool> WriteAssemblyOutputIfSettingsValidAsync() =>
+        WriteAssemblyOutputIfSettingsValidAsync(Project?.LogWriterSettings);
 
-    public bool WriteAssemblyOutputIfSettingsValid(LogWriterSettings settingsToUseAndSave)
+    public async Task<bool> WriteAssemblyOutputIfSettingsValidAsync(LogWriterSettings settingsToUseAndSave)
     {
         if (settingsToUseAndSave == null || !settingsToUseAndSave.IsValid(fs))
             return false;
-        
+
         // must have saved the project first
         if (Project.Session?.ProjectDirectory.Length == 0)
             return false;
-        
-        // save asm exporter settings 
+
+        // save asm exporter settings
         UpdateExportSettings(settingsToUseAndSave);
-        
+
         // OPTIONAL: save the project file, just in case anything goes wrong during export
         if (Project?.ProjectFileName != "")
-            SaveProject(Project?.ProjectFileName);
-        
+            await SaveProjectAsync(Project?.ProjectFileName);
+
         // do the real output
-        WriteAssemblyOutput();
-        
+        await WriteAssemblyOutputAsync();
+
         return true;
     }
 
