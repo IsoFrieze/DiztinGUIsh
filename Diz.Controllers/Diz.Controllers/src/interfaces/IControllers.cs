@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using Diz.Controllers.controllers;
 using Diz.Core;
 using Diz.Core.commands;
@@ -21,8 +22,8 @@ public interface IProjectController :
 {
     // trace log importers
     void ImportBizHawkCdl(string filename);
-    long ImportBsnesUsageMap(string fileName);
-    long ImportBsnesTraceLogs(string[] fileNames);
+    Task<long> ImportBsnesUsageMapAsync(string fileName);
+    Task<long> ImportBsnesTraceLogsAsync(string[] fileNames);
 
     // fix instruction utils
     // probably combine this with something else.
@@ -53,8 +54,8 @@ public interface IProjectController :
 
     IProjectView ProjectView { get; set; }
 
-    bool OpenProject(string filename);  // older signature
-    string SaveProject(string filename); // older signature. new should return void
+    Task<bool> OpenProjectAsync(string filename);
+    Task<string> SaveProjectAsync(string filename); // null on success, else the error message
 
     bool ImportRomAndCreateNewProject(string romFilename);
     // path is supplied by the caller (obtained via IFileDialogService in the view layer);
@@ -62,8 +63,8 @@ public interface IProjectController :
     void ImportLabelsCsv(string importFilename, bool replaceAll);
     void SelectOffset(int offset, [CanBeNull] ISnesNavigation.HistoryArgs historyArgs = null);
 
-    bool ConfirmSettingsThenExportAssembly();
-    bool ExportAssemblyWithCurrentSettings();
+    Task<bool> ConfirmSettingsThenExportAssemblyAsync();
+    Task<bool> ExportAssemblyWithCurrentSettingsAsync();
     void MarkChanged(); // rename to MarkUnsaved or similar in Diz3.0
 }
     

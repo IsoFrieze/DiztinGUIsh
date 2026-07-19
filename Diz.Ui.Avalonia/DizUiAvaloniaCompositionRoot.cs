@@ -5,20 +5,13 @@ using LightInject;
 namespace Diz.Ui.Avalonia;
 
 /// <summary>
-/// Registers the Avalonia UI backend (new-ui plan step 5). Mirrors
-/// DizUiWinformsCompositionRoot's shape: view registrations are named with the exact
-/// IViewFactory method-name string, and the toolkit's IFileDialogService is a singleton.
-///
-/// Today this backend supplies ONE view -- the label editor. The app decides at composition
-/// time which backend's "LabelEditorView" wins: Diz.App.Winforms registers this root AFTER
-/// the WinForms root when the DIZ_LABEL_EDITOR env var selects avalonia, and LightInject's
-/// last-registration-wins override does the rest (proven by test, not assumed:
-/// LabelEditorBackendSwitchTests in Diz.Ui.Winforms.Test).
-///
-/// NOTE: when this root is loaded, its IFileDialogService also overrides the WinForms one.
-/// That is correct today because the label editor view is the seam's only consumer; if a
-/// WinForms-hosted view ever starts consuming IFileDialogService, the two backends' file
-/// dialog services will need named registrations instead.
+/// The Avalonia LABEL-EDITOR BACKEND (new-ui plan step 5/6): exactly the three
+/// backend-selectable registrations (LabelEditorView, ProgressBarView, IFileDialogService),
+/// each named with the exact IViewFactory method-name string. The app registers EITHER this
+/// root OR <c>DizUiWinformsBackendCompositionRoot</c> via an explicit if/else branch in
+/// DizWinformsRegisterServices when DIZ_LABEL_EDITOR selects a backend -- never both. This
+/// replaced the old last-registration-wins ordering trick (step 6). Proven by test:
+/// LabelEditorBackendSwitchTests in Diz.App.Winforms.Test.
 /// </summary>
 [UsedImplicitly]
 public class DizUiAvaloniaCompositionRoot : ICompositionRoot
@@ -35,5 +28,9 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         serviceRegistry.Register<ILabelEditorView>(
             factory => new AvaloniaLabelEditorView(factory.GetInstance<AvaloniaFileDialogService>()),
             "LabelEditorView");
+
+        // new-ui plan step 6, Part C: the Avalonia progress popup (a separate top-level
+        // Avalonia window). Name must match IViewFactory.GetProgressBarView().
+        serviceRegistry.Register<IProgressView, AvaloniaProgressView>("ProgressBarView");
     }
 }

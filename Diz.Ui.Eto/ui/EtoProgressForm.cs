@@ -24,19 +24,12 @@ public class EtoProgressForm : Dialog, IProgressView
 
     public void Show()
     {
-        // todo? needed?
+        // todo? needed? (Eto is slated for removal in new-ui plan step 8; not wired up.)
     }
 
     public void BringFormToTop()
     {
         Focus();
-    }
-
-    public bool PromptDialog()
-    {
-        Show(); // unsure of equivalent in Eto.
-        // probably should make this class derive from Dialog<bool> instead and rework stuff for that.
-        return true;
     }
 
     public void Report(int value)
@@ -47,9 +40,8 @@ public class EtoProgressForm : Dialog, IProgressView
 
     public bool IsMarquee { get; set; }
     public required string TextOverride { get; set; }
-    public bool IsVisible() => 
-        Application.Instance.Invoke(() => Visible);
 
-    public void SignalJobIsDone() => 
-        Application.Instance.Invoke(Close);
+    // new-ui plan step 6: IProgressView is now Close() (non-modal), not PromptDialog/IsVisible/
+    // SignalJobIsDone. Close() is satisfied by the inherited Eto Dialog.Close(). Eto's
+    // TaskHandler is null anyway, so this view is never actually shown at runtime.
 }

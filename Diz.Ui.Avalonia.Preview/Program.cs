@@ -129,6 +129,12 @@ internal static class Program
         Capture(window, Path.Combine(outDir, "context-added.png"),
             "details pane: alternate-context mapping added + an existing override edited");
 
+        // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
+        // The Avalonia progress window in both modes: marquee (open/save/export) and determinate
+        // (trace-log import reports bytes-read %). Rendered here so the popup can be reviewed as
+        // PNGs alongside the label editor.
+        CaptureProgressPopup(outDir);
+
         Console.WriteLine();
         Console.WriteLine("================= PROBE SUMMARY =================");
         foreach (var line in report)
@@ -136,6 +142,34 @@ internal static class Program
         Console.WriteLine("================================================");
 
         return 0;
+    }
+
+    // ------------------------------------------------------------------ progress popup (step 6 Part C)
+
+    private static void CaptureProgressPopup(string outDir)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[progress popup]");
+
+        var marquee = new ProgressWindow();
+        marquee.SetDescription("Exporting assembly source code...");
+        marquee.SetMarquee(true);
+        marquee.Show();
+        Pump();
+        Capture(marquee, Path.Combine(outDir, "progress-marquee.png"),
+            "progress popup: marquee (indeterminate) -- open/save/export");
+        marquee.Close();
+
+        var determinate = new ProgressWindow();
+        determinate.SetDescription("Importing trace logs...");
+        determinate.SetMarquee(false);
+        determinate.SetProgress(60);
+        determinate.Show();
+        Pump();
+        Capture(determinate, Path.Combine(outDir, "progress-determinate.png"),
+            "progress popup: determinate 60% -- trace-log import");
+        determinate.Close();
+        Pump();
     }
 
     // ------------------------------------------------------------------ probes
@@ -493,7 +527,7 @@ internal static class Program
         Dispatcher.UIThread.RunJobs();
     }
 
-    private static void Capture(LabelEditorWindow window, string path, string caption)
+    private static void Capture(Window window, string path, string caption)
     {
         Pump();
         WriteableBitmap? frame = window.CaptureRenderedFrame();

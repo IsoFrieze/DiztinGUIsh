@@ -26,17 +26,17 @@ public interface IModalDialog
 }
     
 
-public interface IProgressView : IFormViewer, IModalDialog, IProgress<int> {
+// new-ui plan step 6 (threading rewrite): a progress view is now a plain non-modal window
+// the long-running-task handler shows while work runs on a Task and closes on completion.
+// GONE (with ProgressBarWorker): IModalDialog.PromptDialog (the blocking ShowDialog),
+// IsVisible() (the worker's spin-wait predicate), and SignalJobIsDone() (the cross-thread
+// close signal). Report(int) is marshalled to the UI thread by the handler's IProgress<int>.
+public interface IProgressView : IFormViewer, IProgress<int> {
     public bool IsMarquee { get; set; }
     public string TextOverride { get; set; }
-    bool IsVisible();
-        
-    /// <summary>
-    /// Signal that a job (potentially running in another task/thread) has completed.
-    /// CAUTION: Implementers should use thread-safety measures, this may be called
-    /// from a different thread than any other calls 
-    /// </summary>
-    void SignalJobIsDone();
+
+    /// <summary>Close/hide the progress window. Called on the UI thread when the work finishes.</summary>
+    void Close();
 }
 
 // diz2 version (use it)

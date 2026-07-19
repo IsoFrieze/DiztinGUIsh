@@ -19,7 +19,10 @@ public class DizEtoApp(IViewFactory viewFactory) : IDizApp
         Debug.Assert(window != null);
         
         if (initialProjectFileToOpen != "") {
-            window.ProjectController.OpenProject(initialProjectFileToOpen);
+            // Eto's TaskHandler is null, so OpenProjectAsync runs inline/synchronously (no
+            // message pump needed); block here at the app-startup edge. (Eto is deprecated;
+            // new-ui plan step 8.)
+            window.ProjectController.OpenProjectAsync(initialProjectFileToOpen).GetAwaiter().GetResult();
         }
 
         application.Run(window);

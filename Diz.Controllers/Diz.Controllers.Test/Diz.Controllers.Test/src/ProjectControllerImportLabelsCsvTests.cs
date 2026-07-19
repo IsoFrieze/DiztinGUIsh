@@ -37,7 +37,6 @@ public class ProjectControllerImportLabelsCsvTests : ContainerFixture
             new Mock<IFilesystemService>().Object,
             new Mock<IControllerFactory>().Object,
             _ => null!,
-            () => null!,
             () => null!);
 
         var project = (Project)sampleProjectFactory.Create();

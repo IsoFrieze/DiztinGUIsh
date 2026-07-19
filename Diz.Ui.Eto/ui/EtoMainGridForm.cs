@@ -264,8 +264,12 @@ public class EtoMainGridForm : Form, IMainGridWindowView
     }
 
 
-    public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler =>
-        ProgressBarJob.RunAndWaitForCompletion;
+    // new-ui plan step 6: Eto is slated for deletion (plan step 8) and its progress path was
+    // already broken by design (EtoProgressForm never became visible, so the old worker
+    // spin-waited forever). Returning null routes long-running work through
+    // ProjectController's headless/inline fallback -- correct (runs synchronously, no progress
+    // UI) and keeps Eto compiling until it's removed.
+    public ILongRunningTaskHandler.LongRunningTaskHandler TaskHandler => null;
 
     public void SelectOffset(int pcOffset, ISnesNavigation.HistoryArgs? historyArgs = null)
     {
