@@ -255,6 +255,7 @@ public class Region : IRegion
     private string assetType;
     private string assetVersion;
     private string assetName;
+    private string assetOptions;
 
     public int StartSnesAddress
     {
@@ -314,6 +315,12 @@ public class Region : IRegion
     {
         get => assetName;
         set => this.SetField(PropertyChanged, ref assetName, value);
+    }
+
+    public string AssetOptions
+    {
+        get => assetOptions;
+        set => this.SetField(PropertyChanged, ref assetOptions, value);
     }
 
     public event PropertyChangedEventHandler PropertyChanged;

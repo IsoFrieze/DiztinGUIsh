@@ -69,6 +69,16 @@ public interface IRegion : INotifyPropertyChanged
     // .bin/manifest filename stem. e.g. "gfx/font" resolves to
     // "assets/src/gfx/font.{bin,json}". if empty, RegionName is used.
     string AssetName { get; set; }
+
+    // for ExportType.Asset: free-form JSON object merged into the manifest under
+    // "options". empty/null (the normal case) omits the key entirely.
+    //
+    // a deliberate escape hatch: it lets a project author codec parameters Diz has no UI
+    // for yet, without adding a field-per-knob. Diz does NOT interpret the contents -- it
+    // only checks the text parses as a JSON object -- EXCEPT for "cell_h", which it must
+    // read because the manifest's own tile count depends on it.
+    // e.g. {"cell_h": 12}   or   {"view": {"order": "column_major", "rows": 12}}
+    string AssetOptions { get; set; }
 }
 
 public interface IReadOnlyContextMapping : INotifyPropertyChanged

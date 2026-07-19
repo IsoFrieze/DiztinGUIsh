@@ -57,6 +57,12 @@ TOOL_VERSION = "gfxpack/1.0.0"
 SUPPORTED_BPP = (2, 4, 8)
 TILE_W = TILE_H = 8
 
+# A "cell" generalizes the 8x8 tile: 8 pixels wide, `cell_h` rows tall. cell_h defaults to
+# 8, in which case a cell IS an 8x8 tile and every formula below reduces to the classic
+# tile case -- verified byte-identical for bpp 2/4/8. Fonts and other non-tile-aligned
+# bitmaps (CT's main font is 8x12, 24 bytes/glyph) just declare a different cell_h.
+DEFAULT_VIEW = {"order": "row_major"}
+
 
 def die(msg: str) -> "None":
     print(f"gfxpack: error: {msg}", file=sys.stderr)
@@ -120,17 +126,27 @@ def png_read_indexed(path: str) -> "tuple[int, int, bytes]":
 # (low-plane byte, high-plane byte). 2bpp = 1 pair (16 bytes); 4bpp = 2 pairs (32 bytes,
 # i.e. two stacked 2bpp halves); 8bpp = 4 pairs (64 bytes). Bit 7 is the LEFTMOST pixel.
 # ======================================================================================
+def cell_size(bpp: int, cell_h: int = TILE_H) -> int:
+    """Bytes per cell. At cell_h=8 this is the classic tile size (bpp*8)."""
+    return bpp * cell_h
+
+
 def tile_size(bpp: int) -> int:
-    return bpp * 8
+    """Back-compat alias: an 8-row cell."""
+    return cell_size(bpp, TILE_H)
 
 
-def decode_tile(buf: bytes, off: int, bpp: int) -> "list[int]":
-    """Decode one tile -> 64 palette indices, row-major."""
-    px = [0] * 64
+def decode_cell(buf: bytes, off: int, bpp: int, cell_h: int = TILE_H) -> "list[int]":
+    """Decode one cell -> 8*cell_h palette indices, row-major.
+
+    Bitplane pairs are stacked across the WHOLE cell, so the pair stride is 2*cell_h
+    (= 16 at cell_h=8, matching the tile codec exactly).
+    """
+    px = [0] * (8 * cell_h)
     for pair in range(bpp // 2):
-        base = off + pair * 16
+        base = off + pair * 2 * cell_h
         lo_shift = pair * 2
-        for y in range(8):
+        for y in range(cell_h):
             lo = buf[base + y * 2]
             hi = buf[base + y * 2 + 1]
             row = y * 8
@@ -141,13 +157,13 @@ def decode_tile(buf: bytes, off: int, bpp: int) -> "list[int]":
     return px
 
 
-def encode_tile(px: "list[int]", bpp: int) -> bytes:
-    """Encode 64 palette indices -> planar tile bytes (inverse of decode_tile)."""
-    out = bytearray(tile_size(bpp))
+def encode_cell(px: "list[int]", bpp: int, cell_h: int = TILE_H) -> bytes:
+    """Encode 8*cell_h palette indices -> planar bytes (inverse of decode_cell)."""
+    out = bytearray(cell_size(bpp, cell_h))
     for pair in range(bpp // 2):
-        base = pair * 16
+        base = pair * 2 * cell_h
         lo_shift = pair * 2
-        for y in range(8):
+        for y in range(cell_h):
             lo = hi = 0
             row = y * 8
             for x in range(8):
@@ -160,17 +176,84 @@ def encode_tile(px: "list[int]", bpp: int) -> bytes:
     return bytes(out)
 
 
-def bytes_to_indices(blob: bytes, bpp: int, tiles: int,
-                     layout_w: int) -> "tuple[int, int, bytes]":
-    """Planar tile bytes -> a (width, height, indices) image laid out in a tile grid."""
-    rows = (tiles + layout_w - 1) // layout_w
-    width, height = layout_w * TILE_W, rows * TILE_H
-    img = bytearray(width * height)  # unused cells in a ragged last row stay 0
-    ts = tile_size(bpp)
+# ======================================================================================
+# View: cell index -> position on the PNG canvas.
+#
+# PURELY COSMETIC. The .bin is always the cells in stream order; a view only decides where
+# each cell is DRAWN, so an artist can see a font/sprite the way it's meant to read. The
+# view is applied identically on extract and compile, so the round-trip stays byte-exact.
+#
+# Correctness rests on ONE property: the mapping must be a BIJECTION (a permutation --
+# every cell lands on its own canvas slot, no two collide). If two cells shared a slot,
+# compile would silently read the same pixels twice and drop the other cell's data. That is
+# why resolve_view validates rather than trusting the manifest.
+# ======================================================================================
+def resolve_view(view: dict, count: int, layout_w: int) -> "tuple[list[int], int, int]":
+    """-> (positions, grid_w, grid_h) in CELLS. positions[i] = canvas slot of cell i."""
+    order = view.get("order", "row_major")
+
+    if order == "row_major":
+        grid_w = layout_w
+        grid_h = (count + grid_w - 1) // grid_w
+        positions = list(range(count))
+
+    elif order == "column_major":
+        # Reading DOWN a column gives consecutive cells:  0 3 6 / 1 4 7 / 2 5 8
+        grid_h = view.get("rows") or layout_w
+        if grid_h < 1:
+            die(f"view.rows must be >= 1, got {grid_h!r}")
+        grid_w = (count + grid_h - 1) // grid_h
+        positions = [(i % grid_h) * grid_w + (i // grid_h) for i in range(count)]
+
+    elif order == "explicit":
+        positions = view.get("cells")
+        if not isinstance(positions, list) or len(positions) != count:
+            die(f"view.cells must be a list of exactly {count} canvas slots "
+                f"(got {len(positions) if isinstance(positions, list) else type(positions).__name__})")
+        if not all(isinstance(p, int) and p >= 0 for p in positions):
+            die("view.cells must contain only non-negative integers")
+        # The canvas GROWS to fit the highest slot used, so gaps are legal -- a font may
+        # deliberately leave holes. Nothing here bounds how sparse a view may be; a typo'd
+        # large slot yields a mostly-empty canvas rather than an error.
+        grid_w = layout_w
+        grid_h = (max(positions) + grid_w) // grid_w if positions else 0
+
+    else:
+        die(f"view.order '{order}' is not implemented "
+            f"(supported: row_major, column_major, explicit). Refusing to guess.")
+
+    # The bijection check. Everything above is only safe because of this.
+    if len(set(positions)) != len(positions):
+        dupes = sorted({p for p in positions if positions.count(p) > 1})[:5]
+        die(f"view maps two or more cells to the same canvas slot {dupes} -- the mapping "
+            f"must be a permutation, or compiling would silently discard pixel data.")
+    # Internal invariant. Unreachable for the modes above (each sizes its own canvas), but
+    # kept so a future view mode can't quietly place a cell off-canvas.
+    limit = grid_w * grid_h
+    if positions and max(positions) >= limit:
+        die(f"internal: view places a cell at slot {max(positions)} but the canvas only "
+            f"holds {limit} cells ({grid_w}x{grid_h})")
+    return positions, grid_w, grid_h
+
+
+def cell_origin(pos: int, grid_w: int, cell_h: int) -> "tuple[int, int]":
+    """Pixel origin of canvas slot `pos`. SINGLE source of truth for placement --
+    extract and compile MUST agree here or the round-trip silently corrupts."""
+    return (pos % grid_w) * TILE_W, (pos // grid_w) * cell_h
+
+
+def bytes_to_indices(blob: bytes, bpp: int, tiles: int, layout_w: int,
+                     cell_h: int = TILE_H,
+                     view: dict = None) -> "tuple[int, int, bytes]":
+    """Planar cell bytes -> a (width, height, indices) image laid out on the canvas."""
+    positions, grid_w, grid_h = resolve_view(view or DEFAULT_VIEW, tiles, layout_w)
+    width, height = grid_w * TILE_W, grid_h * cell_h
+    img = bytearray(width * height)  # unused slots in a ragged last row stay 0
+    cs = cell_size(bpp, cell_h)
     for t in range(tiles):
-        px = decode_tile(blob, t * ts, bpp)
-        tx, ty = (t % layout_w) * TILE_W, (t // layout_w) * TILE_H
-        for y in range(TILE_H):
+        px = decode_cell(blob, t * cs, bpp, cell_h)
+        tx, ty = cell_origin(positions[t], grid_w, cell_h)
+        for y in range(cell_h):
             dst = (ty + y) * width + tx
             img[dst:dst + TILE_W] = bytes(px[y * 8:(y + 1) * 8])
     return width, height, bytes(img)
@@ -193,21 +276,22 @@ def validate_pixel_indices(img: bytes, width: int, bpp: int, path: str) -> None:
         f"has -- repaint that pixel with an in-range palette entry.")
 
 
-def indices_to_bytes(img: bytes, width: int, bpp: int, tiles: int,
-                     layout_w: int) -> bytes:
-    """Image indices -> planar tile bytes (inverse of bytes_to_indices).
+def indices_to_bytes(img: bytes, width: int, bpp: int, tiles: int, layout_w: int,
+                     cell_h: int = TILE_H, view: dict = None) -> bytes:
+    """Image indices -> planar cell bytes (inverse of bytes_to_indices).
 
     Callers feeding user-edited pixels must run validate_pixel_indices first
-    (compile_asset does); encode_tile silently masks out-of-range values.
+    (compile_asset does); encode_cell silently masks out-of-range values.
     """
+    positions, grid_w, _ = resolve_view(view or DEFAULT_VIEW, tiles, layout_w)
     out = bytearray()
     for t in range(tiles):
-        tx, ty = (t % layout_w) * TILE_W, (t // layout_w) * TILE_H
+        tx, ty = cell_origin(positions[t], grid_w, cell_h)
         px = []
-        for y in range(TILE_H):
+        for y in range(cell_h):
             src = (ty + y) * width + tx
             px.extend(img[src:src + TILE_W])
-        out += encode_tile(px, bpp)
+        out += encode_cell(px, bpp, cell_h)
     return bytes(out)
 
 
@@ -253,16 +337,41 @@ def load_manifest(path: str) -> dict:
     if not typ.startswith("gfx.snes."):
         die(f"{path}: type '{typ}' is not a gfx.snes.* type; gfxpack cannot handle it")
 
-    gfx = man.get("gfx") or {}
+    gfx = dict(man.get("gfx") or {})
+
+    # "options" is Diz's free-form passthrough: whatever the author typed into the region
+    # editor, verbatim. Diz does not own this vocabulary, so it does not validate it --
+    # everything below does. Shallow-merged OVER gfx, so options wins on conflict.
+    options = man.get("options")
+    if options is not None:
+        if not isinstance(options, dict):
+            die(f"{path}: 'options' must be a JSON object, got {type(options).__name__}")
+        gfx.update(options)
+    man["gfx"] = gfx
+
     bpp = gfx.get("bpp")
     if bpp not in SUPPORTED_BPP:
         die(f"{path}: gfx.bpp must be one of {SUPPORTED_BPP}, got {bpp!r}")
     if typ != f"gfx.snes.{bpp}bpp":
         die(f"{path}: type '{typ}' disagrees with gfx.bpp={bpp}")
-    if gfx.get("tile_w", TILE_W) != TILE_W or gfx.get("tile_h", TILE_H) != TILE_H:
-        die(f"{path}: only {TILE_W}x{TILE_H} tiles are supported")
+    if gfx.get("tile_w", TILE_W) != TILE_W:
+        die(f"{path}: only {TILE_W}-pixel-wide cells are supported (gfx.tile_w)")
+    # cell_h generalizes tile_h: 8 = a classic tile, anything else = a taller bitmap cell
+    # (e.g. a 12-row font glyph). tile_h is still accepted as the legacy spelling.
+    cell_h = gfx.get("cell_h", gfx.get("tile_h", TILE_H))
+    if not isinstance(cell_h, int) or cell_h < 1:
+        die(f"{path}: gfx.cell_h must be a positive integer, got {cell_h!r}")
+    gfx["cell_h"] = cell_h
     if not gfx.get("tiles"):
         die(f"{path}: gfx.tiles is required")
+
+    view = gfx.get("view") or DEFAULT_VIEW
+    if not isinstance(view, dict):
+        die(f"{path}: gfx.view must be an object, got {type(view).__name__}")
+    # Validate the mapping NOW (bijection + in-bounds) rather than letting a bad view
+    # surface later as a confusing byte mismatch from the round-trip self-check.
+    resolve_view(view, gfx["tiles"], gfx.get("layout_width_tiles", 16))
+    gfx["view"] = view
 
     if man.get("export_only"):
         die(f"{path}: asset is marked export_only (e.g. compressed source data) and "
@@ -280,18 +389,20 @@ def compile_asset(name: str, roots: "list[str]") -> "tuple[bytes, dict, str]":
     gfx = man["gfx"]
     bpp, tiles = gfx["bpp"], gfx["tiles"]
     layout_w = gfx.get("layout_width_tiles", 16)
+    cell_h, view = gfx["cell_h"], gfx["view"]
 
     width, height, img = png_read_indexed(ppath)
 
     # Pinned invariants: reject edits that changed the geometry.
-    rows = (tiles + layout_w - 1) // layout_w
-    exp_w, exp_h = layout_w * TILE_W, rows * TILE_H
+    _, grid_w, grid_h = resolve_view(view, tiles, layout_w)
+    exp_w, exp_h = grid_w * TILE_W, grid_h * cell_h
     if (width, height) != (exp_w, exp_h):
         die(f"{ppath}: image is {width}x{height} but the manifest requires {exp_w}x{exp_h} "
-            f"({tiles} tiles, {layout_w} per row). Keep the canvas size unchanged.")
+            f"({tiles} cells of 8x{cell_h}, view '{view.get('order', 'row_major')}'). "
+            f"Keep the canvas size unchanged.")
 
     validate_pixel_indices(img, width, bpp, ppath)
-    blob = indices_to_bytes(img, width, bpp, tiles, layout_w)
+    blob = indices_to_bytes(img, width, bpp, tiles, layout_w, cell_h, view)
 
     expected_len = man.get("source", {}).get("length")
     if expected_len is not None and len(blob) != expected_len:
@@ -310,16 +421,23 @@ def cmd_extract(a) -> int:
         die(f"--bpp must be one of {SUPPORTED_BPP}")
     if off + length > len(rom):
         die(f"range 0x{off:X}+{length} exceeds ROM size {len(rom)}")
-    ts = tile_size(bpp)
-    if length % ts:
-        die(f"length {length} is not a multiple of the {bpp}bpp tile size ({ts})")
+    cell_h = a.cell_height
+    if cell_h < 1:
+        die("--cell-height must be >= 1")
+    view = {"order": a.view_order}
+    if a.view_order == "column_major":
+        view["rows"] = a.view_rows or a.layout_width
+    cs = cell_size(bpp, cell_h)
+    if length % cs:
+        die(f"length {length} is not a multiple of the {bpp}bpp cell size "
+            f"({cs} = {bpp}bpp x {cell_h} rows)")
 
     blob = rom[off:off + length]
-    tiles = length // ts
+    tiles = length // cs
     layout_w = a.layout_width
     sha = hashlib.sha256(blob).hexdigest()
 
-    width, height, img = bytes_to_indices(blob, bpp, tiles, layout_w)
+    width, height, img = bytes_to_indices(blob, bpp, tiles, layout_w, cell_h, view)
     png_path = os.path.join(a.root, a.name + ".png")
     man_path = os.path.join(a.root, a.name + ".json")
     png_write_indexed(png_path, width, height, img, default_palette(bpp))
@@ -342,6 +460,14 @@ def cmd_extract(a) -> int:
         "export_only": False,
         "generated_by": TOOL_VERSION,
     }
+    # Only record the generalized fields when they differ from the defaults, so ordinary
+    # tile sheets keep producing exactly the manifests they always did. When cell_h is not
+    # 8 the legacy tile_h is dropped rather than left contradicting it.
+    if cell_h != TILE_H:
+        del man["gfx"]["tile_h"]
+        man["gfx"]["cell_h"] = cell_h
+    if view != DEFAULT_VIEW:
+        man["gfx"]["view"] = view
     if a.snes_addr:
         man["source"]["snes_addr"] = a.snes_addr
     os.makedirs(os.path.dirname(os.path.abspath(man_path)), exist_ok=True)
@@ -349,13 +475,16 @@ def cmd_extract(a) -> int:
         json.dump(man, f, indent=2)
         f.write("\n")
 
-    print(f"extracted {tiles} tiles ({length} bytes, {bpp}bpp) from 0x{off:X}")
+    geom = f"{tiles} cells of 8x{cell_h}" if cell_h != TILE_H else f"{tiles} tiles"
+    print(f"extracted {geom} ({length} bytes, {bpp}bpp) from 0x{off:X}")
     print(f"  png      : {png_path}  ({width}x{height})")
     print(f"  manifest : {man_path}")
     print(f"  sha256   : {sha}")
+    if view != DEFAULT_VIEW:
+        print(f"  view     : {view['order']} (cosmetic; .bin is unaffected)")
 
     # Immediate self-check: the asset we just wrote must rebuild to the original bytes.
-    back = indices_to_bytes(img, width, bpp, tiles, layout_w)
+    back = indices_to_bytes(img, width, bpp, tiles, layout_w, cell_h, view)
     if back != blob:
         die("SELF-CHECK FAILED: re-encoding the extracted image did not reproduce the "
             "source bytes. The codec is wrong — do not trust this asset.")
@@ -385,13 +514,15 @@ def cmd_seed(a) -> int:
 
     gfx = man["gfx"]
     bpp, tiles, layout_w = gfx["bpp"], gfx["tiles"], gfx.get("layout_width_tiles", 16)
-    ts = tile_size(bpp)
+    cell_h, view = gfx["cell_h"], gfx["view"]
+    cs = cell_size(bpp, cell_h)
 
     # The manifest is a claim about these bytes. Check it rather than trusting it --
-    # a wrong bpp/tile count here produces a plausible-looking but wrong image.
-    if len(blob) != tiles * ts:
-        die(f"{bin_path}: {len(blob)} bytes, but the manifest describes {tiles} tiles at "
-            f"{bpp}bpp ({tiles * ts} bytes). The manifest does not match the data.")
+    # a wrong bpp/cell_h/cell count here produces a plausible-looking but wrong image.
+    if len(blob) != tiles * cs:
+        die(f"{bin_path}: {len(blob)} bytes, but the manifest describes {tiles} cells of "
+            f"8x{cell_h} at {bpp}bpp ({tiles * cs} bytes). "
+            f"The manifest does not match the data.")
 
     expected_len = man.get("source", {}).get("length")
     if expected_len is not None and len(blob) != expected_len:
@@ -408,15 +539,16 @@ def cmd_seed(a) -> int:
         print(f"seed: {ppath} already exists, leaving it alone (use --force to overwrite)")
         return 0
 
-    width, height, img = bytes_to_indices(blob, bpp, tiles, layout_w)
+    width, height, img = bytes_to_indices(blob, bpp, tiles, layout_w, cell_h, view)
     png_write_indexed(ppath, width, height, img, default_palette(bpp))
 
-    back = indices_to_bytes(img, width, bpp, tiles, layout_w)
+    back = indices_to_bytes(img, width, bpp, tiles, layout_w, cell_h, view)
     if back != blob:
         die("SELF-CHECK FAILED: re-encoding the seeded image did not reproduce the "
             "source bytes. Do not trust this asset.")
 
-    print(f"seeded {a.name} from layer '{layer}' ({tiles} tiles, {bpp}bpp)")
+    geom = f"{tiles} cells of 8x{cell_h}" if cell_h != TILE_H else f"{tiles} tiles"
+    print(f"seeded {a.name} from layer '{layer}' ({geom}, {bpp}bpp)")
     print(f"  png       : {ppath}  ({width}x{height})")
     print(f"  manifest  : {mpath}")
     print(f"  sha256    : {got_sha}  [matches manifest]" if want_sha else f"  sha256    : {got_sha}")
@@ -536,6 +668,15 @@ def main(argv=None) -> int:
     e.add_argument("--root", default="assets/src", help="layer root to write into")
     e.add_argument("--layout-width", type=int, default=16, dest="layout_width",
                    help="tiles per row in the PNG (cosmetic; recorded in the manifest)")
+    e.add_argument("--cell-height", type=int, default=TILE_H, dest="cell_height",
+                   help="pixel rows per cell (default 8 = a classic tile). Use e.g. 12 for "
+                        "a non-tile-aligned bitmap font. Changes how bytes group into "
+                        "pixels -- a wrong value gives wrong pixels, same as --bpp")
+    e.add_argument("--view-order", default="row_major", dest="view_order",
+                   choices=("row_major", "column_major"),
+                   help="cosmetic PNG layout; does not affect the .bin (default row_major)")
+    e.add_argument("--view-rows", type=int, default=None, dest="view_rows",
+                   help="cells per column when --view-order=column_major")
     e.add_argument("--snes-addr", default=None, dest="snes_addr")
     e.set_defaults(fn=cmd_extract)
 
