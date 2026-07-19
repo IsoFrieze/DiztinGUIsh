@@ -148,15 +148,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         int bank;
         int programCounter;
             
-        #if !DIZ_3_BRANCH
-        // old way
         var opcode = data.GetRomByte(offset);
-        #else
-            // new way
-            var byteEntry = GetByteEntryRom(data, offset);
-            var opcode = byteEntry?.Byte;
-        #endif
-            
+
         if (opcode == null)
             return -1;
 

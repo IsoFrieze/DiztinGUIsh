@@ -5,9 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Xml.Serialization;
 using Diz.Core.Interfaces;
-#if DIZ_3_BRANCH
-using Diz.Core.model.byteSources;
-#endif
 using Diz.Core.model.snes;
 using Diz.Core.util;
 using JetBrains.Annotations;
@@ -91,13 +88,8 @@ namespace Diz.Core.model
         public LabelsServiceWithTemp(Data data)
         {
             Data = data;
-            
-            #if DIZ_3_BRANCH
-            NormalProvider = new ByteSourceLabelProvider(data.SnesAddressSpace);
-            #else
+
             NormalProvider = new LabelsCollection();
-            #endif
-            
             TemporaryProvider = new LabelsCollection();
         }
         
@@ -302,92 +294,6 @@ namespace Diz.Core.model
         }
     }
 
-    #if DIZ_3_BRANCH
-    public class ByteSourceLabelProvider : LabelProviderBase, ILabelService, IEquatable<ByteSourceLabelProvider>
-    {
-        public bool Equals(ByteSourceLabelProvider other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return ReferenceEquals(ByteSource, other.ByteSource);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ByteSourceLabelProvider)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return ByteSource.GetHashCode();
-        }
-
-        public static bool operator ==(ByteSourceLabelProvider left, ByteSourceLabelProvider right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(ByteSourceLabelProvider left, ByteSourceLabelProvider right)
-        {
-            return !Equals(left, right);
-        }
-
-        private ByteSource ByteSource { get; }
-        
-        // pass in topleve (i.e. Data.SnesAddressSpace)
-        public ByteSourceLabelProvider(ByteSource byteSource)
-        {
-            ByteSource = byteSource;
-        }
-
-        public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels =>
-            ByteSource.GetAnnotationsIncludingChildrenEnumerator<IAnnotationLabel>();
-
-        // NOTE: DIZ_3_BRANCH-only dead code; not compiled in the default build, so this
-        // member is declared to satisfy the interface but is not exercised or verified.
-        public event EventHandler<LabelChangedEventArgs> LabelsChanged;
-
-        public static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
-        
-        public void DeleteAllLabels()
-        {
-            ByteSource.RemoveAllAnnotations(IsLabel);
-        }
-
-        public void RemoveLabel(int snesAddress)
-        {
-            ByteSource.RemoveAllAnnotationsAt(snesAddress, IsLabel);
-        }
-
-        public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
-        {
-            DeleteAllLabels();
-            foreach (var (key, value) in newLabels)
-            {
-                AddLabel(key, value);
-            }
-        }
-
-        public override Label GetLabel(int snesAddress) => ByteSource.GetOneAnnotation<Label>(snesAddress);
-
-        public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
-        {
-            Debug.Assert(labelToAdd != null);
-            
-            if (overwrite)
-                RemoveLabel(snesAddress);
-
-            var existing = ByteSource.GetOneAnnotation<IAnnotationLabel>(snesAddress);
-            
-            if (existing == null)
-                ByteSource.AddAnnotation(snesAddress, labelToAdd);
-        }
-    } 
-    #endif
-    
     public class LabelsCollection : LabelProviderBase, ILabelService, IEquatable<LabelsCollection>
     {
         // ReSharper disable once MemberCanBePrivate.Global

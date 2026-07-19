@@ -16,13 +16,7 @@ using JetBrains.Annotations;
 
 namespace Diz.Controllers.interfaces;
 
-// public interface IStartFormController : IFormViewer
-// {
-//     public IStartFormViewer View { get; }
-// }
-//     
-
-public interface IProjectController : 
+public interface IProjectController :
     ITraceLogImporters,
     IFixInstructionUtils,
     IDataUtilities
@@ -108,30 +102,6 @@ public interface ILabelImporter
 {
     void ImportLabelsCsv(ILabelEditorView labelEditor, bool replaceAll);
 }
-
-#if DIZ_3_BRANCH
-    public interface IMainFormController : 
-        
-        IFormController,
-        
-        // TODO: shouldn't have the word 'Grid' in here for Main Form controller. refactor
-        // either naming or functionality.
-        // IBytesGridViewerDataController<RomByteDataGridRow>,
-        
-        IProjectController,
-        I65816CpuOperations, 
-        IExportDisassembly, 
-        IProjectOpenerHandler, 
-        ITraceLogImporters, 
-        IProjectNavigation,
-        ILabelImporter
-    {
-        public FlagType CurrentMarkFlag { get; set; }
-        public bool MoveWithStep { get; set; }
-        
-        void SetProject(string filename, Project project);
-    }
-#endif
 
 public interface IMarkManyController<out TDataSource>
 {

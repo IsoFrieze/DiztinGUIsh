@@ -8,27 +8,12 @@ using Diz.Core.Interfaces;
 using Diz.Core.util;
 using JetBrains.Annotations;
 
-#if DIZ_3_BRANCH
-using Diz.Core.model.byteSources;
-#endif
-
 namespace Diz.Core.model
 {
-    
+
     public abstract class Annotation : AnnotationBase
-    #if !DIZ_3_BRANCH
     {}
-    #else
-        , IParentAware<ByteEntry>
-    {
-        public ByteEntry Parent { get; protected set; }
-        public void OnParentChanged(ByteEntry parent)
-        {
-            Parent = parent;
-        }
-    } 
-    #endif
-    
+
     public abstract class AnnotationBase : INotifyPropertyChangedExt
     {
         public event PropertyChangedEventHandler PropertyChanged;

@@ -1,10 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.ComponentModel;
 
-#if DIZ_3_BRANCH
-using Diz.Core.model.byteSources;
-#endif
-
 namespace Diz.Core.Interfaces
 {
     public interface IReadOnlyByteSource
@@ -183,13 +179,8 @@ namespace Diz.Core.Interfaces
     {
         
     }
-// TODO: below: #if DIZ_3_BRANCH
-//         ,ICommentProvider,
-//         IAnnotationProvider,
-//         IByteGraphProvider
-// #endif
-    
-    public interface IData : 
+
+    public interface IData :
         INotifyPropertyChanged,
         IReadOnlyByteSource,
         IRomMapProvider,

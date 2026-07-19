@@ -26,15 +26,9 @@ public class SnesProjectFactoryFromRomImportSettings(
         var snesApi = project.Data.GetSnesApi();
         Debug.Assert(snesApi != null);
 
-#if DIZ_3_BRANCH
-        // new way, though TODO we want to decouple the SNES stuff from here
-        project.Data.PopulateFrom(importSettings.RomBytes, importSettings.RomMapMode, importSettings.RomSpeed);
-#else
-        // old way
         snesApi.RomMapMode = importSettings.RomMapMode;
         snesApi.RomSpeed = importSettings.RomSpeed;
         project.Data.RomBytes.CreateRomBytesFromRom(importSettings.RomBytes);
-#endif
 
         foreach (var (romOffset, label) in importSettings.InitialLabels)
         {

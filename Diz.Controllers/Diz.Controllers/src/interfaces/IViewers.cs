@@ -52,30 +52,6 @@ public interface IMarkManyView<TDataSource> : IModalDialog
 }
 
 
-#if DIZ_3_BRANCH
-    public interface IBytesGridViewer<TByteItem> : IRowBaseViewer<TByteItem>, IViewer
-    {
-        public List<TByteItem> DataSource { get; set; }
-        int TargetNumberOfRowsToShow { get; }
-
-        void SelectRow(int row);
-        
-
-        void BeginEditingSelectionComment();
-        void BeginEditingSelectionLabel();
-        
-        public class SelectedOffsetChangedEventArgs : EventArgs
-        {
-            public TByteItem Row { get; init; }
-            public int RowIndex { get; init; }
-        }
-
-        public delegate void SelectedOffsetChange(object sender, SelectedOffsetChangedEventArgs e);
-
-        public event SelectedOffsetChange SelectedOffsetChanged;
-    }
-#endif
-    
 public interface ILabelEditorView : IFormViewer
 {
     // a lot of these fields/methods shouldn't be done this way
@@ -129,10 +105,3 @@ public interface ILogCreatorSettingsEditorView : IFormViewer
     /// <returns></returns>
     bool PromptEditAndConfirmSettings();
 }
-    
-#if DIZ_3_BRANCH
-    public interface IDataGridEditorForm : IFormViewer, IProjectView
-    {
-        IMainFormController MainFormController { get; set; }
-    }
-#endif
