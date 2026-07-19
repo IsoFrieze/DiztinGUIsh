@@ -239,7 +239,20 @@ public class Data : IData
             .OrderByDescending(region => region.Priority)
             .FirstOrDefault();
     }
-    
+
+    // every region covering snesAddress, most-specific first. "Specific" = narrowest extent
+    // (End - Start), with Priority descending as the tiebreak when two regions have the same
+    // extent. Simple linear scan -- ~136 regions (CT's post-BRR-split ceiling) is small enough
+    // that an interval tree would be optimizing before measuring.
+    public IReadOnlyList<IRegion> GetRegionPath(int snesAddress)
+    {
+        return Regions
+            .Where(region => snesAddress >= region.StartSnesAddress && snesAddress <= region.EndSnesAddress)
+            .OrderBy(region => region.EndSnesAddress - region.StartSnesAddress)
+            .ThenByDescending(region => region.Priority)
+            .ToList();
+    }
+
     public event PropertyChangedEventHandler PropertyChanged;
 }
 
