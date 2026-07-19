@@ -18,7 +18,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     IInOutPointGettable,
     IReadOnlyLabels,
     ICommentTextProvider,
-    IRegionProvider
+    IRegionProvider,
+    ICpuDirectiveProvider
 {
     // TODO: expose these somehow to the project settings
     public bool AttemptTouseDirectPageArithmeticInFinalOutput { get; set; } = true;
@@ -161,6 +162,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             return -1;
 
         var mode = GetAddressMode(data, offset);
+        var romWord = data.GetRomWord(offset + 1);
+        
         switch (mode)
         {
             case Cpu65C816Constants.AddressMode.DirectPage:
@@ -194,7 +197,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
                 bank = opcode is 0x20 or 0x4C or 0x7C or 0xFC
                     ? data.ConvertPCtoSnes(offset) >> 16
                     : data.GetDataBank(offset);
-                var operand = data.GetRomWord(offset + 1);
+                var operand = romWord;
                 if (!operand.HasValue)
                     return -1;
                     
@@ -203,14 +206,20 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             case Cpu65C816Constants.AddressMode.AddressIndirect:
             case Cpu65C816Constants.AddressMode.AddressLongIndirect:
             {
-                var operand = data.GetRomWord(offset + 1) ?? -1;
-                return operand;
+                if (romWord == null)
+                    return -1;
+
+                return (int)romWord.Value;
             }
             case Cpu65C816Constants.AddressMode.Long:
             case Cpu65C816Constants.AddressMode.LongXIndex:
             {
-                var operand = data.GetRomLong(offset + 1) ?? -1;
-                return operand;
+                var romLong = data.GetRomLong(offset + 1);
+
+                if (romLong == null)
+                    return -1;
+                
+                return (int)romLong.Value;
             }
             case Cpu65C816Constants.AddressMode.Relative8:
             {
@@ -230,7 +239,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
                 
                 programCounter = data.ConvertPCtoSnes(offset + 3);
                 bank = programCounter >> 16;
-                var romByte = data.GetRomWord(offset + 1);
+                var romByte = romWord;
                 if (!romByte.HasValue)
                     return -1;
                     
@@ -270,12 +279,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             case Cpu65C816Constants.AddressMode.Immediate16:
                 identified = true;
                 overridesAllowed = true;
-                numDigitsForOperand1 = mode == Cpu65C816Constants.AddressMode.Immediate16 
-                    ? 4 
-                    : 2;
-                operandValue1 = mode == Cpu65C816Constants.AddressMode.Immediate16 
+                numDigitsForOperand1 = mode == Cpu65C816Constants.AddressMode.Immediate16 ? 4 : 2;
+                operandValue1 = (int?)(mode == Cpu65C816Constants.AddressMode.Immediate16 
                     ? data.GetRomWord(offset + 1) 
-                    : data.GetRomByte(offset + 1);
+                    : data.GetRomByte(offset + 1));
                 break;
         }
         
@@ -300,14 +307,14 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // try a substitution, if any exist. only for opcodes with ONE operand (not going to handle the ones with two)
         if (overridesAllowed)
         {
-            var specialDirective = GetSpecialDirectiveOverrideFromComments(data, offset);
+            var specialDirective = data.GetSpecialDirectiveOverrideFromComments(offset);
             if (specialDirective != null)
             {
                 if (!string.IsNullOrEmpty(specialDirective.TextToOverride))
                 {
                     operandFinalStr1 = specialDirective.TextToOverride; // allow overriding here
                 }
-                else if (specialDirective.ConstantFormatOverride == CpuUtils.OperandOverride.FormatOverride.AsDecimal && operandValue1!=null)
+                else if (specialDirective.ConstantFormatOverride == OperandOverride.FormatOverride.AsDecimal && operandValue1!=null)
                 {
                     operandFinalStr1 = operandValue1.ToString();
                 }
@@ -390,16 +397,21 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (distanceToStartOfTable % stride != 0)
             return ""; 
         
-        var ia = data.GetIntermediateAddressOrPointer(offset);
-        if (ia == -1)
+        var iaNullable = data.GetIntermediateAddressOrPointer(offset);
+        if (iaNullable == null)
             return null;
 
+        var ia = iaNullable.Value;
+
         // we're in the middle of a pointer table AND in the right position.
-        // show some useful text, if available.
-        var labelAtIa = data.Labels.GetLabel(ia);
-        if (labelAtIa != null)
-            return labelAtIa.Name;
-        
+        // show some useful text, if available and allowed
+        var labelAtIa = data.Labels.GetLabel((int)ia);
+        if (labelAtIa != null) {
+            var specialDirective = data.GetSpecialDirectiveOverrideFromComments(offset);
+            if (specialDirective is not { ForceOnlyShowRawHex: true })
+                return labelAtIa.Name;
+        }
+
         var iaClipped = stride switch
         {
             2 => ia & 0xFFFF,
@@ -425,7 +437,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (v == null)
             throw new InvalidDataException("Expected non-null input value, got null");
             
-        return Util.NumberToBaseString((int) v, Util.NumberBase.Hexadecimal, numDigits, true);
+        return Util.NumberToBaseString((uint)v, Util.NumberBase.Hexadecimal, numDigits, true);
     }
 
     public override int GetInstructionLength(TByteSource data, int offset)
@@ -499,7 +511,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // OPTION 0: SPECIAL DIRECTIVES
         // we'll let the user do weird special-case things with "!!" directives
         // -------------------------------------------------------------------
-        var specialDirective = GetSpecialDirectiveOverrideFromComments(data, offset);
+        var specialDirective = data.GetSpecialDirectiveOverrideFromComments(offset);
         if (specialDirective != null)
         {
             // ZERO VALIDATION OF THIS TEXT. it's up to the user to get it right. have fun
@@ -548,7 +560,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             intermediateAddress = (int)romWord;
         }
 
-        return RomUtil.ConvertNumToHexStr(intermediateAddress, numByteDigitsToDisplay);
+        return RomUtil.ConvertNumToHexStr((uint)intermediateAddress, numByteDigitsToDisplay);
     }
 
     private string GetFinalLabelExpressionToUse(TByteSource data, int offset)
@@ -699,19 +711,6 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         var absAmountToDisplace = Math.Abs(amountToDisplace);
         
         return $"{direction}${absAmountToDisplace:X}";
-    }
-
-    private static CpuUtils.OperandOverride? GetSpecialDirectiveOverrideFromComments(TByteSource data, int offset)
-    {
-        // here be dragons.  we'll let the user override anything they ever wanted to in the comments.
-        // there will be, for now, very little validation/etc.
-        var snesAddress = data.ConvertPCtoSnes(offset);
-        if (snesAddress == -1)
-            return null;
-        
-        // searches both ROM comments and comments from the label list
-        var comment = data.GetCommentText(snesAddress);
-        return CpuUtils.ParseCommentSpecialDirective(comment);
     }
 
     private static IAnnotationLabel? GetValidatedLabelNameForOffset(TByteSource data, int srcOffset)
