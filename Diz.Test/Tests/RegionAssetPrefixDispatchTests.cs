@@ -11,13 +11,13 @@ using Xunit;
 namespace Diz.Test.Tests;
 
 /// <summary>
-/// Step 6 (regions-as-partition §B.2): asset exporter dispatch keys on the AssetType PREFIX
-/// (gfx. / audio.), not on the 3-value RegionExportType enum. Gfx and a would-be BRR exporter
-/// both carry ExportType == Asset, so the enum alone can't tell them apart -- the prefix must.
+/// Asset exporter dispatch keys on the AssetType PREFIX (gfx. / audio.), not on the 3-value
+/// RegionExportType enum. Gfx and a would-be BRR exporter both carry ExportType == Asset, so
+/// the enum alone can't tell them apart -- the prefix must.
 ///
 /// These tests use a throwaway "audio." exporter built on the same BinaryAssetExporterBase gfx
 /// now derives from, so they exercise the shared base machinery (source envelope, manifest key
-/// order, incbin) generically -- without pulling in the real BRR exporter (that is step 9).
+/// order, incbin) generically -- without pulling in the real BRR exporter.
 /// </summary>
 public class RegionAssetPrefixDispatchTests : IDisposable
 {
@@ -113,7 +113,7 @@ public class RegionAssetPrefixDispatchTests : IDisposable
     public void GfxAndAudioBothHandleAssetButThePrefixRoutesEach()
     {
         // Two exporters, both keyed to ExportType == Asset. Only the AssetType prefix separates
-        // them -- this is the exact blocker §B.2 describes, resolved.
+        // them.
         var rom = MakeFakeRom(0x1000);
         var service = MakeServiceWithBoth(rom);
 

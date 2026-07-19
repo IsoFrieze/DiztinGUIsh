@@ -5,8 +5,7 @@ using Diz.Core.Interfaces;
 namespace Diz.Core.model.snes;
 
 /// <summary>
-/// Regions have three roles, derived from the existing flags rather than a new enum field
-/// (see docs/diz/regions-as-partition-plan.md §A.3):
+/// Regions have three roles, derived from the existing flags rather than a new enum field:
 ///
 ///   File-producing -- ExportSeparateFile == true. Gets its own output file + an incsrc in
 ///                      its parent's file.
@@ -37,12 +36,12 @@ public static class RegionRoleExtensions
 }
 
 /// <summary>
-/// The two non-crossing constraints from §A.3 step 2:
+/// The two non-crossing constraints:
 ///
 ///   File-producing regions must form a LAMINAR family: any two are disjoint or one fully
 ///   contains the other. Partial crossing (start inside one, end outside it) is an error.
-///   Byte-identical duplicate ranges are also an error -- see §A.2.1: "a degenerate case that
-///   validation should probably reject outright rather than silently order."
+///   Byte-identical duplicate ranges are also an error -- a degenerate case validation rejects
+///   outright rather than silently ordering.
 ///
 ///   Asset regions must not overlap each other AT ALL (not even nested).
 ///
@@ -69,12 +68,12 @@ public static class RegionValidation
 
     // ExportSeparateFile currently means specifically "emit a separate .asm file". Asset regions
     // don't use it -- they get their .bin/.png from RegionAssetExportService, a different path
-    // entirely -- which is why CT's three asset regions correctly have it set to false. So the
+    // entirely -- which is why asset regions correctly have it set to false. So the
     // two output roles are mutually exclusive today, and a region claiming both is a data error.
     //
-    // Step 4 may well redefine ExportSeparateFile as "produces its own file, of whatever kind",
-    // folding assets into the laminar family. That's a deliberate rewiring with a byte-identity
-    // gate attached; until then this check pins the current meaning.
+    // A future change may redefine ExportSeparateFile as "produces its own file, of whatever
+    // kind", folding assets into the laminar family. That would be a deliberate rewiring with a
+    // byte-identity gate attached; until then this check pins the current meaning.
     private static void ValidateRolesAreExclusive(IEnumerable<IRegion> regions, List<string> problems)
     {
         foreach (var region in regions.Where(r => r.IsFileProducingRegion() && r.IsAssetRegion()))
@@ -134,7 +133,7 @@ public static class RegionValidation
         }
     }
 
-    // EndSnesAddress is inclusive throughout (see A.2.2), so these compare on that basis.
+    // EndSnesAddress is inclusive throughout (the last byte IN the region), so these compare on that basis.
     private static bool IsDisjoint(IRegion a, IRegion b) =>
         a.EndSnesAddress < b.StartSnesAddress || b.EndSnesAddress < a.StartSnesAddress;
 

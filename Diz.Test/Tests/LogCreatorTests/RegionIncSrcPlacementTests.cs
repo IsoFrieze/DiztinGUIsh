@@ -13,14 +13,13 @@ using Xunit;
 namespace Diz.Test.Tests.LogCreatorTests;
 
 /// <summary>
-/// Regression fixture for incsrc PLACEMENT (docs/diz/regions-as-partition-plan.md §A.3): a
-/// child region's `incsrc` must be written into its PARENT's file, at the child's start
-/// offset -- never into a sibling's file.
+/// Regression fixture for incsrc PLACEMENT: a child region's `incsrc` must be written into its
+/// PARENT's file, at the child's start offset -- never into a sibling's file.
 ///
 /// The bug this guards against: when one file-producing region ends on the byte immediately
-/// before the next sibling begins (contiguous siblings, extremely common -- CT's
-/// player_attack_animations / player_tech_animations / item_animations chain in bank CE),
-/// SyncRegionStack pops the old region and pushes the new one in the SAME call. The output
+/// before the next sibling begins (contiguous siblings, extremely common -- e.g. a chain of
+/// adjacent animation regions inside one bank), SyncRegionStack pops the old region and pushes
+/// the new one in the SAME call. The output
 /// stream was still pointing at the just-closed sibling's file, so the new sibling's incsrc
 /// was "daisy-chained" into the previous sibling's tail instead of landing in the shared
 /// parent. asar assembles both shapes to identical bytes, so the byte-identity gate can NOT
@@ -52,7 +51,7 @@ public class RegionIncSrcPlacementTests
         data.Apis.AddIfDoesntExist(new SnesApi(data));
 
         // two file-producing siblings, CONTIGUOUS: beta starts on the byte right after
-        // alpha's (inclusive, §A.2.2) end. Their shared parent is the synthesized bank_80
+        // alpha's (inclusive) end. Their shared parent is the synthesized bank_80
         // region ($800000-$80FFFF) that GenerateSyntheticBankRegions adds at export time.
         data.Regions.Add(new Region
         {

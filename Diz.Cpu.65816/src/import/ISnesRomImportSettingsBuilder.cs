@@ -24,7 +24,7 @@ public interface ISnesRomImportSettingsBuilder : INotifyPropertyChanged
     public void OptionClearGenerateVectorTableLabels();
     public void OptionSetGenerateVectorTableLabelFor(string vectorName, bool shouldGenerateLabel);
 
-    // generate one whole-bank, file-producing region per bank in the ROM (docs/diz/regions-as-partition-plan.md §A.5)
+    // generate one whole-bank, file-producing region per bank in the ROM
     bool OptionGenerateBankRegions { get; set; }
 
     public ImportRomSettings GenerateSettings();

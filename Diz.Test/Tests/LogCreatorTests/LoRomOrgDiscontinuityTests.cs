@@ -9,15 +9,15 @@ using Xunit;
 namespace Diz.Test.Tests.LogCreatorTests;
 
 /// <summary>
-/// Fixture for docs/diz/regions-as-partition-plan.md §A.4's LoRom worked example: a single
-/// file-producing region straddling PC 0x7FF0-0x800F. LoRom maps 32 KiB into the UPPER half of
-/// each bank, so the SNES address jumps BACKWARD by 0x7FFF exactly at PC 0x8000:
+/// Fixture for the LoRom worked example: a single file-producing region straddling PC
+/// 0x7FF0-0x800F. LoRom maps 32 KiB into the UPPER half of each bank, so the SNES address jumps
+/// BACKWARD by 0x7FFF exactly at PC 0x8000:
 ///
 ///   PC 0x7FFF -> $80:FFFF
 ///   PC 0x8000 -> $81:8000   (NOT $81:0000)
 ///
-/// CT is HiRom, where this hazard can't occur (its mapping is linear), so nothing in the
-/// byte-identical CT gate exercises this path -- this fixture is the only thing that does.
+/// This hazard can't occur under HiRom (its mapping is linear), so a HiRom byte-identity gate
+/// never exercises this path -- this fixture is the only thing that does.
 ///
 /// The rule under test (LogCreator's AsmCreationInstructions.WriteOutputLinesForRomOffset):
 /// emit a real ORG whenever snes(p) != snes(p-1)+1, computed through the same PC->SNES
@@ -30,7 +30,7 @@ public class LoRomOrgDiscontinuityTests
     // PC 0x7FF0 -> $80FFF0, PC 0x800F -> $81800F (see header comment above; also independently
     // derived from RomUtil.ConvertPCtoSnes(offset, LoRom, FastRom)).
     private const int RegionStartSnes = 0x80FFF0;
-    private const int RegionEndSnes = 0x81800F; // inclusive (§A.2.2)
+    private const int RegionEndSnes = 0x81800F; // inclusive (last byte IN the region)
     private const int RomSize = 0x8010; // covers PC 0..0x800F
 
     private static Data BuildLoRomFixture()

@@ -8,11 +8,10 @@ using Xunit;
 namespace Diz.Test.Tests;
 
 /// <summary>
-/// Tests for the shared bank-region synthesis logic (docs/diz/regions-as-partition-plan.md
-/// §A.5): bank enumeration, EndSnesAddress being inclusive (last byte IN the bank, per §A.2.2),
-/// and the skip-if-already-covered rule that reconciles the persisted (migration/import) and
-/// in-memory (LogWriter export-time) call sites so they never both add a region for the same
-/// bank -- see the "As built -- two deviations to reconcile" note at the end of §A.4.
+/// Tests for the shared bank-region synthesis logic: bank enumeration, EndSnesAddress being
+/// inclusive (last byte IN the bank), and the skip-if-already-covered rule that reconciles the
+/// persisted (migration/import) and in-memory (LogWriter export-time) call sites so they never
+/// both add a region for the same bank.
 /// </summary>
 public class BankRegionSynthesisTests
 {
@@ -75,7 +74,7 @@ public class BankRegionSynthesisTests
         const int bankSize = 0x10000;
         var romSize = bankSize * 2; // banks C0, C1
 
-        // mirrors CT's hand-authored "BankC0 - location"
+        // mirrors a hand-authored whole-bank region of identical extent
         IReadOnlyList<IRegion> existing = [MakeRegion("BankC0 - location", 0xC00000, 0xC0FFFF)];
 
         var result = BankRegionSynthesis.SynthesizeMissingBankRegions(
@@ -110,7 +109,7 @@ public class BankRegionSynthesisTests
         const int bankSize = 0x10000;
         var romSize = bankSize * 3; // C0, C1, C2
 
-        // e.g. a "audio data" region crossing from mid-C0 into C1, per plan §B.5 -- the
+        // e.g. an audio-data region crossing from mid-C0 into C1 -- the
         // user/migration is expected to have already tiled the rest of C0 and C1 by hand,
         // so synthesis must not add a whole-bank region that would partially cross this.
         IReadOnlyList<IRegion> existing = [MakeRegion("audio_data", 0xC08000, 0xC18000)];

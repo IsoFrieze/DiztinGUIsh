@@ -161,8 +161,8 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
         return settings;
     }
 
-    // docs/diz/regions-as-partition-plan.md §A.5: on a brand-new import there are no existing
-    // regions to reconcile against, so this synthesizes one whole-bank region per bank in the
+    // on a brand-new import there are no existing regions to reconcile against, so this
+    // synthesizes one whole-bank region per bank in the
     // ROM. Uses the same shared helper as the save-format-107 migration and the LogWriter's
     // export-time synthesis, so all three call sites agree on bank extents/skip rules.
     private List<IRegion> GenerateBankRegions()

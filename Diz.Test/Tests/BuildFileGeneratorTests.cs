@@ -245,18 +245,45 @@ public class BuildFileGeneratorTests : IDisposable
         new ToolVendoring().VendorInto(exportRoot, missing).Should().BeEmpty();
     }
 
-    // ---- step 7: generalized codec dispatch (B.3) ------------------------------------------
+    // ---- generalized codec dispatch --------------------------------------------------------
 
     [Fact]
     public void UnknownAssetTypeFailsLoudlyNamingTheType()
     {
-        // Consistent with step 6's exporter: an Asset region whose type no binding claims must
+        // Consistent with the exporter: an Asset region whose type no binding claims must
         // error loudly (naming the type), not be silently routed to the gfx codec as before.
-        var assets = BuildFileGenerator.CollectAssets([AssetRegion("audio/song", "audio.snes.brr")]);
+        // (audio.* is now a registered default binding, so use a type that still has no binding
+        // -- palette.snes.bgr555 is reserved in the taxonomy but not yet wired.)
+        var assets = BuildFileGenerator.CollectAssets([AssetRegion("palette/pal0", "palette.snes.bgr555")]);
 
         var act = () => new BuildFileGenerator().Generate(assets);
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*audio.snes.brr*");
+        act.Should().Throw<InvalidOperationException>().WithMessage("*palette.snes.bgr555*");
+    }
+
+    [Fact]
+    public void AudioBrrIsAWiredDefaultBindingCompilingViaBinpack()
+    {
+        // The real audio binding ships in DefaultToolBindings, so a plain default
+        // generator (what the exporter uses) wires BRR assets through binpack -- no test-only
+        // binding needed. This is the non-synthetic counterpart to
+        // PerAssetEdgesDispatchByTypePrefixToTheMatchingBinding below.
+        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
+            AssetRegion("audio/AudioBRR_00", "audio.snes.brr"),
+        ]));
+
+        // binpack runs off its own vendored var, declared as a `= ...` line...
+        ninja.Should().Contain("binpack = tools/vendor/dizpack/binpack.py");
+        ninja.Should().Contain("rule audio_compile");
+        ninja.Should().Contain("rule audio_seed");
+
+        // ...the asset compiles from its editable .brr into the build .bin the assembler incbin's
+        ninja.Should().Contain(
+            "build build/assets/audio/AudioBRR_00.bin: audio_compile assets/src/audio/AudioBRR_00.brr | assets/src/audio/AudioBRR_00.json $binpack");
+        // the commands rely on the manifest's ext (no --ext), matching the pinned binding shape
+        ninja.Should().Contain("python $binpack compile --name $name $search_roots --out $out");
+        // and the ROM depends on the compiled BRR .bin
+        ninja.Should().Contain("build $out_rom: assemble | build/assets/audio/AudioBRR_00.bin");
     }
 
     [Fact]

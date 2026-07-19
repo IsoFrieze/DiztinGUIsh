@@ -14,10 +14,9 @@ using Xunit;
 namespace Diz.Test.Tests.SerializationTests;
 
 /// <summary>
-/// Tests for the save-format 106 -> 107 migration (docs/diz/regions-as-partition-plan.md
-/// §A.5): it must be a real, data-creating migration (not a MigrationNoOp), purely additive,
-/// and idempotent against a project that already has an equivalent hand-authored region (the
-/// CT "BankC0 - location" case).
+/// Tests for the save-format 106 -> 107 migration: it must be a real, data-creating migration
+/// (not a MigrationNoOp), purely additive, and idempotent against a project that already has an
+/// equivalent hand-authored region (a whole-bank region a user drew by hand).
 /// </summary>
 public class MigrationAddBankRegions107Tests : ContainerFixture
 {
@@ -50,7 +49,7 @@ public class MigrationAddBankRegions107Tests : ContainerFixture
         var region = project.Data.Regions[0];
         region.RegionName.Should().Be("bank_80");
         region.StartSnesAddress.Should().Be(0x800000);
-        region.EndSnesAddress.Should().Be(0x80FFFF); // inclusive, last byte IN the bank (§A.2.2)
+        region.EndSnesAddress.Should().Be(0x80FFFF); // inclusive, last byte IN the bank
         region.ExportSeparateFile.Should().BeTrue();
         region.Priority.Should().Be(0);
         region.IsFileProducingRegion().Should().BeTrue();
@@ -59,8 +58,8 @@ public class MigrationAddBankRegions107Tests : ContainerFixture
     [Fact]
     public void ExistingHandAuthoredRegionOfTheSameExtentIsNotDuplicated()
     {
-        // mirrors CT's "BankC0 - location": a user region with the exact same extent as the
-        // bank that would otherwise be synthesized.
+        // a user region with the exact same extent as the bank that would otherwise be
+        // synthesized.
         var project = (Project)sampleProjectFactory.Create();
         project.Data.Regions.Add(new Region
         {
@@ -95,9 +94,9 @@ public class MigrationAddBankRegions107Tests : ContainerFixture
     [Fact]
     public void DoesNotTouchEndSnesAddressOfExistingRegions()
     {
-        // per §A.2.2, this migration must NEVER convert EndSnesAddress on anything that
-        // already exists -- that was a one-time hand-edit of the project XML, done outside
-        // this migration entirely.
+        // this migration must NEVER change EndSnesAddress on anything that already exists;
+        // EndSnesAddress is inclusive (the last byte IN the region), and existing regions keep
+        // whatever extent they were saved with.
         var project = (Project)sampleProjectFactory.Create();
         project.Data.Regions.Add(new Region
         {

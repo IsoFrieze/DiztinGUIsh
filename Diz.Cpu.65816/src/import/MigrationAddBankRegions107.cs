@@ -5,14 +5,13 @@ using JetBrains.Annotations;
 
 namespace Diz.Cpu._65816.import;
 
-// Save format 106 -> 107 (docs/diz/regions-as-partition-plan.md §A.5).
+// Save format 106 -> 107.
 //
 // Purely additive: synthesizes one whole-bank, file-producing region per bank present in the
 // ROM (Priority = 0, ExportSeparateFile = true, EndSnesAddress = last byte of the bank,
-// inclusive per §A.2.2), skipping any bank already covered by an existing user region of the
-// same extent -- e.g. CT's hand-authored "BankC0 - location" / "BankC1 - battle stuff". Does
-// NOT touch EndSnesAddress on any existing region; that conversion was done by hand-editing
-// project XML directly (§A.2.2), since no save file >= 104 existed outside this workspace.
+// inclusive), skipping any bank already covered by an existing user region of the same extent
+// -- e.g. a whole-bank region a user drew by hand. Does NOT touch EndSnesAddress on any
+// existing region.
 // Re-running this synthesis (e.g. via a second migration run, or the LogWriter's export-time
 // pass -- see AsmCreationInstructions.GenerateSyntheticBankRegions) is idempotent: the same
 // exact-match skip rule applies both places via the shared BankRegionSynthesis helper.

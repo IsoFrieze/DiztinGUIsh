@@ -59,7 +59,7 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     // - 105: added asset export fields to regions (ExportType/AssetType/AssetVersion/AssetName) (no migrations required)
     // - 106: added "AssetOptions" free-form JSON field to regions (no migrations required)
     // - 107: added a real, data-creating migration that synthesizes one whole-bank,
-    //        file-producing region per ROM bank (docs/diz/regions-as-partition-plan.md §A.5).
+    //        file-producing region per ROM bank.
     //        Purely additive -- skips banks already covered by an existing region of the same
     //        extent, does not touch EndSnesAddress on anything existing.
     public const int LatestSaveFormatVersion = 107;  //  REMEMBER: IF YOU CHANGE THIS YOU MUST ADD A NEW IMigration ENTRY IN RegisterMigrations()

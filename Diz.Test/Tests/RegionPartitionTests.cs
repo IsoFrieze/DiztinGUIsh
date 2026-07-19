@@ -7,12 +7,12 @@ using Xunit;
 namespace Diz.Test.Tests;
 
 /// <summary>
-/// Tests for the region-partition step of docs/diz/regions-as-partition-plan.md §A.3:
+/// Tests for how regions partition the ROM:
 ///   - role split by flag (file-producing / asset / annotation)
 ///   - Data.GetRegionPath (every region covering a byte, most-specific first)
 ///   - RegionValidation.ValidateNonCrossing (laminar file-producing family + non-overlapping assets)
 ///
-/// EndSnesAddress is inclusive throughout (the last byte IN the region), per §A.2.2.
+/// EndSnesAddress is inclusive throughout (the last byte IN the region).
 /// </summary>
 public class RegionPartitionTests
 {
@@ -158,7 +158,7 @@ public class RegionPartitionTests
     public void RegionClaimingBothOutputRolesIsFlagged(RegionExportType exportType)
     {
         // ExportSeparateFile means "emit a .asm file"; assets go through a different path and
-        // correctly leave it false (CT's three asset regions all do). Both set is a data error.
+        // correctly leave it false. Both set is a data error.
         var confused = MakeRegion("confused", 0xC00000, 0xC000FF,
             exportSeparateFile: true, exportType: exportType);
 
@@ -171,7 +171,7 @@ public class RegionPartitionTests
     [Fact]
     public void AssetRegionNestedInsideAFileProducingParentIsValid()
     {
-        // the shape CT actually has: an asset incbin'd inside its enclosing bank .asm file.
+        // a common shape: an asset incbin'd inside its enclosing bank .asm file.
         // The asset is exempt from the laminar check (annotation-and-asset regions aren't
         // members of the file-producing family), so the containment is simply not its business.
         var parent = MakeRegion("bank_C0", 0xC00000, 0xC0FFFF, exportSeparateFile: true);

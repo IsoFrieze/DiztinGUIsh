@@ -7,7 +7,7 @@ using Diz.Core.util;
 namespace Diz.Core.model.snes;
 
 /// <summary>
-/// Shared bank-region synthesis logic (docs/diz/regions-as-partition-plan.md §A.5).
+/// Shared bank-region synthesis logic.
 ///
 /// This is the ONE place that decides "does bank N need a synthesized whole-bank
 /// file-producing region, or is it already covered?" It is used from two call sites that
@@ -22,9 +22,8 @@ namespace Diz.Core.model.snes;
 /// matches a bank's extent is treated as already covering it), a project that has gone
 /// through migration/import will already have exact-match persisted bank regions, and the
 /// export-time synthesis will see them and skip -- no duplicate regions, no laminar-family
-/// violation. This is deliberate: it is what keeps the two mechanisms (in-memory synthesis
-/// from step 4, and persistence from step 5) from both firing for the same bank. See the "As
-/// built -- two deviations to reconcile" note at the end of §A.4.
+/// violation. This is deliberate: it is what keeps the two mechanisms (in-memory synthesis at
+/// export time, and persistence on import/migration) from both firing for the same bank.
 /// </summary>
 public static class BankRegionSynthesis
 {
@@ -33,10 +32,11 @@ public static class BankRegionSynthesis
     /// given size, given the regions that already exist. Skips any bank whose bytes are already
     /// exactly covered by an existing file-producing region (exact extent match), or partially
     /// crossed by one (in which case the user/migration is expected to have already tiled it by
-    /// hand -- see plan §B.5). Purely additive: never mutates or returns anything for existing
-    /// regions, just the NEW ones to add.
+    /// hand). Purely additive: never mutates or returns anything for existing regions, just the
+    /// NEW ones to add.
     ///
-    /// EndSnesAddress is inclusive throughout (§A.2.2) -- bank C0 is $C00000-$C0FFFF.
+    /// EndSnesAddress is inclusive throughout (the last byte IN the region) -- bank C0 is
+    /// $C00000-$C0FFFF.
     /// </summary>
     /// <param name="existingRegions">every region that already exists (persisted + any transient/comment-derived)</param>
     /// <param name="romSize">ROM size in bytes (PC address space)</param>
@@ -71,11 +71,11 @@ public static class BankRegionSynthesis
 
             // An existing region that EXACTLY matches this bank already covers it (nothing to
             // add -- this is the reconciliation case: a persisted region from a prior
-            // migration/import run, or a hand-authored region of identical extent like CT's
-            // "BankC0 - location"). One that CROSSES the bank boundary (overlaps but is neither
-            // an exact match nor fully nested inside) means the user/migration is expected to
-            // have already tiled this bank's remaining bytes by hand (plan doc §B.5) --
-            // synthesis must not add a region that would partially cross it.
+            // migration/import run, or a hand-authored region of identical extent, e.g. a
+            // whole-bank region a user drew by hand). One that CROSSES the bank boundary
+            // (overlaps but is neither an exact match nor fully nested inside) means the
+            // user/migration is expected to have already tiled this bank's remaining bytes by
+            // hand -- synthesis must not add a region that would partially cross it.
             var skip = existingFileProducing.Any(r =>
             {
                 var overlaps = r.StartSnesAddress <= bankEnd && r.EndSnesAddress >= bankStart;
