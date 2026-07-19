@@ -235,11 +235,24 @@ public class Data : IData
     [CanBeNull]  public IRegion GetRegion(int snesAddress)
     {
         return Regions
-            .Where(region => snesAddress >= region.StartSnesAddress && snesAddress < region.EndSnesAddress)
+            .Where(region => snesAddress >= region.StartSnesAddress && snesAddress <= region.EndSnesAddress)
             .OrderByDescending(region => region.Priority)
             .FirstOrDefault();
     }
-    
+
+    // every region covering snesAddress, most-specific first. "Specific" = narrowest extent
+    // (End - Start), with Priority descending as the tiebreak when two regions have the same
+    // extent. Simple linear scan -- a few hundred regions is small enough that an interval tree
+    // would be optimizing before measuring.
+    public IReadOnlyList<IRegion> GetRegionPath(int snesAddress)
+    {
+        return Regions
+            .Where(region => snesAddress >= region.StartSnesAddress && snesAddress <= region.EndSnesAddress)
+            .OrderBy(region => region.EndSnesAddress - region.StartSnesAddress)
+            .ThenByDescending(region => region.Priority)
+            .ToList();
+    }
+
     public event PropertyChangedEventHandler PropertyChanged;
 }
 
@@ -255,6 +268,7 @@ public class Region : IRegion
     private string assetType;
     private string assetVersion;
     private string assetName;
+    private string assetOptions;
 
     public int StartSnesAddress
     {
@@ -280,6 +294,8 @@ public class Region : IRegion
         set => this.SetField(PropertyChanged, ref contextToApply, value);
     }
 
+    // higher number = higher priority = wins. its primary purpose is breaking ties between
+    // overlapping regions that both set ContextToApply.
     public int Priority
     {
         get => priority;
@@ -314,6 +330,12 @@ public class Region : IRegion
     {
         get => assetName;
         set => this.SetField(PropertyChanged, ref assetName, value);
+    }
+
+    public string AssetOptions
+    {
+        get => assetOptions;
+        set => this.SetField(PropertyChanged, ref assetOptions, value);
     }
 
     public event PropertyChangedEventHandler PropertyChanged;

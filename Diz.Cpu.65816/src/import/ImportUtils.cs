@@ -39,6 +39,11 @@ public class SnesProjectFactoryFromRomImportSettings(
         foreach (var (offset, flagType) in importSettings.InitialHeaderFlags)
             snesApi.SetFlag(offset, flagType);
 
+        // regions are already SNES-address-keyed (unlike the two loops above), so no PC->SNES
+        // conversion needed here.
+        foreach (var region in importSettings.InitialRegions)
+            project.Data.Regions.Add(region);
+
         snesApi.CacheVerificationInfoFor(project);
 
         return project;

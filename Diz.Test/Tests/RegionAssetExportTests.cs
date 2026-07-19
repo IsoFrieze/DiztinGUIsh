@@ -79,7 +79,7 @@ public class RegionAssetExportTests : IDisposable
         {
             RegionName = "test_region",
             StartSnesAddress = 0xC00000 + startPc,
-            EndSnesAddress = 0xC00000 + startPc + lengthBytes,
+            EndSnesAddress = 0xC00000 + startPc + lengthBytes - 1,
             ExportType = type,
             AssetType = assetType,
             AssetName = "gfx/test_asset",

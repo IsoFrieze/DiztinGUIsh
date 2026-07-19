@@ -57,7 +57,12 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     // - 103: added "context" fields to labels, added regions (no migrations required)
     // - 104: added "ExportSeparateFile" field to regions (no migrations required)
     // - 105: added asset export fields to regions (ExportType/AssetType/AssetVersion/AssetName) (no migrations required)
-    public const int LatestSaveFormatVersion = 105;  //  REMEMBER: IF YOU CHANGE THIS YOU MUST ADD A NEW IMigration ENTRY IN RegisterMigrations()
+    // - 106: added "AssetOptions" free-form JSON field to regions (no migrations required)
+    // - 107: added a real, data-creating migration that synthesizes one whole-bank,
+    //        file-producing region per ROM bank.
+    //        Purely additive -- skips banks already covered by an existing region of the same
+    //        extent, does not touch EndSnesAddress on anything existing.
+    public const int LatestSaveFormatVersion = 107;  //  REMEMBER: IF YOU CHANGE THIS YOU MUST ADD A NEW IMigration ENTRY IN RegisterMigrations()
     
     // About older project save formats from ancient Diz 1.0:
     // The older binary savefile format BEFORE v100 in Diz 1.0 is removed, and modern Diz can't open them anymore.

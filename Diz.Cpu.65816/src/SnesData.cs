@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Diz.Core;
 using Diz.Core.Interfaces;
@@ -579,6 +580,7 @@ public class SnesApi : ISnesData
 
     public ObservableCollection<IRegion> Regions => Data.Regions;
     public IRegion? GetRegion(int snesAddress) => Data.GetRegion(snesAddress);
+    public IReadOnlyList<IRegion> GetRegionPath(int snesAddress) => Data.GetRegionPath(snesAddress);
     public IRegion? CreateNewRegion() => Data.CreateNewRegion();
 }
 
