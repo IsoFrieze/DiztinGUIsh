@@ -15,6 +15,7 @@ using Diz.Core.util;
 using Diz.Cpu._65816;
 using Diz.Import;
 using Diz.Import.bizhawk;
+using Diz.Import.mesen;
 using Diz.Import.bsnes.tracelog;
 using Diz.Import.bsnes.usagemap;
 using Diz.LogWriter;
@@ -147,6 +148,18 @@ public class ProjectController(
     public void ImportBizHawkCdl(string filename)
     {
         BizHawkCdlImporter.Import(filename, Project.Data.GetSnesApi() ?? throw new InvalidOperationException("Project has no SNES API Present"));
+
+        ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs
+        {
+            ChangeType = IProjectController.ProjectChangedEventArgs.ProjectChangedType.Imported,
+            Filename = filename,
+            Project = Project,
+        });
+    }
+
+    public void ImportMesen2Cdl(string filename)
+    {
+        MesenCdlImporter.Import(filename, Project.Data.GetSnesApi() ?? throw new InvalidOperationException("Project has no SNES API Present"));
 
         ProjectChanged?.Invoke(this, new IProjectController.ProjectChangedEventArgs
         {

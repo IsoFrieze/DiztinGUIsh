@@ -249,22 +249,24 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         return -1;
     }
     
-    public override string GetInstructionStr(TByteSource data, int offset) => 
-        GetInstructionData(data, offset).FullGeneratedText; // shortcut
+    public override string GetInstructionStr(TByteSource data, int offset, bool showMnemonicHint) => 
+        GetInstructionData(data, offset, showMnemonicHint).FullGeneratedText; // shortcut
 
-    public override CpuInstructionDataFormatted GetInstructionData(TByteSource data, int offset)
+    public override CpuInstructionDataFormatted GetInstructionData(TByteSource data, int offset, bool showMnemonicHint)
     {
-        var mode = GetAddressMode(data, offset);
-        if (mode == null)
+        var addrModeNullable = GetAddressMode(data, offset);
+        if (addrModeNullable == null)
             throw new InvalidDataException("Expected non-null addressing mode");
-            
-        var format = GetInstructionFormatString(data, offset);
-        var mnemonic = GetMnemonic(data, offset);
+        var mode = addrModeNullable.Value;
+        
+        var format = GetInstructionFormatStringForAddressMode(mode);
+        var mnemonic = GetMnemonic(data, offset, showMnemonicHint);
             
         int numDigitsForOperand1 = 0, numDigitsForOperand2 = 0;
         int? operandValue1 = null, operandValue2 = null;
         var identified = false;
         var overridesAllowed = false;
+        var operandIsNumeric = true;
             
         switch (mode)
         {
@@ -292,7 +294,9 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (!identified)
         {
             // note: lots of complexity with labels, mirroring, overrides, etc inside here:
-            operandOriginalStr1 = FormatOperandAddress(data, offset);
+            var (formatOperandAddress, isNumeric) = FormatOperandAddress(data, offset);
+            operandIsNumeric = isNumeric;
+            operandOriginalStr1 = formatOperandAddress;
             operandOriginalStr2 = "";
         }
         else
@@ -303,6 +307,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
         var operandFinalStr1 = operandOriginalStr1;
         var operandFinalStr2 = operandOriginalStr2;
+
+        var defineNameUsed = "";
         
         // try a substitution, if any exist. only for opcodes with ONE operand (not going to handle the ones with two)
         if (overridesAllowed)
@@ -312,7 +318,11 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             {
                 if (!string.IsNullOrEmpty(specialDirective.TextToOverride))
                 {
-                    operandFinalStr1 = specialDirective.TextToOverride; // allow overriding here
+                    defineNameUsed = specialDirective.TextToOverride.StartsWith('!') ? specialDirective.TextToOverride : ""; // save with "!" in the name
+                    
+                    // allow overriding here
+                    operandFinalStr1 = specialDirective.GetTextOverrideAsLabel(chopExclamationPoint: !showMnemonicHint); // chop "!" for output if NES
+                    operandIsNumeric = false;
                 }
                 else if (specialDirective.ConstantFormatOverride == OperandOverride.FormatOverride.AsDecimal && operandValue1!=null)
                 {
@@ -321,15 +331,88 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             }
         }
         
+        var intermediateAddress = data.GetIntermediateAddress(offset, resolve: true);
+        
+        // NES hack (this is absolutely terrible)
+        var doNesHacks = !showMnemonicHint;  // TODO: showMnemonicHint arg should probably just be replaced with assemblerflavor at this point.
+        if (doNesHacks)
+        {
+            var isZeroPageAddr = intermediateAddress is >= 0 and <= 0xFF;
+            
+            var shouldForceZeroPage =
+                !operandIsNumeric &&  // not 100% sure we should check operandIsNumeric. remove to spam z: a little more but is maybe safer.
+                isZeroPageAddr &&
+                mode is Cpu65C816Constants.AddressMode.DirectPage
+                    or Cpu65C816Constants.AddressMode.DirectPageXIndex
+                    or Cpu65C816Constants.AddressMode.DirectPageYIndex;
+
+            var shouldForceAbsolute =
+                isZeroPageAddr &&
+                mode is Cpu65C816Constants.AddressMode.Address 
+                or Cpu65C816Constants.AddressMode.AddressXIndex 
+                or Cpu65C816Constants.AddressMode.AddressYIndex;
+
+            // force working around non-zeropage optimization to preserve byte-identical output
+            // (note: not sure how this interacts in all cases with the other mapping hack below, may require better integration with the two)
+            if (shouldForceZeroPage) {
+                // explanation: 
+                // take these bytes from the ROM:
+                // 85 A7
+                // that means:
+                // STA $A7
+                // if we replace A7 with a label:
+                // my_var = $0000A7
+                // or 
+                // my_var = $A7
+                // and do this:
+                // STA my_var
+                // ca65 will not know it's being accessed via the zeropage and will use two bytes as the output:
+                // 85 00 A7      *I think. double check.
+                // that's functionally identical code (even if a bit slower), but, it breaks byte-identical compatability with the output (which we care about for ROM disassemblies). 
+                // what we need to do is tell it, no, this is OK to use as a zeropage, and only use one byte. we can prepend "z:" to force that to output as 1 byte:
+                // STA z:my_var
+                operandFinalStr1 = $"z:{operandFinalStr1}";
+            }  else if (shouldForceAbsolute) { 
+                // prefix with "a:" to prevent the assembler from auto-optimizing this to 1 byte
+                // it's TECHNICALLY wasteful and a problem with the original ROM code, BUT we're going to replicate it for the sake of byte-identical output.
+                //
+                // explanation: if the original instruction bytes looked like this:
+                // B9 44 00
+                // that means:
+                // LDA $0044,Y
+                // but TECHNICALLY you don't need the leading zeroes to access $44.  so ca65 parses LDA and figures that out and emits THIS instead (which is shorter):
+                // B9 44
+                // which is functionally identical (and faster at runtime).
+                //
+                // but, for us it's bad because it breaks byte-identical compatability with the original ROM.
+                // so instead, what we do is emit this directive in ca65:
+                // LDA a:$0044,Y
+                // that "a:" prefix forces it to use $0044 and NOT optimize it to just $44, which is what WE want.
+                operandFinalStr1 = $"a:{operandFinalStr1}";
+            }
+            
+            // hack 1: NES memory mappers
+            if (ShouldLowordOperand1(mode) && !operandIsNumeric && intermediateAddress != -1)
+                operandFinalStr1 = RomUtil.NesHackMmc1BankRelativeAddr(intermediateAddress, operandFinalStr1 ?? "");
+        }
+        
         var finalStr = string.Format(format, mnemonic, operandFinalStr1, operandFinalStr2);
         
         var pointerStr = GetPointerStr(data, offset);
         if (pointerStr != null)
+        { 
             finalStr = pointerStr;
-        
+
+            // NES-specific hacks: (implement better)
+            if (doNesHacks)
+                finalStr = RomUtil.NesHackMmc1BankRelativeAddr(intermediateAddress, finalStr);
+        }
+
         var outputInstructionData = new CpuInstructionDataFormatted  {
-            // generate a string like: "LDA.W $01,X" or "JSR.W fn_do_stuff"
+            // generated a string like: "LDA.W $01,X" or "JSR.W fn_do_stuff"
             FullGeneratedText = finalStr,
+            
+            DefineNameUsed = defineNameUsed,
             
             // save these in case useful later
             OriginalNonOverridenOperand1 = operandOriginalStr1,
@@ -341,6 +424,23 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         };
         
         return outputInstructionData;
+    }
+
+    private bool ShouldLowordOperand1(Cpu65C816Constants.AddressMode addressMode)
+    {
+        // for NES only. SNES, don't use this.
+        switch (addressMode)
+        {
+            case Cpu65C816Constants.AddressMode.Address:
+            case Cpu65C816Constants.AddressMode.AddressXIndex:
+            case Cpu65C816Constants.AddressMode.AddressYIndex:
+            case Cpu65C816Constants.AddressMode.AddressIndirect:
+            case Cpu65C816Constants.AddressMode.AddressXIndexIndirect:
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     private static int SearchForRomOffsetBoundsOfPointerTableFrom(TByteSource data, int offset, bool searchBackwards = true)
@@ -369,6 +469,8 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
 
     private static string? GetPointerStr(TByteSource data, int offset)
     {
+        // NOTE: update Cpu65816::GetPointerStr() with any changes here (maybe can merge at some point)
+        
         var pointerType = data.GetFlag(offset);
         if (pointerType is not (FlagType.Pointer16Bit or FlagType.Pointer24Bit or FlagType.Pointer32Bit))
             return null;
@@ -499,7 +601,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     }
 
     // this can print bytes OR labels. it can also deal with SOME mirroring and Direct Page addressing etc/etc
-    private string FormatOperandAddress(TByteSource data, int offset)
+    // returns:
+    // finalOperand - the text to print on the line (like, a label or a numeric value, etc)
+    // isNumeric - if the operand is a numeric value (vs a label, or an override). not always foolproof
+    private (string finalOperand, bool isNumeric) FormatOperandAddress(TByteSource data, int offset)
     {
         var mode = GetAddressMode(data, offset);
         if (mode == null)
@@ -516,7 +621,12 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         {
             // ZERO VALIDATION OF THIS TEXT. it's up to the user to get it right. have fun
             if (!string.IsNullOrEmpty(specialDirective.TextToOverride))
-                return specialDirective.TextToOverride;
+            {
+                return (
+                    finalOperand: specialDirective.TextToOverride, 
+                    isNumeric: false        // kinda. technically could be anything
+                );
+            }
 
             if (specialDirective.ForceOnlyShowRawHex)
                 allowLabelUsageHere = false;
@@ -530,15 +640,22 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         if (allowLabelUsageHere)
         {
             var finalLabelExpressionToUse = GetFinalLabelExpressionToUse(data, offset);
-            if (!string.IsNullOrEmpty(finalLabelExpressionToUse))
-                return finalLabelExpressionToUse;
+            if (!string.IsNullOrEmpty(finalLabelExpressionToUse)) {
+                return (
+                    finalOperand: finalLabelExpressionToUse, 
+                    isNumeric: false
+                );
+            }
         }
 
         // ---------------------------------------------------------------
         // OPTION 2: Couldn't find a decent label to use
         //           We'll just print the raw hex number as a constant instead
         // ---------------------------------------------------------------
-        return GetFormattedRawHexIa(data, offset);
+        return (
+            finalOperand: GetFormattedRawHexIa(data, offset), 
+            isNumeric: true
+        );
     }
 
     private static string GetFormattedRawHexIa(TByteSource data, int offset)
@@ -854,6 +971,11 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
     private string GetInstructionFormatString(TByteSource data, int offset)
     {
         var mode = GetAddressMode(data, offset);
+        return GetInstructionFormatStringForAddressMode(mode);
+    }
+
+    private static string GetInstructionFormatStringForAddressMode(Cpu65C816Constants.AddressMode? mode)
+    {
         switch (mode)
         {
             case Cpu65C816Constants.AddressMode.Implied:
@@ -897,9 +1019,10 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
             case Cpu65C816Constants.AddressMode.BlockMove:
                 return "{0} {1},{2}";
         }
+
         return "";
     }
-        
+
     public static Cpu65C816Constants.AddressMode? GetAddressMode(TByteSource data, int offset)
     {
         var opcode = data.GetRomByte(offset);

@@ -85,6 +85,9 @@ namespace Diz.Core.Interfaces
         // (most of the time, this is the main thing you're after)
         public string FullGeneratedText { get; set; } = "";
         
+        // if a define (like "!max_health") was used, what was the name?
+        public string DefineNameUsed { get; set; } = "";
+        
         // stuff below is the info that went into generating the above fully generated text
         // useful if you need more context. feel free to expose/save more into this struct as you need it
         
@@ -100,8 +103,8 @@ namespace Diz.Core.Interfaces
     public interface IInstructionGettable
     {
         int GetInstructionLength(int offset);
-        string GetInstructionStr(int offset);
-        public CpuInstructionDataFormatted GetInstructionData(int offset);
+        string GetInstructionStr(int offset, bool showMnemonicHint);
+        public CpuInstructionDataFormatted GetInstructionData(int offset, bool showMnemonicHint);
     }
     
     public interface IMarkable

@@ -24,6 +24,6 @@ public class AssemblyStrings
     [MemberData(nameof(TestHexData))]
     public static void TestHexParse(string inputStr, string outputLine)
     {
-        LogCreatorExtensions.CreateAssemblyFormattedTextLine(inputStr).Should().Be(outputLine);
+        LogCreatorExtensions.CreateAssemblyFormattedTextLine(inputStr, LogCreator.AssemblerFlavor.AssemblerAsar).Should().Be(outputLine);
     }
 }

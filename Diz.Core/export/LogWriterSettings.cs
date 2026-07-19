@@ -50,6 +50,16 @@ public record LogWriterSettings : ILogWriterSettings
     public bool IncludeUnusedLabels  { get; init; }
     public bool PrintLabelSpecificComments { get; init; }
     public bool GeneratePlusMinusLabels { get; init; } = true;
+    
+    // EXTREMELY EXPERIMENTAL AND NOT COMPLETE:
+    // treat output as NES rom assembly (skips certain directives and avoids banks/etc)
+    //
+    // NOTE: defaults to FALSE. upstream dev_early_nes_support shipped this as '= true'
+    // (with the initializer sitting below a "// WHAT WE WANT = false;" comment, so it
+    // still parsed as true) behind a "DO NOT CHECK THIS IN" note. Left as true it puts
+    // EVERY export into NES mode, which silently breaks byte-identical SNES output.
+    // TODO: hook up to the GUI / project file format before this is useful.
+    public bool NesMode { get; init; } = false;
 
     // this is an experimental option, if useful, remove [XmlIgnore] and add the UI for this
     [XmlIgnore] public bool AppendFlagTypeToComment { get; init; } = false;
