@@ -24,6 +24,8 @@
     <ProjectReference Include="..\Diz.App.Common\Diz.App.Common.csproj" />
     <ProjectReference Include="..\Diz.Controllers\Diz.Controllers\Diz.Controllers.csproj" />
     <ProjectReference Include="..\Diz.Ui.Winforms\Diz.Ui.Winforms\Diz.Ui.Winforms.csproj" />
+    <!-- new-ui step 5: the Avalonia label-editor backend (see LabelEditorBackend.cs) -->
+    <ProjectReference Include="..\Diz.Ui.Avalonia\Diz.Ui.Avalonia.csproj" />
     <!-- PHASE 0 SPIKE (throwaway, remove with the spike/ folder) -->
     <ProjectReference Include="..\spike\Diz.Spike.Avalonia\Diz.Spike.Avalonia.csproj" />
   </ItemGroup>

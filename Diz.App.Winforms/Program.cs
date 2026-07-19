@@ -36,6 +36,12 @@ internal static class Program
         if (Array.IndexOf(args, "--avalonia-spike") >= 0)
             Diz.Spike.Avalonia.SpikeHost.Arm();
 
+        // new-ui plan step 5: DIZ_LABEL_EDITOR=avalonia selects the Avalonia label editor.
+        // Warm up Avalonia on first idle (never before SetupDpiStuff -- Phase 0 constraint);
+        // the view itself would also lazy-initialize on first Show as a safety net.
+        if (LabelEditorBackend.FromEnvironment() == LabelEditorBackendKind.Avalonia)
+            LabelEditorBackend.ArmAvaloniaPreInitOnFirstIdle();
+
         var serviceFactory = DizWinformsRegisterServices.CreateServiceFactoryAndRegisterTypes();
         DizAppCommon.StartApp(serviceFactory, args);
     }
