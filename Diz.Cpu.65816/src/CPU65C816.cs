@@ -636,7 +636,7 @@ public class Cpu65C816<TByteSource> : Cpu<TByteSource>
         // find any applicable regions in the surrounding context of where we are in the ROM offset:
         var applicableOrderedRegions = data.Regions
             .Where(x => snesAddress >= x.StartSnesAddress && snesAddress <= x.EndSnesAddress)
-            .OrderBy(x => x.Priority)
+            .OrderByDescending(x => x.Priority)
             .ToList();
 
         foreach (var region in applicableOrderedRegions)

@@ -235,7 +235,7 @@ public class Data : IData
     [CanBeNull]  public IRegion GetRegion(int snesAddress)
     {
         return Regions
-            .Where(region => snesAddress >= region.StartSnesAddress && snesAddress < region.EndSnesAddress)
+            .Where(region => snesAddress >= region.StartSnesAddress && snesAddress <= region.EndSnesAddress)
             .OrderByDescending(region => region.Priority)
             .FirstOrDefault();
     }
@@ -281,6 +281,8 @@ public class Region : IRegion
         set => this.SetField(PropertyChanged, ref contextToApply, value);
     }
 
+    // higher number = higher priority = wins. its primary purpose is breaking ties between
+    // overlapping regions that both set ContextToApply.
     public int Priority
     {
         get => priority;

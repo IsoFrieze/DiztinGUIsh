@@ -80,7 +80,7 @@ public class RegionAssetRoundTripTests
         RegionName = "font",
         AssetName = "gfx/font",
         StartSnesAddress = HiRomBase + pcOffset,
-        EndSnesAddress = HiRomBase + pcOffset + length,
+        EndSnesAddress = HiRomBase + pcOffset + length - 1,
         ExportType = RegionExportType.Asset,
         AssetType = $"gfx.snes.{bpp}bpp",
     };

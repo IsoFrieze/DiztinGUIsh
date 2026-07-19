@@ -42,8 +42,10 @@ public interface IRegion : INotifyPropertyChanged
     // i.e. menu vs battle vs overworld all using RAM address 0x50 for different stuff depending on which mode the game is in.
     string ContextToApply { get; set; }
     
-    // higher number = higher priority in case of overlapping regions
-    int Priority { get; set; } 
+    // higher number = higher priority = wins. its primary purpose is breaking ties between
+    // overlapping regions that both set ContextToApply -- when a snes address falls inside
+    // more than one region, the one with the highest Priority is used first.
+    int Priority { get; set; }
     
     // if true, when exporting assembly, this region will go into a separate file.
     // overlapping regions will either be disallowed for this, or go in priority order.

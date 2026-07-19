@@ -29,7 +29,7 @@ public class BuildFileGeneratorTests : IDisposable
         RegionName = name,
         AssetName = name,
         StartSnesAddress = 0xC00000,
-        EndSnesAddress = 0xC00040,
+        EndSnesAddress = 0xC0003F,
         ExportType = RegionExportType.Asset,
         AssetType = assetType,
     };
