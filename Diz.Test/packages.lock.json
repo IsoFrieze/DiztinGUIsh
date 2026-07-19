@@ -1455,6 +1455,14 @@
           "ExtendedXmlSerializer": "[3.9.6, )",
           "LightInject": "[6.6.4, )"
         }
+      },
+      "diz.ui.viewmodels": {
+        "type": "Project",
+        "dependencies": {
+          "Diz.Core": "[1.0.0, )",
+          "Diz.Core.Interfaces": "[1.0.0, )",
+          "Diz.Import": "[1.0.0, )"
+        }
       }
     }
   }

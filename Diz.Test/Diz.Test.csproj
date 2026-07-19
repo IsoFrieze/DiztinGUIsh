@@ -74,6 +74,7 @@
     <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />
     <ProjectReference Include="..\Diz.LogWriter\Diz.LogWriter.csproj" />
     <ProjectReference Include="..\Diz.Cpu.65816\Diz.Cpu.65816.csproj" />
+    <ProjectReference Include="..\Diz.Ui.ViewModels\Diz.Ui.ViewModels.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Resources\asartestrun.asm" />
