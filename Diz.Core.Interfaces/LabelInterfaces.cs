@@ -106,9 +106,34 @@ public interface IAnnotationLabel : IReadOnlyLabel
     string GetName(string contextName = "");
 }
     
+// what happened to the label set. lets consumers do a targeted update instead of a full rebuild.
+public enum LabelChangeKind
+{
+    Added,
+    Removed,
+    Replaced,
+    BulkReset,
+}
+
+public sealed class LabelChangedEventArgs : EventArgs
+{
+    public required LabelChangeKind Kind { get; init; }
+
+    // the address affected. -1 for BulkReset (the whole set changed).
+    public int SnesAddress { get; init; }
+}
+
 public interface IReadOnlyLabelProvider
 {
     public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels { get; }
+
+    // payloaded change notification. observing is a read-side concern, so it lives here
+    // rather than on ILabelProvider: consumers that only ever reach labels through
+    // IReadOnlyLabels.Labels (SnesData, CPU65C816, ILogCreatorDataSource) still need it.
+    //
+    // this is ADDITIVE. the older payload-less LabelsServiceWithTemp.OnLabelChanged still
+    // fires exactly as before, at the same sites, for every existing subscriber.
+    event EventHandler<LabelChangedEventArgs> LabelsChanged;
 
     IAnnotationLabel? GetLabel(int snesAddress);
     string? GetLabelName(int snesAddress);

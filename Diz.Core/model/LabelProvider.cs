@@ -112,7 +112,23 @@ namespace Diz.Core.model
         
         // this isn't bulletproof, but the best we can do for now.
         // better to replace this with observable collections or something later.
+        //
+        // NOTE: kept exactly as-is for backwards compatibility. every existing subscriber
+        // keeps working unchanged. prefer LabelsChanged below for new code.
         public event EventHandler OnLabelChanged;
+
+        // payloaded version of OnLabelChanged. fires at the same sites, immediately after it.
+        public event EventHandler<LabelChangedEventArgs> LabelsChanged;
+
+        private void RaiseLabelChanged(LabelChangeKind kind, int snesAddress)
+        {
+            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+            LabelsChanged?.Invoke(this, new LabelChangedEventArgs
+            {
+                Kind = kind,
+                SnesAddress = snesAddress,
+            });
+        }
 
         // returns both real and temporary labels
         IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;
@@ -183,8 +199,8 @@ namespace Diz.Core.model
             
             NormalProvider.DeleteAllLabels();
             TemporaryProvider.DeleteAllLabels();
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
 
         public void RemoveLabel(int snesAddress)
@@ -195,8 +211,8 @@ namespace Diz.Core.model
             // we should only operate on real labels here. ignore temporary labels
             
             NormalProvider.RemoveLabel(snesAddress);
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            RaiseLabelChanged(LabelChangeKind.Removed, snesAddress);
         }
 
         public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
@@ -206,10 +222,18 @@ namespace Diz.Core.model
             
             // we should only operate on real labels here. ignore temporary labels.
             // explicitly use AddTemporaryLabel() for temp stuff.
-            
+
+            // capture BEFORE the mutation so we can report Added vs Replaced accurately.
+            var alreadyExisted = NormalProvider.GetLabel(snesAddress) != null;
+
             NormalProvider.AddLabel(snesAddress, labelToAdd, overwrite);
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            // note: if it already existed and overwrite==false, the underlying provider
+            // silently keeps the old label. we still report Replaced there; consumers
+            // re-read the address either way, so this over-reports but never under-reports.
+            RaiseLabelChanged(
+                alreadyExisted ? LabelChangeKind.Replaced : LabelChangeKind.Added,
+                snesAddress);
         }
 
         public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
@@ -219,8 +243,8 @@ namespace Diz.Core.model
             
             ClearTemporaryLabels();
             NormalProvider.SetAll(newLabels);
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
 
         public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels, bool smartMerge = false)
@@ -229,8 +253,9 @@ namespace Diz.Core.model
                 throw new InvalidOperationException("Cannot modify labels while cache is locked");
             
             NormalProvider.AppendLabels(newLabels, smartMerge);
-            
-            OnLabelChanged?.Invoke(this, EventArgs.Empty);
+
+            // affects many addresses at once, so there is no single meaningful SnesAddress.
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
         
         #region "Equality"
@@ -318,8 +343,12 @@ namespace Diz.Core.model
             ByteSource = byteSource;
         }
 
-        public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels => 
+        public IEnumerable<KeyValuePair<int, IAnnotationLabel>> Labels =>
             ByteSource.GetAnnotationsIncludingChildrenEnumerator<IAnnotationLabel>();
+
+        // NOTE: DIZ_3_BRANCH-only dead code; not compiled in the default build, so this
+        // member is declared to satisfy the interface but is not exercised or verified.
+        public event EventHandler<LabelChangedEventArgs> LabelsChanged;
 
         public static bool IsLabel(Annotation annotation) => annotation.GetType() == typeof(Label);
         
@@ -363,37 +392,55 @@ namespace Diz.Core.model
     {
         // ReSharper disable once MemberCanBePrivate.Global
         public Dictionary<int, IAnnotationLabel> Labels { get; private set; } = new();
-        
+
         [XmlIgnore]
         IEnumerable<KeyValuePair<int, IAnnotationLabel>> IReadOnlyLabelProvider.Labels => Labels;
+
+        // NOTE: in the current wiring nothing subscribes to this -- LabelsServiceWithTemp holds
+        // its LabelsCollection instances privately and raises its own event instead. it's
+        // implemented faithfully here so the interface contract holds if that ever changes.
+        public event EventHandler<LabelChangedEventArgs> LabelsChanged;
+
+        private void RaiseLabelChanged(LabelChangeKind kind, int snesAddress) =>
+            LabelsChanged?.Invoke(this, new LabelChangedEventArgs
+            {
+                Kind = kind,
+                SnesAddress = snesAddress,
+            });
 
         public void AddLabel(int snesAddress, IAnnotationLabel labelToAdd, bool overwrite = false)
         {
             Debug.Assert(labelToAdd != null);
-            
+
             if (overwrite)
                 RemoveLabel(snesAddress);
 
             var existing = Labels.ContainsKey(snesAddress);
 
             if (!existing)
+            {
                 Labels.Add(snesAddress, labelToAdd);
+                RaiseLabelChanged(overwrite ? LabelChangeKind.Replaced : LabelChangeKind.Added, snesAddress);
+            }
         }
 
         public void DeleteAllLabels()
         {
             Labels.Clear();
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
-        
+
         public void RemoveLabel(int snesAddress)
         {
-            Labels.Remove(snesAddress);
+            if (Labels.Remove(snesAddress))
+                RaiseLabelChanged(LabelChangeKind.Removed, snesAddress);
         }
 
         public void SetAll(Dictionary<int, IAnnotationLabel> newLabels)
         {
             DeleteAllLabels();
             AppendLabels(newLabels);
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
 
         public void AppendLabels(Dictionary<int, IAnnotationLabel> newLabels, bool smartMerge=false)
@@ -422,6 +469,8 @@ namespace Diz.Core.model
                     label.Comment = newLabelComment == "" ? label.Comment : newLabelComment;
                 }
             }
+
+            RaiseLabelChanged(LabelChangeKind.BulkReset, -1);
         }
         
         public void SortLabels()
