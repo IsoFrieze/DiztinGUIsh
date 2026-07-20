@@ -77,6 +77,22 @@ public class XmlSerializerFactory(
             .Member(x => x.LabelsSerialization)
             .Name("Labels")
         
+            // regions are the single most numerous element in a large project file, and every one of
+            // them repeats its attribute names. short XML names keep the file size (and load time)
+            // down. these names ONLY affect the on-disk XML -- the C# property names are unchanged.
+            .Type<Region>()
+            .Member(x => x.StartSnesAddress).Name("S")
+            .Member(x => x.EndSnesAddress).Name("E")
+            .Member(x => x.RegionName).Name("Id")
+            .Member(x => x.ContextToApply).Name("Ctx")
+            .Member(x => x.Priority).Name("Pri")
+            .Member(x => x.ExportSeparateFile).Name("SepFile")
+            .Member(x => x.ExportType).Name("Type")
+            .Member(x => x.AssetType).Name("AType")
+            .Member(x => x.AssetVersion).Name("AVer")
+            .Member(x => x.AssetName).Name("AName")
+            .Member(x => x.AssetOptions).Name("AOpts")
+
             .EnableImplicitTyping(typeof(ContextMapping))
 
             .Type<Label>()

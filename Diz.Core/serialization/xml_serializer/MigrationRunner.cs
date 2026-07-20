@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using JetBrains.Annotations;
 
 namespace Diz.Core.serialization.xml_serializer
@@ -104,6 +105,11 @@ namespace Diz.Core.serialization.xml_serializer
         private static bool EnsureVersionIsSameOrNext(int proposedVersion, int currentVersion) => 
             proposedVersion == currentVersion || 
             proposedVersion == currentVersion + 1;
+
+        public void OnLoadingPreProcessXml(XDocument document)
+        {
+            RunAllMigrations(migration => migration.OnLoadingPreProcessXml(document));
+        }
 
         public void OnLoadingBeforeAddLinkedRom(IAddRomDataCommand romAddCmd)
         {

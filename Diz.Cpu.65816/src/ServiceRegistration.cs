@@ -53,6 +53,7 @@ public class DizCpu65816ServiceRoot : ICompositionRoot
         serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 104 }, "migrate_104_to_105");
         serviceRegistry.Register<IMigration>(_ => new MigrationNoOp { AppliesToSaveVersion = 105 }, "migrate_105_to_106");
         serviceRegistry.Register<IMigration, MigrationAddBankRegions107>("migrate_106_to_107");
+        serviceRegistry.Register<IMigration, MigrationShortenRegionAttributes108>("migrate_107_to_108");
     }
 
     private static void RegisterSampleDataServices(IServiceRegistry serviceRegistry)

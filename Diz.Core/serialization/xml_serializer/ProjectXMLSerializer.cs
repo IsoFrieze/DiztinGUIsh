@@ -62,7 +62,15 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     //        file-producing region per ROM bank.
     //        Purely additive -- skips banks already covered by an existing region of the same
     //        extent, does not touch EndSnesAddress on anything existing.
-    public const int LatestSaveFormatVersion = 107;  //  REMEMBER: IF YOU CHANGE THIS YOU MUST ADD A NEW IMigration ENTRY IN RegisterMigrations()
+    // - 108: shortened the XML attribute names on Region elements (StartSnesAddress -> S,
+    //        EndSnesAddress -> E, RegionName -> Id, ContextToApply -> Ctx, Priority -> Pri,
+    //        ExportSeparateFile -> SepFile, ExportType -> Type, AssetType -> AType,
+    //        AssetVersion -> AVer, AssetName -> AName, AssetOptions -> AOpts).
+    //        Purely a serialized-name change: the C# properties on Region are unchanged, and no
+    //        data is added or removed. Migration rewrites the attribute names in the raw XML
+    //        before deserialization, because the deserializer would otherwise silently ignore the
+    //        old names and produce empty regions.
+    public const int LatestSaveFormatVersion = 108;  //  REMEMBER: IF YOU CHANGE THIS YOU MUST ADD A NEW IMigration ENTRY IN RegisterMigrations()
     
     // About older project save formats from ancient Diz 1.0:
     // The older binary savefile format BEFORE v100 in Diz 1.0 is removed, and modern Diz can't open them anymore.
@@ -146,16 +154,25 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     
     public override ProjectOpenResult Load(byte[] projectFileRawXmlBytes)
     {
-        // Note: Migrations not yet written for XML itself. ExtendedXmlSerializer has support for this
-        // if we need it, put it in a new MigrationRunner.SetupMigrateXml() or similar.
-
         var xmlStr = Encoding.UTF8.GetString(projectFileRawXmlBytes);
+
+        // scans forward only as far as the root element's attributes, no document is built.
         var versionOnDisk = RunPreDeserializeIntegrityChecks(xmlStr);
 
         MigrationRunner.StartingSaveVersion = versionOnDisk;
         MigrationRunner.TargetSaveVersion = CurrentSaveFormatVersion;
 
-        var root = DeserializeProjectXml(xmlStr);
+        // Only build an XDocument when the file's format actually needs upgrading. Project files run
+        // to many megabytes, and the XML-level migration pass is the sole reason to materialize one:
+        // if the version already matches, no migration can modify the document, so parsing it and
+        // re-serializing it back to a string would hand the deserializer a byte-identical copy of the
+        // string we already have -- at the cost of a full parse plus a second full-size string.
+        // The upgrade path pays that cost exactly once per project, on the same open that already
+        // warns the user their file is being upgraded.
+        var root = versionOnDisk == CurrentSaveFormatVersion
+            ? DeserializeProjectXml(xmlStr)
+            : MigrateThenDeserialize(xmlStr);
+
         RunIntegrityChecks(root.SaveVersion, root.Watermark);
             
         AfterDeserialize?.Invoke(this, root);
@@ -181,21 +198,48 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
         return projectOpenResult;
     }
 
+    // XML-level migrations: rename/reshape raw elements and attributes for older save formats,
+    // for changes the deserializer can't recover from on its own.
+    private Root MigrateThenDeserialize(string xmlStr)
+    {
+        var xDoc = XDocument.Parse(xmlStr);
+        MigrationRunner.OnLoadingPreProcessXml(xDoc);
+
+        // DisableFormatting: never re-indent. Some elements (the RomBytes blob) carry newline-
+        // delimited text that the reader parses line-by-line; added whitespace would corrupt it.
+        return DeserializeProjectXml(xDoc.ToString(SaveOptions.DisableFormatting));
+    }
+
     // finally. this is the real deal.
-    private Root DeserializeProjectXml(string xmlStr) => 
+    private Root DeserializeProjectXml(string xmlStr) =>
         GetSerializerConfig().Create().Deserialize<Root>(xmlStr);
 
     // return the save file version# detected in the raw data
-    private int RunPreDeserializeIntegrityChecks(string rawXml)
+    private int RunPreDeserializeIntegrityChecks(string xmlStr)
     {
         // run this check before opening with our real serializer. read a minimal part of the XML
-        // manually to verify the root element looks sane.
-        var xDoc = XDocument.Parse(rawXml);
-        var xRoot = xDoc.Root;
-            
-        var saveVersionStr = xRoot?.Attribute("SaveVersion")?.Value;
-        var waterMarkStr = xRoot?.Attribute("Watermark")?.Value;
-            
+        // manually to verify the root element looks sane. everything we need lives on the root
+        // element's attributes, so stop the reader the moment we reach it rather than walking
+        // (and allocating) the rest of a multi-megabyte document.
+        string saveVersionStr = null, waterMarkStr = null;
+
+        using (var reader = XmlReader.Create(new StringReader(xmlStr)))
+        {
+            while (reader.Read())
+            {
+                if (reader.NodeType != XmlNodeType.Element)
+                    continue;
+
+                saveVersionStr = reader.GetAttribute("SaveVersion");
+                waterMarkStr = reader.GetAttribute("Watermark");
+                break;
+            }
+        }
+
+        // a document with no root element at all doesn't reach here -- the reader raises
+        // XmlException("Root element is missing") while scanning. The null default still guards the
+        // case of the loop ending without an element, so that reports the same missing-attribute
+        // error a root without the attribute would.
         if (string.IsNullOrEmpty(saveVersionStr))
             throw new InvalidDataException("SaveVersion attribute missing on root element");
 
