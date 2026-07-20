@@ -1,7 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- platform version spelled out (7.0 is what the SDK infers anyway). this project opts out
+         of the repo's lockfiles below, so restore re-resolves the TFM from scratch here; NuGet
+         clients whose framework table predates net10.0 then fail with NU1012 (seen in Rider).
+         every other net10.0-windows project has a packages.lock.json and never hits that path. -->
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>disable</Nullable>
     <LangVersion>latest</LangVersion>
