@@ -84,6 +84,26 @@ public class BuildFileGeneratorTests : IDisposable
     }
 
     [Fact]
+    public void TextAssetsWireThroughTextpack()
+    {
+        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
+            AssetRegion("text/item_names", "text.ct.mapped"),
+        ]));
+
+        // textpack runs off its OWN vendored tool var (like binpack), not the shared gfxpack one.
+        ninja.Should().Contain("textpack = tools/vendor/dizpack/textpack.py");
+        // both rules exist, mirroring the gfx binding -- this is the Phase-2 generation gate.
+        ninja.Should().Contain("rule text_compile");
+        ninja.Should().Contain("rule text_seed");
+        // the editable .yaml is the compile input; the manifest is a dependency.
+        ninja.Should().Contain(
+            "build build/assets/text/item_names.bin: text_compile assets/src/text/item_names.yaml");
+        ninja.Should().Contain("assets/src/text/item_names.json");
+        // the ROM must depend on the compiled asset, or editing text would never re-assemble.
+        ninja.Should().Contain("build $out_rom: assemble | build/assets/text/item_names.bin");
+    }
+
+    [Fact]
     public void GeneratedBuildIncludesTheUserConfigAndDefinesNoGameSpecificVars()
     {
         var ninja = new BuildFileGenerator().Generate([]);

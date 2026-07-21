@@ -510,6 +510,70 @@ def cmd_verify(a) -> int:
     return 0 if ok else 1
 
 
+def cmd_seed(a) -> int:
+    """Render the editable YAML from an EXISTING manifest + raw .bin -- the Diz handoff path.
+
+    `extract` writes the manifest itself, so it is useless for validating someone else's
+    manifest: it would overwrite it and then trivially agree. `seed` instead treats the
+    manifest as authoritative input, so a manifest that misdescribes the bytes fails loudly
+    here rather than silently producing a wrong .yaml.
+
+    Idempotent: refuses to clobber an existing .yaml (that file is the translator's edited
+    copy and regenerating it from the .bin would silently discard work). Pass --force to
+    overwrite. This is what makes a repeated `ninja seed` safe.
+    """
+    layer, mpath, ypath = resolve_asset(a.name, a.search)
+    man = load_manifest(mpath)
+    text = man["text"]
+
+    bin_path = a.bin or os.path.join(layer, a.name + ".bin")
+    if not os.path.isfile(bin_path):
+        die(f"{bin_path}: no raw .bin to seed from")
+    with open(bin_path, "rb") as f:
+        blob = f.read()
+
+    # The manifest is a claim about these bytes. Check it rather than trusting it --
+    # a wrong record_width/count here would slice the records wrong and produce plausible
+    # but incorrect text.
+    width, count = text["record_width"], text["count"]
+    expect = count * width
+    if len(blob) != expect:
+        die(f"{bin_path}: {len(blob)} bytes, but the manifest describes {count} records of "
+            f"width {width} ({expect} bytes). The manifest does not match the data.")
+    src_len = man.get("source", {}).get("length")
+    if src_len is not None and len(blob) != src_len:
+        die(f"{bin_path}: {len(blob)} bytes but manifest declares source.length={src_len}")
+    want_sha = man.get("source", {}).get("source_sha256")
+    got_sha = hashlib.sha256(blob).hexdigest()
+    if want_sha and got_sha != want_sha:
+        die(f"{bin_path}: sha256 {got_sha} does not match the manifest's source_sha256 "
+            f"{want_sha}. Refusing to seed from bytes the manifest does not describe.")
+
+    if os.path.exists(ypath) and not a.force:
+        print(f"seed: {ypath} already exists, leaving it alone (use --force to overwrite)")
+        return 0
+
+    tbl_path = resolve_file(text["tbl"], a.search)
+    tbl_dec, tbl_enc = load_tbl(tbl_path)
+    tok_enc, tok_dec = parse_tokens(text.get("tokens"), tbl_dec, mpath)
+    records = [render_record(blob[i * width:(i + 1) * width], tbl_dec, tok_dec)
+               for i in range(count)]
+    write_yaml(ypath, a.name, man["type"], records)
+
+    # Self-check: re-encoding the rendered records must reproduce the seed bytes exactly,
+    # or the .tbl/tokens in the manifest disagree with the data -- do not trust the asset.
+    back = compile_records(records, width, text["_pad_byte"], tbl_enc, tok_enc, a.name)
+    if back != blob:
+        die("SELF-CHECK FAILED: re-encoding the seeded records did not reproduce the "
+            "source bytes. Do not trust this asset.")
+
+    print(f"seeded {a.name} from layer '{layer}' ({count} records of width {width})")
+    print(f"  yaml     : {ypath}")
+    print(f"  sha256   : {got_sha}" + ("  [matches manifest]" if want_sha else ""))
+    print("  self-check: re-encode reproduces source bytes exactly  [OK]")
+    return 0
+
+
 # ======================================================================================
 # selftest — in-memory codec assertions. No files, no ROM: this is the public-CI gate.
 # ======================================================================================
@@ -615,6 +679,13 @@ def main(argv=None) -> int:
                    type=lambda s: int(s, 0), help="ROM file offset, for later verify --rom")
     e.set_defaults(fn=cmd_extract)
 
+    sd = sub.add_parser("seed", help="manifest + raw .bin -> editable yaml (Diz handoff)")
+    sd.add_argument("--name", required=True)
+    add_search(sd)
+    sd.add_argument("--bin", default=None, help="raw .bin to seed from (default: <layer>/<name>.bin)")
+    sd.add_argument("--force", action="store_true", help="overwrite an existing .yaml")
+    sd.set_defaults(fn=cmd_seed)
+
     c = sub.add_parser("compile", help="yaml + manifest -> raw .bin")
     c.add_argument("--name", required=True)
     add_search(c)
@@ -631,7 +702,7 @@ def main(argv=None) -> int:
     st.set_defaults(fn=cmd_selftest)
 
     a = p.parse_args(argv)
-    if getattr(a, "search", None) is None and a.cmd in ("compile", "verify"):
+    if getattr(a, "search", None) is None and a.cmd in ("seed", "compile", "verify"):
         a.search = ["assets/src"]
     return a.fn(a)
 
