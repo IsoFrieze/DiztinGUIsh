@@ -1,4 +1,5 @@
-# Python dependencies for the asset tools (gfxpack.py) and the build (ninja).
+# Python dependencies for the asset tools (gfxpack.py, textpack.py) and the build (ninja).
 # Install with: pip install -r requirements.txt
 Pillow>=10
+PyYAML>=6
 ninja
