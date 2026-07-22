@@ -8,6 +8,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Diz.Core.Interfaces;
 using Diz.Ui.ViewModels.Labels;
 
 namespace Diz.Ui.Avalonia;
@@ -113,6 +114,7 @@ internal sealed partial class LabelEditorWindow : Window
         UpdateCounts();
         UpdateSortGlyphs();
         UpdateDetailsHeader();
+        SyncConfidenceFromVm();
     }
 
     public void DetachViewModel()
@@ -136,6 +138,7 @@ internal sealed partial class LabelEditorWindow : Window
             case nameof(ILabelEditorViewModel.SelectedRow):
                 SyncSelectionFromVm();
                 UpdateDetailsHeader();
+                SyncConfidenceFromVm();
                 break;
             case nameof(ILabelEditorViewModel.SearchTerm):
                 SyncSearchBoxFromVm();
@@ -484,6 +487,87 @@ internal sealed partial class LabelEditorWindow : Window
         }
     }
 
+    // ------------------------------------------------------------------ details pane: author
+
+    private void DetailsAuthor_GotFocus(object? sender, RoutedEventArgs e) =>
+        editingDetailsRow = vm?.SelectedRow;
+
+    private void DetailsAuthor_LostFocus(object? sender, RoutedEventArgs e) =>
+        CommitDetails(DetailsAuthor, LabelField.Author);
+
+    private void DetailsAuthor_KeyDown(object? sender, KeyEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case Key.Enter:
+                CommitDetails(DetailsAuthor, LabelField.Author);
+                e.Handled = true;
+                break;
+            case Key.Escape:
+                DetailsAuthor.Text = vm?.SelectedRow?.Author ?? "";
+                e.Handled = true;
+                break;
+        }
+    }
+
+    // ------------------------------------------------------------------ details pane: confidence
+
+    private void DetailsConfidence_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (committingDetails)
+            return; // programmatic sync (SyncConfidenceFromVm) re-selects; don't re-commit.
+
+        var row = vm?.SelectedRow;
+        var target = vm;
+        if (row == null || target == null)
+            return;
+
+        // items are DISPLAY strings; only commit a genuine user pick whose STORED value differs
+        // from the row's current stored confidence.
+        if (DetailsConfidence.SelectedItem is not string display)
+            return;
+        if (LabelEditorViewModel.ConfidenceDisplayToStored(display) == (row.Confidence ?? ""))
+            return;
+
+        // Same deferred-commit discipline as CommitDetails: the edited row is the selected row,
+        // and CommitEdit's remove+add mutates the ListBox source while selection is still being
+        // processed. Post past the current event. Confidence commits the display string (CommitEdit
+        // maps it back to the stored value via ConfidenceDisplayToStored).
+        committingDetails = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            try
+            {
+                target.CommitEdit(row, LabelField.Confidence, display);
+                editingDetailsRow = target.SelectedRow;
+            }
+            finally
+            {
+                committingDetails = false;
+            }
+        }, DispatcherPriority.Background);
+    }
+
+    // show the selected row's stored confidence as its display string WITHOUT committing. an
+    // off-vocabulary value (not in ConfidenceOptions) can't be selected in a bound ComboBox, so it
+    // shows blank; the stored value is never overwritten (only a user pick commits). The
+    // committingDetails guard keeps the resulting SelectionChanged from re-committing.
+    private void SyncConfidenceFromVm()
+    {
+        committingDetails = true;
+        try
+        {
+            var row = vm?.SelectedRow;
+            DetailsConfidence.SelectedItem = row == null
+                ? null
+                : LabelEditorViewModel.ConfidenceStoredToDisplay(row.Confidence ?? "");
+        }
+        finally
+        {
+            committingDetails = false;
+        }
+    }
+
     private void CommitDetails(TextBox box, LabelField field)
     {
         if (committingDetails)
@@ -495,7 +579,12 @@ internal sealed partial class LabelEditorWindow : Window
             return;
 
         var proposed = box.Text ?? "";
-        var current = field == LabelField.Name ? row.Name : row.Comment;
+        var current = field switch
+        {
+            LabelField.Name => row.Name,
+            LabelField.Author => row.Author,
+            _ => row.Comment,
+        };
         if (proposed == current)
             return;
 

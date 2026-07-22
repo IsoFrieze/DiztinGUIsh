@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using Diz.Core.Interfaces;
 using Diz.Core.util;
 using Diz.Import;
 
@@ -30,6 +31,8 @@ public enum LabelField
     Address,
     Name,
     Comment,
+    Author,
+    Confidence,
 }
 
 // NOTE -- DELIBERATE DEVIATION from the plan sketch: the sketch declared its own
@@ -65,6 +68,15 @@ public interface ILabelRowViewModel : INotifyPropertyChanged
 
     string Name { get; set; }
     string Comment { get; set; }
+
+    /// <summary>Who stated this label (freeform, "" = unset). Read-only here: details-pane edits
+    /// write the model directly (WinForms) or route through CommitEdit (Avalonia); the row only
+    /// relays the model's INPC so displays refresh.</summary>
+    string Author { get; }
+
+    /// <summary>How confident the author is in this label; the raw stored level string ("" =
+    /// unspecified). Read-only here for the same reason as <see cref="Author"/>.</summary>
+    string Confidence { get; }
 
     /// <summary>Read-only one-line summary of the context mappings, formatted exactly as the
     /// old WinForms "Context" column did: "ctx1: override1, ctx2: override2" (mappings with a
@@ -140,6 +152,11 @@ public interface ILabelEditorViewModel : INotifyPropertyChanged, IDisposable
 
     int TotalLabelCount { get; }
     int VisibleLabelCount { get; }
+
+    /// <summary>The confidence display values a details-pane dropdown offers: the "(unspecified)"
+    /// entry followed by the project's ConfidenceLevels vocabulary, in order. Constant for the
+    /// VM's lifetime.</summary>
+    IReadOnlyList<string> ConfidenceOptions { get; }
 
     // ---------------- COMMANDS ----------------
 

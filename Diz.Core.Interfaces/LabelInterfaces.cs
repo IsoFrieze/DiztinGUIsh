@@ -100,6 +100,15 @@ public interface IReadOnlyLabel
 {
     string Name { get; }
     string Comment { get; }
+
+    // who stated this label (freeform, default "" = unset). e.g. "alice", "bob".
+    string Author { get; }
+
+    // how confident the author is in this label. a free-form level string; default "" means
+    // "unspecified". the set of well-known levels is the project's ConfidenceLevels vocabulary
+    // (see ProjectSettings), but any value is allowed and preserved verbatim.
+    string Confidence { get; }
+
     IEnumerable<IReadOnlyContextMapping> ContextMappings { get; }
 
 }
@@ -109,6 +118,9 @@ public interface IAnnotationLabel : IReadOnlyLabel
     // name used for default context
     new string Name { get; set; }
     new string Comment { get; set; }
+
+    new string Author { get; set; }
+    new string Confidence { get; set; }
     
     // label names can change based on which "context" they're in
     // by default, this is empty but can be overridden

@@ -440,6 +440,11 @@
           "xunit.extensibility.core": "[2.6.6]"
         }
       },
+      "YamlDotNet": {
+        "type": "Transitive",
+        "resolved": "16.3.0",
+        "contentHash": "SgMOdxbz8X65z8hraIs6hOEdnkH6hESTAIUa7viEngHOYaH+6q5XJmwr1+yb9vJpNQ19hCQY69xbFsLtXpobQA=="
+      },
       "diz.controllers": {
         "type": "Project",
         "dependencies": {
@@ -486,7 +491,8 @@
           "Diz.Core": "[1.0.0, )",
           "Diz.Cpu.65816": "[1.0.0, )",
           "ExtendedXmlSerializer": "[3.9.6, )",
-          "LightInject": "[6.6.4, )"
+          "LightInject": "[6.6.4, )",
+          "YamlDotNet": "[16.*, )"
         }
       },
       "diz.ui.viewmodels": {

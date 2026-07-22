@@ -97,9 +97,13 @@ namespace Diz.Core.model
         public Data Data { get; }
 
         private ILabelService NormalProvider { get; }
-        
-        [XmlIgnore] 
+
+        [XmlIgnore]
         private ILabelService TemporaryProvider { get; }
+
+        // all persistent (project) labels, ignoring temporary labels AND the export author-filter.
+        // used for attribution statistics that must report every author, including excluded ones.
+        public IEnumerable<KeyValuePair<int, IAnnotationLabel>> AllPersistentLabelsUnfiltered => NormalProvider.Labels;
         
         
         // this isn't bulletproof, but the best we can do for now.
@@ -145,9 +149,36 @@ namespace Diz.Core.model
             TemporaryProvider.DeleteAllLabels();
         }
 
+        // export author-filter (PHASE 2b): while the cache is locked (i.e. during an assembly export),
+        // labels whose Author is in this set are hidden from EVERY read path that goes through this
+        // service -- crucially including operand naming, which reaches labels via SnesApi.Labels ==
+        // Data.Labels == this. null (the default) means no filtering, so normal/UI reads and exports
+        // without an exclusion list behave byte-for-byte as before. Set immediately before
+        // LockLabelsCache via SetExportLabelAuthorFilter; cleared on UnlockLabelsCache.
+        [CanBeNull] private ISet<string> excludedExportAuthors;
+
+        // configure the export-time author blocklist. call BEFORE LockLabelsCache. an empty/null list
+        // disables filtering. matching is case-insensitive.
+        public void SetExportLabelAuthorFilter([CanBeNull] IReadOnlyCollection<string> excludedLabelAuthors)
+        {
+            excludedExportAuthors = excludedLabelAuthors is { Count: > 0 }
+                ? new HashSet<string>(excludedLabelAuthors, StringComparer.OrdinalIgnoreCase)
+                : null;
+        }
+
+        private bool IsExcludedAuthor(IReadOnlyLabel label) =>
+            excludedExportAuthors != null && excludedExportAuthors.Contains(label.Author ?? "");
+
         public void LockLabelsCache()
         {
-            cachedLabels = ConcatNormalAndTempLabels().ToDictionary();
+            // bake the author-exclusion into the cache so the Labels enumeration AND the mirrored-label
+            // search (both derived from cachedLabels) never surface an excluded label. GetLabel applies
+            // the same filter directly (it doesn't read through cachedLabels).
+            var all = ConcatNormalAndTempLabels();
+            if (excludedExportAuthors != null)
+                all = all.Where(kvp => !IsExcludedAuthor(kvp.Value));
+
+            cachedLabels = all.ToDictionary();
             mirroredLabelCacheSearch = new LabelsMirroredLabelCacheSearch(cachedLabels);
         }
 
@@ -155,6 +186,7 @@ namespace Diz.Core.model
         {
             cachedLabels = null;
             mirroredLabelCacheSearch = null;
+            excludedExportAuthors = null;
         }
         
         // performance only: ALL LABELS: cache of combined temp and real labels together,
@@ -179,7 +211,16 @@ namespace Diz.Core.model
             // if there's a real label (like, added in the Diz GUI), prefer that.
             // if there's not, use an auto-generated label if it exists
             var normalExisting = NormalProvider.GetLabel(snesAddress);
-            return normalExisting ?? TemporaryProvider.GetLabel(snesAddress);
+            var label = normalExisting ?? TemporaryProvider.GetLabel(snesAddress);
+
+            // export author-filter (PHASE 2b): hide excluded-author labels while the export cache is
+            // locked. GetLabelName/GetLabelComment (LabelProviderBase) both funnel through here, so
+            // returning null makes an excluded label indistinguishable from "no label" everywhere --
+            // operand naming falls back to the raw address instead of emitting a dangling symbol.
+            if (label != null && IsExcludedAuthor(label))
+                return null;
+
+            return label;
         }
 
         public IMirroredLabelCacheSearch MirroredLabelCacheSearch => mirroredLabelCacheSearch;

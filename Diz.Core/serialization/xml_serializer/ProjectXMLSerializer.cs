@@ -70,7 +70,13 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
     //        data is added or removed. Migration rewrites the attribute names in the raw XML
     //        before deserialization, because the deserializer would otherwise silently ignore the
     //        old names and produce empty regions.
-    public const int LatestSaveFormatVersion = 108;  //  REMEMBER: IF YOU CHANGE THIS YOU MUST ADD A NEW IMigration ENTRY IN RegisterMigrations()
+    // - 109: added "Author" (freeform string) + "Confidence" (freeform level string) to labels,
+    //        and a project-level "ConfidenceLevels" vocabulary (ordered List<string>) to
+    //        ProjectSettings. Purely additive: all are optional with safe defaults (Author="",
+    //        Confidence="", ConfidenceLevels=the default six-level list), so older files simply
+    //        deserialize to those defaults. Level names ("Medium"/"VeryHigh"/...) are the same
+    //        tokens stored before, so any existing values load unchanged. No shape change -> MigrationNoOp.
+    public const int LatestSaveFormatVersion = 109;  //  REMEMBER: IF YOU CHANGE THIS YOU MUST ADD A NEW IMigration ENTRY IN RegisterMigrations()
     
     // About older project save formats from ancient Diz 1.0:
     // The older binary savefile format BEFORE v100 in Diz 1.0 is removed, and modern Diz can't open them anymore.
@@ -207,12 +213,15 @@ public class ProjectXmlSerializer : ProjectSerializer, IProjectXmlSerializer
 
         // DisableFormatting: never re-indent. Some elements (the RomBytes blob) carry newline-
         // delimited text that the reader parses line-by-line; added whitespace would corrupt it.
-        return DeserializeProjectXml(xDoc.ToString(SaveOptions.DisableFormatting));
+        var migratedXmlStr = xDoc.ToString(SaveOptions.DisableFormatting);
+        return DeserializeProjectXml(migratedXmlStr);
     }
 
     // finally. this is the real deal.
-    private Root DeserializeProjectXml(string xmlStr) =>
-        GetSerializerConfig().Create().Deserialize<Root>(xmlStr);
+    private Root DeserializeProjectXml(string xmlStr)
+    {
+        return GetSerializerConfig().Create().Deserialize<Root>(xmlStr);
+    }
 
     // return the save file version# detected in the raw data
     private int RunPreDeserializeIntegrityChecks(string xmlStr)

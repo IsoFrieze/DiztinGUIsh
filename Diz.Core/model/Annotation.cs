@@ -289,6 +289,8 @@ namespace Diz.Core.model
     {
         private string comment = "";
         private string name = "";
+        private string author = "";
+        private string confidence = "";
 
         public ObservableCollection<IContextMapping> ContextMappings { get; set; } = [];
         IEnumerable<IReadOnlyContextMapping> IReadOnlyLabel.ContextMappings => ContextMappings;
@@ -306,6 +308,20 @@ namespace Diz.Core.model
             set => this.SetField(ref comment, value ?? "");
         }
 
+        public string Author
+        {
+            get => author;
+            set => this.SetField(ref author, value ?? "");
+        }
+
+        // free-form confidence level. "" = unspecified (the default). well-known values come from
+        // the project's ConfidenceLevels vocabulary, but any string is stored verbatim.
+        public string Confidence
+        {
+            get => confidence;
+            set => this.SetField(ref confidence, value ?? "");
+        }
+
         public string GetName(string contextName = "")
         {
             var mapping = ContextMappings.FirstOrDefault(cm => cm.Context == contextName);
@@ -317,8 +333,10 @@ namespace Diz.Core.model
 
         private bool Equals(Label other)
         {
-            return Name == other.Name && 
-                   Comment == other.Comment && 
+            return Name == other.Name &&
+                   Comment == other.Comment &&
+                   Author == other.Author &&
+                   Confidence == other.Confidence &&
                    ContextMappings.SequenceEqual(other.ContextMappings, new ContextMappingComparer());
         }
 
@@ -336,6 +354,8 @@ namespace Diz.Core.model
             {
                 var hashCode = (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Comment != null ? Comment.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Author != null ? Author.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Confidence != null ? Confidence.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ GetContextMappingsHashCode();
                 return hashCode;
             }
@@ -365,7 +385,13 @@ namespace Diz.Core.model
             
             var commentComparison = string.Compare(comment, other.comment, StringComparison.Ordinal);
             if (commentComparison != 0) return commentComparison;
-            
+
+            var authorComparison = string.Compare(author, other.author, StringComparison.Ordinal);
+            if (authorComparison != 0) return authorComparison;
+
+            var confidenceComparison = string.Compare(confidence, other.confidence, StringComparison.Ordinal);
+            if (confidenceComparison != 0) return confidenceComparison;
+
             return CompareContextMappings(other);
         }
 
