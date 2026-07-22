@@ -124,12 +124,14 @@ public class ProjectFileManager(
     public ProjectOpenResult Open(string filename)
     {
         Trace.WriteLine("Opening Project START");
+        StartupTrace.Log($"ProjectFileManager.Open: load stack begin, filename={filename}");
 
         var (serializer, openResult) = Deserialize(filename);
         VerifyIntegrityDeserialized(openResult.Root);
         OnPostProjectDeserialized(filename, openResult.Root, serializer);
 
         Trace.WriteLine("Opening Project END");
+        StartupTrace.Log("ProjectFileManager.Open: load stack complete");
         return openResult;
     }
 
