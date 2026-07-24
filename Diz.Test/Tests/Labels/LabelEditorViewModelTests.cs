@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Ui.ViewModels.Labels;
 using FluentAssertions;
@@ -417,6 +418,144 @@ public class LabelEditorViewModelTests
         after.ContextMappings.Should().ContainSingle()
             .Which.NameOverride.Should().Be("other");
         vm.Rows.Single().ContextSummary.Should().Be("Battle: other");
+    }
+
+    // =====================================================================================
+    // author + confidence (label-attribution feature): carried across every commit
+    // =====================================================================================
+
+    private static Label LabelAt(LabelsServiceWithTemp provider, int addr) => (Label)provider.GetLabel(addr)!;
+
+    [Theory]
+    [InlineData(LabelField.Name, "renamed")]
+    [InlineData(LabelField.Comment, "new comment")]
+    [InlineData(LabelField.Address, "7E2000")]
+    public void CommitEdit_PreservesPreviouslySetAuthorAndConfidence(LabelField field, string proposed)
+    {
+        // regression guard: the fresh-Label rebuild in CommitEdit must carry Author + Confidence,
+        // or editing any OTHER field silently wipes a label's attribution.
+        var provider = NewProvider((0x010000, "n", "c"));
+        var original = LabelAt(provider, 0x010000);
+        original.Author = "Alice";
+        original.Confidence = "High";
+
+        using var vm = NewVm(provider);
+        var row = vm.Rows.Single();
+
+        vm.CommitEdit(row, field, proposed).IsValid.Should().BeTrue();
+
+        // the label may now live at a new address (Address edit); find whichever survives.
+        var after = provider.GetLabel(0x010000) ?? provider.GetLabel(0x7E2000);
+        after!.Author.Should().Be("Alice");
+        after.Confidence.Should().Be("High");
+    }
+
+    [Fact]
+    public void CommitEdit_Author_WritesThrough_AndSurvivesOnTheRow()
+    {
+        var provider = NewProvider((0x010000, "n", ""));
+        using var vm = NewVm(provider);
+
+        vm.CommitEdit(vm.Rows.Single(), LabelField.Author, "Bob").IsValid.Should().BeTrue();
+
+        provider.GetLabel(0x010000)!.Author.Should().Be("Bob");
+        vm.Rows.Single().Author.Should().Be("Bob");
+    }
+
+    [Fact]
+    public void CommitEdit_Confidence_StoresLevelString_AndWritesThrough()
+    {
+        var provider = NewProvider((0x010000, "n", ""));
+        using var vm = NewVm(provider);
+
+        vm.CommitEdit(vm.Rows.Single(), LabelField.Confidence, "VeryHigh").IsValid.Should().BeTrue();
+
+        provider.GetLabel(0x010000)!.Confidence.Should().Be("VeryHigh");
+        vm.Rows.Single().Confidence.Should().Be("VeryHigh");
+    }
+
+    [Fact]
+    public void CommitEdit_Confidence_UnspecifiedDisplay_StoresEmptyString()
+    {
+        var provider = NewProvider((0x010000, "n", ""));
+        LabelAt(provider, 0x010000).Confidence = "High";
+        using var vm = NewVm(provider);
+
+        // picking the "(unspecified)" dropdown entry maps back to the empty stored value.
+        vm.CommitEdit(vm.Rows.Single(), LabelField.Confidence, LabelEditorViewModel.UnspecifiedDisplay)
+            .IsValid.Should().BeTrue();
+
+        provider.GetLabel(0x010000)!.Confidence.Should().Be("");
+        vm.Rows.Single().Confidence.Should().Be("");
+    }
+
+    [Fact]
+    public void CommitEdit_Confidence_OffVocabularyValue_IsStoredVerbatim()
+    {
+        var provider = NewProvider((0x010000, "n", ""));
+        using var vm = NewVm(provider);
+
+        vm.CommitEdit(vm.Rows.Single(), LabelField.Confidence, "Foobar").IsValid.Should().BeTrue();
+
+        provider.GetLabel(0x010000)!.Confidence.Should().Be("Foobar");
+    }
+
+    [Fact]
+    public void CommitEdit_Author_PreservesConfidence_AndViceVersa()
+    {
+        var provider = NewProvider((0x010000, "n", ""));
+        LabelAt(provider, 0x010000).Confidence = "Medium";
+        using var vm = NewVm(provider);
+
+        // editing Author must not disturb Confidence...
+        vm.CommitEdit(vm.Rows.Single(), LabelField.Author, "Carol");
+        provider.GetLabel(0x010000)!.Confidence.Should().Be("Medium");
+
+        // ...and editing Confidence must not disturb Author.
+        vm.CommitEdit(vm.Rows.Single(), LabelField.Confidence, "Low");
+        provider.GetLabel(0x010000)!.Author.Should().Be("Carol");
+    }
+
+    [Theory]
+    [InlineData("None")]
+    [InlineData("Low")]
+    [InlineData("VeryHigh")]
+    [InlineData("Foobar")]      // off-vocabulary is fine now: Confidence is free-form
+    [InlineData("")]
+    [InlineData("(unspecified)")]
+    public void ValidateEdit_Confidence_IsAlwaysOk(string proposed)
+    {
+        using var vm = NewVm(NewProvider((0x010000, "x", "")));
+        var row = vm.Rows.Single();
+
+        vm.ValidateEdit(row, LabelField.Confidence, proposed).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ValidateEdit_Author_IsAlwaysOk()
+    {
+        using var vm = NewVm(NewProvider((0x010000, "x", "")));
+        var row = vm.Rows.Single();
+
+        vm.ValidateEdit(row, LabelField.Author, "").IsValid.Should().BeTrue();
+        vm.ValidateEdit(row, LabelField.Author, "anyone at all!").IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ConfidenceOptions_AreUnspecifiedPlusTheDefaultVocabularyInOrder()
+    {
+        using var vm = NewVm(NewProvider());
+        vm.ConfidenceOptions.Should().Equal(
+            LabelEditorViewModel.UnspecifiedDisplay,
+            "Wrong", "None", "Low", "Medium", "High", "VeryHigh");
+    }
+
+    [Fact]
+    public void ConfidenceOptions_UseInjectedVocabularyWhenProvided()
+    {
+        using var vm = new LabelEditorViewModel(
+            NewProvider(), confidenceLevels: new[] { "lo", "hi" });
+        vm.ConfidenceOptions.Should().Equal(LabelEditorViewModel.UnspecifiedDisplay, "lo", "hi");
     }
 
     // =====================================================================================

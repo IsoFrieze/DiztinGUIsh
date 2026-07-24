@@ -70,5 +70,18 @@ public class DizCoreServicesCompositionRoot : ICompositionRoot
             request => new ReadFromFileBytes());
         
         serviceRegistry.Register<ILinkedRomBytesProvider, LinkedRomBytesFileSearchProvider>();
+
+        // machine-global fallback for locating a project's ROM when its (gitignored) user-prefs
+        // don't point at one - e.g. a fresh checkout or a sibling worktree. Factory registration so
+        // the default-path constructor is used (the path-injectable overload is for tests only).
+        //
+        // Wired as an OPTIONAL constructor dependency: consumers get null when it isn't registered,
+        // which cleanly disables the registry fallback + auto-populate. To turn the feature OFF,
+        // comment out the Register line below - the RegisterConstructorDependency then resolves it
+        // to null. (LightInject does NOT fall back to a parameter's default value on its own; it
+        // needs this explicit optional wiring, or it throws on the unregistered dependency.)
+        serviceRegistry.RegisterConstructorDependency<IGlobalRomRegistry>(
+            (factory, _) => factory.TryGetInstance<IGlobalRomRegistry>());
+        serviceRegistry.Register<IGlobalRomRegistry>(_ => new GlobalRomRegistry());
     }
 }

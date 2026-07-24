@@ -62,17 +62,26 @@ public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorVi
     /// <param name="normalizeWramLabels">optional override; defaults to Diz.Core's
     /// LabelProviderExtensions.NormalizeWramLabels on <paramref name="labelProvider"/>.</param>
     /// <param name="resolveRomOffsetToSnesIa">PROVISIONAL port, see <see cref="ResolveRomOffsetToSnesIaPort"/>.</param>
+    /// <param name="confidenceLevels">the project's confidence vocabulary (worst -> best), used to
+    /// build <see cref="ConfidenceOptions"/>. null (tests / no project) uses
+    /// ProjectSettings.DefaultConfidenceLevels.
+    /// TODO: source ConfidenceLevels from the loaded project's ProjectSettings at the construction seam.</param>
     public LabelEditorViewModel(
         ILabelProvider labelProvider,
         Action<Action>? notificationMarshaller = null,
         NormalizeWramLabelsPort? normalizeWramLabels = null,
-        ResolveRomOffsetToSnesIaPort? resolveRomOffsetToSnesIa = null)
+        ResolveRomOffsetToSnesIaPort? resolveRomOffsetToSnesIa = null,
+        IEnumerable<string>? confidenceLevels = null)
         : base(notificationMarshaller)
     {
         labels = labelProvider;
         // default = the real Core implementation (extension method group -> delegate)
         this.normalizeWramLabels = normalizeWramLabels ?? labelProvider.NormalizeWramLabels;
         this.resolveRomOffsetToSnesIa = resolveRomOffsetToSnesIa;
+
+        // dropdown vocabulary = "(unspecified)" followed by the project's confidence levels, in order.
+        var vocabulary = confidenceLevels?.ToList() ?? ProjectSettings.DefaultConfidenceLevels.ToList();
+        ConfidenceOptions = new[] { UnspecifiedDisplay }.Concat(vocabulary).ToList();
 
         Rows = new ReadOnlyObservableCollection<ILabelRowViewModel>(visibleRows);
 
@@ -136,6 +145,20 @@ public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorVi
 
     public int TotalLabelCount => rowsByAddress.Count;
     public int VisibleLabelCount => visibleRows.Count;
+
+    // the display string shown for the "unspecified" ("") confidence value in the dropdown.
+    public const string UnspecifiedDisplay = "(unspecified)";
+
+    // "(unspecified)" + the project's confidence vocabulary, in order; constant for the VM's lifetime.
+    public IReadOnlyList<string> ConfidenceOptions { get; }
+
+    // map a dropdown DISPLAY string to the STORED confidence value: "(unspecified)" <-> "".
+    public static string ConfidenceDisplayToStored(string display) =>
+        display == UnspecifiedDisplay ? "" : display ?? "";
+
+    // map a STORED confidence value to its dropdown DISPLAY string ("" -> "(unspecified)").
+    public static string ConfidenceStoredToDisplay(string stored) =>
+        string.IsNullOrEmpty(stored) ? UnspecifiedDisplay : stored;
 
     // ---------------------------------------------------------------- EVENTS OUT
 
@@ -332,9 +355,15 @@ public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorVi
             case LabelField.Name:
                 // Strict (see PORT NOTE 2): the importer's Legacy rule stays untouched.
                 return LabelNameValidator.Validate(proposed);
+            case LabelField.Confidence:
+                // Confidence is free-form now (any level string, on- or off-vocabulary), so any
+                // value is accepted. The dropdown offers the vocabulary; hand-set values are kept.
+                return ValidationResult.Ok;
+            case LabelField.Author:
             case LabelField.Comment:
             default:
-                // no rules today, same as before (`// todo (validate for valid comment characters, if any)`)
+                // Author + Comment: no rules today (Comment matches the old
+                // `// todo (validate for valid comment characters, if any)`; Author is freeform).
                 return ValidationResult.Ok;
         }
     }
@@ -358,12 +387,7 @@ public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorVi
         // PORT NOTE 4: fresh Label each commit, context mappings carried over by reference --
         // byte-for-byte what CellValidating did.
         var existingLabelAtOldAddress = labels.GetLabel(oldAddress);
-        var newLabel = new Label
-        {
-            Name = field == LabelField.Name ? proposed : row.Name,
-            Comment = field == LabelField.Comment ? proposed : row.Comment,
-            ContextMappings = existingLabelAtOldAddress?.ContextMappings ?? [],
-        };
+        var newLabel = BuildEditedLabel(row, field, proposed, existingLabelAtOldAddress);
 
         var wasSelected = ReferenceEquals(selectedRow, row);
 
@@ -376,6 +400,23 @@ public sealed class LabelEditorViewModel : ViewModelNotifierBase, ILabelEditorVi
 
         return result;
     }
+
+    /// <summary>
+    /// The single place a commit's fresh Label is built. Every field is carried across (the
+    /// edited one from <paramref name="proposed"/>, the rest from the row), so no commit path
+    /// can silently drop a field -- adding a future label field means touching only here.
+    /// Context mappings are carried by reference, exactly as the old CellValidating did.
+    /// </summary>
+    private static Label BuildEditedLabel(
+        ILabelRowViewModel row, LabelField field, string proposed, IAnnotationLabel? existingLabelAtOldAddress) =>
+        new()
+        {
+            Name = field == LabelField.Name ? proposed : row.Name,
+            Comment = field == LabelField.Comment ? proposed : row.Comment,
+            Author = field == LabelField.Author ? proposed : row.Author,
+            Confidence = field == LabelField.Confidence ? ConfidenceDisplayToStored(proposed) : row.Confidence,
+            ContextMappings = existingLabelAtOldAddress?.ContextMappings ?? [],
+        };
 
     private static bool TryParseSnesAddress(string? text, out int snesAddress) =>
         int.TryParse(text ?? "", NumberStyles.HexNumber, null, out snesAddress);
