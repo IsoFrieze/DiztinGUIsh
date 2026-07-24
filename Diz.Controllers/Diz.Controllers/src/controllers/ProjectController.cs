@@ -67,6 +67,7 @@ public class ProjectController(
 
     public async Task<bool> OpenProjectAsync(string filename)
     {
+        Diz.Core.util.StartupTrace.Log($"ProjectController.OpenProjectAsync: opening {filename}");
         ProjectOpenResult projectOpenResult = null;
         var errorMsg = "";
 

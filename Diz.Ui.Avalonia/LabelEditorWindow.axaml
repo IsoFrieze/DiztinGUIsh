@@ -142,6 +142,22 @@
                                  LostFocus="DetailsComment_LostFocus"
                                  KeyDown="DetailsComment_KeyDown" />
 
+                        <TextBlock Text="Author" Foreground="#606060" Margin="0,4,0,0" />
+                        <TextBox x:Name="DetailsAuthor" Tag="details-author"
+                                 Text="{Binding SelectedRow.Author, Mode=OneWay}"
+                                 GotFocus="DetailsAuthor_GotFocus"
+                                 LostFocus="DetailsAuthor_LostFocus"
+                                 KeyDown="DetailsAuthor_KeyDown" />
+
+                        <TextBlock Text="Confidence" Foreground="#606060" Margin="0,4,0,0" />
+                        <!-- SelectedItem is driven from code-behind (SyncConfidenceFromVm): the
+                             items are DISPLAY strings ("(unspecified)" + vocabulary) while the row
+                             stores the raw level string, so they need stored<->display mapping. -->
+                        <ComboBox x:Name="DetailsConfidence" Tag="details-confidence"
+                                  HorizontalAlignment="Stretch"
+                                  ItemsSource="{Binding ConfidenceOptions}"
+                                  SelectionChanged="DetailsConfidence_SelectionChanged" />
+
                         <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,2">
                             <TextBlock Grid.Column="0" Text="Alternate Contexts" FontWeight="Bold"
                                        VerticalAlignment="Center" />

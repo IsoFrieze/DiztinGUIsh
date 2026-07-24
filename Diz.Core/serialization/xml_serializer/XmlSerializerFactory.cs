@@ -97,7 +97,19 @@ public class XmlSerializerFactory(
 
             .Type<Label>()
             .EnableImplicitTyping()
-        
+
+            // Author/Confidence auto-serialize as attributes via implicit typing. Unlike the older
+            // Name/Comment members (which emit even when empty), only emit these when actually set,
+            // so the vast majority of labels -- which never get annotated -- don't each grow an
+            // Author="" Confidence="" pair. Old files without these attrs load to the defaults.
+            // Confidence is the free-form level string; the empty-string default is omitted.
+            // (Level names like "Medium"/"VeryHigh" stored by older files load unchanged.)
+            // The short on-disk attribute names ("By"/"Cf") keep the file size down (same rationale
+            // as the Region short names above); the C# property names (Author/Confidence) are unchanged.
+            .Type<Label>()
+            .Member(x => x.Author).EmitWhen(author => !string.IsNullOrEmpty(author)).Name("By")
+            .Member(x => x.Confidence).EmitWhen(confidence => !string.IsNullOrEmpty(confidence)).Name("Cf")
+
             .Type<IAnnotationLabel>()
             .WithInterceptor(AnnotationLabelInterceptor.Default)
 

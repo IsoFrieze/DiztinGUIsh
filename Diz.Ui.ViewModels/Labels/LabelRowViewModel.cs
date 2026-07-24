@@ -66,6 +66,14 @@ public sealed class LabelRowViewModel : ViewModelNotifierBase, ILabelRowViewMode
         }
     }
 
+    /// <summary>Read-only relay of the model's Author. Edits reach the model elsewhere
+    /// (details pane / CommitEdit); this only surfaces the current value + its INPC.</summary>
+    public string Author => label.Author ?? "";
+
+    /// <summary>Read-only relay of the model's Confidence (see <see cref="Author"/>); the raw
+    /// stored level string ("" = unspecified).</summary>
+    public string Confidence => label.Confidence ?? "";
+
     /// <summary>Formatted exactly as the old WinForms "Context" column: mappings with a
     /// whitespace-only Context are skipped; the rest join as "ctx: override, ctx: override".</summary>
     public string ContextSummary =>
@@ -91,6 +99,8 @@ public sealed class LabelRowViewModel : ViewModelNotifierBase, ILabelRowViewMode
 
         OnPropertyChanged(nameof(Name));
         OnPropertyChanged(nameof(Comment));
+        OnPropertyChanged(nameof(Author));
+        OnPropertyChanged(nameof(Confidence));
         OnPropertyChanged(nameof(ContextSummary));
     }
 
@@ -117,6 +127,12 @@ public sealed class LabelRowViewModel : ViewModelNotifierBase, ILabelRowViewMode
                 break;
             case nameof(IAnnotationLabel.Comment):
                 OnPropertyChanged(nameof(Comment));
+                break;
+            case nameof(IAnnotationLabel.Author):
+                OnPropertyChanged(nameof(Author));
+                break;
+            case nameof(IAnnotationLabel.Confidence):
+                OnPropertyChanged(nameof(Confidence));
                 break;
             case nameof(IAnnotationLabel.ContextMappings):
                 RebuildContextMappingWrappers();

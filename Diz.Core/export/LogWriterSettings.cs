@@ -1,6 +1,9 @@
 ﻿#nullable enable
 
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 using Diz.Core.util;
 
@@ -74,6 +77,59 @@ public record LogWriterSettings : ILogWriterSettings
 
     public bool OutputToString { get; init; }
     public string ErrorFilename { get; init; } = "errors.txt";
+
+    // ----------------------------------------------------------------------------------------
+    // Exclude-labels-by-author blocklist.
+    //
+    // A label whose Author is in this set is FULLY hidden from export (label listing AND operand
+    // naming). Matching is case-insensitive. Empty (the default) = nothing excluded.
+    //
+    // IMPORTANT: this is stored internally as a single normalized string (excludedLabelAuthors)
+    // rather than a collection field. Two reasons:
+    //   1) value-equality: LogWriterSettings is a record, and ProjectController.UpdateExportSettings
+    //      uses .Equals to detect changed settings. Record equality compares FIELDS -- a collection
+    //      field would compare by REFERENCE, so two blocklists with identical contents would look
+    //      "changed". A string field compares by content, which is exactly what we want.
+    //   2) serialization: the interface-typed ExcludedLabelAuthors is [XmlIgnore]; the normalized
+    //      string ExcludedLabelAuthorsList is what serializes with the project (persists the
+    //      blocklist). ExtendedXmlSerializer can't serialize an IReadOnlyCollection<string> member.
+    private readonly string excludedLabelAuthors = "";
+
+    // splits on commas -- see NormalizeAuthors for why that's safe as the internal delimiter.
+    private static readonly char[] AuthorSeparators = [','];
+
+    /// <summary>
+    /// Authors whose labels are fully hidden from export (case-insensitive). Computed view over
+    /// the normalized backing string. NOT serialized directly (interface-typed, and would duplicate
+    /// state) -- ExcludedLabelAuthorsList is the persisted form.
+    /// </summary>
+    [XmlIgnore]
+    public IReadOnlyCollection<string> ExcludedLabelAuthors
+    {
+        get => excludedLabelAuthors.Length == 0
+            ? Array.Empty<string>()
+            : excludedLabelAuthors.Split(AuthorSeparators, StringSplitOptions.RemoveEmptyEntries);
+        init => excludedLabelAuthors = NormalizeAuthors(value);
+    }
+
+    /// <summary>
+    /// Persisted (and value-equality-participating) form of ExcludedLabelAuthors: the normalized
+    /// blocklist as a single comma-joined string. Normalization = trim, drop blanks, de-duplicate
+    /// case-insensitively, sort (OrdinalIgnoreCase). Serialized with the project.
+    /// </summary>
+    public string ExcludedLabelAuthorsList
+    {
+        get => excludedLabelAuthors;
+        init => excludedLabelAuthors = NormalizeAuthors(
+            (value ?? "").Split(AuthorSeparators, StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    private static string NormalizeAuthors(IEnumerable<string>? authors) =>
+        string.Join(",", (authors ?? Enumerable.Empty<string>())
+            .Where(a => !string.IsNullOrWhiteSpace(a))
+            .Select(a => a.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(a => a, StringComparer.OrdinalIgnoreCase));
 
     public LogWriterSettings WithPathRelativeTo(string newFileNameAndPath, string? pathToMakeRelativeTo) =>
         this with

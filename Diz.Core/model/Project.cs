@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
@@ -37,6 +38,17 @@ public class ProjectSettings
         "(useful if you manually marked a lot of instructions incorrectly and they're desync'd. BSNES's marking is really good but not foolproof, " +
         "and it has been known to get M/X flags incorrect rarely). Safest option is to leave this OFF")]
     public bool BsnesUsageMapImportOnlyChangedUnmarked { get; set; } = true;
+
+    // worst -> best. the default confidence vocabulary; a project may customize this list.
+    public static IReadOnlyList<string> DefaultConfidenceLevels { get; } =
+        new[] { "Wrong", "None", "Low", "Medium", "High", "VeryHigh" };
+
+    // user-customizable confidence vocabulary, serialized with the project.
+    // absent in older files => the property initializer default (the full list above) is kept
+    // (ExtendedXmlSerializer runs the initializer, then only assigns members present in the XML).
+    // TODO: add a GUI to edit this list (deferred). Hidden from the Preferences property-grid for now.
+    [Browsable(false)]
+    public List<string> ConfidenceLevels { get; set; } = new(DefaultConfidenceLevels);
 
     public override string ToString() => "";
 }

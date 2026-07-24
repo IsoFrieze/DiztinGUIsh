@@ -61,8 +61,9 @@ namespace Diz.Test.Utils
             var output = new ParsedOutput();
 
             var split = line.Split([';'], 2,options:StringSplitOptions.None);
-            var main = split[0].Trim(); 
-            var comment = split[1].Trim();
+            var main = split[0].Trim();
+            // a line with no ';' column separator (e.g. CSV sidecar rows) has no comment part.
+            var comment = split.Length > 1 ? split[1].Trim() : "";
 
             // parse the stuff in the comment (it may or may not be there)
             var csplit = comment.Split(['|'], 3, options: StringSplitOptions.None);
