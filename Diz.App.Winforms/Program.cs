@@ -76,8 +76,10 @@ internal static class Program
             var arg = args[i];
             if (arg.Equals(flag, StringComparison.OrdinalIgnoreCase))
             {
-                if (i + 1 < args.Length)
-                    value = args[++i]; // consume the following token as the value
+                // Only take the next token as the value when it isn't itself a flag, so
+                // "--extraTitleBar --avalonia-spike" doesn't swallow the following flag as a label.
+                if (i + 1 < args.Length && !args[i + 1].StartsWith("--", StringComparison.Ordinal))
+                    value = args[++i];
                 continue;
             }
             if (arg.StartsWith(inlineFlag, StringComparison.OrdinalIgnoreCase))

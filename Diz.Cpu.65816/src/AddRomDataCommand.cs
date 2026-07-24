@@ -93,8 +93,11 @@ public class AddRomDataCommand : IAddRomDataCommand
         // exhausted (or none match) do we fall through to asking the user.
         //
         // Crucially, registry paths get no special trust: they re-enter the same loop as any other
-        // candidate and so are validated by EnsureCompatible (checksum + cart title) just the same. A
-        // stale or wrong registry entry simply fails to match and is skipped.
+        // candidate and are validated by EnsureCompatible just like a user-picked file. That check is
+        // header-only, though - it compares the 4 ROM-header complement/checksum bytes and (only when
+        // enabled) the cartridge title; it does NOT hash ROM contents, and the cart-title comparison is
+        // itself switched off for some older projects during migration. So a wrong ROM that happens to
+        // share those header fields would pass; a stale/wrong entry that DOESN'T is simply skipped.
         var registryCandidates = new Queue<string>(GetGlobalRegistryRomCandidates());
         searchProvider.GetNextFilename = reasonWhyLastFileNotCompatible =>
         {
@@ -134,6 +137,20 @@ public class AddRomDataCommand : IAddRomDataCommand
     private void RememberRomInGlobalRegistry(string romFilename)
     {
         if (globalRomRegistry == null || Project == null || string.IsNullOrWhiteSpace(romFilename))
+            return;
+
+        // Skip the load+save of the machine-global file when it already records this exact path for
+        // this ROM identity - the common case where the path came straight from the project's own
+        // prefs and nothing changed. Avoids needlessly widening the concurrent-write window on every
+        // open. Compare on the normalized path since that's the form the registry stores and returns.
+        string comparablePath;
+        try { comparablePath = Path.GetFullPath(romFilename); }
+        catch { comparablePath = romFilename; }
+
+        var alreadyStored = globalRomRegistry
+            .FindCandidateRomPaths(Project.InternalCheckSum, Project.InternalRomGameName)
+            .Any(p => string.Equals(p, comparablePath, StringComparison.OrdinalIgnoreCase));
+        if (alreadyStored)
             return;
 
         globalRomRegistry.Remember(Project.InternalCheckSum, Project.InternalRomGameName, romFilename);

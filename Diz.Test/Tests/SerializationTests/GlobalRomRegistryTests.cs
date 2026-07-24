@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Diz.Core.model.project;
 using Diz.Core.serialization;
 using Diz.Test.Utils;
@@ -117,6 +118,77 @@ public class GlobalRomRegistryTests : IDisposable
         reg.Remember(CtChecksum, CtGameName, @"C:\b\ct.smc"); // stored padded
         reg.FindCandidateRomPaths(CtChecksum, "CHRONO TRIGGER")
             .Should().ContainSingle().Which.Should().Be(@"C:\b\ct.smc");
+    }
+
+    [Fact]
+    public void MalformedFileIsRecovered_RewrittenAsValidXmlContainingTheNewEntry()
+    {
+        // a file left half-written by a crash/force-kill (well-formed prefix, truncated body): a later
+        // Remember must NOT be permanently blocked by it - it recovers the file and writes the entry.
+        File.WriteAllText(registryPath,
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<DizGlobalRomRegistry Version=\"1\"><Rom Internal");
+
+        var reg = new GlobalRomRegistry(registryPath);
+        reg.Remember(CtChecksum, CtGameName, @"C:\recovered\ct.smc");
+
+        // parses again (would throw if still malformed) and holds the new entry
+        var doc = XDocument.Load(registryPath);
+        doc.Root!.Name.LocalName.Should().Be("DizGlobalRomRegistry");
+        reg.FindCandidateRomPaths(CtChecksum, CtGameName)
+            .Should().ContainSingle().Which.Should().Be(@"C:\recovered\ct.smc");
+    }
+
+    [Fact]
+    public void SuccessfulSave_LeavesNoLingeringTempFile()
+    {
+        // the atomic write goes through a sibling ".tmp" then File.Move; nothing should be left behind.
+        var reg = new GlobalRomRegistry(registryPath);
+        reg.Remember(CtChecksum, CtGameName, @"C:\x\ct.smc");
+
+        File.Exists(registryPath).Should().BeTrue();
+        File.Exists(registryPath + ".tmp").Should().BeFalse();
+    }
+
+    [Fact]
+    public void RememberLeavesWellFormedUnknownVersionFileByteIdentical()
+    {
+        // self-heal must not clobber a well-formed file we simply don't understand (deliberate: no
+        // migration). Only MALFORMED xml recovers; an unknown Version is left exactly as-is.
+        var contents =
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            $"<DizGlobalRomRegistry Version=\"{GlobalRomRegistry.ExpectedVersion + 7}\" />";
+        File.WriteAllText(registryPath, contents);
+
+        var reg = new GlobalRomRegistry(registryPath);
+        reg.Remember(CtChecksum, CtGameName, @"C:\y\ct.smc");
+
+        File.ReadAllText(registryPath).Should().Be(contents);
+    }
+
+    [Fact]
+    public void Remember_NormalizesStoredPath_SoEquivalentSpellingsStayOneEntry()
+    {
+        var reg = new GlobalRomRegistry(registryPath);
+        reg.Remember(CtChecksum, CtGameName, @"C:\a\ct.smc");
+        reg.Remember(CtChecksum, CtGameName, @"C:\a\..\a\ct.smc"); // same file, non-normalized spelling
+
+        reg.FindCandidateRomPaths(CtChecksum, CtGameName)
+            .Should().ContainSingle().Which.Should().Be(@"C:\a\ct.smc");
+    }
+
+    [Fact]
+    public void Find_NormalizesStoredPaths()
+    {
+        // a registry written with a non-normalized path (e.g. by an older build or by hand) is
+        // normalized on the way out, so lookups don't depend on the exact spelling that was stored.
+        File.WriteAllText(registryPath,
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            $"<DizGlobalRomRegistry Version=\"{GlobalRomRegistry.ExpectedVersion}\">" +
+            $"<Rom InternalCheckSum=\"{CtChecksum}\" InternalRomGameName=\"{CtGameName}\" Path=\"C:\\a\\..\\a\\ct.smc\" />" +
+            "</DizGlobalRomRegistry>");
+
+        new GlobalRomRegistry(registryPath).FindCandidateRomPaths(CtChecksum, CtGameName)
+            .Should().ContainSingle().Which.Should().Be(@"C:\a\ct.smc");
     }
 }
 

@@ -1,3 +1,4 @@
+using System;
 using Diz.Core.util;
 using FluentAssertions;
 using LightInject;
@@ -39,5 +40,19 @@ public class OptionalDependencyWiringTests
         c.Register<NeedsFoo>();
 
         c.GetInstance<NeedsFoo>().Foo.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void WithoutOptionalWiring_ResolutionThrows_ForUnregisteredCtorDependency()
+    {
+        // Negative control: this is the claim the optional wiring rests on. With neither a registration
+        // for IFoo nor the RegisterConstructorDependency(TryGetInstance) wiring, LightInject does NOT
+        // fall back to the constructor parameter's default (null) - it fails to resolve NeedsFoo. That
+        // failure is precisely why the optional-dependency wiring is needed.
+        var c = DizServiceProvider.CreateServiceContainer();
+        c.Register<NeedsFoo>();
+
+        Action resolve = () => c.GetInstance<NeedsFoo>();
+        resolve.Should().Throw<InvalidOperationException>();
     }
 }
