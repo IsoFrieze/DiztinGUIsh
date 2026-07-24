@@ -1,4 +1,6 @@
-﻿using Diz.Core.model;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Diz.Core.model;
 using Diz.Core.model.project;
 using Diz.Core.serialization;
 using Diz.Core.serialization.xml_serializer;
@@ -19,9 +21,13 @@ namespace Diz.Cpu._65816;
 [UsedImplicitly]
 public class AddRomDataCommand : IAddRomDataCommand
 {
-    public AddRomDataCommand(Func<ILinkedRomBytesProvider> createLinkedProvider)
+    // globalRomRegistry is OPTIONAL. It's wired as an optional constructor dependency (see
+    // CoreServices), so it arrives null when the global ROM registry isn't registered. Null simply
+    // switches the registry fallback + auto-populate off; the rest of the ROM search is unchanged.
+    public AddRomDataCommand(Func<ILinkedRomBytesProvider> createLinkedProvider, IGlobalRomRegistry? globalRomRegistry = null)
     {
         this.createLinkedProvider = createLinkedProvider;
+        this.globalRomRegistry = globalRomRegistry;
     }
 
     public bool ShouldProjectCartTitleMatchRomBytes { get; set; } = true;
@@ -73,21 +79,64 @@ public class AddRomDataCommand : IAddRomDataCommand
     }
 
     private readonly Func<ILinkedRomBytesProvider> createLinkedProvider;
+    private readonly IGlobalRomRegistry? globalRomRegistry;
 
     private (string filename, byte[] romBytes)? SearchForValidRom()
     {
         var searchProvider = createLinkedProvider();
         searchProvider.EnsureCompatible = (romFilename, romBytes) => EnsureProjectCompatibleWithRom(romBytes);
+
+        // Fallback chain for locating the ROM. The search always starts from the project's own
+        // AttachedRomFilename (its user-prefs). When that misses - typically a fresh checkout or a
+        // sibling worktree that has no user-prefs file of its own - try any paths recorded in the
+        // machine-global ROM registry BEFORE bothering the user with a file prompt. Only if those are
+        // exhausted (or none match) do we fall through to asking the user.
+        //
+        // Crucially, registry paths get no special trust: they re-enter the same loop as any other
+        // candidate and so are validated by EnsureCompatible (checksum + cart title) just the same. A
+        // stale or wrong registry entry simply fails to match and is skipped.
+        var registryCandidates = new Queue<string>(GetGlobalRegistryRomCandidates());
         searchProvider.GetNextFilename = reasonWhyLastFileNotCompatible =>
-            GetNextRomFileToTry?.Invoke(reasonWhyLastFileNotCompatible) ?? null;
+        {
+            while (registryCandidates.Count > 0)
+            {
+                var candidate = registryCandidates.Dequeue();
+                if (!string.IsNullOrWhiteSpace(candidate))
+                    return candidate;
+            }
+            return GetNextRomFileToTry?.Invoke(reasonWhyLastFileNotCompatible) ?? null;
+        };
 
         // some other hints for the user for what ROM they should be looking for
         var extraPromptText = $"{Project?.InternalRomGameName ?? ""}";
-            
-        return searchProvider.SearchAndReadFromCompatibleRom(
+
+        var result = searchProvider.SearchAndReadFromCompatibleRom(
             initialRomFile: Project?.AttachedRomFilename ?? "",
             extraPromptText
             );
+
+        // Record the ROM we ended up using so a future open from a different checkout/worktree can
+        // find it straight away instead of prompting. Cheap idempotent upsert; still only a hint.
+        if (result != null)
+            RememberRomInGlobalRegistry(result.Value.filename);
+
+        return result;
+    }
+
+    private IEnumerable<string> GetGlobalRegistryRomCandidates()
+    {
+        if (globalRomRegistry == null || Project == null)
+            return Enumerable.Empty<string>();
+
+        return globalRomRegistry.FindCandidateRomPaths(Project.InternalCheckSum, Project.InternalRomGameName);
+    }
+
+    private void RememberRomInGlobalRegistry(string romFilename)
+    {
+        if (globalRomRegistry == null || Project == null || string.IsNullOrWhiteSpace(romFilename))
+            return;
+
+        globalRomRegistry.Remember(Project.InternalCheckSum, Project.InternalRomGameName, romFilename);
     }
 
     private void EnsureProjectCompatibleWithRom(byte[] romFileBytes)
