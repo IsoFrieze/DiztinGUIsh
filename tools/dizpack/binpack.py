@@ -164,10 +164,20 @@ def manifest_ext(man: dict, override: "str | None") -> str:
 
 def check_integrity(blob: bytes, man: dict, where: str) -> str:
     """Assert the blob matches the manifest's declared source (length + sha256). Returns the
-    computed sha256. `source_sha256` is REQUIRED -- it is the whole point of a passthrough
-    asset: the only thing that keeps a verbatim copy honest is that its hash still matches
-    the ROM bytes it was extracted from."""
-    src = man.get("source") or {}
+    computed sha256.
+
+    The `source` block is provenance: it records that these bytes were extracted from a ROM.
+    It is optional. A hand-authored asset -- content created from scratch that never came from
+    a ROM -- omits `source` entirely, and there is then nothing to check the bytes against:
+    absence of a claim is not violation of a claim. Such an asset is returned unverified.
+
+    When `source` IS present the checks are strict, and `source_sha256` is required within it.
+    That is stricter than the other codecs on purpose: a verbatim asset has no lossy view and
+    no decode/encode round-trip, so its hash is the only thing keeping the copy honest."""
+    src = man.get("source")
+    if not src:
+        return hashlib.sha256(blob).hexdigest()
+
     want_len = src.get("length")
     if want_len is not None and len(blob) != want_len:
         die(f"{where}: {len(blob)} bytes, but the manifest declares source.length={want_len}. "
@@ -175,8 +185,9 @@ def check_integrity(blob: bytes, man: dict, where: str) -> str:
 
     want_sha = src.get("source_sha256")
     if not want_sha:
-        die(f"{where}: manifest has no source.source_sha256 -- a verbatim asset cannot be "
-            f"integrity-checked without it. Re-extract the asset.")
+        die(f"{where}: manifest declares a source block but no source.source_sha256 -- a "
+            f"verbatim asset that claims ROM provenance cannot be integrity-checked without "
+            f"it. Re-extract the asset, or drop the source block if it is hand-authored.")
     got_sha = hashlib.sha256(blob).hexdigest()
     if got_sha != want_sha:
         die(f"{where}: sha256 {got_sha} does not match the manifest's source_sha256 "
