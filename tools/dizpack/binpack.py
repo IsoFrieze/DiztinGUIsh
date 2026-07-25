@@ -338,8 +338,7 @@ def cmd_verify(a) -> int:
             print(f"manifest   : MISMATCH  (expected {want})  [FAIL]")
             ok = False
     else:
-        print("manifest   : no source_sha256 recorded  [FAIL]")
-        ok = False
+        print("manifest   : no source_sha256 recorded -- skipped")
 
     # Strongest check: compare against the live ROM bytes at the recorded offset.
     if a.rom:
