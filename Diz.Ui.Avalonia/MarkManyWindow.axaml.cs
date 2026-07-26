@@ -34,7 +34,10 @@ internal sealed partial class MarkManyWindow : Window
 {
     // combo contents. The display strings and the model values behind each index are kept in
     // lock-step arrays. "CPU architecture" is deliberately absent from the property combo: the
-    // ViewModel supports it, but no menu ever selects it and the window has never offered it.
+    // ViewModel and the applier both support marking it, but no menu ever selects it and the
+    // window has never offered it. If it ever becomes relevant, add MarkManyProperty.CpuArch
+    // and its display string to the two arrays below -- the architecture combo it selects is
+    // already built and wired.
     private static readonly MarkCommand.MarkManyProperty[] PropertyComboValues =
     [
         MarkCommand.MarkManyProperty.Flag,

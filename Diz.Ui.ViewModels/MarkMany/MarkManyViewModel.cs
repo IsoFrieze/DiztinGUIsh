@@ -1,7 +1,6 @@
 using Diz.Core.commands;
 using Diz.Core.Interfaces;
 using Diz.Core.util;
-using Diz.Ui.ViewModels.Labels;
 
 namespace Diz.Ui.ViewModels.MarkMany;
 
@@ -21,7 +20,8 @@ namespace Diz.Ui.ViewModels.MarkMany;
 ///
 /// Data bank / direct page reseed from the ROM whenever the property selection changes: the
 /// useful default when you say "mark the data bank here" is the data bank that is already
-/// recorded at the start of the range.
+/// recorded at the start of the range. Restoring a saved snapshot is the one exception -- see
+/// <see cref="RestoreSettings"/>.
 /// </summary>
 /// <typeparam name="TDataSource">
 /// The ROM being edited, read-only from this ViewModel's point of view: its size, its
@@ -182,6 +182,11 @@ public sealed class MarkManyViewModel<TDataSource> : ViewModelNotifierBase
     public bool IsRegisterWidthUsed =>
         selectedProperty is MarkCommand.MarkManyProperty.MFlag or MarkCommand.MarkManyProperty.XFlag;
 
+    /// <summary>
+    /// True when the CPU-architecture input is the one in play. Marking CPU architecture works
+    /// end to end here and in the applier, but no window lists it in its property selector
+    /// today -- add it there if it ever becomes relevant.
+    /// </summary>
     public bool IsArchitectureValueUsed => selectedProperty == MarkCommand.MarkManyProperty.CpuArch;
 
     /// <summary>Largest accepted value for the register input, given the current selection.</summary>
@@ -269,18 +274,20 @@ public sealed class MarkManyViewModel<TDataSource> : ViewModelNotifierBase
     /// Restore a snapshot. Entries whose stored value doesn't fit the property are ignored,
     /// so a stale or hand-built snapshot degrades to defaults instead of throwing.
     ///
-    /// Note the ordering consequence: the selection is applied last, and applying it reseeds
-    /// the data bank / direct page value from the ROM. A restored data bank or direct page is
-    /// therefore overwritten as soon as that property is the selected one.
+    /// A restored value always wins: the selection is applied FIRST and the remembered values
+    /// second, so the data bank / direct page reseed that the selection triggers cannot
+    /// overwrite what was remembered. Only a property the snapshot has no usable entry for
+    /// keeps the reseeded value. Switching the selection afterwards still reseeds as usual --
+    /// that is the interactive behavior and it is unaffected by this method.
     /// </summary>
     public void RestoreSettings(MarkManySettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
+        SelectedProperty = settings.SelectedProperty;
+
         foreach (var (property, value) in settings.AllSettings)
             RestoreValue(property, value);
-
-        SelectedProperty = settings.SelectedProperty;
     }
 
     private void RestoreValue(MarkCommand.MarkManyProperty property, object value)

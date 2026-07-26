@@ -350,11 +350,11 @@ public class MarkManyViewModelTests
     }
 
     [Fact]
-    public void RestoringARegisterValueLosesToTheRomReseed()
+    public void ARestoredRegisterValueBeatsTheRomReseed()
     {
-        // Documents a real quirk carried over from the old dialog: the selection is applied
-        // last, and applying it reseeds the register value from the ROM. So a remembered data
-        // bank never survives when data bank is the property being restored.
+        // The reopen-the-window case: what the user last chose is what comes back, even for
+        // data bank / direct page, whose selection normally reseeds them from the ROM. Restore
+        // applies the selection first so that reseed happens before the remembered value lands.
         var rom = new RomStub { DataBankAtOffset = 0x42 };
         var first = MakeVm(rom: rom);
         first.SelectedProperty = MarkCommand.MarkManyProperty.DataBank;
@@ -363,7 +363,44 @@ public class MarkManyViewModelTests
         var second = MakeVm(rom: rom);
         second.RestoreSettings(first.CaptureSettings());
 
-        second.DataBankValue.Should().Be(0x42);
+        second.SelectedProperty.Should().Be(MarkCommand.MarkManyProperty.DataBank);
+        second.DataBankValue.Should().Be(0x99, "the remembered value is the whole point of restoring");
+        second.BuildMarkCommand()!.Value.Should().Be(0x99);
+    }
+
+    [Fact]
+    public void SwitchingThePropertyAwayAndBackAfterARestoreReseedsFromTheRom()
+    {
+        // The boundary: restore is the only place a remembered register value outranks the ROM.
+        // Ordinary property switching still offers whatever is recorded at the range start.
+        var rom = new RomStub { DataBankAtOffset = 0x42 };
+        var first = MakeVm(rom: rom);
+        first.SelectedProperty = MarkCommand.MarkManyProperty.DataBank;
+        first.DataBankValue = 0x99;
+
+        var second = MakeVm(rom: rom);
+        second.RestoreSettings(first.CaptureSettings());
+        second.DataBankValue.Should().Be(0x99);
+
+        second.SelectedProperty = MarkCommand.MarkManyProperty.Flag;
+        second.SelectedProperty = MarkCommand.MarkManyProperty.DataBank;
+
+        second.DataBankValue.Should().Be(0x42, "re-picking the property reseeds it from the ROM");
+    }
+
+    [Fact]
+    public void ASnapshotWithNoUsableEntryForTheRegisterLeavesTheRomSeedInPlace()
+    {
+        // Nothing remembered for the selected register -> the ROM value stands, which is what a
+        // fresh window shows too.
+        var vm = MakeVm(rom: new RomStub { DataBankAtOffset = 0x42 });
+
+        vm.RestoreSettings(new MarkManySettings
+        {
+            SelectedProperty = MarkCommand.MarkManyProperty.DataBank,
+        });
+
+        vm.DataBankValue.Should().Be(0x42);
     }
 
     [Fact]

@@ -1,17 +1,19 @@
 using System.ComponentModel;
 using Diz.Core.util;
 
-namespace Diz.Ui.ViewModels.Labels;
+namespace Diz.Ui.ViewModels;
 
 /// <summary>
+/// Shared base for every ViewModel in this assembly, regardless of feature namespace.
+///
 /// Hand-rolled INPC base, mirroring the existing Diz pattern (INotifyPropertyChangedExt +
 /// NotifyPropertyChangedExtensions.SetField in Diz.Core/util/Util.cs). Deliberately NO
-/// ReactiveUI / Fody / any framework -- see the plan's "use plain INPC" decision.
+/// ReactiveUI / Fody / any framework: plain INPC only.
 ///
-/// THREAD RULE (plan review finding 6): every notification this VM layer raises goes through
-/// a marshaller injected at construction. In a real host that marshaller posts (or
-/// send-if-off-thread) to the UI thread; when none is supplied -- e.g. unit tests -- the
-/// default invokes inline, synchronously.
+/// THREAD RULE: every notification this VM layer raises goes through a marshaller injected at
+/// construction. In a real host that marshaller posts (or send-if-off-thread) to the UI
+/// thread; when none is supplied -- e.g. unit tests -- the default invokes inline,
+/// synchronously.
 ///
 /// CONTRACT for hosts: commands are expected to be invoked on the UI thread, and the
 /// marshaller MUST execute synchronously when already called on that thread (Send semantics /

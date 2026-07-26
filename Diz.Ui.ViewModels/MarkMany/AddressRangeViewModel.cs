@@ -2,7 +2,6 @@ using System.Globalization;
 using Diz.Core;
 using Diz.Core.Interfaces;
 using Diz.Core.util;
-using Diz.Ui.ViewModels.Labels;
 
 namespace Diz.Ui.ViewModels.MarkMany;
 
