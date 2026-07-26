@@ -4,6 +4,9 @@ ctlzpack -- Chrono Trigger (US) LZSS *encoder* + byte-identity harness.
 
 Companion to ctlz.py (the verified decoder). This file NEVER modifies ctlz.py; it
 imports its decoder. Same idiom: Python 3, stdlib only, argparse subcommands, die().
+Both are game-specific, so both live beside each other: master copy in the DiztinGUIsh
+repo under tools/dizpack-game/ct/, copied by an export into a game repo's
+tools/vendor/game/. Edit the master; the vendored copy is overwritten every export.
 
 Canonical format spec: docs/chrono-trigger/compression-format.md.
 Primary evidence for the DECODER side is $C3/0557-$C3/08B2 in generated/bank_C3.asm.
@@ -120,7 +123,17 @@ import ctlz  # noqa: E402  -- the verified decoder; we import, never edit
 
 TOOL_VERSION = "ctlzpack/1.0.0"
 
-die = ctlz.die
+
+def die(msg: str) -> "None":
+    """Same contract as ctlz.die(), under this tool's own name: a build log has to say
+    which of the two codecs refused, because they run on adjacent edges."""
+    print(f"ctlzpack: error: {msg}", file=sys.stderr)
+    raise SystemExit(2)
+
+
+def note(msg: str) -> None:
+    """Report something the build must be able to see but which is not a failure."""
+    print(f"ctlzpack: note: {msg}", file=sys.stderr)
 
 
 # ======================================================================================
@@ -991,8 +1004,73 @@ def identity_strategy() -> Strategy:
                     tailpad=False)
 
 
+def report_source_drift(blob: bytes, man: dict, manifest_path: str) -> None:
+    """Compare a freshly compressed blob against what the manifest says the ROM held.
+
+    Presence-guarded on the `source` block, which is provenance: it records that these
+    bytes were extracted from a ROM. A hand-authored asset never came from one and omits
+    the block, and absence of a claim is not violation of a claim -- no block, nothing
+    compared, by construction.
+
+    A difference is deliberately NOT fatal. An edited member re-compresses to different
+    bytes, and that is the entire point of being able to edit it; a stock build still
+    proves itself by comparing the whole ROM, which never consults a manifest.
+
+    But a change in LENGTH moves everything the assembler places after this blob, and the
+    failure that eventually causes lands far away from here -- typically an assembler
+    bank-overflow that names neither this container nor the member that grew. Reporting it
+    at the point where it is still explainable is what gives that error a visible cause.
+    """
+    src = man.get("source")
+    if not isinstance(src, dict):
+        return
+    where = man.get("name") or manifest_path
+
+    want_len = src.get("length")
+    if isinstance(want_len, int) and len(blob) != want_len:
+        grew = len(blob) - want_len
+        if grew > 0:
+            note(f"{where}: recompressed to {len(blob)} bytes, but the manifest declares "
+                 f"source.length={want_len} -- the blob GREW by {grew} byte(s). Every "
+                 f"byte the assembler places after it shifts by that much: the .asm must "
+                 f"make room, or asar will fail later somewhere unrelated (a bank-border "
+                 f"overflow naming neither this container nor what grew inside it).")
+        else:
+            note(f"{where}: recompressed to {len(blob)} bytes, but the manifest declares "
+                 f"source.length={want_len} -- the blob SHRANK by {-grew} byte(s). Every "
+                 f"byte the assembler places after it shifts by that much; the .asm must "
+                 f"account for it.")
+
+    want_sha = src.get("source_sha256")
+    got_sha = hashlib.sha256(blob).hexdigest()
+    if isinstance(want_sha, str) and want_sha and got_sha != want_sha:
+        note(f"{where}: sha256 {got_sha} differs from the manifest's source_sha256 "
+             f"{want_sha} -- building the compressed bytes as produced. Extraction and "
+             f"whole-ROM verification still require an exact match.")
+
+
 def cmd_compress(a) -> int:
-    """File -> file: plaintext in, one compressed blob out, at the pinned strategy."""
+    """File -> file: plaintext in, one compressed blob out, at the pinned strategy.
+
+    With --manifest, two cross-checks ride along, at deliberately different severities.
+    The declared mode versus --mode is a HARD error: the two are copies of one fact that
+    no codec can derive, so a disagreement means one has drifted and a build that guessed
+    would emit valid bytes that are the wrong bytes -- and a mod build, which does not
+    compare against the original ROM, would never notice. The produced blob versus the
+    manifest's recorded `source` is only a NOTE: see report_source_drift().
+    """
+    if a.manifest is not None:
+        man = ctlz.load_node_manifest(a.manifest, fail=die)
+        declared = ctlz.manifest_lz_mode(man, a.manifest, fail=die)
+        if declared != a.mode:
+            die(f"{a.manifest}: manifest declares pipeline[0].lz.mode={declared}, but "
+                f"this build asked for --mode {a.mode}. The two records of the blob's "
+                f"offset width have drifted apart and neither can be trusted; encoding "
+                f"at the wrong width produces valid bytes that are the wrong bytes. "
+                f"Re-export the project so the build matches the manifest, or correct "
+                f"the mode authored on the region.")
+    else:
+        man = None
     try:
         with open(a.inp, "rb") as f:
             src = f.read()
@@ -1002,6 +1080,8 @@ def cmd_compress(a) -> int:
         blob = encode(src, identity_strategy(), orig_mode=a.mode)
     except EncodeError as e:
         die(f"encode failed on {a.inp}: {e}")
+    if man is not None:
+        report_source_drift(blob, man, a.manifest)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "wb") as f:
         f.write(blob)
@@ -1513,6 +1593,89 @@ def cmd_selftest(a) -> int:
                 fails.append(f"tailpad differs by more than a trailing $00 (len {len(c)})")
     print("  ok  tailpad is a pure trailing-$00 axis")
 
+    # 7. The `compress` build edge's manifest cross-checks. The mode must agree or the
+    #    build stops; a blob that no longer matches the ROM bytes it came from is an
+    #    edit, so it is reported and built.
+    import contextlib
+    import io
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="ctlzpack-compress-")
+    R = lambda *p: os.path.join(tmp, *p)
+
+    plain = b"the quick brown fox jumps over the lazy dog. " * 5
+    ppath = R("plain.bin")
+    with open(ppath, "wb") as f:
+        f.write(plain)
+    ref = encode(plain, identity_strategy(), orig_mode=12)
+    ref_sha = hashlib.sha256(ref).hexdigest()
+
+    def manifest(fname, mode=12, source="exact"):
+        man = {"name": "blob/demo_pack", "type": "blob.container",
+               "pipeline": [{"codec": "compress.ct.lzss", "lz": {"mode": mode}}],
+               "members": [{"name": "blob/demo_pack.buffer", "at": 0,
+                            "len": len(plain)}]}
+        if source == "exact":
+            man["source"] = {"rom_offset": "0x2FCDC3", "length": len(ref),
+                             "source_sha256": ref_sha}
+        elif source == "shorter":
+            man["source"] = {"rom_offset": "0x2FCDC3", "length": len(ref) - 7,
+                             "source_sha256": "00" * 32}
+        elif source == "longer":
+            man["source"] = {"rom_offset": "0x2FCDC3", "length": len(ref) + 7,
+                             "source_sha256": "00" * 32}
+        elif source == "sha-only":
+            man["source"] = {"rom_offset": "0x2FCDC3", "length": len(ref),
+                             "source_sha256": "11" * 32}
+        p = R(fname)
+        with open(p, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(man, f, indent=2)
+        return p
+
+    def run(mpath, out):
+        """compress with a manifest; returns (exit code, everything it said)."""
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            rc = main(["compress", "--in", ppath, "--out", R(out),
+                       "--mode", "12", "--manifest", mpath])
+        return rc, buf.getvalue()
+
+    rc, said = run(manifest("m-exact.json"), "exact.bin")
+    check("agreeing manifest compresses", rc, 0)
+    check("a blob matching its source says nothing", said, "")
+    check("agreeing manifest produced the pinned bytes",
+          open(R("exact.bin"), "rb").read(), ref)
+
+    try:
+        main(["compress", "--in", ppath, "--out", R("drift.bin"), "--mode", "12",
+              "--manifest", manifest("m-mode11.json", mode=11)])
+        fails.append("a manifest mode disagreeing with --mode should have halted")
+    except SystemExit:
+        print("  ok  manifest mode disagreeing with --mode halts")
+
+    rc, said = run(manifest("m-grew.json", source="shorter"), "grew.bin")
+    check("a grown blob is built, not rejected", rc, 0)
+    check("growth is reported", "GREW by 7 byte(s)" in said, True)
+    check("growth names both sizes",
+          f"recompressed to {len(ref)} bytes" in said
+          and f"source.length={len(ref) - 7}" in said, True)
+    check("growth warns about the downstream shift",
+          "the .asm must make room" in said, True)
+    check("a grown blob is still written", os.path.exists(R("grew.bin")), True)
+
+    rc, said = run(manifest("m-shrank.json", source="longer"), "shrank.bin")
+    check("a shrunken blob is built, not rejected", rc, 0)
+    check("shrinkage is reported", "SHRANK by 7 byte(s)" in said, True)
+
+    rc, said = run(manifest("m-sha.json", source="sha-only"), "sha.bin")
+    check("a same-size edit is built, not rejected", rc, 0)
+    check("a differing sha is reported", f"sha256 {ref_sha} differs" in said, True)
+    check("a same-size edit reports no size change",
+          "GREW" not in said and "SHRANK" not in said, True)
+
+    rc, said = run(manifest("m-nosource.json", source=None), "nosource.bin")
+    check("a manifest with no source block compresses", rc, 0)
+    check("a manifest with no source block says nothing", said, "")
+
     if fails:
         print("\nFAILURES:")
         for f in fails[:25]:
@@ -1560,6 +1723,10 @@ def main(argv=None) -> int:
                    help="write the compressed blob here")
     c.add_argument("--mode", required=True, type=int, choices=[11, 12],
                    help="offset width to encode with; per-blob metadata, not a policy")
+    c.add_argument("--manifest", default=None, metavar="PATH",
+                   help="the container's manifest; its pipeline[0].lz.mode must agree "
+                        "with --mode, and its source block (if any) is compared against "
+                        "the compressed output and any difference reported")
     c.set_defaults(fn=cmd_compress)
 
     i = sub.add_parser("identity", help="run the identity harness over the corpus")

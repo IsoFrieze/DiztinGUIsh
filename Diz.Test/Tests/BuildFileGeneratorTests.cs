@@ -517,11 +517,14 @@ public class BuildFileGeneratorTests : IDisposable
             "build build/extract/blob/pack.raw: blob_slice | generated/assets/blob/pack.json $nodepack $orig_rom");
 
         // ...then the pipeline turns them into the buffer the members tile. The mode rides as an
-        // edge variable because it is per-blob metadata the codec cannot derive.
+        // edge variable because it is per-blob metadata the codec cannot derive, and the manifest
+        // rides along so the codec can hold that variable against the manifest's own copy.
         ninja.Should().Contain(
             "build build/extract/blob/pack.plain: ctlz_decompress build/extract/blob/pack.raw " +
             "| generated/assets/blob/pack.json $ctlz");
         ninja.Should().Contain("  lz_mode = 12");
+        StageEdgeVars(ninja, "build build/extract/blob/pack.plain:")
+            .Should().Equal("manifest = generated/assets/blob/pack.json", "lz_mode = 12");
 
         // ONE split edge, every member an output.
         ninja.Should().Contain(
@@ -546,7 +549,22 @@ public class BuildFileGeneratorTests : IDisposable
         ninja.Should().Contain(
             "build build/assets/blob/pack.bin: ctlz_compress build/join/blob/pack.plain " +
             "| generated/assets/blob/pack.json $ctlzpack");
+        StageEdgeVars(ninja, "build build/assets/blob/pack.bin:")
+            .Should().Equal("manifest = generated/assets/blob/pack.json", "lz_mode = 12");
         ninja.Should().Contain("build $out_rom: assemble | build/assets/blob/pack.bin");
+    }
+
+    /// <summary>
+    /// The indented variable lines belonging to the edge whose declaration starts with
+    /// <paramref name="edgePrefix"/>, trimmed and in order.
+    /// </summary>
+    private static List<string> StageEdgeVars(string ninja, string edgePrefix)
+    {
+        var lines = ninja.Split('\n').Select(l => l.TrimEnd('\r')).ToList();
+        var start = lines.FindIndex(l => l.StartsWith(edgePrefix, StringComparison.Ordinal));
+        start.Should().BeGreaterThanOrEqualTo(0, "the edge '{0}' should exist", edgePrefix);
+        return lines.Skip(start + 1).TakeWhile(l => l.StartsWith("  ", StringComparison.Ordinal))
+            .Select(l => l.Trim()).ToList();
     }
 
     [Fact]
@@ -564,11 +582,15 @@ public class BuildFileGeneratorTests : IDisposable
         ninja.Should().Contain("ctlzpack = tools/vendor/game/ctlzpack.py");
 
         // the encoder knobs that are policy stay pinned inside the tool; only the per-blob
-        // metadata it cannot derive appears on the command line.
+        // metadata it cannot derive appears on the command line -- alongside the manifest, so the
+        // codec can check that metadata against the manifest's own copy of it instead of taking
+        // an export-time value on faith.
         ninja.Should().Contain(
-            "  command = python $ctlz decompress --in $in --out $out --expect-mode $lz_mode");
+            "  command = python $ctlz decompress --in $in --out $out --expect-mode $lz_mode " +
+            "--manifest $manifest");
         ninja.Should().Contain(
-            "  command = python $ctlzpack compress --in $in --out $out --mode $lz_mode");
+            "  command = python $ctlzpack compress --in $in --out $out --mode $lz_mode " +
+            "--manifest $manifest");
         ninja.Should().NotContain("--tiebreak");
         ninja.Should().NotContain("--tailpad");
     }

@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-ctlz -- Chrono Trigger (US) LZSS codec. DECODE ONLY (phase 1; no encoder yet).
+ctlz -- Chrono Trigger (US) LZSS codec. DECODE ONLY; the encoder is ctlzpack.py.
 
-Game-specific codec, so it lives in tools/game/ (searched before tools/vendor/dizpack/
-and never overwritten by a DiztinGUIsh export -- see tools/vendor/dizpack/README.md).
+Game-specific codec, so it is not part of the shared tool set. The master copy lives in
+the DiztinGUIsh repo under tools/dizpack-game/ct/; an export copies it, together with the
+rest of that game's tool directory, into the game repo's tools/vendor/game/. That copy is
+regenerated on every export -- edit the master, never the vendored file.
+
 Follows the gfxpack.py conventions: single file, stdlib only, argparse subcommands,
 die() for fatal errors, manifests as the authority.
 
@@ -358,6 +361,51 @@ def load_manifest(path: str) -> dict:
     return man
 
 
+def load_node_manifest(path: str, fail=None) -> dict:
+    """Load the manifest that describes ONE container asset in a generated build.
+
+    A different schema from load_manifest() above, which reads the corpus survey: this is
+    the per-asset JSON a build edge is handed, and the only thing this file wants out of
+    it is the pipeline's declared parameters. `fail` lets the encoder report errors under
+    its own name; it defaults to this tool's die().
+    """
+    fail = fail or die
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except OSError as e:
+        fail(f"{path}: cannot read the manifest: {e}")
+    except json.JSONDecodeError as e:
+        fail(f"{path}: manifest is not valid JSON: {e}")
+
+
+def manifest_lz_mode(man: dict, path: str, fail=None) -> int:
+    """The LZSS offset width the manifest declares, from pipeline[0].lz.mode.
+
+    The mode is per-blob metadata no codec can derive from the plaintext, and a generated
+    build records the same fact TWICE: here, and in the build variable the exporter baked
+    into the command line. They are copies of one fact, so a disagreement means one of
+    them has drifted -- and there is no way to tell which. Callers therefore compare the
+    two and halt; that is the whole reason this is read at build time at all.
+
+    A missing or unrecognized value is drift as well, not a licence to fall back: a
+    manifest that no longer declares a mode cannot confirm anything.
+    """
+    fail = fail or die
+    stages = man.get("pipeline")
+    if not isinstance(stages, list) or not stages or not isinstance(stages[0], dict):
+        fail(f"{path}: manifest declares no `pipeline`, so it carries no LZSS mode to "
+             f"check the build against. Re-export the project, or point --manifest at "
+             f"the container's manifest.")
+    block = stages[0].get("lz")
+    mode = block.get("mode") if isinstance(block, dict) else None
+    if mode not in (MODE_11BIT, MODE_12BIT):
+        fail(f"{path}: manifest declares pipeline[0].lz.mode={mode!r}, which is not "
+             f"{MODE_11BIT} or {MODE_12BIT}. Fix the mode on the region and re-export; "
+             f"refusing to guess an offset width.")
+    return mode
+
+
 def read_rom(path: str) -> bytes:
     try:
         with open(path, "rb") as f:
@@ -403,7 +451,22 @@ def cmd_decompress(a) -> int:
     The input is read VERBATIM. It is a build intermediate, not a ROM image, so it
     must not go through read_rom(), which strips a 512-byte copier header from any
     file whose length happens to be 512 mod 1024.
+
+    With --manifest, the mode the manifest declares is cross-checked against the mode the
+    command line asked for BEFORE anything is decoded: they are two copies of one fact and
+    a drifted manifest must be loud, not quietly ignored. Given a manifest and no
+    --expect-mode, the manifest's mode becomes the expectation the stream is held to.
     """
+    expect = a.expect_mode
+    if a.manifest is not None:
+        declared = manifest_lz_mode(load_node_manifest(a.manifest), a.manifest)
+        if expect is not None and declared != expect:
+            die(f"{a.manifest}: manifest declares pipeline[0].lz.mode={declared}, but "
+                f"this build asked for --expect-mode {expect}. The two records of the "
+                f"blob's offset width have drifted apart and neither can be trusted. "
+                f"Re-export the project so the build matches the manifest, or correct "
+                f"the mode authored on the region.")
+        expect = declared
     try:
         with open(a.inp, "rb") as f:
             buf = f.read()
@@ -419,8 +482,9 @@ def cmd_decompress(a) -> int:
     if info["consumed"] != len(buf):
         die(f"{a.inp}: stream ends after {info['consumed']} bytes but the file is "
             f"{len(buf)} bytes; this is not exactly one blob")
-    if a.expect_mode is not None and info["mode"] != a.expect_mode:
-        die(f"{a.inp}: stream is {info['mode']}-bit, expected {a.expect_mode}-bit")
+    if expect is not None and info["mode"] != expect:
+        die(f"{a.inp}: stream is {info['mode']}-bit, expected {expect}-bit"
+            f"{f' (declared by {a.manifest})' if a.manifest is not None else ''}")
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "wb") as f:
         f.write(out)
@@ -943,6 +1007,63 @@ def cmd_selftest(a) -> int:
     check("position independent", bytes(out), b"ABCDEFGHZ")
     check("position independent consumed", info["consumed"], 17)
 
+    # 14. The `decompress` build edge. The offset width is recorded both in the container
+    #     manifest and in the command the build runs; the two are copies of one fact, so
+    #     a disagreement halts instead of silently trusting either.
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="ctlz-decompress-")
+    R = lambda *p: os.path.join(tmp, *p)
+
+    def dies(argv, label):
+        try:
+            main(argv)
+        except SystemExit:
+            print(f"  ok  {label}")
+            return
+        fails.append(f"{label}: expected a hard error, but the command succeeded")
+
+    def manifest(fname, stage) -> str:
+        man = {"name": "blob/demo_pack", "type": "blob.container",
+               "members": [{"name": "blob/demo_pack.buffer", "at": 0, "len": 8}]}
+        if stage is not None:
+            man["pipeline"] = [stage]
+        p = R(fname)
+        with open(p, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(man, f, indent=2)
+        return p
+
+    stream = _pack(bytes([0x00]) + b"ABCDEFGH")     # marker $00 => a 12-bit stream
+    src = R("pack.raw")
+    with open(src, "wb") as f:
+        f.write(stream)
+    check("selftest fixture is a 12-bit stream", dec(stream)[1]["mode"], 12)
+
+    def lz(mode):
+        return {"codec": "compress.ct.lzss", "lz": {"mode": mode}}
+
+    m12, m11 = manifest("c12.json", lz(12)), manifest("c11.json", lz(11))
+    no_pipeline = manifest("c-none.json", None)
+    no_mode = manifest("c-empty.json", {"codec": "compress.ct.lzss", "lz": {}})
+
+    check("manifest mode agreeing with --expect-mode decompresses",
+          main(["decompress", "--in", src, "--out", R("a.bin"),
+                "--expect-mode", "12", "--manifest", m12]), 0)
+    check("agreeing manifest produced the plaintext",
+          open(R("a.bin"), "rb").read(), b"ABCDEFGH")
+    dies(["decompress", "--in", src, "--out", R("b.bin"),
+          "--expect-mode", "12", "--manifest", m11],
+         "manifest mode disagreeing with --expect-mode halts")
+    dies(["decompress", "--in", src, "--out", R("c.bin"), "--manifest", m11],
+         "manifest mode alone is held against the stream")
+    dies(["decompress", "--in", src, "--out", R("d.bin"),
+          "--expect-mode", "12", "--manifest", no_pipeline],
+         "manifest with no pipeline halts")
+    dies(["decompress", "--in", src, "--out", R("e.bin"),
+          "--expect-mode", "12", "--manifest", no_mode],
+         "manifest with no lz.mode halts")
+    check("no manifest is still allowed",
+          main(["decompress", "--in", src, "--out", R("f.bin"), "--expect-mode", "12"]), 0)
+
     if fails:
         print("\nFAILURES:")
         for f in fails:
@@ -980,6 +1101,10 @@ def main(argv=None) -> int:
     dz.add_argument("--expect-mode", dest="expect_mode", type=int, choices=[11, 12],
                     default=None,
                     help="halt unless the stream uses this offset width")
+    dz.add_argument("--manifest", default=None, metavar="PATH",
+                    help="the container's manifest; its pipeline[0].lz.mode must agree "
+                         "with --expect-mode, and is used as the expectation when "
+                         "--expect-mode is omitted")
     dz.set_defaults(fn=cmd_decompress)
 
     h = sub.add_parser("harvest", help="decode candidate offsets -> corpus manifest")
