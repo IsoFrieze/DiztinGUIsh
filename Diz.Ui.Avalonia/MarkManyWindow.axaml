@@ -38,6 +38,14 @@
             <Setter Property="Margin" Value="0,0,14,0" />
             <Setter Property="MinHeight" Value="0" />
         </Style>
+        <!-- the two radio pairs are separate choices (address space vs number base); each gets
+             its own hairline box so they read as two groups, not one row of four options -->
+        <Style Selector="Border.radioGroup">
+            <Setter Property="BorderBrush" Value="#D8D8D8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Padding" Value="8,3" />
+        </Style>
     </Window.Styles>
 
     <Border Padding="12,10">
@@ -90,15 +98,23 @@
                     <StackPanel Spacing="4">
                         <TextBlock Text="Mark Bytes" FontWeight="Bold" Margin="0,0,0,4" />
 
-                        <StackPanel Orientation="Horizontal">
-                            <RadioButton x:Name="RadioSnes" Tag="radio-snes" GroupName="AddressSpace"
-                                         Content="SNES Address" IsCheckedChanged="AddressSpace_Changed" />
-                            <RadioButton x:Name="RadioPc" Tag="radio-pc" GroupName="AddressSpace"
-                                         Content="ROM File Offset" />
-                            <RadioButton x:Name="RadioHex" Tag="radio-hex" GroupName="NumberBase"
-                                         Content="Hex" IsCheckedChanged="NumberBase_Changed" />
-                            <RadioButton x:Name="RadioDec" Tag="radio-dec" GroupName="NumberBase"
-                                         Content="Dec" />
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Classes="radioGroup">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="RadioSnes" Tag="radio-snes" GroupName="AddressSpace"
+                                                 Content="SNES Address" IsCheckedChanged="AddressSpace_Changed" />
+                                    <RadioButton x:Name="RadioPc" Tag="radio-pc" GroupName="AddressSpace"
+                                                 Content="ROM File Offset" Margin="0" />
+                                </StackPanel>
+                            </Border>
+                            <Border Classes="radioGroup">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="RadioHex" Tag="radio-hex" GroupName="NumberBase"
+                                                 Content="Hex" IsCheckedChanged="NumberBase_Changed" />
+                                    <RadioButton x:Name="RadioDec" Tag="radio-dec" GroupName="NumberBase"
+                                                 Content="Dec" Margin="0" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" Margin="0,6,0,0">
