@@ -24,7 +24,8 @@ public class BuildFileGeneratorTests : IDisposable
         try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
     }
 
-    private static Region AssetRegion(string name, string assetType = "gfx.snes.2bpp") => new()
+    private static Region AssetRegion(string name, string assetType = "gfx.snes.2bpp",
+        string assetOptions = null) => new()
     {
         RegionName = name,
         AssetName = name,
@@ -32,6 +33,7 @@ public class BuildFileGeneratorTests : IDisposable
         EndSnesAddress = 0xC0003F,
         ExportType = RegionExportType.Asset,
         AssetType = assetType,
+        AssetOptions = assetOptions,
     };
 
     [Fact]
@@ -70,10 +72,13 @@ public class BuildFileGeneratorTests : IDisposable
             AssetRegion("gfx/font"),
         ]));
 
-        // the PNG is the input the codec compiles from...
-        ninja.Should().Contain("build build/assets/gfx/font.bin: gfx_compile assets/src/gfx/font.png");
-        // ...and the manifest is a dependency, so editing it also triggers a rebuild
-        ninja.Should().Contain("assets/src/gfx/font.json");
+        // the ROM is decoded into an editable PNG, driven by the manifest Diz wrote...
+        ninja.Should().Contain(
+            "build extracted/gfx/font.png: gfx_extract | generated/assets/gfx/font.json $gfxpack $orig_rom");
+        ninja.Should().Contain("  manifest = generated/assets/gfx/font.json");
+        // ...and that PNG is what the codec compiles into the incbin'd payload.
+        ninja.Should().Contain(
+            "build build/assets/gfx/font.bin: gfx_compile extracted/gfx/font.png | generated/assets/gfx/font.json $gfxpack");
 
         // The ROM must depend on the compiled asset. Without this edge, editing a PNG would
         // recompile the .bin but never re-assemble, and the ROM would silently go stale.
@@ -84,23 +89,85 @@ public class BuildFileGeneratorTests : IDisposable
     }
 
     [Fact]
+    public void ExtractRulesDecodeTheRomThroughTheAssetsOwnManifest()
+    {
+        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
+            AssetRegion("gfx/font"),
+        ]));
+
+        // Extraction is ROM ground truth: the manifest path is passed explicitly rather than
+        // resolved through the layer search path, so a mod layer can never redirect what comes
+        // out of the ROM. $search_roots still rides along for shared files (e.g. a .tbl).
+        ninja.Should().Contain("rule gfx_extract");
+        ninja.Should().Contain(
+            "  command = python $gfxpack extract --manifest $manifest --rom $orig_rom --out $out $search_roots");
+
+        // the seed rules and targets are gone entirely -- extraction is a per-build edge now,
+        // not a one-time create-then-yours step.
+        ninja.Should().NotContain("_seed");
+        ninja.Should().NotContain("build seed");
+    }
+
+    [Fact]
+    public void ExtractPhonyTargetAggregatesEveryEditableSource()
+    {
+        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
+            AssetRegion("gfx/b"), AssetRegion("gfx/a"),
+        ]));
+
+        // one name for "give me the editable sources", without assembling a ROM.
+        ninja.Should().Contain("build extract: phony extracted/gfx/a.png extracted/gfx/b.png");
+    }
+
+    [Fact]
     public void TextAssetsWireThroughTextpack()
     {
         var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
-            AssetRegion("text/item_names", "text.ct.mapped"),
+            AssetRegion("text/item_names", "text.ct.mapped",
+                "{\"tbl\": \"text/ct_8px.tbl\", \"record_width\": 11, \"pad\": \"0xEF\"}"),
         ]));
 
         // textpack runs off its OWN vendored tool var (like binpack), not the shared gfxpack one.
         ninja.Should().Contain("textpack = tools/vendor/dizpack/textpack.py");
-        // both rules exist, mirroring the gfx binding -- this is the Phase-2 generation gate.
         ninja.Should().Contain("rule text_compile");
-        ninja.Should().Contain("rule text_seed");
+        ninja.Should().Contain("rule text_extract");
+
+        // the character table is an input the manifest only NAMES, so it must be an implicit
+        // dep of the extract edge: editing the table has to re-decode the text, or the build
+        // keeps serving text rendered with the old glyph map.
+        ninja.Should().Contain(
+            "build extracted/text/item_names.yaml: text_extract | generated/assets/text/item_names.json " +
+            "$textpack $orig_rom assets/text/ct_8px.tbl");
+
         // the editable .yaml is the compile input; the manifest is a dependency.
         ninja.Should().Contain(
-            "build build/assets/text/item_names.bin: text_compile assets/src/text/item_names.yaml");
-        ninja.Should().Contain("assets/src/text/item_names.json");
+            "build build/assets/text/item_names.bin: text_compile extracted/text/item_names.yaml " +
+            "| generated/assets/text/item_names.json $textpack");
         // the ROM must depend on the compiled asset, or editing text would never re-assemble.
         ninja.Should().Contain("build $out_rom: assemble | build/assets/text/item_names.bin");
+    }
+
+    [Fact]
+    public void TierDirectoryNamesComeFromSettings()
+    {
+        // the tier names are per-project settings, not constants baked into Diz.
+        var settings = new BuildFileGeneratorSettings
+        {
+            MainAsmPath = "asm/main.asm",
+            AssetsDir = "art",
+            ExtractedDir = "decoded",
+            BuildDir = "out",
+            ManifestDir = "asm/manifests",
+        };
+
+        var ninja = new BuildFileGenerator(settings).Generate(BuildFileGenerator.CollectAssets([
+            AssetRegion("gfx/font"),
+        ]));
+
+        ninja.Should().Contain(
+            "search_roots = $mod_roots --search art --base-manifests asm/manifests --base-content decoded");
+        ninja.Should().Contain("build decoded/gfx/font.png: gfx_extract | asm/manifests/gfx/font.json");
+        ninja.Should().Contain("build out/assets/gfx/font.bin: gfx_compile decoded/gfx/font.png");
     }
 
     [Fact]
@@ -118,8 +185,11 @@ public class BuildFileGeneratorTests : IDisposable
         ninja.Should().NotContain("\norig_rom =");
         ninja.Should().NotContain("\nmod_roots =");
 
-        // mod layers come first; assets/src (the complete base layer) is always last
-        ninja.Should().Contain("search_roots = $mod_roots --search assets/src");
+        // mod layers come first; the hand-authored assets/ layer is last. Below it the base
+        // pair is split across the two generated tiers: manifests Diz writes, content the
+        // build extracts.
+        ninja.Should().Contain(
+            "search_roots = $mod_roots --search assets --base-manifests generated/assets --base-content extracted");
     }
 
     [Fact]
@@ -162,8 +232,8 @@ public class BuildFileGeneratorTests : IDisposable
         var ninja = new BuildFileGenerator().Generate([]);
 
         ninja.Should().Contain("build $out_rom: assemble");
-        ninja.Should().NotContain("gfx_compile assets/");
-        ninja.Should().Contain("build seed: phony");
+        ninja.Should().NotContain("gfx_compile extracted/");
+        ninja.Should().Contain("build extract: phony");
     }
 
     [Fact]
@@ -233,8 +303,11 @@ public class BuildFileGeneratorTests : IDisposable
         doc.Should().Contain("pip install -r tools/vendor/dizpack/requirements.txt");
         doc.Should().Contain("./build-assets.sh");
         doc.Should().Contain("ninja verify");
-        doc.Should().Contain("ninja seed");
-        doc.Should().Contain("assets/src");
+        doc.Should().Contain("ninja extract");
+        // it must say where the editable files actually appear, and it must not still be
+        // pointing readers at the old hand-authored location for them.
+        doc.Should().Contain("extracted/");
+        doc.Should().NotContain("assets/src");
     }
 
     [Fact]
@@ -295,11 +368,11 @@ public class BuildFileGeneratorTests : IDisposable
         // binpack runs off its own vendored var, declared as a `= ...` line...
         ninja.Should().Contain("binpack = tools/vendor/dizpack/binpack.py");
         ninja.Should().Contain("rule audio_compile");
-        ninja.Should().Contain("rule audio_seed");
+        ninja.Should().Contain("rule audio_extract");
 
         // ...the asset compiles from its editable .brr into the build .bin the assembler incbin's
         ninja.Should().Contain(
-            "build build/assets/audio/AudioBRR_00.bin: audio_compile assets/src/audio/AudioBRR_00.brr | assets/src/audio/AudioBRR_00.json $binpack");
+            "build build/assets/audio/AudioBRR_00.bin: audio_compile extracted/audio/AudioBRR_00.brr | generated/assets/audio/AudioBRR_00.json $binpack");
         // the commands rely on the manifest's ext (no --ext), matching the pinned binding shape
         ninja.Should().Contain("python $binpack compile --name $name $search_roots --out $out");
         // and the ROM depends on the compiled BRR .bin
@@ -322,11 +395,11 @@ public class BuildFileGeneratorTests : IDisposable
                 SourceExtension = ".brr",
                 CompiledExtension = ".bin",
                 CompileRule = "audio_compile",
-                SeedRule = "audio_seed",
+                ExtractRule = "audio_extract",
                 CompileCommand = "python $binpack compile --name $name $search_roots --out $out",
                 CompileDescription = "binpack compile $name",
-                SeedCommand = "python $binpack seed --name $name $search_roots",
-                SeedDescription = "binpack seed $name",
+                ExtractCommand = "python $binpack extract --manifest $manifest --rom $orig_rom --out $out $search_roots",
+                ExtractDescription = "binpack extract $out",
             },
         };
 
@@ -338,14 +411,16 @@ public class BuildFileGeneratorTests : IDisposable
         // the second binding declared its OWN tool var (gfx reuses the shared one, so declares none)
         ninja.Should().Contain("binpack = tools/vendor/dizpack/binpack.py");
         ninja.Should().Contain("rule audio_compile");
-        ninja.Should().Contain("rule audio_seed");
+        ninja.Should().Contain("rule audio_extract");
 
-        // the audio asset compiles from a .brr via the audio rules + $binpack...
+        // the audio asset extracts + compiles via the audio rules + $binpack...
         ninja.Should().Contain(
-            "build build/assets/audio/song.bin: audio_compile assets/src/audio/song.brr | assets/src/audio/song.json $binpack");
-        // ...while gfx still compiles from .png via gfx_compile + $gfxpack, unchanged.
+            "build extracted/audio/song.brr: audio_extract | generated/assets/audio/song.json $binpack $orig_rom");
         ninja.Should().Contain(
-            "build build/assets/gfx/font.bin: gfx_compile assets/src/gfx/font.png | assets/src/gfx/font.json $gfxpack");
+            "build build/assets/audio/song.bin: audio_compile extracted/audio/song.brr | generated/assets/audio/song.json $binpack");
+        // ...while gfx still routes through gfx_compile + $gfxpack, unchanged.
+        ninja.Should().Contain(
+            "build build/assets/gfx/font.bin: gfx_compile extracted/gfx/font.png | generated/assets/gfx/font.json $gfxpack");
     }
 
     [Fact]

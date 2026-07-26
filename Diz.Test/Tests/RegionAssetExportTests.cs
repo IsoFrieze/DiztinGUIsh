@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Diz.Core.Interfaces;
 using Diz.Core.model.snes;
@@ -10,12 +11,14 @@ using Xunit;
 namespace Diz.Test.Tests;
 
 /// <summary>
-/// Tests for exporting a region's bytes as a standalone asset (.bin + manifest).
+/// Tests for exporting a region as a standalone asset (a manifest, and the incbin that
+/// replaces the region's inline bytes).
 ///
-/// The point of these is byte-identity: whatever we write out must be exactly the bytes
-/// that were in the ROM, and the manifest must describe them accurately enough that the
-/// external codec tool can rebuild them. A test that only checked "a file appeared" would
-/// pass just as happily with mangled bytes, so every test here asserts on content.
+/// The point of these is byte-identity: the manifest must describe the region's bytes
+/// accurately enough -- offset, length, sha256, geometry -- that the external codec tool can
+/// slice them out of the ROM and rebuild them. A test that only checked "a file appeared"
+/// would pass just as happily with a manifest pointing at the wrong bytes, so every test here
+/// asserts on content.
 /// </summary>
 public class RegionAssetExportTests : IDisposable
 {
@@ -88,7 +91,7 @@ public class RegionAssetExportTests : IDisposable
     // ------------------------------------------------------------------
 
     [Fact]
-    public void AssetsGoToTheProjectRootAndIncbinResolvesFromTheAsmDir()
+    public void IncbinOfTheCompiledAssetResolvesFromTheAsmDir()
     {
         // The .asm lives in <project>/generated, so the incbin must walk back up. If it
         // didn't, asar would look for generated/build/assets/... and the build would break.
@@ -100,10 +103,37 @@ public class RegionAssetExportTests : IDisposable
 
         directive.Should().Be("incbin \"../build/assets/gfx/test_asset.bin\"");
 
-        // Asset SOURCE must land at the project root, NOT under the generated tree --
-        // that directory is rewritten on every export, so a PNG there would be destroyed.
-        File.Exists(Path.Combine(tempDir, "assets", "src", "gfx", "test_asset.bin"))
-            .Should().BeTrue();
+        // the manifest lands in the manifest root it was given, and is the ONLY thing written.
+        File.Exists(Path.Combine(tempDir, "gfx", "test_asset.json")).Should().BeTrue();
+    }
+
+    [Fact]
+    public void NoRomBytesAreCopiedOutOfTheRom()
+    {
+        // Phase-3 invariant: Diz writes manifests, never game data. The build slices the bytes
+        // straight from the ROM using the manifest, so a raw .bin in the export tree would be
+        // a second, drifting copy of data the repo deliberately does not carry.
+        var service = MakeService(MakeFakeRom(0x1000));
+
+        service.ExportRegion(MakeRegion(0x200, 64, RegionExportType.Asset, "gfx.snes.2bpp"), tempDir);
+
+        Directory.EnumerateFiles(tempDir, "*", SearchOption.AllDirectories)
+            .Select(Path.GetExtension).Should().AllBe(".json");
+    }
+
+    [Fact]
+    public void BuildTierNameIsConfigurable()
+    {
+        // the tier directory names are per-project settings, not baked into Diz.
+        var service = new RegionAssetExportService(
+            new FakeByteSource(MakeFakeRom(0x1000)), new FakeAddressConverter(),
+            [new BinaryRegionAssetExporter(), new GfxRegionAssetExporter()],
+            buildDir: "out/artifacts");
+
+        var directive = service.ExportRegion(
+            MakeRegion(0x200, 64, RegionExportType.Asset, "gfx.snes.2bpp"), tempDir, "..");
+
+        directive.Should().Be("incbin \"../out/artifacts/assets/gfx/test_asset.bin\"");
     }
 
     [Fact]
@@ -117,35 +147,22 @@ public class RegionAssetExportTests : IDisposable
     }
 
     [Fact]
-    public void BinaryExportWritesExactRomBytesAndEmitsIncbin()
+    public void BinaryExportWritesExactRomBytesAndIncbinsWhatItWrote()
     {
         var rom = MakeFakeRom(0x1000);
         var service = MakeService(rom);
         var region = MakeRegion(startPc: 0x100, lengthBytes: 0x40, RegionExportType.Binary);
 
-        var directive = service.ExportRegion(region, tempDir);
+        var directive = service.ExportRegion(region, tempDir, asmToProjectRootPrefix: "..");
 
-        // incbin points at the BUILD output, not the source-layer seed .bin. If it pointed at
-        // the seed, edits to the PNG would compile to a file nothing reads and the ROM would
-        // silently keep the original bytes.
-        directive.Should().Be("incbin \"build/assets/gfx/test_asset.bin\"");
+        // Plain-binary regions have no manifest and no codec, so nothing in the build could
+        // reproduce them: this exporter is their only producer, and the incbin must therefore
+        // name the file it just wrote (in the generated tree, beside the manifests) rather
+        // than a compiled artifact no rule creates.
+        directive.Should().Be("incbin \"assets/gfx/test_asset.bin\"");
 
-        var written = File.ReadAllBytes(Path.Combine(tempDir, "assets", "src", "gfx", "test_asset.bin"));
+        var written = File.ReadAllBytes(Path.Combine(tempDir, "gfx", "test_asset.bin"));
         written.Should().Equal(rom[0x100..0x140]);
-    }
-
-    [Fact]
-    public void GfxExportWritesExactRomBytes()
-    {
-        var rom = MakeFakeRom(0x1000);
-        var service = MakeService(rom);
-        // 4 tiles of 2bpp = 4 * 16 = 64 bytes
-        var region = MakeRegion(0x200, 64, RegionExportType.Asset, "gfx.snes.2bpp");
-
-        service.ExportRegion(region, tempDir);
-
-        var written = File.ReadAllBytes(Path.Combine(tempDir, "assets", "src", "gfx", "test_asset.bin"));
-        written.Should().Equal(rom[0x200..0x240]);
     }
 
     [Fact]
@@ -157,7 +174,7 @@ public class RegionAssetExportTests : IDisposable
 
         service.ExportRegion(region, tempDir);
 
-        var json = File.ReadAllText(Path.Combine(tempDir, "assets", "src", "gfx", "test_asset.json"));
+        var json = File.ReadAllText(Path.Combine(tempDir, "gfx", "test_asset.json"));
         var man = JsonDocument.Parse(json).RootElement;
 
         man.GetProperty("name").GetString().Should().Be("gfx/test_asset");
@@ -187,7 +204,7 @@ public class RegionAssetExportTests : IDisposable
 
         service.ExportRegion(region, tempDir);
 
-        var json = File.ReadAllText(Path.Combine(tempDir, "assets", "src", "gfx", "test_asset.json"));
+        var json = File.ReadAllText(Path.Combine(tempDir, "gfx", "test_asset.json"));
         JsonDocument.Parse(json).RootElement.TryGetProperty("ver", out _).Should().BeFalse();
     }
 
@@ -200,7 +217,7 @@ public class RegionAssetExportTests : IDisposable
 
         service.ExportRegion(region, tempDir);
 
-        var json = File.ReadAllText(Path.Combine(tempDir, "assets", "src", "gfx", "test_asset.json"));
+        var json = File.ReadAllText(Path.Combine(tempDir, "gfx", "test_asset.json"));
         JsonDocument.Parse(json).RootElement.GetProperty("ver").GetString().Should().Be("v1");
     }
 
@@ -245,7 +262,7 @@ public class RegionAssetExportTests : IDisposable
 
         var directive = service.ExportRegion(region, tempDir);
 
-        directive.Should().Be("incbin \"build/assets/test_region.bin\"");
-        File.Exists(Path.Combine(tempDir, "assets", "src", "test_region.bin")).Should().BeTrue();
+        directive.Should().Be("incbin \"assets/test_region.bin\"");
+        File.Exists(Path.Combine(tempDir, "test_region.bin")).Should().BeTrue();
     }
 }

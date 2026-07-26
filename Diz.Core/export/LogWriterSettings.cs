@@ -71,9 +71,40 @@ public record LogWriterSettings : ILogWriterSettings
     public string? BaseOutputPath { get; init; }
         
     /// <summary>
-    /// Relative path to add on after the base path.
+    /// Relative path to add on after the base path. This is the GENERATED tier: everything
+    /// Diz writes (.asm, asset manifests) lands here and is rewritten on every export.
     /// </summary>
-    public string FileOrFolderOutPath { get; init; } = "export\\";
+    public string FileOrFolderOutPath { get; init; } = "generated";
+
+    // ----------------------------------------------------------------------------------------
+    // Directory tiers of the exported repo, relative to BaseOutputPath (the repo root). Diz
+    // writes into none of these -- it emits them into build.ninja and into the assembly's
+    // incbin paths, so a project whose repo uses different names stays buildable.
+    //
+    // The full tier set is:
+    //   <FileOrFolderOutPath>/  generated  - Diz output (.asm + assets/**.json manifests)
+    //   AssetsDirPath/          assets     - hand-authored inputs (character tables, etc.)
+    //   ExtractedDirPath/       extracted  - build output of the `extract` step, editable
+    //   BuildDirPath/           build      - compiled artifacts (assets/**.bin, the ROM)
+    // ----------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Hand-authored asset layer: tracked human-owned inputs, never written by export. It is
+    /// the last (and always-complete) layer of the asset override search path.
+    /// </summary>
+    public string AssetsDirPath { get; init; } = "assets";
+
+    /// <summary>
+    /// Where the build decodes ROM bytes into editable sources (PNG/YAML/BRR). Derived, and
+    /// re-creatable at any time from the ROM plus the manifests, so it is never hand-edited.
+    /// </summary>
+    public string ExtractedDirPath { get; init; } = "extracted";
+
+    /// <summary>
+    /// Where the build writes compiled artifacts. Assembly directives incbin
+    /// <c>&lt;BuildDirPath&gt;/assets/&lt;name&gt;.bin</c>, never the editable source.
+    /// </summary>
+    public string BuildDirPath { get; init; } = "build";
 
     public bool OutputToString { get; init; }
     public string ErrorFilename { get; init; } = "errors.txt";

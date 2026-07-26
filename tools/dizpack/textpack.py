@@ -36,17 +36,24 @@ Rendering (bytes -> string) is the inverse and is deterministic: a byte is a tok
 manifest names it, else a glyph if the .tbl maps it, else a `[$NN]` escape.
 
 Commands:
-  extract  raw bytes + tbl + tokens -> <root>/<name>.yaml + <root>/<name>.json
-  compile  yaml + manifest + tbl    -> raw .bin
-  verify   yaml + manifest + tbl    -> compile and assert sha256 (and optional ROM bytes)
-  selftest                          -> in-memory codec assertions; needs no files (CI gate)
+  extract  manifest + ROM + tbl  -> the editable .yaml (ROM ground truth; re-runnable)
+  fork     effective bundle      -> a private copy under <mods>/<mod>/ (manifest + .yaml)
+  compile  yaml + manifest + tbl -> raw .bin
+  verify   yaml + manifest + tbl -> compile and assert sha256 (and optional ROM bytes)
+  selftest                       -> codec + layering assertions; needs no repo (CI gate)
+
+Layering: an asset is addressed by LOGICAL NAME and resolved against ordered
+COMPLETE-BUNDLE roots (`--search`, highest priority first: mod layers, then the
+hand-authored layer) and finally a base PAIR — manifests from `--base-manifests`,
+content from `--base-content`. See resolve_asset for why the base is a pair and
+everything above it is not.
 
 Example (CT item-name table: 242 records x 11 bytes):
-  textpack.py extract --rom names.bin --offset 0 --length 2662 --width 11 \
-      --name text/item_names --type text.ct.mapped --root assets/src \
-      --tbl text/ct_8px.tbl --tokens assets/src/text/ct_8px.tokens.json --snes-addr CC0B5E
-  textpack.py compile --name text/item_names --search assets/src --out build/item_names.bin
-  textpack.py verify  --name text/item_names --search assets/src
+  textpack.py extract --manifest generated/assets/text/item_names.json \
+      --rom rom/ct-us-orig.sfc --out extracted/text/item_names.yaml
+  textpack.py fork    --name text/item_names --mod mymod
+  textpack.py compile --name text/item_names --out build/assets/text/item_names.bin
+  textpack.py verify  --name text/item_names
 """
 
 from __future__ import annotations
@@ -56,6 +63,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 
 # --------------------------------------------------------------------------------------
@@ -66,6 +74,21 @@ import sys
 LATEST_VER = "v1"
 SUPPORTED_VERS = {"v1"}
 TOOL_VERSION = "textpack/1.0.0"
+
+# --------------------------------------------------------------------------------------
+# Layering defaults. Repo-root-relative, and overridable on every command that resolves an
+# asset, so nothing here is baked into the build graph.
+#   search roots  -- ordered, complete-bundle layers: mod overlays first, hand-authored last
+#   base pair     -- manifests come from the exporter's output dir, content from the dir the
+#                    `extract` command fills from the ROM
+# --------------------------------------------------------------------------------------
+DEFAULT_SEARCH_ROOTS = ("assets",)
+DEFAULT_BASE_MANIFESTS = "generated/assets"
+DEFAULT_BASE_CONTENT = "extracted"
+DEFAULT_MODS_DIR = "mods"
+
+# The editable content file for a text asset. One extension, always.
+CONTENT_EXT = ".yaml"
 
 _HEX2 = re.compile(r"[0-9A-Fa-f]{2}")
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -233,20 +256,57 @@ def parse_record(s: str, tbl_enc: "dict[str, int]",
 # ======================================================================================
 # Manifest + asset resolution
 # ======================================================================================
-def resolve_asset(name: str, roots: "list[str]") -> "tuple[str, str, str]":
-    """Find <root>/<name>.json across ordered layers (first match wins).
-    Returns (layer_root, manifest_path, yaml_path). The .yaml comes from the SAME layer."""
-    for root in roots:
+def resolve_asset(name: str, search_roots: "list[str]", base_manifests: str,
+                  base_content: str, ext: str = CONTENT_EXT) -> "tuple[str, str, str]":
+    """Resolve a logical asset name -> (manifest_path, content_path, layer_label).
+
+    Per-asset-BUNDLE resolution: a manifest and its content must describe each other, so
+    they must come from the same place. An override layer that supplied only the .yaml
+    would be compiled against a manifest describing different records; only the manifest,
+    and the stock text would be compiled with the override's record width. Both are silent
+    corruption, so both are refused.
+
+    1. Walk `search_roots` in priority order. A root matches only if BOTH
+       <root>/<name>.json and <root>/<name><ext> exist there. A root holding exactly one
+       half is a misconfiguration and HALTS -- skipping it would quietly build something
+       other than what the layer was created to change.
+    2. Otherwise fall back to the base PAIR: manifest from `base_manifests`, content from
+       `base_content`. These two directories are one logical bundle that the repo layout
+       splits in two (regenerated description vs. regenerated content), which is why the
+       same-layer rule is relaxed here and nowhere else. Missing either half HALTS.
+    """
+    for root in search_roots:
         mpath = os.path.join(root, name + ".json")
-        if os.path.isfile(mpath):
-            return root, mpath, os.path.join(root, name + ".yaml")
-    base = roots[-1] if roots else "(none)"
-    die(f"asset '{name}' not found in any layer: {roots}. "
-        f"The base layer '{base}' must contain it.")
+        cpath = os.path.join(root, name + ext)
+        has_m, has_c = os.path.isfile(mpath), os.path.isfile(cpath)
+        if has_m and has_c:
+            return mpath, cpath, root
+        if has_m or has_c:
+            present, absent = (mpath, cpath) if has_m else (cpath, mpath)
+            die(f"layer root '{root}' holds only half of asset '{name}': {present} exists "
+                f"but {absent} does not. A search root must carry a COMPLETE bundle -- "
+                f"the manifest and its content must come from the same layer. Add the "
+                f"missing file (see the `fork` command) or remove the other one.")
+    mpath = os.path.join(base_manifests, name + ".json")
+    cpath = os.path.join(base_content, name + ext)
+    absent = [p for p in (mpath, cpath) if not os.path.isfile(p)]
+    if absent:
+        die(f"asset '{name}' not found. Searched complete-bundle roots "
+            f"{list(search_roots)}, then the base pair (manifests '{base_manifests}', "
+            f"content '{base_content}'); missing there: {absent}. The base pair must "
+            f"always hold the asset -- manifests come from export, content from `extract`.")
+    return mpath, cpath, f"{base_manifests} + {base_content}"
 
 
-def resolve_file(ref: str, roots: "list[str]") -> str:
-    """Find a shared file (e.g. a .tbl) by relative ref across ordered layers."""
+def resolve_file(ref: str, search_roots: "list[str]", base_content: str,
+                 base_manifests: str) -> str:
+    """Find a SHARED file (a .tbl, a token map) by repo-relative ref.
+
+    Shared files are not bundles -- nothing pairs with them -- so they use a plain
+    first-match-wins walk over every layer: the search roots in priority order, then the
+    base content dir, then the base manifest dir.
+    """
+    roots = [*search_roots, base_content, base_manifests]
     for root in roots:
         p = os.path.join(root, ref)
         if os.path.isfile(p):
@@ -343,13 +403,12 @@ def compile_records(records: "list[str]", width: int, pad_byte: int,
     return bytes(out)
 
 
-def compile_asset(name: str, roots: "list[str]") -> "tuple[bytes, dict, str]":
-    layer, mpath, ypath = resolve_asset(name, roots)
+def compile_asset(name: str, search_roots: "list[str]", base_manifests: str,
+                  base_content: str) -> "tuple[bytes, dict, str]":
+    mpath, ypath, layer = resolve_asset(name, search_roots, base_manifests, base_content)
     man = load_manifest(mpath)
-    if not os.path.isfile(ypath):
-        die(f"{ypath}: manifest resolved from layer '{layer}' but its .yaml is missing")
     text = man["text"]
-    tbl_path = resolve_file(text["tbl"], roots)
+    tbl_path = resolve_file(text["tbl"], search_roots, base_content, base_manifests)
     tbl_dec, tbl_enc = load_tbl(tbl_path)
     tok_enc, _ = parse_tokens(text.get("tokens"), tbl_dec, mpath)
     records = load_records(ypath, text["count"])
@@ -390,90 +449,125 @@ def write_yaml(path: str, name: str, typ: str, records: "list[str]") -> None:
 # ======================================================================================
 # Commands
 # ======================================================================================
-def cmd_extract(a) -> int:
-    with open(a.rom, "rb") as f:
+def read_rom_slice(rom_path: str, man: dict, manifest_path: str) -> bytes:
+    """Read the ROM bytes a manifest describes, and prove they are the right ones.
+
+    The `source` block is a claim about a specific cartridge. Checking its sha256 before
+    decoding is what turns "you pointed at some ROM" into a hard error instead of a
+    plausible-looking asset built from the wrong bytes -- a wrong region, a different
+    revision, or a headered dump all land here.
+    """
+    src = man.get("source") or {}
+    if "rom_offset" not in src or "length" not in src:
+        die(f"{manifest_path}: extract needs source.rom_offset and source.length, and the "
+            f"manifest has no ROM provenance. A hand-authored asset is not extractable: "
+            f"its content is the source, there is nothing to regenerate it from.")
+    off = int(str(src["rom_offset"]), 0)
+    length = src["length"]
+    if not isinstance(length, int) or length < 0:
+        die(f"{manifest_path}: source.length {length!r} must be a non-negative integer")
+    with open(rom_path, "rb") as f:
         rom = f.read()
-    off, length, width = a.offset, a.length, a.width
-    if width < 1:
-        die("--width must be >= 1")
     if off + length > len(rom):
-        die(f"range 0x{off:X}+{length} exceeds input size {len(rom)}")
-    if length % width:
-        die(f"length {length} is not a multiple of --width {width}")
-    typ = a.type
-    if not typ.startswith("text."):
-        die(f"--type '{typ}' must be a text.* type")
-
+        die(f"{rom_path}: range 0x{off:X}+{length} exceeds the file size {len(rom)}. "
+            f"{manifest_path} describes data this ROM does not contain.")
     blob = rom[off:off + length]
-    count = length // width
-    sha = hashlib.sha256(blob).hexdigest()
 
-    tbl_path = resolve_file(a.tbl, [a.root])
+    want = src.get("source_sha256")
+    if not want:
+        die(f"{manifest_path}: source.source_sha256 is missing. Extraction is only safe "
+            f"when the bytes can be proven to be the ones the manifest describes.")
+    got = hashlib.sha256(blob).hexdigest()
+    if got != want:
+        die(f"{rom_path}: bytes at 0x{off:X}+{length} hash to {got}, but "
+            f"{manifest_path} declares source_sha256 {want}. This is not the ROM the "
+            f"asset was exported from (wrong version, wrong region, or a headered dump). "
+            f"Refusing to extract.")
+    return blob
+
+
+def cmd_extract(a) -> int:
+    """ROM -> the editable .yaml, driven by ONE explicit manifest.
+
+    Extraction is ROM ground truth, so it deliberately does not resolve the manifest
+    through the layer search: a mod override must not be able to change what "the original
+    data" means. The .tbl and any other shared file still resolve through the layers,
+    because those are presentation, not data.
+
+    There is no edited copy to protect here (edits live in a mod layer), so extract simply
+    overwrites and is always safe to re-run. Its output is byte-deterministic.
+    """
+    man = load_manifest(a.manifest)
+    text = man["text"]
+    blob = read_rom_slice(a.rom, man, a.manifest)
+
+    width, count = text["record_width"], text["count"]
+    expect = count * width
+    if len(blob) != expect:
+        die(f"{a.manifest}: describes {count} records of width {width} ({expect} bytes) "
+            f"but source.length is {len(blob)}. The manifest contradicts itself; slicing "
+            f"records out of it would produce plausible but wrong text.")
+
+    tbl_path = resolve_file(text["tbl"], a.search, a.base_content, a.base_manifests)
     tbl_dec, tbl_enc = load_tbl(tbl_path)
-
-    tokmap = {}
-    if a.tokens:
-        tok_doc = json.load(open(a.tokens, encoding="utf-8"))
-        tokmap = tok_doc.get("tokens", tok_doc) if isinstance(tok_doc, dict) else {}
-    tok_enc, tok_dec = parse_tokens(tokmap, tbl_dec, a.tokens or "(--tokens)")
-
-    if a.pad is not None:
-        pad_byte = int(a.pad, 0)
-    elif " " in tbl_enc:
-        pad_byte = tbl_enc[" "]      # default: the native space glyph
-    else:
-        die("no --pad given and the .tbl has no space glyph to default from")
-    if not 0 <= pad_byte <= 0xFF:
-        die(f"--pad {a.pad} out of range 0..255")
+    tok_enc, tok_dec = parse_tokens(text.get("tokens"), tbl_dec, a.manifest)
 
     records = [render_record(blob[i * width:(i + 1) * width], tbl_dec, tok_dec)
                for i in range(count)]
+    write_yaml(a.out, man["name"], man["type"], records)
 
-    man = {
-        "name": a.name,
-        "type": typ,
-        "ver": LATEST_VER,
-        "source": {"length": length, "source_sha256": sha},
-        "text": {
-            "tbl": a.tbl,
-            "count": count,
-            "record_width": width,
-            "pad": f"0x{pad_byte:02X}",
-            "tokens": tokmap,
-        },
-        "generated_by": TOOL_VERSION,
-    }
-    if a.snes_addr:
-        man["source"]["snes_addr"] = a.snes_addr
-    if a.rom_offset is not None:
-        man["source"]["rom_offset"] = f"0x{a.rom_offset:X}"
-
-    mpath = os.path.join(a.root, a.name + ".json")
-    ypath = os.path.join(a.root, a.name + ".yaml")
-    os.makedirs(os.path.dirname(os.path.abspath(mpath)), exist_ok=True)
-    with open(mpath, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(man, f, indent=2)
-        f.write("\n")
-    write_yaml(ypath, a.name, typ, records)
-
-    print(f"extracted {count} records of width {width} ({length} bytes) from 0x{off:X}")
-    print(f"  yaml     : {ypath}")
-    print(f"  manifest : {mpath}")
-    print(f"  tbl      : {tbl_path}")
-    print(f"  pad      : 0x{pad_byte:02X}")
-    print(f"  sha256   : {sha}")
-
-    # Immediate self-check: re-encode what we just wrote back to the source bytes.
-    back = compile_records(records, width, pad_byte, tbl_enc, tok_enc, a.name)
+    # Immediate self-check: re-encode what we just wrote back to the source bytes. If the
+    # .tbl or tokens disagree with the data this catches it here, not at ROM-build time.
+    back = compile_records(records, width, text["_pad_byte"], tbl_enc, tok_enc, man["name"])
     if back != blob:
         die("SELF-CHECK FAILED: re-encoding the extracted records did not reproduce the "
-            "source bytes. The codec is wrong -- do not trust this asset.")
+            "source bytes. Do not trust this asset.")
+
+    src = man["source"]
+    print(f"extracted {man['name']} ({count} records of width {width}, {len(blob)} bytes) "
+          f"from {a.rom} @{src['rom_offset']}")
+    print(f"  manifest : {a.manifest}")
+    print(f"  tbl      : {tbl_path}")
+    print(f"  yaml     : {a.out}")
+    print(f"  sha256   : {src['source_sha256']}  [matches ROM]")
     print("  self-check: re-encode reproduces source bytes exactly  [OK]")
     return 0
 
 
+def cmd_fork(a) -> int:
+    """Copy the currently-effective bundle into a mod layer, so it can be edited there.
+
+    Resolution is exactly compile's, so `fork` always branches from whatever the build is
+    using right now -- including an already-forked lower-priority mod. Both halves are
+    copied together: that is what keeps the complete-bundle rule satisfiable by hand.
+
+    It never overwrites. A second fork onto an edited copy would destroy the edits, and
+    there is no way to tell that apart from a legitimate re-fork.
+    """
+    mpath, cpath, layer = resolve_asset(a.name, a.search, a.base_manifests, a.base_content)
+    dest_root = os.path.join(a.mods_dir, a.mod)
+    dst_m = os.path.join(dest_root, a.name + ".json")
+    dst_c = os.path.join(dest_root, a.name + CONTENT_EXT)
+
+    existing = [p for p in (dst_m, dst_c) if os.path.exists(p)]
+    if existing:
+        die(f"refusing to overwrite {existing} -- '{a.name}' is already forked into mod "
+            f"'{a.mod}'. Delete those files first if you really want to restart from the "
+            f"current bundle; editing them in place is the normal workflow.")
+
+    os.makedirs(os.path.dirname(os.path.abspath(dst_m)), exist_ok=True)
+    shutil.copyfile(mpath, dst_m)
+    shutil.copyfile(cpath, dst_c)
+
+    print(f"forked {a.name} from layer '{layer}' into mod '{a.mod}'")
+    print(f"  manifest : {mpath}  ->  {dst_m}")
+    print(f"  yaml     : {cpath}  ->  {dst_c}")
+    print(f"  edit {dst_c}, then build with --search {dest_root} ahead of the other roots")
+    return 0
+
+
 def cmd_compile(a) -> int:
-    blob, man, layer = compile_asset(a.name, a.search)
+    blob, man, layer = compile_asset(a.name, a.search, a.base_manifests, a.base_content)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "wb") as f:
         f.write(blob)
@@ -482,7 +576,7 @@ def cmd_compile(a) -> int:
 
 
 def cmd_verify(a) -> int:
-    blob, man, layer = compile_asset(a.name, a.search)
+    blob, man, layer = compile_asset(a.name, a.search, a.base_manifests, a.base_content)
     got = hashlib.sha256(blob).hexdigest()
     want = man.get("source", {}).get("source_sha256")
     ok = True
@@ -510,72 +604,9 @@ def cmd_verify(a) -> int:
     return 0 if ok else 1
 
 
-def cmd_seed(a) -> int:
-    """Render the editable YAML from an EXISTING manifest + raw .bin -- the Diz handoff path.
-
-    `extract` writes the manifest itself, so it is useless for validating someone else's
-    manifest: it would overwrite it and then trivially agree. `seed` instead treats the
-    manifest as authoritative input, so a manifest that misdescribes the bytes fails loudly
-    here rather than silently producing a wrong .yaml.
-
-    Idempotent: refuses to clobber an existing .yaml (that file is the translator's edited
-    copy and regenerating it from the .bin would silently discard work). Pass --force to
-    overwrite. This is what makes a repeated `ninja seed` safe.
-    """
-    layer, mpath, ypath = resolve_asset(a.name, a.search)
-    man = load_manifest(mpath)
-    text = man["text"]
-
-    bin_path = a.bin or os.path.join(layer, a.name + ".bin")
-    if not os.path.isfile(bin_path):
-        die(f"{bin_path}: no raw .bin to seed from")
-    with open(bin_path, "rb") as f:
-        blob = f.read()
-
-    # The manifest is a claim about these bytes. Check it rather than trusting it --
-    # a wrong record_width/count here would slice the records wrong and produce plausible
-    # but incorrect text.
-    width, count = text["record_width"], text["count"]
-    expect = count * width
-    if len(blob) != expect:
-        die(f"{bin_path}: {len(blob)} bytes, but the manifest describes {count} records of "
-            f"width {width} ({expect} bytes). The manifest does not match the data.")
-    src_len = man.get("source", {}).get("length")
-    if src_len is not None and len(blob) != src_len:
-        die(f"{bin_path}: {len(blob)} bytes but manifest declares source.length={src_len}")
-    want_sha = man.get("source", {}).get("source_sha256")
-    got_sha = hashlib.sha256(blob).hexdigest()
-    if want_sha and got_sha != want_sha:
-        die(f"{bin_path}: sha256 {got_sha} does not match the manifest's source_sha256 "
-            f"{want_sha}. Refusing to seed from bytes the manifest does not describe.")
-
-    if os.path.exists(ypath) and not a.force:
-        print(f"seed: {ypath} already exists, leaving it alone (use --force to overwrite)")
-        return 0
-
-    tbl_path = resolve_file(text["tbl"], a.search)
-    tbl_dec, tbl_enc = load_tbl(tbl_path)
-    tok_enc, tok_dec = parse_tokens(text.get("tokens"), tbl_dec, mpath)
-    records = [render_record(blob[i * width:(i + 1) * width], tbl_dec, tok_dec)
-               for i in range(count)]
-    write_yaml(ypath, a.name, man["type"], records)
-
-    # Self-check: re-encoding the rendered records must reproduce the seed bytes exactly,
-    # or the .tbl/tokens in the manifest disagree with the data -- do not trust the asset.
-    back = compile_records(records, width, text["_pad_byte"], tbl_enc, tok_enc, a.name)
-    if back != blob:
-        die("SELF-CHECK FAILED: re-encoding the seeded records did not reproduce the "
-            "source bytes. Do not trust this asset.")
-
-    print(f"seeded {a.name} from layer '{layer}' ({count} records of width {width})")
-    print(f"  yaml     : {ypath}")
-    print(f"  sha256   : {got_sha}" + ("  [matches manifest]" if want_sha else ""))
-    print("  self-check: re-encode reproduces source bytes exactly  [OK]")
-    return 0
-
-
 # ======================================================================================
-# selftest — in-memory codec assertions. No files, no ROM: this is the public-CI gate.
+# selftest — codec + layering assertions against throwaway temp trees. Needs no repo and
+# no ROM: this is the public-CI gate.
 # ======================================================================================
 def _expect_die(fn, needle: str, label: str) -> None:
     try:
@@ -583,6 +614,152 @@ def _expect_die(fn, needle: str, label: str) -> None:
     except SystemExit:
         return
     raise AssertionError(f"selftest: expected {label} to fail-loud, but it succeeded")
+
+
+def _quiet(fn):
+    """Run a command function with its progress output swallowed."""
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        return fn()
+
+
+def _mkfile(path: str, body: "str | bytes") -> str:
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    if isinstance(body, bytes):
+        with open(path, "wb") as f:
+            f.write(body)
+    else:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(body)
+    return path
+
+
+def _selftest_layering() -> None:
+    """Resolution: mod bundle wins, half a bundle halts, base pair is the fallback."""
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="textpack-layers-")
+    R = lambda *p: os.path.join(tmp, *p)
+    name = "text/demo"
+    gen, ext, assets, mod = R("generated", "assets"), R("extracted"), R("assets"), R("mods", "m")
+    roots = [mod, assets]
+
+    # 1. base pair: manifest and content live in DIFFERENT directories and still resolve.
+    _mkfile(R("generated", "assets", "text", "demo.json"), "{}")
+    _mkfile(R("extracted", "text", "demo.yaml"), "")
+    m, c, layer = resolve_asset(name, roots, gen, ext)
+    N = os.path.normpath
+    assert (N(m), N(c)) == (N(R("generated", "assets", "text", "demo.json")),
+                            N(R("extracted", "text", "demo.yaml"))), \
+        f"base-pair fallback: {(m, c)}"
+
+    # 2. a complete bundle in a search root outranks the base pair...
+    _mkfile(R("assets", "text", "demo.json"), "{}")
+    _mkfile(R("assets", "text", "demo.yaml"), "")
+    m, c, layer = resolve_asset(name, roots, gen, ext)
+    assert layer == assets and m.startswith(assets) and c.startswith(assets), \
+        f"assets bundle should win over the base pair, got layer {layer!r}"
+
+    # 3. ...and a higher-priority mod bundle outranks that.
+    _mkfile(R("mods", "m", "text", "demo.json"), "{}")
+    _mkfile(R("mods", "m", "text", "demo.yaml"), "")
+    m, c, layer = resolve_asset(name, roots, gen, ext)
+    assert layer == mod and m.startswith(mod) and c.startswith(mod), \
+        f"mod bundle should win, got layer {layer!r}"
+
+    # 4. half a bundle in a search root HALTS -- it must never be silently skipped.
+    os.remove(R("mods", "m", "text", "demo.yaml"))
+    _expect_die(lambda: resolve_asset(name, roots, gen, ext),
+                "half", "manifest-only mod layer")
+    os.remove(R("mods", "m", "text", "demo.json"))
+    _mkfile(R("mods", "m", "text", "demo.yaml"), "")
+    _expect_die(lambda: resolve_asset(name, roots, gen, ext),
+                "half", "content-only mod layer")
+    os.remove(R("mods", "m", "text", "demo.yaml"))
+
+    # 5. a base pair missing either half halts too.
+    os.remove(R("assets", "text", "demo.json"))
+    os.remove(R("assets", "text", "demo.yaml"))
+    os.remove(R("extracted", "text", "demo.yaml"))
+    _expect_die(lambda: resolve_asset(name, roots, gen, ext),
+                "not found", "base pair without content")
+
+    # 6. shared files are NOT bundles: plain first-match over search roots, then the base
+    #    content dir, then the base manifest dir.
+    found = lambda: N(resolve_file("text/x.tbl", roots, ext, gen))
+    _mkfile(R("generated", "assets", "text", "x.tbl"), "")
+    assert found() == N(R("generated", "assets", "text", "x.tbl")), "tbl from base manifests"
+    _mkfile(R("extracted", "text", "x.tbl"), "")
+    assert found() == N(R("extracted", "text", "x.tbl")), "base content outranks manifests"
+    _mkfile(R("assets", "text", "x.tbl"), "")
+    assert found() == N(R("assets", "text", "x.tbl")), "search root outranks the base"
+    _mkfile(R("mods", "m", "text", "x.tbl"), "")
+    assert found() == N(R("mods", "m", "text", "x.tbl")), "mod root outranks assets"
+    _expect_die(lambda: resolve_file("text/nope.tbl", roots, ext, gen),
+                "not found", "unresolvable shared file")
+
+
+def _selftest_extract_fork() -> None:
+    """extract: ROM slice + sha gate + determinism. fork: copies both halves, once only."""
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="textpack-extract-")
+    R = lambda *p: os.path.join(tmp, *p)
+    gen, ext, assets = R("generated", "assets"), R("extracted"), R("assets")
+
+    _mkfile(R("assets", "text", "demo.tbl"), "A0=A\nBA=a\nEF= \n")
+    data = bytes([0xA0, 0xBA, 0xEF, 0x20, 0xA0, 0x99])       # 2 records x 3 bytes
+    rom = _mkfile(R("fake.sfc"), bytes(0x10) + data + bytes(0x10))
+
+    def manifest(sha, count=2, width=3):
+        return _mkfile(R("generated", "assets", "text", "demo.json"), json.dumps({
+            "name": "text/demo", "type": "text.ct.mapped", "ver": "v1",
+            "source": {"rom_offset": "0x10", "length": len(data), "source_sha256": sha},
+            "text": {"tbl": "text/demo.tbl", "count": count, "record_width": width,
+                     "pad": "0xEF", "tokens": {"Blade": "0x20"}},
+        }, indent=2) + "\n")
+
+    good = hashlib.sha256(data).hexdigest()
+    mpath = manifest(good)
+    layer_args = ["--search", assets, "--base-manifests", gen, "--base-content", ext]
+
+    out = R("extracted", "text", "demo.yaml")
+    _quiet(lambda: main(["extract", "--manifest", mpath, "--rom", rom, "--out", out] + layer_args))
+    first = open(out, "rb").read()
+    assert b'0: "Aa "' in first and b'1: "[Blade]A[$99]"' in first, \
+        f"extract decoded wrongly: {first!r}"
+
+    # Determinism: a second extract of the same inputs must produce the same bytes.
+    _quiet(lambda: main(["extract", "--manifest", mpath, "--rom", rom, "--out", out] + layer_args))
+    assert open(out, "rb").read() == first, "extract is not byte-deterministic"
+
+    # The extracted content compiles back to exactly the ROM bytes (base-pair resolution).
+    blob, _, _ = compile_asset("text/demo", [assets], gen, ext)
+    assert blob == data, "extract -> compile is not byte-identical"
+
+    # Wrong ROM: the sha gate must halt rather than decode whatever it was pointed at.
+    manifest("0" * 64)
+    _expect_die(lambda: _quiet(lambda: main(
+        ["extract", "--manifest", mpath, "--rom", rom, "--out", out] + layer_args)),
+        "source_sha256", "extract against the wrong ROM")
+    # A manifest whose geometry contradicts its own length halts before decoding.
+    manifest(good, count=2, width=4)
+    _expect_die(lambda: _quiet(lambda: main(
+        ["extract", "--manifest", mpath, "--rom", rom, "--out", out] + layer_args)),
+        "contradicts", "manifest geometry vs source.length")
+    manifest(good)
+
+    # fork copies BOTH halves out of the effective layer, and refuses to do it twice.
+    mods = R("mods")
+    fork_args = ["fork", "--name", "text/demo", "--mod", "m", "--mods-dir", mods] + layer_args
+    _quiet(lambda: main(fork_args))
+    assert open(R("mods", "m", "text", "demo.json"), "rb").read() == open(mpath, "rb").read()
+    assert open(R("mods", "m", "text", "demo.yaml"), "rb").read() == first
+    _expect_die(lambda: _quiet(lambda: main(fork_args)), "overwrite", "re-forking an asset")
+
+    # The forked bundle now outranks the base pair for compile.
+    _, _, layer = resolve_asset("text/demo", [R("mods", "m"), assets], gen, ext)
+    assert layer == R("mods", "m"), f"forked mod should win, got {layer!r}"
 
 
 def cmd_selftest(a) -> int:
@@ -648,7 +825,11 @@ def cmd_selftest(a) -> int:
     _expect_die(lambda: parse_tokens({"Dup": "0xA0"}, tbl_dec, "selftest"),
                 "glyph or a token", "glyph/token collision")
 
-    print("selftest: all codec invariants hold  [OK]")
+    # 10. layer resolution and the ROM-driven commands, against throwaway temp trees.
+    _selftest_layering()
+    _selftest_extract_fork()
+
+    print("selftest: all codec and layering invariants hold  [OK]")
     return 0
 
 
@@ -659,51 +840,54 @@ def main(argv=None) -> int:
     p.add_argument("--version", action="version", version=TOOL_VERSION)
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    def add_search(sp):
+    def add_layers(sp):
+        # Repeatable and ordered: the mod-overlay mechanism is just more roots up front.
         sp.add_argument("--search", action="append", default=None, metavar="ROOT",
-                        help="asset layer root; repeat in priority order (highest first)")
+                        help="complete-bundle layer root; repeat in priority order "
+                             f"(highest first). Default: {list(DEFAULT_SEARCH_ROOTS)}")
+        sp.add_argument("--base-manifests", default=DEFAULT_BASE_MANIFESTS,
+                        dest="base_manifests", metavar="DIR",
+                        help=f"base-layer manifest root (default {DEFAULT_BASE_MANIFESTS})")
+        sp.add_argument("--base-content", default=DEFAULT_BASE_CONTENT,
+                        dest="base_content", metavar="DIR",
+                        help=f"base-layer content root (default {DEFAULT_BASE_CONTENT})")
 
-    e = sub.add_parser("extract", help="raw bytes -> yaml + manifest")
-    e.add_argument("--rom", required=True, help="raw bytes to read (a ROM or a .bin slice)")
-    e.add_argument("--offset", default=0, type=lambda s: int(s, 0))
-    e.add_argument("--length", required=True, type=lambda s: int(s, 0))
-    e.add_argument("--width", required=True, type=int, help="fixed record width in bytes")
-    e.add_argument("--name", required=True, help="logical name, e.g. text/item_names")
-    e.add_argument("--type", default="text.ct.mapped", help="manifest type (text.*)")
-    e.add_argument("--root", default="assets/src", help="layer root to write into")
-    e.add_argument("--tbl", required=True, help="character table, relative to --root")
-    e.add_argument("--tokens", default=None, help="JSON named-token map (icons/codes)")
-    e.add_argument("--pad", default=None, help="pad byte, e.g. 0xEF (default: the space glyph)")
-    e.add_argument("--snes-addr", default=None, dest="snes_addr")
-    e.add_argument("--rom-offset", default=None, dest="rom_offset",
-                   type=lambda s: int(s, 0), help="ROM file offset, for later verify --rom")
+    e = sub.add_parser("extract", help="manifest + ROM -> the editable yaml")
+    e.add_argument("--manifest", required=True,
+                   help="the manifest to extract by, e.g. generated/assets/text/x.json. "
+                        "An explicit path, NOT a layer lookup: extraction is ROM ground "
+                        "truth and must not be reachable by a mod override")
+    e.add_argument("--rom", required=True, help="the original ROM to slice")
+    e.add_argument("--out", required=True, help="the .yaml to write")
+    add_layers(e)   # only used to resolve shared files such as the .tbl
     e.set_defaults(fn=cmd_extract)
 
-    sd = sub.add_parser("seed", help="manifest + raw .bin -> editable yaml (Diz handoff)")
-    sd.add_argument("--name", required=True)
-    add_search(sd)
-    sd.add_argument("--bin", default=None, help="raw .bin to seed from (default: <layer>/<name>.bin)")
-    sd.add_argument("--force", action="store_true", help="overwrite an existing .yaml")
-    sd.set_defaults(fn=cmd_seed)
+    fk = sub.add_parser("fork", help="copy the effective bundle into a mod layer")
+    fk.add_argument("--name", required=True, help="logical name, e.g. text/item_names")
+    fk.add_argument("--mod", required=True, help="mod layer name to fork into")
+    fk.add_argument("--mods-dir", default=DEFAULT_MODS_DIR, dest="mods_dir", metavar="DIR",
+                    help=f"directory holding mod layers (default {DEFAULT_MODS_DIR})")
+    add_layers(fk)
+    fk.set_defaults(fn=cmd_fork)
 
     c = sub.add_parser("compile", help="yaml + manifest -> raw .bin")
     c.add_argument("--name", required=True)
-    add_search(c)
+    add_layers(c)
     c.add_argument("--out", required=True)
     c.set_defaults(fn=cmd_compile)
 
     v = sub.add_parser("verify", help="compile and assert byte-identity")
     v.add_argument("--name", required=True)
-    add_search(v)
+    add_layers(v)
     v.add_argument("--rom", default=None, help="also compare against ROM bytes at rom_offset")
     v.set_defaults(fn=cmd_verify)
 
-    st = sub.add_parser("selftest", help="in-memory codec assertions (needs no files)")
+    st = sub.add_parser("selftest", help="codec + layering assertions (needs no repo)")
     st.set_defaults(fn=cmd_selftest)
 
     a = p.parse_args(argv)
-    if getattr(a, "search", None) is None and a.cmd in ("seed", "compile", "verify"):
-        a.search = ["assets/src"]
+    if getattr(a, "search", None) is None:
+        a.search = list(DEFAULT_SEARCH_ROOTS)
     return a.fn(a)
 
 

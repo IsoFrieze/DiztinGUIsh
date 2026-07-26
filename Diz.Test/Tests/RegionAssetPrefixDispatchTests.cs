@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Diz.Core.Interfaces;
@@ -64,7 +65,7 @@ public class RegionAssetPrefixDispatchTests : IDisposable
     private class FakeAudioAssetExporter : BinaryAssetExporterBase
     {
         protected override string AssetTypePrefix => "audio.";
-        protected override string FileExtension => ".brr";
+        protected override string CompiledExtension => ".brr";
 
         protected override void Validate(RegionAssetExportRequest request)
         {
@@ -126,12 +127,11 @@ public class RegionAssetPrefixDispatchTests : IDisposable
         gfxDirective.Should().Be("incbin \"build/assets/gfx/pic.bin\"");
         audioDirective.Should().Be("incbin \"build/assets/audio/sample.brr\"");
 
-        File.Exists(Path.Combine(tempDir, "assets", "src", "gfx", "pic.bin")).Should().BeTrue();
-        File.Exists(Path.Combine(tempDir, "assets", "src", "audio", "sample.brr")).Should().BeTrue();
-
-        // the audio payload is the exact ROM bytes, via the base's verbatim write.
-        File.ReadAllBytes(Path.Combine(tempDir, "assets", "src", "audio", "sample.brr"))
-            .Should().Equal(rom[0x400..(0x400 + 27)]);
+        // a manifest each, and NOTHING else: the ROM bytes are never copied out.
+        File.Exists(Path.Combine(tempDir, "gfx", "pic.json")).Should().BeTrue();
+        File.Exists(Path.Combine(tempDir, "audio", "sample.json")).Should().BeTrue();
+        Directory.EnumerateFiles(tempDir, "*", SearchOption.AllDirectories)
+            .Select(Path.GetExtension).Should().AllBe(".json");
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public class RegionAssetPrefixDispatchTests : IDisposable
 
         service.ExportRegion(region, tempDir);
 
-        var jsonPath = Path.Combine(tempDir, "assets", "src", "audio", "sample.json");
+        var jsonPath = Path.Combine(tempDir, "audio", "sample.json");
         var json = File.ReadAllText(jsonPath);
         var man = JsonDocument.Parse(json).RootElement;
 
@@ -179,7 +179,7 @@ public class RegionAssetPrefixDispatchTests : IDisposable
 
         service.ExportRegion(region, tempDir);
 
-        var json = File.ReadAllText(Path.Combine(tempDir, "assets", "src", "audio", "sample.json"));
+        var json = File.ReadAllText(Path.Combine(tempDir, "audio", "sample.json"));
         var man = JsonDocument.Parse(json).RootElement;
         man.GetProperty("ver").GetString().Should().Be("v2");
 

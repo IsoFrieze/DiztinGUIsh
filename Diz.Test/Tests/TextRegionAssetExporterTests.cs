@@ -13,10 +13,10 @@ namespace Diz.Test.Tests;
 /// <summary>
 /// Pins the real TextRegionAssetExporter. Proves the text.* prefix routes to it, the
 /// fixed-width record validation fires (pass/fail), the type-specific fields ride in
-/// Region.AssetOptions, and the payload + manifest it writes match what the vendored
-/// textpack.py round-trip expects: a verbatim `.bin` SEED, an `incbin` of the compiled
-/// `build/assets/text/*.bin`, and a `text` block ({tbl, count, record_width, pad, [tokens]})
-/// in the exact key order textpack's load_manifest reads.
+/// Region.AssetOptions, and the manifest it writes matches what the vendored textpack.py
+/// round-trip expects: an `incbin` of the compiled `build/assets/text/*.bin`, and a `text`
+/// block ({tbl, count, record_width, pad, [tokens]}) in the exact key order textpack's
+/// load_manifest reads.
 /// </summary>
 public class TextRegionAssetExporterTests : IDisposable
 {
@@ -101,15 +101,13 @@ public class TextRegionAssetExporterTests : IDisposable
         // 33 bytes = 3 records of width 11
         var directive = service.ExportRegion(TextRegion(0x400, 33), tempDir);
 
-        // FileExtension is ".bin" (the seed + incbin target), NOT ".yaml": the assembler incbin's
-        // the compiled build output, and textpack turns the seed into the editable .yaml.
+        // CompiledExtension is ".bin", NOT ".yaml": the assembler incbin's the compiled build
+        // output, and textpack extracts/compiles the editable .yaml on either side of it.
         directive.Should().Be("incbin \"build/assets/text/item_names.bin\"");
-        File.Exists(Path.Combine(tempDir, "assets", "src", "text", "item_names.bin")).Should().BeTrue();
-        File.Exists(Path.Combine(tempDir, "assets", "src", "text", "item_names.json")).Should().BeTrue();
+        File.Exists(Path.Combine(tempDir, "text", "item_names.json")).Should().BeTrue();
 
-        // the seed is the exact ROM bytes, written verbatim by the base.
-        File.ReadAllBytes(Path.Combine(tempDir, "assets", "src", "text", "item_names.bin"))
-            .Should().Equal(rom[0x400..(0x400 + 33)]);
+        // the manifest is the only thing written -- the text bytes stay in the ROM.
+        File.Exists(Path.Combine(tempDir, "text", "item_names.bin")).Should().BeFalse();
     }
 
     [Fact]
@@ -120,7 +118,7 @@ public class TextRegionAssetExporterTests : IDisposable
 
         service.ExportRegion(TextRegion(0x400, 33), tempDir);
 
-        var json = File.ReadAllText(Path.Combine(tempDir, "assets", "src", "text", "item_names.json"));
+        var json = File.ReadAllText(Path.Combine(tempDir, "text", "item_names.json"));
         var man = JsonDocument.Parse(json).RootElement;
 
         man.GetProperty("type").GetString().Should().Be("text.ct.mapped");
@@ -149,7 +147,7 @@ public class TextRegionAssetExporterTests : IDisposable
 
         service.ExportRegion(TextRegion(0x400, 22, "text/no_tokens", OptionsNoTokens), tempDir);
 
-        var json = File.ReadAllText(Path.Combine(tempDir, "assets", "src", "text", "no_tokens.json"));
+        var json = File.ReadAllText(Path.Combine(tempDir, "text", "no_tokens.json"));
         var text = JsonDocument.Parse(json).RootElement.GetProperty("text");
 
         text.TryGetProperty("tokens", out _).Should().BeFalse();
@@ -181,7 +179,7 @@ public class TextRegionAssetExporterTests : IDisposable
             .WithMessage("*11-byte records*");
 
         // it must fail BEFORE writing a half-formed asset tree.
-        File.Exists(Path.Combine(tempDir, "assets", "src", "text", "ragged.bin")).Should().BeFalse();
+        File.Exists(Path.Combine(tempDir, "text", "ragged.json")).Should().BeFalse();
     }
 
     [Fact]
@@ -195,6 +193,26 @@ public class TextRegionAssetExporterTests : IDisposable
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*text/no_opts*")
             .WithMessage("*Asset Options*");
+    }
+
+    [Fact]
+    public void ManifestBytesAreDeterministicAndLfOnly()
+    {
+        // Manifests are tracked, so the same project must produce the same bytes every run and
+        // on every host. CRLF here would churn the diff for anyone on a different OS.
+        var service = MakeService(MakeFakeRom(0x1000));
+        var path = Path.Combine(tempDir, "text", "item_names.json");
+
+        service.ExportRegion(TextRegion(0x400, 33), tempDir);
+        var first = File.ReadAllBytes(path);
+
+        service.ExportRegion(TextRegion(0x400, 33), tempDir);
+        File.ReadAllBytes(path).Should().Equal(first, "re-exporting must produce identical bytes");
+
+        var text = System.Text.Encoding.UTF8.GetString(first);
+        text.Should().NotContain("\r");
+        text.Should().EndWith("}\n");
+        first[0].Should().NotBe(0xEF, "a UTF-8 BOM would be an invisible diff and breaks naive readers");
     }
 
     [Fact]

@@ -67,9 +67,10 @@ public interface IRegion : INotifyPropertyChanged
     // which is the default. a mismatch at build time is a hard error, never silent.
     string AssetVersion { get; set; }
 
-    // logical asset name, used as the path within an asset layer root and as the
-    // .bin/manifest filename stem. e.g. "gfx/font" resolves to
-    // "assets/src/gfx/font.{bin,json}". if empty, RegionName is used.
+    // logical asset name, used as the path within an asset layer root and as the filename
+    // stem of every file belonging to the asset. e.g. "gfx/font" resolves to
+    // "generated/assets/gfx/font.json" for the manifest and "extracted/gfx/font.png" for the
+    // editable source. if empty, RegionName is used.
     string AssetName { get; set; }
 
     // for ExportType.Asset: free-form JSON object merged into the manifest under
