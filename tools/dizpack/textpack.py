@@ -37,10 +37,22 @@ manifest names it, else a glyph if the .tbl maps it, else a `[$NN]` escape.
 
 Commands:
   extract  manifest + ROM + tbl  -> the editable .yaml (ROM ground truth; re-runnable)
+  decode   manifest + file + tbl -> the editable .yaml (buffer mode; no ROM)
   fork     effective bundle      -> a private copy under <mods>/<mod>/ (manifest + .yaml)
   compile  yaml + manifest + tbl -> raw .bin
+  encode   yaml + manifest + tbl -> raw bytes for one slot of a larger buffer (buffer mode)
   verify   yaml + manifest + tbl -> compile and assert sha256 (and optional ROM bytes)
   selftest                       -> codec + layering assertions; needs no repo (CI gate)
+
+BUFFER MODE (`decode`/`encode`) exists because not every asset sits at a ROM offset. An
+asset may be one MEMBER of a larger buffer -- typically the decompressed form of a
+compressed container, cut into per-member files by a generic slicing tool. Such an asset's
+manifest is an ordinary leaf manifest whose `source` block records
+`{length, source_sha256, member_of, at}` and has NO `rom_offset`: the hash is of the
+member's own (decompressed) bytes. `decode` is `extract` with the ROM slice replaced by a
+verbatim file read; `encode` is `compile` writing the bytes that belong in that buffer slot.
+`encode` takes `--name`, not an input path, so a mod layer overrides a member exactly as it
+overrides any other asset.
 
 Layering: an asset is addressed by LOGICAL NAME and resolved against ordered
 COMPLETE-BUNDLE roots (`--search`, highest priority first: mod layers, then the
@@ -54,6 +66,11 @@ Example (CT item-name table: 242 records x 11 bytes):
   textpack.py fork    --name text/item_names --mod mymod
   textpack.py compile --name text/item_names --out build/assets/text/item_names.bin
   textpack.py verify  --name text/item_names
+
+Example (the same table as a member of a decompressed container buffer):
+  textpack.py decode  --manifest generated/assets/text/item_names.json \
+      --in build/extract/text/item_names.bin --out extracted/text/item_names.yaml
+  textpack.py encode  --name text/item_names --out build/encode/text/item_names.bin
 """
 
 from __future__ import annotations
@@ -417,7 +434,7 @@ def compile_asset(name: str, search_roots: "list[str]", base_manifests: str,
     expect = text["count"] * text["record_width"]
     if len(blob) != expect:
         die(f"{name}: internal -- compiled {len(blob)} bytes, expected {expect}")
-    src_len = man.get("source", {}).get("length")
+    src_len = (man.get("source") or {}).get("length")
     if src_len is not None and len(blob) != src_len:
         die(f"{name}: compiled {len(blob)} bytes but manifest declares source.length={src_len}")
     return blob, man, layer
@@ -486,6 +503,82 @@ def read_rom_slice(rom_path: str, man: dict, manifest_path: str) -> bytes:
     return blob
 
 
+def read_member_buffer(in_path: str, man: dict, manifest_path: str) -> bytes:
+    """Read a buffer file VERBATIM, and prove it is the data the manifest describes.
+
+    The buffer-mode counterpart of read_rom_slice. Nothing is sliced here: the file IS the
+    asset's bytes, cut out upstream (one member of a decompressed container buffer, say),
+    so no ROM offset is involved. Such a manifest's `source` block records
+    `{length, source_sha256, member_of, at}` and its hash is of those decompressed bytes.
+
+    `source` is provenance and is optional -- a hand-authored asset has none, absence of a
+    claim is not violation of a claim, and its bytes pass unchecked. When `source` IS
+    present the checks are strict, exactly as on the ROM path: this is the extract-side
+    direction, where the wrong input must never turn into plausible but wrong text.
+    """
+    try:
+        with open(in_path, "rb") as f:
+            blob = f.read()
+    except OSError as e:
+        die(f"{in_path}: cannot read the input buffer: {e}")
+
+    src = man.get("source") or {}
+    if not src:
+        return blob
+
+    length = src.get("length")
+    if length is not None and len(blob) != length:
+        die(f"{in_path}: is {len(blob)} bytes, but {manifest_path} declares "
+            f"source.length={length}. This is not the data the manifest describes -- the "
+            f"buffer was cut at the wrong boundaries, or the manifest is stale.")
+
+    want = src.get("source_sha256")
+    if not want:
+        die(f"{manifest_path}: source.source_sha256 is missing. Decoding is only safe "
+            f"when the bytes can be proven to be the ones the manifest describes.")
+    got = hashlib.sha256(blob).hexdigest()
+    if got != want:
+        die(f"{in_path}: bytes hash to {got}, but {manifest_path} declares source_sha256 "
+            f"{want}. This is not the data the asset was exported from. Refusing to decode.")
+    return blob
+
+
+def decode_blob(blob: bytes, man: dict, manifest_path: str, out_path: str,
+                search_roots: "list[str]", base_content: str,
+                base_manifests: str) -> str:
+    """Raw record bytes -> the editable .yaml. Returns the .tbl path actually used.
+
+    Shared by `extract` (blob = a verified ROM slice) and `decode` (blob = a file read
+    verbatim). Everything past the source of the bytes is identical, which is the point:
+    an asset inside a container decodes by exactly the same code as one at a ROM offset.
+    The .tbl and any other shared file resolve through the layers either way, because those
+    are presentation, not data.
+    """
+    text = man["text"]
+    width, count = text["record_width"], text["count"]
+    expect = count * width
+    if len(blob) != expect:
+        die(f"{manifest_path}: describes {count} records of width {width} ({expect} bytes) "
+            f"but the input data is {len(blob)} bytes. The manifest contradicts itself; "
+            f"slicing records out of it would produce plausible but wrong text.")
+
+    tbl_path = resolve_file(text["tbl"], search_roots, base_content, base_manifests)
+    tbl_dec, tbl_enc = load_tbl(tbl_path)
+    tok_enc, tok_dec = parse_tokens(text.get("tokens"), tbl_dec, manifest_path)
+
+    records = [render_record(blob[i * width:(i + 1) * width], tbl_dec, tok_dec)
+               for i in range(count)]
+    write_yaml(out_path, man["name"], man["type"], records)
+
+    # Immediate self-check: re-encode what we just wrote back to the source bytes. If the
+    # .tbl or tokens disagree with the data this catches it here, not at ROM-build time.
+    back = compile_records(records, width, text["_pad_byte"], tbl_enc, tok_enc, man["name"])
+    if back != blob:
+        die("SELF-CHECK FAILED: re-encoding the extracted records did not reproduce the "
+            "source bytes. Do not trust this asset.")
+    return tbl_path
+
+
 def cmd_extract(a) -> int:
     """ROM -> the editable .yaml, driven by ONE explicit manifest.
 
@@ -500,36 +593,46 @@ def cmd_extract(a) -> int:
     man = load_manifest(a.manifest)
     text = man["text"]
     blob = read_rom_slice(a.rom, man, a.manifest)
-
-    width, count = text["record_width"], text["count"]
-    expect = count * width
-    if len(blob) != expect:
-        die(f"{a.manifest}: describes {count} records of width {width} ({expect} bytes) "
-            f"but source.length is {len(blob)}. The manifest contradicts itself; slicing "
-            f"records out of it would produce plausible but wrong text.")
-
-    tbl_path = resolve_file(text["tbl"], a.search, a.base_content, a.base_manifests)
-    tbl_dec, tbl_enc = load_tbl(tbl_path)
-    tok_enc, tok_dec = parse_tokens(text.get("tokens"), tbl_dec, a.manifest)
-
-    records = [render_record(blob[i * width:(i + 1) * width], tbl_dec, tok_dec)
-               for i in range(count)]
-    write_yaml(a.out, man["name"], man["type"], records)
-
-    # Immediate self-check: re-encode what we just wrote back to the source bytes. If the
-    # .tbl or tokens disagree with the data this catches it here, not at ROM-build time.
-    back = compile_records(records, width, text["_pad_byte"], tbl_enc, tok_enc, man["name"])
-    if back != blob:
-        die("SELF-CHECK FAILED: re-encoding the extracted records did not reproduce the "
-            "source bytes. Do not trust this asset.")
+    tbl_path = decode_blob(blob, man, a.manifest, a.out,
+                           a.search, a.base_content, a.base_manifests)
 
     src = man["source"]
-    print(f"extracted {man['name']} ({count} records of width {width}, {len(blob)} bytes) "
-          f"from {a.rom} @{src['rom_offset']}")
+    print(f"extracted {man['name']} ({text['count']} records of width "
+          f"{text['record_width']}, {len(blob)} bytes) from {a.rom} @{src['rom_offset']}")
     print(f"  manifest : {a.manifest}")
     print(f"  tbl      : {tbl_path}")
     print(f"  yaml     : {a.out}")
     print(f"  sha256   : {src['source_sha256']}  [matches ROM]")
+    print("  self-check: re-encode reproduces source bytes exactly  [OK]")
+    return 0
+
+
+def cmd_decode(a) -> int:
+    """A buffer file -> the editable .yaml, driven by ONE explicit manifest.
+
+    Buffer mode: `extract` with the ROM slice replaced by a verbatim file read. The input
+    is produced upstream by the build -- one member cut out of a decompressed container
+    buffer -- so this asset has no ROM offset of its own and the manifest is checked
+    against the file's bytes instead. Like extract it is ground truth: the manifest is an
+    explicit path, never a layer lookup, and re-running simply overwrites.
+    """
+    man = load_manifest(a.manifest)
+    text = man["text"]
+    blob = read_member_buffer(a.in_path, man, a.manifest)
+    tbl_path = decode_blob(blob, man, a.manifest, a.out,
+                           a.search, a.base_content, a.base_manifests)
+
+    src = man.get("source") or {}
+    origin = f" of {src['member_of']}" if src.get("member_of") else ""
+    print(f"decoded {man['name']} ({text['count']} records of width "
+          f"{text['record_width']}, {len(blob)} bytes) from {a.in_path}{origin}")
+    print(f"  manifest : {a.manifest}")
+    print(f"  tbl      : {tbl_path}")
+    print(f"  yaml     : {a.out}")
+    if src.get("source_sha256"):
+        print(f"  sha256   : {src['source_sha256']}  [matches the input buffer]")
+    else:
+        print("  sha256   : no source block -- hand-authored, nothing to check against")
     print("  self-check: re-encode reproduces source bytes exactly  [OK]")
     return 0
 
@@ -575,10 +678,31 @@ def cmd_compile(a) -> int:
     return 0
 
 
+def cmd_encode(a) -> int:
+    """The editable .yaml -> the raw bytes this asset occupies inside a larger buffer.
+
+    The build-direction counterpart of `decode`, and byte-for-byte the same encoder as
+    `compile`; the difference is what the output is FOR. `compile` emits a payload the
+    assembler incbins, `encode` emits a fragment that a slicing tool concatenates back into
+    a buffer (which something downstream may then recompress).
+
+    It addresses the asset by LOGICAL NAME rather than by input path, so layer resolution
+    is identical to compile's and a mod overrides a member exactly as it overrides any
+    other asset. `--in-dir` only replaces the BASE content root, so mod layers still win.
+    """
+    base_content = a.in_dir or a.base_content
+    blob, man, layer = compile_asset(a.name, a.search, a.base_manifests, base_content)
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+    with open(a.out, "wb") as f:
+        f.write(blob)
+    print(f"encoded {a.name} from layer '{layer}' -> {a.out} ({len(blob)} bytes)")
+    return 0
+
+
 def cmd_verify(a) -> int:
     blob, man, layer = compile_asset(a.name, a.search, a.base_manifests, a.base_content)
     got = hashlib.sha256(blob).hexdigest()
-    want = man.get("source", {}).get("source_sha256")
+    want = (man.get("source") or {}).get("source_sha256")
     ok = True
     print(f"asset      : {a.name}  (layer '{layer}', {man['type']} {man['ver']})")
     print(f"compiled   : {len(blob)} bytes")
@@ -589,17 +713,24 @@ def cmd_verify(a) -> int:
         ok = ok and got == want
     else:
         print("manifest   : no source_sha256 recorded -- skipped")
+    # An asset that lives inside a container has no offset of its own -- its bytes only
+    # exist after the container is decompressed -- so there is nothing to compare against
+    # and we say so rather than silently reading the ROM at 0.
     if a.rom:
-        src = man.get("source", {})
-        off = int(str(src.get("rom_offset", "0")), 0)
-        length = src.get("length", len(blob))
-        original = open(a.rom, "rb").read()[off:off + length]
-        if blob == original:
-            print(f"rom @0x{off:X}: BYTE-IDENTICAL  [OK]")
+        src = man.get("source") or {}
+        if "rom_offset" not in src:
+            print("rom        : no source.rom_offset recorded -- skipped "
+                  f"(this asset is a member of {src.get('member_of', 'a container')})")
         else:
-            diff = sum(1 for x, y in zip(blob, original) if x != y)
-            print(f"rom @0x{off:X}: DIFFERS in {diff} byte(s)  [FAIL]")
-            ok = False
+            off = int(str(src["rom_offset"]), 0)
+            length = src.get("length", len(blob))
+            original = open(a.rom, "rb").read()[off:off + length]
+            if blob == original:
+                print(f"rom @0x{off:X}: BYTE-IDENTICAL  [OK]")
+            else:
+                diff = sum(1 for x, y in zip(blob, original) if x != y)
+                print(f"rom @0x{off:X}: DIFFERS in {diff} byte(s)  [FAIL]")
+                ok = False
     print("RESULT     :", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 
@@ -762,6 +893,75 @@ def _selftest_extract_fork() -> None:
     assert layer == R("mods", "m"), f"forked mod should win, got {layer!r}"
 
 
+def _selftest_buffer_mode() -> None:
+    """decode/encode: file in -> file out, no ROM anywhere.
+
+    A container member's manifest carries a `source` block with NO rom_offset, so every
+    check has to key off the bytes themselves. decode -> encode must be byte-identical, and
+    decode must be as strict about wrong input as extract is.
+    """
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="textpack-buffer-")
+    R = lambda *p: os.path.join(tmp, *p)
+    gen, content, assets = R("generated", "assets"), R("extracted"), R("assets")
+
+    _mkfile(R("assets", "text", "demo.tbl"), "A0=A\nBA=a\nEF= \n")
+    data = bytes([0xA0, 0xBA, 0xEF, 0x20, 0xA0, 0x99])       # 2 records x 3 bytes
+    good = hashlib.sha256(data).hexdigest()
+    mpath = R("generated", "assets", "text", "member.json")
+
+    def manifest(sha, length=len(data)):
+        # No rom_offset: this asset only exists once its container is decompressed.
+        return _mkfile(mpath, json.dumps({
+            "name": "text/member", "type": "text.ct.mapped", "ver": "v1",
+            "source": {"length": length, "source_sha256": sha,
+                       "member_of": "blob/demo_pack", "at": 64},
+            "text": {"tbl": "text/demo.tbl", "count": 2, "record_width": 3,
+                     "pad": "0xEF", "tokens": {"Blade": "0x20"}},
+        }, indent=2) + "\n")
+
+    manifest(good)
+    buf = _mkfile(R("build", "extract", "text", "member.bin"), data)
+    out = R("extracted", "text", "member.yaml")
+    layer_args = ["--search", assets, "--base-manifests", gen, "--base-content", content]
+    dec = lambda: main(["decode", "--manifest", mpath, "--in", buf, "--out", out] + layer_args)
+
+    _quiet(dec)
+    first = open(out, "rb").read()
+    assert b'0: "Aa "' in first and b'1: "[Blade]A[$99]"' in first, \
+        f"decode rendered wrongly: {first!r}"
+    _quiet(dec)
+    assert open(out, "rb").read() == first, "decode is not byte-deterministic"
+
+    # encode resolves through the layers and reproduces the member's buffer bytes exactly.
+    enc_out = R("build", "encode", "text", "member.bin")
+    _quiet(lambda: main(["encode", "--name", "text/member", "--out", enc_out] + layer_args))
+    assert open(enc_out, "rb").read() == data, "decode -> encode is not byte-identical"
+
+    # --in-dir supplies the base content root; it must not disturb anything else.
+    alt = R("alt")
+    _mkfile(os.path.join(alt, "text", "member.yaml"), first)
+    _quiet(lambda: main(["encode", "--name", "text/member", "--in-dir", alt,
+                         "--out", enc_out, "--search", assets,
+                         "--base-manifests", gen, "--base-content", R("nowhere")]))
+    assert open(enc_out, "rb").read() == data, "--in-dir did not supply the content root"
+
+    # Wrong bytes and wrong length must both halt -- decode is the extract-side direction.
+    manifest("0" * 64)
+    _expect_die(lambda: _quiet(dec), "source_sha256", "decode of the wrong buffer bytes")
+    manifest(good, length=len(data) + 1)
+    _expect_die(lambda: _quiet(dec), "source.length", "decode of a wrong-length buffer")
+
+    # A hand-authored member has no source block at all: nothing to check, still decodes.
+    _mkfile(mpath, json.dumps({
+        "name": "text/member", "type": "text.ct.mapped", "ver": "v1",
+        "text": {"tbl": "text/demo.tbl", "count": 2, "record_width": 3,
+                 "pad": "0xEF", "tokens": {"Blade": "0x20"}},
+    }, indent=2) + "\n")
+    _quiet(dec)
+    assert open(out, "rb").read() == first, "decode without a source block"
+
+
 def cmd_selftest(a) -> int:
     # A tiny table + tokens exercising all four escape rules, incl. a '[' glyph.
     tbl_dec = {0xA0: "A", 0xBA: "a", 0xEF: " ", 0x5B: "["}
@@ -828,6 +1028,8 @@ def cmd_selftest(a) -> int:
     # 10. layer resolution and the ROM-driven commands, against throwaway temp trees.
     _selftest_layering()
     _selftest_extract_fork()
+    # 11. buffer mode: the same codec driven by a file instead of a ROM.
+    _selftest_buffer_mode()
 
     print("selftest: all codec and layering invariants hold  [OK]")
     return 0
@@ -862,6 +1064,18 @@ def main(argv=None) -> int:
     add_layers(e)   # only used to resolve shared files such as the .tbl
     e.set_defaults(fn=cmd_extract)
 
+    d = sub.add_parser("decode", help="manifest + buffer file -> the editable yaml")
+    d.add_argument("--manifest", required=True,
+                   help="the manifest to decode by. An explicit path, NOT a layer lookup: "
+                        "like extract, this is ground truth and must not be reachable by a "
+                        "mod override")
+    d.add_argument("--in", required=True, dest="in_path", metavar="FILE",
+                   help="the buffer file holding exactly this asset's bytes, read verbatim "
+                        "(e.g. one member cut out of a decompressed container)")
+    d.add_argument("--out", required=True, help="the .yaml to write")
+    add_layers(d)   # only used to resolve shared files such as the .tbl
+    d.set_defaults(fn=cmd_decode)
+
     fk = sub.add_parser("fork", help="copy the effective bundle into a mod layer")
     fk.add_argument("--name", required=True, help="logical name, e.g. text/item_names")
     fk.add_argument("--mod", required=True, help="mod layer name to fork into")
@@ -875,6 +1089,18 @@ def main(argv=None) -> int:
     add_layers(c)
     c.add_argument("--out", required=True)
     c.set_defaults(fn=cmd_compile)
+
+    en = sub.add_parser("encode", help="yaml + manifest -> raw bytes for a buffer slot")
+    en.add_argument("--name", required=True,
+                    help="logical name, resolved through the layers exactly as compile "
+                         "does -- so a mod can override a container member")
+    add_layers(en)
+    en.add_argument("--in-dir", default=None, dest="in_dir", metavar="DIR",
+                    help="directory holding the editable content, replacing the BASE "
+                         "content root for this command. Mod layers still outrank it. "
+                         "Default: --base-content")
+    en.add_argument("--out", required=True, help="the buffer-slot bytes to write")
+    en.set_defaults(fn=cmd_encode)
 
     v = sub.add_parser("verify", help="compile and assert byte-identity")
     v.add_argument("--name", required=True)

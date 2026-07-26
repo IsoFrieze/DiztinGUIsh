@@ -35,11 +35,23 @@ byte-identical, so every step below is a plain copy plus an integrity check.
 
 Commands:
   extract  manifest + ROM -> the payload file (ROM ground truth; re-runnable)
+  decode   manifest + file -> the payload file (buffer mode; no ROM)
   fork     effective bundle -> a private copy under <mods>/<mod>/ (manifest + payload)
-  compile  <name><ext>    -> <out>.bin (copy), asserts source_sha256
+  compile  <name><ext>    -> <out>.bin (copy), checks source_sha256
+  encode   <name><ext>    -> raw bytes for one slot of a larger buffer (buffer mode)
   verify   <name><ext>    -> recompute sha and assert it matches the manifest
                              (and optionally the live ROM bytes)
   selftest                -> integrity + layering assertions; needs no repo (CI gate)
+
+BUFFER MODE (`decode`/`encode`) exists because not every asset sits at a ROM offset. An
+asset may be one MEMBER of a larger buffer -- typically the decompressed form of a
+compressed container, cut into per-member files by a generic slicing tool. Such an asset's
+manifest is an ordinary leaf manifest whose `source` block records
+`{length, source_sha256, member_of, at}` and has NO `rom_offset`: the hash is of the
+member's own (decompressed) bytes. `decode` is `extract` with the ROM slice replaced by a
+verbatim file read; `encode` is `compile` writing the bytes that belong in that buffer slot.
+`encode` takes `--name`, not an input path, so a mod layer overrides a member exactly as it
+overrides any other asset.
 
 The payload extension is resolved as: explicit `--ext` > the `ext` recorded in the
 manifest's type block > `.bin`. So a ninja rule may pass `--ext .brr` OR rely on the
@@ -56,6 +68,11 @@ Example (a BRR sample, verbatim from a ROM offset):
   binpack.py fork    --name audio/AudioBRR_00 --mod mymod
   binpack.py compile --name audio/AudioBRR_00 --out build/assets/audio/AudioBRR_00.bin
   binpack.py verify  --name audio/AudioBRR_00 --rom rom/ct-us-orig.sfc
+
+Example (the same sample as a member of a decompressed container buffer):
+  binpack.py decode  --manifest generated/assets/audio/AudioBRR_00.json \
+      --in build/extract/audio/AudioBRR_00.bin --out extracted/audio/AudioBRR_00.brr
+  binpack.py encode  --name audio/AudioBRR_00 --out build/encode/audio/AudioBRR_00.bin
 """
 
 from __future__ import annotations
@@ -240,21 +257,33 @@ def manifest_ext(man: dict, override: "str | None") -> str:
     return ext if isinstance(ext, str) and ext else DEFAULT_EXT
 
 
-def check_integrity(blob: bytes, man: dict, where: str) -> str:
-    """Assert the blob matches the manifest's declared source (length + sha256). Returns the
-    computed sha256.
+def check_integrity(blob: bytes, man: dict, where: str) -> "tuple[str, bool]":
+    """Check the blob against the manifest's declared source. Returns (sha256, matches).
 
-    The `source` block is provenance: it records that these bytes were extracted from a ROM.
-    It is optional. A hand-authored asset -- content created from scratch that never came from
-    a ROM -- omits `source` entirely, and there is then nothing to check the bytes against:
-    absence of a claim is not violation of a claim. Such an asset is returned unverified.
+    This is the BUILD-direction check (compile/encode). The three outcomes are deliberately
+    not the same severity:
 
-    When `source` IS present the checks are strict, and `source_sha256` is required within it.
-    That is stricter than the other codecs on purpose: a verbatim asset has no lossy view and
-    no decode/encode round-trip, so its hash is the only thing keeping the copy honest."""
+    * No `source` block at all -- nothing to check. `source` is provenance: it records that
+      these bytes were extracted from a ROM. A hand-authored asset never came from one and
+      omits the block entirely; absence of a claim is not violation of a claim, so the bytes
+      pass and `matches` is reported True.
+    * `source` present but `source_sha256` missing -- HALT. Here the claim is present and its
+      proof is missing, which is a broken manifest rather than a design choice: a verbatim
+      asset has no lossy view and no decode/encode round-trip, so the hash is the only thing
+      that could ever check it. Re-extract, or drop the whole block if it is hand-authored.
+    * `source_sha256` present but different -- NOT fatal, reported and returned False. On the
+      build direction a mismatch is the normal state of an EDITED asset: `fork` copies the
+      manifest along with the payload, so a forked .brr still carries the stock hash and the
+      modder's first edit would otherwise be unbuildable -- while an equivalent edit to a
+      .png or .yaml builds fine. Stock byte-identity is still earned, by the whole-ROM
+      comparison, which never consults a manifest. The hash stays a HARD gate where it
+      guards ROM ground truth: `extract` (read_rom_slice) and `verify`.
+
+    The length check is hard in every case: a payload of the wrong size is not an edit of
+    this asset at all, and would silently shift everything the assembler places after it."""
     src = man.get("source")
     if not src:
-        return hashlib.sha256(blob).hexdigest()
+        return hashlib.sha256(blob).hexdigest(), True
 
     want_len = src.get("length")
     if want_len is not None and len(blob) != want_len:
@@ -268,10 +297,11 @@ def check_integrity(blob: bytes, man: dict, where: str) -> str:
             f"it. Re-extract the asset, or drop the source block if it is hand-authored.")
     got_sha = hashlib.sha256(blob).hexdigest()
     if got_sha != want_sha:
-        die(f"{where}: sha256 {got_sha} does not match the manifest's source_sha256 "
-            f"{want_sha}. The bytes have drifted from what was extracted; a verbatim asset "
-            f"is not editable (there is no lossy view to reconcile).")
-    return got_sha
+        print(f"binpack: note: {where}: sha256 {got_sha} differs from the manifest's "
+              f"source_sha256 {want_sha} -- building the edited bytes. Extraction and "
+              f"`verify` still require an exact match.", file=sys.stderr)
+        return got_sha, False
+    return got_sha, True
 
 
 # ======================================================================================
@@ -314,6 +344,64 @@ def read_rom_slice(rom_path: str, man: dict, manifest_path: str) -> bytes:
     return blob
 
 
+def read_member_buffer(in_path: str, man: dict, manifest_path: str) -> bytes:
+    """Read a buffer file VERBATIM, and prove it is the data the manifest describes.
+
+    The buffer-mode counterpart of read_rom_slice. Nothing is sliced here: the file IS the
+    asset's bytes, cut out upstream (one member of a decompressed container buffer, say),
+    so no ROM offset is involved. Such a manifest's `source` block records
+    `{length, source_sha256, member_of, at}` and its hash is of those decompressed bytes.
+
+    `source` is provenance and is optional -- a hand-authored asset has none, absence of a
+    claim is not violation of a claim, and its bytes pass unchecked. When `source` IS
+    present the checks are strict, exactly as on the ROM path: this is the extract-side
+    direction, where the wrong input must never turn into a plausible-looking asset. (The
+    build direction is the tolerant one -- see check_integrity.)
+    """
+    try:
+        with open(in_path, "rb") as f:
+            blob = f.read()
+    except OSError as e:
+        die(f"{in_path}: cannot read the input buffer: {e}")
+
+    src = man.get("source") or {}
+    if not src:
+        return blob
+
+    length = src.get("length")
+    if length is not None and len(blob) != length:
+        die(f"{in_path}: is {len(blob)} bytes, but {manifest_path} declares "
+            f"source.length={length}. This is not the data the manifest describes -- the "
+            f"buffer was cut at the wrong boundaries, or the manifest is stale.")
+
+    want = src.get("source_sha256")
+    if not want:
+        die(f"{manifest_path}: source.source_sha256 is missing. Decoding is only safe "
+            f"when the bytes can be proven to be the ones the manifest describes.")
+    got = hashlib.sha256(blob).hexdigest()
+    if got != want:
+        die(f"{in_path}: bytes hash to {got}, but {manifest_path} declares source_sha256 "
+            f"{want}. This is not the data the asset was exported from. Refusing to decode.")
+    return blob
+
+
+def write_payload(blob: bytes, out_path: str) -> None:
+    """Write the payload file and read it straight back. Shared by extract and decode.
+
+    A verbatim asset's whole correctness claim is "these are the same bytes", so the copy
+    is proven rather than assumed; it is also what makes the output trivially
+    byte-deterministic.
+    """
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+    with open(out_path, "wb") as f:
+        f.write(blob)
+    with open(out_path, "rb") as f:
+        back = f.read()
+    if back != blob:
+        die("SELF-CHECK FAILED: re-reading the extracted payload did not reproduce the "
+            "source bytes. Do not trust this asset.")
+
+
 def cmd_extract(a) -> int:
     """ROM -> the editable payload file, driven by ONE explicit manifest.
 
@@ -325,17 +413,7 @@ def cmd_extract(a) -> int:
     """
     man = load_manifest(a.manifest)
     blob = read_rom_slice(a.rom, man, a.manifest)
-
-    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
-    with open(a.out, "wb") as f:
-        f.write(blob)
-
-    # Immediate self-check: what we just wrote must read back as the source bytes.
-    with open(a.out, "rb") as f:
-        back = f.read()
-    if back != blob:
-        die("SELF-CHECK FAILED: re-reading the extracted payload did not reproduce the "
-            "source bytes. Do not trust this asset.")
+    write_payload(blob, a.out)
 
     src = man["source"]
     print(f"extracted {man.get('name', a.manifest)} ({len(blob)} bytes, {man['type']}) "
@@ -343,6 +421,35 @@ def cmd_extract(a) -> int:
     print(f"  manifest : {a.manifest}")
     print(f"  payload  : {a.out}")
     print(f"  sha256   : {src['source_sha256']}  [matches ROM]")
+    print("  self-check: payload reproduces source bytes exactly  [OK]")
+    return 0
+
+
+def cmd_decode(a) -> int:
+    """A buffer file -> the editable payload file, driven by ONE explicit manifest.
+
+    Buffer mode: `extract` with the ROM slice replaced by a verbatim file read. The input
+    is produced upstream by the build -- one member cut out of a decompressed container
+    buffer -- so this asset has no ROM offset of its own and the manifest is checked
+    against the file's bytes instead. Like extract it is ground truth: the manifest is an
+    explicit path, never a layer lookup, and re-running simply overwrites.
+
+    For a verbatim asset this is a copy, exactly as extract is; the checks are the value.
+    """
+    man = load_manifest(a.manifest)
+    blob = read_member_buffer(a.in_path, man, a.manifest)
+    write_payload(blob, a.out)
+
+    src = man.get("source") or {}
+    origin = f" of {src['member_of']}" if src.get("member_of") else ""
+    print(f"decoded {man.get('name', a.manifest)} ({len(blob)} bytes, {man['type']}) "
+          f"from {a.in_path}{origin}")
+    print(f"  manifest : {a.manifest}")
+    print(f"  payload  : {a.out}")
+    if src.get("source_sha256"):
+        print(f"  sha256   : {src['source_sha256']}  [matches the input buffer]")
+    else:
+        print("  sha256   : no source block -- hand-authored, nothing to check against")
     print("  self-check: payload reproduces source bytes exactly  [OK]")
     return 0
 
@@ -406,6 +513,28 @@ def cmd_compile(a) -> int:
     return 0
 
 
+def cmd_encode(a) -> int:
+    """The editable payload -> the raw bytes this asset occupies inside a larger buffer.
+
+    The build-direction counterpart of `decode`, and byte-for-byte the same copy as
+    `compile`; the difference is what the output is FOR. `compile` emits a payload the
+    assembler incbins, `encode` emits a fragment that a slicing tool concatenates back into
+    a buffer (which something downstream may then recompress).
+
+    It addresses the asset by LOGICAL NAME rather than by input path, so layer resolution
+    is identical to compile's and a mod overrides a member exactly as it overrides any
+    other asset. `--in-dir` only replaces the BASE content root, so mod layers still win.
+    """
+    base_content = a.in_dir or a.base_content
+    blob, man, layer = compile_asset(a.name, a.search, a.base_manifests,
+                                     base_content, a.ext)
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+    with open(a.out, "wb") as f:
+        f.write(blob)
+    print(f"encoded {a.name} from layer '{layer}' -> {a.out} ({len(blob)} bytes)")
+    return 0
+
+
 def cmd_verify(a) -> int:
     ext = resolve_ext(a.name, a.search, a.base_manifests, a.ext)
     mpath, payload_path, layer = resolve_asset(a.name, a.search, a.base_manifests,
@@ -431,20 +560,27 @@ def cmd_verify(a) -> int:
     else:
         print("manifest   : no source_sha256 recorded -- skipped")
 
-    # Strongest check: compare against the live ROM bytes at the recorded offset.
+    # Strongest check: compare against the live ROM bytes at the recorded offset. An asset
+    # that lives inside a container has no offset of its own -- its bytes only exist after
+    # the container is decompressed -- so there is nothing to compare and we say so rather
+    # than silently reading the ROM at 0.
     if a.rom:
         src = man.get("source") or {}
-        off = int(str(src.get("rom_offset", "0")), 0)
-        length = src.get("length", len(blob))
-        with open(a.rom, "rb") as f:
-            rom = f.read()
-        original = rom[off:off + length]
-        if blob == original:
-            print(f"rom @0x{off:X}: BYTE-IDENTICAL  [OK]")
+        if "rom_offset" not in src:
+            print("rom        : no source.rom_offset recorded -- skipped "
+                  f"(this asset is a member of {src.get('member_of', 'a container')})")
         else:
-            diff = sum(1 for x, y in zip(blob, original) if x != y)
-            print(f"rom @0x{off:X}: DIFFERS in {diff} byte(s)  [FAIL]")
-            ok = False
+            off = int(str(src["rom_offset"]), 0)
+            length = src.get("length", len(blob))
+            with open(a.rom, "rb") as f:
+                rom = f.read()
+            original = rom[off:off + length]
+            if blob == original:
+                print(f"rom @0x{off:X}: BYTE-IDENTICAL  [OK]")
+            else:
+                diff = sum(1 for x, y in zip(blob, original) if x != y)
+                print(f"rom @0x{off:X}: DIFFERS in {diff} byte(s)  [FAIL]")
+                ok = False
 
     print("RESULT     :", "PASS" if ok else "FAIL")
     return 0 if ok else 1
@@ -493,16 +629,23 @@ def _manifest_json(sha: "str | None", length: int, off: str = "0x10") -> str:
 
 
 def _selftest_integrity() -> None:
-    """check_integrity: absent source is unverified, present source is strict."""
+    """check_integrity: absent source is unverified, a missing hash halts, a DIFFERING
+    hash is reported but builds (an edited asset is the normal reason for it)."""
     blob = bytes(range(32))
     sha = hashlib.sha256(blob).hexdigest()
-    assert check_integrity(blob, {}, "selftest") == sha, "no source block => unverified"
+    assert check_integrity(blob, {}, "selftest") == (sha, True), \
+        "no source block => unverified"
     man = {"source": {"length": 32, "source_sha256": sha}}
-    assert check_integrity(blob, man, "selftest") == sha, "matching source block"
+    assert check_integrity(blob, man, "selftest") == (sha, True), "matching source block"
+    # Edited bytes: not fatal on the build direction, but reported as not matching.
+    edited = bytes(32)
+    assert check_integrity(edited, man, "selftest") == \
+        (hashlib.sha256(edited).hexdigest(), False), \
+        "a sha mismatch must be reported, not fatal, on the build direction"
+    # A wrong LENGTH is still fatal -- that is not an edit of this asset.
     _expect_die(lambda: check_integrity(blob + b"\x00", man, "selftest"),
                 "length", "payload longer than source.length")
-    _expect_die(lambda: check_integrity(bytes(32), man, "selftest"),
-                "sha256", "payload with the wrong bytes")
+    # A source block whose proof was deleted is a broken manifest, not a design choice.
     _expect_die(lambda: check_integrity(blob, {"source": {"length": 32}}, "selftest"),
                 "source_sha256", "source block without a hash")
     # A gfx type must be refused outright -- its payload is a PNG, not the bytes.
@@ -631,10 +774,85 @@ def _selftest_extract_fork() -> None:
         == R("mods", "m"), "forked mod should win"
 
 
+def _selftest_buffer_mode() -> None:
+    """decode/encode: file in -> file out, no ROM anywhere.
+
+    A container member's manifest carries a `source` block with NO rom_offset, so every
+    check has to key off the bytes themselves. decode -> encode must be byte-identical, and
+    decode must be as strict about wrong input as extract is.
+    """
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="binpack-buffer-")
+    R = lambda *p: os.path.join(tmp, *p)
+    gen, content, assets = R("generated", "assets"), R("extracted"), R("assets")
+
+    data = bytes(range(48))
+    good = hashlib.sha256(data).hexdigest()
+    mpath = R("generated", "assets", "audio", "member.json")
+
+    def manifest(sha, length=len(data)):
+        # No rom_offset: this asset only exists once its container is decompressed.
+        return _mkfile(mpath, json.dumps({
+            "name": "audio/member", "type": "audio.snes.brr", "ver": "v1",
+            "source": {"length": length, "source_sha256": sha,
+                       "member_of": "blob/demo_pack", "at": 256},
+            "audio": {"ext": ".brr"},
+        }, indent=2) + "\n")
+
+    manifest(good)
+    buf = _mkfile(R("build", "extract", "audio", "member.bin"), data)
+    out = R("extracted", "audio", "member.brr")
+    layer_args = ["--search", assets, "--base-manifests", gen, "--base-content", content]
+    dec = lambda: main(["decode", "--manifest", mpath, "--in", buf, "--out", out] + layer_args)
+
+    _quiet(dec)
+    assert open(out, "rb").read() == data, "decode did not reproduce the buffer bytes"
+    _quiet(dec)
+    assert open(out, "rb").read() == data, "decode is not byte-deterministic"
+
+    # encode resolves through the layers and reproduces the member's buffer bytes exactly.
+    enc_out = R("build", "encode", "audio", "member.bin")
+    _quiet(lambda: main(["encode", "--name", "audio/member", "--out", enc_out] + layer_args))
+    assert open(enc_out, "rb").read() == data, "decode -> encode is not byte-identical"
+
+    # --in-dir supplies the base content root; it must not disturb anything else.
+    alt = R("alt")
+    _mkfile(os.path.join(alt, "audio", "member.brr"), data)
+    _quiet(lambda: main(["encode", "--name", "audio/member", "--in-dir", alt,
+                         "--out", enc_out, "--search", assets,
+                         "--base-manifests", gen, "--base-content", R("nowhere")]))
+    assert open(enc_out, "rb").read() == data, "--in-dir did not supply the content root"
+
+    # An EDITED member still encodes (the build direction tolerates a sha mismatch) while
+    # `verify` -- which guards ROM ground truth -- fails on exactly the same bytes.
+    edited = bytes([b ^ 0xFF for b in data])
+    _mkfile(R("extracted", "audio", "member.brr"), edited)
+    _quiet(lambda: main(["encode", "--name", "audio/member", "--out", enc_out] + layer_args))
+    assert open(enc_out, "rb").read() == edited, "an edited member must still encode"
+    assert _quiet(lambda: main(["verify", "--name", "audio/member"] + layer_args)) == 1, \
+        "verify must still FAIL on a sha mismatch"
+    _mkfile(R("extracted", "audio", "member.brr"), data)
+
+    # Wrong bytes and wrong length must both halt -- decode is the extract-side direction.
+    manifest("0" * 64)
+    _expect_die(lambda: _quiet(dec), "source_sha256", "decode of the wrong buffer bytes")
+    manifest(good, length=len(data) + 1)
+    _expect_die(lambda: _quiet(dec), "source.length", "decode of a wrong-length buffer")
+
+    # A hand-authored member has no source block at all: nothing to check, still decodes.
+    _mkfile(mpath, json.dumps({
+        "name": "audio/member", "type": "audio.snes.brr", "ver": "v1",
+        "audio": {"ext": ".brr"},
+    }, indent=2) + "\n")
+    _quiet(dec)
+    assert open(out, "rb").read() == data, "decode without a source block"
+
+
 def cmd_selftest(a) -> int:
     _selftest_integrity()
     _selftest_layering()
     _selftest_extract_fork()
+    _selftest_buffer_mode()
     print("selftest: all integrity and layering invariants hold  [OK]")
     return 0
 
@@ -672,6 +890,18 @@ def main(argv=None) -> int:
     add_layers(e, with_ext=False)   # accepted for symmetry with the other codecs' rules
     e.set_defaults(fn=cmd_extract)
 
+    d = sub.add_parser("decode", help="manifest + buffer file -> the payload file")
+    d.add_argument("--manifest", required=True,
+                   help="the manifest to decode by. An explicit path, NOT a layer lookup: "
+                        "like extract, this is ground truth and must not be reachable by a "
+                        "mod override")
+    d.add_argument("--in", required=True, dest="in_path", metavar="FILE",
+                   help="the buffer file holding exactly this asset's bytes, read verbatim "
+                        "(e.g. one member cut out of a decompressed container)")
+    d.add_argument("--out", required=True, help="the payload file to write")
+    add_layers(d, with_ext=False)   # accepted for symmetry with the other codecs' rules
+    d.set_defaults(fn=cmd_decode)
+
     fk = sub.add_parser("fork", help="copy the effective bundle into a mod layer")
     fk.add_argument("--name", required=True, help="logical name, e.g. audio/AudioBRR_00")
     fk.add_argument("--mod", required=True, help="mod layer name to fork into")
@@ -680,11 +910,23 @@ def main(argv=None) -> int:
     add_layers(fk)
     fk.set_defaults(fn=cmd_fork)
 
-    c = sub.add_parser("compile", help="payload file -> raw .bin, assert source_sha256")
+    c = sub.add_parser("compile", help="payload file -> raw .bin, check source_sha256")
     c.add_argument("--name", required=True)
     add_layers(c)
     c.add_argument("--out", required=True)
     c.set_defaults(fn=cmd_compile)
+
+    en = sub.add_parser("encode", help="payload file -> raw bytes for a buffer slot")
+    en.add_argument("--name", required=True,
+                    help="logical name, resolved through the layers exactly as compile "
+                         "does -- so a mod can override a container member")
+    add_layers(en)
+    en.add_argument("--in-dir", default=None, dest="in_dir", metavar="DIR",
+                    help="directory holding the editable content, replacing the BASE "
+                         "content root for this command. Mod layers still outrank it. "
+                         "Default: --base-content")
+    en.add_argument("--out", required=True, help="the buffer-slot bytes to write")
+    en.set_defaults(fn=cmd_encode)
 
     v = sub.add_parser("verify", help="assert the payload still matches the manifest (and optionally the ROM)")
     v.add_argument("--name", required=True)
