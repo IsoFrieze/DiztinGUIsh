@@ -37,7 +37,7 @@ public class BuildFileGeneratorTests : IDisposable
     };
 
     [Fact]
-    public void OnlyAssetRegionsAreCollected()
+    public void EveryNonAssemblyRegionIsCollected()
     {
         var regions = new IRegion[]
         {
@@ -48,9 +48,48 @@ public class BuildFileGeneratorTests : IDisposable
 
         var assets = BuildFileGenerator.CollectAssets(regions);
 
-        // Binary regions are incbin'd directly and need no codec step, so the build has
-        // nothing to rebuild for them -- only Asset regions belong here.
-        assets.Should().ContainSingle().Which.Name.Should().Be("gfx/font");
+        // Plain-binary regions are rebuilt by a codec like everything else -- nothing in the
+        // exported tree carries their bytes -- so they need build edges too. Only regions
+        // emitted as inline assembly have nothing to rebuild.
+        assets.Select(a => a.Name).Should().Equal("data/raw", "gfx/font");
+
+        // ...and the type is synthesized for them, since a binary region has none to author.
+        assets.Single(a => a.Name == "data/raw").AssetType.Should().Be("raw.bin");
+    }
+
+    [Fact]
+    public void BinaryRegionsWireThroughBinpackAsRawAssets()
+    {
+        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
+            new Region { RegionName = "raw", AssetName = "data/raw", ExportType = RegionExportType.Binary },
+        ]));
+
+        ninja.Should().Contain("rule raw_compile");
+        ninja.Should().Contain("rule raw_extract");
+        ninja.Should().Contain("  command = python $binpack compile --name $name $search_roots --out $out");
+
+        // the editable source and the compiled payload share an extension (a verbatim asset has
+        // no lossy view), so they must be distinguished by tier, not by name.
+        ninja.Should().Contain(
+            "build extracted/data/raw.bin: raw_extract | generated/assets/data/raw.json $binpack $orig_rom");
+        ninja.Should().Contain(
+            "build build/assets/data/raw.bin: raw_compile extracted/data/raw.bin | generated/assets/data/raw.json $binpack");
+
+        // and the ROM depends on it -- without this edge a binary region would never rebuild.
+        ninja.Should().Contain("build $out_rom: assemble | build/assets/data/raw.bin");
+    }
+
+    [Fact]
+    public void CodecSharedByTwoBindingsIsDeclaredExactlyOnce()
+    {
+        // binpack backs both the verbatim audio and raw types. Emitting its var line per binding
+        // would put the same assignment in build.ninja twice.
+        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
+            AssetRegion("audio/song", "audio.snes.brr"),
+            new Region { RegionName = "raw", AssetName = "data/raw", ExportType = RegionExportType.Binary },
+        ]));
+
+        ninja.Split("binpack = tools/vendor/dizpack/binpack.py").Length.Should().Be(2);
     }
 
     [Fact]

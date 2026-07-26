@@ -11,13 +11,15 @@ public enum RegionExportType
     // normal: bytes are emitted inline in the .asm as `db $xx,$xx,...`
     Assembly = 0,
 
-    // bytes are written to a sidecar .bin, and the .asm gets `incbin "<file>"` instead.
-    // the .bin is the canonical copy; Diz's stored bytes become a display cache.
+    // the bytes are an asset with no interpretation at all -- a verbatim range. Shorthand for
+    // Asset with an implicit "raw.bin" AssetType, so it behaves identically: a manifest is
+    // written, the build extracts the bytes from the ROM into an editable .bin and recompiles
+    // them, and the .asm gets `incbin` of that compiled payload.
     Binary,
 
-    // like Binary, but also writes an asset manifest describing how to decode the bytes
-    // (e.g. gfx.snes.2bpp). an external tool (gfxpack) turns the .bin into an editable
-    // PNG and back. Diz deliberately does NOT encode the PNG itself -- see AssetType.
+    // like Binary, but the AssetType names a real codec contract (e.g. gfx.snes.2bpp), and the
+    // manifest describes how to decode the bytes. An external tool (gfxpack and friends) turns
+    // them into an editable PNG and back. Diz deliberately does NOT encode the PNG itself.
     Asset,
 }
 

@@ -214,12 +214,18 @@ public class RegionAssetPrefixDispatchTests : IDisposable
     }
 
     [Fact]
-    public void BinaryExporterOnlyClaimsBinaryExportType()
+    public void BinaryExporterClaimsTheBinaryExportTypeAndTheRawPrefix()
     {
+        // The raw exporter is the one asset kind reachable two ways: the plain-binary export
+        // type (which carries no AssetType for the prefix to match on) and the type named
+        // outright. Both must land here, and it must still not swallow other typed assets.
         var bin = new BinaryRegionAssetExporter();
+
         var binRegion = MakeRegion(0, 16, null, "b");
         binRegion.ExportType = RegionExportType.Binary;
         bin.CanExport(binRegion).Should().BeTrue();
+
+        bin.CanExport(MakeRegion(0, 16, "raw.bin", "r")).Should().BeTrue();
 
         bin.CanExport(MakeRegion(0, 64, "gfx.snes.2bpp", "g")).Should().BeFalse();
     }
