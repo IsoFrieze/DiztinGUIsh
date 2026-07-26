@@ -112,7 +112,8 @@ public class RegionAssetRoundTripTests
         {
             // 1. Diz exports the region as a manifest -- and nothing else.
             var manifestRoot = Path.Combine(workDir, "generated", "assets");
-            var directive = MakeService(rom).ExportRegion(MakeGfxRegion(offset, length, bpp), manifestRoot);
+            var directive = MakeService(rom)
+                .ExportRegion(MakeGfxRegion(offset, length, bpp), manifestRoot).AsmDirective;
             directive.Should().Be("incbin \"build/assets/gfx/font.bin\"");
 
             var manifest = Path.Combine(manifestRoot, "gfx", "font.json");

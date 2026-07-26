@@ -99,7 +99,7 @@ public class TextRegionAssetExporterTests : IDisposable
         var service = MakeService(rom);
 
         // 33 bytes = 3 records of width 11
-        var directive = service.ExportRegion(TextRegion(0x400, 33), tempDir);
+        var directive = service.ExportRegion(TextRegion(0x400, 33), tempDir).AsmDirective;
 
         // CompiledExtension is ".bin", NOT ".yaml": the assembler incbin's the compiled build
         // output, and textpack extracts/compiles the editable .yaml on either side of it.

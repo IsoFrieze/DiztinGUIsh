@@ -99,7 +99,7 @@ public class RegionAssetExportTests : IDisposable
         var service = MakeService(rom);
         var region = MakeRegion(0x200, 64, RegionExportType.Asset, "gfx.snes.2bpp");
 
-        var directive = service.ExportRegion(region, tempDir, asmToProjectRootPrefix: "..");
+        var directive = service.ExportRegion(region, tempDir, asmToProjectRootPrefix: "..").AsmDirective;
 
         directive.Should().Be("incbin \"../build/assets/gfx/test_asset.bin\"");
 
@@ -131,7 +131,7 @@ public class RegionAssetExportTests : IDisposable
             buildDir: "out/artifacts");
 
         var directive = service.ExportRegion(
-            MakeRegion(0x200, 64, RegionExportType.Asset, "gfx.snes.2bpp"), tempDir, "..");
+            MakeRegion(0x200, 64, RegionExportType.Asset, "gfx.snes.2bpp"), tempDir, "..").AsmDirective;
 
         directive.Should().Be("incbin \"../out/artifacts/assets/gfx/test_asset.bin\"");
     }
@@ -153,7 +153,7 @@ public class RegionAssetExportTests : IDisposable
         var service = MakeService(rom);
         var region = MakeRegion(startPc: 0x100, lengthBytes: 0x40, RegionExportType.Binary);
 
-        var directive = service.ExportRegion(region, tempDir, asmToProjectRootPrefix: "..");
+        var directive = service.ExportRegion(region, tempDir, asmToProjectRootPrefix: "..").AsmDirective;
 
         // A plain-binary region is an ordinary asset: the codec extracts and recompiles it like
         // any other, so the incbin names the COMPILED payload under the build tier -- not a copy
@@ -205,7 +205,8 @@ public class RegionAssetExportTests : IDisposable
         var service = MakeService(MakeFakeRom(0x1000));
         var region = MakeRegion(0x100, 0x40, RegionExportType.Asset, "raw.bin");
 
-        service.ExportRegion(region, tempDir).Should().Be("incbin \"build/assets/gfx/test_asset.bin\"");
+        service.ExportRegion(region, tempDir).AsmDirective.Should()
+            .Be("incbin \"build/assets/gfx/test_asset.bin\"");
 
         var man = JsonDocument.Parse(File.ReadAllText(Path.Combine(tempDir, "gfx", "test_asset.json")))
             .RootElement;
@@ -317,7 +318,7 @@ public class RegionAssetExportTests : IDisposable
         var region = MakeRegion(0x200, 64, RegionExportType.Binary);
         region.AssetName = null;
 
-        var directive = service.ExportRegion(region, tempDir);
+        var directive = service.ExportRegion(region, tempDir).AsmDirective;
 
         directive.Should().Be("incbin \"build/assets/test_region.bin\"");
         File.Exists(Path.Combine(tempDir, "test_region.json")).Should().BeTrue();

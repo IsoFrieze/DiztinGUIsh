@@ -1,8 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
-using Diz.Core.Interfaces;
-using Diz.Core.model.snes;
 using Diz.LogWriter.assets;
 using FluentAssertions;
 using Xunit;
@@ -24,45 +21,22 @@ public class BuildFileGeneratorTests : IDisposable
         try { Directory.Delete(tempDir, recursive: true); } catch (IOException) { }
     }
 
-    private static Region AssetRegion(string name, string assetType = "gfx.snes.2bpp",
-        string assetOptions = null) => new()
+    /// <summary>
+    /// A build node as an exporter would report it. The generator consumes nodes, not regions:
+    /// what a region turned into is the exporter's answer, not something re-derived here.
+    /// </summary>
+    private static AssetBuildNode AssetNode(string name, string assetType = "gfx.snes.2bpp",
+        params string[] sharedFiles) => new()
     {
-        RegionName = name,
-        AssetName = name,
-        StartSnesAddress = 0xC00000,
-        EndSnesAddress = 0xC0003F,
-        ExportType = RegionExportType.Asset,
+        Name = name,
         AssetType = assetType,
-        AssetOptions = assetOptions,
+        SharedFiles = sharedFiles ?? [],
     };
-
-    [Fact]
-    public void EveryNonAssemblyRegionIsCollected()
-    {
-        var regions = new IRegion[]
-        {
-            AssetRegion("gfx/font"),
-            new Region { RegionName = "plain", ExportType = RegionExportType.Assembly },
-            new Region { RegionName = "raw", AssetName = "data/raw", ExportType = RegionExportType.Binary },
-        };
-
-        var assets = BuildFileGenerator.CollectAssets(regions);
-
-        // Plain-binary regions are rebuilt by a codec like everything else -- nothing in the
-        // exported tree carries their bytes -- so they need build edges too. Only regions
-        // emitted as inline assembly have nothing to rebuild.
-        assets.Select(a => a.Name).Should().Equal("data/raw", "gfx/font");
-
-        // ...and the type is synthesized for them, since a binary region has none to author.
-        assets.Single(a => a.Name == "data/raw").AssetType.Should().Be("raw.bin");
-    }
 
     [Fact]
     public void BinaryRegionsWireThroughBinpackAsRawAssets()
     {
-        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
-            new Region { RegionName = "raw", AssetName = "data/raw", ExportType = RegionExportType.Binary },
-        ]));
+        var ninja = new BuildFileGenerator().Generate([AssetNode("data/raw", "raw.bin")]);
 
         ninja.Should().Contain("rule raw_compile");
         ninja.Should().Contain("rule raw_extract");
@@ -84,10 +58,9 @@ public class BuildFileGeneratorTests : IDisposable
     {
         // binpack backs both the verbatim audio and raw types. Emitting its var line per binding
         // would put the same assignment in build.ninja twice.
-        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
-            AssetRegion("audio/song", "audio.snes.brr"),
-            new Region { RegionName = "raw", AssetName = "data/raw", ExportType = RegionExportType.Binary },
-        ]));
+        var ninja = new BuildFileGenerator().Generate([
+            AssetNode("audio/song", "audio.snes.brr"), AssetNode("data/raw", "raw.bin"),
+        ]);
 
         ninja.Split("binpack = tools/vendor/dizpack/binpack.py").Length.Should().Be(2);
     }
@@ -95,21 +68,22 @@ public class BuildFileGeneratorTests : IDisposable
     [Fact]
     public void AssetsAreSortedSoOutputIsDeterministic()
     {
-        // build.ninja is checked in, so unstable ordering would produce spurious diffs
-        // on every export.
-        var assets = BuildFileGenerator.CollectAssets([
-            AssetRegion("gfx/zebra"), AssetRegion("gfx/apple"), AssetRegion("gfx/mango"),
+        // build.ninja is checked in, and nodes arrive in the order the regions were exported
+        // (ROM order), so the generator must sort -- otherwise moving a region churns the diff.
+        var ninja = new BuildFileGenerator().Generate([
+            AssetNode("gfx/zebra"), AssetNode("gfx/apple"), AssetNode("gfx/mango"),
         ]);
 
-        assets.Select(a => a.Name).Should().ContainInOrder("gfx/apple", "gfx/mango", "gfx/zebra");
+        ninja.IndexOf("# gfx/apple", StringComparison.Ordinal).Should()
+            .BeLessThan(ninja.IndexOf("# gfx/mango", StringComparison.Ordinal));
+        ninja.IndexOf("# gfx/mango", StringComparison.Ordinal).Should()
+            .BeLessThan(ninja.IndexOf("# gfx/zebra", StringComparison.Ordinal));
     }
 
     [Fact]
     public void GeneratedBuildWiresAssetsIntoTheRom()
     {
-        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
-            AssetRegion("gfx/font"),
-        ]));
+        var ninja = new BuildFileGenerator().Generate([AssetNode("gfx/font")]);
 
         // the ROM is decoded into an editable PNG, driven by the manifest Diz wrote...
         ninja.Should().Contain(
@@ -130,9 +104,7 @@ public class BuildFileGeneratorTests : IDisposable
     [Fact]
     public void ExtractRulesDecodeTheRomThroughTheAssetsOwnManifest()
     {
-        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
-            AssetRegion("gfx/font"),
-        ]));
+        var ninja = new BuildFileGenerator().Generate([AssetNode("gfx/font")]);
 
         // Extraction is ROM ground truth: the manifest path is passed explicitly rather than
         // resolved through the layer search path, so a mod layer can never redirect what comes
@@ -150,9 +122,7 @@ public class BuildFileGeneratorTests : IDisposable
     [Fact]
     public void ExtractPhonyTargetAggregatesEveryEditableSource()
     {
-        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
-            AssetRegion("gfx/b"), AssetRegion("gfx/a"),
-        ]));
+        var ninja = new BuildFileGenerator().Generate([AssetNode("gfx/b"), AssetNode("gfx/a")]);
 
         // one name for "give me the editable sources", without assembling a ROM.
         ninja.Should().Contain("build extract: phony extracted/gfx/a.png extracted/gfx/b.png");
@@ -161,10 +131,9 @@ public class BuildFileGeneratorTests : IDisposable
     [Fact]
     public void TextAssetsWireThroughTextpack()
     {
-        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
-            AssetRegion("text/item_names", "text.ct.mapped",
-                "{\"tbl\": \"text/ct_8px.tbl\", \"record_width\": 11, \"pad\": \"0xEF\"}"),
-        ]));
+        var ninja = new BuildFileGenerator().Generate([
+            AssetNode("text/item_names", "text.ct.mapped", "text/ct_8px.tbl"),
+        ]);
 
         // textpack runs off its OWN vendored tool var (like binpack), not the shared gfxpack one.
         ninja.Should().Contain("textpack = tools/vendor/dizpack/textpack.py");
@@ -199,9 +168,7 @@ public class BuildFileGeneratorTests : IDisposable
             ManifestDir = "asm/manifests",
         };
 
-        var ninja = new BuildFileGenerator(settings).Generate(BuildFileGenerator.CollectAssets([
-            AssetRegion("gfx/font"),
-        ]));
+        var ninja = new BuildFileGenerator(settings).Generate([AssetNode("gfx/font")]);
 
         ninja.Should().Contain(
             "search_roots = $mod_roots --search art --base-manifests asm/manifests --base-content decoded");
@@ -257,7 +224,7 @@ public class BuildFileGeneratorTests : IDisposable
 
         // regenerate twice; build.ninja may churn freely, the config must not
         new BuildFileGenerator().WriteTo(tempDir, []);
-        new BuildFileGenerator().WriteTo(tempDir, BuildFileGenerator.CollectAssets([AssetRegion("gfx/font")]));
+        new BuildFileGenerator().WriteTo(tempDir, [AssetNode("gfx/font")]);
 
         File.ReadAllBytes(configPath).Should().Equal(before,
             "build-config.ninja is user-owned; re-export must never touch it");
@@ -278,7 +245,7 @@ public class BuildFileGeneratorTests : IDisposable
     [Fact]
     public void GeneratedBuildIsStableAcrossRuns()
     {
-        var assets = BuildFileGenerator.CollectAssets([AssetRegion("gfx/a"), AssetRegion("gfx/b")]);
+        AssetBuildNode[] assets = [AssetNode("gfx/a"), AssetNode("gfx/b")];
         var first = new BuildFileGenerator().Generate(assets);
         var second = new BuildFileGenerator().Generate(assets);
 
@@ -288,7 +255,7 @@ public class BuildFileGeneratorTests : IDisposable
     [Fact]
     public void WriteToProducesBuildNinjaAtExportRoot()
     {
-        new BuildFileGenerator().WriteTo(tempDir, BuildFileGenerator.CollectAssets([AssetRegion("gfx/f")]));
+        new BuildFileGenerator().WriteTo(tempDir, [AssetNode("gfx/f")]);
 
         File.Exists(Path.Combine(tempDir, "build.ninja")).Should().BeTrue();
     }
@@ -386,7 +353,7 @@ public class BuildFileGeneratorTests : IDisposable
         // error loudly (naming the type), not be silently routed to the gfx codec as before.
         // (audio.* is now a registered default binding, so use a type that still has no binding
         // -- palette.snes.bgr555 is reserved in the taxonomy but not yet wired.)
-        var assets = BuildFileGenerator.CollectAssets([AssetRegion("palette/pal0", "palette.snes.bgr555")]);
+        AssetBuildNode[] assets = [AssetNode("palette/pal0", "palette.snes.bgr555")];
 
         var act = () => new BuildFileGenerator().Generate(assets);
 
@@ -400,9 +367,9 @@ public class BuildFileGeneratorTests : IDisposable
         // generator (what the exporter uses) wires BRR assets through binpack -- no test-only
         // binding needed. This is the non-synthetic counterpart to
         // PerAssetEdgesDispatchByTypePrefixToTheMatchingBinding below.
-        var ninja = new BuildFileGenerator().Generate(BuildFileGenerator.CollectAssets([
-            AssetRegion("audio/AudioBRR_00", "audio.snes.brr"),
-        ]));
+        var ninja = new BuildFileGenerator().Generate([
+            AssetNode("audio/AudioBRR_00", "audio.snes.brr"),
+        ]);
 
         // binpack runs off its own vendored var, declared as a `= ...` line...
         ninja.Should().Contain("binpack = tools/vendor/dizpack/binpack.py");
@@ -442,10 +409,9 @@ public class BuildFileGeneratorTests : IDisposable
             },
         };
 
-        var ninja = new BuildFileGenerator(toolBindings: bindings).Generate(BuildFileGenerator.CollectAssets([
-            AssetRegion("gfx/font", "gfx.snes.2bpp"),
-            AssetRegion("audio/song", "audio.snes.brr"),
-        ]));
+        var ninja = new BuildFileGenerator(toolBindings: bindings).Generate([
+            AssetNode("gfx/font", "gfx.snes.2bpp"), AssetNode("audio/song", "audio.snes.brr"),
+        ]);
 
         // the second binding declared its OWN tool var (gfx reuses the shared one, so declares none)
         ninja.Should().Contain("binpack = tools/vendor/dizpack/binpack.py");

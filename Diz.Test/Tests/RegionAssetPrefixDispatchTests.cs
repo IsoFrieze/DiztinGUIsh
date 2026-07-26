@@ -121,8 +121,8 @@ public class RegionAssetPrefixDispatchTests : IDisposable
         var gfxRegion = MakeRegion(0x200, 64, "gfx.snes.2bpp", "gfx/pic");     // 4 * 16 bytes
         var audioRegion = MakeRegion(0x400, 27, "audio.brr", "audio/sample"); // 3 * 9 bytes
 
-        var gfxDirective = service.ExportRegion(gfxRegion, tempDir);
-        var audioDirective = service.ExportRegion(audioRegion, tempDir);
+        var gfxDirective = service.ExportRegion(gfxRegion, tempDir).AsmDirective;
+        var audioDirective = service.ExportRegion(audioRegion, tempDir).AsmDirective;
 
         gfxDirective.Should().Be("incbin \"build/assets/gfx/pic.bin\"");
         audioDirective.Should().Be("incbin \"build/assets/audio/sample.brr\"");

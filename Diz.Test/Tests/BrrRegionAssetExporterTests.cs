@@ -82,7 +82,7 @@ public class BrrRegionAssetExporterTests : IDisposable
         var service = MakeService(rom);
 
         // 63 bytes = 7 whole BRR blocks
-        var directive = service.ExportRegion(BrrRegion(0x400, 63), tempDir);
+        var directive = service.ExportRegion(BrrRegion(0x400, 63), tempDir).AsmDirective;
 
         // CompiledExtension is ".bin", NOT ".brr": the assembler incbin's the compiled build
         // output, and binpack extracts/compiles the editable .brr on either side of it.
