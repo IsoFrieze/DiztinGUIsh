@@ -81,12 +81,15 @@ internal sealed partial class MarkManyWindow : Window
 
     // true while widget values are being written FROM the ViewModel; the input handlers below
     // bail out then, so a ViewModel-driven refresh can't be mistaken for the user typing.
+    // Only catches handlers that run inside the write itself -- TextChanged does not (see
+    // PushText), so the text boxes need the value comparison there as well as this flag.
     private bool updatingWidgets;
 
     // the control the user is currently typing into. Text is never pushed back into it while
     // it holds the caret -- reformatting a field under the caret fights the user. (The range
     // ViewModel already withholds notifications for the field being edited; this covers the
-    // register value box, which shares no such rule.)
+    // register value box, which shares no such rule.) Set only for the duration of one push, so
+    // like updatingWidgets it does not reach a TextChanged raised on a later dispatcher turn.
     private Control? controlBeingEdited;
 
     public MarkManyWindow()
@@ -315,36 +318,23 @@ internal sealed partial class MarkManyWindow : Window
         });
 
     private void StartBox_TextChanged(object? sender, TextChangedEventArgs e) =>
-        PushToViewModel(StartBox, () =>
-        {
-            if (vm != null)
-                vm.Range.StartText = StartBox.Text ?? "";
-        });
+        PushText(StartBox, vm?.Range.StartText, text => vm!.Range.StartText = text);
 
     private void EndBox_TextChanged(object? sender, TextChangedEventArgs e) =>
-        PushToViewModel(EndBox, () =>
-        {
-            if (vm != null)
-                vm.Range.EndText = EndBox.Text ?? "";
-        });
+        PushText(EndBox, vm?.Range.EndText, text => vm!.Range.EndText = text);
 
     private void CountBox_TextChanged(object? sender, TextChangedEventArgs e) =>
-        PushToViewModel(CountBox, () =>
-        {
-            if (vm != null)
-                vm.Range.CountText = CountBox.Text ?? "";
-        });
+        PushText(CountBox, vm?.Range.CountText, text => vm!.Range.CountText = text);
 
     private void RegValueBox_TextChanged(object? sender, TextChangedEventArgs e) =>
-        PushToViewModel(RegValueBox, () =>
+        PushText(RegValueBox, RegisterValueText(), text =>
         {
             // unparseable text is ignored outright, exactly as this box has always behaved:
             // the last good number stays in effect until something parseable is typed.
-            if (vm == null ||
-                !int.TryParse(RegValueBox.Text, NumberStyle, CultureInfo.InvariantCulture, out var value))
+            if (!int.TryParse(text, NumberStyle, CultureInfo.InvariantCulture, out var value))
                 return;
 
-            switch (vm.SelectedProperty)
+            switch (vm!.SelectedProperty)
             {
                 case MarkCommand.MarkManyProperty.DataBank:
                     vm.DataBankValue = value;
@@ -411,6 +401,34 @@ internal sealed partial class MarkManyWindow : Window
         {
             controlBeingEdited = previous;
         }
+    }
+
+    /// <summary>
+    /// Hand a box's text to the ViewModel -- unless the box is only reporting back what the
+    /// ViewModel itself just put there.
+    ///
+    /// Neither guard above can decide that on its own. Avalonia raises TextChanged on a LATER
+    /// dispatcher turn, not inside the Text setter, so by the time the event arrives
+    /// updatingWidgets is down again and controlBeingEdited is back to null: a write this window
+    /// made is indistinguishable from a keystroke. Comparing the text instead does not depend on
+    /// when the event fires.
+    ///
+    /// Letting an echo through is not harmless. A box holding the ViewModel's own value has
+    /// nothing new to say, but assigning it re-derives the other range fields from it, and their
+    /// answer need not be the text on screen: HiROM ignores the top two bank bits, so $40:0200
+    /// and $C0:0200 are one ROM byte, and the offset converts back to the canonical bank. Round
+    /// tripping it retypes the user's address under their caret, mid-word.
+    /// </summary>
+    private void PushText(TextBox box, string? viewModelText, Action<string> assign)
+    {
+        if (vm == null || updatingWidgets)
+            return;
+
+        var text = box.Text ?? "";
+        if (string.Equals(text, viewModelText, StringComparison.Ordinal))
+            return;
+
+        PushToViewModel(box, () => assign(text));
     }
 
     /// <summary>Write widget state without the input handlers treating it as user input.</summary>

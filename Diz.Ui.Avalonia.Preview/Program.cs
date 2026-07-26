@@ -137,6 +137,7 @@ internal static class Program
         MarkManyScenes(outDir, report);
 
         // ------------------------------------------------------------------ GOTO WINDOW
+        ProbeTextChangedTiming(report);
         GotoScenes(outDir, report);
 
         // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
@@ -191,6 +192,7 @@ internal static class Program
 
         // ---- interaction probes, on their own window
         ProbeMarkMany(outDir, report);
+        ProbeMarkManyTypingIsNotRewritten(outDir, report);
 
         defaultWindow.Close();
         invalidWindow.Close();
@@ -338,6 +340,173 @@ internal static class Program
         }
     }
 
+    /// <summary>
+    /// The range field the user is typing in must keep exactly what they typed, keystroke by
+    /// keystroke -- the mark-many counterpart of the goto window's probe of the same name.
+    ///
+    /// Start/end/count are three views of one range, so moving any of them rewrites the other
+    /// two, and each of those rewrites is a chance for the range to come back around into the
+    /// field under the caret. The address typed is a HiROM MIRROR BANK ($40:0200 is the same ROM
+    /// byte as $C0:0200), so the range's own text for it differs from what was typed and a round
+    /// trip is visible rather than silent.
+    /// </summary>
+    private static void ProbeMarkManyTypingIsNotRewritten(string outDir, List<string> report)
+    {
+        MarkManyWindow? window = null;
+        try
+        {
+            var (w, vm) = OpenMarkMany();
+            window = w;
+
+            var startBox = FindByTag<TextBox>(window, "start-text");
+            var endBox = FindByTag<TextBox>(window, "end-text");
+            var countBox = FindByTag<TextBox>(window, "count-text");
+            if (startBox == null || endBox == null || countBox == null)
+            {
+                Record(report, "markmany typing not rewritten", "HARNESS-FAIL",
+                    $"range boxes missing (start={startBox != null}, end={endBox != null}, count={countBox != null})");
+                return;
+            }
+
+            const string typed = "400200";
+
+            var firstDivergence = TypeCharByChar(window, startBox, typed, _ =>
+                $"end box '{endBox.Text}', count box '{countBox.Text}'");
+            if (firstDivergence == HarnessCouldNotType)
+            {
+                Record(report, "markmany typing not rewritten", "HARNESS-FAIL",
+                    "start box has no on-screen position");
+                return;
+            }
+
+            var keptTyping = firstDivergence == null;
+            Record(report, "markmany typing not rewritten", keptTyping ? "PASS" : "APP-FAIL",
+                keptTyping
+                    ? $"start box held every prefix of '{typed}' while it had the caret"
+                    : firstDivergence!);
+
+            // the range still has to have moved to where the typed address actually is.
+            var movedOk = vm.Range.StartIndex == 0x200;
+            Console.WriteLine($"  final: start='{startBox.Text}' end='{endBox.Text}' count='{countBox.Text}'; " +
+                              $"vm.Range.StartIndex=0x{vm.Range.StartIndex:X} count=0x{vm.Range.Count:X}");
+            Record(report, "markmany mirror bank start", movedOk ? "PASS" : "APP-FAIL",
+                $"vm.Range.StartIndex=0x{vm.Range.StartIndex:X} (wanted 0x200)");
+
+            Pump();
+            Capture(window, Path.Combine(outDir, "markmany-mirror-bank-typed.png"),
+                $"mark many: after typing the mirror-bank address '{typed}' into start one key at a " +
+                $"time (box reads '{startBox.Text}')");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "markmany typing not rewritten", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    // ------------------------------------------------------------------ TextChanged timing
+
+    /// <summary>
+    /// Measures a framework behavior every "don't mistake my own write for the user typing"
+    /// re-entrancy guard in this assembly depends on: when a TextBox's Text is set from code,
+    /// is TextChanged raised BEFORE the setter returns, or posted to a later dispatcher turn?
+    ///
+    /// A guard that is a bool raised around the write only works in the first case. In the
+    /// second, the flag is already back down when the event lands, and the write comes back in
+    /// through the input handler indistinguishable from a keystroke.
+    ///
+    /// Reported, not asserted: it records what this Avalonia build does rather than demanding a
+    /// particular answer, so an upgrade that changes the answer shows up in the readout instead
+    /// of being silently absorbed.
+    /// </summary>
+    private static void ProbeTextChangedTiming(List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[avalonia TextChanged timing]");
+
+        var box = new TextBox { Text = "start" };
+        var window = new Window { Content = box };
+        window.Show();
+        Pump();
+
+        var insideSetter = false;
+        var firedInsideSetter = 0;
+        var firedTotal = 0;
+        box.TextChanged += (_, _) =>
+        {
+            firedTotal++;
+            if (insideSetter)
+                firedInsideSetter++;
+        };
+
+        insideSetter = true;
+        box.Text = "written-from-code";
+        insideSetter = false;
+        var afterSetterReturned = firedTotal;
+        Pump();
+
+        var synchronous = firedInsideSetter > 0;
+        Console.WriteLine($"  box.Text = <new value>: TextChanged fired {firedInsideSetter}x inside the setter, " +
+                          $"{afterSetterReturned}x by the time it returned, {firedTotal}x after pumping the dispatcher");
+        Record(report, "avalonia TextChanged timing", "INFO",
+            synchronous
+                ? $"SYNCHRONOUS -- fired inside the .Text setter ({firedInsideSetter} inside, {firedTotal} total)"
+                : $"DEFERRED -- 0 fired inside the .Text setter, {firedTotal} after pumping the dispatcher");
+
+        // the same question for the other two widgets whose state these windows write back:
+        // a combo's selected index and a radio button's check.
+        var combo = new ComboBox { ItemsSource = new[] { "a", "b", "c" }, SelectedIndex = 0 };
+        var radio = new RadioButton { IsChecked = false };
+        var panel = new StackPanel();
+        panel.Children.Add(combo);
+        panel.Children.Add(radio);
+        var window2 = new Window { Content = panel };
+        window2.Show();
+        Pump();
+
+        var insideComboSetter = false;
+        var comboInside = 0;
+        var comboTotal = 0;
+        combo.SelectionChanged += (_, _) =>
+        {
+            comboTotal++;
+            if (insideComboSetter)
+                comboInside++;
+        };
+        insideComboSetter = true;
+        combo.SelectedIndex = 2;
+        insideComboSetter = false;
+        Pump();
+
+        var insideRadioSetter = false;
+        var radioInside = 0;
+        var radioTotal = 0;
+        radio.IsCheckedChanged += (_, _) =>
+        {
+            radioTotal++;
+            if (insideRadioSetter)
+                radioInside++;
+        };
+        insideRadioSetter = true;
+        radio.IsChecked = true;
+        insideRadioSetter = false;
+        Pump();
+
+        Console.WriteLine($"  combo.SelectedIndex = 2: SelectionChanged fired {comboInside}x inside the setter, {comboTotal}x total");
+        Console.WriteLine($"  radio.IsChecked = true: IsCheckedChanged fired {radioInside}x inside the setter, {radioTotal}x total");
+        Record(report, "avalonia combo/radio timing", "INFO",
+            $"ComboBox.SelectionChanged {(comboInside > 0 ? "SYNCHRONOUS" : "DEFERRED")} ({comboInside}/{comboTotal}), " +
+            $"RadioButton.IsCheckedChanged {(radioInside > 0 ? "SYNCHRONOUS" : "DEFERRED")} ({radioInside}/{radioTotal})");
+
+        window2.Close();
+        window.Close();
+        Pump();
+    }
+
     // ------------------------------------------------------------------ goto window
 
     /// <summary>
@@ -370,10 +539,80 @@ internal static class Program
 
         // ---- interaction probes, on their own window
         ProbeGoto(outDir, report);
+        ProbeGotoTypingIsNotRewritten(outDir, report);
 
         defaultWindow.Close();
         invalidWindow.Close();
         Pump();
+    }
+
+    /// <summary>
+    /// The box the user is typing in must keep exactly what they typed, keystroke by keystroke.
+    ///
+    /// The earlier goto probes all type addresses whose round trip is the identity ("C00200" ->
+    /// offset 200 -> "C00200"), so they cannot see a box being rewritten from its own mirror.
+    /// This one types a MIRROR-BANK address: HiROM ignores the top two bank bits, so $40:0200
+    /// and $C0:0200 are the same ROM byte, and converting the offset back produces "C00200" --
+    /// a different string from the one on screen. Anything that round-trips the mirror back into
+    /// the edited box therefore replaces the user's text mid-word.
+    ///
+    /// Typed one character at a time, because that is how the failure shows up in use: the
+    /// prefixes of a real address ("4", "40", "400", ...) mostly name nowhere, so each keystroke
+    /// moves the other box too, and every one of those moves is an opportunity to bounce back.
+    /// </summary>
+    private static void ProbeGotoTypingIsNotRewritten(string outDir, List<string> report)
+    {
+        GotoWindow? window = null;
+        try
+        {
+            var (w, vm) = OpenGoto();
+            window = w;
+
+            var snesBox = FindByTag<TextBox>(window, "snes-text");
+            var pcBox = FindByTag<TextBox>(window, "pc-text");
+            if (snesBox == null || pcBox == null)
+            {
+                Record(report, "goto typing not rewritten", "HARNESS-FAIL",
+                    $"snes box={snesBox != null}, pc box={pcBox != null}");
+                return;
+            }
+
+            const string typed = "400200";
+
+            var firstDivergence = TypeCharByChar(window, snesBox, typed, i =>
+                $"pc box '{pcBox.Text}'");
+            if (firstDivergence == HarnessCouldNotType)
+            {
+                Record(report, "goto typing not rewritten", "HARNESS-FAIL", "SNES box has no on-screen position");
+                return;
+            }
+
+            var keptTyping = firstDivergence == null;
+            Record(report, "goto typing not rewritten", keptTyping ? "PASS" : "APP-FAIL",
+                keptTyping
+                    ? $"SNES box held every prefix of '{typed}' while it had the caret"
+                    : firstDivergence!);
+
+            // the mirror still has to work: the offset box must show where $40:0200 actually is.
+            var mirrorOk = (pcBox.Text ?? "") == "200" && vm.ResultPcOffset == 0x200;
+            Console.WriteLine($"  final: snes='{snesBox.Text}' pc='{pcBox.Text}' ResultPcOffset={Hex(vm.ResultPcOffset)}");
+            Record(report, "goto mirror bank offset", mirrorOk ? "PASS" : "APP-FAIL",
+                $"pc box '{pcBox.Text}' (wanted '200'), ResultPcOffset={Hex(vm.ResultPcOffset)} (wanted 0x200)");
+
+            Pump();
+            Capture(window, Path.Combine(outDir, "goto-mirror-bank-typed.png"),
+                $"goto: after typing the mirror-bank address '{typed}' one key at a time " +
+                $"(box reads '{snesBox.Text}')");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "goto typing not rewritten", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
     }
 
     private static (GotoWindow window, GotoViewModel vm) OpenGoto(int startPcOffset = 0x100)
@@ -490,6 +729,45 @@ internal static class Program
     }
 
     private static string Hex(int? value) => value == null ? "<null>" : $"0x{value.Value:X}";
+
+    /// <summary>Sentinel <see cref="TypeCharByChar"/> returns when the gesture couldn't be performed.</summary>
+    private const string HarnessCouldNotType = "<harness: box has no on-screen position>";
+
+    /// <summary>
+    /// Replace a box's contents by typing <paramref name="text"/> ONE KEY AT A TIME, checking
+    /// after every keystroke that the box holds exactly the prefix typed so far. Returns null
+    /// when it always did, otherwise a description of the FIRST keystroke after which it did not.
+    ///
+    /// One key at a time rather than one KeyTextInput of the whole string, because a field that
+    /// mirrors another only rewrites itself when the mirror moves, and it is the half-typed
+    /// prefixes that move it.
+    /// </summary>
+    private static string? TypeCharByChar(Window window, TextBox box, string text, Func<int, string> describeOthers)
+    {
+        var pt = CenterInWindow(box, window);
+        if (pt == null)
+            return HarnessCouldNotType;
+
+        Click(window, pt.Value);
+        window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
+        window.KeyRelease(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
+        Pump();
+
+        string? firstDivergence = null;
+        for (var i = 0; i < text.Length; i++)
+        {
+            window.KeyTextInput(text[i].ToString());
+            Pump();
+
+            var expected = text[..(i + 1)];
+            var actual = box.Text ?? "";
+            Console.WriteLine($"  keystroke {i + 1} '{text[i]}': box expected '{expected}', is '{actual}'; {describeOthers(i)}");
+            if (firstDivergence == null && actual != expected)
+                firstDivergence = $"after keystroke {i + 1} ('{text[i]}') the box read '{actual}', not '{expected}'";
+        }
+
+        return firstDivergence;
+    }
 
     /// <summary>Click into a TextBox, select all, and type -- i.e. replace its contents.</summary>
     private static void TypeIntoBox(Window window, TextBox box, string text)
