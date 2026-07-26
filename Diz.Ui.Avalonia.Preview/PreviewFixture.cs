@@ -1,5 +1,7 @@
 using Diz.Core.Interfaces;
 using Diz.Core.model;
+using Diz.Core.model.snes;
+using Diz.Cpu._65816;
 
 // namespace is intentionally NOT under Diz.Ui.* -- inside a `Diz.Ui.Avalonia.*` namespace the
 // bare identifier `Avalonia` resolves to the Diz namespace, not the framework (see the gotcha
@@ -37,6 +39,31 @@ internal static class PreviewFixture
 
     /// <summary>How many labels the fixture defines (for the harness report / sanity check).</summary>
     public static int Count => Labels().Count;
+
+    /// <summary>Bytes in the throwaway ROM the mark-many scenes are rendered against.</summary>
+    public const int MarkManyRomSize = 0x1000;
+
+    /// <summary>
+    /// A tiny in-memory HiROM for the mark-many window, which -- unlike the label editor --
+    /// genuinely needs a ROM: its ViewModel converts addresses, clamps the range to the ROM
+    /// size, and reads the data bank / direct page already recorded at the range start. Byte
+    /// contents are arbitrary; only the size and map mode matter to the window.
+    /// </summary>
+    public static ISnesData BuildSnesData()
+    {
+        var romBytes = new RomBytes();
+        for (var i = 0; i < MarkManyRomSize; ++i)
+            romBytes.Add(new RomByte { Rom = (byte)i });
+
+        var data = new Data
+        {
+            RomMapMode = RomMapMode.HiRom,
+            RomSpeed = RomSpeed.FastRom,
+            RomBytes = romBytes,
+        };
+        data.Apis.AddIfDoesntExist(new SnesApi(data));
+        return data.GetSnesApi()!;
+    }
 
     private static List<(int addr, Label label)> Labels()
     {

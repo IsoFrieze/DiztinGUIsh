@@ -1,0 +1,128 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.MarkManyWindow"
+        x:CompileBindings="False"
+        Title="Mark Many"
+        Width="480" Height="320"
+        CanResize="False"
+        SizeToContent="Manual"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        FontSize="12">
+
+    <!--
+      Pick one property to mark, one value for it, and a run of bytes. The widgets are wired to
+      a MarkManyViewModel by hand in the code-behind (MarkManyWindow.axaml.cs) rather than by
+      binding: the range fields are text projections the ViewModel deliberately refuses to
+      rewrite while they hold the caret, the register value is an int the view has to format,
+      and the value editor swaps between four controls depending on the selected property.
+
+      Field labels, combo contents and the "Mark Bytes" grouping match the WinForms window, so
+      the same instructions describe either backend.
+
+      Styled like the other Avalonia windows here: compact, FontSize 12, light theme (pinned
+      application-wide in DizAvaloniaApp).
+    -->
+
+    <Window.Styles>
+        <Style Selector="TextBlock.field">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+        <Style Selector="TextBox.value">
+            <Setter Property="Padding" Value="4,2" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
+        </Style>
+        <Style Selector="RadioButton">
+            <Setter Property="Margin" Value="0,0,14,0" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </Window.Styles>
+
+    <Border Padding="12,10">
+        <DockPanel>
+
+            <!-- ============ bottom bar: Cancel | Hex/Dec | OK ============ -->
+            <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto" Margin="0,10,0,0">
+                <Button Grid.Column="0" x:Name="CancelButton" Tag="cancel-button" Content="Cancel"
+                        Width="80" IsCancel="True" Click="CancelButton_Click" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <RadioButton x:Name="RadioHex" Tag="radio-hex" GroupName="NumberBase"
+                                 Content="Hex" IsCheckedChanged="NumberBase_Changed" />
+                    <RadioButton x:Name="RadioDec" Tag="radio-dec" GroupName="NumberBase"
+                                 Content="Dec" Margin="0" />
+                </StackPanel>
+                <Button Grid.Column="2" x:Name="OkButton" Tag="ok-button" Content="OK"
+                        Width="80" IsDefault="True" Click="OkButton_Click" />
+            </Grid>
+
+            <!-- ============================= validation message ============================= -->
+            <TextBlock x:Name="ErrorText" DockPanel.Dock="Bottom" Tag="error-text"
+                       Foreground="#B00000" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+            <!-- ============================= property + Mark Bytes group ============================= -->
+            <StackPanel Spacing="6">
+
+                <Grid ColumnDefinitions="120,*">
+                    <TextBlock Grid.Column="0" Classes="field" Text="Property to Mark:" />
+                    <ComboBox Grid.Column="1" x:Name="PropertyCombo" Tag="property-combo"
+                              HorizontalAlignment="Stretch"
+                              SelectionChanged="PropertyCombo_SelectionChanged" />
+                </Grid>
+
+                <!-- ===== Mark Bytes: value + range fields, with the address-space radios beside
+                     the address fields and Hex/Dec down in the bottom bar, mirroring the WinForms
+                     window so the same instructions describe either backend ===== -->
+                <Border BorderBrush="#C8C8C8" BorderThickness="1" CornerRadius="3"
+                        Padding="10,8" Margin="0,10,0,0">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Mark Bytes" FontWeight="Bold" Margin="0,0,0,4" />
+
+                        <Grid ColumnDefinitions="140,150,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="field" Text="Value:" />
+                            <!-- exactly one of these four is visible at a time; which one is
+                                 decided by the selected property. -->
+                            <Panel Grid.Row="0" Grid.Column="1">
+                                <ComboBox x:Name="FlagCombo" Tag="flag-combo"
+                                          HorizontalAlignment="Stretch"
+                                          SelectionChanged="FlagCombo_SelectionChanged" />
+                                <ComboBox x:Name="MxCombo" Tag="mx-combo"
+                                          HorizontalAlignment="Stretch"
+                                          SelectionChanged="MxCombo_SelectionChanged" />
+                                <ComboBox x:Name="ArchCombo" Tag="arch-combo"
+                                          HorizontalAlignment="Stretch"
+                                          SelectionChanged="ArchCombo_SelectionChanged" />
+                                <TextBox x:Name="RegValueBox" Tag="reg-value" Classes="value"
+                                         HorizontalAlignment="Left" Width="90"
+                                         TextChanged="RegValueBox_TextChanged" />
+                            </Panel>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="field" Text="Start at Address:" Margin="0,6,8,0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="StartBox" Tag="start-text" Classes="value"
+                                     HorizontalAlignment="Left" Width="140" Margin="0,6,0,0"
+                                     TextChanged="StartBox_TextChanged" />
+                            <RadioButton Grid.Row="1" Grid.Column="2" x:Name="RadioSnes" Tag="radio-snes"
+                                         GroupName="AddressSpace" Content="SNES Address"
+                                         Margin="12,6,0,0" IsCheckedChanged="AddressSpace_Changed" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="field" Text="Up to and including:" Margin="0,4,8,0" />
+                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="EndBox" Tag="end-text" Classes="value"
+                                     HorizontalAlignment="Left" Width="140" Margin="0,4,0,0"
+                                     TextChanged="EndBox_TextChanged" />
+                            <RadioButton Grid.Row="2" Grid.Column="2" x:Name="RadioPc" Tag="radio-pc"
+                                         GroupName="AddressSpace" Content="ROM File Offset"
+                                         Margin="12,4,0,0" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Classes="field" Text="# Bytes:" Margin="0,4,8,0" />
+                            <TextBox Grid.Row="3" Grid.Column="1" x:Name="CountBox" Tag="count-text" Classes="value"
+                                     HorizontalAlignment="Left" Width="140" Margin="0,4,0,0"
+                                     TextChanged="CountBox_TextChanged" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</Window>

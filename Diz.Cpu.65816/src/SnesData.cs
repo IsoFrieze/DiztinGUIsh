@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Diz.Core;
+using Diz.Core.commands;
 using Diz.Core.Interfaces;
 using Diz.Core.model;
 using Diz.Core.util;
@@ -651,7 +652,35 @@ public static class SnesApiExtensions
     
     public static int MarkArchitecture(this ISnesApi<IData> @this, int offset, Architecture arch, int count) =>
         @this.Data.Mark(i => @this.Data.SetArchitecture(i, arch), offset, count);
-    
+
+    /// <summary>
+    /// Apply a <see cref="MarkCommand"/> by dispatching to the matching Mark* method above.
+    /// This is the single non-UI entry point for "mark many": build the command anywhere
+    /// (a ViewModel, a script, an external API), then apply it here. No UI toolkit involved.
+    /// </summary>
+    /// <returns>
+    /// The offset one past the last byte marked (clamped to the last ROM offset), i.e. where a
+    /// caller that follows the marking should navigate to. -1 if the command's property is not
+    /// a recognized <see cref="MarkCommand.MarkManyProperty"/>, in which case nothing was marked.
+    /// </returns>
+    /// <remarks>
+    /// <see cref="MarkCommand.Value"/> is a boxed object whose runtime type must match the
+    /// property: FlagType for Flag, int for DataBank/DirectPage, bool for MFlag/XFlag,
+    /// Architecture for CpuArch. A mismatch throws InvalidCastException -- the same behavior
+    /// this dispatch has always had.
+    /// </remarks>
+    public static int ApplyMarkCommand(this ISnesApi<IData> @this, MarkCommand command) =>
+        command.Property switch
+        {
+            MarkCommand.MarkManyProperty.Flag => @this.MarkTypeFlag(command.Start, (FlagType) command.Value, command.Count),
+            MarkCommand.MarkManyProperty.DataBank => @this.MarkDataBank(command.Start, (int) command.Value, command.Count),
+            MarkCommand.MarkManyProperty.DirectPage => @this.MarkDirectPage(command.Start, (int) command.Value, command.Count),
+            MarkCommand.MarkManyProperty.MFlag => @this.MarkMFlag(command.Start, (bool) command.Value, command.Count),
+            MarkCommand.MarkManyProperty.XFlag => @this.MarkXFlag(command.Start, (bool) command.Value, command.Count),
+            MarkCommand.MarkManyProperty.CpuArch => @this.MarkArchitecture(command.Start, (Architecture) command.Value, command.Count),
+            _ => -1
+        };
+
     // input can be any length, and will be padded, using spaces, to the right size for SNES header
     public static void SetCartridgeTitle(this ISnesData @this, string utf8CartridgeTitle)
     {

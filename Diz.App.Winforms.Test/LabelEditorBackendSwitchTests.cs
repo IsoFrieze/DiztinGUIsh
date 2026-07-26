@@ -21,10 +21,10 @@ namespace Diz.App.Winforms.Test;
 ///
 /// Step 6 replaced the old last-registration-wins ordering trick with an EXPLICIT if/else
 /// branch that registers EITHER the WinForms backend root OR the Avalonia backend root -- never
-/// both. So each backend must resolve ALL THREE backend-selectable seams (LabelEditorView,
-/// ProgressBarView, IFileDialogService) to its own toolkit's types, and never the other's.
-/// If someone breaks or reorders the branch (e.g. registers both roots), these type assertions
-/// fail.
+/// both. So each backend must resolve ALL FOUR backend-selectable seams (LabelEditorView,
+/// MarkManyView, ProgressBarView, IFileDialogService) to its own toolkit's types, and never the
+/// other's. If someone breaks or reorders the branch (e.g. registers both roots), these type
+/// assertions fail.
 ///
 /// Resolution constructs the real view objects headlessly: the WinForms path builds the
 /// LabelEditorForm host + control and the ProgressDialog (no handle until Show; precedent:
@@ -48,6 +48,8 @@ public class LabelEditorBackendSwitchTests
 
         container.GetInstance<ILabelEditorView>("LabelEditorView")
             .Should().BeOfType<LabelsViewControl>();
+        container.GetInstance<IMarkManyView>("MarkManyView")
+            .Should().BeOfType<WinformsMarkManyView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
@@ -61,6 +63,8 @@ public class LabelEditorBackendSwitchTests
 
         container.GetInstance<ILabelEditorView>("LabelEditorView")
             .Should().BeOfType<AvaloniaLabelEditorView>();
+        container.GetInstance<IMarkManyView>("MarkManyView")
+            .Should().BeOfType<AvaloniaMarkManyView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<AvaloniaProgressView>();
         container.GetInstance<IFileDialogService>()
@@ -75,12 +79,50 @@ public class LabelEditorBackendSwitchTests
         // TUI backend: only the label editor is TUI...
         container.GetInstance<ILabelEditorView>("LabelEditorView")
             .Should().BeOfType<TuiLabelEditorView>();
-        // ...the progress popup and file dialogs stay WinForms (registered explicitly in the
-        // tui branch, not via the WinForms backend root).
+        // ...the mark-many window, progress popup and file dialogs stay WinForms (registered
+        // explicitly in the tui branch, not via the WinForms backend root).
+        container.GetInstance<IMarkManyView>("MarkManyView")
+            .Should().BeOfType<WinformsMarkManyView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
             .Should().BeOfType<WinformsFileDialogService>();
+    }
+
+    /// <summary>
+    /// The mark-many view is resolved fresh for every invocation and thrown away afterwards,
+    /// so two resolutions must never hand back the same object (a singleton would leak one
+    /// window's state into the next edit).
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void MarkManyView_ResolvesAFreshInstanceEachTime(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        var first = container.GetInstance<IMarkManyView>("MarkManyView");
+        var second = container.GetInstance<IMarkManyView>("MarkManyView");
+
+        second.Should().NotBeSameAs(first);
+    }
+
+    /// <summary>
+    /// The registration name is a bare string that has to match the auto-factory method name
+    /// exactly, and nothing checks that at compile time. This resolves through the factory
+    /// itself -- the path MainWindow actually takes -- so a typo fails here instead of at the
+    /// user's first click.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ViewFactory_HandsOutAMarkManyView_OnEveryBackend(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        container.GetInstance<IViewFactory>().GetMarkManyView().Should().NotBeNull();
     }
 
     [Fact]
@@ -88,6 +130,7 @@ public class LabelEditorBackendSwitchTests
     {
         using var container = CreateAppContainer(LabelEditorBackendKind.Avalonia);
         container.GetInstance<ILabelEditorView>("LabelEditorView");
+        container.GetInstance<IMarkManyView>("MarkManyView");
 
         // the timing constraint from Phase 0: Avalonia must not come up before the
         // message loop / DPI setup. Resolution happens in MainWindow's ctor, so it must

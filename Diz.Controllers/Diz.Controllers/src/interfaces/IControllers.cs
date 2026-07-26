@@ -78,20 +78,6 @@ public interface IProjectOpenerHandler : ILongRunningTaskHandler
     Project OpenProject(string filename, bool showPopupAlertOnLoaded);
 }
 
-public class MarkManyViewSettings
-{
-    public Dictionary<MarkCommand.MarkManyProperty, object> AllSettings { get; set; } = new();
-    public MarkCommand.MarkManyProperty SelectedProperty { get; set; } = MarkCommand.MarkManyProperty.Flag;
-}
-
-public interface IMarkManyController<out TDataSource>
-{
-    IDataRange DataRange { get; }
-    TDataSource Data { get; }
-    MarkCommand? Show(int startOffset = 0, int count = 0x10, MarkManyViewSettings? inputSettings = null);
-    MarkManyViewSettings GetCurrentSettings();
-}
-
 public interface ILogCreatorSettingsEditorController : INotifyPropertyChangedExt
 {
     ILogCreatorSettingsEditorView View { get; set; }

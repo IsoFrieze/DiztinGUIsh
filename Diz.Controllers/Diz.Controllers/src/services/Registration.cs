@@ -23,18 +23,5 @@ public class DizControllersCompositionRoot : ICompositionRoot
 
         serviceRegistry.Register<IDizDocument, DizDocument>();
 
-        // sorry this is all a huge WIP mess, cleanup incoming soon.
-
-        // serviceRegistry.Register<int, int, IReadOnlySnesRom, IMarkManyController>(
-        //     (factory, offset, whichIndex, data) =>
-        //     {
-        //          // TODO: update this with updated controller from Diz 2.0 branch.
-        //          // I think that means kill 'whichIndex', use the new format that doesn't rely on it.
-        //         var view = factory.GetInstance<IMarkManyView>();
-        //         var markManyController = new MarkManyController(offset, whichIndex, data, view);
-        //         markManyController.MarkManyView.Controller = markManyController;
-        //         return markManyController;
-        //     });
-
     }
 }
