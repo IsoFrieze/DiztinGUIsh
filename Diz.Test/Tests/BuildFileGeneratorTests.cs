@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Json.Nodes;
 using Diz.LogWriter.assets;
 using FluentAssertions;
 using Xunit;
@@ -32,6 +35,38 @@ public class BuildFileGeneratorTests : IDisposable
         AssetType = assetType,
         SharedFiles = sharedFiles ?? [],
     };
+
+    /// <summary>
+    /// A container node as the container exporter reports it: members tiling a buffer, optionally
+    /// behind one transform stage.
+    /// </summary>
+    private static AssetBuildNode ContainerNode(string name, bool compressed,
+        params AssetBuildNode[] members) => new()
+    {
+        Name = name,
+        AssetType = "blob.container",
+        Pipeline = compressed
+            ?
+            [
+                new AssetPipelineStage
+                {
+                    Codec = "compress.ct.lzss",
+                    BlockKey = "lz",
+                    Block = new JsonObject { ["mode"] = 12 },
+                },
+            ]
+            : [],
+        Members = members,
+    };
+
+    /// <summary>Every `build` statement in a generated file, one per emitted edge.</summary>
+    private static List<string> BuildEdges(string ninja) =>
+        ninja.Split('\n').Select(l => l.TrimEnd('\r'))
+            .Where(l => l.StartsWith("build ", StringComparison.Ordinal))
+            .ToList();
+
+    /// <summary>The three edges every project has regardless of assets: the ROM, verify, extract.</summary>
+    private const int FixedEdges = 3;
 
     [Fact]
     public void BinaryRegionsWireThroughBinpackAsRawAssets()
@@ -426,6 +461,274 @@ public class BuildFileGeneratorTests : IDisposable
         // ...while gfx still routes through gfx_compile + $gfxpack, unchanged.
         ninja.Should().Contain(
             "build build/assets/gfx/font.bin: gfx_compile extracted/gfx/font.png | generated/assets/gfx/font.json $gfxpack");
+    }
+
+    // ---- containers ------------------------------------------------------------------------
+
+    [Fact]
+    public void AProjectWithNoContainersGainsNothingThatServesOne()
+    {
+        // The whole container family -- the packing tool, the game-specific pipeline codecs, and
+        // the buffer-mode rules -- is conditional. A project that packs nothing must produce the
+        // build file it produced before packing existed, or every unrelated re-export shows up
+        // as a diff and an inert rule block becomes impossible to tell from a live one.
+        var ninja = new BuildFileGenerator().Generate([
+            AssetNode("gfx/font"), AssetNode("audio/song", "audio.snes.brr"),
+            AssetNode("text/names", "text.ct.mapped", "text/ct_8px.tbl"),
+        ]);
+
+        foreach (var token in new[]
+                 {
+                     "nodepack", "blob_slice", "blob_split", "blob_join",
+                     "ctlz", "tools/vendor/game",
+                     "gfx_decode", "gfx_encode", "audio_decode", "audio_encode",
+                     "text_decode", "text_encode", "raw_decode", "raw_encode",
+                 })
+        {
+            ninja.Should().NotContain(token, $"a container-free project must not mention {token}");
+        }
+    }
+
+    [Fact]
+    public void AContainerEmitsTwoEdgesPerMemberPlusFive()
+    {
+        // slice, decompress, split, join, compress -- plus decode + encode for each member.
+        // The count is the point: split fans out in ONE edge and join fans in with ONE, so the
+        // graph grows linearly and needs no scheduling machinery of its own.
+        var ninja = new BuildFileGenerator().Generate([
+            ContainerNode("blob/pack", compressed: true,
+                AssetNode("gfx/a"), AssetNode("gfx/b"), AssetNode("gfx/c")),
+        ]);
+
+        BuildEdges(ninja).Count.Should().Be(2 * 3 + 5 + FixedEdges);
+    }
+
+    [Fact]
+    public void ContainerEdgesChainSliceDecompressSplitDecodeEncodeJoinCompress()
+    {
+        var ninja = new BuildFileGenerator().Generate([
+            ContainerNode("blob/pack", compressed: true,
+                AssetNode("gfx/a"), AssetNode("text/b", "text.ct.mapped", "text/ct_8px.tbl")),
+        ]);
+
+        // the container's bytes come out of the ROM through its own manifest, exactly as a leaf
+        // asset's do -- ROM ground truth, explicit manifest, never a layer lookup.
+        ninja.Should().Contain(
+            "build build/extract/blob/pack.raw: blob_slice | generated/assets/blob/pack.json $nodepack $orig_rom");
+
+        // ...then the pipeline turns them into the buffer the members tile. The mode rides as an
+        // edge variable because it is per-blob metadata the codec cannot derive.
+        ninja.Should().Contain(
+            "build build/extract/blob/pack.plain: ctlz_decompress build/extract/blob/pack.raw " +
+            "| generated/assets/blob/pack.json $ctlz");
+        ninja.Should().Contain("  lz_mode = 12");
+
+        // ONE split edge, every member an output.
+        ninja.Should().Contain(
+            "build build/extract/gfx/a.bin build/extract/text/b.bin: blob_split " +
+            "build/extract/blob/pack.plain | generated/assets/blob/pack.json $nodepack");
+        ninja.Should().Contain("  outdir = build/extract");
+
+        // each member decodes and encodes exactly like a top-level asset of its type would
+        ninja.Should().Contain(
+            "build extracted/gfx/a.png: gfx_decode build/extract/gfx/a.bin | generated/assets/gfx/a.json $gfxpack");
+        ninja.Should().Contain(
+            "build build/encode/gfx/a.bin: gfx_encode extracted/gfx/a.png | generated/assets/gfx/a.json $gfxpack");
+        ninja.Should().Contain("  indir = extracted");
+
+        // ONE join edge, every member an input: the buffer cannot be rebuilt from a subset.
+        ninja.Should().Contain(
+            "build build/join/blob/pack.plain: blob_join build/encode/gfx/a.bin " +
+            "build/encode/text/b.bin | generated/assets/blob/pack.json $nodepack");
+        ninja.Should().Contain("  indir = build/encode");
+
+        // and the recompressed blob is what the assembler incbin's, so the ROM depends on it
+        ninja.Should().Contain(
+            "build build/assets/blob/pack.bin: ctlz_compress build/join/blob/pack.plain " +
+            "| generated/assets/blob/pack.json $ctlzpack");
+        ninja.Should().Contain("build $out_rom: assemble | build/assets/blob/pack.bin");
+    }
+
+    [Fact]
+    public void PipelineCodecsComeFromTheGameToolDirAndTheSplitterFromTheSharedOne()
+    {
+        // Cutting a buffer at declared offsets is format-agnostic and ships with the codecs.
+        // A compression format belongs to one game and must not: putting it in the shared dir is
+        // what would ship it into every other game's repo.
+        var ninja = new BuildFileGenerator().Generate([
+            ContainerNode("blob/pack", compressed: true, AssetNode("gfx/a")),
+        ]);
+
+        ninja.Should().Contain("nodepack = tools/vendor/dizpack/nodepack.py");
+        ninja.Should().Contain("ctlz = tools/vendor/game/ctlz.py");
+        ninja.Should().Contain("ctlzpack = tools/vendor/game/ctlzpack.py");
+
+        // the encoder knobs that are policy stay pinned inside the tool; only the per-blob
+        // metadata it cannot derive appears on the command line.
+        ninja.Should().Contain(
+            "  command = python $ctlz decompress --in $in --out $out --expect-mode $lz_mode");
+        ninja.Should().Contain(
+            "  command = python $ctlzpack compress --in $in --out $out --mode $lz_mode");
+        ninja.Should().NotContain("--tiebreak");
+        ninja.Should().NotContain("--tailpad");
+    }
+
+    [Fact]
+    public void AnUncompressedContainerHasNoPipelineEdges()
+    {
+        // Nothing between the stored bytes and the buffer means the two collapse: the slice IS
+        // the buffer and the join output IS the incbin'd payload.
+        var ninja = new BuildFileGenerator().Generate([
+            ContainerNode("blob/plain", compressed: false, AssetNode("gfx/a"), AssetNode("gfx/b")),
+        ]);
+
+        BuildEdges(ninja).Count.Should().Be(2 * 2 + 3 + FixedEdges);
+        ninja.Should().NotContain("ctlz");
+        ninja.Should().NotContain(".plain");
+        ninja.Should().Contain(
+            "build build/extract/gfx/a.bin build/extract/gfx/b.bin: blob_split " +
+            "build/extract/blob/plain.raw | generated/assets/blob/plain.json $nodepack");
+        ninja.Should().Contain(
+            "build build/assets/blob/plain.bin: blob_join build/encode/gfx/a.bin build/encode/gfx/b.bin");
+    }
+
+    [Fact]
+    public void AMembersSharedFilesAreImplicitDepsOfItsDecodeEdge()
+    {
+        // Same rule as a top-level asset: editing the character table has to re-decode the text,
+        // or the build keeps serving text rendered with the old glyph map.
+        var ninja = new BuildFileGenerator().Generate([
+            ContainerNode("blob/pack", compressed: true,
+                AssetNode("text/credits", "text.ct.mapped", "text/ct_8px.tbl")),
+        ]);
+
+        ninja.Should().Contain(
+            "build extracted/text/credits.yaml: text_decode build/extract/text/credits.bin " +
+            "| generated/assets/text/credits.json $textpack assets/text/ct_8px.tbl");
+    }
+
+    [Fact]
+    public void MembersAppearInTheExtractAliasButTheContainerDoesNot()
+    {
+        // A member has an editable source; the container has none -- what it holds is its
+        // members, and they are already listed.
+        var ninja = new BuildFileGenerator().Generate([
+            ContainerNode("blob/pack", compressed: true, AssetNode("gfx/a"), AssetNode("gfx/b")),
+        ]);
+
+        ninja.Should().Contain("build extract: phony extracted/gfx/a.png extracted/gfx/b.png");
+    }
+
+    [Fact]
+    public void ChainedPipelineStagesAreRejectedRatherThanGuessedAt()
+    {
+        var twoStages = new AssetBuildNode
+        {
+            Name = "blob/pack",
+            AssetType = "blob.container",
+            Pipeline =
+            [
+                new AssetPipelineStage { Codec = "compress.ct.lzss", BlockKey = "lz", Block = [] },
+                new AssetPipelineStage { Codec = "compress.ct.lzss", BlockKey = "lz", Block = [] },
+            ],
+            Members = [AssetNode("gfx/a")],
+        };
+
+        var act = () => new BuildFileGenerator().Generate([twoStages]);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*chained stages*");
+    }
+
+    [Fact]
+    public void AnUnregisteredPipelineCodecFailsLoudlyNamingIt()
+    {
+        var unknown = new AssetBuildNode
+        {
+            Name = "blob/pack",
+            AssetType = "blob.container",
+            Pipeline = [new AssetPipelineStage { Codec = "compress.made.up", BlockKey = "lz", Block = [] }],
+            Members = [AssetNode("gfx/a")],
+        };
+
+        var act = () => new BuildFileGenerator().Generate([unknown]);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*compress.made.up*");
+    }
+
+    // ---- game-tool vendoring ---------------------------------------------------------------
+
+    /// <summary>Build a Diz-shaped tools tree: shared codecs plus one game-specific set.</summary>
+    private string MakeToolsTree(string rootName, params string[] gameKeys)
+    {
+        var tools = Path.Combine(tempDir, rootName, "tools", "dizpack");
+        Directory.CreateDirectory(tools);
+        File.WriteAllText(Path.Combine(tools, "gfxpack.py"), "# stub\n");
+        File.WriteAllText(Path.Combine(tools, "requirements.txt"), "Pillow>=10\n");
+
+        foreach (var key in gameKeys)
+        {
+            var gameDir = Path.Combine(tempDir, rootName, "tools", "dizpack-game", key);
+            Directory.CreateDirectory(gameDir);
+            File.WriteAllText(Path.Combine(gameDir, "ctlz.py"), "# stub decoder\n");
+            File.WriteAllText(Path.Combine(gameDir, "ctlzpack.py"), "# stub encoder\n");
+        }
+
+        return tools;
+    }
+
+    [Fact]
+    public void AContainerFreeProjectVendorsNoGameToolsAtAll()
+    {
+        // Not an empty directory either: a vendored tool nothing invokes is indistinguishable
+        // from one that has quietly stopped being invoked.
+        var tools = MakeToolsTree("clean-diz", "ct");
+        var exportRoot = Path.Combine(tempDir, "clean-export");
+        Directory.CreateDirectory(exportRoot);
+
+        var generator = new BuildFileGenerator();
+        var keys = generator.GameToolKeys([AssetNode("gfx/font")]);
+
+        keys.Should().BeEmpty();
+        new ToolVendoring().VendorGameToolsInto(exportRoot, keys, tools).Should().BeEmpty();
+        Directory.Exists(Path.Combine(exportRoot, "tools", "vendor", "game")).Should().BeFalse();
+    }
+
+    [Fact]
+    public void AContainerVendorsExactlyTheToolSetItsPipelineNames()
+    {
+        var tools = MakeToolsTree("game-diz", "ct", "unused");
+        var exportRoot = Path.Combine(tempDir, "game-export");
+        Directory.CreateDirectory(exportRoot);
+
+        var generator = new BuildFileGenerator();
+        var keys = generator.GameToolKeys([
+            ContainerNode("blob/pack", compressed: true, AssetNode("gfx/a")),
+        ]);
+
+        keys.Should().Equal("ct");
+        new ToolVendoring().VendorGameToolsInto(exportRoot, keys, tools);
+
+        var vendored = Path.Combine(exportRoot, "tools", "vendor", "game");
+        File.Exists(Path.Combine(vendored, "ctlz.py")).Should().BeTrue();
+        File.Exists(Path.Combine(vendored, "ctlzpack.py")).Should().BeTrue();
+
+        // the other game's tools are present in the Diz install and must stay there: keying the
+        // source dir per game is the whole point of not putting these with the shared codecs.
+        Directory.GetFiles(vendored).Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void AMissingGameToolSetFailsTheExportRatherThanShippingAnUnbuildableRepo()
+    {
+        // The generated build names these scripts by path, so a silent skip would move the
+        // failure to whoever next runs ninja, with nothing pointing back at the export.
+        var tools = MakeToolsTree("no-game-diz");
+        var exportRoot = Path.Combine(tempDir, "no-game-export");
+        Directory.CreateDirectory(exportRoot);
+
+        var act = () => new ToolVendoring().VendorGameToolsInto(exportRoot, ["ct"], tools);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*'ct' tool set*");
     }
 
     [Fact]
