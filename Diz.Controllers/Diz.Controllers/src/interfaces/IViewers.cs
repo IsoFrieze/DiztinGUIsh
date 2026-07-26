@@ -15,22 +15,10 @@ public interface IFormViewer
     void BringFormToTop();
 }
 
-public interface IModalDialog
-{
-    /// <summary>
-    /// Show the dialog to the user and wait for them to complete
-    /// the steps on the view
-    /// </summary>
-    /// <returns>True if steps were completed and we have a valid result</returns>
-    bool PromptDialog();
-}
-    
-
-// new-ui plan step 6 (threading rewrite): a progress view is now a plain non-modal window
-// the long-running-task handler shows while work runs on a Task and closes on completion.
-// GONE (with ProgressBarWorker): IModalDialog.PromptDialog (the blocking ShowDialog),
-// IsVisible() (the worker's spin-wait predicate), and SignalJobIsDone() (the cross-thread
-// close signal). Report(int) is marshalled to the UI thread by the handler's IProgress<int>.
+// a progress view is a plain non-modal window the long-running-task handler shows while work
+// runs on a Task, and closes on completion. There is deliberately no blocking "show and wait"
+// call, no visibility predicate to spin on, and no cross-thread done signal: Report(int) is
+// marshalled to the UI thread by the handler's IProgress<int>.
 public interface IProgressView : IFormViewer, IProgress<int> {
     public bool IsMarquee { get; set; }
     public string TextOverride { get; set; }
@@ -38,19 +26,6 @@ public interface IProgressView : IFormViewer, IProgress<int> {
     /// <summary>Close/hide the progress window. Called on the UI thread when the work finishes.</summary>
     void Close();
 }
-
-// diz2 version (use it)
-public interface IMarkManyView<TDataSource> : IModalDialog 
-    where TDataSource : IRomSize
-{
-    MarkCommand.MarkManyProperty Property { get; set; }
-    object GetPropertyValue();
-    [CanBeNull] IMarkManyController<TDataSource> Controller { get; set; }
-
-    void RestoreUiFromSettings(MarkManyViewSettings settings);
-    MarkManyViewSettings BuildSettingsFromUi();
-}
-
 
 public interface ILabelEditorView : IFormViewer
 {
