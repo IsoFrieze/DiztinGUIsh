@@ -14,9 +14,12 @@ using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Diz.Core.commands;
 using Diz.Core.Interfaces;
-using Diz.Ui.Avalonia;             // DizAvaloniaApp, AvaloniaLabelEditorView, AvaloniaFileDialogService, LabelEditorWindow (internal)
+using Diz.Cpu._65816;
+using Diz.Ui.Avalonia;             // DizAvaloniaApp, AvaloniaLabelEditorView, AvaloniaFileDialogService, LabelEditorWindow + MarkManyWindow (internal)
 using Diz.Ui.ViewModels.Labels;    // LabelEditorViewModel, ILabelEditorViewModel, ILabelRowViewModel, LabelField
+using Diz.Ui.ViewModels.MarkMany;  // MarkManyViewModel, AddressRangeViewModel
 
 namespace DizPreview;
 
@@ -129,6 +132,9 @@ internal static class Program
         Capture(window, Path.Combine(outDir, "context-added.png"),
             "details pane: alternate-context mapping added + an existing override edited");
 
+        // ------------------------------------------------------------------ MARK MANY WINDOW
+        MarkManyScenes(outDir, report);
+
         // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
         // The Avalonia progress window in both modes: marquee (open/save/export) and determinate
         // (trace-log import reports bytes-read %). Rendered here so the popup can be reviewed as
@@ -143,6 +149,211 @@ internal static class Program
 
         return 0;
     }
+
+    // ------------------------------------------------------------------ mark many window
+
+    /// <summary>
+    /// Renders the Avalonia mark-many window in three states and drives it with simulated
+    /// input. Unlike the label editor this window needs a ROM, so the fixture builds a tiny
+    /// in-memory one. Each scene gets a FRESH window + ViewModel, because the real window is
+    /// created per invocation and completes a task when it closes.
+    /// </summary>
+    private static void MarkManyScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[mark many window]");
+
+        // ---- scene 1: default (Flag selected, flag combo showing, valid range)
+        var (defaultWindow, defaultVm) = OpenMarkMany();
+        Capture(defaultWindow, Path.Combine(outDir, "markmany-default.png"),
+            $"mark many: default, property=Flag, range {defaultVm.Range.StartText}..{defaultVm.Range.EndText} " +
+            $"({defaultVm.Range.CountText} bytes)");
+
+        // ---- scene 2: validation error (data bank out of range -> OK disabled + message)
+        var (invalidWindow, invalidVm) = OpenMarkMany();
+        invalidVm.SelectedProperty = MarkCommand.MarkManyProperty.DataBank;
+        invalidVm.DataBankValue = 0x1FF;
+        Pump();
+        Capture(invalidWindow, Path.Combine(outDir, "markmany-validation-error.png"),
+            $"mark many: data bank $1FF rejected -- '{TagText(invalidWindow, "error-text")}'");
+
+        // ---- scene 3: a different property selected (M Flag -> the 16/8-bit combo)
+        var (mflagWindow, mflagVm) = OpenMarkMany();
+        mflagVm.SelectedProperty = MarkCommand.MarkManyProperty.MFlag;
+        mflagVm.RegisterWidthIs8Bit = true;
+        Pump();
+        Capture(mflagWindow, Path.Combine(outDir, "markmany-property-switched.png"),
+            "mark many: property=M Flag, value combo = 8-Bit");
+
+        // ---- interaction probes, on their own window
+        ProbeMarkMany(outDir, report);
+
+        defaultWindow.Close();
+        invalidWindow.Close();
+        mflagWindow.Close();
+        Pump();
+    }
+
+    private static (MarkManyWindow window, MarkManyViewModel<ISnesData> vm) OpenMarkMany(
+        int start = 0x100, int count = 0x10)
+    {
+        var vm = new MarkManyViewModel<ISnesData>(PreviewFixture.BuildSnesData(), start, count);
+        var window = new MarkManyWindow();
+        window.AttachViewModel(vm);
+        window.Show();
+        Pump();
+        return (window, vm);
+    }
+
+    private static void ProbeMarkMany(string outDir, List<string> report)
+    {
+        MarkManyWindow? window = null;
+        try
+        {
+            var (w, vm) = OpenMarkMany();
+            window = w;
+
+            // ---- 1: pick "Data Bank" in the property selector
+            var propertyCombo = FindByTag<ComboBox>(window, "property-combo");
+            if (propertyCombo == null)
+            {
+                Record(report, "markmany property combo", "HARNESS-FAIL", "property ComboBox not found");
+                return;
+            }
+
+            var beforeProperty = vm.SelectedProperty;
+            propertyCombo.SelectedIndex = 1; // "Data Bank"
+            Pump();
+            var propertyOk = vm.SelectedProperty == MarkCommand.MarkManyProperty.DataBank;
+            Console.WriteLine($"  property combo -> index 1; vm.SelectedProperty {beforeProperty} -> {vm.SelectedProperty}");
+            Record(report, "markmany property select", propertyOk ? "PASS" : "APP-FAIL",
+                $"vm.SelectedProperty {beforeProperty} -> {vm.SelectedProperty} (wanted DataBank)");
+
+            // the value editor must have swapped to the register box
+            var regBox = FindByTag<TextBox>(window, "reg-value");
+            var flagCombo = FindByTag<ComboBox>(window, "flag-combo");
+            var widgetOk = regBox is { IsVisible: true } && flagCombo is { IsVisible: false };
+            Record(report, "markmany value widget swap", widgetOk ? "PASS" : "APP-FAIL",
+                $"reg box visible={regBox?.IsVisible}, flag combo visible={flagCombo?.IsVisible}");
+
+            // ---- 2: type a valid data bank into the value box
+            if (regBox == null)
+            {
+                Record(report, "markmany value typing", "HARNESS-FAIL", "register value TextBox not found");
+                return;
+            }
+
+            TypeIntoBox(window, regBox, "7E");
+            var valueOk = vm.DataBankValue == 0x7E && (regBox.Text ?? "") == "7E";
+            Console.WriteLine($"  typed '7E' into value box; box='{regBox.Text}'; vm.DataBankValue=${vm.DataBankValue:X}");
+            Record(report, "markmany value typing", valueOk ? "PASS" : "APP-FAIL",
+                $"box='{regBox.Text}', vm.DataBankValue=${vm.DataBankValue:X} (wanted $7E)");
+
+            // ---- 3: type a byte count into the range
+            var countBox = FindByTag<TextBox>(window, "count-text");
+            var startBox = FindByTag<TextBox>(window, "start-text");
+            var endBox = FindByTag<TextBox>(window, "end-text");
+            if (countBox == null || startBox == null || endBox == null)
+            {
+                Record(report, "markmany range typing", "HARNESS-FAIL",
+                    $"range boxes missing (start={startBox != null}, end={endBox != null}, count={countBox != null})");
+                return;
+            }
+
+            var startBefore = vm.Range.StartIndex;
+            var endTextBefore = endBox.Text;
+            TypeIntoBox(window, countBox, "20");
+            var rangeOk = vm.Range.Count == 0x20 && vm.Range.StartIndex == startBefore;
+            // the OTHER fields must refresh, and the field being typed in must keep the typed text
+            var refreshOk = (countBox.Text ?? "") == "20" && endBox.Text != endTextBefore &&
+                            endBox.Text == vm.Range.EndText;
+            Console.WriteLine($"  typed '20' into # bytes; vm.Range.Count={vm.Range.Count:X}; " +
+                              $"start {startBefore:X}->{vm.Range.StartIndex:X}; end box '{endTextBefore}'->'{endBox.Text}'");
+            Record(report, "markmany range typing", rangeOk ? "PASS" : "APP-FAIL",
+                $"vm.Range.Count=0x{vm.Range.Count:X} (wanted 0x20), start held at 0x{vm.Range.StartIndex:X}");
+            Record(report, "markmany range refresh", refreshOk ? "PASS" : "APP-FAIL",
+                $"typed field kept '{countBox.Text}', end field refreshed to '{endBox.Text}'");
+
+            // ---- 4: an out-of-range value disables OK and shows the ViewModel's reason
+            var okButton = FindByTag<Button>(window, "ok-button");
+            if (okButton == null)
+            {
+                Record(report, "markmany OK gating", "HARNESS-FAIL", "OK Button not found");
+                return;
+            }
+
+            TypeIntoBox(window, regBox, "1FF"); // > $FF for a data bank
+            var errorText = TagText(window, "error-text");
+            var gatedOk = !okButton.IsEnabled && !string.IsNullOrEmpty(errorText) && !vm.CanBuildMarkCommand;
+            Console.WriteLine($"  typed '1FF'; OK enabled={okButton.IsEnabled}; error='{errorText}'");
+            Record(report, "markmany OK gated on invalid", gatedOk ? "PASS" : "APP-FAIL",
+                $"OK enabled={okButton.IsEnabled}, message='{errorText}'");
+
+            Pump();
+            Capture(window, Path.Combine(outDir, "markmany-probe-invalid.png"),
+                "mark many: after typing an out-of-range data bank (OK greyed, reason shown)");
+
+            // ---- 5: correct it, then confirm -- the built command must match what is on screen
+            TypeIntoBox(window, regBox, "C0");
+            var reenabledOk = okButton.IsEnabled && string.IsNullOrEmpty(TagText(window, "error-text"));
+            Record(report, "markmany OK re-enabled", reenabledOk ? "PASS" : "APP-FAIL",
+                $"OK enabled={okButton.IsEnabled}, message='{TagText(window, "error-text")}'");
+
+            var okPoint = CenterInWindow(okButton, window);
+            if (okPoint == null)
+            {
+                Record(report, "markmany confirm", "HARNESS-FAIL", "OK button has no on-screen position");
+                return;
+            }
+
+            Click(window, okPoint.Value);
+            Pump();
+
+            var confirmed = window.Completion.IsCompleted && window.Completion.Result;
+            var command = vm.BuildMarkCommand();
+            var commandOk = confirmed && command != null &&
+                            command.Property == MarkCommand.MarkManyProperty.DataBank &&
+                            Equals(command.Value, 0xC0) &&
+                            command.Start == vm.Range.StartIndex &&
+                            command.Count == vm.Range.Count;
+            Console.WriteLine($"  clicked OK; completion={(window.Completion.IsCompleted ? window.Completion.Result.ToString() : "<pending>")}; " +
+                              $"command={(command == null ? "<null>" : $"{command.Property} value={command.Value} start=0x{command.Start:X} count=0x{command.Count:X}")}");
+            Record(report, "markmany confirm -> command", commandOk ? "PASS" : "APP-FAIL",
+                command == null
+                    ? $"confirmed={confirmed}, BuildMarkCommand() returned null"
+                    : $"confirmed={confirmed}, {command.Property} value={command.Value} start=0x{command.Start:X} count=0x{command.Count:X}");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "markmany", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    /// <summary>Click into a TextBox, select all, and type -- i.e. replace its contents.</summary>
+    private static void TypeIntoBox(Window window, TextBox box, string text)
+    {
+        var pt = CenterInWindow(box, window);
+        if (pt == null)
+            return;
+
+        Click(window, pt.Value);
+        window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
+        window.KeyRelease(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
+        Pump();
+        window.KeyTextInput(text);
+        Pump();
+    }
+
+    private static T? FindByTag<T>(Window window, string tag) where T : Control =>
+        window.GetVisualDescendants().OfType<T>().FirstOrDefault(c => Equals(c.Tag, tag));
+
+    private static string TagText(Window window, string tag) =>
+        FindByTag<TextBlock>(window, tag)?.Text ?? "";
 
     // ------------------------------------------------------------------ progress popup (step 6 Part C)
 
@@ -541,7 +752,7 @@ internal static class Program
         Console.WriteLine($"  wrote {Path.GetFileName(path),-22} {frame.PixelSize.Width}x{frame.PixelSize.Height}  {size,8} bytes  -- {caption}");
     }
 
-    private static void Click(LabelEditorWindow window, Point p)
+    private static void Click(Window window, Point p)
     {
         window.MouseMove(p, RawInputModifiers.None);
         window.MouseDown(p, MouseButton.Left, RawInputModifiers.None);

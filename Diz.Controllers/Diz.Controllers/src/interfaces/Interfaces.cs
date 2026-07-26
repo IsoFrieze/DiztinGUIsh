@@ -41,6 +41,7 @@ public interface IViewFactory
     IProgressView GetProgressBarView();
     ILogCreatorSettingsEditorView GetExportDisassemblyView();
     ILabelEditorView GetLabelEditorView();
+    IMarkManyView GetMarkManyView();
     IMainGridWindowView GetMainGridWindowView();
     IFormViewer GetAboutView();
     IRegionListView GetRegionEditorView();

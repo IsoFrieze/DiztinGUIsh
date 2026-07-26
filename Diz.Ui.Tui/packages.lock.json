@@ -296,6 +296,7 @@
           "Diz.Core": "[1.0.0, )",
           "Diz.Import": "[1.0.0, )",
           "Diz.LogWriter": "[1.0.0, )",
+          "Diz.Ui.ViewModels": "[1.0.0, )",
           "LightInject": "[6.6.4, )"
         }
       },
