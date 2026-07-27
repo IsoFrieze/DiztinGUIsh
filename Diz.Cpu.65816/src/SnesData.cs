@@ -681,6 +681,19 @@ public static class SnesApiExtensions
             _ => -1
         };
 
+    /// <summary>
+    /// Apply an <see cref="AutoStepHarshCommand"/>. This is the single non-UI entry point for
+    /// "harsh auto step": build the command anywhere (a ViewModel, a script, an external API),
+    /// then apply it here. No UI toolkit involved.
+    /// </summary>
+    /// <returns>
+    /// The offset decoding stopped at -- the first instruction boundary at or past
+    /// Start + Count -- i.e. where a caller that follows the stepping should navigate to. A
+    /// count of zero or less decodes nothing and answers the command's Start unchanged.
+    /// </returns>
+    public static int ApplyAutoStepHarshCommand(this ISnesApi<IData> @this, AutoStepHarshCommand command) =>
+        @this.AutoStepHarsh(command.Start, command.Count);
+
     // input can be any length, and will be padded, using spaces, to the right size for SNES header
     public static void SetCartridgeTitle(this ISnesData @this, string utf8CartridgeTitle)
     {

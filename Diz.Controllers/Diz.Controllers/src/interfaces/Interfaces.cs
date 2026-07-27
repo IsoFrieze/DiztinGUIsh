@@ -43,6 +43,7 @@ public interface IViewFactory
     ILabelEditorView GetLabelEditorView();
     IMarkManyView GetMarkManyView();
     IGotoView GetGotoView();
+    IHarshAutoStepView GetHarshAutoStepView();
     IMainGridWindowView GetMainGridWindowView();
     IFormViewer GetAboutView();
     IRegionListView GetRegionEditorView();

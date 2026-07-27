@@ -43,7 +43,8 @@ public static class DizWinformsRegisterServices
         // step-5 last-registration-wins ordering trick. Exactly ONE of these roots is ever
         // registered, so the label-editor backend selection has no dependency on registration
         // order. Each root registers the same named seams -- LabelEditorView, MarkManyView,
-        // GotoView, ProgressBarView, IFileDialogService -- for its toolkit. Everything not listed here
+        // GotoView, HarshAutoStepView, ProgressBarView, IFileDialogService -- for its toolkit.
+        // Everything not listed here
         // stays WinForms (registered unconditionally above). Set DIZ_LABEL_EDITOR=avalonia to
         // pick the Avalonia backend (see LabelEditorBackend docs).
         if (labelEditorBackend == LabelEditorBackendKind.Avalonia)
@@ -54,8 +55,9 @@ public static class DizWinformsRegisterServices
         {
             // TUI backend (DIZ_LABEL_EDITOR=tui): ONLY the label editor is TUI. Unlike the
             // Avalonia/WinForms roots (which supply every seam for their toolkit), the TUI
-            // root supplies just LabelEditorView; the mark-many window, goto window, progress
-            // popup and file dialogs stay WinForms and are registered EXPLICITLY here. We do NOT
+            // root supplies just LabelEditorView; the mark-many window, goto window,
+            // harsh-auto-step window, progress popup and file dialogs stay WinForms and are
+            // registered EXPLICITLY here. We do NOT
             // register DizUiWinformsBackendCompositionRoot for those, because it would also
             // register a WinForms LabelEditorView and reintroduce the last-registration-wins
             // ordering this branch exists to avoid.
@@ -63,6 +65,7 @@ public static class DizWinformsRegisterServices
             serviceRegistry.Register<IProgressView, ProgressDialog>("ProgressBarView");
             serviceRegistry.Register<IMarkManyView, WinformsMarkManyView>("MarkManyView");
             serviceRegistry.Register<IGotoView, WinformsGotoView>("GotoView");
+            serviceRegistry.Register<IHarshAutoStepView, WinformsHarshAutoStepView>("HarshAutoStepView");
             serviceRegistry.RegisterSingleton<IFileDialogService, WinformsFileDialogService>();
         }
         else
