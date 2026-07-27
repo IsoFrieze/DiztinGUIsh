@@ -44,6 +44,8 @@ public interface IViewFactory
     IMarkManyView GetMarkManyView();
     IGotoView GetGotoView();
     IHarshAutoStepView GetHarshAutoStepView();
+    IMisalignmentCheckerView GetMisalignmentCheckerView();
+    IInOutPointCheckerView GetInOutPointCheckerView();
     IMainGridWindowView GetMainGridWindowView();
     IFormViewer GetAboutView();
     IRegionListView GetRegionEditorView();
