@@ -17,10 +17,11 @@ using Avalonia.VisualTree;
 using Diz.Core.commands;
 using Diz.Core.Interfaces;
 using Diz.Cpu._65816;
-using Diz.Ui.Avalonia;             // DizAvaloniaApp, AvaloniaLabelEditorView, AvaloniaFileDialogService, LabelEditorWindow + MarkManyWindow + GotoWindow (internal)
-using Diz.Ui.ViewModels.Goto;      // GotoViewModel
-using Diz.Ui.ViewModels.Labels;    // LabelEditorViewModel, ILabelEditorViewModel, ILabelRowViewModel, LabelField
-using Diz.Ui.ViewModels.MarkMany;  // MarkManyViewModel, AddressRangeViewModel
+using Diz.Ui.Avalonia;                    // DizAvaloniaApp, AvaloniaLabelEditorView, AvaloniaFileDialogService, LabelEditorWindow + MarkManyWindow + GotoWindow + HarshAutoStepWindow (internal)
+using Diz.Ui.ViewModels.Goto;             // GotoViewModel
+using Diz.Ui.ViewModels.HarshAutoStep;    // HarshAutoStepViewModel
+using Diz.Ui.ViewModels.Labels;           // LabelEditorViewModel, ILabelEditorViewModel, ILabelRowViewModel, LabelField
+using Diz.Ui.ViewModels.MarkMany;         // MarkManyViewModel, AddressRangeViewModel
 
 namespace DizPreview;
 
@@ -139,6 +140,9 @@ internal static class Program
         // ------------------------------------------------------------------ GOTO WINDOW
         ProbeTextChangedTiming(report);
         GotoScenes(outDir, report);
+
+        // ------------------------------------------------------------------ HARSH AUTO STEP WINDOW
+        HarshAutoStepScenes(outDir, report);
 
         // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
         // The Avalonia progress window in both modes: marquee (open/save/export) and determinate
@@ -720,6 +724,265 @@ internal static class Program
         catch (Exception ex)
         {
             Record(report, "goto", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    // ------------------------------------------------------------------ harsh auto step window
+
+    /// <summary>
+    /// Renders the Avalonia harsh-auto-step window and drives it with simulated input. Like the
+    /// other two ROM windows it needs a ROM, so the fixture's tiny in-memory HiROM is reused.
+    /// Each scene gets a FRESH window + ViewModel, because the real window is created per
+    /// invocation and completes a task when it closes.
+    /// </summary>
+    private static void HarshAutoStepScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[harsh auto step window]");
+
+        // ---- scene 1: default (seeded from a ROM file offset, a full $100 bytes, Go enabled)
+        var (defaultWindow, defaultVm) = OpenHarshAutoStep();
+        Capture(defaultWindow, Path.Combine(outDir, "harshautostep-default.png"),
+            $"harsh auto step: default, range {defaultVm.Range.StartText}..{defaultVm.Range.EndText} " +
+            $"({defaultVm.Range.CountText} bytes), Go enabled");
+
+        // ---- scene 2: an empty range -- Go greyed, the ViewModel's reason shown. Driven through
+        // the widget rather than by assigning the ViewModel, because the range deliberately
+        // withholds the notification for the field being typed into.
+        var (emptyWindow, _) = OpenHarshAutoStep();
+        var emptyCountBox = FindByTag<TextBox>(emptyWindow, "count-text");
+        if (emptyCountBox != null)
+            TypeIntoBox(emptyWindow, emptyCountBox, "0");
+        Pump();
+        Capture(emptyWindow, Path.Combine(outDir, "harshautostep-validation-error.png"),
+            $"harsh auto step: zero bytes rejected -- '{TagText(emptyWindow, "error-text")}'");
+
+        // ---- scene 3: the other display mode -- ROM file offsets, decimal
+        var (decimalWindow, decimalVm) = OpenHarshAutoStep();
+        decimalVm.Range.UseSnesAddresses = false;
+        decimalVm.Range.UseHexadecimal = false;
+        Pump();
+        Capture(decimalWindow, Path.Combine(outDir, "harshautostep-rom-decimal.png"),
+            $"harsh auto step: ROM file offset + decimal, range {decimalVm.Range.StartText}.." +
+            $"{decimalVm.Range.EndText} ({decimalVm.Range.CountText} bytes)");
+
+        // ---- interaction probes, on their own windows
+        ProbeHarshAutoStep(outDir, report);
+        ProbeHarshAutoStepTypingIsNotRewritten(outDir, report);
+
+        defaultWindow.Close();
+        emptyWindow.Close();
+        decimalWindow.Close();
+        Pump();
+    }
+
+    private static (HarshAutoStepWindow window, HarshAutoStepViewModel vm) OpenHarshAutoStep(
+        int startPcOffset = 0x100)
+    {
+        var snesData = PreviewFixture.BuildSnesData();
+        var vm = new HarshAutoStepViewModel(snesData, snesData.GetRomSize(), startPcOffset);
+        var window = new HarshAutoStepWindow();
+        window.AttachViewModel(vm);
+        window.Show();
+        Pump();
+        return (window, vm);
+    }
+
+    private static void ProbeHarshAutoStep(string outDir, List<string> report)
+    {
+        HarshAutoStepWindow? window = null;
+        try
+        {
+            var (w, vm) = OpenHarshAutoStep();
+            window = w;
+
+            var startBox = FindByTag<TextBox>(window, "start-text");
+            var endBox = FindByTag<TextBox>(window, "end-text");
+            var countBox = FindByTag<TextBox>(window, "count-text");
+            var goButton = FindByTag<Button>(window, "go-button");
+            if (startBox == null || endBox == null || countBox == null || goButton == null)
+            {
+                Record(report, "harshautostep widgets", "HARNESS-FAIL",
+                    $"start={startBox != null}, end={endBox != null}, count={countBox != null}, " +
+                    $"Go={goButton != null}");
+                return;
+            }
+
+            // ---- 1: typing a START address moves the range; END holds and COUNT follows, and
+            // both of the other boxes are refreshed from the ViewModel.
+            var endTextBefore = endBox.Text;
+            var countTextBefore = countBox.Text;
+            TypeIntoBox(window, startBox, "C00180");
+            var startOk = vm.Range.StartIndex == 0x180 && vm.Range.EndIndex == 0x1FF &&
+                          vm.Range.Count == 0x80 && (startBox.Text ?? "") == "C00180" &&
+                          countBox.Text != countTextBefore && countBox.Text == vm.Range.CountText &&
+                          endBox.Text == vm.Range.EndText;
+            Console.WriteLine($"  typed 'C00180' into start; start=0x{vm.Range.StartIndex:X} " +
+                              $"end=0x{vm.Range.EndIndex:X} count=0x{vm.Range.Count:X}; " +
+                              $"end box '{endTextBefore}'->'{endBox.Text}', count box '{countTextBefore}'->'{countBox.Text}'");
+            Record(report, "harshautostep start typing", startOk ? "PASS" : "APP-FAIL",
+                $"start=0x{vm.Range.StartIndex:X} (wanted 0x180), end held 0x{vm.Range.EndIndex:X}, " +
+                $"count=0x{vm.Range.Count:X} (wanted 0x80); boxes refreshed to '{endBox.Text}'/'{countBox.Text}'");
+
+            // ---- 2: typing an END address moves COUNT with START held -- and pins the INCLUSIVE
+            // arithmetic: the byte named in the End box is part of the range.
+            TypeIntoBox(window, endBox, "C002FF");
+            var inclusiveOk = vm.Range.StartIndex == 0x180 && vm.Range.EndIndex == 0x2FF &&
+                              vm.Range.Count == 0x2FF - 0x180 + 1 &&
+                              (endBox.Text ?? "") == "C002FF" && countBox.Text == vm.Range.CountText;
+            Console.WriteLine($"  typed 'C002FF' into end; start=0x{vm.Range.StartIndex:X} " +
+                              $"end=0x{vm.Range.EndIndex:X} count=0x{vm.Range.Count:X} " +
+                              $"(inclusive arithmetic wants 0x{0x2FF - 0x180 + 1:X}); count box '{countBox.Text}'");
+            Record(report, "harshautostep end typing (inclusive)", inclusiveOk ? "PASS" : "APP-FAIL",
+                $"start held 0x{vm.Range.StartIndex:X}, end=0x{vm.Range.EndIndex:X}, " +
+                $"count=0x{vm.Range.Count:X} == end - start + 1 (0x{0x2FF - 0x180 + 1:X})");
+
+            // ---- 3: typing a COUNT moves the END, with START held
+            TypeIntoBox(window, countBox, "40");
+            var countOk = vm.Range.Count == 0x40 && vm.Range.StartIndex == 0x180 &&
+                          vm.Range.EndIndex == 0x1BF && (countBox.Text ?? "") == "40" &&
+                          (endBox.Text ?? "") == "C001BF";
+            Console.WriteLine($"  typed '40' into # bytes; start=0x{vm.Range.StartIndex:X} " +
+                              $"end=0x{vm.Range.EndIndex:X} count=0x{vm.Range.Count:X}; end box '{endBox.Text}'");
+            Record(report, "harshautostep count typing", countOk ? "PASS" : "APP-FAIL",
+                $"count=0x{vm.Range.Count:X} (wanted 0x40), start held 0x{vm.Range.StartIndex:X}, " +
+                $"end box -> '{endBox.Text}' (wanted 'C001BF')");
+
+            // ---- 4: an empty range disables Go and shows the ViewModel's own reason
+            TypeIntoBox(window, countBox, "0");
+            var errorText = TagText(window, "error-text");
+            var gatedOk = !goButton.IsEnabled && errorText == HarshAutoStepViewModel.EmptyRangeMessage &&
+                          !vm.CanBuildAutoStepCommand && vm.BuildAutoStepHarshCommand() == null;
+            Console.WriteLine($"  typed '0' into # bytes; Go enabled={goButton.IsEnabled}; error='{errorText}'");
+            Record(report, "harshautostep empty gates Go", gatedOk ? "PASS" : "APP-FAIL",
+                $"Go enabled={goButton.IsEnabled}, message='{errorText}', command={(vm.BuildAutoStepHarshCommand() == null ? "<null>" : "<built>")}");
+
+            Pump();
+            Capture(window, Path.Combine(outDir, "harshautostep-probe-invalid.png"),
+                "harsh auto step: after asking for zero bytes (Go greyed, reason shown)");
+
+            // ---- 5: correct it, then confirm -- the built command must match what is on screen
+            TypeIntoBox(window, countBox, "20");
+            var reenabledOk = goButton.IsEnabled && string.IsNullOrEmpty(TagText(window, "error-text"));
+            Record(report, "harshautostep Go re-enabled", reenabledOk ? "PASS" : "APP-FAIL",
+                $"Go enabled={goButton.IsEnabled}, message='{TagText(window, "error-text")}'");
+
+            var goPoint = CenterInWindow(goButton, window);
+            if (goPoint == null)
+            {
+                Record(report, "harshautostep confirm", "HARNESS-FAIL", "Go button has no on-screen position");
+                return;
+            }
+
+            var startTextOnScreen = startBox.Text ?? "";
+            var countTextOnScreen = countBox.Text ?? "";
+            Click(window, goPoint.Value);
+            Pump();
+
+            var confirmed = window.Completion.IsCompleted && window.Completion.Result;
+            var command = vm.BuildAutoStepHarshCommand();
+            var screenCountParsed = int.TryParse(countTextOnScreen,
+                System.Globalization.NumberStyles.HexNumber,
+                System.Globalization.CultureInfo.InvariantCulture, out var countFromBox);
+            var commandOk = confirmed && command != null && command.Start == 0x180 &&
+                            command.Count == 0x20 && screenCountParsed && command.Count == countFromBox &&
+                            startTextOnScreen == "C00180";
+            Console.WriteLine($"  clicked Go; completion={(window.Completion.IsCompleted ? window.Completion.Result.ToString() : "<pending>")}; " +
+                              $"command={(command == null ? "<null>" : $"start=0x{command.Start:X} count=0x{command.Count:X}")}; " +
+                              $"boxes were start='{startTextOnScreen}' count='{countTextOnScreen}'");
+            Record(report, "harshautostep confirm -> command", commandOk ? "PASS" : "APP-FAIL",
+                command == null
+                    ? $"confirmed={confirmed}, BuildAutoStepHarshCommand() returned null"
+                    : $"confirmed={confirmed}, start=0x{command.Start:X} count=0x{command.Count:X} " +
+                      $"== boxes start='{startTextOnScreen}' count='{countTextOnScreen}'");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "harshautostep", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    /// <summary>
+    /// The range field the user is typing in must keep exactly what they typed, keystroke by
+    /// keystroke -- the harsh-auto-step counterpart of the goto and mark-many probes of the same
+    /// name, and the exact reproduction that caught the echo bug.
+    ///
+    /// Start/end/count are three views of one range, so moving any of them rewrites the other
+    /// two, and each of those rewrites is a chance for the range to come back around into the
+    /// field under the caret. The address typed is a HiROM MIRROR BANK ($40:0200 is the same ROM
+    /// byte as $C0:0200), so the range's own text for it differs from what was typed and a round
+    /// trip is visible rather than silent.
+    ///
+    /// Afterwards a different field is edited, which is what makes the canonical conversion
+    /// appear: the start box is only ever rewritten once the caret has moved off it.
+    /// </summary>
+    private static void ProbeHarshAutoStepTypingIsNotRewritten(string outDir, List<string> report)
+    {
+        HarshAutoStepWindow? window = null;
+        try
+        {
+            var (w, vm) = OpenHarshAutoStep();
+            window = w;
+
+            var startBox = FindByTag<TextBox>(window, "start-text");
+            var endBox = FindByTag<TextBox>(window, "end-text");
+            var countBox = FindByTag<TextBox>(window, "count-text");
+            if (startBox == null || endBox == null || countBox == null)
+            {
+                Record(report, "harshautostep typing not rewritten", "HARNESS-FAIL",
+                    $"range boxes missing (start={startBox != null}, end={endBox != null}, count={countBox != null})");
+                return;
+            }
+
+            const string typed = "400200";
+
+            var firstDivergence = TypeCharByChar(window, startBox, typed, _ =>
+                $"end box '{endBox.Text}', count box '{countBox.Text}'");
+            if (firstDivergence == HarnessCouldNotType)
+            {
+                Record(report, "harshautostep typing not rewritten", "HARNESS-FAIL",
+                    "start box has no on-screen position");
+                return;
+            }
+
+            var keptTyping = firstDivergence == null;
+            Record(report, "harshautostep typing not rewritten", keptTyping ? "PASS" : "APP-FAIL",
+                keptTyping
+                    ? $"start box held every prefix of '{typed}' while it had the caret"
+                    : firstDivergence!);
+
+            // the range still has to have moved to where the typed address actually is...
+            var movedOk = vm.Range.StartIndex == 0x200;
+
+            Pump();
+            Capture(window, Path.Combine(outDir, "harshautostep-mirror-bank-typed.png"),
+                $"harsh auto step: after typing the mirror-bank address '{typed}' into start one key " +
+                $"at a time (box reads '{startBox.Text}')");
+
+            // ...and once the caret moves to another field, the start box shows the CANONICAL
+            // bank for that same ROM byte rather than the mirror the user typed.
+            TypeIntoBox(window, countBox, "8");
+            var canonicalOk = (startBox.Text ?? "") == "C00200" && vm.Range.StartIndex == 0x200;
+            Console.WriteLine($"  after typing '8' into # bytes: start box '{startBox.Text}' " +
+                              $"end box '{endBox.Text}'; vm.Range.StartIndex=0x{vm.Range.StartIndex:X} " +
+                              $"count=0x{vm.Range.Count:X}");
+            Record(report, "harshautostep mirror bank start", movedOk && canonicalOk ? "PASS" : "APP-FAIL",
+                $"vm.Range.StartIndex=0x{vm.Range.StartIndex:X} (wanted 0x200), start box now " +
+                $"'{startBox.Text}' (wanted the canonical 'C00200')");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "harshautostep typing not rewritten", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
         }
         finally
         {

@@ -6,8 +6,9 @@ namespace Diz.Ui.Avalonia;
 
 /// <summary>
 /// The Avalonia LABEL-EDITOR BACKEND (new-ui plan step 5/6): exactly the
-/// backend-selectable registrations (LabelEditorView, MarkManyView, GotoView, ProgressBarView,
-/// IFileDialogService), each named with the exact IViewFactory method-name string. The app registers EITHER this
+/// backend-selectable registrations (LabelEditorView, MarkManyView, GotoView, HarshAutoStepView,
+/// ProgressBarView, IFileDialogService), each named with the exact IViewFactory method-name
+/// string. The app registers EITHER this
 /// root OR <c>DizUiWinformsBackendCompositionRoot</c> via an explicit if/else branch in
 /// DizWinformsRegisterServices when DIZ_LABEL_EDITOR selects a backend -- never both. This
 /// replaced the old last-registration-wins ordering trick (step 6). Proven by test:
@@ -40,5 +41,9 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         // the goto window, same per-invocation lifetime. Name must match
         // IViewFactory.GetGotoView().
         serviceRegistry.Register<IGotoView, AvaloniaGotoView>("GotoView");
+
+        // the harsh-auto-step window, same per-invocation lifetime. Name must match
+        // IViewFactory.GetHarshAutoStepView().
+        serviceRegistry.Register<IHarshAutoStepView, AvaloniaHarshAutoStepView>("HarshAutoStepView");
     }
 }
