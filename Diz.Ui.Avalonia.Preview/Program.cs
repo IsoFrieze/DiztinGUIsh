@@ -620,8 +620,8 @@ internal static class Program
         var snesData = PreviewFixture.BuildSnesData();
         var vm = new GotoViewModel(snesData, snesData.GetRomSize(), startPcOffset);
         var window = new GotoWindow();
-        // false selects the SNES ADDRESS box (the flag reads inverted; see IGotoView).
-        window.AttachViewModel(vm, selectSnesAddrInitially: false);
+        // true selects the SNES ADDRESS box (see IGotoView).
+        window.AttachViewModel(vm, selectSnesAddrInitially: true);
         window.Show();
         Pump();
         return (window, vm);

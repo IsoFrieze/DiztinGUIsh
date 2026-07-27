@@ -32,11 +32,11 @@ public interface IGotoView
     /// This is a view concern only -- nothing about it belongs in the ViewModel, which does not
     /// know that boxes or carets exist.
     ///
-    /// NOTE THE OBSERVED BEHAVIOR, WHICH THE NAME DOES NOT DESCRIBE: true selects the ROM FILE
-    /// OFFSET box and false selects the SNES ADDRESS box. The name is kept as-is, inversion and
-    /// all, because the caller passes the negation of "the grid is displaying ROM file offsets",
-    /// so the net effect on screen is that the selected box is the one showing the address form
-    /// the grid is NOT showing -- and that net effect is what users have today.
+    /// True selects the SNES ADDRESS box; false selects the ROM FILE OFFSET box -- the name
+    /// describes the behavior. The legacy dialog had this inverted (true selected the ROM file
+    /// offset box); un-inverted as a deliberate behavior fix (Dom, 2026-07-26), so that with the
+    /// caller's <c>!DisplayOffsetsInGrid</c> argument, the selected box is the one showing the
+    /// same address form the grid is displaying.
     /// </param>
     /// <returns>true if the user confirmed; false if they cancelled or closed the window.</returns>
     Task<bool> EditAsync(GotoViewModel viewModel, bool initiallySelectSnesAddr);

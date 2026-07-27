@@ -29,8 +29,8 @@ internal sealed partial class GotoWindow : Window
 
     private GotoViewModel? vm;
 
-    // which box's text is selected when the window opens, so typing replaces it. See
-    // SelectInitialText for what the flag actually maps to on screen.
+    // which box's text is selected when the window opens, so typing replaces it. The flag
+    // means what it says: true selects the SNES Address box.
     private bool initiallySelectSnesAddr = true;
 
     // true while widget values are being written FROM the ViewModel; the input handlers below
@@ -58,9 +58,8 @@ internal sealed partial class GotoWindow : Window
 
     /// <param name="viewModel">Holds both address projections and decides which are valid.</param>
     /// <param name="selectSnesAddrInitially">
-    /// NOTE THE OBSERVED BEHAVIOR, WHICH THE NAME DOES NOT DESCRIBE: true selects the ROM FILE
-    /// OFFSET box and false selects the SNES ADDRESS box. Named to match the flag the caller
-    /// hands down so the inversion is not accidentally undone in translation.
+    /// True selects the SNES ADDRESS box, false the ROM FILE OFFSET box (matches IGotoView's
+    /// contract after the 2026-07-26 un-inversion).
     /// </param>
     public void AttachViewModel(GotoViewModel viewModel, bool selectSnesAddrInitially = true)
     {
@@ -94,7 +93,7 @@ internal sealed partial class GotoWindow : Window
 
     private void SelectInitialText()
     {
-        var box = initiallySelectSnesAddr ? PcBox : SnesBox;
+        var box = initiallySelectSnesAddr ? SnesBox : PcBox;
         box.Focus();
         box.SelectAll();
     }
