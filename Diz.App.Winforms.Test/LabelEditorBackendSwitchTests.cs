@@ -21,10 +21,11 @@ namespace Diz.App.Winforms.Test;
 ///
 /// Step 6 replaced the old last-registration-wins ordering trick with an EXPLICIT if/else
 /// branch that registers EITHER the WinForms backend root OR the Avalonia backend root -- never
-/// both. So each backend must resolve ALL SIX backend-selectable seams (LabelEditorView,
-/// MarkManyView, GotoView, HarshAutoStepView, ProgressBarView, IFileDialogService) to its own
-/// toolkit's types, and never the other's. If someone breaks or reorders the branch (e.g.
-/// registers both roots), these type assertions fail.
+/// both. So each backend must resolve ALL EIGHT backend-selectable seams (LabelEditorView,
+/// MarkManyView, GotoView, HarshAutoStepView, MisalignmentCheckerView, InOutPointCheckerView,
+/// ProgressBarView, IFileDialogService) to its own toolkit's types, and never the other's. If
+/// someone breaks or reorders the branch (e.g. registers both roots), these type assertions
+/// fail.
 ///
 /// Resolution constructs the real view objects headlessly: the WinForms path builds the
 /// LabelEditorForm host + control and the ProgressDialog (no handle until Show; precedent:
@@ -54,6 +55,10 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<WinformsGotoView>();
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<WinformsHarshAutoStepView>();
+        container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
+            .Should().BeOfType<WinformsMisalignmentCheckerView>();
+        container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
+            .Should().BeOfType<WinformsInOutPointCheckerView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
@@ -73,6 +78,10 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<AvaloniaGotoView>();
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<AvaloniaHarshAutoStepView>();
+        container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
+            .Should().BeOfType<AvaloniaMisalignmentCheckerView>();
+        container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
+            .Should().BeOfType<AvaloniaInOutPointCheckerView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<AvaloniaProgressView>();
         container.GetInstance<IFileDialogService>()
@@ -87,15 +96,19 @@ public class LabelEditorBackendSwitchTests
         // TUI backend: only the label editor is TUI...
         container.GetInstance<ILabelEditorView>("LabelEditorView")
             .Should().BeOfType<TuiLabelEditorView>();
-        // ...the mark-many window, goto window, harsh-auto-step window, progress popup and file
-        // dialogs stay WinForms (registered explicitly in the tui branch, not via the WinForms
-        // backend root).
+        // ...the mark-many window, goto window, harsh-auto-step window, the two checker windows,
+        // progress popup and file dialogs stay WinForms (registered explicitly in the tui
+        // branch, not via the WinForms backend root).
         container.GetInstance<IMarkManyView>("MarkManyView")
             .Should().BeOfType<WinformsMarkManyView>();
         container.GetInstance<IGotoView>("GotoView")
             .Should().BeOfType<WinformsGotoView>();
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<WinformsHarshAutoStepView>();
+        container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
+            .Should().BeOfType<WinformsMisalignmentCheckerView>();
+        container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
+            .Should().BeOfType<WinformsInOutPointCheckerView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
@@ -210,6 +223,79 @@ public class LabelEditorBackendSwitchTests
         container.GetInstance<IViewFactory>().GetHarshAutoStepView().Should().NotBeNull();
     }
 
+    /// <summary>
+    /// The misaligned-flags view is resolved fresh for every invocation and thrown away
+    /// afterwards, so two resolutions must never hand back the same object (a singleton would
+    /// leak one window's report into the next scan).
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void MisalignmentCheckerView_ResolvesAFreshInstanceEachTime(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        var first = container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView");
+        var second = container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView");
+
+        second.Should().NotBeSameAs(first);
+    }
+
+    /// <summary>
+    /// Same unchecked-string risk as the other registrations: "MisalignmentCheckerView" has to
+    /// match the auto-factory method name exactly, and nothing checks that at compile time. This
+    /// resolves through the factory itself -- the path MainWindow actually takes -- so a typo
+    /// fails here instead of at the user's first click.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ViewFactory_HandsOutAMisalignmentCheckerView_OnEveryBackend(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        container.GetInstance<IViewFactory>().GetMisalignmentCheckerView().Should().NotBeNull();
+    }
+
+    /// <summary>
+    /// The in/out-point rescan confirmation is resolved fresh for every invocation and thrown
+    /// away afterwards, so two resolutions must never hand back the same object (a singleton
+    /// would hand back a window whose task has already completed, and the second ask would
+    /// answer itself).
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void InOutPointCheckerView_ResolvesAFreshInstanceEachTime(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        var first = container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView");
+        var second = container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView");
+
+        second.Should().NotBeSameAs(first);
+    }
+
+    /// <summary>
+    /// Same unchecked-string risk as the other registrations: "InOutPointCheckerView" has to
+    /// match the auto-factory method name exactly, and nothing checks that at compile time. This
+    /// resolves through the factory itself -- the path MainWindow actually takes -- so a typo
+    /// fails here instead of at the user's first click.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ViewFactory_HandsOutAnInOutPointCheckerView_OnEveryBackend(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        container.GetInstance<IViewFactory>().GetInOutPointCheckerView().Should().NotBeNull();
+    }
+
     [Fact]
     public void AvaloniaBackend_DoesNotInitializeAvalonia_JustByResolvingTheView()
     {
@@ -218,6 +304,8 @@ public class LabelEditorBackendSwitchTests
         container.GetInstance<IMarkManyView>("MarkManyView");
         container.GetInstance<IGotoView>("GotoView");
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView");
+        container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView");
+        container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView");
 
         // the timing constraint from Phase 0: Avalonia must not come up before the
         // message loop / DPI setup. Resolution happens in MainWindow's ctor, so it must
