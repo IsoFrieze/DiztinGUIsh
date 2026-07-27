@@ -6,7 +6,7 @@ namespace Diz.Ui.Avalonia;
 
 /// <summary>
 /// The Avalonia LABEL-EDITOR BACKEND (new-ui plan step 5/6): exactly the
-/// backend-selectable registrations (LabelEditorView, MarkManyView, ProgressBarView,
+/// backend-selectable registrations (LabelEditorView, MarkManyView, GotoView, ProgressBarView,
 /// IFileDialogService), each named with the exact IViewFactory method-name string. The app registers EITHER this
 /// root OR <c>DizUiWinformsBackendCompositionRoot</c> via an explicit if/else branch in
 /// DizWinformsRegisterServices when DIZ_LABEL_EDITOR selects a backend -- never both. This
@@ -36,5 +36,9 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         // the mark-many window. A fresh instance per resolve: the view is created, used for one
         // edit, and discarded. Name must match IViewFactory.GetMarkManyView().
         serviceRegistry.Register<IMarkManyView, AvaloniaMarkManyView>("MarkManyView");
+
+        // the goto window, same per-invocation lifetime. Name must match
+        // IViewFactory.GetGotoView().
+        serviceRegistry.Register<IGotoView, AvaloniaGotoView>("GotoView");
     }
 }

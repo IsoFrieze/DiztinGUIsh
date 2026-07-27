@@ -1,0 +1,83 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.GotoWindow"
+        x:CompileBindings="False"
+        Title="Goto"
+        Width="300" Height="200"
+        CanResize="False"
+        SizeToContent="Manual"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        FontSize="12">
+
+    <!--
+      Type either a SNES address or a ROM file offset and press Go. The two boxes mirror each
+      other: accepting one rewrites the other. The widgets are wired to a GotoViewModel by hand
+      in the code-behind (GotoWindow.axaml.cs) rather than by binding, because the two text
+      projections are values the ViewModel deliberately declines to re-notify while they hold
+      the caret.
+
+      Field labels, radio captions and button captions match the WinForms window, so the same
+      instructions describe either backend.
+
+      Styled like the other Avalonia windows here: compact, FontSize 12, light theme (pinned
+      application-wide in DizAvaloniaApp).
+    -->
+
+    <Window.Styles>
+        <Style Selector="TextBlock.field">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+        <Style Selector="TextBox.value">
+            <Setter Property="Padding" Value="4,2" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
+            <Setter Property="TextAlignment" Value="Right" />
+        </Style>
+        <Style Selector="RadioButton">
+            <Setter Property="Margin" Value="0,0,14,0" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </Window.Styles>
+
+    <Border Padding="12,10">
+        <DockPanel>
+
+            <!-- ============ bottom bar: Cancel | Go ============ -->
+            <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto" Margin="0,10,0,0">
+                <Button Grid.Column="0" x:Name="CancelButton" Tag="cancel-button" Content="Cancel"
+                        Width="80" IsCancel="True" Click="CancelButton_Click" />
+                <Button Grid.Column="2" x:Name="GoButton" Tag="go-button" Content="Go"
+                        Width="80" IsDefault="True" Click="GoButton_Click" />
+            </Grid>
+
+            <!-- ===== why the boxes do not name a place to go; the ViewModel's own wording ===== -->
+            <TextBlock x:Name="ErrorText" DockPanel.Dock="Bottom" Tag="error-text"
+                       Foreground="#B00000" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+            <!-- ============ the two mirrored address boxes, plus the number base ============ -->
+            <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Classes="field" Text="SNES Address:" />
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="SnesBox" Tag="snes-text" Classes="value"
+                             HorizontalAlignment="Left" Width="120" MaxLength="40"
+                             TextChanged="SnesBox_TextChanged" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Classes="field" Text="PC Offset:" Margin="0,6,8,0" />
+                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="PcBox" Tag="pc-text" Classes="value"
+                             HorizontalAlignment="Left" Width="120" Margin="0,6,0,0" MaxLength="40"
+                             TextChanged="PcBox_TextChanged" />
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
+                    <RadioButton x:Name="RadioHex" Tag="radio-hex" GroupName="NumberBase"
+                                 Content="Hex" IsCheckedChanged="NumberBase_Changed" />
+                    <RadioButton x:Name="RadioDec" Tag="radio-dec" GroupName="NumberBase"
+                                 Content="Dec" Margin="0" />
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</Window>

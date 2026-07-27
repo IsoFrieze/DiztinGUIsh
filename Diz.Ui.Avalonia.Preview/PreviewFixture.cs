@@ -40,19 +40,20 @@ internal static class PreviewFixture
     /// <summary>How many labels the fixture defines (for the harness report / sanity check).</summary>
     public static int Count => Labels().Count;
 
-    /// <summary>Bytes in the throwaway ROM the mark-many scenes are rendered against.</summary>
-    public const int MarkManyRomSize = 0x1000;
+    /// <summary>Bytes in the throwaway ROM the ROM-dependent scenes are rendered against.</summary>
+    public const int PreviewRomSize = 0x1000;
 
     /// <summary>
-    /// A tiny in-memory HiROM for the mark-many window, which -- unlike the label editor --
-    /// genuinely needs a ROM: its ViewModel converts addresses, clamps the range to the ROM
-    /// size, and reads the data bank / direct page already recorded at the range start. Byte
-    /// contents are arbitrary; only the size and map mode matter to the window.
+    /// A tiny in-memory HiROM for the windows that -- unlike the label editor -- genuinely need
+    /// a ROM. The mark-many ViewModel converts addresses, clamps the range to the ROM size, and
+    /// reads the data bank / direct page already recorded at the range start; the goto ViewModel
+    /// converts between SNES addresses and ROM file offsets and rejects anything outside the
+    /// ROM. Byte contents are arbitrary; only the size and map mode matter to either window.
     /// </summary>
     public static ISnesData BuildSnesData()
     {
         var romBytes = new RomBytes();
-        for (var i = 0; i < MarkManyRomSize; ++i)
+        for (var i = 0; i < PreviewRomSize; ++i)
             romBytes.Add(new RomByte { Rom = (byte)i });
 
         var data = new Data
