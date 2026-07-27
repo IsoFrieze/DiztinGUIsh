@@ -54,6 +54,17 @@ public record LogWriterSettings : ILogWriterSettings
     public bool PrintLabelSpecificComments { get; init; }
     public bool GeneratePlusMinusLabels { get; init; } = true;
 
+    /// <summary>
+    /// Give every region that exports as an asset (an `incbin` instead of inline bytes) a name at
+    /// its start address, emitted inline right before the `incbin`, plus a text-only
+    /// "&lt;name&gt;__END" marker right after it so table math can be written symbolically.
+    /// A hand-authored label already at that address is used as-is; only addresses with no
+    /// project label get a generated "ASSET_" name.
+    /// Off: the asset's address gets no generated name, and any label there is emitted as an
+    /// equate in labels.asm instead of inline.
+    /// </summary>
+    public bool GenerateAssetLabels { get; init; } = true;
+
     // this is an experimental option, if useful, remove [XmlIgnore] and add the UI for this
     [XmlIgnore] public bool AppendFlagTypeToComment { get; init; } = false;
 
