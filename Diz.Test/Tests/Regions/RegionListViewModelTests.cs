@@ -742,6 +742,63 @@ public class RegionListViewModelTests
     }
 
     [Fact]
+    public void ARefusedClosedValueEdit_LeavesNoStaleMarker_BecauseNothingRefusedIsOnScreen()
+    {
+        // A bool and an enum are carried by widgets whose value space is closed -- a checkbox, a
+        // combo -- so a refused edit to one of them leaves NOTHING on screen that the model did
+        // not accept: the widget shows the committed value again. Flagging the row would mark it
+        // forever over a value that is neither displayed nor stored.
+        var region = NewRegion("r", 0x808000, 0x80800F);
+        region.AssetType = "gfx.snes.4bpp"; // 0x10 bytes is not a whole number of 4bpp tiles
+        var (vm, row, _) = OneRow(region);
+
+        vm.CommitField(row, RegionField.ExportType, "Asset").IsValid.Should().BeFalse();
+
+        row.HasError.Should().BeFalse();
+        row.ErrorText.Should().Be("");
+        row.HasPendingTextFor(RegionField.ExportType).Should().BeFalse();
+        row.ExportTypeText.Should().Be("Assembly", "the combo snapped back to what the model holds");
+        // the refusal is still reported -- on the status line, which is where a message that has
+        // nowhere to live on the row belongs.
+        vm.StatusText.Should().Contain("must be a whole multiple of");
+    }
+
+    [Fact]
+    public void ARefusedClosedValueEdit_LetsTheModelsOwnVerdictKeepTheMarker()
+    {
+        // clearing the refusal record must not clear a marker the STORED values earned: those two
+        // are separate, and the row is still wrong for its own reasons.
+        var (vm, row, _) = OneRow(NewRegion("r", 0x808000, 0x81800F));
+
+        // cross-bank + "export as its own .asm file" is refused, and the checkbox snaps back...
+        vm.CommitField(row, RegionField.ExportSeparateFile, "True").IsValid.Should().BeFalse();
+        row.HasError.Should().BeFalse();
+
+        // ... but a row whose stored values break a rule stays flagged, refusal or no refusal.
+        vm.CommitField(row, RegionField.RegionName, "").IsValid.Should().BeFalse();
+        row.HasError.Should().BeTrue();
+        row.ErrorText.Should().Be("Region Name is required.");
+    }
+
+    [Fact]
+    public void RetryingARefusedClosedValueEdit_IsAFreshAttempt_NotANoOp()
+    {
+        // the retry path: refused once, the reason is fixed, the same value is offered again and
+        // must now go in. Nothing may be left over from the first attempt that makes the second
+        // one look like it changed nothing.
+        var (vm, row, region) = OneRow(NewRegion("r", 0x808000, 0x81800F));
+
+        vm.CommitField(row, RegionField.ExportSeparateFile, "True").IsValid.Should().BeFalse();
+        region.ExportSeparateFile.Should().BeFalse();
+
+        vm.CommitField(row, RegionField.End, "80800F").IsValid.Should().BeTrue();
+        vm.CommitField(row, RegionField.ExportSeparateFile, "True").IsValid.Should().BeTrue();
+
+        region.ExportSeparateFile.Should().BeTrue();
+        row.HasError.Should().BeFalse();
+    }
+
+    [Fact]
     public void AnIgnoredBlankEdit_DoesNotFlagTheRow()
     {
         // pending text and refused text are not the same thing: an empty box is neither.

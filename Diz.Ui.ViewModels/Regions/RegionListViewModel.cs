@@ -302,11 +302,24 @@ public sealed class RegionListViewModel : ViewModelNotifierBase, IRegionListView
 
         if (outcome == EditOutcome.Invalid)
         {
-            // The model is not touched. The row keeps its committed value AND the text the user
-            // typed, and stays flagged until that text is dealt with -- successfully editing
-            // some OTHER field must not un-flag a row that is still displaying a value the
-            // model refused.
-            target.SetPendingText(field, text, result.Error ?? "");
+            // The model is not touched.
+            if (field.DisplaysTypedText())
+            {
+                // The row keeps its committed value AND the text the user typed, and stays
+                // flagged until that text is dealt with -- successfully editing some OTHER field
+                // must not un-flag a row that is still displaying a value the model refused.
+                target.SetPendingText(field, text, result.Error ?? "");
+            }
+            else
+            {
+                // A closed-value field cannot display text the model refused: its widget snaps
+                // back to the committed value. Parking the refusal here would leave the row
+                // marked forever over a value that is neither on screen nor in the model, and
+                // would make a later, identical attempt look like "no change" to a view that
+                // compares against what it is showing.
+                target.ClearPendingText(field);
+            }
+
             StatusText = result.Error ?? "";
             return result;
         }

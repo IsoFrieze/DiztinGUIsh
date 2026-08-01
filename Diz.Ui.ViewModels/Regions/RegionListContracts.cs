@@ -48,6 +48,26 @@ public enum RegionField
 }
 
 /// <summary>
+/// Which fields a view can leave TYPED TEXT sitting in.
+///
+/// Ten of the twelve are free text: a box can hold anything the user types, including something
+/// the model refused, and it stays on screen until they deal with it. The other two carry a
+/// CLOSED value space -- a bool and an enum -- so whatever widget shows them (a checkbox, a
+/// combo, a pair of radio buttons) can only ever display a legal value. When an edit to one of
+/// those is refused the widget snaps back to what the model holds, and there is no typed text
+/// left over: nothing to keep, nothing to flag the row about, and nothing for a view to compare
+/// a later attempt against except the committed value.
+///
+/// Both halves of the editing path depend on that distinction, which is why it is stated once
+/// here rather than re-derived per backend.
+/// </summary>
+public static class RegionFieldExtensions
+{
+    public static bool DisplaysTypedText(this RegionField field) =>
+        field is not (RegionField.ExportSeparateFile or RegionField.ExportType);
+}
+
+/// <summary>
 /// How much a whole-list problem matters. Errors describe combinations the exporter cannot
 /// resolve; warnings describe data that still exports but is probably a mistake -- existing
 /// projects may already contain them and must keep loading.
