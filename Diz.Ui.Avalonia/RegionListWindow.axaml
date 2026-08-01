@@ -3,22 +3,23 @@
         x:Class="Diz.Ui.Avalonia.RegionListWindow"
         x:CompileBindings="False"
         Title="Regions List"
-        Width="1200" Height="560"
+        Width="1280" Height="720"
         MinWidth="700" MinHeight="320"
         FontSize="12">
 
     <!--
-      The Avalonia region editor: a MASTER LIST plus a details pane, over the same
+      The Avalonia region editor: a MASTER LIST plus an EDITABLE details pane, over the same
       RegionListViewModel the WinForms grid binds. The two toolkits deliberately differ in
       LAYOUT - WinForms shows all thirteen columns at once, this one shows the eight
       scannable ones and puts the awkward fields (the asset descriptors and their free-form
       JSON) in the pane - while sharing the ViewModel, so the rules, the sort order and the
       commands cannot drift apart.
 
-      The details pane is READ-ONLY here. Editing lands with the editable pane; until then the
-      grid is read-only too, because the DataGrid's control-owned edit pipeline would fight the
-      ViewModel's validate-then-commit path (a refused value must stay on screen without ever
-      reaching the model, which two-way cell binding cannot express).
+      ALL EDITING HAPPENS IN THE PANE; the master grid is read-only. The DataGrid's own edit
+      pipeline commits a cell's value into the bound object and then tells you about it, whereas
+      the ViewModel must validate FIRST and refuse - leaving the typed text on screen and the
+      model untouched. Those two are not reconcilable through two-way cell binding, so the pane
+      carries purpose-built editors instead and the grid stays a display of the result.
 
       Sorting is the ViewModel's, not the grid's: CanUserSortColumns is off and each header's
       pointer-press writes SortField/SortDescending and nothing else. Letting the DataGrid sort
@@ -27,17 +28,35 @@
 
       Reflection bindings (x:CompileBindings="False"): the details pane binds through the
       possibly-null SelectedRow, which reflection bindings tolerate without an x:DataType. The
-      window's DataContext is the IRegionListViewModel (set in AttachViewModel).
+      window's DataContext is the IRegionListViewModel (set in AttachViewModel). The pane's
+      EDITORS are not bound at all - they are written from the ViewModel by hand, because a
+      binding would fight the caret (see the code-behind's PushText).
     -->
 
     <Window.Styles>
-        <Style Selector="TextBlock.detail-label">
+        <Style Selector="TextBlock.field-label">
             <Setter Property="Foreground" Value="#606060" />
-            <Setter Property="Margin" Value="0,4,0,0" />
-        </Style>
-        <Style Selector="TextBlock.detail-value">
-            <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,6,0" />
             <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <!-- the field whose typed text the model refused: marked where the eye already is (the
+             label), not only by a border a focused/hovered text box would repaint anyway. -->
+        <Style Selector="TextBlock.field-bad">
+            <Setter Property="Foreground" Value="#B00000" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBox.field-editor">
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Padding" Value="4,2" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+        <Style Selector="TextBox.hex">
+            <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
+        </Style>
+        <Style Selector="TextBox.field-bad">
+            <Setter Property="BorderBrush" Value="#B00000" />
+            <Setter Property="BorderThickness" Value="1.5" />
         </Style>
         <!-- toolbar button gaps (WrapPanel has no built-in item spacing in this version) -->
         <Style Selector="WrapPanel#Toolbar > Button">
@@ -79,7 +98,7 @@
         </StackPanel>
 
         <!-- ============================= main: master grid | splitter | details ============================= -->
-        <Grid ColumnDefinitions="*,4,290" Margin="8,0,8,0">
+        <Grid ColumnDefinitions="*,4,360" Margin="8,0,8,0">
 
             <DataGrid x:Name="RegionGrid" Tag="region-grid" Grid.Column="0"
                       AutoGenerateColumns="False"
@@ -91,6 +110,7 @@
                       HeadersVisibility="All"
                       RowHeaderWidth="24"
                       SelectionChanged="RegionGrid_SelectionChanged"
+                      KeyDown="RegionGrid_KeyDown"
                       LoadingRow="RegionGrid_LoadingRow">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Start" Width="85"
@@ -118,74 +138,99 @@
 
             <GridSplitter Grid.Column="1" Background="#DDDDDD" ResizeDirection="Columns" />
 
-            <!-- ===== Region Details pane (read-only until the editable pane lands) ===== -->
+            <!-- ===== Region Details pane: the editor for the selected region ===== -->
             <Border Grid.Column="2" BorderBrush="#C8C8C8" BorderThickness="1" Margin="0,2,0,2">
                 <ScrollViewer>
-                    <StackPanel Margin="8" Spacing="1">
-                        <TextBlock x:Name="DetailsHeader" Tag="details-header"
-                                   Text="Region Details" FontWeight="Bold" Margin="0,0,0,2" />
-                        <TextBlock x:Name="DetailsNotice" Tag="details-notice"
-                                   Text="Read-only. Edit regions in the WinForms window for now."
-                                   Foreground="#808080" TextWrapping="Wrap" Margin="0,0,0,4" />
+                    <Grid x:Name="DetailsPane" Tag="details-pane" Margin="8"
+                          ColumnDefinitions="110,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
 
+                        <TextBlock x:Name="DetailsHeader" Tag="details-header"
+                                   Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                                   Text="Region Details" FontWeight="Bold" Margin="0,0,0,4" />
+
+                        <!-- the message behind the row's bad-row marker, in the pane where the
+                             offending field is. The status bar carries the same text; this is the
+                             copy the user reads while fixing it. -->
                         <TextBlock x:Name="DetailsError" Tag="details-error"
+                                   Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                    Foreground="#B00000" TextWrapping="Wrap" Margin="0,0,0,4"
                                    Text="{Binding SelectedRow.ErrorText, Mode=OneWay}" />
 
-                        <TextBlock Classes="detail-label" Text="Start" />
-                        <TextBlock Classes="detail-value" Tag="details-start"
-                                   Text="{Binding SelectedRow.StartText, Mode=OneWay}" />
+                        <TextBlock x:Name="LblStart" Tag="details-start-label" Classes="field-label" Grid.Row="2" Grid.Column="0" Text="Start" />
+                        <TextBox x:Name="BoxStart" Tag="details-start" Classes="field-editor hex"
+                                 Grid.Row="2" Grid.Column="1" />
 
-                        <TextBlock Classes="detail-label" Text="End (inclusive)" />
-                        <TextBlock Classes="detail-value" Tag="details-end"
-                                   Text="{Binding SelectedRow.EndText, Mode=OneWay}" />
+                        <TextBlock x:Name="LblEnd" Tag="details-end-label" Classes="field-label" Grid.Row="3" Grid.Column="0" Text="End (inclusive)" />
+                        <TextBox x:Name="BoxEnd" Tag="details-end" Classes="field-editor hex"
+                                 Grid.Row="3" Grid.Column="1" />
 
-                        <TextBlock Classes="detail-label" Text="Length" />
-                        <TextBlock Classes="detail-value" Tag="details-length"
-                                   Text="{Binding SelectedRow.LengthText, Mode=OneWay}" />
+                        <TextBlock x:Name="LblLength" Tag="details-length-label" Classes="field-label" Grid.Row="4" Grid.Column="0" Text="Length (hex)" />
+                        <TextBox x:Name="BoxLength" Tag="details-length" Classes="field-editor hex"
+                                 Grid.Row="4" Grid.Column="1" />
 
-                        <TextBlock Classes="detail-label" Text="Region Name" />
-                        <TextBlock Classes="detail-value" Tag="details-name"
-                                   Text="{Binding SelectedRow.RegionNameText, Mode=OneWay}" />
+                        <TextBlock x:Name="LblName" Tag="details-name-label" Classes="field-label" Grid.Row="5" Grid.Column="0" Text="Region Name" />
+                        <TextBox x:Name="BoxName" Tag="details-name" Classes="field-editor"
+                                 Grid.Row="5" Grid.Column="1" />
 
-                        <TextBlock Classes="detail-label" Text="Label Context" />
-                        <TextBlock Classes="detail-value" Tag="details-context"
-                                   Text="{Binding SelectedRow.ContextToApplyText, Mode=OneWay}" />
+                        <TextBlock x:Name="LblContext" Tag="details-context-label" Classes="field-label" Grid.Row="6" Grid.Column="0" Text="Label Context" />
+                        <TextBox x:Name="BoxContext" Tag="details-context" Classes="field-editor"
+                                 Grid.Row="6" Grid.Column="1" />
 
-                        <TextBlock Classes="detail-label" Text="Priority" />
-                        <TextBlock Classes="detail-value" Tag="details-priority"
-                                   Text="{Binding SelectedRow.PriorityText, Mode=OneWay}" />
+                        <TextBlock x:Name="LblPriority" Tag="details-priority-label" Classes="field-label" Grid.Row="7" Grid.Column="0" Text="Priority" />
+                        <TextBox x:Name="BoxPriority" Tag="details-priority" Classes="field-editor"
+                                 Grid.Row="7" Grid.Column="1" />
 
-                        <TextBlock Classes="detail-label" Text="Export Separate File" />
-                        <TextBlock Classes="detail-value" Tag="details-sepfile"
-                                   Text="{Binding SelectedRow.ExportSeparateFileText, Mode=OneWay}" />
+                        <!-- The two CLOSED-VALUE editors. Their widgets can only ever show a legal
+                             value, so a refused edit has no typed text to leave behind: they snap
+                             back to what the model holds instead of keeping a bad value on screen. -->
+                        <TextBlock x:Name="LblSeparateFile" Tag="details-sepfile-label" Classes="field-label" Grid.Row="8" Grid.Column="0"
+                                   Text="Separate File" />
+                        <CheckBox x:Name="ChkSeparateFile" Tag="details-sepfile"
+                                  Grid.Row="8" Grid.Column="1" Margin="0,2"
+                                  Content="Export to its own file" />
 
-                        <TextBlock Classes="detail-label" Text="Export Type" />
-                        <TextBlock Classes="detail-value" Tag="details-exporttype"
-                                   Text="{Binding SelectedRow.ExportTypeText, Mode=OneWay}" />
+                        <TextBlock x:Name="LblExportType" Tag="details-exporttype-label" Classes="field-label" Grid.Row="9" Grid.Column="0"
+                                   Text="Export Type" />
+                        <ComboBox x:Name="CboExportType" Tag="details-exporttype"
+                                  Grid.Row="9" Grid.Column="1" Margin="0,2"
+                                  HorizontalAlignment="Stretch" />
 
                         <!-- Asset fields are shown even when they mean nothing for this row, and
                              greyed instead of hidden: hiding them would make it non-obvious that
                              the feature exists. Nothing clears the stored values while disabled. -->
-                        <StackPanel x:Name="AssetFields" Tag="details-asset-fields" Spacing="1">
-                            <TextBlock Classes="detail-label" Text="Asset Type" />
-                            <TextBlock Classes="detail-value" Tag="details-assettype"
-                                       Text="{Binding SelectedRow.AssetTypeText, Mode=OneWay}" />
+                        <Border x:Name="AssetFields" Tag="details-asset-fields"
+                                Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2"
+                                BorderBrush="#DDDDDD" BorderThickness="1" Margin="0,8,0,0" Padding="6">
+                            <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
 
-                            <TextBlock Classes="detail-label" Text="Asset Version" />
-                            <TextBlock Classes="detail-value" Tag="details-assetversion"
-                                       Text="{Binding SelectedRow.AssetVersionText, Mode=OneWay}" />
+                                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                                           Text="Asset fields" FontWeight="Bold" Margin="0,0,0,4" />
 
-                            <TextBlock Classes="detail-label" Text="Asset Name" />
-                            <TextBlock Classes="detail-value" Tag="details-assetname"
-                                       Text="{Binding SelectedRow.AssetNameText, Mode=OneWay}" />
+                                <TextBlock x:Name="LblAssetType" Tag="details-assettype-label" Classes="field-label" Grid.Row="1" Grid.Column="0"
+                                           Text="Asset Type" />
+                                <TextBox x:Name="BoxAssetType" Tag="details-assettype" Classes="field-editor"
+                                         Grid.Row="1" Grid.Column="1" />
 
-                            <TextBlock Classes="detail-label" Text="Asset Options (JSON)" />
-                            <TextBlock Classes="detail-value" Tag="details-assetoptions"
-                                       Text="{Binding SelectedRow.AssetOptionsText, Mode=OneWay}" />
-                        </StackPanel>
+                                <TextBlock x:Name="LblAssetVersion" Tag="details-assetversion-label" Classes="field-label" Grid.Row="2" Grid.Column="0"
+                                           Text="Asset Version" />
+                                <TextBox x:Name="BoxAssetVersion" Tag="details-assetversion" Classes="field-editor"
+                                         Grid.Row="2" Grid.Column="1" />
 
-                    </StackPanel>
+                                <TextBlock x:Name="LblAssetName" Tag="details-assetname-label" Classes="field-label" Grid.Row="3" Grid.Column="0"
+                                           Text="Asset Name" />
+                                <TextBox x:Name="BoxAssetName" Tag="details-assetname" Classes="field-editor"
+                                         Grid.Row="3" Grid.Column="1" />
+
+                                <TextBlock x:Name="LblAssetOptions" Tag="details-assetoptions-label" Classes="field-label" Grid.Row="4" Grid.Column="0"
+                                           Text="Asset Options (JSON)" />
+                                <TextBox x:Name="BoxAssetOptions" Tag="details-assetoptions"
+                                         Classes="field-editor hex"
+                                         Grid.Row="4" Grid.Column="1" />
+                            </Grid>
+                        </Border>
+
+                    </Grid>
                 </ScrollViewer>
             </Border>
         </Grid>

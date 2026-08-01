@@ -211,6 +211,19 @@ public interface IRegionListViewModel : INotifyPropertyChanged, IDisposable
     /// </summary>
     ValidationResult CommitField(IRegionRowViewModel row, RegionField field, string proposedText);
 
+    /// <summary>
+    /// Abandon whatever a field is displaying that the region does not hold -- the text the user
+    /// typed and, if it was refused, the refusal -- so the field shows the stored value again.
+    /// This is the way out of a value the model will not take.
+    ///
+    /// Nothing is written and NOTHING IS RE-CHECKED. That matters for rows whose stored values
+    /// already break a rule (existing projects carry them: an asset type no descriptor owns, an
+    /// options blob that is not a JSON object, a separate-file region straddling a bank): giving
+    /// up on an edit must leave such a row exactly the errors it already had, and must not
+    /// re-attribute them to the field being abandoned.
+    /// </summary>
+    void RevertField(IRegionRowViewModel row, RegionField field);
+
     /// <summary>Append a region with sane defaults -- a name, and a legal one-byte range -- and
     /// return its row. A half-filled new row is never a trap: validation does not block.</summary>
     IRegionRowViewModel AddRegion();

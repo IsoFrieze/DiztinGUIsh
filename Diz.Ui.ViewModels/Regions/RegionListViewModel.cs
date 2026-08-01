@@ -346,6 +346,20 @@ public sealed class RegionListViewModel : ViewModelNotifierBase, IRegionListView
         return ValidationResult.Ok;
     }
 
+    /// <summary>
+    /// Give up on an edit: the field stops displaying what the user typed and shows the stored
+    /// value again, and any refusal attached to it goes with it.
+    ///
+    /// Deliberately NOT a validation pass. The row's error state is recomputed only from what is
+    /// left -- other fields' refusals, and whatever the stored values themselves were already
+    /// failing -- so abandoning an edit can clear a marker but can never invent one.
+    ///
+    /// StatusText is left alone: it records the last thing that happened, and one field's revert
+    /// says nothing about a message some other field's refusal put there.
+    /// </summary>
+    public void RevertField(IRegionRowViewModel row, RegionField field) =>
+        RowOf(row).ClearPendingText(field);
+
     public void RevalidateAll()
     {
         foreach (var row in rowsByRegion.Values)

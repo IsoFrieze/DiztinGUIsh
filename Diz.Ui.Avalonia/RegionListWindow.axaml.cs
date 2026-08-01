@@ -6,8 +6,10 @@ using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Diz.Core.Interfaces;
 using Diz.Ui.ViewModels.Regions;
 
 namespace Diz.Ui.Avalonia;
@@ -21,12 +23,15 @@ namespace Diz.Ui.Avalonia;
 /// WinForms grid shows all thirteen columns, this one shows the eight scannable ones and moves
 /// the asset descriptors and their free-form JSON into the pane).
 ///
-/// READ-ONLY, for now. The grid and the pane display; nothing in this window writes to a region.
-/// The editable pane is the next piece of work, and it is a separate one on purpose: the
-/// DataGrid's control-owned edit pipeline commits a cell's value into the bound object and then
-/// tells you about it, whereas the ViewModel must validate FIRST and refuse -- leaving the typed
-/// text on screen and the model untouched. Those two are not reconcilable through cell binding,
-/// which is why editing arrives with purpose-built editors instead.
+/// ALL EDITING HAPPENS IN THE PANE. The master grid is read-only, deliberately: the DataGrid's
+/// control-owned edit pipeline commits a cell's value into the bound object and then tells you
+/// about it, whereas the ViewModel must validate FIRST and refuse -- leaving the typed text on
+/// screen and the model untouched. Those two are not reconcilable through two-way cell binding,
+/// so the pane carries purpose-built editors and the grid displays the result.
+///
+/// The pane's editors are NOT bound. Values are written into them by hand (see WriteText) and
+/// read back out on Enter or focus loss; a binding would fight the caret, because the text a box
+/// holds mid-edit is exactly the text the ViewModel has not accepted yet.
 ///
 /// Sorting belongs to the ViewModel. CanUserSortColumns is off and each column header's
 /// pointer-press writes SortField/SortDescending and nothing else; the arrow in the header text
@@ -59,10 +64,56 @@ internal sealed partial class RegionListWindow : Window
 
     private readonly List<string> problemLines = [];
 
+    /// <summary>Every free-text editor in the details pane, in the order the pane shows them.</summary>
+    private readonly List<DetailEditor> detailEditors = [];
+
+    /// <summary>The same editors, keyed by the row property whose change means "rewrite this box".</summary>
+    private readonly Dictionary<string, DetailEditor> editorsByRowProperty = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The pane's CLOSED-VALUE editors, by the field each one edits. Tracked rather than just
+    /// wired, so the completeness check below can prove every such field has a widget: a field
+    /// whose value space is closed cannot be given a text box, and one added to the ViewModel and
+    /// forgotten here would sit on screen doing nothing.
+    /// </summary>
+    private readonly Dictionary<RegionField, Control> closedValueEditors = new();
+
+    /// <summary>
+    /// Fields whose box currently holds text the USER put there, i.e. an edit that has not been
+    /// offered to the ViewModel yet. Only these are committed, so an untouched box can never
+    /// write its own displayed value back into the model, and swapping rows can never carry one
+    /// region's half-typed text onto another.
+    /// </summary>
+    private readonly HashSet<RegionField> typedFields = [];
+
     private IRegionListViewModel? vm;
     private IRegionRowViewModel? subscribedRow;
     private bool syncingSelection;
     private bool problemsCollapsed;
+
+    /// <summary>
+    /// Which region the pane's editors are currently editing. It is not simply "whatever is
+    /// selected now": a commit is decided after the fact (see CommitEditor), and by then the
+    /// selection may have moved on -- so the row the text was typed AGAINST has to be remembered
+    /// while it still is the selected one. Pane-wide rather than per box, because every editor in
+    /// the pane always shows the same region.
+    /// </summary>
+    private IRegionRowViewModel? detailEditingRow;
+
+    // true while widget values are being written FROM the ViewModel; the input handlers below
+    // bail out then, so a ViewModel-driven refresh can't be mistaken for the user typing.
+    // Only catches handlers that run inside the write itself -- TextChanged does not (see
+    // PushText), so the text boxes need the value comparison there as well as this flag.
+    private bool updatingWidgets;
+
+    /// <summary>
+    /// One free-text field of the details pane: the box that edits it, the label that names it
+    /// (and carries its bad-field marker), and the row property whose change means the box is out
+    /// of date. <see cref="Caption"/> is read off the label at construction so the MARKUP stays
+    /// the one place a field's name is written.
+    /// </summary>
+    private sealed record DetailEditor(
+        RegionField Field, TextBox Box, TextBlock Label, string Caption, string RowProperty);
 
     /// <summary>
     /// How the user is asked to confirm a delete. Deleting a region is destructive and the
@@ -87,11 +138,12 @@ internal sealed partial class RegionListWindow : Window
         };
 
         WireSortableHeaders();
+        WireDetailEditors();
 
         ProblemsList.ItemsSource = problemLines;
         UpdateProblemsHeader();
         UpdateSortGlyphs();
-        UpdateDetails();
+        SwapDetailRow();
     }
 
     /// <summary>
@@ -158,6 +210,126 @@ internal sealed partial class RegionListWindow : Window
         }
     }
 
+    // ------------------------------------------------------------------ details pane wiring
+
+    /// <summary>
+    /// Give every editor in the details pane the same treatment, from one place, so a field
+    /// cannot be added to the markup and quietly left without the commit discipline the others
+    /// have.
+    /// </summary>
+    private void WireDetailEditors()
+    {
+        // the export types the model actually defines, so a new one appears here for free.
+        CboExportType.ItemsSource = Enum.GetNames<RegionExportType>();
+
+        Register(RegionField.Start, BoxStart, LblStart, nameof(IRegionRowViewModel.StartText));
+        Register(RegionField.End, BoxEnd, LblEnd, nameof(IRegionRowViewModel.EndText));
+        Register(RegionField.Length, BoxLength, LblLength, nameof(IRegionRowViewModel.LengthText));
+        Register(RegionField.RegionName, BoxName, LblName, nameof(IRegionRowViewModel.RegionNameText));
+        Register(RegionField.ContextToApply, BoxContext, LblContext,
+            nameof(IRegionRowViewModel.ContextToApplyText));
+        Register(RegionField.Priority, BoxPriority, LblPriority, nameof(IRegionRowViewModel.PriorityText));
+        Register(RegionField.AssetType, BoxAssetType, LblAssetType, nameof(IRegionRowViewModel.AssetTypeText));
+        Register(RegionField.AssetVersion, BoxAssetVersion, LblAssetVersion,
+            nameof(IRegionRowViewModel.AssetVersionText));
+        Register(RegionField.AssetName, BoxAssetName, LblAssetName, nameof(IRegionRowViewModel.AssetNameText));
+        Register(RegionField.AssetOptions, BoxAssetOptions, LblAssetOptions,
+            nameof(IRegionRowViewModel.AssetOptionsText));
+
+        // The two CLOSED-VALUE editors. A checkbox and a combo can only ever show a legal value,
+        // so a refused edit leaves no typed text behind: the widget is put back to what the model
+        // holds and the row gains no marker. Both report synchronously from inside the write that
+        // caused them, so the updatingWidgets flag alone is enough to tell a ViewModel-driven
+        // refresh from a user's pick -- unlike TextChanged (see PushText).
+        closedValueEditors[RegionField.ExportSeparateFile] = ChkSeparateFile;
+        closedValueEditors[RegionField.ExportType] = CboExportType;
+
+        ChkSeparateFile.IsCheckedChanged += (_, _) =>
+            CommitClosedValue(RegionField.ExportSeparateFile,
+                (ChkSeparateFile.IsChecked == true).ToString());
+
+        CboExportType.SelectionChanged += (_, _) =>
+            CommitClosedValue(RegionField.ExportType, CboExportType.SelectedItem as string ?? "");
+
+        VerifyEveryFieldHasAnEditor();
+        return;
+
+        void Register(RegionField field, TextBox box, TextBlock label, string rowProperty)
+        {
+            var editor = new DetailEditor(field, box, label, label.Text ?? field.ToString(), rowProperty);
+            detailEditors.Add(editor);
+            editorsByRowProperty[rowProperty] = editor;
+
+            box.GotFocus += (_, _) => detailEditingRow = vm?.SelectedRow;
+            box.TextChanged += (_, _) => PushText(box, field);
+            box.LostFocus += (_, _) => CommitEditor(editor);
+            box.KeyDown += (_, e) =>
+            {
+                switch (e.Key)
+                {
+                    case Key.Enter:
+                        CommitEditor(editor);
+                        e.Handled = true;
+                        break;
+                    case Key.Escape:
+                        RevertEditor(editor);
+                        e.Handled = true;
+                        break;
+                }
+            };
+        }
+    }
+
+    /// <summary>
+    /// Prove, at construction, that the pane really does edit every field a region has -- and
+    /// that the markup contains no editor this wiring never claimed.
+    ///
+    /// Both halves fail SILENTLY at runtime otherwise, which is the worst way for an editor to be
+    /// wrong: a field with no editor is simply not editable and nobody notices until someone needs
+    /// it, and a text box that was never registered accepts typing and commits nothing. Growing
+    /// the ViewModel's field set, or the markup, therefore breaks the window loudly here instead.
+    /// </summary>
+    private void VerifyEveryFieldHasAnEditor()
+    {
+        var fields = Enum.GetValues<RegionField>();
+
+        var missing = fields
+            .Where(f => f.DisplaysTypedText()
+                ? detailEditors.All(e => e.Field != f)
+                : !closedValueEditors.ContainsKey(f))
+            .ToList();
+        if (missing.Count != 0)
+        {
+            throw new InvalidOperationException(
+                "The region details pane has no editor for these region field(s): " +
+                $"{string.Join(", ", missing)}. Every field must be editable somewhere in the " +
+                "pane -- free-text fields through a text box that can keep refused text on " +
+                "screen, closed-value fields through a widget that can only show a legal value.");
+        }
+
+        // catches the other direction: a field wired twice, or an editor registered for something
+        // that is no longer a field.
+        if (detailEditors.Count + closedValueEditors.Count != fields.Length)
+        {
+            throw new InvalidOperationException(
+                $"The region details pane wires {detailEditors.Count} text editor(s) and " +
+                $"{closedValueEditors.Count} closed-value editor(s) for {fields.Length} region " +
+                "field(s). Each field must be wired exactly once.");
+        }
+
+        var unwired = DetailsPane.GetLogicalDescendants().OfType<TextBox>()
+            .Where(box => detailEditors.All(e => !ReferenceEquals(e.Box, box)))
+            .Select(box => box.Tag as string ?? box.Name ?? "<unnamed>")
+            .ToList();
+        if (unwired.Count != 0)
+        {
+            throw new InvalidOperationException(
+                "The region details pane declares text box(es) that are not paired with a region " +
+                $"field: {string.Join(", ", unwired)}. Every editor in the pane must be registered " +
+                "in the wiring, or it accepts typing and commits nothing.");
+        }
+    }
+
     // ------------------------------------------------------------------ VM attach/detach
 
     public void AttachViewModel(IRegionListViewModel viewModel)
@@ -178,7 +350,7 @@ internal sealed partial class RegionListWindow : Window
         UpdateCounts();
         UpdateSortGlyphs();
         RefreshProblems();
-        UpdateDetails();
+        SwapDetailRow();
     }
 
     public void DetachViewModel()
@@ -199,7 +371,7 @@ internal sealed partial class RegionListWindow : Window
         RefreshProblems();
         UpdateStatusText();
         UpdateCounts();
-        UpdateDetails();
+        SwapDetailRow();
     }
 
     private void Vm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -211,7 +383,7 @@ internal sealed partial class RegionListWindow : Window
                 break;
             case nameof(IRegionListViewModel.SelectedRow):
                 SyncSelectionFromVm();
-                UpdateDetails();
+                SwapDetailRow();
                 break;
             case nameof(IRegionListViewModel.SortField):
             case nameof(IRegionListViewModel.SortDescending):
@@ -322,6 +494,17 @@ internal sealed partial class RegionListWindow : Window
         }
     }
 
+    private void RegionGrid_KeyDown(object? sender, KeyEventArgs e)
+    {
+        // Delete on the grid is the toolbar button's gesture, not a second delete path: same
+        // confirmation, same by-identity removal, asked exactly once.
+        if (e.Key != Key.Delete || vm?.SelectedRow == null)
+            return;
+
+        e.Handled = true;
+        BeginDeleteSelectedRegion();
+    }
+
     // ------------------------------------------------------------------ sorting
 
     private void SortBy(RegionField field)
@@ -391,13 +574,80 @@ internal sealed partial class RegionListWindow : Window
             subscribedRow.PropertyChanged += SelectedRow_PropertyChanged;
     }
 
-    private void SelectedRow_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
-        UpdateDetails();
-
-    private void UpdateDetails()
+    /// <summary>
+    /// A different region is on screen: re-stock every editor from it and forget anything the
+    /// user had half-typed for the previous one. Nothing is committed on the way past -- text a
+    /// region never accepted belongs to the region it was typed against, and carrying it onto the
+    /// next one would write a value the user never meant into a region they only glanced at.
+    /// </summary>
+    private void SwapDetailRow()
     {
         var row = vm?.SelectedRow;
         SubscribeToSelectedRow(row);
+
+        typedFields.Clear();
+
+        // Anything typed from here on belongs to the region now on screen -- including into a box
+        // that already had the caret when the selection moved (adding a region selects it, and the
+        // user may well be mid-field when a rebind or an import re-points the pane). Leaving the
+        // previous region recorded here would make every such edit look like it was typed against
+        // a region that is no longer showing, and CommitEditor would correctly drop it.
+        detailEditingRow = row;
+
+        WriteWidgets(() =>
+        {
+            foreach (var editor in detailEditors)
+                editor.Box.Text = row?.TextFor(editor.Field) ?? "";
+
+            ChkSeparateFile.IsChecked = row?.ExportSeparateFile ?? false;
+            CboExportType.SelectedItem = row?.ExportType.ToString();
+        });
+
+        UpdateDetailChrome();
+    }
+
+    /// <summary>
+    /// One field of the shown region moved (or its error state did). Rewrite exactly that box and
+    /// nothing else: rewriting the whole pane would throw away text the user is part-way through
+    /// typing into some OTHER field.
+    /// </summary>
+    private void SelectedRow_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        var row = vm?.SelectedRow;
+        if (row == null || !ReferenceEquals(sender, row))
+            return;
+
+        var property = e.PropertyName ?? "";
+
+        if (editorsByRowProperty.TryGetValue(property, out var editor))
+        {
+            // The ViewModel's answer for this field changed, so what is in the box is out of date
+            // -- INCLUDING when the box is the one being typed into. That case is the point: a
+            // refused edit comes back as the typed text (keep showing it), an accepted one comes
+            // back canonicalised (pasting the label "CODE_C012AB" leaves "C012AB"), and moving
+            // Start restates the Length that was derived from it.
+            //
+            // A change this window did NOT cause -- an import, a migration, another view editing
+            // the same region -- lands here too, and also wins over half-typed text. That is the
+            // intended trade: the region really did move, and leaving a stale edit on screen over
+            // it would let the user commit it back on top without ever seeing what happened.
+            typedFields.Remove(editor.Field);
+            WriteText(editor.Box, row.TextFor(editor.Field));
+        }
+        else if (property is nameof(IRegionRowViewModel.ExportSeparateFile)
+                 or nameof(IRegionRowViewModel.ExportType))
+        {
+            SyncClosedValueEditors(row);
+        }
+
+        UpdateDetailChrome();
+    }
+
+    /// <summary>Everything about the pane that is not a value: the caption, what is enabled, and
+    /// which fields are wearing the "the model refused this" marker.</summary>
+    private void UpdateDetailChrome()
+    {
+        var row = vm?.SelectedRow;
 
         // an unnamed region (or one whose name the user has just blanked) gets the bare caption
         // rather than a caption with a dangling separator.
@@ -405,13 +655,189 @@ internal sealed partial class RegionListWindow : Window
             ? "Region Details"
             : $"Region Details - {row.RegionNameText}";
 
+        // nothing selected: there is no region to edit, so the editors are dead rather than
+        // showing an empty region that does not exist.
+        DetailsPane.IsEnabled = row != null;
+
         // greyed rather than hidden when the region's bytes are emitted as plain inline assembly:
         // hiding them would make it non-obvious that the feature exists, and the stored values
         // survive a round trip through Assembly and back.
         AssetFields.IsEnabled = row?.AssetFieldsEnabled ?? false;
 
         DetailsError.IsVisible = row is { HasError: true };
+
+        foreach (var editor in detailEditors)
+        {
+            // Which field is wearing the error: it is displaying text the model would not take.
+            // A field can also hold text the model merely IGNORED -- an emptied numeric box is not
+            // a mistake -- and that must not be marked, which is why the row's own error state has
+            // to agree before a field is flagged.
+            var bad = row is { HasError: true } && row.HasPendingTextFor(editor.Field);
+
+            editor.Label.Text = bad ? "⚠ " + editor.Caption : editor.Caption;
+            editor.Label.Classes.Set("field-bad", bad);
+            editor.Box.Classes.Set("field-bad", bad);
+        }
     }
+
+    // ------------------------------------------------------------------ details pane: commits
+
+    /// <summary>
+    /// Offer one box's text to the ViewModel. Runs on Enter and on focus leaving the box; the
+    /// ViewModel validates, and either writes the one field or refuses and hands the typed text
+    /// back for the box to keep showing.
+    ///
+    /// DEFERRED (Dispatcher.Post) and re-checked when it runs. Focus leaves a box for two very
+    /// different reasons: the user moved to the next field, or they clicked a different region in
+    /// the master grid. In the second case the pane is about to belong to another region, and
+    /// committing would either write the old region behind the user's back or -- worse -- land
+    /// the text on whichever row is selected by then. Posting lets the selection settle first;
+    /// the commit then happens only if the row it was typed against is still the one on screen.
+    /// It also keeps the write out of the grid's own selection bookkeeping, which forbids the row
+    /// collection moving underneath it (a commit can re-sort).
+    /// </summary>
+    private void CommitEditor(DetailEditor editor)
+    {
+        var target = vm;
+        var row = detailEditingRow ?? target?.SelectedRow;
+        if (target == null || row == null)
+            return;
+
+        // Nothing the user typed, nothing to say. Also stops Enter and the focus change it can
+        // cause from each committing the same text.
+        if (!typedFields.Remove(editor.Field))
+            return;
+
+        var proposed = editor.Box.Text ?? "";
+        if (string.Equals(proposed, row.TextFor(editor.Field), StringComparison.Ordinal))
+            return;
+
+        var field = editor.Field;
+        Dispatcher.UIThread.Post(() =>
+        {
+            var live = vm;
+            if (live == null || !ReferenceEquals(live.SelectedRow, row) || !live.Rows.Contains(row))
+                return;
+
+            live.CommitField(row, field, proposed);
+        }, DispatcherPriority.Background);
+    }
+
+    /// <summary>
+    /// Escape: give up on this field's edit. The ViewModel drops the typed text and any refusal
+    /// that came with it, and the box goes back to the value the region holds.
+    ///
+    /// The ViewModel has to be told, not just the box. If only the box were rewritten, the
+    /// ViewModel would still be holding the abandoned text: the field would keep its marker while
+    /// displaying a perfectly good value, and the box's own value would read as a fresh edit and
+    /// be committed again the moment focus left -- which on a row whose STORED values already
+    /// break a rule comes straight back as a refusal, pinning the marker on a field the user had
+    /// just backed out of.
+    /// </summary>
+    private void RevertEditor(DetailEditor editor)
+    {
+        var target = vm;
+        var row = target?.SelectedRow;
+        if (target == null || row == null)
+            return;
+
+        typedFields.Remove(editor.Field);
+        target.RevertField(row, editor.Field);
+
+        // After the revert the box and the ViewModel agree, so the write's own TextChanged echo
+        // compares equal and does not re-arm a commit. (Belt and braces: the revert itself
+        // notifies, and this window rewrites the box from that -- but only when there WAS text to
+        // drop, and Escape out of an uncommitted edit is the case where there was not.)
+        WriteText(editor.Box, row.TextFor(editor.Field));
+    }
+
+    /// <summary>
+    /// Commit a closed-value field (the checkbox, the combo). These commit the moment the user
+    /// picks, because there is nothing to finish typing -- and on a refusal the widget is put back
+    /// to the committed value, since it has no way to display the value the model rejected.
+    /// </summary>
+    private void CommitClosedValue(RegionField field, string text)
+    {
+        if (updatingWidgets)
+            return;
+
+        var target = vm;
+        var row = target?.SelectedRow;
+        if (target == null || row == null)
+            return;
+
+        var result = target.CommitField(row, field, text);
+        if (!result.IsValid)
+            SyncClosedValueEditors(row);
+    }
+
+    private void SyncClosedValueEditors(IRegionRowViewModel? row) =>
+        WriteWidgets(() =>
+        {
+            ChkSeparateFile.IsChecked = row?.ExportSeparateFile ?? false;
+            CboExportType.SelectedItem = row?.ExportType.ToString();
+        });
+
+    // ------------------------------------------------------------------ details pane: plumbing
+
+    /// <summary>
+    /// Note that a box holds text the user typed -- unless the box is only reporting back what
+    /// this window itself just put there.
+    ///
+    /// The updatingWidgets flag cannot decide that on its own. Avalonia raises TextChanged on a
+    /// LATER dispatcher turn, not inside the Text setter, so by the time the event arrives the
+    /// flag is down again and a write this window made is indistinguishable from a keystroke.
+    /// Comparing the text instead does not depend on when the event fires.
+    ///
+    /// Letting an echo through is not harmless. A box holding the ViewModel's own value has
+    /// nothing new to say, but recording it as an edit arms a commit: the next Enter or focus
+    /// change writes that value back, and the answer need not be the text on screen. Start, End
+    /// and Length are three views of one range, so committing one restates the others, and an
+    /// address is canonicalised on the way in -- so an echo taken for a keystroke retypes the
+    /// user's field under their caret, mid-word, and can drag a neighbouring field with it.
+    ///
+    /// The comparison is against what the VIEWMODEL says the field shows, and every write this
+    /// window makes puts exactly that in the box (WriteText, and the revert path first tells the
+    /// ViewModel so the two still agree) -- so the rule holds with no exceptions: if the box
+    /// differs from the ViewModel, a person put it there.
+    /// </summary>
+    private void PushText(TextBox box, RegionField field)
+    {
+        if (updatingWidgets)
+            return;
+
+        var row = vm?.SelectedRow;
+        if (row == null)
+            return;
+
+        var text = box.Text ?? "";
+        if (string.Equals(text, row.TextFor(field), StringComparison.Ordinal))
+            return;
+
+        typedFields.Add(field);
+    }
+
+    /// <summary>Write widget state without the input handlers treating it as user input.</summary>
+    private void WriteWidgets(Action write)
+    {
+        var previous = updatingWidgets;
+        updatingWidgets = true;
+        try
+        {
+            write();
+        }
+        finally
+        {
+            updatingWidgets = previous;
+        }
+    }
+
+    /// <summary>
+    /// Push text into a box, INCLUDING the one being typed into. That is deliberate: this is only
+    /// reached when the ViewModel's own text for the field changed, and that change has to be
+    /// visible -- it is either the value the model settled on or the very text it refused.
+    /// </summary>
+    private void WriteText(TextBox textBox, string text) => WriteWidgets(() => textBox.Text = text);
 
     // ------------------------------------------------------------------ problem panel
 
@@ -464,9 +890,12 @@ internal sealed partial class RegionListWindow : Window
         vm.SelectedRow = vm.AddRegion();
     }
 
-    private async void BtnDelete_Click(object? sender, RoutedEventArgs e)
+    private void BtnDelete_Click(object? sender, RoutedEventArgs e) => BeginDeleteSelectedRegion();
+
+    private async void BeginDeleteSelectedRegion()
     {
-        // async void event handler: an exception must not tear down the shared message loop.
+        // async void: this is the end of an event handler's call chain, and an exception escaping
+        // it must not tear down the shared message loop.
         try
         {
             await DeleteSelectedRegion();

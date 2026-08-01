@@ -1277,6 +1277,101 @@ public class RegionListViewModelTests
         vm.Rows.Select(r => r.UnderlyingRegion).Should().Equal(a);
     }
 
+    // =========================================================================================
+    // giving up on an edit (RevertField)
+    // =========================================================================================
+
+    [Fact]
+    public void RevertingARefusedField_DropsTheTypedTextAndTheMarkerWithIt()
+    {
+        var (vm, row, region) = OneRow();
+        vm.CommitField(row, RegionField.Start, "!!!").IsValid.Should().BeFalse();
+        row.HasError.Should().BeTrue();
+
+        vm.RevertField(row, RegionField.Start);
+
+        row.StartText.Should().Be("808000", "the field shows the value the region actually holds");
+        row.HasPendingTextFor(RegionField.Start).Should().BeFalse();
+        row.HasError.Should().BeFalse();
+        row.ErrorText.Should().Be("");
+        region.StartSnesAddress.Should().Be(0x808000, "reverting writes nothing");
+    }
+
+    [Fact]
+    public void RevertingOneField_LeavesAnotherFieldsRefusalAlone()
+    {
+        var (vm, row, _) = OneRow();
+        vm.CommitField(row, RegionField.Start, "!!!");
+        vm.CommitField(row, RegionField.Priority, "high");
+
+        vm.RevertField(row, RegionField.Start);
+
+        row.StartText.Should().Be("808000");
+        row.PriorityText.Should().Be("high", "the other field is still showing what the user typed");
+        row.HasError.Should().BeTrue("that field's refusal is still outstanding");
+        row.ErrorText.Should().Be("Priority must be a valid number.");
+    }
+
+    [Fact]
+    public void RevertingAField_DoesNotRevalidate_SoAnAlreadyBrokenRowGainsNoNewError()
+    {
+        // Existing projects carry regions whose STORED values break a rule -- here an asset type
+        // no descriptor owns. Backing out of an unrelated edit must leave that row exactly the
+        // error it already had, and must not re-attribute it to the field being abandoned.
+        var region = NewRegion("r", 0x808000, 0x80800F);
+        region.ExportType = RegionExportType.Asset;
+        region.AssetType = "gfx.snes.9bpp";
+        var (vm, row, _) = OneRow(region);
+
+        var errorBefore = row.ErrorText;
+        errorBefore.Should().NotBe("", "the stored values already fail a rule");
+
+        vm.CommitField(row, RegionField.RegionName, "").IsValid.Should().BeFalse();
+        vm.RevertField(row, RegionField.RegionName);
+
+        row.HasPendingTextFor(RegionField.RegionName).Should().BeFalse();
+        row.RegionNameText.Should().Be("r");
+        row.HasError.Should().BeTrue("the stored values still break a rule");
+        row.ErrorText.Should().Be(errorBefore, "and it is still the SAME complaint");
+    }
+
+    [Fact]
+    public void RevertingAFieldNobodyEdited_ChangesNothing()
+    {
+        var (vm, row, region) = OneRow();
+
+        vm.RevertField(row, RegionField.RegionName);
+
+        row.RegionNameText.Should().Be("region");
+        row.HasError.Should().BeFalse();
+        region.RegionName.Should().Be("region");
+    }
+
+    [Fact]
+    public void RevertingAField_DoesNotReportRegionDataAsChanged()
+    {
+        // nothing was written, so nothing is newly unsaved.
+        var (vm, row, _) = OneRow();
+        vm.CommitField(row, RegionField.Start, "!!!");
+
+        var changed = 0;
+        vm.RegionsChanged += (_, _) => changed++;
+        vm.RevertField(row, RegionField.Start);
+
+        changed.Should().Be(0);
+    }
+
+    [Fact]
+    public void RevertingAFieldOfARowFromADifferentList_IsRefused()
+    {
+        var (vm, _, _) = OneRow();
+        var (_, foreignRow, _) = OneRow();
+
+        var revert = () => vm.RevertField(foreignRow, RegionField.Start);
+
+        revert.Should().Throw<ArgumentException>();
+    }
+
     private static void Drain(List<Action> queue)
     {
         // nested marshalled actions join the queue, so walk it by index rather than snapshotting.
