@@ -22,6 +22,7 @@ using Diz.Ui.ViewModels.Goto;             // GotoViewModel
 using Diz.Ui.ViewModels.HarshAutoStep;    // HarshAutoStepViewModel
 using Diz.Ui.ViewModels.Labels;           // LabelEditorViewModel, ILabelEditorViewModel, ILabelRowViewModel, LabelField
 using Diz.Ui.ViewModels.MarkMany;         // MarkManyViewModel, AddressRangeViewModel
+using Diz.Ui.ViewModels.MisalignmentChecker; // MisalignmentCheckerViewModel
 
 namespace DizPreview;
 
@@ -143,6 +144,10 @@ internal static class Program
 
         // ------------------------------------------------------------------ HARSH AUTO STEP WINDOW
         HarshAutoStepScenes(outDir, report);
+
+        // ------------------------------------------------------------------ CHECKER WINDOWS
+        MisalignmentCheckerScenes(outDir, report);
+        InOutPointCheckerScenes(outDir, report);
 
         // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
         // The Avalonia progress window in both modes: marquee (open/save/export) and determinate
@@ -983,6 +988,264 @@ internal static class Program
         catch (Exception ex)
         {
             Record(report, "harshautostep typing not rewritten", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    // ------------------------------------------------------------------ misaligned-flags window
+
+    /// <summary>
+    /// Renders the Avalonia misaligned-flags window and drives it with simulated input.
+    ///
+    /// Needs NO ROM: the ViewModel runs a caller-seeded scan delegate, so the harness supplies a
+    /// canned result instead of sweeping anything. Each scene gets a FRESH window + ViewModel,
+    /// because the real window is created per invocation and completes a task when it closes.
+    ///
+    /// The state worth looking at hardest is the CAPPED scan: its status sentence runs to about
+    /// eighty characters, far wider than the window, so it is the one thing in this window that
+    /// can silently lose half of what it says if the status element does not wrap.
+    /// </summary>
+    private static void MisalignmentCheckerScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[misaligned flags window]");
+
+        // ---- scene 1: nothing scanned yet -- empty report, empty status, Fix already available
+        var (freshWindow, _) = OpenMisalignmentChecker(() => (0, ""));
+        var freshFix = FindByTag<Button>(freshWindow, "fix-button");
+        var freshReport = FindByTag<TextBox>(freshWindow, "report-text");
+        Capture(freshWindow, Path.Combine(outDir, "misalignmentchecker-default.png"),
+            "misaligned flags: opened, nothing scanned yet (report + status empty, Fix enabled)");
+
+        // Fix is deliberately NOT gated on having scanned -- the instruction paragraph offers it
+        // as an alternative to reading the report, and the legacy window always allowed it.
+        var ungatedOk = freshFix is { IsEnabled: true } &&
+                        string.IsNullOrEmpty(TagText(freshWindow, "status-text")) &&
+                        string.IsNullOrEmpty(freshReport?.Text);
+        Console.WriteLine($"  fresh window: Fix enabled={freshFix?.IsEnabled}, " +
+                          $"status='{TagText(freshWindow, "status-text")}', report='{freshReport?.Text}'");
+        Record(report, "misalignment fix ungated", ungatedOk ? "PASS" : "APP-FAIL",
+            $"Fix enabled={freshFix?.IsEnabled} before any scan, status='{TagText(freshWindow, "status-text")}'");
+
+        // the report is output, never input: there is no writable text anywhere in this window,
+        // which is why the code-behind carries no typing/echo guard.
+        var readOnlyOk = freshReport is { IsReadOnly: true };
+        Record(report, "misalignment report read-only", readOnlyOk ? "PASS" : "APP-FAIL",
+            $"report box IsReadOnly={freshReport?.IsReadOnly}");
+
+        // ---- scene 2: a scan that found a handful
+        const string foundReport =
+            "Misaligned instruction at C00123\r\nMisaligned data at C00456\r\nMisaligned pointer at C0078A";
+        var (scannedWindow, scannedVm) = OpenMisalignmentChecker(() => (3, foundReport));
+        var scanButton = FindByTag<Button>(scannedWindow, "scan-button");
+        var scannedReport = FindByTag<TextBox>(scannedWindow, "report-text");
+        var scanPoint = scanButton == null ? null : CenterInWindow(scanButton, scannedWindow);
+        if (scanPoint == null)
+        {
+            Record(report, "misalignment scan click", "HARNESS-FAIL", "Scan button has no on-screen position");
+        }
+        else
+        {
+            Click(scannedWindow, scanPoint.Value);
+            Pump();
+            var scanOk = scannedVm.FoundCount == 3 &&
+                         (scannedReport?.Text ?? "") == foundReport &&
+                         TagText(scannedWindow, "status-text") == "Found 3 misalignments";
+            Console.WriteLine($"  clicked Scan; vm.FoundCount={scannedVm.FoundCount}; " +
+                              $"status='{TagText(scannedWindow, "status-text")}'; " +
+                              $"report box has {(scannedReport?.Text ?? "").Length} chars");
+            Record(report, "misalignment scan click", scanOk ? "PASS" : "APP-FAIL",
+                $"vm.FoundCount={scannedVm.FoundCount}, status='{TagText(scannedWindow, "status-text")}', " +
+                $"report box == generator text: {(scannedReport?.Text ?? "") == foundReport}");
+        }
+
+        Capture(scannedWindow, Path.Combine(outDir, "misalignmentchecker-scanned.png"),
+            $"misaligned flags: after Scan -- '{TagText(scannedWindow, "status-text")}', 3-line report");
+
+        var shortStatusHeight = FindByTag<TextBlock>(scannedWindow, "status-text")?.Bounds.Height ?? 0;
+
+        // ---- scene 3: a CAPPED scan. The generator tests its 500-limit once per step and a step
+        // can add several findings, so a capped scan reports AT LEAST 500 -- hence the odd count.
+        const int cappedCount = MisalignmentCheckerViewModel.FindingLimit + 3;
+        var (cappedWindow, cappedVm) = OpenMisalignmentChecker(() => (cappedCount, "...500+ findings..."));
+        cappedVm.Scan();
+        Pump();
+        var cappedStatusBlock = FindByTag<TextBlock>(cappedWindow, "status-text");
+        var cappedText = TagText(cappedWindow, "status-text");
+        Capture(cappedWindow, Path.Combine(outDir, "misalignmentchecker-capped-status.png"),
+            $"misaligned flags: capped scan -- the ~{cappedText.Length}-char status sentence, wrapped");
+
+        // The layout question, asked of the rendered control rather than of the string: the
+        // capped sentence must occupy MORE THAN ONE LINE (it wrapped) and must still fit inside
+        // the window (it was not simply drawn off the edge). A non-wrapping status would clip
+        // exactly the clause saying the ROM was not swept to the end.
+        var cappedHeight = cappedStatusBlock?.Bounds.Height ?? 0;
+        var cappedWidth = cappedStatusBlock?.Bounds.Width ?? 0;
+        var wrapped = cappedHeight > shortStatusHeight && shortStatusHeight > 0;
+        var fits = cappedWidth > 0 && cappedWidth <= cappedWindow.Width;
+        Console.WriteLine($"  capped status ({cappedText.Length} chars): '{cappedText}'");
+        Console.WriteLine($"  status block: short scan {shortStatusHeight:F1}px tall, capped scan " +
+                          $"{cappedHeight:F1}px tall x {cappedWidth:F1}px wide (window {cappedWindow.Width}px)");
+        Record(report, "misalignment status wraps", wrapped && fits ? "PASS" : "APP-FAIL",
+            $"{cappedText.Length}-char sentence: {cappedHeight:F1}px tall vs {shortStatusHeight:F1}px for a " +
+            $"short one (wrapped={wrapped}), {cappedWidth:F1}px wide inside a {cappedWindow.Width}px window (fits={fits})");
+
+        // ---- confirm / cancel / closed-without-choosing
+        ProbeMisalignmentCheckerAnswers(report);
+
+        freshWindow.Close();
+        scannedWindow.Close();
+        cappedWindow.Close();
+        Pump();
+    }
+
+    private static (MisalignmentCheckerWindow window, MisalignmentCheckerViewModel vm)
+        OpenMisalignmentChecker(Func<(int found, string reportText)> scan)
+    {
+        var vm = new MisalignmentCheckerViewModel(scan);
+        var window = new MisalignmentCheckerWindow();
+        window.AttachViewModel(vm);
+        window.Show();
+        Pump();
+        return (window, vm);
+    }
+
+    /// <summary>
+    /// The three ways out of the misaligned-flags window, each on its own window because each
+    /// completes that window's task for good: Fix confirms, Cancel declines, and closing it any
+    /// other way (the X, Escape) counts as declining too.
+    /// </summary>
+    private static void ProbeMisalignmentCheckerAnswers(List<string> report)
+    {
+        try
+        {
+            ProbeButtonAnswer(report, "misalignment fix -> confirm", "fix-button", expected: true,
+                open: () => OpenMisalignmentChecker(() => (0, "")).window,
+                completion: w => ((MisalignmentCheckerWindow)w).Completion);
+
+            ProbeButtonAnswer(report, "misalignment cancel", "cancel-button", expected: false,
+                open: () => OpenMisalignmentChecker(() => (0, "")).window,
+                completion: w => ((MisalignmentCheckerWindow)w).Completion);
+
+            // closed without answering: the task must still complete, as a decline.
+            var (closedWindow, _) = OpenMisalignmentChecker(() => (0, ""));
+            closedWindow.Close();
+            Pump();
+            var closedOk = closedWindow.Completion.IsCompleted && !closedWindow.Completion.Result;
+            Console.WriteLine($"  closed without answering; completion=" +
+                              $"{(closedWindow.Completion.IsCompleted ? closedWindow.Completion.Result.ToString() : "<pending>")}");
+            Record(report, "misalignment close = cancel", closedOk ? "PASS" : "APP-FAIL",
+                $"completion={(closedWindow.Completion.IsCompleted ? closedWindow.Completion.Result.ToString() : "<pending>")} (wanted False)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "misalignment answers", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    // ------------------------------------------------------------------ in/out-point rescan window
+
+    /// <summary>
+    /// Renders the Avalonia in/out-point rescan confirmation and drives it with simulated input.
+    /// There is no ViewModel and no ROM: the window explains what a rescan does and takes a yes
+    /// or a no, and the rescan itself belongs to whoever opened it.
+    /// </summary>
+    private static void InOutPointCheckerScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[in/out point rescan window]");
+
+        var window = OpenInOutPointChecker();
+        var instruction = TagText(window, "instruction-text");
+        var rescanButton = FindByTag<Button>(window, "rescan-button");
+        Console.WriteLine($"  instruction paragraph: {instruction.Length} chars, " +
+                          $"{instruction.Split('\n').Length} lines; Rescan is default={rescanButton?.IsDefault}");
+        Capture(window, Path.Combine(outDir, "inoutpointchecker-default.png"),
+            $"in/out point rescan: the {instruction.Split('\n').Length}-line explanation, Cancel | Rescan");
+
+        // the whole window is that paragraph, so an empty or clipped one is the only way it can
+        // be wrong before a button is pressed.
+        var paragraphBlock = FindByTag<TextBlock>(window, "instruction-text");
+        var paragraphOk = instruction.Length > 0 && paragraphBlock != null &&
+                          paragraphBlock.Bounds.Height > 0 &&
+                          paragraphBlock.Bounds.Width <= window.Width;
+        Record(report, "inout instruction rendered", paragraphOk ? "PASS" : "APP-FAIL",
+            $"{instruction.Length} chars laid out {paragraphBlock?.Bounds.Width:F1}x{paragraphBlock?.Bounds.Height:F1}px " +
+            $"inside a {window.Width}x{window.Height}px window");
+
+        window.Close();
+        Pump();
+
+        try
+        {
+            ProbeButtonAnswer(report, "inout rescan -> confirm", "rescan-button", expected: true,
+                open: OpenInOutPointChecker,
+                completion: w => ((InOutPointCheckerWindow)w).Completion);
+
+            ProbeButtonAnswer(report, "inout cancel", "cancel-button", expected: false,
+                open: OpenInOutPointChecker,
+                completion: w => ((InOutPointCheckerWindow)w).Completion);
+
+            var closedWindow = OpenInOutPointChecker();
+            closedWindow.Close();
+            Pump();
+            var closedOk = closedWindow.Completion.IsCompleted && !closedWindow.Completion.Result;
+            Console.WriteLine($"  closed without answering; completion=" +
+                              $"{(closedWindow.Completion.IsCompleted ? closedWindow.Completion.Result.ToString() : "<pending>")}");
+            Record(report, "inout close = cancel", closedOk ? "PASS" : "APP-FAIL",
+                $"completion={(closedWindow.Completion.IsCompleted ? closedWindow.Completion.Result.ToString() : "<pending>")} (wanted False)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "inout answers", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    private static InOutPointCheckerWindow OpenInOutPointChecker()
+    {
+        var window = new InOutPointCheckerWindow();
+        window.Show();
+        Pump();
+        return window;
+    }
+
+    /// <summary>
+    /// Click one button on a freshly opened window and check the answer its task carries. Shared
+    /// by both checker windows, whose entire user interaction is "press one of these".
+    /// </summary>
+    private static void ProbeButtonAnswer(
+        List<string> report, string what, string buttonTag, bool expected,
+        Func<Window> open, Func<Window, Task<bool>> completion)
+    {
+        Window? window = null;
+        try
+        {
+            window = open();
+            var button = FindByTag<Button>(window, buttonTag);
+            var point = button == null ? null : CenterInWindow(button, window);
+            if (point == null)
+            {
+                Record(report, what, "HARNESS-FAIL", $"'{buttonTag}' has no on-screen position");
+                return;
+            }
+
+            Click(window, point.Value);
+            Pump();
+
+            var task = completion(window);
+            var ok = task.IsCompleted && task.Result == expected;
+            Console.WriteLine($"  clicked '{buttonTag}'; completion=" +
+                              $"{(task.IsCompleted ? task.Result.ToString() : "<pending>")} (wanted {expected})");
+            Record(report, what, ok ? "PASS" : "APP-FAIL",
+                $"completion={(task.IsCompleted ? task.Result.ToString() : "<pending>")} (wanted {expected})");
+        }
+        catch (Exception ex)
+        {
+            Record(report, what, "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
         }
         finally
         {

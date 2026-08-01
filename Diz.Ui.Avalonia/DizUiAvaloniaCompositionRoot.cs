@@ -7,7 +7,8 @@ namespace Diz.Ui.Avalonia;
 /// <summary>
 /// The Avalonia LABEL-EDITOR BACKEND (new-ui plan step 5/6): exactly the
 /// backend-selectable registrations (LabelEditorView, MarkManyView, GotoView, HarshAutoStepView,
-/// ProgressBarView, IFileDialogService), each named with the exact IViewFactory method-name
+/// MisalignmentCheckerView, InOutPointCheckerView, ProgressBarView, IFileDialogService), each
+/// named with the exact IViewFactory method-name
 /// string. The app registers EITHER this
 /// root OR <c>DizUiWinformsBackendCompositionRoot</c> via an explicit if/else branch in
 /// DizWinformsRegisterServices when DIZ_LABEL_EDITOR selects a backend -- never both. This
@@ -45,5 +46,13 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         // the harsh-auto-step window, same per-invocation lifetime. Name must match
         // IViewFactory.GetHarshAutoStepView().
         serviceRegistry.Register<IHarshAutoStepView, AvaloniaHarshAutoStepView>("HarshAutoStepView");
+
+        // the misaligned-flags window, same per-invocation lifetime. Name must match
+        // IViewFactory.GetMisalignmentCheckerView().
+        serviceRegistry.Register<IMisalignmentCheckerView, AvaloniaMisalignmentCheckerView>("MisalignmentCheckerView");
+
+        // the in/out-point rescan confirmation, same per-invocation lifetime. Name must match
+        // IViewFactory.GetInOutPointCheckerView().
+        serviceRegistry.Register<IInOutPointCheckerView, AvaloniaInOutPointCheckerView>("InOutPointCheckerView");
     }
 }

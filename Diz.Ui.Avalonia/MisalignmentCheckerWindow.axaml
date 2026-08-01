@@ -1,0 +1,79 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.MisalignmentCheckerWindow"
+        x:CompileBindings="False"
+        Title="Misaligned Flags"
+        Width="380" Height="440"
+        CanResize="False"
+        SizeToContent="Manual"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        FontSize="12">
+
+    <!--
+      Press Scan to sweep the ROM for bytes whose flags contradict the instruction or data item
+      they belong to, read the list it produces, and press Fix to have the flags reassigned. The
+      sweep is the ViewModel's caller-seeded delegate and the repair belongs to whoever opened
+      this window; nothing here touches project data.
+
+      Fix is NOT gated on having scanned. The instruction paragraph offers fixing as an
+      ALTERNATIVE to reading the report ("You can fix them manually and rescan, or click the
+      'Fix' button"), which is how the legacy window has always behaved.
+
+      The instruction paragraph is the WinForms window's text word for word, kept as literal
+      line breaks rather than wrapped so the shape on screen is the same in both backends. The
+      button captions and their left-to-right order (Cancel, Scan, Fix) match too, so the same
+      instructions describe either backend.
+
+      The widgets are wired to a MisalignmentCheckerViewModel by hand in the code-behind
+      (MisalignmentCheckerWindow.axaml.cs) rather than by binding, matching the other windows
+      here. There is deliberately NO re-entrancy guard of the PushText kind: nothing in this
+      window is user-editable, so there is no echo loop to break. Do not add one.
+
+      Styled like the other Avalonia windows here: compact, FontSize 12, light theme (pinned
+      application-wide in DizAvaloniaApp).
+    -->
+
+    <Border Padding="12,10">
+        <DockPanel>
+
+            <!-- ============ bottom bar: Cancel | Scan | Fix ============ -->
+            <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,10,0,0">
+                <Button Grid.Column="0" x:Name="CancelButton" Tag="cancel-button" Content="Cancel"
+                        Width="80" IsCancel="True" Click="CancelButton_Click" />
+                <Button Grid.Column="2" x:Name="ScanButton" Tag="scan-button" Content="Scan"
+                        Width="80" Margin="0,0,8,0" Click="ScanButton_Click" />
+                <!-- enabled from the start on purpose: fixing without scanning first is allowed. -->
+                <Button Grid.Column="3" x:Name="FixButton" Tag="fix-button" Content="Fix"
+                        Width="80" Click="FixButton_Click" />
+            </Grid>
+
+            <!-- ===== how many the last scan found, in words. The legacy window threw this
+                 number away and showed only the report body, so a clean ROM and a ROM nobody
+                 had scanned yet looked identical.
+
+                 MUST WRAP. A capped scan's sentence runs to about eighty characters, far
+                 wider than this window, so a single non-wrapping line would silently clip the
+                 half that says the ROM was not swept to the end. ===== -->
+            <TextBlock x:Name="StatusText" DockPanel.Dock="Bottom" Tag="status-text"
+                       TextWrapping="Wrap" Margin="0,8,0,0" />
+
+            <!-- ===== the instruction paragraph, word for word as the WinForms window shows it ===== -->
+            <TextBlock x:Name="InstructionText" DockPanel.Dock="Top" Tag="instruction-text"
+                       TextWrapping="Wrap" Margin="0,0,0,10"
+                       Text="Check for misaligned flags, including desynched&#10;instructions and misaligned data and pointers.&#10;Clicking &quot;Scan&quot; will locate all errors and dump the&#10;first 500 in the box below.&#10;You can fix them manually and rescan, or click the&#10;&quot;Fix&quot; button. DiztinGUIsh will attempt to reassign&#10;the appropriate flags for every misalignment." />
+
+            <!-- ===== the report, exactly as the generator wrote it. READ-ONLY, but a real
+                 TextBox rather than a TextBlock so the text can be selected and copied out,
+                 the same choice the WinForms window makes. Nothing typed here ever reaches the
+                 ViewModel; there is no writable text in this window at all. ===== -->
+            <TextBox x:Name="ReportBox" Tag="report-text"
+                     IsReadOnly="True" AcceptsReturn="True" TabIndex="1"
+                     TextWrapping="NoWrap"
+                     FontFamily="Consolas, Courier New, monospace"
+                     VerticalContentAlignment="Top"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+        </DockPanel>
+    </Border>
+</Window>

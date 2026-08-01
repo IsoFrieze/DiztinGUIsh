@@ -1,0 +1,43 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.InOutPointCheckerWindow"
+        x:CompileBindings="False"
+        Title="Rescan for In/Out/End/Read Points"
+        Width="380" Height="380"
+        CanResize="False"
+        SizeToContent="Manual"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        FontSize="12">
+
+    <!--
+      A pure confirmation: it explains what a rescan of every instruction's in/out/end/read
+      points does, and takes a yes or a no. NO ViewModel, on purpose: there is no state, no
+      input and no backend call here. Running the rescan (ProjectController.RescanForInOut)
+      belongs to whoever opened this window.
+
+      The instruction paragraph is the WinForms window's text word for word, kept as literal line
+      breaks rather than wrapped so the shape on screen is the same in both backends. The button
+      captions match too, so the same instructions describe either backend.
+
+      Styled like the other Avalonia windows here: compact, FontSize 12, light theme (pinned
+      application-wide in DizAvaloniaApp).
+    -->
+
+    <Border Padding="12,10">
+        <DockPanel>
+
+            <!-- ============ bottom bar: Cancel | Rescan ============ -->
+            <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto" Margin="0,10,0,0">
+                <Button Grid.Column="0" x:Name="CancelButton" Tag="cancel-button" Content="Cancel"
+                        Width="80" IsCancel="True" Click="CancelButton_Click" />
+                <Button Grid.Column="2" x:Name="RescanButton" Tag="rescan-button" Content="Rescan"
+                        Width="80" IsDefault="True" Click="RescanButton_Click" />
+            </Grid>
+
+            <!-- ===== what a rescan is for, word for word as the WinForms window shows it ===== -->
+            <TextBlock x:Name="InstructionText" Tag="instruction-text" TextWrapping="Wrap"
+                       Text="Rescan all instructions for in points, out points,&#10;end points, and read points.&#10;In points are locations where execution can reach&#10;by means other than the instruction directly before&#10;it in the ROM. (e.g. jump, branch)&#10;Out points are locations where execution can jump&#10;to elsewhere, other than the instruction directly&#10;after it in the ROM. (e.g. branch)&#10;End points are special out points where execution&#10;cannot proceed to the instruction directly after it&#10;in the ROM. (e.g. jump, return)&#10;Read points are locations that are the intermediate&#10;address of any other load or math instruction.&#10;(e.g. data tables)&#10;This data is used mainly when formatting the&#10;disassembly, and can be of help when examining&#10;code manually." />
+        </DockPanel>
+    </Border>
+</Window>
