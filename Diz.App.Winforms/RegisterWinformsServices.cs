@@ -42,9 +42,9 @@ public static class DizWinformsRegisterServices
         // new-ui plan step 6: EXPLICIT backend branch (Dom's directive), replacing the old
         // step-5 last-registration-wins ordering trick. Exactly ONE of these roots is ever
         // registered, so the label-editor backend selection has no dependency on registration
-        // order. Each root registers the same named seams -- LabelEditorView, MarkManyView,
-        // GotoView, HarshAutoStepView, MisalignmentCheckerView, InOutPointCheckerView,
-        // ProgressBarView, IFileDialogService -- for its toolkit.
+        // order. Each root registers the same named seams -- LabelEditorView, RegionEditorView,
+        // MarkManyView, GotoView, HarshAutoStepView, MisalignmentCheckerView,
+        // InOutPointCheckerView, ProgressBarView, IFileDialogService -- for its toolkit.
         // Everything not listed here
         // stays WinForms (registered unconditionally above). Set DIZ_LABEL_EDITOR=avalonia to
         // pick the Avalonia backend (see LabelEditorBackend docs).
@@ -56,8 +56,8 @@ public static class DizWinformsRegisterServices
         {
             // TUI backend (DIZ_LABEL_EDITOR=tui): ONLY the label editor is TUI. Unlike the
             // Avalonia/WinForms roots (which supply every seam for their toolkit), the TUI
-            // root supplies just LabelEditorView; the mark-many window, goto window,
-            // harsh-auto-step window, misaligned-flags window, in/out-point rescan
+            // root supplies just LabelEditorView; the region editor, mark-many window, goto
+            // window, harsh-auto-step window, misaligned-flags window, in/out-point rescan
             // confirmation, progress popup and file dialogs stay WinForms and are
             // registered EXPLICITLY here. We do NOT
             // register DizUiWinformsBackendCompositionRoot for those, because it would also
@@ -65,6 +65,8 @@ public static class DizWinformsRegisterServices
             // ordering this branch exists to avoid.
             serviceRegistry.RegisterFrom<DizUiTuiCompositionRoot>();
             serviceRegistry.Register<IProgressView, ProgressDialog>("ProgressBarView");
+            // the TUI has no region screen, so the region editor is the WinForms one here.
+            DizUiWinformsBackendCompositionRoot.RegisterRegionEditorView(serviceRegistry);
             serviceRegistry.Register<IMarkManyView, WinformsMarkManyView>("MarkManyView");
             serviceRegistry.Register<IGotoView, WinformsGotoView>("GotoView");
             serviceRegistry.Register<IHarshAutoStepView, WinformsHarshAutoStepView>("HarshAutoStepView");

@@ -6,7 +6,8 @@ namespace Diz.Ui.Avalonia;
 
 /// <summary>
 /// The Avalonia LABEL-EDITOR BACKEND (new-ui plan step 5/6): exactly the
-/// backend-selectable registrations (LabelEditorView, MarkManyView, GotoView, HarshAutoStepView,
+/// backend-selectable registrations (LabelEditorView, RegionEditorView, MarkManyView, GotoView,
+/// HarshAutoStepView,
 /// MisalignmentCheckerView, InOutPointCheckerView, ProgressBarView, IFileDialogService), each
 /// named with the exact IViewFactory method-name
 /// string. The app registers EITHER this
@@ -30,6 +31,12 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         serviceRegistry.Register<ILabelEditorView>(
             factory => new AvaloniaLabelEditorView(factory.GetInstance<AvaloniaFileDialogService>()),
             "LabelEditorView");
+
+        // the region editor window. Long-lived like the label editor: MainWindow resolves one in
+        // its constructor and keeps it for the application's lifetime, and it hides rather than
+        // closes. Still one per resolve, so two owners never share a window. Name must match
+        // IViewFactory.GetRegionEditorView().
+        serviceRegistry.Register<IRegionListView, AvaloniaRegionListView>("RegionEditorView");
 
         // new-ui plan step 6, Part C: the Avalonia progress popup (a separate top-level
         // Avalonia window). Name must match IViewFactory.GetProgressBarView().

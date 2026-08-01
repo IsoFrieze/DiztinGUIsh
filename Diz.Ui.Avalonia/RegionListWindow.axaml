@@ -1,0 +1,193 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.RegionListWindow"
+        x:CompileBindings="False"
+        Title="Regions List"
+        Width="1200" Height="560"
+        MinWidth="700" MinHeight="320"
+        FontSize="12">
+
+    <!--
+      The Avalonia region editor: a MASTER LIST plus a details pane, over the same
+      RegionListViewModel the WinForms grid binds. The two toolkits deliberately differ in
+      LAYOUT - WinForms shows all thirteen columns at once, this one shows the eight
+      scannable ones and puts the awkward fields (the asset descriptors and their free-form
+      JSON) in the pane - while sharing the ViewModel, so the rules, the sort order and the
+      commands cannot drift apart.
+
+      The details pane is READ-ONLY here. Editing lands with the editable pane; until then the
+      grid is read-only too, because the DataGrid's control-owned edit pipeline would fight the
+      ViewModel's validate-then-commit path (a refused value must stay on screen without ever
+      reaching the model, which two-way cell binding cannot express).
+
+      Sorting is the ViewModel's, not the grid's: CanUserSortColumns is off and each header's
+      pointer-press writes SortField/SortDescending and nothing else. Letting the DataGrid sort
+      would wrap the row collection in its own ordered view and silently disagree with the order
+      the ViewModel hands out - and with the other backend.
+
+      Reflection bindings (x:CompileBindings="False"): the details pane binds through the
+      possibly-null SelectedRow, which reflection bindings tolerate without an x:DataType. The
+      window's DataContext is the IRegionListViewModel (set in AttachViewModel).
+    -->
+
+    <Window.Styles>
+        <Style Selector="TextBlock.detail-label">
+            <Setter Property="Foreground" Value="#606060" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+        </Style>
+        <Style Selector="TextBlock.detail-value">
+            <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <!-- toolbar button gaps (WrapPanel has no built-in item spacing in this version) -->
+        <Style Selector="WrapPanel#Toolbar > Button">
+            <Setter Property="Margin" Value="0,0,6,4" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+
+        <!-- ============================= top toolbar (wraps: no clipping) ============================= -->
+        <WrapPanel x:Name="Toolbar" DockPanel.Dock="Top" Margin="8,8,8,4">
+            <Button x:Name="BtnAdd" Tag="add-button" Content="Add Region" Click="BtnAdd_Click" />
+            <Button x:Name="BtnDelete" Tag="delete-button" Content="Delete Region" Click="BtnDelete_Click" />
+        </WrapPanel>
+
+        <!-- ============================= status bar (bottom-most) ============================= -->
+        <Border DockPanel.Dock="Bottom" BorderBrush="#C8C8C8" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto" Margin="8,3">
+                <TextBlock x:Name="StatusText" Tag="status-text" Grid.Column="0"
+                           VerticalAlignment="Center" Foreground="#B00000" TextWrapping="Wrap" />
+                <TextBlock x:Name="CountsText" Tag="counts-text" Grid.Column="1"
+                           VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- ============================= problem panel (above the status bar) =============================
+             Whole-list problems: relationships BETWEEN regions (crossing file-producing regions,
+             overlapping asset regions, a region claiming two output roles, duplicate names), so
+             they belong to no single row. DISPLAY-ONLY on purpose: the ViewModel's problem entries
+             do not carry the region they are about, so there is nothing to navigate to, and
+             offering it would mean guessing from the message text. -->
+        <StackPanel DockPanel.Dock="Bottom" Margin="8,0,8,2">
+            <Button x:Name="ProblemsToggle" Tag="problems-toggle"
+                    Content="Problems (0)" Click="ProblemsToggle_Click"
+                    HorizontalAlignment="Left" Padding="6,2"
+                    Background="Transparent" BorderThickness="0" />
+            <ListBox x:Name="ProblemsList" Tag="problems-list"
+                     MaxHeight="110" SelectionMode="Single" />
+        </StackPanel>
+
+        <!-- ============================= main: master grid | splitter | details ============================= -->
+        <Grid ColumnDefinitions="*,4,290" Margin="8,0,8,0">
+
+            <DataGrid x:Name="RegionGrid" Tag="region-grid" Grid.Column="0"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserSortColumns="False"
+                      CanUserReorderColumns="False"
+                      SelectionMode="Single"
+                      GridLinesVisibility="All"
+                      HeadersVisibility="All"
+                      RowHeaderWidth="24"
+                      SelectionChanged="RegionGrid_SelectionChanged"
+                      LoadingRow="RegionGrid_LoadingRow">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Start" Width="85"
+                                        FontFamily="Consolas, Courier New, monospace"
+                                        Binding="{Binding StartText, Mode=OneWay}" />
+                    <DataGridTextColumn Header="End" Width="85"
+                                        FontFamily="Consolas, Courier New, monospace"
+                                        Binding="{Binding EndText, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Length" Width="80"
+                                        FontFamily="Consolas, Courier New, monospace"
+                                        Binding="{Binding LengthText, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Region Name" Width="*" MinWidth="140"
+                                        Binding="{Binding RegionNameText, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Label Context" Width="125"
+                                        Binding="{Binding ContextToApplyText, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Priority" Width="85"
+                                        Binding="{Binding PriorityText, Mode=OneWay}" />
+                    <DataGridCheckBoxColumn Header="Separate File" Width="115"
+                                            IsReadOnly="True"
+                                            Binding="{Binding ExportSeparateFile, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Export Type" Width="105"
+                                        Binding="{Binding ExportTypeText, Mode=OneWay}" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <GridSplitter Grid.Column="1" Background="#DDDDDD" ResizeDirection="Columns" />
+
+            <!-- ===== Region Details pane (read-only until the editable pane lands) ===== -->
+            <Border Grid.Column="2" BorderBrush="#C8C8C8" BorderThickness="1" Margin="0,2,0,2">
+                <ScrollViewer>
+                    <StackPanel Margin="8" Spacing="1">
+                        <TextBlock x:Name="DetailsHeader" Tag="details-header"
+                                   Text="Region Details" FontWeight="Bold" Margin="0,0,0,2" />
+                        <TextBlock x:Name="DetailsNotice" Tag="details-notice"
+                                   Text="Read-only. Edit regions in the WinForms window for now."
+                                   Foreground="#808080" TextWrapping="Wrap" Margin="0,0,0,4" />
+
+                        <TextBlock x:Name="DetailsError" Tag="details-error"
+                                   Foreground="#B00000" TextWrapping="Wrap" Margin="0,0,0,4"
+                                   Text="{Binding SelectedRow.ErrorText, Mode=OneWay}" />
+
+                        <TextBlock Classes="detail-label" Text="Start" />
+                        <TextBlock Classes="detail-value" Tag="details-start"
+                                   Text="{Binding SelectedRow.StartText, Mode=OneWay}" />
+
+                        <TextBlock Classes="detail-label" Text="End (inclusive)" />
+                        <TextBlock Classes="detail-value" Tag="details-end"
+                                   Text="{Binding SelectedRow.EndText, Mode=OneWay}" />
+
+                        <TextBlock Classes="detail-label" Text="Length" />
+                        <TextBlock Classes="detail-value" Tag="details-length"
+                                   Text="{Binding SelectedRow.LengthText, Mode=OneWay}" />
+
+                        <TextBlock Classes="detail-label" Text="Region Name" />
+                        <TextBlock Classes="detail-value" Tag="details-name"
+                                   Text="{Binding SelectedRow.RegionNameText, Mode=OneWay}" />
+
+                        <TextBlock Classes="detail-label" Text="Label Context" />
+                        <TextBlock Classes="detail-value" Tag="details-context"
+                                   Text="{Binding SelectedRow.ContextToApplyText, Mode=OneWay}" />
+
+                        <TextBlock Classes="detail-label" Text="Priority" />
+                        <TextBlock Classes="detail-value" Tag="details-priority"
+                                   Text="{Binding SelectedRow.PriorityText, Mode=OneWay}" />
+
+                        <TextBlock Classes="detail-label" Text="Export Separate File" />
+                        <TextBlock Classes="detail-value" Tag="details-sepfile"
+                                   Text="{Binding SelectedRow.ExportSeparateFileText, Mode=OneWay}" />
+
+                        <TextBlock Classes="detail-label" Text="Export Type" />
+                        <TextBlock Classes="detail-value" Tag="details-exporttype"
+                                   Text="{Binding SelectedRow.ExportTypeText, Mode=OneWay}" />
+
+                        <!-- Asset fields are shown even when they mean nothing for this row, and
+                             greyed instead of hidden: hiding them would make it non-obvious that
+                             the feature exists. Nothing clears the stored values while disabled. -->
+                        <StackPanel x:Name="AssetFields" Tag="details-asset-fields" Spacing="1">
+                            <TextBlock Classes="detail-label" Text="Asset Type" />
+                            <TextBlock Classes="detail-value" Tag="details-assettype"
+                                       Text="{Binding SelectedRow.AssetTypeText, Mode=OneWay}" />
+
+                            <TextBlock Classes="detail-label" Text="Asset Version" />
+                            <TextBlock Classes="detail-value" Tag="details-assetversion"
+                                       Text="{Binding SelectedRow.AssetVersionText, Mode=OneWay}" />
+
+                            <TextBlock Classes="detail-label" Text="Asset Name" />
+                            <TextBlock Classes="detail-value" Tag="details-assetname"
+                                       Text="{Binding SelectedRow.AssetNameText, Mode=OneWay}" />
+
+                            <TextBlock Classes="detail-label" Text="Asset Options (JSON)" />
+                            <TextBlock Classes="detail-value" Tag="details-assetoptions"
+                                       Text="{Binding SelectedRow.AssetOptionsText, Mode=OneWay}" />
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

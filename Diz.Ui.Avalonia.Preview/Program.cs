@@ -23,6 +23,7 @@ using Diz.Ui.ViewModels.HarshAutoStep;    // HarshAutoStepViewModel
 using Diz.Ui.ViewModels.Labels;           // LabelEditorViewModel, ILabelEditorViewModel, ILabelRowViewModel, LabelField
 using Diz.Ui.ViewModels.MarkMany;         // MarkManyViewModel, AddressRangeViewModel
 using Diz.Ui.ViewModels.MisalignmentChecker; // MisalignmentCheckerViewModel
+using Diz.Ui.ViewModels.Regions;          // RegionListViewModel, IRegionListViewModel, IRegionRowViewModel, RegionField
 
 namespace DizPreview;
 
@@ -148,6 +149,9 @@ internal static class Program
         // ------------------------------------------------------------------ CHECKER WINDOWS
         MisalignmentCheckerScenes(outDir, report);
         InOutPointCheckerScenes(outDir, report);
+
+        // ------------------------------------------------------------------ REGION LIST WINDOW
+        RegionListScenes(outDir, report);
 
         // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
         // The Avalonia progress window in both modes: marquee (open/save/export) and determinate
@@ -1343,6 +1347,517 @@ internal static class Program
         determinate.Close();
         Pump();
     }
+
+    // ------------------------------------------------------------------ region list window
+
+    /// <summary>
+    /// Renders the Avalonia region editor in four states and drives it with simulated input.
+    /// Unlike the label editor this window needs a region provider, so the fixture's tiny
+    /// in-memory ROM is seeded with a spread of realistic regions: plain assembly banks, a
+    /// separate-file bank, and typed assets (gfx + BRR).
+    ///
+    /// The first PNG is also the DataGrid THEME check: the control ships in its own package and
+    /// its theme in a separate style resource, so a missing StyleInclude shows up here as an
+    /// untemplated, effectively invisible grid rather than as a build error.
+    /// </summary>
+    private static void RegionListScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[region list window]");
+
+        // ---- scene 1: populated master grid, default sort (Start ascending)
+        var (window, vm, _) = OpenRegionList();
+        Console.WriteLine($"  {vm.RegionCount} regions, {vm.Rows.Count} rows, " +
+                          $"sort={vm.SortField} descending={vm.SortDescending}");
+        Capture(window, Path.Combine(outDir, "regionlist-default.png"),
+            $"region list: {vm.RegionCount} regions, master grid + read-only details pane, " +
+            "sorted by Start ascending");
+
+        ProbeRegionGridPopulates(window, vm, report);
+        ProbeRegionSelection(window, vm, report);
+
+        // ---- scene 2: sorted descending, driven through the header (the VM owns the order)
+        ProbeRegionHeaderSort(window, vm, report);
+        Capture(window, Path.Combine(outDir, "regionlist-sorted-desc.png"),
+            $"region list: header click sorted by {vm.SortField} " +
+            $"{(vm.SortDescending ? "descending" : "ascending")} - arrow in the header, " +
+            "highest Start first");
+
+        ProbeRegionSelectionSurvivesResort(window, vm, report);
+        window.Close();
+        Pump();
+
+        // ---- scene 3: a row the rules refuse, flagged without committing
+        var (badWindow, badVm, _) = OpenRegionList();
+        var victim = badVm.Rows.First(r => r.RegionNameText == "title_gfx");
+        badVm.SelectedRow = victim;
+        var refusal = badVm.CommitField(victim, RegionField.RegionName, "   ");
+
+        // a second flagged row, deliberately NOT the selected one: the tint is what an unselected
+        // bad row shows, and the selection brush paints over it on the row the user is in - which
+        // is why the marker also lives in the row header.
+        var alsoBad = badVm.Rows.First(r => r.RegionNameText == "map_tiles");
+        badVm.CommitField(alsoBad, RegionField.End, "C2FFFF"); // end before start: refused
+        Pump();
+        Console.WriteLine($"  refused edit: valid={refusal.IsValid}, row.HasError={victim.HasError}, " +
+                          $"model name still '{victim.LastGoodTextFor(RegionField.RegionName)}', " +
+                          $"status='{badVm.StatusText}'");
+        Capture(badWindow, Path.Combine(outDir, "regionlist-bad-row.png"),
+            $"region list: a blanked Region Name was refused - row tinted + tooltip, status says " +
+            $"'{badVm.StatusText}', the model still holds " +
+            $"'{victim.LastGoodTextFor(RegionField.RegionName)}'");
+        badWindow.Close();
+        Pump();
+
+        // ---- add / delete, on their own window (both change the region collection)
+        ProbeRegionAddAndDelete(outDir, report);
+
+        // ---- scene 4: whole-list problems (two asset regions overlapping)
+        ProbeRegionProblemPanel(outDir, report);
+
+        // ---- scene 5: the same window under the DARK theme variant, because the DataGrid's
+        // theme carries its own light/dark dictionaries and a missing one shows up as unreadable
+        // (not as an error). The app pins Light by default; DIZ_AVALONIA_THEME=dark selects this.
+        var (darkWindow, darkVm, _) = OpenRegionList();
+        darkWindow.RequestedThemeVariant = global::Avalonia.Styling.ThemeVariant.Dark;
+        Pump();
+        Capture(darkWindow, Path.Combine(outDir, "regionlist-dark.png"),
+            $"region list: {darkVm.RegionCount} regions under the Dark theme variant " +
+            "(DIZ_AVALONIA_THEME=dark)");
+        darkWindow.Close();
+        Pump();
+    }
+
+    /// <summary>The columns the master grid is supposed to show, in order.</summary>
+    private static readonly string[] ExpectedRegionColumns =
+    [
+        "Start", "End", "Length", "Region Name", "Label Context", "Priority",
+        "Separate File", "Export Type",
+    ];
+
+    private static (RegionListWindow window, IRegionListViewModel vm, IRegionProvider provider)
+        OpenRegionList(Action<IRegionProvider>? seed = null)
+    {
+        var provider = PreviewFixture.BuildSnesData();
+        (seed ?? SeedRegions)(provider);
+
+        var vm = new RegionListViewModel(provider, notificationMarshaller: RunOnUiThread);
+        var window = new RegionListWindow();
+        window.AttachViewModel(vm);
+        window.Show();
+        Pump();
+        return (window, vm, provider);
+    }
+
+    /// <summary>
+    /// A spread that exercises every role the grid distinguishes: plain assembly, a
+    /// separate-file bank (one bank, as the rules require), typed gfx and BRR assets, and an
+    /// annotation region in WRAM carrying a label context. All of it is valid, so the problem
+    /// panel starts empty and the scenes that want a problem can create one deliberately.
+    /// </summary>
+    private static void SeedRegions(IRegionProvider provider)
+    {
+        AddRegion(provider, "bank_C0_code", 0xC00000, 0xC0FFFF);
+        AddRegion(provider, "bank_C1_code", 0xC10000, 0xC1FFFF, separateFile: true);
+        AddRegion(provider, "title_gfx", 0xC20000, 0xC2001F, RegionExportType.Asset,
+            assetType: "gfx.snes.4bpp", assetName: "gfx/title.png", assetOptions: "{\"cell_h\": 8}");
+        AddRegion(provider, "intro_song", 0xC20100, 0xC20111, RegionExportType.Asset,
+            assetType: "audio.snes.brr", assetName: "audio/intro.brr");
+        AddRegion(provider, "map_tiles", 0xC30000, 0xC3007F, RegionExportType.Asset,
+            assetType: "gfx.snes.2bpp", assetName: "gfx/map.png", assetOptions: "{\"cell_h\": 8}");
+        AddRegion(provider, "battle_scratch", 0x7E0000, 0x7E00FF, context: "battle", priority: 5);
+        AddRegion(provider, "sram_notes", 0x700000, 0x7000FF, priority: 1);
+    }
+
+    /// <summary>Two asset regions deliberately covering the same bytes - the whole-list check
+    /// that has no home on any single row.</summary>
+    private static void SeedOverlappingRegions(IRegionProvider provider)
+    {
+        AddRegion(provider, "bank_C0_code", 0xC00000, 0xC0FFFF);
+        // Binary rather than Asset: it counts as an asset region for the overlap rule without
+        // dragging in a codec's own length arithmetic, so the fix below can move one end freely.
+        AddRegion(provider, "sprite_blob_a", 0xC10000, 0xC1007F, RegionExportType.Binary);
+        AddRegion(provider, "sprite_blob_b", 0xC10040, 0xC100BF, RegionExportType.Binary);
+    }
+
+    private static IRegion AddRegion(
+        IRegionProvider provider, string name, int start, int end,
+        RegionExportType exportType = RegionExportType.Assembly, bool separateFile = false,
+        string assetType = "", string assetName = "", string assetOptions = "",
+        string context = "", int priority = 0)
+    {
+        var region = provider.CreateNewRegion()
+                     ?? throw new InvalidOperationException("fixture could not create a region");
+
+        region.RegionName = name;
+        region.StartSnesAddress = start;
+        region.EndSnesAddress = end;
+        region.ExportType = exportType;
+        region.ExportSeparateFile = separateFile;
+        region.AssetType = assetType;
+        region.AssetVersion = "";
+        region.AssetName = assetName;
+        region.AssetOptions = assetOptions;
+        region.ContextToApply = context;
+        region.Priority = priority;
+
+        provider.Regions.Add(region);
+        return region;
+    }
+
+    private static void ProbeRegionGridPopulates(
+        RegionListWindow window, IRegionListViewModel vm, List<string> report)
+    {
+        try
+        {
+            var grid = FindByTag<DataGrid>(window, "region-grid");
+            if (grid == null)
+            {
+                Record(report, "region grid populates", "HARNESS-FAIL",
+                    "no DataGrid tagged 'region-grid' in the visual tree");
+                return;
+            }
+
+            // headers carry a sort arrow on whichever column the ViewModel is ordering by, so
+            // compare on the caption before it.
+            var headers = grid.Columns.Select(c => StripSortArrow(c.Header as string ?? "")).ToList();
+            var realizedRows = window.GetVisualDescendants().OfType<DataGridRow>().Count();
+
+            var ok = grid.ItemsSource != null &&
+                     vm.Rows.Count == vm.RegionCount &&
+                     headers.SequenceEqual(ExpectedRegionColumns) &&
+                     realizedRows > 0;
+
+            Console.WriteLine($"  columns: {string.Join(" | ", headers)}");
+            Console.WriteLine($"  rows: {vm.Rows.Count} in the ViewModel, {realizedRows} realized containers");
+            Record(report, "region grid populates", ok ? "PASS" : "APP-FAIL",
+                $"{headers.Count} columns [{string.Join(", ", headers)}], {vm.Rows.Count} rows, " +
+                $"{realizedRows} realized");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "region grid populates", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    private static void ProbeRegionSelection(
+        RegionListWindow window, IRegionListViewModel vm, List<string> report)
+    {
+        try
+        {
+            var target = vm.Rows[2];
+            if (!ClickRegionRow(window, target))
+            {
+                Record(report, "region selection", "HARNESS-FAIL",
+                    $"row '{target.RegionNameText}' has no on-screen position");
+                return;
+            }
+
+            var ok = ReferenceEquals(vm.SelectedRow, target);
+            Console.WriteLine($"  clicked row '{target.RegionNameText}'; " +
+                              $"vm.SelectedRow='{vm.SelectedRow?.RegionNameText ?? "<null>"}'");
+            Record(report, "region selection", ok ? "PASS" : "APP-FAIL",
+                $"clicked '{target.RegionNameText}', vm.SelectedRow='{vm.SelectedRow?.RegionNameText ?? "<null>"}'");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "region selection", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    private static void ProbeRegionHeaderSort(
+        RegionListWindow window, IRegionListViewModel vm, List<string> report)
+    {
+        try
+        {
+            // the grid's own sorting is off, so a header press has exactly one effect: the
+            // ViewModel re-orders and the arrow is redrawn from ITS state.
+            var startHeader = FindColumnHeader(window, "Start");
+            var point = startHeader == null ? null : CenterInWindow(startHeader, window);
+            if (point == null)
+            {
+                Record(report, "region header sorts", "HARNESS-FAIL",
+                    "the 'Start' column header has no on-screen position");
+                return;
+            }
+
+            var before = vm.Rows.Select(r => r.StartText).ToList();
+            Click(window, point.Value);
+            Pump();
+
+            var after = vm.Rows.Select(r => r.StartText).ToList();
+            var arrow = (FindColumnHeader(window, "Start")?.Content as string) ?? "";
+            var ok = vm.SortField == RegionField.Start && vm.SortDescending &&
+                     after.SequenceEqual(before.AsEnumerable().Reverse()) &&
+                     arrow.Contains('▼');
+
+            Console.WriteLine($"  header 'Start' clicked; sort={vm.SortField} desc={vm.SortDescending}; " +
+                              $"header now '{arrow}'");
+            Console.WriteLine($"  order before: {string.Join(",", before)}");
+            Console.WriteLine($"  order after : {string.Join(",", after)}");
+            Record(report, "region header sorts", ok ? "PASS" : "APP-FAIL",
+                $"vm.SortField={vm.SortField} descending={vm.SortDescending}, header='{arrow}', " +
+                $"row order reversed={after.SequenceEqual(before.AsEnumerable().Reverse())}");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "region header sorts", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Re-sorting restreams the whole row collection, which reads to the grid as a reset and
+    /// makes it drop its own selection. The ViewModel owns the selection, so the window has to
+    /// put it back - otherwise sorting silently clears the details pane and disarms Delete.
+    /// </summary>
+    private static void ProbeRegionSelectionSurvivesResort(
+        RegionListWindow window, IRegionListViewModel vm, List<string> report)
+    {
+        try
+        {
+            var grid = FindByTag<DataGrid>(window, "region-grid");
+            var target = vm.Rows[1];
+            vm.SelectedRow = target;
+            Pump();
+
+            vm.SortDescending = !vm.SortDescending;
+            Pump();
+            Pump(); // the restore is posted past the grid's own selection bookkeeping
+
+            var vmKept = ReferenceEquals(vm.SelectedRow, target);
+            var gridKept = ReferenceEquals(grid?.SelectedItem, target);
+            Console.WriteLine($"  re-sorted with '{target.RegionNameText}' selected; " +
+                              $"vm.SelectedRow='{vm.SelectedRow?.RegionNameText ?? "<null>"}', " +
+                              $"grid.SelectedItem='{(grid?.SelectedItem as IRegionRowViewModel)?.RegionNameText ?? "<null>"}'");
+            Record(report, "region selection resort", vmKept && gridKept ? "PASS" : "APP-FAIL",
+                $"vm kept={vmKept}, grid kept={gridKept} (row '{target.RegionNameText}')");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "region selection resort", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Add, then delete - the two commands that change the region collection. Delete is run
+    /// WHILE SORTED DESCENDING and on a row in the middle, because the bug this guards against
+    /// (deleting by grid position instead of by region) only shows up when the display order and
+    /// the stored order disagree.
+    /// </summary>
+    private static void ProbeRegionAddAndDelete(string outDir, List<string> report)
+    {
+        // Every verdict this probe owes, so an exception part-way through FAILS the outstanding
+        // ones instead of quietly leaving them out of the summary (a probe that is missing reads
+        // like a probe that was never written).
+        string[] owed = ["region add", "region delete sorted", "region delete declined"];
+        var answered = new HashSet<string>();
+
+        void Say(string what, string verdict, string detail)
+        {
+            answered.Add(what);
+            Record(report, what, verdict, detail);
+        }
+
+        RegionListWindow? window = null;
+        try
+        {
+            var (w, vm, provider) = OpenRegionList();
+            window = w;
+
+            // ---- add
+            var beforeAdd = vm.RegionCount;
+            var addButton = FindByTag<Button>(window, "add-button");
+            var addPoint = addButton == null ? null : CenterInWindow(addButton, window);
+            if (addPoint == null)
+            {
+                Say("region add", "HARNESS-FAIL", "the Add Region button has no on-screen position");
+            }
+            else
+            {
+                Click(window, addPoint.Value);
+                Pump();
+                var added = vm.SelectedRow;
+                var addOk = vm.RegionCount == beforeAdd + 1 &&
+                            added != null &&
+                            added.RegionNameText == RegionListViewModel.DefaultRegionName &&
+                            provider.Regions.Count == beforeAdd + 1;
+                Console.WriteLine($"  clicked Add Region; {beforeAdd} -> {vm.RegionCount} regions, " +
+                                  $"selected '{added?.RegionNameText ?? "<null>"}'");
+                Say("region add", addOk ? "PASS" : "APP-FAIL",
+                    $"{beforeAdd} -> {vm.RegionCount} regions, new row selected=" +
+                    $"'{added?.RegionNameText ?? "<null>"}'");
+            }
+
+            // ---- delete, sorted descending, from the middle of the list
+            vm.SortDescending = true;
+            Pump();
+
+            var doomedRow = vm.Rows[2];
+            var doomed = doomedRow.UnderlyingRegion;
+            var survivors = provider.Regions.Where(r => !ReferenceEquals(r, doomed)).ToList();
+            vm.SelectedRow = doomedRow;
+            Pump();
+
+            var asked = new List<string>();
+            window.ConfirmDelete = message =>
+            {
+                asked.Add(message);
+                return Task.FromResult(true);
+            };
+
+            var deleteButton = FindByTag<Button>(window, "delete-button");
+            var deletePoint = deleteButton == null ? null : CenterInWindow(deleteButton, window);
+            if (deletePoint == null)
+            {
+                Say("region delete sorted", "HARNESS-FAIL",
+                    "the Delete Region button has no on-screen position");
+            }
+            else
+            {
+                Click(window, deletePoint.Value);
+                Pump();
+                Pump();
+
+                var wentAway = !provider.Regions.Any(r => ReferenceEquals(r, doomed));
+                var othersKept = survivors.All(s => provider.Regions.Any(r => ReferenceEquals(r, s)));
+                var deleteOk = asked.Count == 1 && wentAway && othersKept;
+
+                Console.WriteLine($"  clicked Delete on '{doomedRow.RegionNameText}' (sorted descending); " +
+                                  $"asked {asked.Count}x, region gone={wentAway}, others kept={othersKept}");
+                Say("region delete sorted", deleteOk ? "PASS" : "APP-FAIL",
+                    $"asked {asked.Count}x ('{(asked.Count > 0 ? asked[0] : "")}'), " +
+                    $"'{doomedRow.RegionNameText}' removed={wentAway}, every other region kept={othersKept}");
+            }
+
+            Capture(window, Path.Combine(outDir, "regionlist-after-add-delete.png"),
+                $"region list: after Add Region + a confirmed Delete while sorted descending " +
+                $"({vm.RegionCount} regions)");
+
+            // ---- delete, declined: the question is asked and nothing happens
+            var spared = vm.Rows[1];
+            var sparedRegion = spared.UnderlyingRegion;
+            vm.SelectedRow = spared;
+            Pump();
+
+            var declined = 0;
+            window.ConfirmDelete = _ =>
+            {
+                declined++;
+                return Task.FromResult(false);
+            };
+
+            var countBefore = vm.RegionCount;
+            var declinePoint = CenterInWindow(FindByTag<Button>(window, "delete-button")!, window);
+            if (declinePoint == null)
+            {
+                Say("region delete declined", "HARNESS-FAIL",
+                    "the Delete Region button has no on-screen position");
+            }
+            else
+            {
+                Click(window, declinePoint.Value);
+                Pump();
+                Pump();
+
+                var stillThere = provider.Regions.Any(r => ReferenceEquals(r, sparedRegion));
+                var declineOk = declined == 1 && stillThere && vm.RegionCount == countBefore;
+                Console.WriteLine($"  clicked Delete and said no; asked {declined}x, " +
+                                  $"'{spared.RegionNameText}' still present={stillThere}");
+                Say("region delete declined", declineOk ? "PASS" : "APP-FAIL",
+                    $"asked {declined}x, region kept={stillThere}, count {countBefore} -> {vm.RegionCount}");
+            }
+        }
+        catch (Exception ex)
+        {
+            foreach (var what in owed.Where(w => !answered.Contains(w)))
+                Record(report, what, "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    /// <summary>
+    /// The problem panel reports what no single row can: two asset regions covering the same
+    /// bytes. It must appear when the overlap does and go away when it is fixed.
+    /// </summary>
+    private static void ProbeRegionProblemPanel(string outDir, List<string> report)
+    {
+        RegionListWindow? window = null;
+        try
+        {
+            var (w, vm, _) = OpenRegionList(SeedOverlappingRegions);
+            window = w;
+
+            var list = FindByTag<ListBox>(window, "problems-list");
+            var toggle = FindByTag<Button>(window, "problems-toggle");
+            var shown = (list?.ItemsSource as IEnumerable<string>)?.ToList() ?? [];
+
+            Console.WriteLine($"  problems: {vm.Problems.Count} in the ViewModel, " +
+                              $"{shown.Count} in the panel, header='{toggle?.Content}'");
+            foreach (var line in shown)
+                Console.WriteLine($"    {line}");
+
+            Capture(window, Path.Combine(outDir, "regionlist-problem-panel.png"),
+                $"region list: two overlapping asset regions - problem panel shows " +
+                $"{shown.Count} entry/entries");
+
+            var listedOk = vm.Problems.Count == 1 &&
+                           shown.Count == 1 &&
+                           shown[0].StartsWith("Error: ", StringComparison.Ordinal) &&
+                           shown[0].Contains("overlap", StringComparison.OrdinalIgnoreCase) &&
+                           (toggle?.Content as string ?? "").Contains("Problems (1)", StringComparison.Ordinal);
+
+            // fix it: move the first blob's end below the second blob's start.
+            var blobA = vm.Rows.First(r => r.RegionNameText == "sprite_blob_a");
+            var result = vm.CommitField(blobA, RegionField.End, "C1003F");
+            Pump();
+
+            var afterFix = (FindByTag<ListBox>(window, "problems-list")?.ItemsSource as IEnumerable<string>)
+                           ?.ToList() ?? [];
+            var afterToggle = FindByTag<Button>(window, "problems-toggle")?.Content as string ?? "";
+            var clearedOk = result.IsValid && vm.Problems.Count == 0 && afterFix.Count == 0 &&
+                            afterToggle.Contains("Problems (0)", StringComparison.Ordinal);
+
+            Console.WriteLine($"  moved sprite_blob_a's end to C1003F; problems now " +
+                              $"{vm.Problems.Count}, panel '{afterToggle}'");
+            Record(report, "region problem panel", listedOk && clearedOk ? "PASS" : "APP-FAIL",
+                $"overlap listed={listedOk} ({shown.Count} line(s)), cleared after the fix={clearedOk} " +
+                $"({afterFix.Count} line(s), header '{afterToggle}')");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "region problem panel", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    private static bool ClickRegionRow(RegionListWindow window, IRegionRowViewModel row)
+    {
+        var container = window.GetVisualDescendants().OfType<DataGridRow>()
+            .FirstOrDefault(r => ReferenceEquals(r.DataContext, row));
+        var cell = container?.GetVisualDescendants().OfType<DataGridCell>().FirstOrDefault();
+        var point = cell == null ? null : CenterInWindow(cell, window);
+        if (point == null)
+            return false;
+
+        Click(window, point.Value);
+        Pump();
+        return true;
+    }
+
+    private static DataGridColumnHeader? FindColumnHeader(Window window, string caption) =>
+        window.GetVisualDescendants().OfType<DataGridColumnHeader>()
+            .FirstOrDefault(h => StripSortArrow(h.Content as string ?? "") == caption);
+
+    private static string StripSortArrow(string header) =>
+        header.Replace("▲", "").Replace("▼", "").Trim();
 
     // ------------------------------------------------------------------ probes
 
