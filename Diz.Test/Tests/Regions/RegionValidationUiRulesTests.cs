@@ -390,6 +390,201 @@ public class RegionValidationUiRulesTests
     }
 
     // =========================================================================================
+    // packed containers (blob.*): the members are authored, so the authoring is what is checked.
+    // The buffer they tile does not exist until the build has unpacked it, which is why nothing
+    // here looks at the region's length.
+    // =========================================================================================
+
+    // straight out of a real project: an LZ-compressed graphics pack whose buffer is one member.
+    private const string ContainerOptions =
+        "{\"lz\":{\"mode\":12},\"members\":[{\"name\":\"blob/gfx_pack_L12_AE.buffer\",\"at\":0," +
+        "\"len\":4096,\"type\":\"gfx.snes.4bpp\"," +
+        "\"sha256\":\"0f2dad865acbdbd772d314778de4ea43d3f5c3314f55b3a599776f36c1dc298b\"}]}";
+
+    // also real: three members tiling one buffer, mixing codecs.
+    private const string MultiMemberContainerOptions =
+        "{\"lz\":{\"mode\":12},\"members\":[" +
+        "{\"name\":\"blob/gfx_pack_L12_4.head\",\"at\":0,\"len\":960,\"type\":\"gfx.snes.4bpp\"," +
+        "\"sha256\":\"2736177d42982a4ed8e6adc410d3bae9c995c223b5621d6822ebebdd58e65d70\"}," +
+        "{\"name\":\"blob/gfx_pack_L12_4.pad\",\"at\":960,\"len\":32,\"type\":\"raw.bin\"," +
+        "\"sha256\":\"af9613760f72635fbdb44a5a0a63c39f12af30f950a6ee5c971be188e89c4051\"}," +
+        "{\"name\":\"blob/gfx_pack_L12_4.tail\",\"at\":992,\"len\":2080,\"type\":\"gfx.snes.4bpp\"," +
+        "\"sha256\":\"8e2f94f32918b1f2fc027e4b50964383f518d6e43a537510975293097a5d0807\"}]}";
+
+    [Fact]
+    public void ContainerRegionWithRealAuthoredMembers_IsAccepted()
+    {
+        RegionRowValidation.ValidateRow(GfxValues("blob.container", 618, ContainerOptions))
+            .IsValid.Should().BeTrue();
+
+        RegionRowValidation.ValidateRow(GfxValues("blob.container", 1300, MultiMemberContainerOptions))
+            .IsValid.Should().BeTrue();
+    }
+
+    // THE regression this family exists to prevent. A container's bytes as stored are compressed,
+    // so its region length has no arithmetic relationship to the members' offsets at all -- any
+    // length rule would reject every compressed container in a project at once.
+    [Theory]
+    [InlineData(1)]
+    [InlineData(7)]
+    [InlineData(618)]
+    [InlineData(4097)]
+    [InlineData(65536)]
+    public void ContainerRegion_IsNeverJudgedByItsLength(int length)
+    {
+        RegionRowValidation.ValidateRow(GfxValues("blob.container", length, ContainerOptions))
+            .IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ContainerRegionWithNoAssetOptions_IsRejected()
+    {
+        var result = RegionRowValidation.ValidateRow(GfxValues("blob.container", 618));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain("Container assets require Asset Options");
+    }
+
+    [Theory]
+    // "members" missing entirely, or not an array
+    [InlineData("{\"lz\":{\"mode\":12}}", "\"members\" must be an array")]
+    [InlineData("{\"members\":{\"name\":\"blob/a\"}}", "\"members\" must be an array")]
+    [InlineData("{\"members\":[]}", "\"members\" is empty")]
+    // an entry that is not an object at all
+    [InlineData("{\"members\":[\"blob/a\"]}", "must be an object")]
+    public void ContainerWithAMalformedMembersList_IsRejected(string options, string expected)
+    {
+        var result = RegionRowValidation.ValidateRow(GfxValues("blob.container", 618, options));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain(expected);
+    }
+
+    private static string OneMember(string body) => "{\"members\":[" + body + "]}";
+
+    private const string Sha = "0f2dad865acbdbd772d314778de4ea43d3f5c3314f55b3a599776f36c1dc298b";
+
+    [Theory]
+    // name: missing, blank, or not a string
+    [InlineData("{\"at\":0,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}", "\"name\"")]
+    [InlineData("{\"name\":\"  \",\"at\":0,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}", "\"name\"")]
+    // at: missing, negative, or not an integer
+    [InlineData("{\"name\":\"a\",\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}", "\"at\"")]
+    [InlineData("{\"name\":\"a\",\"at\":-1,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}", "\"at\"")]
+    [InlineData("{\"name\":\"a\",\"at\":\"0\",\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}", "\"at\"")]
+    // len: missing, zero, or fractional
+    [InlineData("{\"name\":\"a\",\"at\":0,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}", "\"len\"")]
+    [InlineData("{\"name\":\"a\",\"at\":0,\"len\":0,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}", "\"len\"")]
+    [InlineData("{\"name\":\"a\",\"at\":0,\"len\":1.5,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}", "\"len\"")]
+    // type: missing or blank
+    [InlineData("{\"name\":\"a\",\"at\":0,\"len\":16,\"sha256\":\"" + Sha + "\"}", "\"type\"")]
+    [InlineData("{\"name\":\"a\",\"at\":0,\"len\":16,\"type\":\"\",\"sha256\":\"" + Sha + "\"}", "\"type\"")]
+    // sha256: missing, wrong length, or uppercase (the build compares lowercase hex)
+    [InlineData("{\"name\":\"a\",\"at\":0,\"len\":16,\"type\":\"raw.bin\"}", "\"sha256\"")]
+    [InlineData("{\"name\":\"a\",\"at\":0,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"abc123\"}", "\"sha256\"")]
+    [InlineData("{\"name\":\"a\",\"at\":0,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"0F2DAD865ACBDBD772D314778DE4EA43D3F5C3314F55B3A599776F36C1DC298B\"}", "\"sha256\"")]
+    public void ContainerMemberWithABadField_IsRejected(string member, string expectedKey)
+    {
+        var result = RegionRowValidation.ValidateRow(
+            GfxValues("blob.container", 618, OneMember(member)));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain("members[0]").And.Contain(expectedKey);
+    }
+
+    // The tiling check that CAN be done without the buffer: members are ascending and adjacent
+    // to each other. Whether they add up to the whole buffer is the build's half.
+    [Fact]
+    public void ContainerMembersThatLeaveAHole_AreRejected()
+    {
+        var options = "{\"members\":[" +
+                      "{\"name\":\"a\",\"at\":0,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}," +
+                      "{\"name\":\"b\",\"at\":32,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}]}";
+
+        var result = RegionRowValidation.ValidateRow(GfxValues("blob.container", 618, options));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain("members[1]").And.Contain("HOLE").And.Contain("16 unclaimed");
+    }
+
+    [Fact]
+    public void ContainerMembersThatOverlap_AreRejected()
+    {
+        var options = "{\"members\":[" +
+                      "{\"name\":\"a\",\"at\":0,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}," +
+                      "{\"name\":\"b\",\"at\":8,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}]}";
+
+        var result = RegionRowValidation.ValidateRow(GfxValues("blob.container", 618, options));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain("OVERLAPS").And.Contain("8 bytes claimed twice");
+    }
+
+    [Fact]
+    public void ContainerMembersSharingAName_AreRejected()
+    {
+        // names are file paths, and the two spellings normalize to the same one.
+        var options = "{\"members\":[" +
+                      "{\"name\":\"blob/a\",\"at\":0,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}," +
+                      "{\"name\":\"blob\\\\a\",\"at\":16,\"len\":16,\"type\":\"raw.bin\",\"sha256\":\"" + Sha + "\"}]}";
+
+        var result = RegionRowValidation.ValidateRow(GfxValues("blob.container", 618, options));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain("declared twice");
+    }
+
+    // Deliberately NOT checked here: the transform-stage key and the member type strings. Their
+    // registries live with the exporters, and a stale copy of either would reject authoring the
+    // build handles fine, so both are left to the build.
+    [Fact]
+    public void ContainerIgnoresTheTransformStageBlockAndMemberTypeVocabulary()
+    {
+        var options = "{\"squish\":{\"mode\":7},\"members\":[" +
+                      "{\"name\":\"a\",\"at\":0,\"len\":16,\"type\":\"future.codec.v9\"," +
+                      "\"sha256\":\"" + Sha + "\"}]}";
+
+        RegionRowValidation.ValidateRow(GfxValues("blob.container", 618, options))
+            .IsValid.Should().BeTrue();
+    }
+
+    // =========================================================================================
+    // verbatim bytes (raw.*): any byte is a valid byte, so only emptiness is refused
+    // =========================================================================================
+
+    [Theory]
+    [InlineData("raw.bin", 1)]
+    [InlineData("raw.bin", 36)]
+    [InlineData("raw.bin", 1215)]
+    public void RawRegionOfAnyLength_IsAccepted(string assetType, int length)
+    {
+        RegionRowValidation.ValidateRow(GfxValues(assetType, length)).IsValid.Should().BeTrue();
+    }
+
+    // Both families are matched by prefix, mirroring the exporters' own dispatch: the suffix
+    // selects nothing downstream, so an unfamiliar one is not a near-miss with no codec.
+    [Theory]
+    [InlineData("raw.something")]
+    [InlineData("blob.pack")]
+    public void PrefixFamilies_AcceptSuffixesTheValidatorHasNeverSeen(string assetType)
+    {
+        var options = assetType.StartsWith("blob.") ? ContainerOptions : "";
+
+        RegionRowValidation.ValidateRow(GfxValues(assetType, 618, options))
+            .IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void UnknownTypeMessage_NamesTheContainerAndRawFamiliesToo()
+    {
+        var result = RegionRowValidation.ValidateRow(
+            Values(exportType: RegionExportType.Asset, assetType: "gfx.snes.3bpp"));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain("blob.container").And.Contain("raw.bin");
+    }
+
+    // =========================================================================================
     // the value type the rules run against
     // =========================================================================================
 
@@ -421,9 +616,15 @@ public class RegionValidationUiRulesTests
     }
 
     [Fact]
-    public void RegisteredAssetTypeDescriptors_CoverTheGfxAudioAndTextFamilies()
+    public void RegisteredAssetTypeDescriptors_CoverEveryFamilyAnExporterClaims()
     {
+        // one entry per exporter family; the two PREFIX families contribute a representative
+        // type rather than an unlistable set of suffixes.
         RegionAssetTypeValidators.All.SelectMany(d => d.ExampleTypes).Should().BeEquivalentTo(
-            new[] { "gfx.snes.2bpp", "gfx.snes.4bpp", "gfx.snes.8bpp", "audio.snes.brr", "text.ct.mapped" });
+            new[]
+            {
+                "gfx.snes.2bpp", "gfx.snes.4bpp", "gfx.snes.8bpp", "audio.snes.brr",
+                "text.ct.mapped", "blob.container", "raw.bin",
+            });
     }
 }

@@ -194,7 +194,12 @@ public sealed class RegionAssetTypeValidator
     /// <summary>Does this descriptor own the given AssetType string?</summary>
     public Func<string, bool> Matches { get; init; } = _ => false;
 
-    /// <summary>Example type strings, surfaced in the "expected one of" error.</summary>
+    /// <summary>
+    /// Example type strings, surfaced in the "expected one of" error. A descriptor that owns a
+    /// whole PREFIX family cannot list its members -- the suffix is open -- so it contributes one
+    /// representative type instead (e.g. "blob.container" for the "blob." family). That keeps the
+    /// message a list of things a user can literally type.
+    /// </summary>
     public IReadOnlyList<string> ExampleTypes { get; init; } = [];
 
     /// <summary>Returns null when valid, else a user-facing error message.</summary>
@@ -208,7 +213,12 @@ public sealed class RegionAssetTypeValidator
 /// bytes are written out. They are kept in sync by hand so an editor cannot accept a region the
 /// build will reject, or reject one the build accepts. If a rule changes on one side, change it
 /// on both. The counterparts are RegionAssetUtil.ParseSnesGfxBpp,
-/// BrrRegionAssetExporter.Validate and TextRegionAssetExporter in Diz.LogWriter.
+/// BrrRegionAssetExporter.Validate, TextRegionAssetExporter, BinaryRegionAssetExporter.Validate
+/// and ContainerRegionAssetExporter.Parse in Diz.LogWriter.
+///
+/// EVERY family an exporter claims needs a descriptor here, even one with nothing to check: an
+/// asset type no descriptor owns is reported as an unknown type, so a missing descriptor rejects
+/// regions the build exports perfectly well.
 /// </summary>
 public static class RegionAssetTypeValidators
 {
@@ -217,6 +227,8 @@ public static class RegionAssetTypeValidators
         BuildGfxAssetValidator(),
         BuildBrrAssetValidator(),
         BuildTextAssetValidator(),
+        BuildContainerAssetValidator(),
+        BuildRawAssetValidator(),
     ];
 
     // SNES BRR audio: audio.snes.brr. The stream is 9-byte ADPCM blocks (1 header + 8 data),
@@ -333,6 +345,143 @@ public static class RegionAssetTypeValidators
             },
         };
     }
+
+    // Packed containers: the "blob." family, e.g. blob.container. One ROM region holding several
+    // assets, usually behind a transform stage such as compression. Nothing in the ROM says what
+    // is inside, so the decomposition -- which members, where, how long, what each hashes to --
+    // is AUTHORED in Asset Options, and that authoring is what gets checked. Mirrors
+    // ContainerRegionAssetExporter.Parse in Diz.LogWriter, minus the parts a row editor cannot
+    // decide. Matched by PREFIX, like the exporter's own dispatch: the suffix selects nothing.
+    //
+    // NO REGION-LENGTH RULE, and that is deliberate. Members are offsets into the UNPACKED
+    // buffer, which does not exist until the build has run the transform stage; when a stage such
+    // as "lz" is declared, the region's byte count is the COMPRESSED length and bears no
+    // arithmetic relationship to the members at all. So the tiling is checked here only RELATIVE
+    // to the members themselves -- ascending, no hole, no overlap between neighbours -- and
+    // whether those tiles add up to the whole buffer is checked at build time against the
+    // buffer's real length. That is the half of the tiling check that cannot be done here, and
+    // inventing a length rule in its place would reject every compressed container there is.
+    //
+    // Also deliberately unchecked: the transform-stage option key ("lz") and the member "type"
+    // strings. Both are vocabularies owned by registries that live with the exporters, which this
+    // layer cannot see; a hand-copied list of either would go stale and start rejecting a
+    // legitimately registered stage or codec. The exporter names both precisely when the build
+    // runs, and a check missed here merely halts a build, while a false one blocks editing.
+    private static RegionAssetTypeValidator BuildContainerAssetValidator()
+    {
+        const string containerPrefix = "blob.";
+        const string membersKey = "members";
+
+        return new RegionAssetTypeValidator
+        {
+            Matches = t => t?.StartsWith(containerPrefix, StringComparison.Ordinal) == true,
+            ExampleTypes = ["blob.container"],
+            Validate = ctx =>
+            {
+                if (ctx.Options == null)
+                    return "Container assets require Asset Options: a container is defined by the " +
+                           "members tiling its unpacked buffer, and nothing in the ROM says what " +
+                           "they are, e.g. {\"members\": [{\"name\": \"blob/thing\", \"at\": 0, " +
+                           "\"len\": N, \"type\": \"raw.bin\", \"sha256\": \"<64 hex digits>\"}]}.";
+
+                if (!ctx.Options.TryGetPropertyValue(membersKey, out var membersNode)
+                    || membersNode is not JsonArray members)
+                    return $"Asset Options: \"{membersKey}\" must be an array. That array IS the " +
+                           "container -- without it there is nothing to unpack into.";
+
+                if (members.Count == 0)
+                    return $"Asset Options: \"{membersKey}\" is empty. Every byte of the buffer " +
+                           "belongs to some member, so a container has at least one -- a buffer " +
+                           "nobody has decomposed yet is ONE verbatim member covering all of it.";
+
+                var seenNames = new HashSet<string>(StringComparer.Ordinal);
+                var cursor = 0;
+
+                for (var i = 0; i < members.Count; ++i)
+                {
+                    var where = $"Asset Options: {membersKey}[{i}]";
+
+                    if (members[i] is not JsonObject member)
+                        return $"{where} must be an object with \"name\", \"at\", \"len\", " +
+                               "\"type\" and \"sha256\".";
+
+                    if (!TryGetNonEmptyStringOption(member, "name", out var name))
+                        return $"{where}: \"name\" must be a non-empty string.";
+
+                    // the exporter normalizes before comparing, so two spellings of one path
+                    // collide here exactly as they would when the buffer is split into files.
+                    name = name.Replace('\\', '/').Trim('/');
+                    if (!seenNames.Add(name))
+                        return $"{where}: member name '{name}' is declared twice. Names are file " +
+                               "paths -- two members sharing one would overwrite each other.";
+
+                    if (!TryGetIntOption(member, "at", out var at) || at < 0)
+                        return $"{where}: \"at\" must be an integer >= 0 (a byte offset into the " +
+                               "container's unpacked buffer).";
+
+                    if (!TryGetIntOption(member, "len", out var length) || length < 1)
+                        return $"{where}: \"len\" must be an integer >= 1. A zero-length member " +
+                               "claims no bytes and cannot be told apart from a typo; drop it.";
+
+                    if (at != cursor)
+                    {
+                        var problem = at > cursor
+                            ? $"leaves a HOLE at bytes 0x{cursor:X}..0x{at:X} ({at - cursor} unclaimed)"
+                            : $"OVERLAPS the member before it at bytes 0x{at:X}..0x{cursor:X} " +
+                              $"({cursor - at} bytes claimed twice)";
+                        return $"{where} ('{name}') {problem}. Members must tile the buffer in " +
+                               "ascending order with no hole and no overlap -- declaration order " +
+                               "is data, because reassembly concatenates in it -- so declare any " +
+                               "gap as an explicit verbatim member rather than losing those bytes.";
+                    }
+
+                    cursor = at + length;
+
+                    if (!TryGetNonEmptyStringOption(member, "type", out _))
+                        return $"{where}: \"type\" must be a non-empty asset type string -- a " +
+                               "member is an ordinary asset and needs a codec contract.";
+
+                    if (!TryGetNonEmptyStringOption(member, "sha256", out var sha256)
+                        || !IsSha256Hex(sha256))
+                        return $"{where}: \"sha256\" must be 64 lowercase hex digits -- the " +
+                               "sha256 of this member's bytes as they appear in the unpacked " +
+                               "buffer. The build checks it, and it is the only thing that can " +
+                               "catch a decomposition that is plausible but wrong.";
+                }
+
+                return null;
+            },
+        };
+    }
+
+    // Verbatim bytes: the "raw." family, e.g. raw.bin -- the type a plain-binary region is
+    // exported as, and the type a container member carries when nothing decodes it further.
+    // There is no structure to check, because any byte is a valid byte; the only thing
+    // BinaryRegionAssetExporter.Validate in Diz.LogWriter refuses is an empty region, whose
+    // manifest would describe a zero-length slice of the ROM. (Row-level bounds checks already
+    // make that unreachable from here -- the end address is inclusive, so the shortest legal
+    // region is one byte -- but the rule is stated anyway so the two copies read the same.)
+    // Matched by PREFIX, mirroring the exporter's dispatch: the bytes are copied through
+    // unchanged whatever the suffix says, so unlike the exactly-matched gfx/BRR/text types there
+    // is no near-miss that would reach the build with no codec to handle it.
+    private static RegionAssetTypeValidator BuildRawAssetValidator()
+    {
+        const string rawPrefix = "raw.";
+
+        return new RegionAssetTypeValidator
+        {
+            Matches = t => t?.StartsWith(rawPrefix, StringComparison.Ordinal) == true,
+            ExampleTypes = ["raw.bin"],
+            Validate = ctx => ctx.RegionLength <= 0
+                ? $"Region is empty; a binary asset needs at least one byte when Asset Type is " +
+                  $"'{ctx.AssetType}'."
+                : null,
+        };
+    }
+
+    // 64 lowercase hex digits. Mirrors ContainerRegionAssetExporter.RequiredSha256.
+    private static bool IsSha256Hex(string value) =>
+        value.Length == 64 && value.All(c => c is >= '0' and <= '9' or >= 'a' and <= 'f');
 
     private static bool TryGetIntOption(JsonObject options, string key, out int value)
     {
