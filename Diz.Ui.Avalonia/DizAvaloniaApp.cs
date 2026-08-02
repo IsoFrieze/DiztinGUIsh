@@ -1,3 +1,4 @@
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
 
@@ -20,9 +21,31 @@ public class DizAvaloniaApp : global::Avalonia.Application
     /// <summary>Env var that overrides the theme: "light" (default), "dark", or "os".</summary>
     public const string ThemeEnvVarName = "DIZ_AVALONIA_THEME";
 
+    /// <summary>
+    /// Where the DataGrid's control theme lives. The control ships in its own assembly and its
+    /// theme ships as a separate style resource inside that assembly, so adding the package is
+    /// only half of it: without this include every DataGrid renders as an untemplated,
+    /// effectively invisible control. Read off the installed package -- the assembly is
+    /// Avalonia.Controls.DataGrid and it carries /Themes/Fluent.xaml (and a Simple.xaml, for the
+    /// theme this app does not use).
+    /// </summary>
+    private const string DataGridFluentThemeUri = "avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml";
+
+    /// <summary>Base URI for resolving style includes: this assembly. The include below is
+    /// absolute, so this only ever serves as the resolution context.</summary>
+    private const string ThisAssemblyBaseUri = "avares://Diz.Ui.Avalonia/";
+
     public override void Initialize()
     {
         Styles.Add(new FluentTheme());
+
+        // AFTER the Fluent theme: the DataGrid's theme is written against Fluent's resource keys
+        // (accents, control brushes), and it carries its own light/dark ThemeDictionaries, so the
+        // theme variant chosen below applies to it as well.
+        Styles.Add(new StyleInclude(new Uri(ThisAssemblyBaseUri))
+        {
+            Source = new Uri(DataGridFluentThemeUri),
+        });
 
         // THEMING DECISION (new-ui plan step 5, "Still open" item): PIN TO LIGHT by
         // default instead of following the OS. Rationale: Diz's WinForms UI is light; the

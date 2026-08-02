@@ -39,6 +39,13 @@ internal static class Program
         args = ExtractExtraTitleBarArg(args, out var extraTitleBar);
         MainWindowTitleExtras.CommandLineText = extraTitleBar;
 
+        // --acceptProjectOpenWarnings: auto-accept the post-open informational warnings (e.g. the
+        // save-format upgrade notice) so a scripted/unattended launch isn't left on a modal OK box.
+        // Stripped here for the same reason as --extraTitleBar: whatever survives as args[0] is
+        // taken as the project file to open.
+        args = ExtractBoolFlag(args, "--acceptProjectOpenWarnings", out var acceptProjectOpenWarnings);
+        StartupPromptOptions.AcceptProjectOpenWarnings = acceptProjectOpenWarnings;
+
         // PHASE 0 SPIKE HOOK -- throwaway, delete with the spike/ folder.
         // Runs only when explicitly asked for, so normal startup is unchanged.
         if (Array.IndexOf(args, "--avalonia-spike") >= 0)
@@ -60,6 +67,26 @@ internal static class Program
 
         var serviceFactory = DizWinformsRegisterServices.CreateServiceFactoryAndRegisterTypes();
         DizAppCommon.StartApp(serviceFactory, args);
+    }
+
+    // Pull a valueless "--flag" out of args, reporting whether it was present. Same motivation as
+    // ExtractExtraTitleBarArg: switches must not survive into args[0], which is the project to open.
+    private static string[] ExtractBoolFlag(string[] args, string flag, out bool present)
+    {
+        var found = false;
+        var remaining = new List<string>(args.Length);
+        foreach (var arg in args)
+        {
+            if (arg.Equals(flag, StringComparison.OrdinalIgnoreCase))
+            {
+                found = true;
+                continue;
+            }
+            remaining.Add(arg);
+        }
+
+        present = found;
+        return remaining.ToArray();
     }
 
     // Pull "--extraTitleBar <text>" (or "--extraTitleBar=<text>") out of args, returning the remaining

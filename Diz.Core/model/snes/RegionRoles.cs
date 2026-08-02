@@ -47,10 +47,9 @@ public static class RegionRoleExtensions
 ///
 /// Annotation regions are exempt from both checks entirely.
 ///
-/// This returns every problem found rather than throwing on the first one, so a caller (e.g.
-/// a future RegionListUserControl wiring) can report the whole list at once -- mirrors the
-/// existing single-region checks in RegionGridView_RowValidating, just operating over the
-/// whole collection instead of one row.
+/// This returns every problem found rather than throwing on the first one, so a region editor
+/// can report the whole list at once -- the companion to the per-region checks in
+/// RegionRowValidation, operating over the whole collection instead of one region.
 /// </summary>
 public static class RegionValidation
 {

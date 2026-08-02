@@ -16,6 +16,11 @@
         <PackageReference Include="Avalonia" Version="12.1.0" />
         <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />
+        <!-- DataGrid ships out-of-core in its own package, and its theme ships as a separate
+             style resource that has to be added to the Application's Styles (DizAvaloniaApp)
+             or every DataGrid renders as an unstyled/invisible control. Version must track the
+             other Avalonia packages exactly. -->
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.0" />
         <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
         <PackageReference Include="LightInject" Version="6.6.4" />
     </ItemGroup>
