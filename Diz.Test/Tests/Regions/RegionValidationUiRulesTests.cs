@@ -113,31 +113,31 @@ public class RegionValidationUiRulesTests
     }
 
     // =========================================================================================
-    // check 8: a region that emits its own file cannot straddle a bank boundary
+    // BANK BOUNDARIES ARE NOT A ROW RULE. There used to be a check here refusing a region that
+    // both emits its own file and straddles a bank boundary; it is gone, and this pins that.
     // =========================================================================================
 
-    [Fact]
-    public void SeparateFileRegionCrossingABank_IsRejected()
+    /// <summary>
+    /// A file-producing region may span as many bank boundaries as it likes. The only constraint
+    /// on file-producing regions is a relationship BETWEEN regions -- they must nest, never
+    /// partially overlap -- which is a whole-collection check, not a row check. Banks do not
+    /// appear in it. The emitted assembly handles the seam itself: the writer scopes the
+    /// assembler's bank-crossing diagnostic off across such a region and re-emits an ORG at the
+    /// discontinuity, so a multi-bank file assembles correctly.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ARegionCrossingABankIsAccepted_WhetherOrNotItEmitsItsOwnFile(bool separateFile)
     {
-        var result = RegionRowValidation.ValidateRow(
-            Values(start: 0x80FFF0, end: 0x810010, separateFile: true));
-
-        result.IsValid.Should().BeFalse();
-        result.Error.Should().Be(
-            "When 'Export As Separate Files' is on, Start/end address must be in the same bank.");
+        RegionRowValidation.ValidateRow(Values(start: 0x80FFF0, end: 0x810010, separateFile: separateFile))
+            .IsValid.Should().BeTrue();
     }
 
     [Fact]
     public void SeparateFileRegionWithinOneBank_IsAccepted()
     {
         RegionRowValidation.ValidateRow(Values(start: 0x80FFF0, end: 0x80FFFF, separateFile: true))
-            .IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public void ARegionCrossingABankIsFine_WhenItDoesNotEmitItsOwnFile()
-    {
-        RegionRowValidation.ValidateRow(Values(start: 0x80FFF0, end: 0x810010, separateFile: false))
             .IsValid.Should().BeTrue();
     }
 

@@ -10,8 +10,14 @@ namespace Diz.Core.model.snes;
 
 /// <summary>
 /// The values of one region as a plain snapshot, so a rule set can be run against a PROPOSED
-/// edit without writing it to the model first. Only the fields any rule actually reads are
-/// carried; everything else on IRegion (Priority, ContextToApply, AssetVersion) has no rule.
+/// edit without writing it to the model first. Only fields a rule could reach are carried;
+/// everything else on IRegion (Priority, ContextToApply, AssetVersion) has no rule.
+///
+/// ExportSeparateFile is carried even though no PER-ROW rule reads it: whether a region emits
+/// its own file is decided against the OTHER regions (the file-producing regions have to nest,
+/// never partially overlap), which is a whole-collection question. Keeping it in the snapshot
+/// means a row-level caller does not have to know that, and a future row rule that does need it
+/// has it to hand.
 /// </summary>
 public readonly record struct RegionRowValues(
     string RegionName,
@@ -78,10 +84,6 @@ public static class RegionRowValidation
         if (values.StartSnesAddress > MaxSnesAddress || values.EndSnesAddress > MaxSnesAddress)
             return ValidationResult.Fail("SNES address too large (max allowed: 24-bits: 0xFFFFFF)");
 
-        var bankResult = ValidateSeparateFileStaysInOneBank(values);
-        if (!bankResult.IsValid)
-            return bankResult;
-
         var assetNameResult = ValidateAssetName(values.AssetName);
         if (!assetNameResult.IsValid)
             return assetNameResult;
@@ -89,24 +91,6 @@ public static class RegionRowValidation
         return values.ExportType == RegionExportType.Asset
             ? ValidateAssetFields(values)
             : ValidationResult.Ok;
-    }
-
-    /// <summary>
-    /// A region that emits its own .asm file cannot straddle a bank boundary: the emitted file
-    /// is assembled at one bank's origin.
-    /// </summary>
-    public static ValidationResult ValidateSeparateFileStaysInOneBank(RegionRowValues values)
-    {
-        if (!values.ExportSeparateFile)
-            return ValidationResult.Ok;
-
-        var startBank = RomUtil.GetBankFromSnesAddress(values.StartSnesAddress);
-        var endBank = RomUtil.GetBankFromSnesAddress(values.EndSnesAddress);
-
-        return startBank == endBank
-            ? ValidationResult.Ok
-            : ValidationResult.Fail(
-                "When 'Export As Separate Files' is on, Start/end address must be in the same bank.");
     }
 
     /// <summary>

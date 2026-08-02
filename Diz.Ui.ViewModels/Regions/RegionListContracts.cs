@@ -81,12 +81,16 @@ public enum RegionProblemSeverity
 /// <summary>
 /// One entry of the whole-list problem report.
 ///
-/// <paramref name="Region"/> is reserved for the region a problem is about when exactly one is
-/// implicated, so a view can eventually offer "take me there". It is NOT POPULATED YET and is
-/// null on every problem produced today: the whole-collection checks return prose, not region
-/// handles, and re-deriving which region each message meant would mean matching on message text.
-/// A view must therefore not offer navigation from this list until the checks hand back the
-/// regions themselves.
+/// <paramref name="Region"/> is the region a problem is about when exactly one is implicated, so
+/// a view can eventually offer "take me there". It IS populated for problems that came from one
+/// row failing a per-region rule, and is still null for the whole-collection checks: those return
+/// prose, not region handles, and re-deriving which region each message meant would mean matching
+/// on message text. A view offering navigation therefore has to cope with entries that have no
+/// region to navigate to.
+///
+/// Compared by REFERENCE as part of this record's equality, since regions are identified by
+/// object identity and none of them override Equals -- two regions holding identical values are
+/// still two regions.
 /// </summary>
 public sealed record RegionProblem(RegionProblemSeverity Severity, string Message, IRegion? Region = null);
 
@@ -186,9 +190,16 @@ public interface IRegionListViewModel : INotifyPropertyChanged, IDisposable
     /// replaces it, and is cleared to "" by a successful commit.</summary>
     string StatusText { get; }
 
-    /// <summary>Problems that only exist BETWEEN regions -- crossing file-producing regions,
-    /// overlapping asset regions, a region claiming two output roles, duplicate names. Recomputed
-    /// by every mutation and by <see cref="RevalidateAll"/>.</summary>
+    /// <summary>
+    /// Everything wrong with the region data, in one place: problems that only exist BETWEEN
+    /// regions (crossing file-producing regions, overlapping asset regions, a region claiming two
+    /// output roles, duplicate names) AND rows whose own stored values break a per-region rule,
+    /// so a row flagged red in the grid is never missing from the report.
+    ///
+    /// Stored values only. Text a field is displaying that the model refused is not in the data
+    /// and does not appear here; the row carries that. Recomputed by every mutation and by
+    /// <see cref="RevalidateAll"/>.
+    /// </summary>
     ReadOnlyObservableCollection<RegionProblem> Problems { get; }
 
     int RegionCount { get; }
@@ -218,8 +229,9 @@ public interface IRegionListViewModel : INotifyPropertyChanged, IDisposable
     ///
     /// Nothing is written and NOTHING IS RE-CHECKED. That matters for rows whose stored values
     /// already break a rule (existing projects carry them: an asset type no descriptor owns, an
-    /// options blob that is not a JSON object, a separate-file region straddling a bank): giving
-    /// up on an edit must leave such a row exactly the errors it already had, and must not
+    /// options blob that is not a JSON object, an asset region whose length is not a whole number
+    /// of codec blocks): giving up on an edit must leave such a row exactly the errors it already
+    /// had, and must not
     /// re-attribute them to the field being abandoned.
     /// </summary>
     void RevertField(IRegionRowViewModel row, RegionField field);

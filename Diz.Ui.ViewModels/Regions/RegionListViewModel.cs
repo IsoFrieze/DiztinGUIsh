@@ -16,8 +16,9 @@ namespace Diz.Ui.ViewModels.Regions;
 ///    order -- that stored order is what gets serialized and exported, and sorting must never
 ///    disturb it;
 ///  - per-field validation, so an invalid value is refused before it can reach the model;
-///  - the whole-list problem report, which is about relationships BETWEEN regions and therefore
-///    cannot be computed one row at a time.
+///  - the whole-list problem report: the relationships BETWEEN regions, which cannot be computed
+///    one row at a time, PLUS the rows whose own stored values break a rule, so that nothing can
+///    be flagged in the grid and missing from the report.
 ///
 /// WHAT IT DOES NOT OWN
 ///  - asking the user anything. A delete confirmation is obtained by the host BEFORE it calls
@@ -570,6 +571,7 @@ public sealed class RegionListViewModel : ViewModelNotifierBase, IRegionListView
         foreach (var message in RegionValidation.ValidateNonCrossing(regions))
             found.Add(new RegionProblem(RegionProblemSeverity.Error, message));
 
+        found.AddRange(RowProblems());
         found.AddRange(DuplicateNameProblems());
 
         if (found.Count == problems.Count && !found.Where((p, i) => p != problems[i]).Any())
@@ -578,6 +580,46 @@ public sealed class RegionListViewModel : ViewModelNotifierBase, IRegionListView
         problems.Clear();
         foreach (var problem in found)
             problems.Add(problem);
+    }
+
+    /// <summary>
+    /// Rows whose STORED values break a per-region rule. Without these a region could sit in the
+    /// list flagged red while the report underneath it claimed there was nothing wrong -- and a
+    /// project loaded with bad data on disk (an asset type no descriptor owns, an options blob
+    /// that is not a JSON object) has exactly that shape until someone opens the offending row.
+    ///
+    /// ONLY THE STORED VALUES COUNT. A field currently displaying text the model refused is NOT
+    /// reported here, deliberately: that text is not in the data, it is one keystroke or one
+    /// revert away from being gone, and a report that flickered while the user typed would be
+    /// unreadable. The row itself carries the refusal, which is where an in-flight problem
+    /// belongs.
+    ///
+    /// ORDER IS BY ADDRESS, not by row-dictionary order (which is unspecified) and not by display
+    /// order (which the user can re-sort at will): the report has to come out the same every time
+    /// it is rebuilt, or the no-churn comparison below would rewrite the collection for nothing.
+    /// </summary>
+    private IEnumerable<RegionProblem> RowProblems() =>
+        rowsByRegion.Values
+            .Where(row => row.ModelErrorText.Length != 0)
+            .OrderBy(row => row.UnderlyingRegion.StartSnesAddress)
+            .ThenBy(row => row.UnderlyingRegion.EndSnesAddress)
+            .ThenBy(row => row.Sequence)
+            .Select(row => new RegionProblem(
+                RegionProblemSeverity.Error,
+                $"{DescribeRow(row)}: {row.ModelErrorText}",
+                row.UnderlyingRegion));
+
+    /// <summary>
+    /// How a row is named in the problem report. The rule messages are row-local ("Region Name is
+    /// required."), which says nothing at all in a list of hundreds of regions, so every one of
+    /// them is prefixed with the region's name and range. A blank name is the subject of one of
+    /// the rules, so it needs a stand-in rather than an empty prefix.
+    /// </summary>
+    private static string DescribeRow(RegionRowViewModel row)
+    {
+        var region = row.UnderlyingRegion;
+        var name = string.IsNullOrWhiteSpace(region.RegionName) ? "(unnamed region)" : region.RegionName;
+        return $"{name} (${region.StartSnesAddress:X6}-${region.EndSnesAddress:X6})";
     }
 
     /// <summary>

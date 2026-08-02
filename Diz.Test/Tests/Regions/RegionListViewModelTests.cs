@@ -574,16 +574,23 @@ public class RegionListViewModelTests
         region.EndSnesAddress.Should().Be(0x80800F);
     }
 
+    /// <summary>
+    /// Regression guard: a region that emits its own file may span bank boundaries, and there is
+    /// no row rule about banks at all. The only constraint on file-producing regions is between
+    /// regions -- they must nest, never partially overlap -- and banks play no part in it.
+    /// (There used to be a row check refusing exactly this edit; the emitted assembly handles a
+    /// bank seam inside a file on purpose, so the check was refusing valid data.)
+    /// </summary>
     [Fact]
-    public void Check8_ASeparateFileRegionCrossingABank_IsRefused()
+    public void Check8_ASeparateFileRegionCrossingABank_IsAccepted()
     {
         var (vm, row, region) = OneRow(NewRegion("r", 0x80FFF0, 0x810010));
 
         var result = vm.CommitField(row, RegionField.ExportSeparateFile, "True");
 
-        result.Error.Should().Be(
-            "When 'Export As Separate Files' is on, Start/end address must be in the same bank.");
-        region.ExportSeparateFile.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
+        region.ExportSeparateFile.Should().BeTrue();
+        row.HasError.Should().BeFalse();
     }
 
     [Fact]
@@ -768,10 +775,13 @@ public class RegionListViewModelTests
     {
         // clearing the refusal record must not clear a marker the STORED values earned: those two
         // are separate, and the row is still wrong for its own reasons.
-        var (vm, row, _) = OneRow(NewRegion("r", 0x808000, 0x81800F));
+        // 10 bytes is not a whole number of 9-byte BRR blocks, so switching to Asset is refused.
+        var region = NewRegion("r", 0x808000, 0x808009);
+        region.AssetType = "audio.snes.brr";
+        var (vm, row, _) = OneRow(region);
 
-        // cross-bank + "export as its own .asm file" is refused, and the checkbox snaps back...
-        vm.CommitField(row, RegionField.ExportSeparateFile, "True").IsValid.Should().BeFalse();
+        // an illegal export type is refused, and the combo snaps back...
+        vm.CommitField(row, RegionField.ExportType, "Asset").IsValid.Should().BeFalse();
         row.HasError.Should().BeFalse();
 
         // ... but a row whose stored values break a rule stays flagged, refusal or no refusal.
@@ -786,15 +796,18 @@ public class RegionListViewModelTests
         // the retry path: refused once, the reason is fixed, the same value is offered again and
         // must now go in. Nothing may be left over from the first attempt that makes the second
         // one look like it changed nothing.
-        var (vm, row, region) = OneRow(NewRegion("r", 0x808000, 0x81800F));
+        // 10 bytes is not a whole number of 9-byte BRR blocks; 9 bytes is exactly one.
+        var seed = NewRegion("r", 0x808000, 0x808009);
+        seed.AssetType = "audio.snes.brr";
+        var (vm, row, region) = OneRow(seed);
 
-        vm.CommitField(row, RegionField.ExportSeparateFile, "True").IsValid.Should().BeFalse();
-        region.ExportSeparateFile.Should().BeFalse();
+        vm.CommitField(row, RegionField.ExportType, "Asset").IsValid.Should().BeFalse();
+        region.ExportType.Should().Be(RegionExportType.Assembly);
 
-        vm.CommitField(row, RegionField.End, "80800F").IsValid.Should().BeTrue();
-        vm.CommitField(row, RegionField.ExportSeparateFile, "True").IsValid.Should().BeTrue();
+        vm.CommitField(row, RegionField.End, "808008").IsValid.Should().BeTrue();
+        vm.CommitField(row, RegionField.ExportType, "Asset").IsValid.Should().BeTrue();
 
-        region.ExportSeparateFile.Should().BeTrue();
+        region.ExportType.Should().Be(RegionExportType.Asset);
         row.HasError.Should().BeFalse();
     }
 
@@ -995,10 +1008,10 @@ public class RegionListViewModelTests
     [Fact]
     public void OverlappingAssetRegions_AreReported()
     {
-        var a = NewRegion("a", 0x100, 0x200);
-        var b = NewRegion("b", 0x180, 0x280);
-        a.ExportType = RegionExportType.Asset;
-        b.ExportType = RegionExportType.Asset;
+        // 0x100 bytes is a whole number of 2bpp tiles, so neither row has a problem of its own:
+        // the ONLY thing wrong here is the relationship between the two.
+        var a = AssetRegion("a", 0x100, 0x1FF);
+        var b = AssetRegion("b", 0x180, 0x27F);
         var data = NewData(a, b);
         using var vm = new RegionListViewModel(data);
 
@@ -1023,9 +1036,8 @@ public class RegionListViewModelTests
     [Fact]
     public void ARegionClaimingBothOutputRoles_IsReported()
     {
-        var a = NewRegion("a", 0x100, 0x200);
+        var a = AssetRegion("a", 0x100, 0x1FF);
         a.ExportSeparateFile = true;
-        a.ExportType = RegionExportType.Asset;
         var data = NewData(a);
         using var vm = new RegionListViewModel(data);
 
@@ -1077,17 +1089,93 @@ public class RegionListViewModelTests
     [Fact]
     public void ProblemsAppearWhenAnExternalChangeCreatesThem()
     {
-        var a = NewRegion("a", 0x100, 0x200);
-        a.ExportType = RegionExportType.Asset;
+        var a = AssetRegion("a", 0x100, 0x1FF);
         var data = NewData(a);
         using var vm = new RegionListViewModel(data);
         vm.Problems.Should().BeEmpty();
 
-        var b = NewRegion("b", 0x180, 0x280);
-        b.ExportType = RegionExportType.Asset;
-        data.Regions.Add(b);
+        data.Regions.Add(AssetRegion("b", 0x180, 0x27F));
 
         ErrorMessages(vm).Should().NotBeEmpty();
+    }
+
+    // =========================================================================================
+    // problems a single row already has, which the report used to leave out entirely
+    // =========================================================================================
+
+    [Fact]
+    public void ARowWhoseStoredValuesBreakARule_IsReported()
+    {
+        // a project on disk can hold anything; nothing stops a region arriving unnamed. The grid
+        // flags such a row -- so the report has to list it, or the two disagree on screen.
+        var unnamed = NewRegion("", 0x808000, 0x80800F);
+        var data = NewData(unnamed);
+        using var vm = new RegionListViewModel(data);
+
+        vm.Rows[0].HasError.Should().BeTrue();
+        vm.Problems.Should().ContainSingle();
+        vm.Problems[0].Severity.Should().Be(RegionProblemSeverity.Error);
+        vm.Problems[0].Message.Should().Be(
+            "(unnamed region) ($808000-$80800F): Region Name is required.");
+        vm.Problems[0].Region.Should().BeSameAs(unnamed);
+    }
+
+    [Fact]
+    public void ARowProblemNamesTheRegionAndItsRange_BecauseTheRuleMessageAloneCouldBeAnyRow()
+    {
+        // 0x11 bytes is not a whole number of 2bpp tiles.
+        var bad = NewRegion("tiles", 0x808000, 0x808010);
+        bad.ExportType = RegionExportType.Asset;
+        bad.AssetType = "gfx.snes.2bpp";
+        using var vm = new RegionListViewModel(NewData(bad));
+
+        vm.Problems.Should().ContainSingle();
+        vm.Problems[0].Message.Should().StartWith("tiles ($808000-$808010): ")
+            .And.Contain("must be a whole multiple of");
+        vm.Problems[0].Region.Should().BeSameAs(bad);
+    }
+
+    [Fact]
+    public void FixingTheStoredValues_TakesTheRowProblemOutOfTheReport()
+    {
+        var data = NewData(NewRegion("", 0x808000, 0x80800F));
+        using var vm = new RegionListViewModel(data);
+        vm.Problems.Should().ContainSingle();
+
+        vm.CommitField(vm.Rows[0], RegionField.RegionName, "named now").IsValid.Should().BeTrue();
+
+        vm.Problems.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ARefusedEditThatWasNeverStored_StaysOnTheRowAndOutOfTheReport()
+    {
+        // The boundary the report is drawn at: text the model REFUSED is not in the data. It is
+        // one keystroke or one Esc away from being gone, so counting it would make the panel
+        // churn while the user typed and would flip the count on a revert. The row is flagged --
+        // that is where an in-flight problem is shown -- and the report stays quiet.
+        var (vm, row, region) = OneRow();
+
+        vm.CommitField(row, RegionField.RegionName, "").IsValid.Should().BeFalse();
+
+        row.HasError.Should().BeTrue();
+        row.ErrorText.Should().Be("Region Name is required.");
+        region.RegionName.Should().Be("region", "nothing was written");
+        vm.Problems.Should().BeEmpty();
+
+        // and giving up on the edit does not make one appear either.
+        vm.RevertField(row, RegionField.RegionName);
+        vm.Problems.Should().BeEmpty();
+    }
+
+    /// <summary>A region exported as a typed asset whose stored values are all legal, so it can
+    /// only ever contribute a problem that is about its RELATIONSHIP to another region.</summary>
+    private static Region AssetRegion(string name, int start, int end)
+    {
+        var region = NewRegion(name, start, end);
+        region.ExportType = RegionExportType.Asset;
+        region.AssetType = "gfx.snes.2bpp"; // 0x10 bytes per tile
+        return region;
     }
 
     private static List<string> ErrorMessages(RegionListViewModel vm) =>

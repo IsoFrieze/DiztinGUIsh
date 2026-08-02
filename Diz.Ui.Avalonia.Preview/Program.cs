@@ -1420,7 +1420,7 @@ internal static class Program
         ProbeRegionDetailAssetFields(outDir, report);
         ProbeRegionDetailValidation(outDir, report);
         ProbeRegionDetailLostFocusAndEscape(report);
-        ProbeRegionDetailClosedValueSnapBack(report);
+        ProbeRegionDetailSeparateFileCheckbox(report);
         ProbeRegionDetailMasterSync(report);
         ProbeRegionDeleteKey(report);
         ProbeRegionCloseHides(report);
@@ -1482,8 +1482,8 @@ internal static class Program
         AddRegion(provider, "sram_notes", 0x700000, 0x7000FF, priority: 1);
     }
 
-    /// <summary>A region straddling a bank boundary: the one shape that makes "export me to my
-    /// own file" illegal, and therefore the only way to get a closed-value field refused.</summary>
+    /// <summary>A region straddling a bank boundary, next to one that does not. "Export me to my
+    /// own file" is legal on both -- the emitted assembly re-origins at the seam.</summary>
     private static void SeedCrossBankRegions(IRegionProvider provider)
     {
         AddRegion(provider, "spans_two_banks", 0xC0FF00, 0xC1007F);
@@ -2276,13 +2276,13 @@ internal static class Program
     }
 
     /// <summary>
-    /// A refused edit to a CLOSED-VALUE field. A checkbox cannot display a value the model
-    /// rejected, so it has to snap back to what the region holds -- and leave NO marker behind,
-    /// because there is nothing on screen that the model did not accept. The retry after fixing
-    /// the real problem then has to go through: an earlier version of the WinForms grid swallowed
-    /// it, because it compared the new attempt against text the refusal had parked.
+    /// The CLOSED-VALUE checkbox, driven by a real click, on the shape that used to be refused: a
+    /// region that emits its own .asm file and straddles a bank boundary. Nothing about banks
+    /// constrains a file-producing region -- the emitted assembly re-origins at the seam -- so the
+    /// tick has to reach the model, stay ticked, and leave no marker on the row. Untick has to put
+    /// it back, which is the other half of a checkbox whose value the model owns.
     /// </summary>
-    private static void ProbeRegionDetailClosedValueSnapBack(List<string> report)
+    private static void ProbeRegionDetailSeparateFileCheckbox(List<string> report)
     {
         RegionListWindow? window = null;
         try
@@ -2295,14 +2295,12 @@ internal static class Program
             Pump();
 
             var check = FindByTag<CheckBox>(window, "details-sepfile");
-            var endBox = FindByTag<TextBox>(window, "details-end");
             var sepLabel = FindByTag<TextBlock>(window, "details-sepfile-label");
             var point = check == null ? null : CenterInWindow(check, window);
-            if (check == null || endBox == null || point == null)
+            if (check == null || point == null)
             {
-                Record(report, "region detail closed value snap back", "HARNESS-FAIL",
-                    $"widgets missing (check={check != null}, end={endBox != null}, " +
-                    $"positioned={point != null})");
+                Record(report, "region detail separate file checkbox", "HARNESS-FAIL",
+                    $"widgets missing (check={check != null}, positioned={point != null})");
                 return;
             }
 
@@ -2310,41 +2308,37 @@ internal static class Program
             Pump();
             Pump();
 
-            var refusedOk = check.IsChecked != true &&
-                            !row.UnderlyingRegion.ExportSeparateFile &&
-                            !row.HasError &&
-                            !row.HasPendingTextFor(RegionField.ExportSeparateFile) &&
-                            (sepLabel?.Text ?? "") == "Separate File" &&
-                            vm.StatusText.Contains("same bank", StringComparison.OrdinalIgnoreCase);
+            var tickedOk = check.IsChecked == true &&
+                           row.UnderlyingRegion.ExportSeparateFile &&
+                           !row.HasError &&
+                           !row.HasPendingTextFor(RegionField.ExportSeparateFile) &&
+                           (sepLabel?.Text ?? "") == "Separate File" &&
+                           vm.StatusText.Length == 0;
 
-            Console.WriteLine($"  ticked Separate File on a cross-bank region: checkbox now " +
+            Console.WriteLine($"  ticked Separate File on a region spanning two banks: checkbox now " +
                               $"{check.IsChecked}, model={row.UnderlyingRegion.ExportSeparateFile}, " +
                               $"HasError={row.HasError}, label='{sepLabel?.Text}'");
-            Console.WriteLine($"  status: {vm.StatusText}");
+            Console.WriteLine($"  status: '{vm.StatusText}'");
 
-            // fix the range so the region lives in one bank, then tick again.
-            TypeIntoBox(window, endBox, "C0FFFF");
-            PressEnter(window);
-
+            // and back off again: the checkbox owns both directions.
             Click(window, point.Value);
             Pump();
             Pump();
 
-            var retryOk = check.IsChecked == true &&
-                          row.UnderlyingRegion.ExportSeparateFile &&
-                          !row.HasError;
+            var untickedOk = check.IsChecked != true &&
+                             !row.UnderlyingRegion.ExportSeparateFile &&
+                             !row.HasError;
 
-            Console.WriteLine($"  fixed the end to C0FFFF and ticked again: checkbox " +
-                              $"{check.IsChecked}, model={row.UnderlyingRegion.ExportSeparateFile}");
-            Record(report, "region detail closed value snap back",
-                refusedOk && retryOk ? "PASS" : "APP-FAIL",
-                $"refused: checkbox snapped back={check.IsChecked != true || retryOk}, " +
-                $"no marker={!row.HasError || retryOk}, status named the bank rule=" +
-                $"{refusedOk}; retry after the fix committed={retryOk}");
+            Console.WriteLine($"  unticked again: checkbox {check.IsChecked}, " +
+                              $"model={row.UnderlyingRegion.ExportSeparateFile}");
+            Record(report, "region detail separate file checkbox",
+                tickedOk && untickedOk ? "PASS" : "APP-FAIL",
+                $"cross-bank tick committed={tickedOk} (status '{vm.StatusText}'), " +
+                $"untick committed={untickedOk}");
         }
         catch (Exception ex)
         {
-            Record(report, "region detail closed value snap back", "EXCEPTION",
+            Record(report, "region detail separate file checkbox", "EXCEPTION",
                 ex.GetType().Name + ": " + ex.Message);
         }
         finally

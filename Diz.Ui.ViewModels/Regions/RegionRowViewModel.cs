@@ -114,6 +114,15 @@ public sealed class RegionRowViewModel : ViewModelNotifierBase, IRegionRowViewMo
         private set => this.SetField(ref errorText, value ?? "");
     }
 
+    /// <summary>
+    /// What the rules say about the values the region ACTUALLY holds; "" when they are legal.
+    ///
+    /// Deliberately narrower than <see cref="ErrorText"/>, which also speaks for text the user
+    /// typed and the model refused. Only the stored half belongs in a whole-list report: an
+    /// in-flight refusal is not in the data, and would come and go as the user typed.
+    /// </summary>
+    internal string ModelErrorText => modelErrorText;
+
     /// <summary>Record what the rules say about the region's stored values.</summary>
     internal void ApplyValidationResult(ValidationResult result)
     {
