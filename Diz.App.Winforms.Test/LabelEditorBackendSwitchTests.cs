@@ -21,10 +21,10 @@ namespace Diz.App.Winforms.Test;
 ///
 /// Step 6 replaced the old last-registration-wins ordering trick with an EXPLICIT if/else
 /// branch that registers EITHER the WinForms backend root OR the Avalonia backend root -- never
-/// both. So each backend must resolve ALL NINE backend-selectable seams (LabelEditorView,
-/// RegionEditorView, MarkManyView, GotoView, HarshAutoStepView, MisalignmentCheckerView,
-/// InOutPointCheckerView, ProgressBarView, IFileDialogService) to its own toolkit's types, and
-/// never the other's. If someone breaks or reorders the branch (e.g. registers both roots),
+/// both. So each backend must resolve ALL TEN backend-selectable seams (LabelEditorView,
+/// RegionEditorView, NavigationHistoryView, MarkManyView, GotoView, HarshAutoStepView,
+/// MisalignmentCheckerView, InOutPointCheckerView, ProgressBarView, IFileDialogService) to its
+/// own toolkit's types, and never the other's. If someone breaks or reorders the branch (e.g. registers both roots),
 /// these type assertions fail.
 ///
 /// Resolution constructs the real view objects headlessly: the WinForms path builds the
@@ -51,6 +51,8 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<LabelsViewControl>();
         container.GetInstance<IRegionListView>("RegionEditorView")
             .Should().BeOfType<RegionListViewControl>();
+        container.GetInstance<INavigationHistoryView>("NavigationHistoryView")
+            .Should().BeOfType<NavigationHistoryViewControl>();
         container.GetInstance<IMarkManyView>("MarkManyView")
             .Should().BeOfType<WinformsMarkManyView>();
         container.GetInstance<IGotoView>("GotoView")
@@ -76,6 +78,8 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<AvaloniaLabelEditorView>();
         container.GetInstance<IRegionListView>("RegionEditorView")
             .Should().BeOfType<AvaloniaRegionListView>();
+        container.GetInstance<INavigationHistoryView>("NavigationHistoryView")
+            .Should().BeOfType<AvaloniaNavigationHistoryView>();
         container.GetInstance<IMarkManyView>("MarkManyView")
             .Should().BeOfType<AvaloniaMarkManyView>();
         container.GetInstance<IGotoView>("GotoView")
@@ -100,11 +104,13 @@ public class LabelEditorBackendSwitchTests
         // TUI backend: only the label editor is TUI...
         container.GetInstance<ILabelEditorView>("LabelEditorView")
             .Should().BeOfType<TuiLabelEditorView>();
-        // ...the region editor, mark-many window, goto window, harsh-auto-step window, the two
-        // checker windows, progress popup and file dialogs stay WinForms (registered explicitly
-        // in the tui branch, not via the WinForms backend root).
+        // ...the region editor, the navigation history, mark-many window, goto window,
+        // harsh-auto-step window, the two checker windows, progress popup and file dialogs stay
+        // WinForms (registered explicitly in the tui branch, not via the WinForms backend root).
         container.GetInstance<IRegionListView>("RegionEditorView")
             .Should().BeOfType<RegionListViewControl>();
+        container.GetInstance<INavigationHistoryView>("NavigationHistoryView")
+            .Should().BeOfType<NavigationHistoryViewControl>();
         container.GetInstance<IMarkManyView>("MarkManyView")
             .Should().BeOfType<WinformsMarkManyView>();
         container.GetInstance<IGotoView>("GotoView")
@@ -345,12 +351,54 @@ public class LabelEditorBackendSwitchTests
         container.GetInstance<IViewFactory>().GetRegionEditorView().Should().NotBeNull();
     }
 
+    /// <summary>
+    /// The navigation-history window is NOT a per-invocation dialog: MainWindow resolves one in
+    /// its constructor and keeps it for the whole run, the same shape the label and region editors
+    /// have. So this deliberately does NOT assert the per-invocation seams' "fresh instance each
+    /// time" contract, which would be the wrong requirement to write down for a cached window.
+    ///
+    /// What DOES have to hold is that the registration is not a SINGLETON. Each owner hands its
+    /// view the NavigationHistoryViewModel it owns, so two owners sharing one instance would leave
+    /// one main window displaying -- and driving -- the other's history.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void NavigationHistoryView_IsNotSharedBetweenOwners(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        var first = container.GetInstance<INavigationHistoryView>("NavigationHistoryView");
+        var second = container.GetInstance<INavigationHistoryView>("NavigationHistoryView");
+
+        second.Should().NotBeSameAs(first);
+    }
+
+    /// <summary>
+    /// Same unchecked-string risk as the other registrations: "NavigationHistoryView" has to match
+    /// the auto-factory method name exactly, and nothing checks that at compile time. This resolves
+    /// through the factory itself -- the path MainWindow's CONSTRUCTOR actually takes -- so a typo
+    /// fails here instead of taking the whole main window down at startup.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ViewFactory_HandsOutANavigationHistoryView_OnEveryBackend(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        container.GetInstance<IViewFactory>().GetNavigationHistoryView().Should().NotBeNull();
+    }
+
     [Fact]
     public void AvaloniaBackend_DoesNotInitializeAvalonia_JustByResolvingTheView()
     {
         using var container = CreateAppContainer(LabelEditorBackendKind.Avalonia);
         container.GetInstance<ILabelEditorView>("LabelEditorView");
         container.GetInstance<IRegionListView>("RegionEditorView");
+        container.GetInstance<INavigationHistoryView>("NavigationHistoryView");
         container.GetInstance<IMarkManyView>("MarkManyView");
         container.GetInstance<IGotoView>("GotoView");
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView");

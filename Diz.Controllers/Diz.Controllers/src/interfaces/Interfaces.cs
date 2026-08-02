@@ -49,6 +49,7 @@ public interface IViewFactory
     IMainGridWindowView GetMainGridWindowView();
     IFormViewer GetAboutView();
     IRegionListView GetRegionEditorView();
+    INavigationHistoryView GetNavigationHistoryView();
 }
     
 public interface IControllerFactory

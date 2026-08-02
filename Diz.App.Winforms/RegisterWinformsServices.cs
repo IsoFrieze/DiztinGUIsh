@@ -44,7 +44,8 @@ public static class DizWinformsRegisterServices
         // registered, so the label-editor backend selection has no dependency on registration
         // order. Each root registers the same named seams -- LabelEditorView, RegionEditorView,
         // MarkManyView, GotoView, HarshAutoStepView, MisalignmentCheckerView,
-        // InOutPointCheckerView, ProgressBarView, IFileDialogService -- for its toolkit.
+        // InOutPointCheckerView, NavigationHistoryView, ProgressBarView, IFileDialogService -- for
+        // its toolkit.
         // Everything not listed here
         // stays WinForms (registered unconditionally above). Set DIZ_LABEL_EDITOR=avalonia to
         // pick the Avalonia backend (see LabelEditorBackend docs).
@@ -56,7 +57,7 @@ public static class DizWinformsRegisterServices
         {
             // TUI backend (DIZ_LABEL_EDITOR=tui): ONLY the label editor is TUI. Unlike the
             // Avalonia/WinForms roots (which supply every seam for their toolkit), the TUI
-            // root supplies just LabelEditorView; the region editor, mark-many window, goto
+            // root supplies just LabelEditorView; the region editor, navigation history, mark-many window, goto
             // window, harsh-auto-step window, misaligned-flags window, in/out-point rescan
             // confirmation, progress popup and file dialogs stay WinForms and are
             // registered EXPLICITLY here. We do NOT
@@ -67,6 +68,8 @@ public static class DizWinformsRegisterServices
             serviceRegistry.Register<IProgressView, ProgressDialog>("ProgressBarView");
             // the TUI has no region screen, so the region editor is the WinForms one here.
             DizUiWinformsBackendCompositionRoot.RegisterRegionEditorView(serviceRegistry);
+            // ...nor a navigation-history screen, same fallback.
+            DizUiWinformsBackendCompositionRoot.RegisterNavigationHistoryView(serviceRegistry);
             serviceRegistry.Register<IMarkManyView, WinformsMarkManyView>("MarkManyView");
             serviceRegistry.Register<IGotoView, WinformsGotoView>("GotoView");
             serviceRegistry.Register<IHarshAutoStepView, WinformsHarshAutoStepView>("HarshAutoStepView");
