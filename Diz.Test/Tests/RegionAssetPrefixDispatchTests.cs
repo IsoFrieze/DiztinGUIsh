@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Diz.Core.Interfaces;
@@ -64,7 +65,7 @@ public class RegionAssetPrefixDispatchTests : IDisposable
     private class FakeAudioAssetExporter : BinaryAssetExporterBase
     {
         protected override string AssetTypePrefix => "audio.";
-        protected override string FileExtension => ".brr";
+        protected override string CompiledExtension => ".brr";
 
         protected override void Validate(RegionAssetExportRequest request)
         {
@@ -120,18 +121,17 @@ public class RegionAssetPrefixDispatchTests : IDisposable
         var gfxRegion = MakeRegion(0x200, 64, "gfx.snes.2bpp", "gfx/pic");     // 4 * 16 bytes
         var audioRegion = MakeRegion(0x400, 27, "audio.brr", "audio/sample"); // 3 * 9 bytes
 
-        var gfxDirective = service.ExportRegion(gfxRegion, tempDir);
-        var audioDirective = service.ExportRegion(audioRegion, tempDir);
+        var gfxDirective = service.ExportRegion(gfxRegion, tempDir).AsmDirective;
+        var audioDirective = service.ExportRegion(audioRegion, tempDir).AsmDirective;
 
         gfxDirective.Should().Be("incbin \"build/assets/gfx/pic.bin\"");
         audioDirective.Should().Be("incbin \"build/assets/audio/sample.brr\"");
 
-        File.Exists(Path.Combine(tempDir, "assets", "src", "gfx", "pic.bin")).Should().BeTrue();
-        File.Exists(Path.Combine(tempDir, "assets", "src", "audio", "sample.brr")).Should().BeTrue();
-
-        // the audio payload is the exact ROM bytes, via the base's verbatim write.
-        File.ReadAllBytes(Path.Combine(tempDir, "assets", "src", "audio", "sample.brr"))
-            .Should().Equal(rom[0x400..(0x400 + 27)]);
+        // a manifest each, and NOTHING else: the ROM bytes are never copied out.
+        File.Exists(Path.Combine(tempDir, "gfx", "pic.json")).Should().BeTrue();
+        File.Exists(Path.Combine(tempDir, "audio", "sample.json")).Should().BeTrue();
+        Directory.EnumerateFiles(tempDir, "*", SearchOption.AllDirectories)
+            .Select(Path.GetExtension).Should().AllBe(".json");
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public class RegionAssetPrefixDispatchTests : IDisposable
 
         service.ExportRegion(region, tempDir);
 
-        var jsonPath = Path.Combine(tempDir, "assets", "src", "audio", "sample.json");
+        var jsonPath = Path.Combine(tempDir, "audio", "sample.json");
         var json = File.ReadAllText(jsonPath);
         var man = JsonDocument.Parse(json).RootElement;
 
@@ -179,7 +179,7 @@ public class RegionAssetPrefixDispatchTests : IDisposable
 
         service.ExportRegion(region, tempDir);
 
-        var json = File.ReadAllText(Path.Combine(tempDir, "assets", "src", "audio", "sample.json"));
+        var json = File.ReadAllText(Path.Combine(tempDir, "audio", "sample.json"));
         var man = JsonDocument.Parse(json).RootElement;
         man.GetProperty("ver").GetString().Should().Be("v2");
 
@@ -214,12 +214,18 @@ public class RegionAssetPrefixDispatchTests : IDisposable
     }
 
     [Fact]
-    public void BinaryExporterOnlyClaimsBinaryExportType()
+    public void BinaryExporterClaimsTheBinaryExportTypeAndTheRawPrefix()
     {
+        // The raw exporter is the one asset kind reachable two ways: the plain-binary export
+        // type (which carries no AssetType for the prefix to match on) and the type named
+        // outright. Both must land here, and it must still not swallow other typed assets.
         var bin = new BinaryRegionAssetExporter();
+
         var binRegion = MakeRegion(0, 16, null, "b");
         binRegion.ExportType = RegionExportType.Binary;
         bin.CanExport(binRegion).Should().BeTrue();
+
+        bin.CanExport(MakeRegion(0, 16, "raw.bin", "r")).Should().BeTrue();
 
         bin.CanExport(MakeRegion(0, 64, "gfx.snes.2bpp", "g")).Should().BeFalse();
     }

@@ -12,9 +12,10 @@ Design invariants (do not break — byte-identity depends on them):
     embedded palette is viewer-only and is IGNORED on compile. Indices — not PNG
     bytes — are canonical: the same PNG may be re-encoded to different bytes by a
     different Pillow version, and that's fine, because compile only reads indices.
-  * Assets are addressed by LOGICAL NAME + an ordered list of SEARCH ROOTS
-    (first-match-wins). Today that's usually one root; mod overlays later are just
-    more roots, in priority order.
+  * Assets are addressed by LOGICAL NAME and resolved against ordered COMPLETE-BUNDLE
+    roots (`--search`, highest priority first: mod layers, then the hand-authored
+    layer) and finally a base PAIR — manifests from `--base-manifests`, content from
+    `--base-content`. See resolve_asset.
 
 PNG input notes: only INDEXED (palette-mode) PNGs are accepted — anything else is
 rejected rather than silently quantized, because quantization would scramble the
@@ -22,16 +23,37 @@ indices, which are the data. Sub-byte bit depths (1/2/4-bit) and interlaced PNGs
 are fine: Pillow decodes both into plain per-pixel indices.
 
 Commands:
-  extract  ROM bytes            -> <root>/<name>.png + <root>/<name>.json
-  compile  png + manifest       -> raw .bin
-  verify   png + manifest       -> compile and assert sha256 matches the manifest
-                                   (and optionally the live ROM bytes)
+  extract  manifest + ROM   -> the editable PNG (ROM ground truth; re-runnable)
+  decode   manifest + file  -> the editable PNG (buffer mode; no ROM)
+  fork     effective bundle -> a private copy under <mods>/<mod>/ (manifest + PNG)
+  compile  png + manifest   -> raw .bin
+  encode   png + manifest   -> raw bytes for one slot of a larger buffer (buffer mode)
+  verify   png + manifest   -> compile and assert sha256 matches the manifest
+                               (and optionally the live ROM bytes)
+  romcheck rebuilt ROM      -> assert it matches the original (the build's oracle)
+  selftest                  -> codec + layering assertions; needs no repo (CI gate)
 
-Example (an uncompressed 2bpp font sheet, 224 tiles @ ROM offset 0x40000):
-  gfxpack.py extract --rom rom.sfc --offset 0x40000 --length 3584 --bpp 2 \
-                     --name gfx/font --root assets/src --layout-width 16
-  gfxpack.py compile --name gfx/font --search assets/src --out build/font.bin
-  gfxpack.py verify  --name gfx/font --search assets/src --rom rom.sfc
+BUFFER MODE (`decode`/`encode`) exists because not every asset sits at a ROM offset. An
+asset may be one MEMBER of a larger buffer -- typically the decompressed form of a
+compressed container, cut into per-member files by a generic slicing tool. Such an asset's
+manifest is an ordinary leaf manifest whose `source` block records
+`{length, source_sha256, member_of, at}` and has NO `rom_offset`: the hash is of the
+member's own (decompressed) bytes. `decode` is `extract` with the ROM slice replaced by a
+verbatim file read; `encode` is `compile` writing the bytes that belong in that buffer slot.
+`encode` takes `--name`, not an input path, so a mod layer overrides a member exactly as it
+overrides any other asset.
+
+Example (an uncompressed 2bpp font sheet):
+  gfxpack.py extract --manifest generated/assets/gfx/font.json \
+                     --rom rom/ct-us-orig.sfc --out extracted/gfx/font.png
+  gfxpack.py fork    --name gfx/font --mod mymod
+  gfxpack.py compile --name gfx/font --out build/assets/gfx/font.bin
+  gfxpack.py verify  --name gfx/font --rom rom/ct-us-orig.sfc
+
+Example (the same sheet as a member of a decompressed container buffer):
+  gfxpack.py decode  --manifest generated/assets/gfx/font.json \
+                     --in build/extract/gfx/font.bin --out extracted/gfx/font.png
+  gfxpack.py encode  --name gfx/font --out build/encode/gfx/font.bin
 """
 
 from __future__ import annotations
@@ -40,6 +62,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import sys
 
 # --------------------------------------------------------------------------------------
@@ -56,6 +79,29 @@ TOOL_VERSION = "gfxpack/1.0.0"
 
 SUPPORTED_BPP = (2, 4, 8)
 TILE_W = TILE_H = 8
+
+# --------------------------------------------------------------------------------------
+# Layering defaults (same scheme as the other codecs; see resolve_asset).
+#   search roots -- ordered, complete-bundle layers: mod overlays first, hand-authored last
+#   base pair    -- manifests from the exporter's output dir, content from the dir the
+#                   `extract` command fills from the ROM
+# --------------------------------------------------------------------------------------
+DEFAULT_SEARCH_ROOTS = ("assets",)
+DEFAULT_BASE_MANIFESTS = "generated/assets"
+DEFAULT_BASE_CONTENT = "extracted"
+DEFAULT_MODS_DIR = "mods"
+
+# The editable content file for a graphics asset. One extension, always.
+CONTENT_EXT = ".png"
+
+# PNG encoder settings. Both are pinned rather than left to Pillow's defaults because the
+# extracted PNGs are a tracked, diffable artifact: the same indices must produce the same
+# file bytes on every machine and every run, or every re-extract becomes diff churn.
+# `optimize` is off because it selects filters/levels heuristically; `compress_level` is
+# stated outright so a change in Pillow's default cannot silently rewrite every asset.
+# Nothing here affects correctness -- compile reads pixel INDICES, never PNG bytes.
+PNG_COMPRESS_LEVEL = 9
+PNG_OPTIMIZE = False
 
 # A "cell" generalizes the 8x8 tile: 8 pixels wide, `cell_h` rows tall. cell_h defaults to
 # 8, in which case a cell IS an 8x8 tile and every formula below reduces to the classic
@@ -80,10 +126,12 @@ except ImportError:
 # ======================================================================================
 # PNG I/O (Pillow) — indexed/palette mode ("P") only.
 #
-# Determinism note: for a GIVEN Pillow version, saving the same indices produces the
-# same PNG bytes (no randomized options are used). Different Pillow versions may encode
-# the same image to different bytes — that's accepted, because the pixel INDICES are
-# canonical, not the PNG file bytes.
+# Determinism: writing the same indices must produce the same file bytes, so the encoder
+# options are pinned (see PNG_COMPRESS_LEVEL) and NO ancillary chunks are written. In
+# particular no `pnginfo=` is passed, which is what keeps Pillow from stamping a `tIME`
+# chunk — a timestamp would make every re-extract a spurious diff. Different Pillow
+# versions may still encode the same image to different bytes; that is accepted, because
+# the pixel INDICES are canonical, not the PNG file bytes.
 # ======================================================================================
 def png_write_indexed(path: str, width: int, height: int,
                       indices: bytes, palette_rgb: "list[tuple[int, int, int]]") -> None:
@@ -93,7 +141,8 @@ def png_write_indexed(path: str, width: int, height: int,
     img = Image.frombytes("P", (width, height), bytes(indices))
     img.putpalette([c for rgb in palette_rgb for c in rgb])
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    img.save(path, format="PNG")
+    img.save(path, format="PNG",
+             optimize=PNG_OPTIMIZE, compress_level=PNG_COMPRESS_LEVEL)
 
 
 def png_read_indexed(path: str) -> "tuple[int, int, bytes]":
@@ -304,20 +353,58 @@ def default_palette(bpp: int) -> "list[tuple[int, int, int]]":
 # ======================================================================================
 # Manifest: load, resolve, validate
 # ======================================================================================
-def resolve_asset(name: str, roots: "list[str]") -> "tuple[str, str, str]":
-    """Find an asset by logical name across ordered layer roots (first match wins).
+def resolve_asset(name: str, search_roots: "list[str]", base_manifests: str,
+                  base_content: str, ext: str = CONTENT_EXT) -> "tuple[str, str, str]":
+    """Resolve a logical asset name -> (manifest_path, png_path, layer_label).
 
-    Per-asset-BUNDLE resolution: the manifest and PNG always come from the SAME layer,
-    so pixels and format can never be mismatched across layers.
-    Returns (layer_root, manifest_path, png_path).
+    Per-asset-BUNDLE resolution: a manifest and its PNG must describe each other, so they
+    must come from the same place. An override layer supplying only the PNG would be
+    decoded with someone else's bpp/geometry -- pixels and format mismatched, silently.
+
+    1. Walk `search_roots` in priority order. A root matches only if BOTH
+       <root>/<name>.json and <root>/<name><ext> exist there. A root holding exactly one
+       half is a misconfiguration and HALTS -- skipping it would quietly build something
+       other than what the layer was created to change.
+    2. Otherwise fall back to the base PAIR: manifest from `base_manifests`, PNG from
+       `base_content`. Those two directories are one logical bundle that the repo layout
+       splits in two (regenerated description vs. regenerated content), which is why the
+       same-layer rule is relaxed here and nowhere else. Missing either half HALTS.
     """
-    for root in roots:
+    for root in search_roots:
         mpath = os.path.join(root, name + ".json")
-        if os.path.isfile(mpath):
-            return root, mpath, os.path.join(root, name + ".png")
-    base = roots[-1] if roots else "(none)"
-    die(f"asset '{name}' not found in any layer: {roots}. "
-        f"The base layer '{base}' must always contain it.")
+        cpath = os.path.join(root, name + ext)
+        has_m, has_c = os.path.isfile(mpath), os.path.isfile(cpath)
+        if has_m and has_c:
+            return mpath, cpath, root
+        if has_m or has_c:
+            present, absent = (mpath, cpath) if has_m else (cpath, mpath)
+            die(f"layer root '{root}' holds only half of asset '{name}': {present} exists "
+                f"but {absent} does not. A search root must carry a COMPLETE bundle -- "
+                f"the manifest and its PNG must come from the same layer. Add the missing "
+                f"file (see the `fork` command) or remove the other one.")
+    mpath = os.path.join(base_manifests, name + ".json")
+    cpath = os.path.join(base_content, name + ext)
+    absent = [p for p in (mpath, cpath) if not os.path.isfile(p)]
+    if absent:
+        die(f"asset '{name}' not found. Searched complete-bundle roots "
+            f"{list(search_roots)}, then the base pair (manifests '{base_manifests}', "
+            f"content '{base_content}'); missing there: {absent}. The base pair must "
+            f"always hold the asset -- manifests come from export, content from `extract`.")
+    return mpath, cpath, f"{base_manifests} + {base_content}"
+
+
+def resolve_file(ref: str, search_roots: "list[str]", base_content: str,
+                 base_manifests: str) -> str:
+    """Find a SHARED file by repo-relative ref: plain first-match-wins over the search
+    roots in priority order, then the base content dir, then the base manifest dir.
+    Shared files are not bundles -- nothing pairs with them -- so the same-layer rule
+    does not apply."""
+    roots = [*search_roots, base_content, base_manifests]
+    for root in roots:
+        p = os.path.join(root, ref)
+        if os.path.isfile(p):
+            return p
+    die(f"file '{ref}' not found in any layer: {roots}")
 
 
 def load_manifest(path: str) -> dict:
@@ -379,12 +466,11 @@ def load_manifest(path: str) -> dict:
     return man
 
 
-def compile_asset(name: str, roots: "list[str]") -> "tuple[bytes, dict, str]":
+def compile_asset(name: str, search_roots: "list[str]", base_manifests: str,
+                  base_content: str) -> "tuple[bytes, dict, str]":
     """Resolve, read PNG, and encode to raw planar bytes. Returns (blob, manifest, layer)."""
-    layer, mpath, ppath = resolve_asset(name, roots)
+    mpath, ppath, layer = resolve_asset(name, search_roots, base_manifests, base_content)
     man = load_manifest(mpath)
-    if not os.path.isfile(ppath):
-        die(f"{ppath}: manifest resolved from layer '{layer}' but its PNG is missing")
 
     gfx = man["gfx"]
     bpp, tiles = gfx["bpp"], gfx["tiles"]
@@ -404,7 +490,7 @@ def compile_asset(name: str, roots: "list[str]") -> "tuple[bytes, dict, str]":
     validate_pixel_indices(img, width, bpp, ppath)
     blob = indices_to_bytes(img, width, bpp, tiles, layout_w, cell_h, view)
 
-    expected_len = man.get("source", {}).get("length")
+    expected_len = (man.get("source") or {}).get("length")
     if expected_len is not None and len(blob) != expected_len:
         die(f"{name}: encoded {len(blob)} bytes but manifest declares {expected_len}")
     return blob, man, layer
@@ -413,151 +499,208 @@ def compile_asset(name: str, roots: "list[str]") -> "tuple[bytes, dict, str]":
 # ======================================================================================
 # Commands
 # ======================================================================================
-def cmd_extract(a) -> int:
-    with open(a.rom, "rb") as f:
-        rom = f.read()
-    off, length, bpp = a.offset, a.length, a.bpp
-    if bpp not in SUPPORTED_BPP:
-        die(f"--bpp must be one of {SUPPORTED_BPP}")
-    if off + length > len(rom):
-        die(f"range 0x{off:X}+{length} exceeds ROM size {len(rom)}")
-    cell_h = a.cell_height
-    if cell_h < 1:
-        die("--cell-height must be >= 1")
-    view = {"order": a.view_order}
-    if a.view_order == "column_major":
-        view["rows"] = a.view_rows or a.layout_width
-    cs = cell_size(bpp, cell_h)
-    if length % cs:
-        die(f"length {length} is not a multiple of the {bpp}bpp cell size "
-            f"({cs} = {bpp}bpp x {cell_h} rows)")
+def read_rom_slice(rom_path: str, man: dict, manifest_path: str) -> bytes:
+    """Read the ROM bytes a manifest describes, and prove they are the right ones.
 
-    blob = rom[off:off + length]
-    tiles = length // cs
-    layout_w = a.layout_width
-    sha = hashlib.sha256(blob).hexdigest()
-
-    width, height, img = bytes_to_indices(blob, bpp, tiles, layout_w, cell_h, view)
-    png_path = os.path.join(a.root, a.name + ".png")
-    man_path = os.path.join(a.root, a.name + ".json")
-    png_write_indexed(png_path, width, height, img, default_palette(bpp))
-
-    man = {
-        "name": a.name,
-        "type": f"gfx.snes.{bpp}bpp",
-        "ver": LATEST_VER,
-        "source": {
-            "rom_offset": f"0x{off:X}",
-            "length": length,
-            "source_sha256": sha,
-        },
-        "gfx": {
-            "bpp": bpp, "tile_w": TILE_W, "tile_h": TILE_H, "tiles": tiles,
-            "plane_order": "snes-interleaved-pairs",
-            "layout_width_tiles": layout_w,
-        },
-        "compressed": False,
-        "export_only": False,
-        "generated_by": TOOL_VERSION,
-    }
-    # Only record the generalized fields when they differ from the defaults, so ordinary
-    # tile sheets keep producing exactly the manifests they always did. When cell_h is not
-    # 8 the legacy tile_h is dropped rather than left contradicting it.
-    if cell_h != TILE_H:
-        del man["gfx"]["tile_h"]
-        man["gfx"]["cell_h"] = cell_h
-    if view != DEFAULT_VIEW:
-        man["gfx"]["view"] = view
-    if a.snes_addr:
-        man["source"]["snes_addr"] = a.snes_addr
-    os.makedirs(os.path.dirname(os.path.abspath(man_path)), exist_ok=True)
-    with open(man_path, "w", encoding="utf-8") as f:
-        json.dump(man, f, indent=2)
-        f.write("\n")
-
-    geom = f"{tiles} cells of 8x{cell_h}" if cell_h != TILE_H else f"{tiles} tiles"
-    print(f"extracted {geom} ({length} bytes, {bpp}bpp) from 0x{off:X}")
-    print(f"  png      : {png_path}  ({width}x{height})")
-    print(f"  manifest : {man_path}")
-    print(f"  sha256   : {sha}")
-    if view != DEFAULT_VIEW:
-        print(f"  view     : {view['order']} (cosmetic; .bin is unaffected)")
-
-    # Immediate self-check: the asset we just wrote must rebuild to the original bytes.
-    back = indices_to_bytes(img, width, bpp, tiles, layout_w, cell_h, view)
-    if back != blob:
-        die("SELF-CHECK FAILED: re-encoding the extracted image did not reproduce the "
-            "source bytes. The codec is wrong — do not trust this asset.")
-    print("  self-check: re-encode reproduces source bytes exactly  [OK]")
-    return 0
-
-
-def cmd_seed(a) -> int:
-    """Render a PNG from an EXISTING manifest + raw .bin.
-
-    This is the Diz handoff path. `extract` writes the manifest itself, which makes it
-    useless for validating someone else's manifest -- it would just overwrite it and then
-    trivially agree with itself. `seed` instead treats the manifest as authoritative input,
-    so a manifest that misdescribes the bytes fails loudly here.
-
-    Idempotent by default: refuses to clobber an existing PNG, because that PNG is the
-    artist's edited copy and regenerating it from the .bin would silently discard work.
+    The `source` block is a claim about a specific cartridge. Checking its sha256 before
+    decoding is what turns "you pointed at some ROM" into a hard error instead of a
+    plausible-looking asset built from the wrong bytes -- a wrong region, a different
+    revision, or a headered dump all land here.
     """
-    layer, mpath, ppath = resolve_asset(a.name, a.search)
-    man = load_manifest(mpath)
+    src = man.get("source") or {}
+    if "rom_offset" not in src or "length" not in src:
+        die(f"{manifest_path}: extract needs source.rom_offset and source.length, and the "
+            f"manifest has no ROM provenance. A hand-authored asset is not extractable: "
+            f"its content is the source, there is nothing to regenerate it from.")
+    off = int(str(src["rom_offset"]), 0)
+    length = src["length"]
+    if not isinstance(length, int) or length < 0:
+        die(f"{manifest_path}: source.length {length!r} must be a non-negative integer")
+    with open(rom_path, "rb") as f:
+        rom = f.read()
+    if off + length > len(rom):
+        die(f"{rom_path}: range 0x{off:X}+{length} exceeds the file size {len(rom)}. "
+            f"{manifest_path} describes data this ROM does not contain.")
+    blob = rom[off:off + length]
 
-    bin_path = a.bin or os.path.join(layer, a.name + ".bin")
-    if not os.path.isfile(bin_path):
-        die(f"{bin_path}: no raw .bin to seed from")
-    with open(bin_path, "rb") as f:
-        blob = f.read()
+    want = src.get("source_sha256")
+    if not want:
+        die(f"{manifest_path}: source.source_sha256 is missing. Extraction is only safe "
+            f"when the bytes can be proven to be the ones the manifest describes.")
+    got = hashlib.sha256(blob).hexdigest()
+    if got != want:
+        die(f"{rom_path}: bytes at 0x{off:X}+{length} hash to {got}, but "
+            f"{manifest_path} declares source_sha256 {want}. This is not the ROM the "
+            f"asset was exported from (wrong version, wrong region, or a headered dump). "
+            f"Refusing to extract.")
+    return blob
 
+
+def read_member_buffer(in_path: str, man: dict, manifest_path: str) -> bytes:
+    """Read a buffer file VERBATIM, and prove it is the data the manifest describes.
+
+    The buffer-mode counterpart of read_rom_slice. Nothing is sliced here: the file IS the
+    asset's bytes, cut out upstream (one member of a decompressed container buffer, say),
+    so no ROM offset is involved. Such a manifest's `source` block records
+    `{length, source_sha256, member_of, at}` and its hash is of those decompressed bytes.
+
+    `source` is provenance and is optional -- a hand-authored asset has none, absence of a
+    claim is not violation of a claim, and its bytes pass unchecked. When `source` IS
+    present the checks are strict, exactly as on the ROM path: this is the extract-side
+    direction, where the wrong input must never turn into a plausible-looking asset.
+    """
+    try:
+        with open(in_path, "rb") as f:
+            blob = f.read()
+    except OSError as e:
+        die(f"{in_path}: cannot read the input buffer: {e}")
+
+    src = man.get("source") or {}
+    if not src:
+        return blob
+
+    length = src.get("length")
+    if length is not None and len(blob) != length:
+        die(f"{in_path}: is {len(blob)} bytes, but {manifest_path} declares "
+            f"source.length={length}. This is not the data the manifest describes -- the "
+            f"buffer was cut at the wrong boundaries, or the manifest is stale.")
+
+    want = src.get("source_sha256")
+    if not want:
+        die(f"{manifest_path}: source.source_sha256 is missing. Decoding is only safe "
+            f"when the bytes can be proven to be the ones the manifest describes.")
+    got = hashlib.sha256(blob).hexdigest()
+    if got != want:
+        die(f"{in_path}: bytes hash to {got}, but {manifest_path} declares source_sha256 "
+            f"{want}. This is not the data the asset was exported from. Refusing to decode.")
+    return blob
+
+
+def decode_blob(blob: bytes, man: dict, manifest_path: str,
+                out_path: str) -> "tuple[int, int]":
+    """Raw planar bytes -> the editable PNG. Returns the canvas size in pixels.
+
+    Shared by `extract` (blob = a verified ROM slice) and `decode` (blob = a file read
+    verbatim). Everything past the source of the bytes is identical, which is the point:
+    an asset inside a container decodes by exactly the same code as one at a ROM offset.
+    """
     gfx = man["gfx"]
     bpp, tiles, layout_w = gfx["bpp"], gfx["tiles"], gfx.get("layout_width_tiles", 16)
     cell_h, view = gfx["cell_h"], gfx["view"]
     cs = cell_size(bpp, cell_h)
 
-    # The manifest is a claim about these bytes. Check it rather than trusting it --
-    # a wrong bpp/cell_h/cell count here produces a plausible-looking but wrong image.
+    # The manifest is a claim about these bytes. Check it rather than trusting it -- a
+    # wrong bpp/cell_h/cell count would produce a plausible-looking but wrong image.
     if len(blob) != tiles * cs:
-        die(f"{bin_path}: {len(blob)} bytes, but the manifest describes {tiles} cells of "
-            f"8x{cell_h} at {bpp}bpp ({tiles * cs} bytes). "
-            f"The manifest does not match the data.")
-
-    expected_len = man.get("source", {}).get("length")
-    if expected_len is not None and len(blob) != expected_len:
-        die(f"{bin_path}: {len(blob)} bytes but manifest declares source.length={expected_len}")
-
-    want_sha = man.get("source", {}).get("source_sha256")
-    got_sha = hashlib.sha256(blob).hexdigest()
-    if want_sha and got_sha != want_sha:
-        die(f"{bin_path}: sha256 {got_sha} does not match the manifest's "
-            f"source_sha256 {want_sha}. Refusing to seed from bytes the manifest "
-            "does not describe.")
-
-    if os.path.exists(ppath) and not a.force:
-        print(f"seed: {ppath} already exists, leaving it alone (use --force to overwrite)")
-        return 0
+        die(f"{manifest_path}: describes {tiles} cells of 8x{cell_h} at {bpp}bpp "
+            f"({tiles * cs} bytes) but the input data is {len(blob)} bytes. The manifest "
+            f"contradicts itself; decoding it would produce wrong pixels.")
 
     width, height, img = bytes_to_indices(blob, bpp, tiles, layout_w, cell_h, view)
-    png_write_indexed(ppath, width, height, img, default_palette(bpp))
+    png_write_indexed(out_path, width, height, img, default_palette(bpp))
 
+    # Immediate self-check: the asset we just wrote must rebuild to the original bytes.
     back = indices_to_bytes(img, width, bpp, tiles, layout_w, cell_h, view)
     if back != blob:
-        die("SELF-CHECK FAILED: re-encoding the seeded image did not reproduce the "
+        die("SELF-CHECK FAILED: re-encoding the extracted image did not reproduce the "
             "source bytes. Do not trust this asset.")
+    return width, height
 
-    geom = f"{tiles} cells of 8x{cell_h}" if cell_h != TILE_H else f"{tiles} tiles"
-    print(f"seeded {a.name} from layer '{layer}' ({geom}, {bpp}bpp)")
-    print(f"  png       : {ppath}  ({width}x{height})")
-    print(f"  manifest  : {mpath}")
-    print(f"  sha256    : {got_sha}  [matches manifest]" if want_sha else f"  sha256    : {got_sha}")
+
+def cmd_extract(a) -> int:
+    """ROM -> the editable PNG, driven by ONE explicit manifest.
+
+    Extraction is ROM ground truth, so it deliberately does not resolve the manifest
+    through the layer search: a mod override must not be able to change what "the original
+    data" means. There is no edited copy to protect here (edits live in a mod layer), so
+    extract simply overwrites and is always safe to re-run. Its output is byte-deterministic
+    for a given Pillow version -- see png_write_indexed.
+    """
+    man = load_manifest(a.manifest)
+    blob = read_rom_slice(a.rom, man, a.manifest)
+    width, height = decode_blob(blob, man, a.manifest, a.out)
+
+    gfx = man["gfx"]
+    bpp, cell_h, view = gfx["bpp"], gfx["cell_h"], gfx["view"]
+    src = man["source"]
+    geom = f"{gfx['tiles']} cells of 8x{cell_h}" if cell_h != TILE_H else f"{gfx['tiles']} tiles"
+    print(f"extracted {man['name']} ({geom}, {len(blob)} bytes, {bpp}bpp) "
+          f"from {a.rom} @{src['rom_offset']}")
+    print(f"  manifest : {a.manifest}")
+    print(f"  png      : {a.out}  ({width}x{height})")
+    print(f"  sha256   : {src['source_sha256']}  [matches ROM]")
+    if view != DEFAULT_VIEW:
+        print(f"  view     : {view.get('order')} (cosmetic; the .bin is unaffected)")
     print("  self-check: re-encode reproduces source bytes exactly  [OK]")
     return 0
 
 
+def cmd_decode(a) -> int:
+    """A buffer file -> the editable PNG, driven by ONE explicit manifest.
+
+    Buffer mode: `extract` with the ROM slice replaced by a verbatim file read. The input
+    is produced upstream by the build -- one member cut out of a decompressed container
+    buffer -- so this asset has no ROM offset of its own and the manifest is checked
+    against the file's bytes instead. Like extract it is ROM-side ground truth: the
+    manifest is an explicit path, never a layer lookup, and re-running simply overwrites.
+    """
+    man = load_manifest(a.manifest)
+    blob = read_member_buffer(a.in_path, man, a.manifest)
+    width, height = decode_blob(blob, man, a.manifest, a.out)
+
+    gfx = man["gfx"]
+    bpp, cell_h, view = gfx["bpp"], gfx["cell_h"], gfx["view"]
+    src = man.get("source") or {}
+    geom = f"{gfx['tiles']} cells of 8x{cell_h}" if cell_h != TILE_H else f"{gfx['tiles']} tiles"
+    origin = f" of {src['member_of']}" if src.get("member_of") else ""
+    print(f"decoded {man['name']} ({geom}, {len(blob)} bytes, {bpp}bpp) "
+          f"from {a.in_path}{origin}")
+    print(f"  manifest : {a.manifest}")
+    print(f"  png      : {a.out}  ({width}x{height})")
+    if src.get("source_sha256"):
+        print(f"  sha256   : {src['source_sha256']}  [matches the input buffer]")
+    else:
+        print("  sha256   : no source block -- hand-authored, nothing to check against")
+    if view != DEFAULT_VIEW:
+        print(f"  view     : {view.get('order')} (cosmetic; the .bin is unaffected)")
+    print("  self-check: re-encode reproduces source bytes exactly  [OK]")
+    return 0
+
+
+def cmd_fork(a) -> int:
+    """Copy the currently-effective bundle into a mod layer, so it can be edited there.
+
+    Resolution is exactly compile's, so `fork` always branches from whatever the build is
+    using right now -- including an already-forked lower-priority mod. Both halves are
+    copied together: that is what keeps the complete-bundle rule satisfiable by hand.
+
+    It never overwrites. A second fork onto an edited copy would destroy the artist's work,
+    and there is no way to tell that apart from a legitimate re-fork.
+    """
+    mpath, cpath, layer = resolve_asset(a.name, a.search, a.base_manifests, a.base_content)
+    dest_root = os.path.join(a.mods_dir, a.mod)
+    dst_m = os.path.join(dest_root, a.name + ".json")
+    dst_c = os.path.join(dest_root, a.name + CONTENT_EXT)
+
+    existing = [p for p in (dst_m, dst_c) if os.path.exists(p)]
+    if existing:
+        die(f"refusing to overwrite {existing} -- '{a.name}' is already forked into mod "
+            f"'{a.mod}'. Delete those files first if you really want to restart from the "
+            f"current bundle; editing them in place is the normal workflow.")
+
+    os.makedirs(os.path.dirname(os.path.abspath(dst_m)), exist_ok=True)
+    shutil.copyfile(mpath, dst_m)
+    shutil.copyfile(cpath, dst_c)
+
+    print(f"forked {a.name} from layer '{layer}' into mod '{a.mod}'")
+    print(f"  manifest : {mpath}  ->  {dst_m}")
+    print(f"  png      : {cpath}  ->  {dst_c}")
+    print(f"  edit {dst_c}, then build with --search {dest_root} ahead of the other roots")
+    return 0
+
+
 def cmd_compile(a) -> int:
-    blob, man, layer = compile_asset(a.name, a.search)
+    blob, man, layer = compile_asset(a.name, a.search, a.base_manifests, a.base_content)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "wb") as f:
         f.write(blob)
@@ -565,10 +708,31 @@ def cmd_compile(a) -> int:
     return 0
 
 
+def cmd_encode(a) -> int:
+    """The editable PNG -> the raw bytes this asset occupies inside a larger buffer.
+
+    The build-direction counterpart of `decode`, and byte-for-byte the same encoder as
+    `compile`; the difference is what the output is FOR. `compile` emits a payload the
+    assembler incbins, `encode` emits a fragment that a slicing tool concatenates back into
+    a buffer (which something downstream may then recompress).
+
+    It addresses the asset by LOGICAL NAME rather than by input path, so layer resolution
+    is identical to compile's and a mod overrides a member exactly as it overrides any
+    other asset. `--in-dir` only replaces the BASE content root, so mod layers still win.
+    """
+    base_content = a.in_dir or a.base_content
+    blob, man, layer = compile_asset(a.name, a.search, a.base_manifests, base_content)
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+    with open(a.out, "wb") as f:
+        f.write(blob)
+    print(f"encoded {a.name} from layer '{layer}' -> {a.out} ({len(blob)} bytes)")
+    return 0
+
+
 def cmd_verify(a) -> int:
-    blob, man, layer = compile_asset(a.name, a.search)
+    blob, man, layer = compile_asset(a.name, a.search, a.base_manifests, a.base_content)
     got = hashlib.sha256(blob).hexdigest()
-    want = man.get("source", {}).get("source_sha256")
+    want = (man.get("source") or {}).get("source_sha256")
     ok = True
 
     print(f"asset      : {a.name}  (layer '{layer}', {man['type']} {man['ver']})")
@@ -584,20 +748,27 @@ def cmd_verify(a) -> int:
     else:
         print("manifest   : no source_sha256 recorded — skipped")
 
-    # Strongest check: compare against the live ROM bytes at the recorded offset.
+    # Strongest check: compare against the live ROM bytes at the recorded offset. An asset
+    # that lives inside a container has no offset of its own -- its bytes only exist after
+    # the container is decompressed -- so there is nothing to compare and we say so rather
+    # than silently reading the ROM at 0.
     if a.rom:
-        src = man.get("source", {})
-        off = int(str(src.get("rom_offset", "0")), 0)
-        length = src.get("length", len(blob))
-        with open(a.rom, "rb") as f:
-            rom = f.read()
-        original = rom[off:off + length]
-        if blob == original:
-            print(f"rom @0x{off:X}: BYTE-IDENTICAL  [OK]")
+        src = man.get("source") or {}
+        if "rom_offset" not in src:
+            print("rom        : no source.rom_offset recorded -- skipped "
+                  f"(this asset is a member of {src.get('member_of', 'a container')})")
         else:
-            diff = sum(1 for x, y in zip(blob, original) if x != y)
-            print(f"rom @0x{off:X}: DIFFERS in {diff} byte(s)  [FAIL]")
-            ok = False
+            off = int(str(src["rom_offset"]), 0)
+            length = src.get("length", len(blob))
+            with open(a.rom, "rb") as f:
+                rom = f.read()
+            original = rom[off:off + length]
+            if blob == original:
+                print(f"rom @0x{off:X}: BYTE-IDENTICAL  [OK]")
+            else:
+                diff = sum(1 for x, y in zip(blob, original) if x != y)
+                print(f"rom @0x{off:X}: DIFFERS in {diff} byte(s)  [FAIL]")
+                ok = False
 
     print("RESULT     :", "PASS" if ok else "FAIL")
     return 0 if ok else 1
@@ -647,57 +818,356 @@ def cmd_romcheck(a) -> int:
     return 1
 
 
+# ======================================================================================
+# selftest — codec, determinism and layering assertions against throwaway temp trees.
+# Needs no repo and no ROM: this is the public-CI gate.
+# ======================================================================================
+def _expect_die(fn, needle: str, label: str) -> None:
+    try:
+        fn()
+    except SystemExit:
+        return
+    raise AssertionError(f"selftest: expected {label} to fail-loud, but it succeeded")
+
+
+def _quiet(fn):
+    """Run a command function with its progress output swallowed."""
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        return fn()
+
+
+def _mkfile(path: str, body: "str | bytes") -> str:
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    if isinstance(body, bytes):
+        with open(path, "wb") as f:
+            f.write(body)
+    else:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(body)
+    return path
+
+
+def _demo_blob(bpp: int, tiles: int, cell_h: int = TILE_H) -> bytes:
+    """Deterministic pseudo-random planar bytes, enough to exercise every bitplane."""
+    n = cell_size(bpp, cell_h) * tiles
+    return bytes((i * 37 + 11) & 0xFF for i in range(n))
+
+
+def _selftest_codec() -> None:
+    """decode/encode are exact inverses, and the view mapping is validated not trusted."""
+    for bpp in SUPPORTED_BPP:
+        for cell_h in (TILE_H, 12):
+            blob = _demo_blob(bpp, 7, cell_h)
+            w, h, img = bytes_to_indices(blob, bpp, 7, 4, cell_h, DEFAULT_VIEW)
+            assert indices_to_bytes(img, w, bpp, 7, 4, cell_h, DEFAULT_VIEW) == blob, \
+                f"planar round-trip failed at {bpp}bpp, cell_h={cell_h}"
+            assert max(img) <= (1 << bpp) - 1, f"{bpp}bpp produced an out-of-range index"
+
+    # column_major is a permutation of the same cells, so it must round-trip too, and it
+    # must NOT change the compiled bytes -- the view is cosmetic.
+    view = {"order": "column_major", "rows": 3}
+    blob = _demo_blob(4, 9)
+    w, h, img = bytes_to_indices(blob, 4, 9, 3, TILE_H, view)
+    assert indices_to_bytes(img, w, 4, 9, 3, TILE_H, view) == blob, "column_major round-trip"
+
+    # A view that maps two cells onto one slot would silently discard pixels: refuse it.
+    _expect_die(lambda: resolve_view({"order": "explicit", "cells": [0, 0, 1]}, 3, 4),
+                "same canvas slot", "a non-bijective explicit view")
+    _expect_die(lambda: resolve_view({"order": "diagonal"}, 3, 4),
+                "not implemented", "an unknown view order")
+    # An index too large for the declared bpp must be caught before encode_cell masks it.
+    _expect_die(lambda: validate_pixel_indices(bytes([0, 1, 9]), 3, 2, "selftest"),
+                "only allows", "an out-of-range pixel index")
+
+
+def _selftest_png_determinism() -> None:
+    """Encoding the same indices twice must produce byte-identical PNG files."""
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="gfxpack-png-")
+    blob = _demo_blob(4, 12)
+    w, h, img = bytes_to_indices(blob, 4, 12, 4)
+    a = os.path.join(tmp, "a.png")
+    b = os.path.join(tmp, "b.png")
+    png_write_indexed(a, w, h, img, default_palette(4))
+    png_write_indexed(b, w, h, img, default_palette(4))
+    first, second = open(a, "rb").read(), open(b, "rb").read()
+    assert first == second, "PNG encoding is not byte-deterministic across runs"
+    # No timestamp chunk: a tIME would make every re-extract a spurious diff.
+    assert b"tIME" not in first, "PNG carries a tIME chunk, which is not deterministic"
+    # And the pixels survive the file round-trip.
+    rw, rh, rimg = png_read_indexed(a)
+    assert (rw, rh, rimg) == (w, h, img), "PNG write/read did not preserve the indices"
+
+
+def _selftest_layering() -> None:
+    """Resolution: mod bundle wins, half a bundle halts, base pair is the fallback."""
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="gfxpack-layers-")
+    R = lambda *p: os.path.join(tmp, *p)
+    N = os.path.normpath
+    name = "gfx/demo"
+    gen, content = R("generated", "assets"), R("extracted")
+    assets, mod = R("assets"), R("mods", "m")
+    roots = [mod, assets]
+
+    # 1. base pair: manifest and PNG live in DIFFERENT directories and still resolve.
+    _mkfile(R("generated", "assets", "gfx", "demo.json"), "{}")
+    _mkfile(R("extracted", "gfx", "demo.png"), b"")
+    m, c, layer = resolve_asset(name, roots, gen, content)
+    assert (N(m), N(c)) == (N(R("generated", "assets", "gfx", "demo.json")),
+                            N(R("extracted", "gfx", "demo.png"))), \
+        f"base-pair fallback: {(m, c)}"
+
+    # 2. a complete bundle in a search root outranks the base pair...
+    _mkfile(R("assets", "gfx", "demo.json"), "{}")
+    _mkfile(R("assets", "gfx", "demo.png"), b"")
+    assert resolve_asset(name, roots, gen, content)[2] == assets, \
+        "assets bundle should win over the base pair"
+
+    # 3. ...and a higher-priority mod bundle outranks that.
+    _mkfile(R("mods", "m", "gfx", "demo.json"), "{}")
+    _mkfile(R("mods", "m", "gfx", "demo.png"), b"")
+    assert resolve_asset(name, roots, gen, content)[2] == mod, "mod bundle should win"
+
+    # 4. half a bundle in a search root HALTS -- it must never be silently skipped.
+    os.remove(R("mods", "m", "gfx", "demo.png"))
+    _expect_die(lambda: resolve_asset(name, roots, gen, content),
+                "half", "manifest-only mod layer")
+    os.remove(R("mods", "m", "gfx", "demo.json"))
+    _mkfile(R("mods", "m", "gfx", "demo.png"), b"")
+    _expect_die(lambda: resolve_asset(name, roots, gen, content),
+                "half", "PNG-only mod layer")
+    os.remove(R("mods", "m", "gfx", "demo.png"))
+
+    # 5. a base pair missing either half halts too.
+    os.remove(R("assets", "gfx", "demo.json"))
+    os.remove(R("assets", "gfx", "demo.png"))
+    os.remove(R("extracted", "gfx", "demo.png"))
+    _expect_die(lambda: resolve_asset(name, roots, gen, content),
+                "not found", "base pair without content")
+
+    # 6. shared files are NOT bundles: plain first-match over search roots, then the base
+    #    content dir, then the base manifest dir.
+    found = lambda: N(resolve_file("gfx/palette.pal", roots, content, gen))
+    _mkfile(R("generated", "assets", "gfx", "palette.pal"), "")
+    assert found() == N(R("generated", "assets", "gfx", "palette.pal")), "from base manifests"
+    _mkfile(R("extracted", "gfx", "palette.pal"), "")
+    assert found() == N(R("extracted", "gfx", "palette.pal")), "base content outranks manifests"
+    _mkfile(R("assets", "gfx", "palette.pal"), "")
+    assert found() == N(R("assets", "gfx", "palette.pal")), "search root outranks the base"
+    _mkfile(R("mods", "m", "gfx", "palette.pal"), "")
+    assert found() == N(R("mods", "m", "gfx", "palette.pal")), "mod root outranks assets"
+    _expect_die(lambda: resolve_file("gfx/nope.pal", roots, content, gen),
+                "not found", "unresolvable shared file")
+
+
+def _selftest_extract_fork() -> None:
+    """extract: ROM slice + sha gate + determinism. fork: copies both halves, once only."""
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="gfxpack-extract-")
+    R = lambda *p: os.path.join(tmp, *p)
+    gen, content, assets = R("generated", "assets"), R("extracted"), R("assets")
+
+    bpp, tiles, layout_w = 4, 12, 4
+    data = _demo_blob(bpp, tiles)
+    rom = _mkfile(R("fake.sfc"), bytes(0x10) + data + bytes(0x10))
+    good = hashlib.sha256(data).hexdigest()
+    mpath = R("generated", "assets", "gfx", "demo.json")
+
+    def manifest(sha, count=tiles):
+        return _mkfile(mpath, json.dumps({
+            "name": "gfx/demo", "type": f"gfx.snes.{bpp}bpp", "ver": "v1",
+            "source": {"rom_offset": "0x10", "length": len(data), "source_sha256": sha},
+            "gfx": {"bpp": bpp, "tile_w": TILE_W, "tile_h": TILE_H, "tiles": count,
+                    "plane_order": "snes-interleaved-pairs",
+                    "layout_width_tiles": layout_w},
+        }, indent=2) + "\n")
+
+    manifest(good)
+    layer_args = ["--search", assets, "--base-manifests", gen, "--base-content", content]
+    out = R("extracted", "gfx", "demo.png")
+    run = lambda: main(["extract", "--manifest", mpath, "--rom", rom, "--out", out] + layer_args)
+
+    _quiet(run)
+    first = open(out, "rb").read()
+    _quiet(run)
+    assert open(out, "rb").read() == first, "extract is not byte-deterministic"
+
+    # The extracted PNG compiles back to exactly the ROM bytes (base-pair resolution).
+    blob, _, _ = compile_asset("gfx/demo", [assets], gen, content)
+    assert blob == data, "extract -> compile is not byte-identical"
+
+    # Wrong ROM: the sha gate must halt rather than decode whatever it was pointed at.
+    manifest("0" * 64)
+    _expect_die(lambda: _quiet(run), "source_sha256", "extract against the wrong ROM")
+    # A manifest whose geometry contradicts its own length halts before decoding.
+    manifest(good, count=tiles - 1)
+    _expect_die(lambda: _quiet(run), "contradicts", "manifest geometry vs source.length")
+    manifest(good)
+
+    # fork copies BOTH halves out of the effective layer, and refuses to do it twice.
+    fork_args = (["fork", "--name", "gfx/demo", "--mod", "m", "--mods-dir", R("mods")]
+                 + layer_args)
+    _quiet(lambda: main(fork_args))
+    assert open(R("mods", "m", "gfx", "demo.json"), "rb").read() == open(mpath, "rb").read()
+    assert open(R("mods", "m", "gfx", "demo.png"), "rb").read() == first
+    _expect_die(lambda: _quiet(lambda: main(fork_args)), "overwrite", "re-forking an asset")
+
+    # The forked bundle now outranks the base pair for compile.
+    assert resolve_asset("gfx/demo", [R("mods", "m"), assets], gen, content)[2] \
+        == R("mods", "m"), "forked mod should win"
+
+
+def _selftest_buffer_mode() -> None:
+    """decode/encode: file in -> file out, no ROM anywhere.
+
+    A container member's manifest carries a `source` block with NO rom_offset, so every
+    check has to key off the bytes themselves. decode -> encode must be byte-identical, and
+    decode must be as strict about wrong input as extract is.
+    """
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="gfxpack-buffer-")
+    R = lambda *p: os.path.join(tmp, *p)
+    gen, content, assets = R("generated", "assets"), R("extracted"), R("assets")
+
+    bpp, tiles, layout_w = 2, 6, 3
+    data = _demo_blob(bpp, tiles)
+    good = hashlib.sha256(data).hexdigest()
+    mpath = R("generated", "assets", "gfx", "member.json")
+
+    def manifest(sha, length=len(data)):
+        # No rom_offset: this asset only exists once its container is decompressed.
+        return _mkfile(mpath, json.dumps({
+            "name": "gfx/member", "type": f"gfx.snes.{bpp}bpp", "ver": "v1",
+            "source": {"length": length, "source_sha256": sha,
+                       "member_of": "blob/demo_pack", "at": 128},
+            "gfx": {"bpp": bpp, "tile_w": TILE_W, "tiles": tiles,
+                    "plane_order": "snes-interleaved-pairs",
+                    "layout_width_tiles": layout_w},
+        }, indent=2) + "\n")
+
+    manifest(good)
+    buf = _mkfile(R("build", "extract", "gfx", "member.bin"), data)
+    out = R("extracted", "gfx", "member.png")
+    layer_args = ["--search", assets, "--base-manifests", gen, "--base-content", content]
+    dec = lambda: main(["decode", "--manifest", mpath, "--in", buf, "--out", out] + layer_args)
+
+    _quiet(dec)
+    first = open(out, "rb").read()
+    _quiet(dec)
+    assert open(out, "rb").read() == first, "decode is not byte-deterministic"
+
+    # encode resolves through the layers and reproduces the member's buffer bytes exactly.
+    enc_out = R("build", "encode", "gfx", "member.bin")
+    _quiet(lambda: main(["encode", "--name", "gfx/member", "--out", enc_out] + layer_args))
+    assert open(enc_out, "rb").read() == data, "decode -> encode is not byte-identical"
+
+    # --in-dir supplies the base content root; it must not disturb anything else.
+    alt = R("alt")
+    _mkfile(os.path.join(alt, "gfx", "member.png"), first)
+    _quiet(lambda: main(["encode", "--name", "gfx/member", "--in-dir", alt,
+                         "--out", enc_out, "--search", assets,
+                         "--base-manifests", gen, "--base-content", R("nowhere")]))
+    assert open(enc_out, "rb").read() == data, "--in-dir did not supply the content root"
+
+    # Wrong bytes and wrong length must both halt -- decode is the extract-side direction.
+    manifest("0" * 64)
+    _expect_die(lambda: _quiet(dec), "source_sha256", "decode of the wrong buffer bytes")
+    manifest(good, length=len(data) + 1)
+    _expect_die(lambda: _quiet(dec), "source.length", "decode of a wrong-length buffer")
+
+    # A hand-authored member has no source block at all: nothing to check, still decodes.
+    _mkfile(mpath, json.dumps({
+        "name": "gfx/member", "type": f"gfx.snes.{bpp}bpp", "ver": "v1",
+        "gfx": {"bpp": bpp, "tile_w": TILE_W, "tiles": tiles,
+                "plane_order": "snes-interleaved-pairs", "layout_width_tiles": layout_w},
+    }, indent=2) + "\n")
+    _quiet(dec)
+    assert open(out, "rb").read() == first, "decode without a source block"
+
+
+def cmd_selftest(a) -> int:
+    _selftest_codec()
+    _selftest_png_determinism()
+    _selftest_layering()
+    _selftest_extract_fork()
+    _selftest_buffer_mode()
+    print("selftest: all codec, determinism and layering invariants hold  [OK]")
+    return 0
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(
         prog="gfxpack", description="SNES planar graphics <-> indexed PNG (round-trip)")
     p.add_argument("--version", action="version", version=TOOL_VERSION)
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    def add_search(sp):
+    def add_layers(sp):
         # Repeatable and ordered: the mod-overlay mechanism is just more roots up front.
         sp.add_argument("--search", action="append", default=None, metavar="ROOT",
-                        help="asset layer root; repeat in priority order "
-                             "(highest first, base layer last)")
+                        help="complete-bundle layer root; repeat in priority order "
+                             f"(highest first). Default: {list(DEFAULT_SEARCH_ROOTS)}")
+        sp.add_argument("--base-manifests", default=DEFAULT_BASE_MANIFESTS,
+                        dest="base_manifests", metavar="DIR",
+                        help=f"base-layer manifest root (default {DEFAULT_BASE_MANIFESTS})")
+        sp.add_argument("--base-content", default=DEFAULT_BASE_CONTENT,
+                        dest="base_content", metavar="DIR",
+                        help=f"base-layer content root (default {DEFAULT_BASE_CONTENT})")
 
-    e = sub.add_parser("extract", help="ROM bytes -> PNG + manifest")
-    e.add_argument("--rom", required=True)
-    e.add_argument("--offset", required=True, type=lambda s: int(s, 0))
-    e.add_argument("--length", required=True, type=lambda s: int(s, 0))
-    e.add_argument("--bpp", required=True, type=int)
-    e.add_argument("--name", required=True, help="logical name, e.g. gfx/font")
-    e.add_argument("--root", default="assets/src", help="layer root to write into")
-    e.add_argument("--layout-width", type=int, default=16, dest="layout_width",
-                   help="tiles per row in the PNG (cosmetic; recorded in the manifest)")
-    e.add_argument("--cell-height", type=int, default=TILE_H, dest="cell_height",
-                   help="pixel rows per cell (default 8 = a classic tile). Use e.g. 12 for "
-                        "a non-tile-aligned bitmap font. Changes how bytes group into "
-                        "pixels -- a wrong value gives wrong pixels, same as --bpp")
-    e.add_argument("--view-order", default="row_major", dest="view_order",
-                   choices=("row_major", "column_major"),
-                   help="cosmetic PNG layout; does not affect the .bin (default row_major)")
-    e.add_argument("--view-rows", type=int, default=None, dest="view_rows",
-                   help="cells per column when --view-order=column_major")
-    e.add_argument("--snes-addr", default=None, dest="snes_addr")
+    e = sub.add_parser("extract", help="manifest + ROM -> the editable PNG")
+    e.add_argument("--manifest", required=True,
+                   help="the manifest to extract by, e.g. generated/assets/gfx/x.json. "
+                        "An explicit path, NOT a layer lookup: extraction is ROM ground "
+                        "truth and must not be reachable by a mod override")
+    e.add_argument("--rom", required=True, help="the original ROM to slice")
+    e.add_argument("--out", required=True, help="the .png to write")
+    add_layers(e)   # only used to resolve shared files
     e.set_defaults(fn=cmd_extract)
 
-    s = sub.add_parser("seed", help="existing manifest + raw .bin -> PNG (Diz handoff)")
-    s.add_argument("--name", required=True, help="logical name, e.g. gfx/font")
-    add_search(s)
-    s.add_argument("--bin", default=None,
-                   help="raw .bin to seed from (default: <layer>/<name>.bin)")
-    s.add_argument("--force", action="store_true",
-                   help="overwrite an existing PNG (destroys edits -- off by default)")
-    s.set_defaults(fn=cmd_seed)
+    d = sub.add_parser("decode", help="manifest + buffer file -> the editable PNG")
+    d.add_argument("--manifest", required=True,
+                   help="the manifest to decode by. An explicit path, NOT a layer lookup: "
+                        "like extract, this is ground truth and must not be reachable by a "
+                        "mod override")
+    d.add_argument("--in", required=True, dest="in_path", metavar="FILE",
+                   help="the buffer file holding exactly this asset's bytes, read verbatim "
+                        "(e.g. one member cut out of a decompressed container)")
+    d.add_argument("--out", required=True, help="the .png to write")
+    add_layers(d)   # only used to resolve shared files
+    d.set_defaults(fn=cmd_decode)
+
+    fk = sub.add_parser("fork", help="copy the effective bundle into a mod layer")
+    fk.add_argument("--name", required=True, help="logical name, e.g. gfx/font")
+    fk.add_argument("--mod", required=True, help="mod layer name to fork into")
+    fk.add_argument("--mods-dir", default=DEFAULT_MODS_DIR, dest="mods_dir", metavar="DIR",
+                    help=f"directory holding mod layers (default {DEFAULT_MODS_DIR})")
+    add_layers(fk)
+    fk.set_defaults(fn=cmd_fork)
 
     c = sub.add_parser("compile", help="PNG + manifest -> raw .bin")
     c.add_argument("--name", required=True)
-    add_search(c)
+    add_layers(c)
     c.add_argument("--out", required=True)
     c.set_defaults(fn=cmd_compile)
 
+    en = sub.add_parser("encode", help="PNG + manifest -> raw bytes for a buffer slot")
+    en.add_argument("--name", required=True,
+                    help="logical name, resolved through the layers exactly as compile "
+                         "does -- so a mod can override a container member")
+    add_layers(en)
+    en.add_argument("--in-dir", default=None, dest="in_dir", metavar="DIR",
+                    help="directory holding the editable content, replacing the BASE "
+                         "content root for this command. Mod layers still outrank it. "
+                         "Default: --base-content")
+    en.add_argument("--out", required=True, help="the buffer-slot bytes to write")
+    en.set_defaults(fn=cmd_encode)
+
     v = sub.add_parser("verify", help="compile and assert byte-identity")
     v.add_argument("--name", required=True)
-    add_search(v)
+    add_layers(v)
     v.add_argument("--rom", default=None,
                    help="also compare against live ROM bytes at the manifest offset")
     v.set_defaults(fn=cmd_verify)
@@ -708,9 +1178,12 @@ def main(argv=None) -> int:
                    help="the original ROM to compare against")
     r.set_defaults(fn=cmd_romcheck)
 
+    st = sub.add_parser("selftest", help="codec + layering assertions (needs no repo)")
+    st.set_defaults(fn=cmd_selftest)
+
     a = p.parse_args(argv)
-    if getattr(a, "search", None) is None and a.cmd in ("seed", "compile", "verify"):
-        a.search = ["assets/src"]
+    if getattr(a, "search", None) is None:
+        a.search = list(DEFAULT_SEARCH_ROOTS)
     return a.fn(a)
 
 

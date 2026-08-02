@@ -11,9 +11,9 @@ namespace Diz.Test.Tests;
 
 /// <summary>
 /// Pins the real BrrRegionAssetExporter. Proves the audio.* prefix routes to it, %9 BRR-block
-/// validation fires (pass/fail), and the payload + manifest it writes match what the vendored
-/// binpack.py round-trip expects: a verbatim `.bin` SEED, an `incbin` of the compiled
-/// `build/assets/audio/*.bin`, and an `audio` block recording the editable `.brr` extension.
+/// validation fires (pass/fail), and the manifest it writes matches what the vendored
+/// binpack.py round-trip expects: an `incbin` of the compiled `build/assets/audio/*.bin`, and
+/// an `audio` block recording the editable `.brr` extension.
 /// </summary>
 public class BrrRegionAssetExporterTests : IDisposable
 {
@@ -82,17 +82,23 @@ public class BrrRegionAssetExporterTests : IDisposable
         var service = MakeService(rom);
 
         // 63 bytes = 7 whole BRR blocks
-        var directive = service.ExportRegion(BrrRegion(0x400, 63), tempDir);
+        var directive = service.ExportRegion(BrrRegion(0x400, 63), tempDir).AsmDirective;
 
-        // FileExtension is ".bin" (the seed + incbin target), NOT ".brr": the assembler incbin's
-        // the compiled build output, and binpack turns the seed into the editable .brr.
+        // CompiledExtension is ".bin", NOT ".brr": the assembler incbin's the compiled build
+        // output, and binpack extracts/compiles the editable .brr on either side of it.
         directive.Should().Be("incbin \"build/assets/audio/AudioBRR_00.bin\"");
-        File.Exists(Path.Combine(tempDir, "assets", "src", "audio", "AudioBRR_00.bin")).Should().BeTrue();
-        File.Exists(Path.Combine(tempDir, "assets", "src", "audio", "AudioBRR_00.json")).Should().BeTrue();
+        File.Exists(Path.Combine(tempDir, "audio", "AudioBRR_00.json")).Should().BeTrue();
 
-        // the seed is the exact ROM bytes, written verbatim by the base.
-        File.ReadAllBytes(Path.Combine(tempDir, "assets", "src", "audio", "AudioBRR_00.bin"))
-            .Should().Equal(rom[0x400..(0x400 + 63)]);
+        // the manifest is the only thing written -- the sample stays in the ROM.
+        File.Exists(Path.Combine(tempDir, "audio", "AudioBRR_00.bin")).Should().BeFalse();
+
+        // and the manifest's hash is over the real ROM bytes: that is what `extract` checks
+        // the ROM against, so if it were computed over the wrong buffer nothing downstream
+        // would catch it.
+        var source = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(tempDir, "audio", "AudioBRR_00.json"))).RootElement.GetProperty("source");
+        source.GetProperty("source_sha256").GetString()
+            .Should().Be(RegionAssetUtil.Sha256Hex(rom[0x400..(0x400 + 63)]));
     }
 
     [Fact]
@@ -103,7 +109,7 @@ public class BrrRegionAssetExporterTests : IDisposable
 
         service.ExportRegion(BrrRegion(0x400, 63), tempDir);
 
-        var json = File.ReadAllText(Path.Combine(tempDir, "assets", "src", "audio", "AudioBRR_00.json"));
+        var json = File.ReadAllText(Path.Combine(tempDir, "audio", "AudioBRR_00.json"));
         var man = JsonDocument.Parse(json).RootElement;
 
         man.GetProperty("type").GetString().Should().Be("audio.snes.brr");
@@ -144,7 +150,7 @@ public class BrrRegionAssetExporterTests : IDisposable
             .WithMessage("*9-byte BRR blocks*");
 
         // it must fail BEFORE writing a half-formed asset tree.
-        File.Exists(Path.Combine(tempDir, "assets", "src", "audio", "AudioBRR_bad.bin")).Should().BeFalse();
+        File.Exists(Path.Combine(tempDir, "audio", "AudioBRR_bad.json")).Should().BeFalse();
     }
 
     [Fact]

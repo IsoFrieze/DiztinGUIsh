@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -206,8 +207,8 @@ public sealed class RegionAssetTypeValidator
 /// These rules are a DELIBERATE SECOND COPY of the ones the asset exporters enforce when the
 /// bytes are written out. They are kept in sync by hand so an editor cannot accept a region the
 /// build will reject, or reject one the build accepts. If a rule changes on one side, change it
-/// on both. The counterparts are RegionAssetUtil.ParseSnesGfxBpp and
-/// BrrRegionAssetExporter.Validate in Diz.LogWriter.
+/// on both. The counterparts are RegionAssetUtil.ParseSnesGfxBpp,
+/// BrrRegionAssetExporter.Validate and TextRegionAssetExporter in Diz.LogWriter.
 /// </summary>
 public static class RegionAssetTypeValidators
 {
@@ -215,6 +216,7 @@ public static class RegionAssetTypeValidators
     [
         BuildGfxAssetValidator(),
         BuildBrrAssetValidator(),
+        BuildTextAssetValidator(),
     ];
 
     // SNES BRR audio: audio.snes.brr. The stream is 9-byte ADPCM blocks (1 header + 8 data),
@@ -290,5 +292,73 @@ public static class RegionAssetTypeValidators
                 return null;
             },
         };
+    }
+
+    // Fixed-width name tables: text.ct.mapped. Mirrors TextRegionAssetExporter in Diz.LogWriter:
+    // text assets REQUIRE options (tbl/record_width/pad have no defaults Diz could invent), and the
+    // region must be a whole number of record_width-byte records -- the records carry no terminator,
+    // so a ragged tail mis-frames every later record. Matched EXACTLY (like the gfx/brr validators),
+    // not by "text." prefix: a near-miss such as "text.ct.mapped2" has no codec downstream and must
+    // be rejected here, not accepted and then failed at build.
+    private static RegionAssetTypeValidator BuildTextAssetValidator()
+    {
+        const string mappedType = "text.ct.mapped";
+        return new RegionAssetTypeValidator
+        {
+            Matches = t => string.Equals(t, mappedType, StringComparison.Ordinal),
+            ExampleTypes = [mappedType],
+            Validate = ctx =>
+            {
+                if (ctx.Options == null)
+                    return "Text assets require Asset Options, e.g. " +
+                           "{\"tbl\": \"text/<table>.tbl\", \"record_width\": N, \"pad\": \"0xNN\"} " +
+                           "(plus an optional \"tokens\" map).";
+
+                if (!TryGetIntOption(ctx.Options, "record_width", out var recordWidth) || recordWidth < 1)
+                    return "Asset Options: \"record_width\" must be an integer >= 1.";
+
+                if (!TryGetNonEmptyStringOption(ctx.Options, "tbl", out _))
+                    return "Asset Options: \"tbl\" must be a non-empty string path to the .tbl font map.";
+
+                if (!TryGetNonEmptyStringOption(ctx.Options, "pad", out var pad) || !TryParseByteLiteral(pad, out _))
+                    return "Asset Options: \"pad\" must be a byte literal like \"0xEF\" (0..255).";
+
+                if (ctx.RegionLength <= 0 || ctx.RegionLength % recordWidth != 0)
+                    return $"Region length ({ctx.RegionLength} bytes) must be a whole multiple of " +
+                           $"record_width ({recordWidth}) when Asset Type is '{ctx.AssetType}'. " +
+                           "Fixed-width records have no terminator, so a ragged tail mis-frames " +
+                           "every later record -- adjust the bounds or record_width.";
+
+                return null;
+            },
+        };
+    }
+
+    private static bool TryGetIntOption(JsonObject options, string key, out int value)
+    {
+        value = 0;
+        return options.TryGetPropertyValue(key, out var node) && node != null
+            && node.GetValueKind() == JsonValueKind.Number
+            && node.AsValue().TryGetValue(out value);
+    }
+
+    private static bool TryGetNonEmptyStringOption(JsonObject options, string key, out string value)
+    {
+        value = "";
+        if (!options.TryGetPropertyValue(key, out var node) || node == null
+            || node.GetValueKind() != JsonValueKind.String)
+            return false;
+        value = node.GetValue<string>();
+        return !string.IsNullOrWhiteSpace(value);
+    }
+
+    // A byte literal like "0xEF" or "239" (0..255). Mirrors TextRegionAssetExporter.TryParseByteLiteral.
+    private static bool TryParseByteLiteral(string s, out int value)
+    {
+        s = s.Trim();
+        var ok = s.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? int.TryParse(s.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value)
+            : int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+        return ok && value is >= 0 and <= 0xFF;
     }
 }

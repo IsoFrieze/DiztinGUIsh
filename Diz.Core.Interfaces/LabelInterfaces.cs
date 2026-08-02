@@ -11,13 +11,15 @@ public enum RegionExportType
     // normal: bytes are emitted inline in the .asm as `db $xx,$xx,...`
     Assembly = 0,
 
-    // bytes are written to a sidecar .bin, and the .asm gets `incbin "<file>"` instead.
-    // the .bin is the canonical copy; Diz's stored bytes become a display cache.
+    // the bytes are an asset with no interpretation at all -- a verbatim range. Shorthand for
+    // Asset with an implicit "raw.bin" AssetType, so it behaves identically: a manifest is
+    // written, the build extracts the bytes from the ROM into an editable .bin and recompiles
+    // them, and the .asm gets `incbin` of that compiled payload.
     Binary,
 
-    // like Binary, but also writes an asset manifest describing how to decode the bytes
-    // (e.g. gfx.snes.2bpp). an external tool (gfxpack) turns the .bin into an editable
-    // PNG and back. Diz deliberately does NOT encode the PNG itself -- see AssetType.
+    // like Binary, but the AssetType names a real codec contract (e.g. gfx.snes.2bpp), and the
+    // manifest describes how to decode the bytes. An external tool (gfxpack and friends) turns
+    // them into an editable PNG and back. Diz deliberately does NOT encode the PNG itself.
     Asset,
 }
 
@@ -67,9 +69,10 @@ public interface IRegion : INotifyPropertyChanged
     // which is the default. a mismatch at build time is a hard error, never silent.
     string AssetVersion { get; set; }
 
-    // logical asset name, used as the path within an asset layer root and as the
-    // .bin/manifest filename stem. e.g. "gfx/font" resolves to
-    // "assets/src/gfx/font.{bin,json}". if empty, RegionName is used.
+    // logical asset name, used as the path within an asset layer root and as the filename
+    // stem of every file belonging to the asset. e.g. "gfx/font" resolves to
+    // "generated/assets/gfx/font.json" for the manifest and "extracted/gfx/font.png" for the
+    // editable source. if empty, RegionName is used.
     string AssetName { get; set; }
 
     // for ExportType.Asset: free-form JSON object merged into the manifest under

@@ -287,6 +287,74 @@ public class RegionValidationUiRulesTests
         result.Error.Should().Contain("9 bytes (one BRR ADPCM block)");
     }
 
+    // =========================================================================================
+    // fixed-width text tables: options are mandatory, and the region must be whole records
+    // =========================================================================================
+
+    private const string TextOptions = "{\"tbl\": \"text/ct_8px.tbl\", \"record_width\": 11, \"pad\": \"0xEF\"}";
+
+    [Theory]
+    [InlineData(11)]
+    [InlineData(22)]
+    [InlineData(2761)]
+    public void TextRegionWholeNumberOfRecords_IsAccepted(int length)
+    {
+        RegionRowValidation.ValidateRow(GfxValues("text.ct.mapped", length, TextOptions))
+            .IsValid.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(10)]
+    [InlineData(12)]
+    public void TextRegionWithARaggedTail_IsRejected(int length)
+    {
+        var result = RegionRowValidation.ValidateRow(GfxValues("text.ct.mapped", length, TextOptions));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain("record_width (11)");
+    }
+
+    [Fact]
+    public void TextRegionWithNoAssetOptions_IsRejected()
+    {
+        var result = RegionRowValidation.ValidateRow(GfxValues("text.ct.mapped", 11));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain("Text assets require Asset Options");
+    }
+
+    [Theory]
+    // record_width missing, not a number, or below 1
+    [InlineData("{\"tbl\": \"t.tbl\", \"pad\": \"0xEF\"}", "record_width")]
+    [InlineData("{\"tbl\": \"t.tbl\", \"record_width\": \"11\", \"pad\": \"0xEF\"}", "record_width")]
+    [InlineData("{\"tbl\": \"t.tbl\", \"record_width\": 0, \"pad\": \"0xEF\"}", "record_width")]
+    // tbl missing or blank
+    [InlineData("{\"record_width\": 11, \"pad\": \"0xEF\"}", "tbl")]
+    [InlineData("{\"tbl\": \"  \", \"record_width\": 11, \"pad\": \"0xEF\"}", "tbl")]
+    // pad missing, or not a byte literal
+    [InlineData("{\"tbl\": \"t.tbl\", \"record_width\": 11}", "pad")]
+    [InlineData("{\"tbl\": \"t.tbl\", \"record_width\": 11, \"pad\": \"0x100\"}", "pad")]
+    [InlineData("{\"tbl\": \"t.tbl\", \"record_width\": 11, \"pad\": \"nope\"}", "pad")]
+    public void TextRegionWithBadAssetOptions_IsRejected(string options, string expectedKey)
+    {
+        var result = RegionRowValidation.ValidateRow(GfxValues("text.ct.mapped", 11, options));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().Contain(expectedKey);
+    }
+
+    // The type is matched exactly: a near-miss has no codec downstream, so it must be rejected
+    // here rather than accepted and then failed at build time.
+    [Fact]
+    public void TextAssetTypeNearMiss_IsRejectedAsAnUnknownType()
+    {
+        var result = RegionRowValidation.ValidateRow(GfxValues("text.ct.mapped2", 11, TextOptions));
+
+        result.IsValid.Should().BeFalse();
+        result.Error.Should().StartWith("Asset Type is required when Export Type is 'Asset'. Expected one of: ");
+    }
+
     [Theory]
     [InlineData("{not json at all")]
     [InlineData("{\"cell_h\": }")]
@@ -353,9 +421,9 @@ public class RegionValidationUiRulesTests
     }
 
     [Fact]
-    public void RegisteredAssetTypeDescriptors_CoverTheGfxAndAudioFamilies()
+    public void RegisteredAssetTypeDescriptors_CoverTheGfxAudioAndTextFamilies()
     {
         RegionAssetTypeValidators.All.SelectMany(d => d.ExampleTypes).Should().BeEquivalentTo(
-            new[] { "gfx.snes.2bpp", "gfx.snes.4bpp", "gfx.snes.8bpp", "audio.snes.brr" });
+            new[] { "gfx.snes.2bpp", "gfx.snes.4bpp", "gfx.snes.8bpp", "audio.snes.brr", "text.ct.mapped" });
     }
 }

@@ -13,9 +13,9 @@ namespace Diz.Test.Tests;
 /// <summary>
 /// End-to-end check that Diz's asset export and the external codec tool (gfxpack) agree.
 ///
-/// Diz writes raw bytes + a manifest; gfxpack turns those into a PNG and back. Nothing
+/// Diz writes a manifest; gfxpack uses it to slice the ROM into a PNG and back. Nothing
 /// guarantees the two stay in sync except a test that actually runs both, so this does:
-///   Diz export -> .bin + .json  ->  gfxpack seed -> .png  ->  gfxpack compile -> .bin
+///   Diz export -> .json  ->  gfxpack extract -> .png  ->  gfxpack compile -> .bin
 /// and asserts the final bytes equal the original ROM bytes.
 ///
 /// Gated on env vars rather than hardcoded paths/offsets, so it's skipped (not broken) on
@@ -110,30 +110,33 @@ public class RegionAssetRoundTripTests
         Directory.CreateDirectory(workDir);
         try
         {
-            // 1. Diz exports the region as .bin + manifest
-            var directive = MakeService(rom).ExportRegion(MakeGfxRegion(offset, length, bpp), workDir);
+            // 1. Diz exports the region as a manifest -- and nothing else.
+            var manifestRoot = Path.Combine(workDir, "generated", "assets");
+            var directive = MakeService(rom)
+                .ExportRegion(MakeGfxRegion(offset, length, bpp), manifestRoot).AsmDirective;
             directive.Should().Be("incbin \"build/assets/gfx/font.bin\"");
 
-            var assetRoot = Path.Combine(workDir, "assets", "src");
-            var dizBin = Path.Combine(assetRoot, "gfx", "font.bin");
-            File.ReadAllBytes(dizBin).Should().Equal(expected, "Diz must write the ROM bytes verbatim");
+            var manifest = Path.Combine(manifestRoot, "gfx", "font.json");
+            File.Exists(manifest).Should().BeTrue();
 
-            // 2. gfxpack renders a PNG using DIZ'S manifest as the authority.
-            //    Deliberately 'seed', not 'extract': extract writes its own manifest, which
-            //    would overwrite Diz's and then trivially agree with itself, testing nothing.
+            // 2. gfxpack slices the ROM per DIZ'S manifest and renders a PNG. The manifest is
+            //    named explicitly, so this exercises Diz's manifest -- not one the codec wrote
+            //    for itself, which would trivially agree with itself and test nothing.
+            var png = Path.Combine(workDir, "extracted", "gfx", "font.png");
             RunGfxPack(workDir,
-                $"seed --name gfx/font --search \"{assetRoot}\"");
+                $"extract --manifest \"{manifest}\" --rom \"{RomPath}\" --out \"{png}\"");
 
-            File.Exists(Path.Combine(assetRoot, "gfx", "font.png")).Should().BeTrue();
+            File.Exists(png).Should().BeTrue();
 
             // 3. gfxpack compiles the PNG back to raw bytes
             var rebuilt = Path.Combine(workDir, "rebuilt.bin");
             RunGfxPack(workDir,
-                $"compile --name gfx/font --search \"{assetRoot}\" --out \"{rebuilt}\"");
+                $"compile --name gfx/font --base-manifests \"{manifestRoot}\" " +
+                $"--base-content \"{Path.Combine(workDir, "extracted")}\" --out \"{rebuilt}\"");
 
             // 4. the whole loop must be byte-identical
             File.ReadAllBytes(rebuilt).Should().Equal(expected,
-                "Diz -> .bin -> PNG -> .bin must reproduce the original ROM bytes exactly");
+                "Diz -> manifest -> PNG -> .bin must reproduce the original ROM bytes exactly");
         }
         finally
         {
@@ -143,11 +146,13 @@ public class RegionAssetRoundTripTests
 
     /// <summary>
     /// The companion to the round-trip test: proves the check can actually fail.
-    /// If Diz's manifest and the .bin disagree, gfxpack must refuse rather than seed a
-    /// wrong-but-plausible PNG. Without this, a passing round-trip proves nothing.
+    /// The manifest's source_sha256 is what catches someone extracting against the wrong ROM,
+    /// so gfxpack must refuse when the ROM's bytes don't hash to what Diz recorded, rather
+    /// than decoding a wrong-but-plausible PNG. Without this, a passing round-trip proves
+    /// nothing.
     /// </summary>
     [Fact]
-    public void GfxPackRefusesWhenDizManifestDoesNotMatchTheBytes()
+    public void GfxPackRefusesWhenTheRomDoesNotMatchTheManifestHash()
     {
         if (!CanRun)
             return;
@@ -159,19 +164,22 @@ public class RegionAssetRoundTripTests
         Directory.CreateDirectory(workDir);
         try
         {
-            MakeService(rom).ExportRegion(MakeGfxRegion(offset, length, bpp), workDir);
+            var manifestRoot = Path.Combine(workDir, "generated", "assets");
+            MakeService(rom).ExportRegion(MakeGfxRegion(offset, length, bpp), manifestRoot);
+            var manifest = Path.Combine(manifestRoot, "gfx", "font.json");
 
-            var assetRoot = Path.Combine(workDir, "assets", "src");
-            var binPath = Path.Combine(assetRoot, "gfx", "font.bin");
+            // flip a byte in a COPY of the ROM, so the slice no longer hashes to what the
+            // manifest recorded -- exactly the "built against the wrong ROM" case.
+            var wrongRom = Path.Combine(workDir, "wrong.sfc");
+            rom[offset + length / 2] ^= 0xFF;
+            File.WriteAllBytes(wrongRom, rom);
 
-            // flip a single byte so the .bin no longer matches the manifest's sha256
-            var bytes = File.ReadAllBytes(binPath);
-            bytes[bytes.Length / 2] ^= 0xFF;
-            File.WriteAllBytes(binPath, bytes);
+            var png = Path.Combine(workDir, "extracted", "gfx", "font.png");
+            var exitCode = RunGfxPackRaw(workDir,
+                $"extract --manifest \"{manifest}\" --rom \"{wrongRom}\" --out \"{png}\"");
 
-            var exitCode = RunGfxPackRaw(workDir, $"seed --name gfx/font --search \"{assetRoot}\"");
             exitCode.Should().NotBe(0,
-                "gfxpack must reject a .bin whose sha256 disagrees with the manifest");
+                "gfxpack must reject a ROM whose bytes disagree with the manifest's sha256");
         }
         finally
         {
