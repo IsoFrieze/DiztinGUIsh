@@ -3,7 +3,7 @@
         x:Class="Diz.Ui.Avalonia.SnesImportRomWindow"
         x:CompileBindings="False"
         Title="New Project"
-        Width="470" Height="960"
+        Width="470" Height="965"
         MinWidth="420" MinHeight="480"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False"
@@ -59,13 +59,18 @@
         <Style Selector="TextBlock.mono">
             <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
         </Style>
-        <!-- Checkboxes are deliberately left at the theme's own size.
-             Sixteen vector rows are tall at that size, and squeezing them by overriding the height
-             of the grid inside the checkbox template is the obvious-looking way to win the space
-             back. It clips the bottom of the tick, and it does so ONLY on a real display: the
-             offscreen render used for checking this layout came out clean at two different
-             overridden heights while both were visibly cut off on a monitor. So there is no way to
-             verify such an override here, and the list scrolls instead. Leave the template alone. -->
+        <!-- Sixteen vector rows at the checkbox's stock height make for a very tall window, so the
+             grid inside the checkbox template is shortened a little to tighten the rows.
+             28 IS A FLOOR THAT WAS FOUND BY LOOKING, NOT BY CALCULATION. The tick box is larger
+             than it appears and 24 cut the bottom off both these rows and the standalone
+             checkboxes above them. Anything shorter than this needs checking on a real monitor:
+             the offscreen render used for this window's layout came out clean at two different
+             heights that were visibly clipped in the actual app, so it cannot answer this
+             question. If in doubt, delete this style rather than shrink it: the theme's own
+             size always renders correctly and the list scrolls. -->
+        <Style Selector="CheckBox /template/ Grid">
+            <Setter Property="Height" Value="28" />
+        </Style>
     </Window.Styles>
 
     <Border Padding="12,10">
@@ -157,7 +162,7 @@
                         <ItemsControl x:Name="VectorRows" Tag="vector-rows">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Tag="vector-row" ColumnDefinitions="*,70,70" Margin="0,1">
+                                    <Grid Tag="vector-row" ColumnDefinitions="*,70,70">
                                         <TextBlock Grid.Column="0" Classes="value mono"
                                                    Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                                         <TextBlock Grid.Column="1" Classes="value mono"
