@@ -8,7 +8,7 @@ namespace Diz.Ui.Avalonia;
 /// The Avalonia LABEL-EDITOR BACKEND (new-ui plan step 5/6): exactly the
 /// backend-selectable registrations (LabelEditorView, RegionEditorView, NavigationHistoryView,
 /// MarkManyView, GotoView, HarshAutoStepView, SnesImportRomView,
-/// MisalignmentCheckerView, InOutPointCheckerView, ExportSettingsView, ProgressBarView,
+/// MisalignmentCheckerView, InOutPointCheckerView, ExportSettingsView, AboutView, ProgressBarView,
 /// IFileDialogService), each
 /// named with the exact IViewFactory method-name
 /// string. The app registers EITHER this
@@ -82,5 +82,11 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         serviceRegistry.Register<IExportSettingsView>(
             factory => new AvaloniaExportSettingsView(factory.GetInstance<AvaloniaFileDialogService>()),
             "ExportSettingsView");
+
+        // the About window. SINGLETON, unlike every other window here: it hides rather than
+        // closes and the service keeps it, so picking Help -> About repeatedly brings the same
+        // window forward instead of stacking a new one behind the last. Name must match
+        // IViewFactory.GetAboutView().
+        serviceRegistry.RegisterSingleton<IAboutView, AvaloniaAboutView>("AboutView");
     }
 }

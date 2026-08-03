@@ -172,6 +172,9 @@ internal static class Program
         // ------------------------------------------------------------------ EXPORT SETTINGS WINDOW
         ExportSettingsScenes(outDir, report);
 
+        // ------------------------------------------------------------------ ABOUT WINDOW
+        AboutScenes(outDir, report);
+
         // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
         // The Avalonia progress window in both modes: marquee (open/save/export) and determinate
         // (trace-log import reports bytes-read %). Rendered here so the popup can be reviewed as
@@ -1338,6 +1341,98 @@ internal static class Program
         Pump();
         window.KeyTextInput(text);
         Pump();
+    }
+
+    // ------------------------------------------------------------------ about window
+
+    /// <summary>
+    /// Renders the Avalonia About window. There is no ViewModel and nothing to drive: the whole
+    /// window is a logo, two strings from the version source, and an OK button -- so a clipped
+    /// or missing piece is the only way it can be wrong. The one behaviour worth probing is that
+    /// it HIDES instead of closing, which is what lets the host re-show one window rather than
+    /// stack a new one behind the last on every Help -> About.
+    /// </summary>
+    private static void AboutScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[about window]");
+
+        var versionInfo = new PreviewAppVersionInfo();
+        var window = new AboutWindow(versionInfo);
+        window.Show();
+        Pump();
+
+        var logo = FindByTag<Image>(window, "logo-image");
+        var product = TagText(window, "product-name-text");
+        var version = TagText(window, "version-text");
+        var description = FindByTag<TextBox>(window, "description-text");
+        Console.WriteLine($"  title='{window.Title}' product='{product}' version='{version}'; " +
+                          $"description {description?.Text?.Length ?? -1} chars; " +
+                          $"logo source={(logo?.Source == null ? "<none>" : logo.Source.Size.Width + "x" + logo.Source.Size.Height)}");
+        Capture(window, Path.Combine(outDir, "about-default.png"),
+            $"about: logo, '{product}', '{version}', the build description, OK");
+
+        // the logo is an embedded resource of the UI assembly, so a wrong path or a missing
+        // AvaloniaResource entry shows up as a null Source and an empty column, not as a build error.
+        var logoOk = logo?.Source != null && logo.Bounds is { Width: > 0, Height: > 0 };
+        Record(report, "about logo rendered", logoOk ? "PASS" : "APP-FAIL",
+            $"source={(logo?.Source == null ? "<null>" : "loaded")} laid out " +
+            $"{logo?.Bounds.Width:F1}x{logo?.Bounds.Height:F1}px");
+
+        // both strings come from the version source; the title carries the version too.
+        var textOk = version == $"Version: {PreviewAppVersionInfo.Version}" &&
+                     window.Title == $"About Diz {PreviewAppVersionInfo.Version}" &&
+                     description?.Text == versionInfo.GetVersionInfo(
+                         IAppVersionInfo.AppVersionInfoType.FullDescription);
+        Record(report, "about shows version info", textOk ? "PASS" : "APP-FAIL",
+            $"title='{window.Title}' version='{version}' description={description?.Text?.Length ?? -1} chars");
+
+        // nothing may sit outside the window: the description box is the only thing that grows.
+        var boxOk = description != null && description.Bounds.Height > 0 &&
+                    description.TranslatePoint(new Point(0, description.Bounds.Height), window) is { } bottom &&
+                    bottom.Y <= window.Height;
+        Record(report, "about nothing clipped", boxOk ? "PASS" : "APP-FAIL",
+            $"description box {description?.Bounds.Width:F1}x{description?.Bounds.Height:F1}px " +
+            $"inside a {window.Width}x{window.Height}px window");
+
+        // Q: picking Help -> About twice must not stack windows. The host keeps one window and
+        // re-shows it, which only works because closing hides.
+        window.Close();
+        Pump();
+        var hidden = !window.IsVisible;
+        window.Show();
+        Pump();
+        var reshown = window.IsVisible;
+        Record(report, "about hides on close", hidden && reshown ? "PASS" : "APP-FAIL",
+            $"after Close(): IsVisible={hidden switch { true => "false", false => "true" }}; " +
+            $"after re-Show(): IsVisible={reshown}");
+
+        window.Hide();
+        Pump();
+    }
+
+    /// <summary>
+    /// Stand-in for the app's version source. The real one reads the git metadata baked into the
+    /// app assembly, which the harness does not link -- and fixed strings make the probes' string
+    /// comparisons meaningful.
+    /// </summary>
+    private sealed class PreviewAppVersionInfo : IAppVersionInfo
+    {
+        public const string Version = "v0.0.0-preview";
+
+        public string GetVersionInfo(IAppVersionInfo.AppVersionInfoType type) => type switch
+        {
+            IAppVersionInfo.AppVersionInfoType.Version => Version,
+            IAppVersionInfo.AppVersionInfoType.FullDescription =>
+                "Build info:\r\n------------\r\n" +
+                $"Version: {Version}\r\n" +
+                "Git branch: preview-harness\r\n" +
+                "Git commit: 0000000000000000000000000000000000000000\r\n" +
+                "Git repo URL: https://example.invalid/preview\r\n" +
+                "Git IsDirty: false\r\n\r\n\r\n" +
+                "Diz app savefile format ver: 0",
+            _ => "",
+        };
     }
 
     private static T? FindByTag<T>(Window window, string tag) where T : Control =>

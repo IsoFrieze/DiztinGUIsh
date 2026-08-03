@@ -47,7 +47,7 @@ public interface IViewFactory
     IMisalignmentCheckerView GetMisalignmentCheckerView();
     IInOutPointCheckerView GetInOutPointCheckerView();
     IMainGridWindowView GetMainGridWindowView();
-    IFormViewer GetAboutView();
+    IAboutView GetAboutView();
     IRegionListView GetRegionEditorView();
     INavigationHistoryView GetNavigationHistoryView();
 }

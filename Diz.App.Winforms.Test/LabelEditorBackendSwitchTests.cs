@@ -25,7 +25,7 @@ namespace Diz.App.Winforms.Test;
 /// both. So each backend must resolve ALL ELEVEN backend-selectable seams (LabelEditorView,
 /// RegionEditorView, NavigationHistoryView, MarkManyView, GotoView, HarshAutoStepView,
 /// SnesImportRomView, MisalignmentCheckerView, InOutPointCheckerView, ExportSettingsView,
-/// ProgressBarView, IFileDialogService) to its
+/// AboutView, ProgressBarView, IFileDialogService) to its
 /// own toolkit's types, and never the other's. If someone breaks or reorders the branch (e.g. registers both roots),
 /// these type assertions fail.
 ///
@@ -69,6 +69,8 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<WinformsInOutPointCheckerView>();
         container.GetInstance<IExportSettingsView>("ExportSettingsView")
             .Should().BeOfType<WinformsExportSettingsView>();
+        container.GetInstance<IAboutView>("AboutView")
+            .Should().BeOfType<WinformsAboutView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
@@ -101,6 +103,8 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<AvaloniaInOutPointCheckerView>();
         container.GetInstance<IExportSettingsView>("ExportSettingsView")
             .Should().BeOfType<AvaloniaExportSettingsView>();
+        container.GetInstance<IAboutView>("AboutView")
+            .Should().BeOfType<AvaloniaAboutView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<AvaloniaProgressView>();
         container.GetInstance<IFileDialogService>()
@@ -136,10 +140,49 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<WinformsInOutPointCheckerView>();
         container.GetInstance<IExportSettingsView>("ExportSettingsView")
             .Should().BeOfType<WinformsExportSettingsView>();
+        container.GetInstance<IAboutView>("AboutView")
+            .Should().BeOfType<WinformsAboutView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
             .Should().BeOfType<WinformsFileDialogService>();
+    }
+
+    /// <summary>
+    /// The About window is the one seam here that IS shared: it hides rather than closes and its
+    /// view service keeps it, so picking Help -> About repeatedly brings the same window forward
+    /// instead of stacking a new one behind the last. A per-invocation registration would restore
+    /// exactly the stacking this replaced, and nothing else would fail.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void AboutView_IsASingleSharedInstance(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        var first = container.GetInstance<IAboutView>("AboutView");
+        var second = container.GetInstance<IAboutView>("AboutView");
+
+        second.Should().BeSameAs(first);
+    }
+
+    /// <summary>
+    /// Same unchecked-string risk as the other registrations: "AboutView" has to match the
+    /// auto-factory method name exactly, and nothing checks that at compile time. This resolves
+    /// through the factory itself -- the path Help -> About actually takes -- so a typo fails
+    /// here instead of at the user's first click.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ViewFactory_HandsOutAnAboutView_OnEveryBackend(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        container.GetInstance<IViewFactory>().GetAboutView().Should().NotBeNull();
     }
 
     /// <summary>
@@ -457,6 +500,7 @@ public class LabelEditorBackendSwitchTests
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView");
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView");
         container.GetInstance<IExportSettingsView>("ExportSettingsView");
+        container.GetInstance<IAboutView>("AboutView");
 
         // the timing constraint from Phase 0: Avalonia must not come up before the
         // message loop / DPI setup. Resolution happens in MainWindow's ctor, so it must
