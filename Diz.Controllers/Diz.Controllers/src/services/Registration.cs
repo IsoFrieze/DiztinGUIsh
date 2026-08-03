@@ -15,7 +15,6 @@ public class DizControllersCompositionRoot : ICompositionRoot
     public void Compose(IServiceRegistry serviceRegistry)
     {
         serviceRegistry.Register<IProjectController, ProjectController>("ProjectController");
-        serviceRegistry.Register<ILogCreatorSettingsEditorController, LogCreatorSettingsEditorController>("AssemblyExporterSettingsController");
         serviceRegistry.Register<ILargeFilesReaderController, LargeFilesReader>("LargeFileReaderProgressController");
 
         // the SNES importer, registered under the platform seam rather than by its own type: this

@@ -96,16 +96,3 @@ public interface ICommonGui
     void ShowMessage(string msg);
 }
     
-public interface ILogCreatorSettingsEditorView : IFormViewer
-{
-    ILogCreatorSettingsEditorController Controller { get; set; }
-    
-    [CanBeNull] string PromptForLogPathFromFileOrFolderDialog(bool askForFile);
-    bool PromptCreatePath(string buildFullOutputPath, string extraMsg);
-        
-    /// <summary>
-    /// Main method, return true if we showed the dialog and edited successfully.
-    /// </summary>
-    /// <returns></returns>
-    bool PromptEditAndConfirmSettings();
-}

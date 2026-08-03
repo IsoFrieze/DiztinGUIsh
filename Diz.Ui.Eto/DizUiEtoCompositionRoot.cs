@@ -15,7 +15,7 @@ namespace Diz.Ui.Eto;
         serviceRegistry.Register<IProgressView, EtoProgressForm>("ProgressBarView");
         // serviceRegistry.Register<IFormViewer, PlaceholderForm>("AboutView");
         // serviceRegistry.Register<ISnesImportRomView, PlaceholderForm>("SnesImportRomView");
-        // serviceRegistry.Register<ILogCreatorSettingsEditorView, PlaceholderForm>("ExportDisassemblyView");
+        // serviceRegistry.Register<IExportSettingsView, PlaceholderForm>("ExportSettingsView");
         // serviceRegistry.Register<ILabelEditorView, PlaceholderForm>("LabelEditorView");
         
         serviceRegistry.RegisterSingleton<IDizAppSettings, DizEtoAppSettingsProvider>();

@@ -65,6 +65,20 @@ public interface IProjectController :
 
     Task<bool> ConfirmSettingsThenExportAssemblyAsync();
     Task<bool> ExportAssemblyWithCurrentSettingsAsync();
+
+    /// <summary>
+    /// Let the user edit the export settings until they are exportable, or give up. Returns the
+    /// edited settings, or null if they cancelled -- nothing is written and nothing is saved, so a
+    /// caller that wants an export must pass the result to
+    /// <see cref="WriteAssemblyOutputIfSettingsValidAsync(LogWriterSettings)"/>.
+    ///
+    /// Split out from <see cref="ConfirmSettingsThenExportAssemblyAsync"/> so a host can keep its
+    /// own window on screen while the settings are being edited and hide it only for the export.
+    /// </summary>
+    Task<LogWriterSettings?> ShowSettingsEditorUntilValidAsync();
+
+    Task<bool> WriteAssemblyOutputIfSettingsValidAsync();
+    Task<bool> WriteAssemblyOutputIfSettingsValidAsync(LogWriterSettings? settingsToUseAndSave);
     void MarkChanged(); // rename to MarkUnsaved or similar in Diz3.0
 }
     
@@ -78,21 +92,6 @@ public interface IProjectOpenerHandler : ILongRunningTaskHandler
     Project OpenProject(string filename, bool showPopupAlertOnLoaded);
 }
 
-public interface ILogCreatorSettingsEditorController : INotifyPropertyChangedExt
-{
-    ILogCreatorSettingsEditorView View { get; set; }
-    
-    LogWriterSettings Settings { get; set; }
-
-    public string KeepPathsRelativeToThisPath { get; set; }
-
-    bool PromptSetupAndValidateExportSettings();
-
-    bool EnsureSelectRealOutputDirectory(bool forcePrompt = false);
-    string GetSampleOutput();
-}
-    
-    
 public interface IDizAppSettings : INotifyPropertyChanged
 {
     string LastProjectFilename { get; set; }

@@ -22,6 +22,7 @@ using Diz.Import.bsnes.tracelog;
 using Diz.Import.bsnes.usagemap;
 using Diz.LogWriter;
 using Diz.LogWriter.util;
+using Diz.Ui.ViewModels.ExportSettings;
 using JetBrains.Annotations;
 
 namespace Diz.Controllers.controllers;
@@ -31,6 +32,8 @@ public class ProjectController(
     ICommonGui commonGui,
     IFilesystemService fs,
     IControllerFactory controllerFactory,
+    IViewFactory viewFactory,
+    Func<LogWriterSettings, ISampleAssemblyTextGenerator> sampleAssemblyTextGeneratorCreate,
     Func<RomImporterRegistry> romImporterRegistryCreate,
     Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate,
     Func<IProjectFileManager> projectFileManagerCreate)
@@ -406,7 +409,7 @@ public class ProjectController(
     /// <returns>True if we exported assembly, false if we didn't / aborted.</returns>
     public async Task<bool> ConfirmSettingsThenExportAssemblyAsync()
     {
-        var newlyEditedSettings = ShowSettingsEditorUntilValid();
+        var newlyEditedSettings = await ShowSettingsEditorUntilValidAsync();
         return await WriteAssemblyOutputIfSettingsValidAsync(newlyEditedSettings);
     }
 
@@ -417,24 +420,37 @@ public class ProjectController(
     public async Task<bool> ExportAssemblyWithCurrentSettingsAsync() =>
         await WriteAssemblyOutputIfSettingsValidAsync() || await ConfirmSettingsThenExportAssemblyAsync();
 
+    /// <summary>
+    /// Show the export-settings screen until what the user chose can actually be exported, or they
+    /// give up. Returns the edited settings, or null if they cancelled.
+    ///
+    /// THE SCREEN IS BUILT ONCE AND RE-SHOWN. Re-seeding it from the project on every retry --
+    /// which is what used to happen -- discards everything typed so far the moment the user answers
+    /// "yes, edit now", i.e. exactly when they are being asked to fix a typo in what they typed.
+    /// </summary>
     [CanBeNull]
-    public LogWriterSettings ShowSettingsEditorUntilValid()
+    public async Task<LogWriterSettings> ShowSettingsEditorUntilValidAsync()
     {
-        LogWriterSettings newlyEditedSettings = null;
+        var viewModel = CreateExportSettingsViewModel();
+        if (viewModel == null)
+            return null;
 
-        do
+        var firstAttempt = true;
+
+        while (true)
         {
-            var shouldAskUserToContinue = newlyEditedSettings != null; 
-            if (shouldAskUserToContinue && !PromptUserTryAgainOrAbortExport())
+            if (!firstAttempt && !PromptUserTryAgainOrAbortExport())
                 return null;
 
-            newlyEditedSettings = ShowExportSettingsEditor();
-            if (newlyEditedSettings == null)
-                return null;
-                
-        } while (!newlyEditedSettings.IsValid(fs));
+            firstAttempt = false;
 
-        return newlyEditedSettings;
+            if (!await viewFactory.GetExportSettingsView().EditAsync(viewModel))
+                return null;
+
+            var newlyEditedSettings = viewModel.BuildSettings();
+            if (newlyEditedSettings.IsValid(fs))
+                return newlyEditedSettings;
+        }
     }
 
     private bool PromptUserTryAgainOrAbortExport() => 
@@ -465,24 +481,40 @@ public class ProjectController(
         return true;
     }
 
+    /// <summary>
+    /// Build the export-settings screen's state from the open project, wired to the two things the
+    /// screen needs from the assembly writer: whether a line template parses, and what a few lines
+    /// of assembly would look like written with the current settings. Both are handed over as
+    /// delegates because the ViewModel assembly is not allowed to reference the assembly writer.
+    /// </summary>
     [CanBeNull]
-    private LogWriterSettings ShowExportSettingsEditor()
-    {
-        var exportSettingsController = CreateExportSettingsEditorController();
-        return !(exportSettingsController?.PromptSetupAndValidateExportSettings() ?? false) 
-            ? null 
-            : exportSettingsController.Settings;
-    }
-    
-    [CanBeNull]
-    private ILogCreatorSettingsEditorController CreateExportSettingsEditorController()
+    private ExportSettingsViewModel CreateExportSettingsViewModel()
     {
         if (Project == null)
             return null;
-        
-        var exportSettingsController = controllerFactory.GetAssemblyExporterSettingsController();
-        exportSettingsController.KeepPathsRelativeToThisPath = Project.Session?.ProjectDirectory ?? "";
-        exportSettingsController.Settings = Project.LogWriterSettings with { }; // operate on a new copy of the settings
-        return exportSettingsController;
+
+        // a copy: nothing on screen touches the project until the export actually runs.
+        return new ExportSettingsViewModel(
+            Project.LogWriterSettings with { },
+            fs,
+            LogCreatorLineFormatter.Validate,
+            GenerateSampleAssemblyText);
+    }
+
+    /// <summary>
+    /// Render the sample-output box's contents. A template can parse and still blow up while being
+    /// used, so a failure comes back as the text to show rather than as an exception -- the screen
+    /// has always reported it this way.
+    /// </summary>
+    private string GenerateSampleAssemblyText(LogWriterSettings settings)
+    {
+        try
+        {
+            return sampleAssemblyTextGeneratorCreate(settings).GetSampleAssemblyOutput().AssemblyOutputStr;
+        }
+        catch (Exception ex)
+        {
+            return $"Invalid format or sample output: {ex.Message}";
+        }
     }
 }

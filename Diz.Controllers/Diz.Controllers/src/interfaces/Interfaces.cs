@@ -39,7 +39,7 @@ public interface IViewFactory
 {
     ISnesImportRomView GetSnesImportRomView();
     IProgressView GetProgressBarView();
-    ILogCreatorSettingsEditorView GetExportDisassemblyView();
+    IExportSettingsView GetExportSettingsView();
     ILabelEditorView GetLabelEditorView();
     IMarkManyView GetMarkManyView();
     IGotoView GetGotoView();
@@ -54,6 +54,5 @@ public interface IViewFactory
     
 public interface IControllerFactory
 {
-    ILogCreatorSettingsEditorController GetAssemblyExporterSettingsController();
     ILargeFilesReaderController GetLargeFileReaderProgressController();
 }

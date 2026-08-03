@@ -52,6 +52,12 @@ public static class DizWinformsRegisterServices
         if (labelEditorBackend == LabelEditorBackendKind.Avalonia)
         {
             serviceRegistry.RegisterFrom<DizUiAvaloniaCompositionRoot>();
+
+            // TEMPORARY: the export-settings window has no Avalonia implementation yet, so this
+            // backend borrows the WinForms one. Delete this line the moment the Avalonia window
+            // is registered in DizUiAvaloniaCompositionRoot -- registering both would make the
+            // backend selection depend on registration order again.
+            serviceRegistry.Register<IExportSettingsView, WinformsExportSettingsView>("ExportSettingsView");
         }
         else if (labelEditorBackend == LabelEditorBackendKind.Tui)
         {
@@ -76,6 +82,7 @@ public static class DizWinformsRegisterServices
             serviceRegistry.Register<ISnesImportRomView, WinformsSnesImportRomView>("SnesImportRomView");
             serviceRegistry.Register<IMisalignmentCheckerView, WinformsMisalignmentCheckerView>("MisalignmentCheckerView");
             serviceRegistry.Register<IInOutPointCheckerView, WinformsInOutPointCheckerView>("InOutPointCheckerView");
+            serviceRegistry.Register<IExportSettingsView, WinformsExportSettingsView>("ExportSettingsView");
             serviceRegistry.RegisterSingleton<IFileDialogService, WinformsFileDialogService>();
         }
         else
