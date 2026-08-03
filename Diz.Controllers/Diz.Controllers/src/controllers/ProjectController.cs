@@ -31,7 +31,7 @@ public class ProjectController(
     ICommonGui commonGui,
     IFilesystemService fs,
     IControllerFactory controllerFactory,
-    Func<SnesRomImporter> snesRomImporterCreate,
+    Func<RomImporterRegistry> romImporterRegistryCreate,
     Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate,
     Func<IProjectFileManager> projectFileManagerCreate)
     : IProjectController
@@ -169,11 +169,27 @@ public class ProjectController(
         });
     }
 
-    // a fresh importer per import: it drives a settings builder that holds the analysed ROM, and
-    // that state belongs to one import and no other.
+    /// <summary>
+    /// Shown when the file cannot be matched to any console Diz knows how to import. Unreachable
+    /// while one importer is registered -- the registry sends everything to it -- and the reason
+    /// this path exists at all is so that adding a second one produces a question for the user
+    /// rather than a silent guess at which console a file belongs to.
+    /// </summary>
+    public const string UnrecognizedRomFormatMessage =
+        "Couldn't work out what kind of ROM this is. Try a file with a recognized extension.";
+
+    // a fresh registry (and so a fresh importer) per import: an importer drives a settings builder
+    // that holds the analysed ROM, and that state belongs to one import and no other.
     public async Task<bool> ImportRomAndCreateNewProjectAsync(string romFilename)
     {
-        var importSettings = await snesRomImporterCreate().ChooseImportSettingsAsync(romFilename);
+        var importer = romImporterRegistryCreate().SelectFor(romFilename);
+        if (importer == null)
+        {
+            commonGui.ShowError(UnrecognizedRomFormatMessage);
+            return false;
+        }
+
+        var importSettings = await importer.ChooseImportSettingsAsync(romFilename);
         if (importSettings == null)
             return false;
 

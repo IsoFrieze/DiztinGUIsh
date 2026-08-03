@@ -1,5 +1,6 @@
 ﻿using System;
 using Diz.App.Winforms;
+using Diz.Controllers.importers;
 using Diz.Controllers.interfaces;
 using Diz.Core.util;
 using Diz.Ui.Avalonia;
@@ -452,5 +453,26 @@ public class LabelEditorBackendSwitchTests
         {
             Environment.SetEnvironmentVariable(LabelEditorBackend.EnvVarName, original);
         }
+    }
+
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void EveryBackendResolvesTheRomImporterRegistryWithTheSnesImporterInIt(
+        LabelEditorBackendKind backend)
+    {
+        // the registry is collected from every IRomImporter registration, and both its consumers
+        // take it as Func<RomImporterRegistry> so it is built at the moment it is used. Neither
+        // shape is exercised anywhere else at startup: a broken registration would first show up
+        // as the main window failing to construct, or as the New Project picker throwing.
+        using var container = CreateAppContainer(backend);
+
+        var registry = container.GetInstance<Func<RomImporterRegistry>>()();
+
+        registry.Importers.Should().ContainSingle()
+            .Which.Should().BeOfType<SnesRomImporter>();
+
+        registry.BuildFileDialogFilter().Should().Contain("*.smc").And.Contain("*.*");
     }
 }

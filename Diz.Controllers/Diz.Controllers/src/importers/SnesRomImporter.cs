@@ -31,8 +31,18 @@ namespace Diz.Controllers.importers;
 /// choice are asked here through <see cref="ICommonGui"/>, not by the window.
 /// </summary>
 [UsedImplicitly]
-public class SnesRomImporter
+public class SnesRomImporter : IRomImporter
 {
+    public string PlatformName => "SNES";
+
+    /// <summary>
+    /// .smc and .sfc are what SNES ROMs are normally called; .swc and .fig are the file extensions
+    /// left behind by the Super Wild Card and Pro Fighter copiers, whose 512-byte header the
+    /// importer already strips. None of this is required -- see the registry -- it is what makes
+    /// the file picker show a ROM without the user switching it to "all files".
+    /// </summary>
+    public IReadOnlyList<string> FileExtensions { get; } = [".smc", ".sfc", ".swc", ".fig"];
+
     /// <summary>
     /// Appended to every warning about a choice that may produce a bad import. Verbatim from the
     /// window this replaced -- the wording is the whole reason the question is answerable.
