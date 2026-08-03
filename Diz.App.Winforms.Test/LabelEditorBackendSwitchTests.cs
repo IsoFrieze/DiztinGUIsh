@@ -22,9 +22,10 @@ namespace Diz.App.Winforms.Test;
 ///
 /// Step 6 replaced the old last-registration-wins ordering trick with an EXPLICIT if/else
 /// branch that registers EITHER the WinForms backend root OR the Avalonia backend root -- never
-/// both. So each backend must resolve ALL TEN backend-selectable seams (LabelEditorView,
+/// both. So each backend must resolve ALL ELEVEN backend-selectable seams (LabelEditorView,
 /// RegionEditorView, NavigationHistoryView, MarkManyView, GotoView, HarshAutoStepView,
-/// MisalignmentCheckerView, InOutPointCheckerView, ProgressBarView, IFileDialogService) to its
+/// SnesImportRomView, MisalignmentCheckerView, InOutPointCheckerView, ProgressBarView,
+/// IFileDialogService) to its
 /// own toolkit's types, and never the other's. If someone breaks or reorders the branch (e.g. registers both roots),
 /// these type assertions fail.
 ///
@@ -90,11 +91,8 @@ public class LabelEditorBackendSwitchTests
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<AvaloniaHarshAutoStepView>();
 
-        // there is no Avalonia import window yet, so this backend still resolves the WinForms one
-        // -- registered explicitly in the Avalonia branch. Without it, creating a new project
-        // under DIZ_LABEL_EDITOR=avalonia would fail to resolve at the moment the user clicks.
         container.GetInstance<ISnesImportRomView>("SnesImportRomView")
-            .Should().BeOfType<WinformsSnesImportRomView>();
+            .Should().BeOfType<AvaloniaSnesImportRomView>();
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
             .Should().BeOfType<AvaloniaMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")

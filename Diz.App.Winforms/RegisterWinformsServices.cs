@@ -52,12 +52,6 @@ public static class DizWinformsRegisterServices
         if (labelEditorBackend == LabelEditorBackendKind.Avalonia)
         {
             serviceRegistry.RegisterFrom<DizUiAvaloniaCompositionRoot>();
-
-            // there is no Avalonia import window yet, so the WinForms one is registered here
-            // explicitly rather than left unregistered -- without this the container cannot
-            // resolve SnesImportRomView and creating a new project throws. Delete this line once
-            // the Avalonia root registers its own.
-            serviceRegistry.Register<ISnesImportRomView, WinformsSnesImportRomView>("SnesImportRomView");
         }
         else if (labelEditorBackend == LabelEditorBackendKind.Tui)
         {

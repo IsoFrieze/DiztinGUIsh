@@ -1,0 +1,193 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.SnesImportRomWindow"
+        x:CompileBindings="False"
+        Title="New Project"
+        Width="470" Height="860"
+        MinWidth="420" MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        FontSize="12">
+
+    <!--
+      How a SNES ROM is read when it becomes a new project: which memory mapping to use, which
+      interrupt vectors get automatic labels, and which extra data to synthesize up front. The
+      mapping cannot be changed after the project exists, which is why the ROM information sits
+      directly under the picker - picking the wrong mapping makes the title and the vector words
+      turn to nonsense, and that is the signal the user is meant to read.
+
+      Everything that decides what those choices MEAN lives in SnesImportRomViewModel; this
+      window neither reads the ROM nor creates a project, and it asks nothing. When the choices
+      warrant an "are you sure?", the ViewModel says so and whoever opened this window puts the
+      question after it closes - which is why OK is enabled unconditionally.
+
+      NO PushText VALUE-SUPPRESSION HERE, AND NONE SHOULD BE ADDED. Sibling windows that host
+      editable text (the goto window, mark-many, harsh auto step) need it because TextChanged
+      arrives on a LATER dispatcher turn, so a plain "am I writing?" flag has already been
+      cleared by the time the handler runs and a ViewModel-driven refresh is indistinguishable
+      from a keystroke. THIS WINDOW HAS NO EDITABLE TEXT AT ALL: every vector word and every
+      piece of ROM information is a TextBlock, and the only inputs are one combo box and some
+      checkboxes, whose change events are raised synchronously inside the write that caused them
+      and are therefore fully covered by the updatingWidgets flag in the code-behind. Same
+      reasoning as the misaligned-flags window.
+
+      NO DataGrid EITHER, deliberately. The vector table is a fixed set of sixteen rows with one
+      checkbox each - an ItemsControl renders that with no virtualization, no row recycling and
+      no selection model. A DataGrid would additionally swallow Enter (it handles the key to move
+      the selection and marks it handled before a bubbling handler sees it), which would break
+      the default button for no benefit here.
+
+      Field captions, the group headings and the button order match the WinForms window, so the
+      same instructions describe either backend. The vector list does NOT match its layout: the
+      WinForms window arranges twelve of the sixteen slots in two hardcoded designer columns and
+      has no controls at all for the four the user cannot switch off. This one lists all sixteen
+      in vector-table order, so the table is shown as it actually is.
+
+      Styled like the other Avalonia windows here: compact, FontSize 12, light theme (pinned
+      application-wide in DizAvaloniaApp).
+    -->
+
+    <Window.Styles>
+        <Style Selector="TextBlock.field">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Foreground" Value="#606060" />
+        </Style>
+        <Style Selector="TextBlock.value">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.mono">
+            <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+        <!-- Sixteen vector rows at the theme's stock checkbox height do not fit in any sensible
+             window, and the list is the point of this screen. That height is 32px fixed on a grid
+             INSIDE the checkbox's template rather than on the control, so MinHeight="0" above does
+             not reach it and the row has to be resized through the template. 22px still leaves
+             room for the 20px tick box. -->
+        <Style Selector="CheckBox /template/ Grid">
+            <Setter Property="Height" Value="22" />
+        </Style>
+    </Window.Styles>
+
+    <Border Padding="12,10">
+        <DockPanel>
+
+            <!-- ============ bottom bar: Cancel | OK ============
+                 OK is enabled whatever is on screen. Whether the choices are risky is decided
+                 AFTER this window closes, and a warning the user is allowed to accept is not a
+                 reason to block the button. -->
+            <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto" Margin="0,10,0,0">
+                <Button Grid.Column="0" x:Name="CancelButton" Tag="cancel-button" Content="Cancel"
+                        Width="80" IsCancel="True" Click="CancelButton_Click" />
+                <Button Grid.Column="2" x:Name="OkButton" Tag="ok-button" Content="OK"
+                        Width="80" IsDefault="True" Click="OkButton_Click" />
+            </Grid>
+
+            <!-- ===== why the vector column is full of placeholders, or empty when there is
+                 nothing to say. MUST WRAP: the sentence is far wider than this window, and a
+                 non-wrapping line would clip exactly the half that explains itself. ===== -->
+            <TextBlock x:Name="StatusText" DockPanel.Dock="Bottom" Tag="status-text"
+                       Foreground="#B00000" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+            <!-- ===== ROM Information: the picker, then what the ROM reads as under it ===== -->
+            <Border DockPanel.Dock="Top" BorderBrush="#C8C8C8" BorderThickness="1" CornerRadius="3"
+                    Padding="10,8">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="ROM Information" FontWeight="Bold" Margin="0,0,0,4" />
+
+                    <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="field" Text="Rom Map Mode" />
+                        <ComboBox Grid.Row="0" Grid.Column="1" x:Name="MapModeCombo" Tag="mapmode-combo"
+                                  HorizontalAlignment="Stretch" MinHeight="0" Padding="6,2"
+                                  DisplayMemberBinding="{Binding Description}"
+                                  SelectionChanged="MapModeCombo_SelectionChanged" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="field" Text="Detected Rom Mode:"
+                                   Margin="0,6,8,0" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DetectMessage" Tag="detect-message"
+                                   Classes="value" TextWrapping="Wrap" Margin="0,6,0,0" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Classes="field" Text="ROM Name:"
+                                   Margin="0,4,8,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="RomTitle" Tag="rom-title"
+                                   Classes="value mono" TextWrapping="Wrap" Margin="0,4,0,0" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Classes="field" Text="ROM Speed:"
+                                   Margin="0,4,8,0" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="RomSpeed" Tag="rom-speed"
+                                   Classes="value" Margin="0,4,0,0" />
+                    </Grid>
+
+                    <!-- the three sentences the WinForms window shows, word for word: the ROM
+                         information above is the evidence, and this says what to do about it. -->
+                    <TextBlock Text="Does the following info look correct?" Margin="0,8,0,0" TextWrapping="Wrap" />
+                    <TextBlock Text="If not, try changing the ROM Map Mode." TextWrapping="Wrap" />
+                    <TextBlock Text="This cannot be changed once the project is created."
+                               FontWeight="Bold" TextWrapping="Wrap" />
+
+                    <CheckBox x:Name="HeaderFlagsCheck" Tag="header-flags-check" Margin="0,6,0,0"
+                              Content="Auto generate flags for Internal ROM Header"
+                              IsCheckedChanged="HeaderFlagsCheck_Changed" />
+                    <!-- one whole-bank region per bank, created up front. On by default, which is
+                         what importing has always done; the switch exists so it can be declined. -->
+                    <CheckBox x:Name="BankRegionsCheck" Tag="bank-regions-check"
+                              Content="Generate bank regions"
+                              IsCheckedChanged="BankRegionsCheck_Changed" />
+                </StackPanel>
+            </Border>
+
+            <!-- ===== the 65816 vector table, in vector-table order, all sixteen slots =====
+                 Rows come from the ViewModel by binding rather than by hand, unlike the rest of
+                 this window: they carry no text the user can type into, so there is no caret to
+                 fight. The template's Tag is the vector NAME (the string a generated label would
+                 carry), not display text. -->
+            <Border BorderBrush="#C8C8C8" BorderThickness="1" CornerRadius="3"
+                    Padding="10,8" Margin="0,10,0,0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Vectors @ $00FFE0" FontWeight="Bold" Margin="0,0,0,4" />
+                    <TextBlock DockPanel.Dock="Top" Text="Select vectors to generate automatic labels."
+                               TextWrapping="Wrap" Margin="0,0,0,6" />
+
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,70,70" Margin="0,0,14,2">
+                        <TextBlock Grid.Column="0" Classes="field" Text="Vector" />
+                        <TextBlock Grid.Column="1" Classes="field" Text="Value" />
+                        <TextBlock Grid.Column="2" Classes="field" Text="Label" />
+                    </Grid>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl x:Name="VectorRows" Tag="vector-rows">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Tag="vector-row" ColumnDefinitions="*,70,70" Margin="0,1">
+                                        <TextBlock Grid.Column="0" Classes="value mono"
+                                                   Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1" Classes="value mono"
+                                                   Text="{Binding DisplayValue}" />
+                                        <!--
+                                          IsEnabled follows IsSelectable, so a row the user gets no
+                                          say over renders greyed out AND STILL SHOWS ITS TICK. Two
+                                          separate kinds of row look like that: the four slots the
+                                          65816 reserves and the SNES never uses, whose labels are
+                                          always generated, and any slot whose word cannot be read
+                                          at the selected mapping (those show unticked instead).
+                                          Greying an always-on row is the intended appearance, not
+                                          a bug to fix - the label IS generated, and there is no
+                                          way to decline it.
+                                        -->
+                                        <CheckBox Grid.Column="2" Tag="{Binding Name}"
+                                                  HorizontalAlignment="Center"
+                                                  IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                                  IsEnabled="{Binding IsSelectable}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </DockPanel>
+    </Border>
+</Window>

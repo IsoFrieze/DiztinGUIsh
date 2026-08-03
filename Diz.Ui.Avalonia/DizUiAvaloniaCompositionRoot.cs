@@ -7,7 +7,7 @@ namespace Diz.Ui.Avalonia;
 /// <summary>
 /// The Avalonia LABEL-EDITOR BACKEND (new-ui plan step 5/6): exactly the
 /// backend-selectable registrations (LabelEditorView, RegionEditorView, NavigationHistoryView,
-/// MarkManyView, GotoView, HarshAutoStepView,
+/// MarkManyView, GotoView, HarshAutoStepView, SnesImportRomView,
 /// MisalignmentCheckerView, InOutPointCheckerView, ProgressBarView, IFileDialogService), each
 /// named with the exact IViewFactory method-name
 /// string. The app registers EITHER this
@@ -68,5 +68,10 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         // the in/out-point rescan confirmation, same per-invocation lifetime. Name must match
         // IViewFactory.GetInOutPointCheckerView().
         serviceRegistry.Register<IInOutPointCheckerView, AvaloniaInOutPointCheckerView>("InOutPointCheckerView");
+
+        // the new-project ROM import window, same per-invocation lifetime -- the importer resolves
+        // a second one to re-show the same ViewModel when the user declines its confirmation
+        // prompt. Name must match IViewFactory.GetSnesImportRomView().
+        serviceRegistry.Register<ISnesImportRomView, AvaloniaSnesImportRomView>("SnesImportRomView");
     }
 }

@@ -17,10 +17,13 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Diz.Core.commands;
 using Diz.Core.Interfaces;
+using Diz.Core.util;                      // Util.GetEnumDescription (what the map-mode picker must render)
 using Diz.Cpu._65816;
+using Diz.Cpu._65816.import;              // SnesVectorNames (the always-on reserved vector slots)
 using Diz.Ui.Avalonia;                    // DizAvaloniaApp, AvaloniaLabelEditorView, AvaloniaFileDialogService, LabelEditorWindow + MarkManyWindow + GotoWindow + HarshAutoStepWindow (internal)
 using Diz.Ui.ViewModels.Goto;             // GotoViewModel
 using Diz.Ui.ViewModels.HarshAutoStep;    // HarshAutoStepViewModel
+using Diz.Ui.ViewModels.ImportRom;        // SnesImportRomViewModel, SnesVectorSnapshot, SnesVectorValue
 using Diz.Ui.ViewModels.Labels;           // LabelEditorViewModel, ILabelEditorViewModel, ILabelRowViewModel, LabelField
 using Diz.Ui.ViewModels.MarkMany;         // MarkManyViewModel, AddressRangeViewModel
 using Diz.Ui.ViewModels.MisalignmentChecker; // MisalignmentCheckerViewModel
@@ -160,6 +163,9 @@ internal static class Program
 
         // ------------------------------------------------------------------ NAVIGATION HISTORY WINDOW
         NavigationHistoryScenes(outDir, report);
+
+        // ------------------------------------------------------------------ NEW-PROJECT ROM IMPORT WINDOW
+        SnesImportRomScenes(outDir, report);
 
         // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
         // The Avalonia progress window in both modes: marquee (open/save/export) and determinate
@@ -3443,6 +3449,374 @@ internal static class Program
         Pump();
         return true;
     }
+
+    // ------------------------------------------------------------------ new-project ROM import window
+
+    /// <summary>Every vector-table slot, in vector-table order. Offset 0: only the names are used here.</summary>
+    private static readonly string[] ImportVectorNames =
+        CpuVectorTable.ComputeVectorTableNamesAndOffsets(0)
+            .Select(entry => entry.VectorTableEntry.Name)
+            .ToArray();
+
+    /// <summary>
+    /// The four slots the 65816 reserves and the SNES never uses. Their labels are always
+    /// generated and the user is offered no way to switch them off, so their rows must render
+    /// TICKED AND NON-INTERACTIVE. That is the appearance being probed for, not a bug.
+    /// </summary>
+    private static readonly string[] ImportAlwaysEnabledVectorNames =
+    [
+        SnesVectorNames.Native_Reserved1__ignored,
+        SnesVectorNames.Native_Reserved2__ignored,
+        SnesVectorNames.Emulation_Reserved1__ignored,
+        SnesVectorNames.Emulation_Reserved2__ignored,
+    ];
+
+    /// <summary>
+    /// Renders the Avalonia "new project from a SNES ROM" window in its three interesting states
+    /// and drives it with simulated input. No ROM is read: the ViewModel takes a caller-supplied
+    /// delegate that turns a map mode into a vector snapshot, so the harness supplies snapshots
+    /// directly and the window sees exactly what the real importer would hand it.
+    ///
+    /// Each scene gets a FRESH window + ViewModel, because the real window is created per
+    /// invocation and completes a task when it closes.
+    /// </summary>
+    private static void SnesImportRomScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[new project / rom import window]");
+
+        // ---- scene 1: detection succeeded, everything readable
+        var (window, vm) = OpenSnesImportRom(
+            detected: RomMapMode.LoRom, detectionSucceeded: true, romSpeedText: "SlowROM",
+            snapshotFor: ReadableImportSnapshot);
+
+        Console.WriteLine($"  detection message: '{TagText(window, "detect-message")}', " +
+                          $"title '{TagText(window, "rom-title")}', speed '{TagText(window, "rom-speed")}'");
+        Capture(window, Path.Combine(outDir, "snesimportrom-default.png"),
+            $"rom import: detection succeeded ({TagText(window, "detect-message")}), 16 vectors readable");
+
+        ProbeImportVectorRowCount(window, report, "import rows (detected)");
+        ProbeImportReservedRowsLocked(window, report);
+        ProbeImportNoEditableText(window, report);
+        ProbeImportMapModeDescriptions(window, vm, report);
+
+        // ---- the checkboxes reach the ViewModel
+        ProbeImportCheckbox(window, report, "bank-regions-check", "import bank-regions checkbox",
+            () => vm.GenerateBankRegions);
+        ProbeImportCheckbox(window, report, "header-flags-check", "import header-flags checkbox",
+            () => vm.GenerateHeaderFlags);
+
+        // ---- scene 2: nothing could be detected. The window still opens, the picker still works,
+        // and every value is a placeholder -- which is also the state in which the four reserved
+        // rows must STILL show as enabled.
+        var (failedWindow, failedVm) = OpenSnesImportRom(
+            detected: RomMapMode.LoRom, detectionSucceeded: false, romSpeedText: "????",
+            snapshotFor: _ => SnesVectorSnapshot.Unreadable(ImportVectorNames));
+
+        Console.WriteLine($"  detection failed: message='{TagText(failedWindow, "detect-message")}', " +
+                          $"status='{TagText(failedWindow, "status-text")}'");
+        Capture(failedWindow, Path.Combine(outDir, "snesimportrom-detection-failed.png"),
+            "rom import: detection failed -- placeholder title/vectors, status line explaining why");
+
+        var failedMessageOk =
+            TagText(failedWindow, "detect-message") == SnesImportRomViewModel.DetectionFailedMessage &&
+            TagText(failedWindow, "status-text") == SnesImportRomViewModel.VectorsUnreadableMessage;
+        Record(report, "import detection failed", failedMessageOk ? "PASS" : "APP-FAIL",
+            $"detect-message='{TagText(failedWindow, "detect-message")}', " +
+            $"status-text='{TagText(failedWindow, "status-text")}'");
+
+        // detection failing is exactly the case that used to force every visible box off; the
+        // reserved four must survive it, because their labels are generated regardless.
+        ProbeImportReservedRowsStillEnabled(failedWindow, failedVm, report);
+
+        // ---- scene 3: detection succeeded, then the user overrules it with a mapping this ROM
+        // cannot be read at. Values fall back to placeholders and the status line says why.
+        var (overrideWindow, overrideVm) = OpenSnesImportRom(
+            detected: RomMapMode.LoRom, detectionSucceeded: true, romSpeedText: "SlowROM",
+            snapshotFor: mode => mode == RomMapMode.LoRom
+                ? ReadableImportSnapshot(mode)
+                : SnesVectorSnapshot.Unreadable(ImportVectorNames));
+
+        ProbeImportMapModeChange(overrideWindow, overrideVm, report);
+        Capture(overrideWindow, Path.Combine(outDir, "snesimportrom-vectors-unreadable.png"),
+            "rom import: mapping overruled to HiROM -- '????' placeholders + the unreadable status line");
+        ProbeImportVectorRowCount(overrideWindow, report, "import rows (unreadable)");
+
+        // ---- confirm / cancel / closed-without-choosing
+        ProbeSnesImportRomAnswers(report);
+
+        window.Close();
+        failedWindow.Close();
+        overrideWindow.Close();
+        Pump();
+    }
+
+    /// <summary>A plausible readable snapshot: a cartridge title and a distinct word per slot.</summary>
+    private static SnesVectorSnapshot ReadableImportSnapshot(RomMapMode mapMode) =>
+        new(
+            CartridgeTitle: "PREVIEW HARNESS ROM  ",
+            VectorsReadable: true,
+            Vectors: ImportVectorNames
+                .Select((name, index) => new SnesVectorValue(name, $"8{index:X03}", IsReadable: true))
+                .ToList());
+
+    private static (SnesImportRomWindow window, SnesImportRomViewModel vm) OpenSnesImportRom(
+        RomMapMode detected, bool detectionSucceeded, string romSpeedText,
+        Func<RomMapMode, SnesVectorSnapshot> snapshotFor)
+    {
+        var vm = new SnesImportRomViewModel(
+            initialSnapshot: snapshotFor(detected),
+            detectedRomMapMode: detected,
+            detectionSucceeded: detectionSucceeded,
+            romSpeedText: romSpeedText,
+            alwaysEnabledVectorNames: ImportAlwaysEnabledVectorNames,
+            // every slot starts ticked; the ViewModel unticks the ones whose value isn't a ROM
+            // address. Same seeding the real importer does.
+            initiallyEnabledVectorNames: ImportVectorNames,
+            recomputeForMapMode: snapshotFor,
+            notificationMarshaller: RunOnUiThread);
+
+        var window = new SnesImportRomWindow();
+        window.AttachViewModel(vm);
+        window.Show();
+        Pump();
+        return (window, vm);
+    }
+
+    /// <summary>
+    /// All sixteen vector rows are on screen. COUNTS ONLY ROWS THAT ARE VISIBLE AND HAVE A
+    /// NON-ZERO HEIGHT: an item container that is present in the visual tree but collapsed is not
+    /// a row the user can see, and counting those has produced phantom rows before.
+    /// </summary>
+    private static void ProbeImportVectorRowCount(Window window, List<string> report, string what)
+    {
+        var containers = window.GetVisualDescendants().OfType<Grid>()
+            .Where(g => Equals(g.Tag, "vector-row"))
+            .ToList();
+        var visible = containers.Count(g => g.IsVisible && g.Bounds.Height > 0);
+
+        Console.WriteLine($"  vector rows: {containers.Count} container(s) in the tree, {visible} visible with height > 0");
+        Record(report, what, visible == ImportVectorNames.Length ? "PASS" : "APP-FAIL",
+            $"{visible} visible row(s) with height > 0 (wanted {ImportVectorNames.Length}); " +
+            $"{containers.Count} container(s) present in the visual tree");
+    }
+
+    /// <summary>
+    /// The four always-on rows render TICKED AND NON-INTERACTIVE. Both halves matter: greyed-out
+    /// says the user has no say, and still-ticked says the label is generated anyway.
+    /// </summary>
+    private static void ProbeImportReservedRowsLocked(Window window, List<string> report)
+    {
+        var found = ImportAlwaysEnabledVectorNames
+            .Select(name => (name, box: FindByTag<CheckBox>(window, name)))
+            .ToList();
+
+        var ok = found.All(entry => entry.box is { IsEnabled: false, IsChecked: true });
+        foreach (var (name, box) in found)
+            Console.WriteLine($"  reserved row {name}: IsChecked={box?.IsChecked}, IsEnabled={box?.IsEnabled}");
+
+        Record(report, "import reserved rows", ok ? "PASS" : "APP-FAIL",
+            string.Join("; ", found.Select(e =>
+                $"{e.name} checked={e.box?.IsChecked} interactive={e.box?.IsEnabled}")) +
+            " (wanted checked=True interactive=False on all four)");
+    }
+
+    /// <summary>
+    /// Detection failing used to force every box on screen off and disabled. The reserved four
+    /// must still be ticked afterwards, and the ViewModel must still report them as the vectors
+    /// to generate labels for.
+    /// </summary>
+    private static void ProbeImportReservedRowsStillEnabled(
+        Window window, SnesImportRomViewModel vm, List<string> report)
+    {
+        var boxesTicked = ImportAlwaysEnabledVectorNames
+            .All(name => FindByTag<CheckBox>(window, name)?.IsChecked == true);
+        var enabledNames = vm.EnabledVectorNames;
+        var vmAgrees = ImportAlwaysEnabledVectorNames.All(enabledNames.Contains);
+
+        Console.WriteLine($"  detection failed: EnabledVectorNames = [{string.Join(", ", enabledNames)}]");
+        Record(report, "import reserved survive fail", boxesTicked && vmAgrees ? "PASS" : "APP-FAIL",
+            $"all four reserved boxes ticked={boxesTicked}, ViewModel still lists them={vmAgrees}, " +
+            $"{enabledNames.Count} vector(s) enabled in total");
+    }
+
+    /// <summary>
+    /// There is no typeable text in this window at all -- which is the whole reason its code-behind
+    /// carries no PushText value-suppression. If a writable box ever appears here, this fails and
+    /// the guard has to be reconsidered.
+    /// </summary>
+    private static void ProbeImportNoEditableText(Window window, List<string> report)
+    {
+        var writable = window.GetVisualDescendants().OfType<TextBox>()
+            .Where(box => !box.IsReadOnly)
+            .ToList();
+
+        foreach (var box in writable)
+            Console.WriteLine($"  writable TextBox: name='{box.Name}', visible={box.IsEffectivelyVisible}, " +
+                              $"enabled={box.IsEffectivelyEnabled}, ancestors=[{Ancestry(box)}]");
+
+        // Reachable means the user can actually put a caret in it. A ComboBox's control template
+        // carries a TextBox part for its editable mode whether or not that mode is on; with
+        // IsEditable false the part is collapsed and cannot be typed into, so it is not a typing
+        // surface this window owns.
+        var reachable = writable.Count(box => box.IsEffectivelyVisible && box.IsEffectivelyEnabled);
+
+        Console.WriteLine($"  writable text boxes in the window: {writable.Count} in the tree, {reachable} reachable");
+
+        Record(report, "import has no typing", reachable == 0 ? "PASS" : "APP-FAIL",
+            $"{reachable} reachable writable TextBox(es) (wanted 0; PushText suppression is only needed when " +
+            $"there are some), out of {writable.Count} present in the template tree");
+    }
+
+    /// <summary>The chain of visual parents above a control, outermost last. Diagnostic only.</summary>
+    private static string Ancestry(Visual visual) =>
+        string.Join(" < ", visual.GetVisualAncestors().Take(4).Select(a => a.GetType().Name));
+
+    /// <summary>
+    /// The picker must show the FRIENDLY text for a map mode, not the enum member name: the
+    /// ViewModel hands out bare RomMapMode values, so a host that forgets to render the
+    /// descriptions offers the user "Sa1Rom" instead of "SA - 1 ROM".
+    /// </summary>
+    private static void ProbeImportMapModeDescriptions(
+        Window window, SnesImportRomViewModel vm, List<string> report)
+    {
+        // Sa1Rom is the sharpest test of the two: its description and its member name differ in
+        // both spelling and punctuation, so no accidental match is possible.
+        const RomMapMode probeMode = RomMapMode.Sa1Rom;
+        var wanted = Util.GetEnumDescription(probeMode);
+
+        var combo = FindByTag<ComboBox>(window, "mapmode-combo");
+        vm.SelectedRomMapMode = probeMode;
+        Pump();
+
+        var rendered = combo == null
+            ? []
+            : combo.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text ?? "").ToList();
+
+        var showsDescription = rendered.Any(text => text == wanted);
+        var showsMemberName = rendered.Any(text => text == probeMode.ToString());
+
+        Console.WriteLine($"  picker set to {probeMode}; rendered text in the combo: " +
+                          $"[{string.Join(" | ", rendered)}]");
+        Record(report, "import mapmode descriptions", showsDescription && !showsMemberName ? "PASS" : "APP-FAIL",
+            $"picker renders '{wanted}'={showsDescription}, renders raw '{probeMode}'={showsMemberName}");
+
+        // put it back so the following probes see the detected mapping again
+        vm.SelectedRomMapMode = vm.DetectedRomMapMode;
+        Pump();
+    }
+
+    /// <summary>
+    /// Choosing a mapping in the picker re-reads everything that depends on it. Driven through the
+    /// widget rather than the ViewModel, so the host's SelectionChanged wiring is what is under
+    /// test; the drop-down popup is not a child of the window's own frame, so the selection is set
+    /// on the control instead of clicked in the list.
+    /// </summary>
+    private static void ProbeImportMapModeChange(
+        Window window, SnesImportRomViewModel vm, List<string> report)
+    {
+        var combo = FindByTag<ComboBox>(window, "mapmode-combo");
+        if (combo?.ItemsSource == null)
+        {
+            Record(report, "import mapmode change", "HARNESS-FAIL", "the map-mode picker has no items");
+            return;
+        }
+
+        var items = combo.ItemsSource.Cast<object>().ToList();
+        var target = items.FirstOrDefault(item =>
+            item?.ToString()?.Contains(RomMapMode.HiRom.ToString(), StringComparison.Ordinal) == true);
+        if (target == null)
+        {
+            Record(report, "import mapmode change", "HARNESS-FAIL",
+                $"no picker entry for {RomMapMode.HiRom} among [{string.Join(" | ", items)}]");
+            return;
+        }
+
+        combo.SelectedItem = target;
+        Pump();
+
+        var values = window.GetVisualDescendants().OfType<Grid>()
+            .Where(g => Equals(g.Tag, "vector-row") && g.IsVisible && g.Bounds.Height > 0)
+            .SelectMany(g => g.GetVisualDescendants().OfType<TextBlock>())
+            .Select(t => t.Text ?? "")
+            .ToList();
+        var allPlaceholders = values.Count(v => v == SnesVectorSnapshot.UnreadablePlaceholder);
+
+        var ok = vm.SelectedRomMapMode == RomMapMode.HiRom &&
+                 TagText(window, "status-text") == SnesImportRomViewModel.VectorsUnreadableMessage &&
+                 TagText(window, "rom-title") == SnesVectorSnapshot.UnreadableCartridgeTitle &&
+                 allPlaceholders == ImportVectorNames.Length;
+
+        Console.WriteLine($"  picked {RomMapMode.HiRom} in the widget; vm.SelectedRomMapMode={vm.SelectedRomMapMode}, " +
+                          $"title='{TagText(window, "rom-title")}', {allPlaceholders} placeholder value(s) on screen");
+        Console.WriteLine($"  status: '{TagText(window, "status-text")}'");
+        Record(report, "import mapmode change", ok ? "PASS" : "APP-FAIL",
+            $"vm.SelectedRomMapMode={vm.SelectedRomMapMode}, {allPlaceholders}/{ImportVectorNames.Length} rows show " +
+            $"'{SnesVectorSnapshot.UnreadablePlaceholder}', status='{TagText(window, "status-text")}'");
+    }
+
+    /// <summary>Click one of the two synthesis checkboxes and confirm the ViewModel heard it.</summary>
+    private static void ProbeImportCheckbox(
+        Window window, List<string> report, string tag, string what, Func<bool> readBack)
+    {
+        var box = FindByTag<CheckBox>(window, tag);
+        var point = box == null ? null : CenterInWindow(box, window);
+        if (point == null)
+        {
+            Record(report, what, "HARNESS-FAIL", $"'{tag}' has no on-screen position");
+            return;
+        }
+
+        var before = readBack();
+        Click(window, point.Value);
+        Pump();
+        var after = readBack();
+
+        Console.WriteLine($"  clicked '{tag}': ViewModel {before} -> {after}, box IsChecked={box!.IsChecked}");
+        var ok = after == !before && box.IsChecked == after;
+        Record(report, what, ok ? "PASS" : "APP-FAIL",
+            $"ViewModel {before} -> {after} (wanted {!before}), widget IsChecked={box.IsChecked}");
+
+        // leave it as it started, so the captured scenes show the defaults
+        Click(window, point.Value);
+        Pump();
+    }
+
+    /// <summary>
+    /// The three ways out of the import window, each on its own window because each completes that
+    /// window's task for good: OK confirms, Cancel declines, and closing it any other way (the X,
+    /// Escape) counts as declining too.
+    /// </summary>
+    private static void ProbeSnesImportRomAnswers(List<string> report)
+    {
+        try
+        {
+            ProbeButtonAnswer(report, "import ok -> confirm", "ok-button", expected: true,
+                open: () => OpenDefaultSnesImportRom().window,
+                completion: w => ((SnesImportRomWindow)w).Completion);
+
+            ProbeButtonAnswer(report, "import cancel", "cancel-button", expected: false,
+                open: () => OpenDefaultSnesImportRom().window,
+                completion: w => ((SnesImportRomWindow)w).Completion);
+
+            var (closedWindow, _) = OpenDefaultSnesImportRom();
+            closedWindow.Close();
+            Pump();
+            var closedOk = closedWindow.Completion.IsCompleted && !closedWindow.Completion.Result;
+            Console.WriteLine("  closed without answering; completion=" +
+                              $"{(closedWindow.Completion.IsCompleted ? closedWindow.Completion.Result.ToString() : "<pending>")}");
+            Record(report, "import close = cancel", closedOk ? "PASS" : "APP-FAIL",
+                $"completion={(closedWindow.Completion.IsCompleted ? closedWindow.Completion.Result.ToString() : "<pending>")} (wanted False)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "import answers", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    private static (SnesImportRomWindow window, SnesImportRomViewModel vm) OpenDefaultSnesImportRom() =>
+        OpenSnesImportRom(RomMapMode.LoRom, detectionSucceeded: true, romSpeedText: "SlowROM",
+            snapshotFor: ReadableImportSnapshot);
 
     // ------------------------------------------------------------------ headless plumbing
 
