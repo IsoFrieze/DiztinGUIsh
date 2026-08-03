@@ -3,7 +3,7 @@
         x:Class="Diz.Ui.Avalonia.SnesImportRomWindow"
         x:CompileBindings="False"
         Title="New Project"
-        Width="470" Height="860"
+        Width="470" Height="960"
         MinWidth="420" MinHeight="480"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False"
@@ -59,19 +59,13 @@
         <Style Selector="TextBlock.mono">
             <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
         </Style>
-        <Style Selector="CheckBox">
-            <Setter Property="MinHeight" Value="0" />
-        </Style>
-        <!-- Sixteen vector rows at the theme's stock checkbox height do not fit in any sensible
-             window, and the list is the point of this screen. That height is 32px fixed on a grid
-             INSIDE the checkbox's template rather than on the control, so MinHeight="0" above does
-             not reach it and the row has to be resized through the template.
-             The tick box is 20px and its glyph is drawn to the box's edges, so anything under 24
-             clips the bottom of the tick. 22 looked fine in a rendered check and was visibly cut
-             off on a real display. Do not shave this further to win vertical space. -->
-        <Style Selector="CheckBox /template/ Grid">
-            <Setter Property="Height" Value="24" />
-        </Style>
+        <!-- Checkboxes are deliberately left at the theme's own size.
+             Sixteen vector rows are tall at that size, and squeezing them by overriding the height
+             of the grid inside the checkbox template is the obvious-looking way to win the space
+             back. It clips the bottom of the tick, and it does so ONLY on a real display: the
+             offscreen render used for checking this layout came out clean at two different
+             overridden heights while both were visibly cut off on a monitor. So there is no way to
+             verify such an override here, and the list scrolls instead. Leave the template alone. -->
     </Window.Styles>
 
     <Border Padding="12,10">
