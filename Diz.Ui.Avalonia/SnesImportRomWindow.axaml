@@ -65,10 +65,12 @@
         <!-- Sixteen vector rows at the theme's stock checkbox height do not fit in any sensible
              window, and the list is the point of this screen. That height is 32px fixed on a grid
              INSIDE the checkbox's template rather than on the control, so MinHeight="0" above does
-             not reach it and the row has to be resized through the template. 22px still leaves
-             room for the 20px tick box. -->
+             not reach it and the row has to be resized through the template.
+             The tick box is 20px and its glyph is drawn to the box's edges, so anything under 24
+             clips the bottom of the tick. 22 looked fine in a rendered check and was visibly cut
+             off on a real display. Do not shave this further to win vertical space. -->
         <Style Selector="CheckBox /template/ Grid">
-            <Setter Property="Height" Value="22" />
+            <Setter Property="Height" Value="24" />
         </Style>
     </Window.Styles>
 
