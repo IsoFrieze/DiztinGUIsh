@@ -24,8 +24,8 @@ namespace Diz.App.Winforms.Test;
 /// branch that registers EITHER the WinForms backend root OR the Avalonia backend root -- never
 /// both. So each backend must resolve ALL ELEVEN backend-selectable seams (LabelEditorView,
 /// RegionEditorView, NavigationHistoryView, MarkManyView, GotoView, HarshAutoStepView,
-/// SnesImportRomView, MisalignmentCheckerView, InOutPointCheckerView, ProgressBarView,
-/// IFileDialogService) to its
+/// SnesImportRomView, MisalignmentCheckerView, InOutPointCheckerView, ExportSettingsView,
+/// ProgressBarView, IFileDialogService) to its
 /// own toolkit's types, and never the other's. If someone breaks or reorders the branch (e.g. registers both roots),
 /// these type assertions fail.
 ///
@@ -67,6 +67,8 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<WinformsMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
             .Should().BeOfType<WinformsInOutPointCheckerView>();
+        container.GetInstance<IExportSettingsView>("ExportSettingsView")
+            .Should().BeOfType<WinformsExportSettingsView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
@@ -97,6 +99,8 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<AvaloniaMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
             .Should().BeOfType<AvaloniaInOutPointCheckerView>();
+        container.GetInstance<IExportSettingsView>("ExportSettingsView")
+            .Should().BeOfType<AvaloniaExportSettingsView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<AvaloniaProgressView>();
         container.GetInstance<IFileDialogService>()
@@ -130,10 +134,49 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<WinformsMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
             .Should().BeOfType<WinformsInOutPointCheckerView>();
+        container.GetInstance<IExportSettingsView>("ExportSettingsView")
+            .Should().BeOfType<WinformsExportSettingsView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
             .Should().BeOfType<WinformsFileDialogService>();
+    }
+
+    /// <summary>
+    /// The export-settings window is resolved fresh for every invocation and thrown away
+    /// afterwards, so two resolutions must never hand back the same object -- the caller resolves
+    /// a second one to re-show the same settings when what was chosen still is not exportable, and
+    /// a shared instance would hand back a window whose task has already completed.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ExportSettingsView_ResolvesAFreshInstanceEachTime(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        var first = container.GetInstance<IExportSettingsView>("ExportSettingsView");
+        var second = container.GetInstance<IExportSettingsView>("ExportSettingsView");
+
+        second.Should().NotBeSameAs(first);
+    }
+
+    /// <summary>
+    /// Same unchecked-string risk as the other registrations: "ExportSettingsView" has to match the
+    /// auto-factory method name exactly, and nothing checks that at compile time. This resolves
+    /// through the factory itself -- the path the export flow actually takes -- so a typo fails
+    /// here instead of at the user's first File -> Export.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ViewFactory_HandsOutAnExportSettingsView_OnEveryBackend(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        container.GetInstance<IViewFactory>().GetExportSettingsView().Should().NotBeNull();
     }
 
     /// <summary>
@@ -413,6 +456,7 @@ public class LabelEditorBackendSwitchTests
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView");
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView");
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView");
+        container.GetInstance<IExportSettingsView>("ExportSettingsView");
 
         // the timing constraint from Phase 0: Avalonia must not come up before the
         // message loop / DPI setup. Resolution happens in MainWindow's ctor, so it must

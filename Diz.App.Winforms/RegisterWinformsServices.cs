@@ -45,19 +45,13 @@ public static class DizWinformsRegisterServices
         // order. Each root registers the same named seams -- LabelEditorView, RegionEditorView,
         // MarkManyView, GotoView, HarshAutoStepView, SnesImportRomView, MisalignmentCheckerView,
         // InOutPointCheckerView, NavigationHistoryView, ProgressBarView, IFileDialogService -- for
-        // its toolkit.
+        // its toolkit, plus ExportSettingsView.
         // Everything not listed here
         // stays WinForms (registered unconditionally above). Set DIZ_LABEL_EDITOR=avalonia to
         // pick the Avalonia backend (see LabelEditorBackend docs).
         if (labelEditorBackend == LabelEditorBackendKind.Avalonia)
         {
             serviceRegistry.RegisterFrom<DizUiAvaloniaCompositionRoot>();
-
-            // TEMPORARY: the export-settings window has no Avalonia implementation yet, so this
-            // backend borrows the WinForms one. Delete this line the moment the Avalonia window
-            // is registered in DizUiAvaloniaCompositionRoot -- registering both would make the
-            // backend selection depend on registration order again.
-            serviceRegistry.Register<IExportSettingsView, WinformsExportSettingsView>("ExportSettingsView");
         }
         else if (labelEditorBackend == LabelEditorBackendKind.Tui)
         {

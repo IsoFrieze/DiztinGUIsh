@@ -18,9 +18,11 @@ using Avalonia.VisualTree;
 using Diz.Core.commands;
 using Diz.Core.Interfaces;
 using Diz.Core.util;                      // Util.GetEnumDescription (what the map-mode picker must render)
+using Diz.Core.export;                    // LogWriterSettings (the record the export screen edits)
 using Diz.Cpu._65816;
 using Diz.Cpu._65816.import;              // SnesVectorNames (the always-on reserved vector slots)
 using Diz.Ui.Avalonia;                    // DizAvaloniaApp, AvaloniaLabelEditorView, AvaloniaFileDialogService, LabelEditorWindow + MarkManyWindow + GotoWindow + HarshAutoStepWindow (internal)
+using Diz.Ui.ViewModels.ExportSettings;   // ExportSettingsViewModel
 using Diz.Ui.ViewModels.Goto;             // GotoViewModel
 using Diz.Ui.ViewModels.HarshAutoStep;    // HarshAutoStepViewModel
 using Diz.Ui.ViewModels.ImportRom;        // SnesImportRomViewModel, SnesVectorSnapshot, SnesVectorValue
@@ -166,6 +168,9 @@ internal static class Program
 
         // ------------------------------------------------------------------ NEW-PROJECT ROM IMPORT WINDOW
         SnesImportRomScenes(outDir, report);
+
+        // ------------------------------------------------------------------ EXPORT SETTINGS WINDOW
+        ExportSettingsScenes(outDir, report);
 
         // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
         // The Avalonia progress window in both modes: marquee (open/save/export) and determinate
@@ -1286,7 +1291,14 @@ internal static class Program
     /// mirrors another only rewrites itself when the mirror moves, and it is the half-typed
     /// prefixes that move it.
     /// </summary>
-    private static string? TypeCharByChar(Window window, TextBox box, string text, Func<int, string> describeOthers)
+    /// <param name="expect">
+    /// What the box SHOULD read after a given prefix has been typed, when that is not the prefix
+    /// itself. One box in this app normalizes what it is given as it stores it (the export screen's
+    /// line template is lower-cased, because the parser looks its placeholders up by name), so the
+    /// value coming back is deliberately not the keystrokes. Defaults to the prefix unchanged.
+    /// </param>
+    private static string? TypeCharByChar(Window window, TextBox box, string text,
+        Func<int, string> describeOthers, Func<string, string>? expect = null)
     {
         var pt = CenterInWindow(box, window);
         if (pt == null)
@@ -1303,7 +1315,7 @@ internal static class Program
             window.KeyTextInput(text[i].ToString());
             Pump();
 
-            var expected = text[..(i + 1)];
+            var expected = expect == null ? text[..(i + 1)] : expect(text[..(i + 1)]);
             var actual = box.Text ?? "";
             Console.WriteLine($"  keystroke {i + 1} '{text[i]}': box expected '{expected}', is '{actual}'; {describeOthers(i)}");
             if (firstDivergence == null && actual != expected)
@@ -3817,6 +3829,493 @@ internal static class Program
     private static (SnesImportRomWindow window, SnesImportRomViewModel vm) OpenDefaultSnesImportRom() =>
         OpenSnesImportRom(RomMapMode.LoRom, detectionSucceeded: true, romSpeedText: "SlowROM",
             snapshotFor: ReadableImportSnapshot);
+
+    // ------------------------------------------------------------------ export settings window
+
+    /// <summary>Where the imaginary project this screen is exporting lives.</summary>
+    private const string ExportProjectDirectory = @"C:\preview-project";
+
+    /// <summary>The output directory the default settings resolve to, and the only one the stub
+    /// filesystem below says exists.</summary>
+    private const string ExportExistingOutputDirectory = @"C:\preview-project\generated";
+
+    /// <summary>
+    /// Placeholder names the stub template parser accepts. The real parser lives in the
+    /// assembly-writing layer, which this harness does not reference (and neither does the
+    /// ViewModel -- that is why the check arrives as a delegate); this set is just the ones the
+    /// stock template uses, so a template with an unknown placeholder in it reads as invalid.
+    /// </summary>
+    private static readonly HashSet<string> ExportTemplateTokens =
+        new(StringComparer.Ordinal) { "label", "code", "pc", "bytes", "ia", "comment", "" };
+
+    /// <summary>
+    /// Renders the Avalonia export-settings window in four states and drives it with simulated
+    /// input.
+    ///
+    /// Needs NO ROM and no assembly writer: the ViewModel is handed a template-validity check and
+    /// a sample renderer as delegates, so the harness supplies stubs and the window sees exactly
+    /// the shape the real caller would give it. The filesystem is stubbed too -- one directory
+    /// exists, everything else does not -- because the validator asks the disk whether the output
+    /// directory is real, and that answer is what gates the export button.
+    ///
+    /// Each scene gets a FRESH window + ViewModel, because the real window is created per
+    /// invocation and completes a task when it closes.
+    /// </summary>
+    private static void ExportSettingsScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[export settings window]");
+
+        // ---- scene 1: the stock settings, pointed at a directory that exists
+        var (window, vm, samples) = OpenExportSettings();
+
+        Console.WriteLine($"  default: template='{vm.LineTemplate}', valid={vm.LineTemplateIsValid}, " +
+                          $"canStartExport={vm.CanStartExport}, sample renders {samples.Count} time(s) so far");
+        Capture(window, Path.Combine(outDir, "exportsettings-default.png"),
+            $"export settings: stock template, output '{vm.OutputPath}' (exists), " +
+            $"{vm.Problems.Count} problem(s), export {(vm.CanStartExport ? "enabled" : "disabled")}");
+
+        ProbeExportSettingsStartGate(window, vm, report);
+        ProbeExportSettingsSampleUpdates(window, vm, samples, report);
+        ProbeExportSettingsAuthorsCommaSurvives(window, vm, report);
+        ProbeExportSettingsOutputPathTyping(window, vm, report);
+
+        // ---- scene 2: a template with a placeholder nothing knows how to render
+        var (invalidWindow, invalidVm, _) = OpenExportSettings(
+            new LogWriterSettings { Format = "%label% %bogus%" });
+
+        Console.WriteLine($"  invalid: valid={invalidVm.LineTemplateIsValid}, " +
+                          $"sample='{FindByTag<TextBox>(invalidWindow, "sample-text-box")?.Text}'");
+        Capture(invalidWindow, Path.Combine(outDir, "exportsettings-invalid-template.png"),
+            "export settings: line template with an unknown placeholder -- sample box says so and " +
+            "the export button is off");
+
+        // ---- scene 3: the settings validator has something to say. The output directory does not
+        // exist on this (stub) disk, which is a problem the old screen only surfaced after it closed.
+        var (problemWindow, problemVm, _) = OpenExportSettings(
+            new LogWriterSettings { FileOrFolderOutPath = "nowhere-at-all" });
+
+        Console.WriteLine($"  problems: [{string.Join(" | ", problemVm.Problems)}], " +
+                          $"canStartExport={problemVm.CanStartExport}");
+        Capture(problemWindow, Path.Combine(outDir, "exportsettings-problems.png"),
+            $"export settings: output directory does not exist -- {problemVm.Problems.Count} " +
+            "validator complaint(s) shown under the fields, export button off");
+        ProbeExportSettingsProblemsAreShown(problemWindow, problemVm, report);
+
+        // ---- scene 4: the structure mode the assembly writer refuses, picked through the widget
+        var (warningWindow, warningVm, _) = OpenExportSettings();
+        ProbeExportSettingsSingleFileWarning(warningWindow, warningVm, report);
+        Capture(warningWindow, Path.Combine(outDir, "exportsettings-single-file-warning.png"),
+            "export settings: structure set to 'All in one file' -- the writer's own refusal text " +
+            "shown in the window");
+
+        // ---- the line template is the box whose echo differs from the keystrokes
+        ProbeExportSettingsTemplateTypingIsNotRewritten(outDir, report);
+        ProbeExportSettingsCaretSurvivesLowerCasing(report);
+
+        window.Close();
+        invalidWindow.Close();
+        problemWindow.Close();
+        warningWindow.Close();
+        Pump();
+    }
+
+    private static (ExportSettingsWindow window, ExportSettingsViewModel vm, List<LogWriterSettings> samples)
+        OpenExportSettings(LogWriterSettings? settings = null)
+    {
+        var samples = new List<LogWriterSettings>();
+
+        var vm = new ExportSettingsViewModel(
+            (settings ?? new LogWriterSettings()) with { BaseOutputPath = ExportProjectDirectory },
+            new ExportStubFilesystem(ExportExistingOutputDirectory),
+            isLineTemplateValid: ExportTemplateIsValid,
+            generateSampleText: s =>
+            {
+                samples.Add(s);
+                return RenderExportSample(s);
+            },
+            notificationMarshaller: RunOnUiThread);
+
+        var window = new ExportSettingsWindow(new AvaloniaFileDialogService());
+        window.AttachViewModel(vm);
+        window.Show();
+        Pump();
+        return (window, vm, samples);
+    }
+
+    /// <summary>
+    /// Stands in for the line-template parser: a template is acceptable when every placeholder in
+    /// it is one this harness has heard of. Placeholders are the odd-numbered pieces of a split on
+    /// '%', which is also how the real template names them, and anything after a ':' in one is a
+    /// width rather than part of the name.
+    /// </summary>
+    private static bool ExportTemplateIsValid(string template)
+    {
+        if (string.IsNullOrWhiteSpace(template))
+            return false;
+
+        var pieces = template.Split('%');
+        for (var i = 1; i < pieces.Length; i += 2)
+        {
+            var name = pieces[i].Split(':')[0];
+            if (!ExportTemplateTokens.Contains(name))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Stands in for the sample renderer. Deliberately built out of settings that are NOT the line
+    /// template, so the sample box visibly answers a change to any of them -- the real one renders
+    /// the whole record too, which is why it is called far more often than a template edit.
+    /// </summary>
+    private static string RenderExportSample(LogWriterSettings settings) =>
+        $"; sample rendered from '{settings.Format}'\r\n" +
+        $"; {settings.DataPerLine} data byte(s) per line, {settings.Structure}, " +
+        $"unlabeled={settings.Unlabeled}\r\n" +
+        (settings.OutputExtraWhitespace ? "main_loop:    lda #$01\r\n" : "main_loop: lda #$01\r\n") +
+        (settings.NewLine ? "\r\n" : "") +
+        "              rts";
+
+    /// <summary>
+    /// A filesystem that exists only in this process: it knows about the directories it was given
+    /// and remembers any it is asked to create. The validator rule that gates the export button
+    /// reads the disk, and a harness that touched the real one would answer differently on every
+    /// machine.
+    /// </summary>
+    private sealed class ExportStubFilesystem(params string[] existingDirectories) : IFilesystemService
+    {
+        private readonly HashSet<string> directories =
+            new(existingDirectories, StringComparer.OrdinalIgnoreCase);
+
+        public bool DirectoryExists(string? outputDirectoryName) =>
+            outputDirectoryName != null && directories.Contains(outputDirectoryName);
+
+        public void CreateDirectory(string name) => directories.Add(name);
+    }
+
+    /// <summary>
+    /// The export button follows the ViewModel's verdict, both ways. This is the visible behaviour
+    /// change the live-validation decision brought in: the button used to be gated on the line
+    /// template alone, and everything else was discovered after the window closed.
+    /// </summary>
+    private static void ProbeExportSettingsStartGate(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var button = FindByTag<Button>(window, "start-export-button");
+        if (button == null)
+        {
+            Record(report, "export start gate", "HARNESS-FAIL", "the export button was not found");
+            return;
+        }
+
+        var enabledWhenValid = button.IsEnabled;
+
+        vm.LineTemplate = "%label% %bogus%";
+        Pump();
+        var disabledWhenInvalid = !button.IsEnabled;
+
+        vm.LineTemplate = LogWriterSettings.DefaultStr;
+        Pump();
+        var reenabled = button.IsEnabled;
+
+        Console.WriteLine($"  export button: valid={enabledWhenValid}, invalid template={!disabledWhenInvalid}, " +
+                          $"valid again={reenabled}");
+        Record(report, "export start gate",
+            enabledWhenValid && disabledWhenInvalid && reenabled ? "PASS" : "APP-FAIL",
+            $"enabled with valid settings={enabledWhenValid}, disabled on an unparseable template=" +
+            $"{disabledWhenInvalid}, enabled again after fixing it={reenabled}");
+    }
+
+    /// <summary>
+    /// The sample box shows what the current settings would write -- and follows a change to ANY of
+    /// them, not only the line template, because the sample is rendered from the whole record.
+    /// </summary>
+    private static void ProbeExportSettingsSampleUpdates(
+        Window window, ExportSettingsViewModel vm, List<LogWriterSettings> samples, List<string> report)
+    {
+        var box = FindByTag<TextBox>(window, "sample-text-box");
+        if (box == null)
+        {
+            Record(report, "export sample box", "HARNESS-FAIL", "the sample box was not found");
+            return;
+        }
+
+        var before = box.Text ?? "";
+        var rendersBefore = samples.Count;
+
+        // a setting that is NOT the template: the sample still has to move.
+        vm.DataPerLine = vm.DataPerLine == 8 ? 4 : 8;
+        Pump();
+        var afterDataPerLine = box.Text ?? "";
+
+        vm.LineTemplate = "%label% %bogus%";
+        Pump();
+        var whenInvalid = box.Text ?? "";
+
+        vm.LineTemplate = LogWriterSettings.DefaultStr;
+        vm.DataPerLine = 8;
+        Pump();
+
+        var movedOnOtherSetting = afterDataPerLine != before;
+        var saysInvalid = whenInvalid == ExportSettingsViewModel.InvalidLineTemplateMessage;
+
+        Console.WriteLine($"  sample box: {rendersBefore} render(s) before the probe, {samples.Count} after; " +
+                          $"changed on a non-template setting={movedOnOtherSetting}");
+        Console.WriteLine($"  sample when the template is unparseable: '{whenInvalid}'");
+        Record(report, "export sample box", movedOnOtherSetting && saysInvalid ? "PASS" : "APP-FAIL",
+            $"followed a bytes-per-line change={movedOnOtherSetting}, showed " +
+            $"'{ExportSettingsViewModel.InvalidLineTemplateMessage}' for an unparseable template={saysInvalid}, " +
+            $"{samples.Count} sample render(s) in total");
+    }
+
+    /// <summary>
+    /// THE COMMA HAS TO SURVIVE. The settings record trims, de-duplicates and SORTS this list as it
+    /// stores it, so a screen that wrote the stored form back per keystroke would turn "a," into
+    /// "a" and make a second author impossible to start -- which is exactly what the old screen did.
+    /// Typed one key at a time, because the failure is one keystroke wide.
+    /// </summary>
+    private static void ProbeExportSettingsAuthorsCommaSurvives(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var box = FindByTag<TextBox>(window, "exclude-authors-box");
+        if (box == null)
+        {
+            Record(report, "export authors comma", "HARNESS-FAIL", "the exclude-authors box was not found");
+            return;
+        }
+
+        const string typed = "zed, alice";
+
+        var firstDivergence = TypeCharByChar(window, box, typed, _ => $"vm='{vm.ExcludedAuthorsText}'");
+        if (firstDivergence == HarnessCouldNotType)
+        {
+            Record(report, "export authors comma", "HARNESS-FAIL",
+                "the exclude-authors box has no on-screen position");
+            return;
+        }
+
+        var keptTyping = firstDivergence == null;
+        // and the sorted, de-duplicated form is what the settings come out as -- normalization
+        // happens on the way out, not under the caret.
+        var normalized = vm.BuildSettings().ExcludedLabelAuthorsList;
+        var normalizedOk = normalized == "alice,zed";
+
+        Console.WriteLine($"  authors box holds '{box.Text}'; BuildSettings gives '{normalized}'");
+        Record(report, "export authors comma", keptTyping ? "PASS" : "APP-FAIL",
+            keptTyping
+                ? $"box held every prefix of '{typed}', commas included"
+                : firstDivergence!);
+        Record(report, "export authors normalize", normalizedOk ? "PASS" : "APP-FAIL",
+            $"BuildSettings normalized to '{normalized}' (wanted 'alice,zed' -- sorted and trimmed), " +
+            $"while the box still reads '{box.Text}'");
+    }
+
+    /// <summary>
+    /// The output path box is rewritten by nothing, so what is typed stays typed -- even though
+    /// every keystroke re-runs the validator and changes what the window says underneath.
+    /// </summary>
+    private static void ProbeExportSettingsOutputPathTyping(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var box = FindByTag<TextBox>(window, "output-path-box");
+        if (box == null)
+        {
+            Record(report, "export path typing", "HARNESS-FAIL", "the output path box was not found");
+            return;
+        }
+
+        const string typed = "generated";
+
+        var firstDivergence = TypeCharByChar(window, box, typed,
+            _ => $"vm='{vm.OutputPath}', problems={vm.Problems.Count}");
+        if (firstDivergence == HarnessCouldNotType)
+        {
+            Record(report, "export path typing", "HARNESS-FAIL",
+                "the output path box has no on-screen position");
+            return;
+        }
+
+        var keptTyping = firstDivergence == null;
+        Record(report, "export path typing", keptTyping ? "PASS" : "APP-FAIL",
+            keptTyping
+                ? $"box held every prefix of '{typed}' while it had the caret"
+                : firstDivergence!);
+    }
+
+    /// <summary>
+    /// What the validator objects to is on screen, in its own words, rather than being found out
+    /// after the window closes.
+    /// </summary>
+    private static void ProbeExportSettingsProblemsAreShown(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var shown = TagText(window, "problems-text");
+        var hasProblems = vm.Problems.Count > 0;
+        var everyProblemShown = vm.Problems.All(p => shown.Contains(p, StringComparison.Ordinal));
+        var button = FindByTag<Button>(window, "start-export-button");
+
+        Console.WriteLine($"  problems on screen: '{shown}'");
+        Record(report, "export problems shown",
+            hasProblems && everyProblemShown && button?.IsEnabled == false ? "PASS" : "APP-FAIL",
+            $"{vm.Problems.Count} problem(s) from the validator, all of them on screen={everyProblemShown}, " +
+            $"export button enabled={button?.IsEnabled}");
+    }
+
+    /// <summary>
+    /// Choosing the structure mode the assembly writer refuses puts its refusal on screen. Driven
+    /// through the widget, so the host's SelectionChanged wiring is what is under test; the
+    /// drop-down popup is not a child of the window's own frame, so the selection is set on the
+    /// control instead of clicked in the list.
+    /// </summary>
+    private static void ProbeExportSettingsSingleFileWarning(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var combo = FindByTag<ComboBox>(window, "structure-combo");
+        if (combo?.ItemsSource == null)
+        {
+            Record(report, "export single-file warning", "HARNESS-FAIL", "the structure picker has no items");
+            return;
+        }
+
+        var quietBefore = TagText(window, "structure-warning") == "";
+
+        var items = combo.ItemsSource.Cast<object>().ToList();
+        var target = items.FirstOrDefault(item =>
+            item?.ToString()?.Contains(
+                LogWriterSettings.FormatStructure.SingleFile.ToString(), StringComparison.Ordinal) == true);
+        if (target == null)
+        {
+            Record(report, "export single-file warning", "HARNESS-FAIL",
+                $"no picker entry for {LogWriterSettings.FormatStructure.SingleFile} among " +
+                $"[{string.Join(" | ", items)}]");
+            return;
+        }
+
+        combo.SelectedItem = target;
+        Pump();
+
+        var warned = TagText(window, "structure-warning");
+        var ok = quietBefore &&
+                 vm.Structure == LogWriterSettings.FormatStructure.SingleFile &&
+                 warned == ExportSettingsViewModel.SingleFileWarningText;
+
+        Console.WriteLine($"  picked 'all in one file': vm.Structure={vm.Structure}, warning='{warned}'");
+        Record(report, "export single-file warning", ok ? "PASS" : "APP-FAIL",
+            $"nothing warned about one-bank-per-file={quietBefore}, vm.Structure={vm.Structure}, " +
+            $"warning matches the writer's own wording={warned == ExportSettingsViewModel.SingleFileWarningText}");
+    }
+
+    /// <summary>
+    /// The line-template box is the one whose echo is NOT what was typed: the ViewModel lower-cases
+    /// the template as it stores it, because the parser looks its placeholders up by name. So the
+    /// box must hold the LOWER-CASED prefix of the keystrokes after every one of them -- never a
+    /// stale value, never the un-normalized one, and never a rewrite that arrives a keystroke late.
+    /// Typed in upper case precisely so the round trip is visible rather than silent.
+    /// </summary>
+    private static void ProbeExportSettingsTemplateTypingIsNotRewritten(string outDir, List<string> report)
+    {
+        ExportSettingsWindow? window = null;
+        try
+        {
+            var (w, vm, _) = OpenExportSettings();
+            window = w;
+
+            var box = FindByTag<TextBox>(window, "line-template-box");
+            if (box == null)
+            {
+                Record(report, "export template typing", "HARNESS-FAIL", "the line template box was not found");
+                return;
+            }
+
+            const string typed = "%LABEL% %CODE%";
+
+            var firstDivergence = TypeCharByChar(window, box, typed,
+                _ => $"vm='{vm.LineTemplate}'", expect: prefix => prefix.ToLower());
+            if (firstDivergence == HarnessCouldNotType)
+            {
+                Record(report, "export template typing", "HARNESS-FAIL",
+                    "the line template box has no on-screen position");
+                return;
+            }
+
+            var keptTyping = firstDivergence == null;
+            Record(report, "export template typing", keptTyping ? "PASS" : "APP-FAIL",
+                keptTyping
+                    ? $"box held the lower-cased prefix of '{typed}' after every keystroke"
+                    : firstDivergence!);
+
+            var storedOk = vm.LineTemplate == typed.ToLower();
+            Console.WriteLine($"  template box reads '{box.Text}', vm holds '{vm.LineTemplate}'");
+            Record(report, "export template lowercased", storedOk ? "PASS" : "APP-FAIL",
+                $"vm.LineTemplate='{vm.LineTemplate}' (wanted '{typed.ToLower()}')");
+
+            Pump();
+            Capture(window, Path.Combine(outDir, "exportsettings-template-typed.png"),
+                $"export settings: after typing '{typed}' one key at a time (box reads '{box.Text}')");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "export template typing", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    /// <summary>
+    /// Typing an upper-case letter INTO THE MIDDLE of the line template must not move the caret to
+    /// the end of the box. The lower-casing means the window is handed back a different string from
+    /// the one on screen and has to write it, and a plain assignment to a TextBox's Text drops the
+    /// caret at the end -- so every capital typed mid-string would throw the rest of the word to the
+    /// end of the line. This is the check on the write helper that puts the caret back.
+    /// </summary>
+    private static void ProbeExportSettingsCaretSurvivesLowerCasing(List<string> report)
+    {
+        ExportSettingsWindow? window = null;
+        try
+        {
+            var (w, vm, _) = OpenExportSettings();
+            window = w;
+
+            var box = FindByTag<TextBox>(window, "line-template-box");
+            var point = box == null ? null : CenterInWindow(box, window);
+            if (box == null || point == null)
+            {
+                Record(report, "export template caret", "HARNESS-FAIL",
+                    "the line template box has no on-screen position");
+                return;
+            }
+
+            TypeIntoBox(window, box, "abcd");
+            box.CaretIndex = 2;
+            Pump();
+
+            window.KeyTextInput("X");
+            Pump();
+
+            var textOk = box.Text == "abxcd";
+            var caretOk = box.CaretIndex == 3;
+
+            Console.WriteLine($"  typed 'X' between 'ab' and 'cd': box='{box.Text}', caret={box.CaretIndex}, " +
+                              $"vm='{vm.LineTemplate}'");
+            Record(report, "export template caret", textOk && caretOk ? "PASS" : "APP-FAIL",
+                $"box='{box.Text}' (wanted 'abxcd'), caret={box.CaretIndex} (wanted 3 -- just after the " +
+                "character typed, not at the end of the box)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "export template caret", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
 
     // ------------------------------------------------------------------ headless plumbing
 

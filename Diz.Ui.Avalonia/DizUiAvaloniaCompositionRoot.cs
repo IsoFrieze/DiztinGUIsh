@@ -8,7 +8,8 @@ namespace Diz.Ui.Avalonia;
 /// The Avalonia LABEL-EDITOR BACKEND (new-ui plan step 5/6): exactly the
 /// backend-selectable registrations (LabelEditorView, RegionEditorView, NavigationHistoryView,
 /// MarkManyView, GotoView, HarshAutoStepView, SnesImportRomView,
-/// MisalignmentCheckerView, InOutPointCheckerView, ProgressBarView, IFileDialogService), each
+/// MisalignmentCheckerView, InOutPointCheckerView, ExportSettingsView, ProgressBarView,
+/// IFileDialogService), each
 /// named with the exact IViewFactory method-name
 /// string. The app registers EITHER this
 /// root OR <c>DizUiWinformsBackendCompositionRoot</c> via an explicit if/else branch in
@@ -73,5 +74,13 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         // a second one to re-show the same ViewModel when the user declines its confirmation
         // prompt. Name must match IViewFactory.GetSnesImportRomView().
         serviceRegistry.Register<ISnesImportRomView, AvaloniaSnesImportRomView>("SnesImportRomView");
+
+        // the export-settings window, same per-invocation lifetime -- the caller resolves a second
+        // one to re-show the same ViewModel when what was chosen still is not exportable. Takes the
+        // file-dialog service by its concrete type, because it points the picker at its own window
+        // while it is open. Name must match IViewFactory.GetExportSettingsView().
+        serviceRegistry.Register<IExportSettingsView>(
+            factory => new AvaloniaExportSettingsView(factory.GetInstance<AvaloniaFileDialogService>()),
+            "ExportSettingsView");
     }
 }

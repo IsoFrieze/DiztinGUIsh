@@ -1,0 +1,185 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.ExportSettingsWindow"
+        x:CompileBindings="False"
+        Title="Export Disassembly"
+        Width="700" Height="880"
+        MinWidth="560" MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        FontSize="12">
+
+    <!--
+      How a disassembly is written out: the template every emitted line is built from, where the
+      files go, and which optional pieces are included. Everything that decides what those choices
+      MEAN lives in ExportSettingsViewModel - this window neither validates a template nor renders
+      the sample itself; both answers are handed to the ViewModel by whoever opened it.
+
+      PushText VALUE SUPPRESSION IS MANDATORY ON ALL THREE EDITABLE BOXES here, and the reason is
+      in the code-behind: Avalonia raises TextChanged on a LATER dispatcher turn, so the "am I
+      writing?" flag is already down when the event lands and a ViewModel-driven refresh is
+      indistinguishable from a keystroke. The line template makes that fatal rather than merely
+      wasteful, because it is lower-cased as it is stored: pushing an upper-case keystroke gets a
+      DIFFERENT string back, so an unsuppressed echo would retype the box under the caret on every
+      capital letter.
+
+      NO DataGrid, and nothing that needs one - the whole screen is fields. (A DataGrid would also
+      swallow Enter, which the default button here relies on.)
+
+      Field captions, the two picker item lists and the button order match the WinForms window, so
+      the same instructions describe either backend. Two things this window shows that the older
+      layout did not: the validator's complaints, live, under the fields; and a warning when the
+      structure picker is set to the mode the assembly writer currently refuses. Both come from the
+      ViewModel as text.
+
+      Styled like the other Avalonia windows here: compact, FontSize 12, light theme (pinned
+      application-wide in DizAvaloniaApp).
+    -->
+
+    <Window.Styles>
+        <Style Selector="TextBlock.field">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Foreground" Value="#606060" />
+        </Style>
+        <Style Selector="TextBlock.note">
+            <Setter Property="Foreground" Value="#808080" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBox.mono">
+            <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
+        </Style>
+    </Window.Styles>
+
+    <Border Padding="12,10">
+        <DockPanel>
+
+            <!-- ============ bottom bar: Cancel | Start Export! ============
+                 Unlike the import window, the confirm button IS gated: the ViewModel decides
+                 whether what is on screen can be exported at all, and says why underneath. -->
+            <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto" Margin="0,10,0,0">
+                <Button Grid.Column="0" x:Name="CancelButton" Tag="cancel-button" Content="Cancel"
+                        Width="80" IsCancel="True" Click="CancelButton_Click" />
+                <Button Grid.Column="2" x:Name="StartExportButton" Tag="start-export-button"
+                        Content="Start Export!" MinWidth="110" IsDefault="True"
+                        Click="StartExportButton_Click" />
+            </Grid>
+
+            <!-- ===== everything currently wrong with the settings, in the validator's own words.
+                 MUST WRAP: a path complaint carries the whole path and is far wider than this
+                 window. ===== -->
+            <TextBlock x:Name="ProblemsText" DockPanel.Dock="Bottom" Tag="problems-text"
+                       Foreground="#B00000" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="6">
+
+                    <!-- the paragraph the WinForms window opens with, same words: what this does,
+                         and what to run before it. -->
+                    <TextBlock TextWrapping="Wrap"
+                               Text="Export a disassembly of the ROM. Output will be assemblable via Asar. It is recommended to run the instruction misalignment checker and the in/out point scanner before exporting. See the help document for more details." />
+
+                    <Grid ColumnDefinitions="180,*" RowDefinitions="Auto" Margin="0,6,0,0">
+                        <TextBlock Grid.Column="0" Classes="field" Text="Output format:" />
+                        <TextBox Grid.Column="1" x:Name="LineTemplateBox" Tag="line-template-box"
+                                 Classes="mono" MinHeight="0" Padding="6,3"
+                                 TextChanged="LineTemplateBox_TextChanged" />
+                    </Grid>
+
+                    <TextBlock Text="Sample Output:" Classes="field" Margin="0,4,0,0" />
+                    <!-- read-only on purpose: this is what the settings above WOULD write, rendered
+                         by the caller's generator. Multi-line and monospaced so columns line up the
+                         way they will in the .asm. -->
+                    <TextBox x:Name="SampleBox" Tag="sample-text-box" Classes="mono"
+                             IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                             Height="130" VerticalContentAlignment="Top" />
+
+                    <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto" Margin="0,6,0,0">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="field"
+                                   Text="Max data bytes per line:" />
+                        <NumericUpDown Grid.Row="0" Grid.Column="1" x:Name="DataPerLineBox"
+                                       Tag="data-per-line-box"
+                                       Minimum="1" Maximum="16" Increment="1" FormatString="0"
+                                       Width="110" HorizontalAlignment="Left"
+                                       ValueChanged="DataPerLineBox_ValueChanged" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="field"
+                                   Text="Unlabeled instructions:" Margin="0,6,8,0" />
+                        <ComboBox Grid.Row="1" Grid.Column="1" x:Name="UnlabeledCombo"
+                                  Tag="unlabeled-combo" HorizontalAlignment="Stretch"
+                                  MinHeight="0" Padding="6,2" Margin="0,6,0,0"
+                                  DisplayMemberBinding="{Binding Text}"
+                                  SelectionChanged="UnlabeledCombo_SelectionChanged" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Classes="field"
+                                   Text="Bank structure:" Margin="0,6,8,0" />
+                        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="StructureCombo"
+                                  Tag="structure-combo" HorizontalAlignment="Stretch"
+                                  MinHeight="0" Padding="6,2" Margin="0,6,0,0"
+                                  DisplayMemberBinding="{Binding Text}"
+                                  SelectionChanged="StructureCombo_SelectionChanged" />
+                    </Grid>
+
+                    <!-- one of the two structure choices is refused outright by the assembly writer
+                         right now. The option stays selectable - a project that already stores it
+                         has to remain editable - so this says so instead of hiding it. MUST WRAP:
+                         it is two sentences long. -->
+                    <TextBlock x:Name="StructureWarning" Tag="structure-warning"
+                               Foreground="#B06000" TextWrapping="Wrap" Margin="0,4,0,0" />
+
+                    <StackPanel Spacing="2" Margin="0,6,0,0">
+                        <CheckBox x:Name="NewLineCheck" Tag="newline-check"
+                                  Content="Print labels on their own lines"
+                                  IsCheckedChanged="NewLineCheck_Changed" />
+                        <CheckBox x:Name="ExtraWhitespaceCheck" Tag="extra-whitespace-check"
+                                  Content="Output extra whitespace in assembly code"
+                                  IsCheckedChanged="ExtraWhitespaceCheck_Changed" />
+                        <CheckBox x:Name="FullLineCheck" Tag="full-line-check"
+                                  Content="Generate full line on special lines"
+                                  IsCheckedChanged="FullLineCheck_Changed" />
+                        <CheckBox x:Name="LabelCommentsCheck" Tag="label-comments-check"
+                                  Content="Print label-specific comments in labels.asm"
+                                  IsCheckedChanged="LabelCommentsCheck_Changed" />
+                        <CheckBox x:Name="UnusedLabelsCheck" Tag="unused-labels-check"
+                                  Content="optional: Generate other label metadata (.txt, .csv, .sym)"
+                                  IsCheckedChanged="UnusedLabelsCheck_Changed" />
+                        <CheckBox x:Name="PlusMinusLabelsCheck" Tag="plus-minus-labels-check"
+                                  Content="Generate +/- local labels"
+                                  IsCheckedChanged="PlusMinusLabelsCheck_Changed" />
+                        <CheckBox x:Name="AssetLabelsCheck" Tag="asset-labels-check"
+                                  Content="Generate labels for asset regions"
+                                  IsCheckedChanged="AssetLabelsCheck_Changed" />
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="180,*,Auto" RowDefinitions="Auto" Margin="0,8,0,0">
+                        <TextBlock Grid.Column="0" Classes="field" Text="Output directory or file:"
+                                   TextWrapping="Wrap" />
+                        <TextBox Grid.Column="1" x:Name="OutputPathBox" Tag="output-path-box"
+                                 MinHeight="0" Padding="6,3"
+                                 TextChanged="OutputPathBox_TextChanged"
+                                 LostFocus="OutputPathBox_LostFocus" />
+                        <Button Grid.Column="2" x:Name="BrowseButton" Tag="browse-button"
+                                Content="Browse..." Margin="8,0,0,0" Click="BrowseButton_Click" />
+                    </Grid>
+
+                    <!-- verbatim from the WinForms window: it describes real behaviour (a relative
+                         path resolves against the project file's directory, and a missing directory
+                         is offered for creation rather than refused). -->
+                    <TextBlock Classes="note"
+                               Text="(By default, path is relative to the project file's directory. it will be created if it doesn't exist)" />
+
+                    <TextBlock Text="Exclude labels by author (comma-separated):" Classes="field"
+                               Margin="0,8,0,0" />
+                    <!-- holds exactly what was typed. The settings record trims, de-duplicates and
+                         SORTS this list as it stores it, so echoing the stored form back per
+                         keystroke would eat the comma just typed and make a second author
+                         impossible to start; the ViewModel normalizes only when the settings are
+                         read back. -->
+                    <TextBox x:Name="ExcludeAuthorsBox" Tag="exclude-authors-box"
+                             MinHeight="0" Padding="6,3"
+                             TextChanged="ExcludeAuthorsBox_TextChanged" />
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</Window>
