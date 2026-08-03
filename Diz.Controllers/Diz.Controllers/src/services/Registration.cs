@@ -1,6 +1,7 @@
 ﻿// using Diz.Controllers.controllers;
 
 using Diz.Controllers.controllers;
+using Diz.Controllers.importers;
 using Diz.Controllers.interfaces;
 using Diz.Controllers.util;
 using JetBrains.Annotations;
@@ -15,8 +16,11 @@ public class DizControllersCompositionRoot : ICompositionRoot
     {
         serviceRegistry.Register<IProjectController, ProjectController>("ProjectController");
         serviceRegistry.Register<ILogCreatorSettingsEditorController, LogCreatorSettingsEditorController>("AssemblyExporterSettingsController");
-        serviceRegistry.Register<IImportRomDialogController, ImportRomDialogController>("ImportRomDialogController");
         serviceRegistry.Register<ILargeFilesReaderController, LargeFilesReader>("LargeFileReaderProgressController");
+
+        // the SNES importer. Transient on purpose: it drives a settings builder holding one
+        // analysed ROM, so each import must start from a fresh one.
+        serviceRegistry.Register<SnesRomImporter>();
         
         serviceRegistry.EnableAutoFactories();
         serviceRegistry.RegisterAutoFactory<IControllerFactory>();

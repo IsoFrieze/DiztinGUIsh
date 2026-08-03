@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Diz.Controllers.importers;
 using Diz.Controllers.interfaces;
 using Diz.Core;
 using Diz.Core.export;
@@ -30,6 +31,7 @@ public class ProjectController(
     ICommonGui commonGui,
     IFilesystemService fs,
     IControllerFactory controllerFactory,
+    Func<SnesRomImporter> snesRomImporterCreate,
     Func<ImportRomSettings, IProjectFactoryFromRomImportSettings> projectImporterFactoryCreate,
     Func<IProjectFileManager> projectFileManagerCreate)
     : IProjectController
@@ -167,13 +169,14 @@ public class ProjectController(
         });
     }
 
-    public bool ImportRomAndCreateNewProject(string romFilename)
+    // a fresh importer per import: it drives a settings builder that holds the analysed ROM, and
+    // that state belongs to one import and no other.
+    public async Task<bool> ImportRomAndCreateNewProjectAsync(string romFilename)
     {
-        var importController = SetupImportController();
-        var importSettings = importController.PromptUserForImportOptions(romFilename);
-        if (importSettings == null) 
+        var importSettings = await snesRomImporterCreate().ChooseImportSettingsAsync(romFilename);
+        if (importSettings == null)
             return false;
-        
+
         CloseProject();
         ImportRomAndCreateNewProject(importSettings);
         return true;
@@ -187,14 +190,6 @@ public class ProjectController(
         {
             OnProjectOpenSuccess(project.ProjectFileName, project);   
         }
-    }
-
-    private IImportRomDialogController SetupImportController()
-    {
-        // let the user select settings on the GUI
-        var importController = controllerFactory.GetImportRomDialogController();
-        importController.View.Controller = importController;
-        return importController;
     }
 
     // step 4 of the new-ui plan: takes a plain path (the view layer prompts via

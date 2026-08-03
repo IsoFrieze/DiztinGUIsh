@@ -87,15 +87,6 @@ public interface INavigationHistoryView : IFormViewer
 }
 
 
-public interface IImportRomDialogView
-{
-    IImportRomDialogController Controller { get; set; }
-    public List<string> EnabledVectorTableEntries { get; }
-        
-    bool ShowAndWaitForUserToConfirmSettings();
-    void RefreshUi();
-}
-
 public interface ICommonGui
 {
     bool PromptToConfirmAction(string msg);

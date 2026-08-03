@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Diz.App.Winforms;
 using Diz.Controllers.interfaces;
 using Diz.Core.util;
@@ -59,6 +59,8 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<WinformsGotoView>();
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<WinformsHarshAutoStepView>();
+        container.GetInstance<ISnesImportRomView>("SnesImportRomView")
+            .Should().BeOfType<WinformsSnesImportRomView>();
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
             .Should().BeOfType<WinformsMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
@@ -86,6 +88,12 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<AvaloniaGotoView>();
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<AvaloniaHarshAutoStepView>();
+
+        // there is no Avalonia import window yet, so this backend still resolves the WinForms one
+        // -- registered explicitly in the Avalonia branch. Without it, creating a new project
+        // under DIZ_LABEL_EDITOR=avalonia would fail to resolve at the moment the user clicks.
+        container.GetInstance<ISnesImportRomView>("SnesImportRomView")
+            .Should().BeOfType<WinformsSnesImportRomView>();
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
             .Should().BeOfType<AvaloniaMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
@@ -117,6 +125,8 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<WinformsGotoView>();
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<WinformsHarshAutoStepView>();
+        container.GetInstance<ISnesImportRomView>("SnesImportRomView")
+            .Should().BeOfType<WinformsSnesImportRomView>();
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
             .Should().BeOfType<WinformsMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")

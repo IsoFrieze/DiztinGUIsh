@@ -1,4 +1,4 @@
-using Diz.App.Common;
+﻿using Diz.App.Common;
 using Diz.Controllers.interfaces;
 using Diz.Core.util;
 using Diz.Ui.Avalonia;
@@ -43,7 +43,7 @@ public static class DizWinformsRegisterServices
         // step-5 last-registration-wins ordering trick. Exactly ONE of these roots is ever
         // registered, so the label-editor backend selection has no dependency on registration
         // order. Each root registers the same named seams -- LabelEditorView, RegionEditorView,
-        // MarkManyView, GotoView, HarshAutoStepView, MisalignmentCheckerView,
+        // MarkManyView, GotoView, HarshAutoStepView, SnesImportRomView, MisalignmentCheckerView,
         // InOutPointCheckerView, NavigationHistoryView, ProgressBarView, IFileDialogService -- for
         // its toolkit.
         // Everything not listed here
@@ -52,6 +52,12 @@ public static class DizWinformsRegisterServices
         if (labelEditorBackend == LabelEditorBackendKind.Avalonia)
         {
             serviceRegistry.RegisterFrom<DizUiAvaloniaCompositionRoot>();
+
+            // there is no Avalonia import window yet, so the WinForms one is registered here
+            // explicitly rather than left unregistered -- without this the container cannot
+            // resolve SnesImportRomView and creating a new project throws. Delete this line once
+            // the Avalonia root registers its own.
+            serviceRegistry.Register<ISnesImportRomView, WinformsSnesImportRomView>("SnesImportRomView");
         }
         else if (labelEditorBackend == LabelEditorBackendKind.Tui)
         {
@@ -59,7 +65,7 @@ public static class DizWinformsRegisterServices
             // Avalonia/WinForms roots (which supply every seam for their toolkit), the TUI
             // root supplies just LabelEditorView; the region editor, navigation history, mark-many window, goto
             // window, harsh-auto-step window, misaligned-flags window, in/out-point rescan
-            // confirmation, progress popup and file dialogs stay WinForms and are
+            // confirmation, new-project import window, progress popup and file dialogs stay WinForms and are
             // registered EXPLICITLY here. We do NOT
             // register DizUiWinformsBackendCompositionRoot for those, because it would also
             // register a WinForms LabelEditorView and reintroduce the last-registration-wins
@@ -73,6 +79,7 @@ public static class DizWinformsRegisterServices
             serviceRegistry.Register<IMarkManyView, WinformsMarkManyView>("MarkManyView");
             serviceRegistry.Register<IGotoView, WinformsGotoView>("GotoView");
             serviceRegistry.Register<IHarshAutoStepView, WinformsHarshAutoStepView>("HarshAutoStepView");
+            serviceRegistry.Register<ISnesImportRomView, WinformsSnesImportRomView>("SnesImportRomView");
             serviceRegistry.Register<IMisalignmentCheckerView, WinformsMisalignmentCheckerView>("MisalignmentCheckerView");
             serviceRegistry.Register<IInOutPointCheckerView, WinformsInOutPointCheckerView>("InOutPointCheckerView");
             serviceRegistry.RegisterSingleton<IFileDialogService, WinformsFileDialogService>();

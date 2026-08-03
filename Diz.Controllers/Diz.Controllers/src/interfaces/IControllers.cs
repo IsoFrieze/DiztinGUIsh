@@ -57,7 +57,7 @@ public interface IProjectController :
     Task<bool> OpenProjectAsync(string filename);
     Task<string> SaveProjectAsync(string filename); // null on success, else the error message
 
-    bool ImportRomAndCreateNewProject(string romFilename);
+    Task<bool> ImportRomAndCreateNewProjectAsync(string romFilename);
     // path is supplied by the caller (obtained via IFileDialogService in the view layer);
     // this method never prompts. errors are surfaced through ICommonGui.
     void ImportLabelsCsv(string importFilename, bool replaceAll);
