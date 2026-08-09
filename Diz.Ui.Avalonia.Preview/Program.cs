@@ -116,6 +116,7 @@ internal static class Program
 
         var report = new List<string>();
         ProbeSearchBox(window, vm, report);
+        ProbeCellClickSelectsRow(window, vm, report, targetAddress: 0x7E1402);
         ProbeCell(window, vm, provider, report, LabelField.Name, targetAddress: 0x7E1401,
             newValue: "probe_name_edit");
         ProbeCell(window, vm, provider, report, LabelField.Comment, targetAddress: 0x7E1403,
@@ -2739,6 +2740,48 @@ internal static class Program
         catch (Exception ex)
         {
             Record(report, "search-box", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Regression probe: pressing inside a row's EDITABLE cell must select that row (and so
+    /// populate the details pane), not just place the caret. The cell TextBoxes consume the
+    /// pointer press themselves, so without the window's tunneling handler only the one
+    /// non-editable cell (Contexts) ever reached the row container and selected it.
+    /// The same click must still focus the cell -- selecting a row may not steal the caret.
+    /// </summary>
+    private static void ProbeCellClickSelectsRow(
+        LabelEditorWindow window, ILabelEditorViewModel vm, List<string> report, int targetAddress)
+    {
+        Console.WriteLine($"[cell click selects row @ {targetAddress:X6}]");
+        try
+        {
+            vm.SelectedRow = null;
+            Pump();
+
+            var cell = FindRowCell(window, targetAddress, LabelField.Name);
+            if (cell == null) { Record(report, "cell click selects row", "HARNESS-FAIL", $"no name cell for row {targetAddress:X6} (row not realized?)"); return; }
+
+            var pt = CenterInWindow(cell, window);
+            if (pt == null) { Record(report, "cell click selects row", "HARNESS-FAIL", "name cell has no measurable position"); return; }
+
+            Click(window, pt.Value);
+
+            var selected = vm.SelectedRow;
+            var selectedOk = selected != null && selected.SnesAddress == targetAddress;
+            var focusOk = ReferenceEquals(window.FocusManager?.GetFocusedElement(), cell);
+            var detail = $"clicked the name cell; vm.SelectedRow={(selected == null ? "<null>" : selected.AddressText)} (wanted {targetAddress:X6})";
+            Console.WriteLine($"  {detail}; focused == cell: {focusOk}");
+
+            if (selectedOk) Record(report, "cell click selects row", "PASS", detail);
+            else Record(report, "cell click selects row", "APP-FAIL", detail);
+
+            if (focusOk) Record(report, "cell click keeps caret", "PASS", "the same click still focused the cell");
+            else Record(report, "cell click keeps caret", "APP-FAIL", $"selection stole focus (focused={Describe(window.FocusManager?.GetFocusedElement())})");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "cell click selects row", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
         }
     }
 

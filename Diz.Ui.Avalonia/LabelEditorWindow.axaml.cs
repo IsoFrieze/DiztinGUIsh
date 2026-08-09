@@ -92,6 +92,13 @@ internal sealed partial class LabelEditorWindow : Window
         LabelList.ItemsPanel = new FuncTemplate<Panel?>(() => new VirtualizingStackPanel());
         LabelList.ItemTemplate = new FuncDataTemplate<ILabelRowViewModel>(
             (_, _) => BuildRowTemplate(), supportsRecycling: true);
+
+        // Three of the four row cells are TextBoxes, which consume the pointer press themselves;
+        // it never bubbles to the ListBoxItem, so a ListBox left to its own devices only selects
+        // when the click lands on the one non-editable cell (Contexts). Select from a TUNNELING
+        // handler instead: it runs before the TextBox sees the press, and deliberately leaves the
+        // event unhandled so the click still lands the caret and starts an in-cell edit.
+        LabelList.AddHandler(PointerPressedEvent, LabelList_PointerPressed, RoutingStrategies.Tunnel);
     }
 
     // ------------------------------------------------------------------ VM attach/detach
@@ -235,6 +242,26 @@ internal sealed partial class LabelEditorWindow : Window
         {
             syncingSelection = false;
         }
+    }
+
+    /// <summary>Pressing anywhere in a row selects it -- including inside the cell TextBoxes,
+    /// whose own pointer handling would otherwise keep the press from ever reaching the row
+    /// container. Runs on the tunnel, so selection (and therefore the details pane) is already
+    /// updated by the time the TextBox takes focus.</summary>
+    private void LabelList_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (vm == null || e.Source is not global::Avalonia.Visual source)
+            return;
+
+        // includeSelf: the press may land on the container itself (the gaps between cells).
+        if (source.FindAncestorOfType<ListBoxItem>(includeSelf: true)?.DataContext
+            is not ILabelRowViewModel row)
+            return;
+
+        // Assigning SelectedItem is the same path a click on the Contexts cell already takes:
+        // SelectionChanged pushes it to vm.SelectedRow under the syncingSelection guard.
+        if (!ReferenceEquals(LabelList.SelectedItem, row))
+            LabelList.SelectedItem = row;
     }
 
     private void SyncSelectionFromVm()
