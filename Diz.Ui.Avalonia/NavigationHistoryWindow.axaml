@@ -1,0 +1,75 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.NavigationHistoryWindow"
+        x:CompileBindings="False"
+        Title="Navigation"
+        Width="620" Height="420"
+        MinWidth="360" MinHeight="200"
+        FontSize="12">
+
+    <!--
+      The Avalonia navigation-history window: a DISPLAY of NavigationHistoryViewModel plus three
+      commands. It edits nothing - there is no text box anywhere in this window, which is why the
+      code-behind carries none of the PushText / typed-text machinery the region and goto windows
+      need (Avalonia raises TextChanged on a later dispatcher turn, so a box would need it; a grid
+      of read-only cells does not).
+
+      NAVIGATION IS DRIVEN BY ROW ACTIVATION ONLY - double-click, or Enter on the selected row.
+      There is deliberately NO SelectionChanged handler: a bound DataGrid puts its own caret on row
+      0 when it materializes its rows, so a selection-driven design would navigate the user to the
+      OLDEST point in their history simply for opening the window. Single-clicking a row therefore
+      only selects it. (Dom ruled on this directly; it is also what the WinForms host does.)
+
+      The grid is bound to a BindingListRows mirror rather than to the ViewModel's BindingList,
+      because a BindingList raises no INotifyCollectionChanged and a DataGrid bound to one never
+      updates. See BindingListRows.
+
+      Reflection bindings (x:CompileBindings="False"): rows are NavigationEntry, matching the other
+      windows in this assembly.
+    -->
+
+    <Window.Styles>
+        <Style Selector="StackPanel#Toolbar > Button">
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Padding" Value="10,3" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+
+        <StackPanel x:Name="Toolbar" DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,8,8,4">
+            <Button x:Name="BtnBack" Tag="back-button" Content="←" Click="BtnBack_Click"
+                    ToolTip.Tip="Go back one entry" />
+            <Button x:Name="BtnForward" Tag="forward-button" Content="→" Click="BtnForward_Click"
+                    ToolTip.Tip="Go forward one entry" />
+            <Button x:Name="BtnClearHistory" Tag="clear-button" Content="Clear History"
+                    Click="BtnClearHistory_Click" />
+        </StackPanel>
+
+        <Border DockPanel.Dock="Bottom" BorderBrush="#C8C8C8" BorderThickness="0,1,0,0">
+            <TextBlock x:Name="HintText" Tag="hint-text" Margin="8,3"
+                       Text="Double-click a row (or press Enter) to go there."
+                       Foreground="#606060" TextWrapping="Wrap" />
+        </Border>
+
+        <DataGrid x:Name="HistoryGrid" Tag="history-grid" Margin="8,0,8,4"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserSortColumns="False"
+                  SelectionMode="Single"
+                  GridLinesVisibility="All"
+                  HeadersVisibility="Column"
+                  DoubleTapped="HistoryGrid_DoubleTapped">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="SNES Offset" Width="110"
+                                    FontFamily="Consolas, Courier New, monospace"
+                                    Binding="{Binding Address, Mode=OneWay}" />
+                <DataGridTextColumn Header="Description" Width="*" MinWidth="140"
+                                    Binding="{Binding Description, Mode=OneWay}" />
+                <DataGridTextColumn Header="Position" Width="140"
+                                    Binding="{Binding Position, Mode=OneWay}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+    </DockPanel>
+</Window>

@@ -7,6 +7,7 @@
 // LabelEditorWindow comes from the InternalsVisibleTo("Diz.Ui.Avalonia.Preview") grant in
 // Diz.Ui.Avalonia.csproj, which matches on ASSEMBLY name, not namespace.
 
+using System.ComponentModel;              // BindingList (the shape the ViewModel hands out)
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
@@ -16,14 +17,23 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Diz.Core.commands;
 using Diz.Core.Interfaces;
+using Diz.Core.util;                      // Util.GetEnumDescription (what the map-mode picker must render)
+using Diz.Core.export;                    // LogWriterSettings (the record the export screen edits)
 using Diz.Cpu._65816;
+using Diz.Cpu._65816.import;              // SnesVectorNames (the always-on reserved vector slots)
 using Diz.Ui.Avalonia;                    // DizAvaloniaApp, AvaloniaLabelEditorView, AvaloniaFileDialogService, LabelEditorWindow + MarkManyWindow + GotoWindow + HarshAutoStepWindow (internal)
+using Diz.Ui.ViewModels.ExportSettings;   // ExportSettingsViewModel
 using Diz.Ui.ViewModels.Goto;             // GotoViewModel
 using Diz.Ui.ViewModels.HarshAutoStep;    // HarshAutoStepViewModel
+using Diz.Ui.ViewModels.ImportRom;        // SnesImportRomViewModel, SnesVectorSnapshot, SnesVectorValue
 using Diz.Ui.ViewModels.Labels;           // LabelEditorViewModel, ILabelEditorViewModel, ILabelRowViewModel, LabelField
 using Diz.Ui.ViewModels.MarkMany;         // MarkManyViewModel, AddressRangeViewModel
 using Diz.Ui.ViewModels.MisalignmentChecker; // MisalignmentCheckerViewModel
+using Diz.Ui.ViewModels.Navigation;       // NavigationHistoryViewModel, NavigationRequest
 using Diz.Ui.ViewModels.Regions;          // RegionListViewModel, IRegionListViewModel, IRegionRowViewModel, RegionField
+// aliased rather than `using Diz.Core.model`, which would drag a namespace full of model types
+// (Label, Data, Project...) into a file that already names same-shaped ViewModel types.
+using NavigationEntry = Diz.Core.model.NavigationEntry;
 
 namespace DizPreview;
 
@@ -152,6 +162,18 @@ internal static class Program
 
         // ------------------------------------------------------------------ REGION LIST WINDOW
         RegionListScenes(outDir, report);
+
+        // ------------------------------------------------------------------ NAVIGATION HISTORY WINDOW
+        NavigationHistoryScenes(outDir, report);
+
+        // ------------------------------------------------------------------ NEW-PROJECT ROM IMPORT WINDOW
+        SnesImportRomScenes(outDir, report);
+
+        // ------------------------------------------------------------------ EXPORT SETTINGS WINDOW
+        ExportSettingsScenes(outDir, report);
+
+        // ------------------------------------------------------------------ ABOUT WINDOW
+        AboutScenes(outDir, report);
 
         // ------------------------------------------------------------------ PROGRESS POPUP (step 6 Part C)
         // The Avalonia progress window in both modes: marquee (open/save/export) and determinate
@@ -1272,7 +1294,14 @@ internal static class Program
     /// mirrors another only rewrites itself when the mirror moves, and it is the half-typed
     /// prefixes that move it.
     /// </summary>
-    private static string? TypeCharByChar(Window window, TextBox box, string text, Func<int, string> describeOthers)
+    /// <param name="expect">
+    /// What the box SHOULD read after a given prefix has been typed, when that is not the prefix
+    /// itself. One box in this app normalizes what it is given as it stores it (the export screen's
+    /// line template is lower-cased, because the parser looks its placeholders up by name), so the
+    /// value coming back is deliberately not the keystrokes. Defaults to the prefix unchanged.
+    /// </param>
+    private static string? TypeCharByChar(Window window, TextBox box, string text,
+        Func<int, string> describeOthers, Func<string, string>? expect = null)
     {
         var pt = CenterInWindow(box, window);
         if (pt == null)
@@ -1289,7 +1318,7 @@ internal static class Program
             window.KeyTextInput(text[i].ToString());
             Pump();
 
-            var expected = text[..(i + 1)];
+            var expected = expect == null ? text[..(i + 1)] : expect(text[..(i + 1)]);
             var actual = box.Text ?? "";
             Console.WriteLine($"  keystroke {i + 1} '{text[i]}': box expected '{expected}', is '{actual}'; {describeOthers(i)}");
             if (firstDivergence == null && actual != expected)
@@ -1312,6 +1341,98 @@ internal static class Program
         Pump();
         window.KeyTextInput(text);
         Pump();
+    }
+
+    // ------------------------------------------------------------------ about window
+
+    /// <summary>
+    /// Renders the Avalonia About window. There is no ViewModel and nothing to drive: the whole
+    /// window is a logo, two strings from the version source, and an OK button -- so a clipped
+    /// or missing piece is the only way it can be wrong. The one behaviour worth probing is that
+    /// it HIDES instead of closing, which is what lets the host re-show one window rather than
+    /// stack a new one behind the last on every Help -> About.
+    /// </summary>
+    private static void AboutScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[about window]");
+
+        var versionInfo = new PreviewAppVersionInfo();
+        var window = new AboutWindow(versionInfo);
+        window.Show();
+        Pump();
+
+        var logo = FindByTag<Image>(window, "logo-image");
+        var product = TagText(window, "product-name-text");
+        var version = TagText(window, "version-text");
+        var description = FindByTag<TextBox>(window, "description-text");
+        Console.WriteLine($"  title='{window.Title}' product='{product}' version='{version}'; " +
+                          $"description {description?.Text?.Length ?? -1} chars; " +
+                          $"logo source={(logo?.Source == null ? "<none>" : logo.Source.Size.Width + "x" + logo.Source.Size.Height)}");
+        Capture(window, Path.Combine(outDir, "about-default.png"),
+            $"about: logo, '{product}', '{version}', the build description, OK");
+
+        // the logo is an embedded resource of the UI assembly, so a wrong path or a missing
+        // AvaloniaResource entry shows up as a null Source and an empty column, not as a build error.
+        var logoOk = logo?.Source != null && logo.Bounds is { Width: > 0, Height: > 0 };
+        Record(report, "about logo rendered", logoOk ? "PASS" : "APP-FAIL",
+            $"source={(logo?.Source == null ? "<null>" : "loaded")} laid out " +
+            $"{logo?.Bounds.Width:F1}x{logo?.Bounds.Height:F1}px");
+
+        // both strings come from the version source; the title carries the version too.
+        var textOk = version == $"Version: {PreviewAppVersionInfo.Version}" &&
+                     window.Title == $"About Diz {PreviewAppVersionInfo.Version}" &&
+                     description?.Text == versionInfo.GetVersionInfo(
+                         IAppVersionInfo.AppVersionInfoType.FullDescription);
+        Record(report, "about shows version info", textOk ? "PASS" : "APP-FAIL",
+            $"title='{window.Title}' version='{version}' description={description?.Text?.Length ?? -1} chars");
+
+        // nothing may sit outside the window: the description box is the only thing that grows.
+        var boxOk = description != null && description.Bounds.Height > 0 &&
+                    description.TranslatePoint(new Point(0, description.Bounds.Height), window) is { } bottom &&
+                    bottom.Y <= window.Height;
+        Record(report, "about nothing clipped", boxOk ? "PASS" : "APP-FAIL",
+            $"description box {description?.Bounds.Width:F1}x{description?.Bounds.Height:F1}px " +
+            $"inside a {window.Width}x{window.Height}px window");
+
+        // Q: picking Help -> About twice must not stack windows. The host keeps one window and
+        // re-shows it, which only works because closing hides.
+        window.Close();
+        Pump();
+        var hidden = !window.IsVisible;
+        window.Show();
+        Pump();
+        var reshown = window.IsVisible;
+        Record(report, "about hides on close", hidden && reshown ? "PASS" : "APP-FAIL",
+            $"after Close(): IsVisible={hidden switch { true => "false", false => "true" }}; " +
+            $"after re-Show(): IsVisible={reshown}");
+
+        window.Hide();
+        Pump();
+    }
+
+    /// <summary>
+    /// Stand-in for the app's version source. The real one reads the git metadata baked into the
+    /// app assembly, which the harness does not link -- and fixed strings make the probes' string
+    /// comparisons meaningful.
+    /// </summary>
+    private sealed class PreviewAppVersionInfo : IAppVersionInfo
+    {
+        public const string Version = "v0.0.0-preview";
+
+        public string GetVersionInfo(IAppVersionInfo.AppVersionInfoType type) => type switch
+        {
+            IAppVersionInfo.AppVersionInfoType.Version => Version,
+            IAppVersionInfo.AppVersionInfoType.FullDescription =>
+                "Build info:\r\n------------\r\n" +
+                $"Version: {Version}\r\n" +
+                "Git branch: preview-harness\r\n" +
+                "Git commit: 0000000000000000000000000000000000000000\r\n" +
+                "Git repo URL: https://example.invalid/preview\r\n" +
+                "Git IsDirty: false\r\n\r\n\r\n" +
+                "Diz app savefile format ver: 0",
+            _ => "",
+        };
     }
 
     private static T? FindByTag<T>(Window window, string tag) where T : Control =>
@@ -2922,6 +3043,1374 @@ internal static class Program
     private static Button? FindAddContextButton(LabelEditorWindow window) =>
         window.GetVisualDescendants().OfType<Button>()
             .FirstOrDefault(b => (b.Content as string) == "+ Add");
+
+    // ------------------------------------------------------------------ navigation history window
+
+    /// <summary>
+    /// What MainWindow seeds the in-window arrows with (its standardOvershootAmount). Row
+    /// activation deliberately uses NavigationHistoryViewModel.NoOvershoot instead.
+    /// </summary>
+    private const int NavBackForwardOvershoot = 12;
+
+    /// <summary>The columns the history grid is supposed to show, in order.</summary>
+    private static readonly string[] ExpectedNavigationColumns =
+    [
+        "SNES Offset", "Description", "Position",
+    ];
+
+    /// <summary>
+    /// Renders the Avalonia navigation-history window and drives it with simulated input.
+    ///
+    /// The two things worth proving here are both about what must NOT happen. Opening the window,
+    /// and appending to the history while it is open, must navigate NOWHERE -- recording where you
+    /// were is not a reason to go anywhere, and a bound grid puts its own caret on row 0 as it
+    /// materializes, which would send the user to the OLDEST point in their history. And a single
+    /// click must only select. Navigation comes from row ACTIVATION alone: double-click, or Enter.
+    ///
+    /// The third is that the grid stays live: the ViewModel hands out a BindingList, which raises
+    /// no INotifyCollectionChanged, so a DataGrid bound to it directly would render the history as
+    /// it was at bind time and then silently never update again.
+    /// </summary>
+    private static void NavigationHistoryScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[navigation history window]");
+
+        var (window, vm, history, requests) = OpenNavigationHistory();
+        Console.WriteLine($"  {vm.Count} entries, CurrentIndex={vm.CurrentIndex}, " +
+                          $"{requests.Count} navigation(s) requested by opening the window");
+        Capture(window, Path.Combine(outDir, "navhistory-default.png"),
+            $"navigation history: {vm.Count} entries, parked on the newest (index {vm.CurrentIndex})");
+
+        // Opening the window must navigate NOWHERE. The grid selects row 0 for itself while doing
+        // so, which is exactly the gesture a selection-driven design would mistake for the user.
+        Record(report, "navhistory open is inert", requests.Count == 0 ? "PASS" : "APP-FAIL",
+            $"{requests.Count} navigation(s) requested just by showing the window (wanted 0), " +
+            $"vm.CurrentIndex={vm.CurrentIndex}");
+
+        ProbeNavigationGridPopulates(window, vm, report);
+        ProbeNavigationSingleClickDoesNotNavigate(window, vm, requests, report);
+        ProbeNavigationEnterActivates(window, vm, requests, report);
+        ProbeNavigationDoubleClickActivates(window, vm, requests, report);
+        ProbeNavigationUnconvertibleEntry(window, vm, requests, report);
+        ProbeNavigationArrowButtons(window, vm, requests, report);
+        ProbeNavigationLiveAppend(outDir, window, vm, history, requests, report);
+        ProbeNavigationClear(outDir, window, vm, requests, report);
+
+        window.Close();
+        Pump();
+
+        ProbeNavigationCloseHides(report);
+    }
+
+    /// <summary>
+    /// A window over a fresh history, plus every navigation the ViewModel asked for. Entry 1 is
+    /// deliberately a WRAM address that is NOT in the ROM, so the "an entry that names nowhere
+    /// moves the position but requests nothing" path has something to exercise.
+    /// </summary>
+    private static (NavigationHistoryWindow window, NavigationHistoryViewModel vm,
+        BindingList<NavigationEntry> history, List<NavigationRequest> requests)
+        OpenNavigationHistory()
+    {
+        var snesData = PreviewFixture.BuildSnesData();
+
+        // same flags the document creates its history list with: a log, never edited in place.
+        var history = new BindingList<NavigationEntry>
+        {
+            AllowEdit = false,
+            AllowNew = false,
+            AllowRemove = false,
+        };
+        history.Add(new NavigationEntry(0xC00100, "Step Over", "start", null));
+        history.Add(new NavigationEntry(0x7E0000, "Mark (single)", "wram", null));
+        history.Add(new NavigationEntry(0xC00240, "Goto", "", null));
+        history.Add(new NavigationEntry(0xC003A0, "Step Into", "end", null));
+
+        var vm = new NavigationHistoryViewModel(history, snesData.ConvertSnesToPc, RunOnUiThread);
+
+        var requests = new List<NavigationRequest>();
+        vm.NavigationRequested += (_, request) => requests.Add(request);
+
+        var window = new NavigationHistoryWindow { BackForwardOvershoot = NavBackForwardOvershoot };
+        window.AttachViewModel(vm);
+        window.Show();
+        Pump();
+
+        return (window, vm, history, requests);
+    }
+
+    private static void ProbeNavigationGridPopulates(
+        NavigationHistoryWindow window, NavigationHistoryViewModel vm, List<string> report)
+    {
+        try
+        {
+            var grid = FindByTag<DataGrid>(window, "history-grid");
+            if (grid == null)
+            {
+                Record(report, "navhistory grid populates", "HARNESS-FAIL",
+                    "no DataGrid tagged 'history-grid' in the visual tree");
+                return;
+            }
+
+            var headers = grid.Columns.Select(c => c.Header as string ?? "").ToList();
+            var realized = RealizedNavigationRows(window);
+            var ok = grid.ItemsSource != null && realized == vm.Count &&
+                     headers.SequenceEqual(ExpectedNavigationColumns);
+
+            Console.WriteLine($"  columns: {string.Join(" | ", headers)}");
+            Console.WriteLine($"  rows: {vm.Count} in the ViewModel, {realized} realized containers");
+            Record(report, "navhistory grid populates", ok ? "PASS" : "APP-FAIL",
+                $"{headers.Count} columns [{string.Join(", ", headers)}], {vm.Count} entries, " +
+                $"{realized} realized");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "navhistory grid populates", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// A single click SELECTS AND NOTHING ELSE. This is the bug the conversion removed: the old
+    /// control turned the grid's current-position change into a navigation, so every recorded point
+    /// re-navigated to itself. Dom ruled directly that no selection path may navigate.
+    /// </summary>
+    private static void ProbeNavigationSingleClickDoesNotNavigate(
+        NavigationHistoryWindow window, NavigationHistoryViewModel vm,
+        List<NavigationRequest> requests, List<string> report)
+    {
+        try
+        {
+            var before = requests.Count;
+            var indexBefore = vm.CurrentIndex;
+
+            if (!ClickNavigationRow(window, 0))
+            {
+                Record(report, "navhistory click only selects", "HARNESS-FAIL",
+                    "row 0 has no on-screen position");
+                return;
+            }
+
+            var grid = FindByTag<DataGrid>(window, "history-grid");
+            var selected = grid?.SelectedIndex ?? -1;
+            var ok = requests.Count == before && vm.CurrentIndex == indexBefore && selected == 0;
+
+            Console.WriteLine($"  single-clicked row 0; grid.SelectedIndex={selected}; " +
+                              $"vm.CurrentIndex {indexBefore} -> {vm.CurrentIndex}; " +
+                              $"requests {before} -> {requests.Count}");
+            Record(report, "navhistory click only selects", ok ? "PASS" : "APP-FAIL",
+                $"grid selected row {selected}, vm.CurrentIndex held at {vm.CurrentIndex}, " +
+                $"{requests.Count - before} navigation(s) requested (wanted 0)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "navhistory click only selects", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>Enter on the selected row activates it -- the keyboard equivalent of a
+    /// double-click, and with the same NoOvershoot: the user pointed at this row.</summary>
+    private static void ProbeNavigationEnterActivates(
+        NavigationHistoryWindow window, NavigationHistoryViewModel vm,
+        List<NavigationRequest> requests, List<string> report)
+    {
+        try
+        {
+            // row 0 is selected and focused by the click probe above.
+            var before = requests.Count;
+            PressEnter(window);
+
+            var got = requests.Count == before + 1 ? requests[^1] : (NavigationRequest?)null;
+            var ok = got == new NavigationRequest(0x100, NavigationHistoryViewModel.NoOvershoot) &&
+                     vm.CurrentIndex == 0;
+
+            Console.WriteLine($"  pressed Enter on row 0; vm.CurrentIndex={vm.CurrentIndex}; " +
+                              $"request={(got == null ? "<none>" : got.ToString())}");
+            Record(report, "navhistory Enter activates", ok ? "PASS" : "APP-FAIL",
+                $"{requests.Count - before} request(s), last={(got == null ? "<none>" : got.ToString())} " +
+                $"(wanted PcOffset 0x100 overshoot 0), vm.CurrentIndex={vm.CurrentIndex}");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "navhistory Enter activates", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>Double-clicking a row goes there, landing exactly on it (NoOvershoot).</summary>
+    private static void ProbeNavigationDoubleClickActivates(
+        NavigationHistoryWindow window, NavigationHistoryViewModel vm,
+        List<NavigationRequest> requests, List<string> report)
+    {
+        try
+        {
+            var before = requests.Count;
+            if (!DoubleClickNavigationRow(window, 2))
+            {
+                Record(report, "navhistory double-click activates", "HARNESS-FAIL",
+                    "row 2 has no on-screen position");
+                return;
+            }
+
+            // the single click inside the double click selects; only the SECOND one activates, so
+            // exactly one request must have arrived.
+            var got = requests.Count == before + 1 ? requests[^1] : (NavigationRequest?)null;
+            var ok = got == new NavigationRequest(0x240, NavigationHistoryViewModel.NoOvershoot) &&
+                     vm.CurrentIndex == 2;
+
+            Console.WriteLine($"  double-clicked row 2 ($C00240); vm.CurrentIndex={vm.CurrentIndex}; " +
+                              $"{requests.Count - before} request(s), last={(got == null ? "<none>" : got.ToString())}");
+            Record(report, "navhistory double-click activates", ok ? "PASS" : "APP-FAIL",
+                $"{requests.Count - before} request(s) (wanted exactly 1), " +
+                $"last={(got == null ? "<none>" : got.ToString())} (wanted PcOffset 0x240 overshoot 0), " +
+                $"vm.CurrentIndex={vm.CurrentIndex}");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "navhistory double-click activates", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Activating an entry whose address is not in the open ROM MOVES onto it and asks for nothing.
+    /// The move has to happen anyway: a selection that refused to move would strand back/forward on
+    /// the unconvertible entry forever. (Entry 1 is a WRAM address; the fixture ROM is HiROM.)
+    /// </summary>
+    private static void ProbeNavigationUnconvertibleEntry(
+        NavigationHistoryWindow window, NavigationHistoryViewModel vm,
+        List<NavigationRequest> requests, List<string> report)
+    {
+        try
+        {
+            var before = requests.Count;
+            if (!DoubleClickNavigationRow(window, 1))
+            {
+                Record(report, "navhistory unconvertible entry", "HARNESS-FAIL",
+                    "row 1 has no on-screen position");
+                return;
+            }
+
+            var ok = requests.Count == before && vm.CurrentIndex == 1;
+            Console.WriteLine($"  double-clicked row 1 ($7E0000, not in this ROM); " +
+                              $"vm.CurrentIndex={vm.CurrentIndex}; requests {before} -> {requests.Count}");
+            Record(report, "navhistory unconvertible entry", ok ? "PASS" : "APP-FAIL",
+                $"vm.CurrentIndex={vm.CurrentIndex} (wanted 1), " +
+                $"{requests.Count - before} navigation(s) requested (wanted 0)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "navhistory unconvertible entry", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// The arrows step one entry and carry the HOST-SEEDED overshoot, so "go back" scrolls the same
+    /// distance past its destination however it was triggered -- unlike row activation, which lands
+    /// exactly. Forward from entry 1 lands on 2 ($C00240); back from there returns to 1, which does
+    /// not convert, so it moves and asks for nothing.
+    /// </summary>
+    private static void ProbeNavigationArrowButtons(
+        NavigationHistoryWindow window, NavigationHistoryViewModel vm,
+        List<NavigationRequest> requests, List<string> report)
+    {
+        try
+        {
+            var forward = FindByTag<Button>(window, "forward-button");
+            var back = FindByTag<Button>(window, "back-button");
+            var forwardPoint = forward == null ? null : CenterInWindow(forward, window);
+            var backPoint = back == null ? null : CenterInWindow(back, window);
+            if (forwardPoint == null || backPoint == null)
+            {
+                Record(report, "navhistory arrows", "HARNESS-FAIL",
+                    $"forward button={forward != null}, back button={back != null} (no on-screen position)");
+                return;
+            }
+
+            var before = requests.Count;
+            Click(window, forwardPoint.Value);
+            var afterForward = requests.Count == before + 1 ? requests[^1] : (NavigationRequest?)null;
+            var forwardOk = afterForward == new NavigationRequest(0x240, NavBackForwardOvershoot) &&
+                            vm.CurrentIndex == 2;
+
+            Console.WriteLine($"  clicked forward; vm.CurrentIndex={vm.CurrentIndex}; " +
+                              $"request={(afterForward == null ? "<none>" : afterForward.ToString())}");
+            Record(report, "navhistory forward overshoot", forwardOk ? "PASS" : "APP-FAIL",
+                $"request={(afterForward == null ? "<none>" : afterForward.ToString())} " +
+                $"(wanted PcOffset 0x240 overshoot {NavBackForwardOvershoot}), vm.CurrentIndex={vm.CurrentIndex}");
+
+            var beforeBack = requests.Count;
+            Click(window, backPoint.Value);
+            var backOk = requests.Count == beforeBack && vm.CurrentIndex == 1;
+            Console.WriteLine($"  clicked back; vm.CurrentIndex={vm.CurrentIndex}; " +
+                              $"requests {beforeBack} -> {requests.Count} (entry 1 is not in this ROM)");
+            Record(report, "navhistory back moves", backOk ? "PASS" : "APP-FAIL",
+                $"vm.CurrentIndex={vm.CurrentIndex} (wanted 1), " +
+                $"{requests.Count - beforeBack} request(s) for an entry that names no ROM byte (wanted 0)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "navhistory arrows", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// THE BINDINGLIST PROBLEM, measured. The ViewModel exposes the document's
+    /// BindingList&lt;NavigationEntry&gt;, which raises WinForms' ListChanged and NOT
+    /// INotifyCollectionChanged -- so a DataGrid bound to it renders what was there at bind time and
+    /// then never updates, silently. The window binds a BindingListRows mirror instead; this appends
+    /// while the window is open and reads the answer out of the REALIZED CELLS, not off the
+    /// ViewModel, because "did the grid repaint" is the whole question.
+    ///
+    /// It also re-checks the rule the conversion exists for: appending navigates NOWHERE.
+    /// </summary>
+    private static void ProbeNavigationLiveAppend(
+        string outDir, NavigationHistoryWindow window, NavigationHistoryViewModel vm,
+        BindingList<NavigationEntry> history, List<NavigationRequest> requests, List<string> report)
+    {
+        try
+        {
+            var rowsBefore = RealizedNavigationRows(window);
+            var requestsBefore = requests.Count;
+
+            var appended = new NavigationEntry(0xC00777, "AutoStep (Safe)", "appended-live", null);
+            history.Add(appended);
+            history.Add(new NavigationEntry(0xC00888, "Goto", "appended-live-2", null));
+            Pump();
+            Pump();
+
+            var rowsAfter = RealizedNavigationRows(window);
+            var appendedText = NavigationCellText(window, appended, 1);
+            var grid = FindByTag<DataGrid>(window, "history-grid");
+            var boundCount = (grid?.ItemsSource as System.Collections.ICollection)?.Count ?? -1;
+
+            var liveOk = rowsAfter == rowsBefore + 2 && boundCount == vm.Count &&
+                         appendedText == "AutoStep (Safe)";
+            Console.WriteLine($"  appended 2 entries; realized rows {rowsBefore} -> {rowsAfter}; " +
+                              $"bound collection has {boundCount} of {vm.Count}; " +
+                              $"the new row's Description cell reads '{appendedText}'");
+            Record(report, "navhistory live append", liveOk ? "PASS" : "APP-FAIL",
+                $"realized rows {rowsBefore} -> {rowsAfter} (wanted +2), bound count {boundCount} " +
+                $"== vm.Count {vm.Count}, new row's Description cell '{appendedText}'");
+
+            // recording a point is not navigating to it, and the position moves onto the newest so
+            // that the next "back" leaves it.
+            var inertOk = requests.Count == requestsBefore && vm.CurrentIndex == vm.Count - 1;
+            Console.WriteLine($"  after the append: vm.CurrentIndex={vm.CurrentIndex} of {vm.Count}; " +
+                              $"requests {requestsBefore} -> {requests.Count}");
+            Record(report, "navhistory append is inert", inertOk ? "PASS" : "APP-FAIL",
+                $"{requests.Count - requestsBefore} navigation(s) requested by recording (wanted 0), " +
+                $"vm.CurrentIndex={vm.CurrentIndex} parked on the newest ({vm.Count - 1})");
+
+            Capture(window, Path.Combine(outDir, "navhistory-appended.png"),
+                $"navigation history: two entries appended while the window was open -- " +
+                $"{vm.Count} rows, highlight on the newest");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "navhistory live append", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>Clear History empties the grid and asks for no navigation: the user is still
+    /// looking at wherever they already were.</summary>
+    private static void ProbeNavigationClear(
+        string outDir, NavigationHistoryWindow window, NavigationHistoryViewModel vm,
+        List<NavigationRequest> requests, List<string> report)
+    {
+        try
+        {
+            var clear = FindByTag<Button>(window, "clear-button");
+            var point = clear == null ? null : CenterInWindow(clear, window);
+            if (point == null)
+            {
+                Record(report, "navhistory clear", "HARNESS-FAIL", "Clear History button has no on-screen position");
+                return;
+            }
+
+            var before = requests.Count;
+            Click(window, point.Value);
+            Pump();
+
+            var rows = RealizedNavigationRows(window);
+            var ok = rows == 0 && vm.Count == 0 &&
+                     vm.CurrentIndex == NavigationHistoryViewModel.NoSelection &&
+                     requests.Count == before;
+
+            Console.WriteLine($"  clicked Clear History; vm.Count={vm.Count}; " +
+                              $"vm.CurrentIndex={vm.CurrentIndex}; {rows} realized rows; " +
+                              $"requests {before} -> {requests.Count}");
+            Record(report, "navhistory clear", ok ? "PASS" : "APP-FAIL",
+                $"vm.Count={vm.Count}, vm.CurrentIndex={vm.CurrentIndex}, {rows} rows left on screen, " +
+                $"{requests.Count - before} navigation(s) requested (wanted 0)");
+
+            Capture(window, Path.Combine(outDir, "navhistory-cleared.png"),
+                "navigation history: after Clear History -- empty grid, nothing selected, " +
+                "no navigation requested");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "navhistory clear", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    /// <summary>Closing hides rather than closes, so reopening is instant and still bound -- and
+    /// the history and the place in it were never the window's to lose.</summary>
+    private static void ProbeNavigationCloseHides(List<string> report)
+    {
+        NavigationHistoryWindow? window = null;
+        try
+        {
+            var (w, vm, _, requests) = OpenNavigationHistory();
+            window = w;
+
+            var visibleBefore = window.IsVisible;
+            var indexBefore = vm.CurrentIndex;
+            window.Close();
+            Pump();
+            var hidden = !window.IsVisible;
+
+            window.Show();
+            Pump();
+
+            var grid = FindByTag<DataGrid>(window, "history-grid");
+            var reopenedOk = window.IsVisible && grid?.ItemsSource != null &&
+                             RealizedNavigationRows(window) == vm.Count &&
+                             vm.CurrentIndex == indexBefore && requests.Count == 0;
+
+            Console.WriteLine($"  visible {visibleBefore} -> closed -> visible {!hidden} -> " +
+                              $"shown again {window.IsVisible}; vm.CurrentIndex still {vm.CurrentIndex}; " +
+                              $"{requests.Count} navigation(s) requested by the whole round trip");
+            Record(report, "navhistory close hides", visibleBefore && hidden && reopenedOk ? "PASS" : "APP-FAIL",
+                $"visible before={visibleBefore}, hidden after Close={hidden}, re-shown and still " +
+                $"bound={reopenedOk}, position held at {vm.CurrentIndex}, {requests.Count} request(s)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "navhistory close hides", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    /// <summary>
+    /// How many rows the history grid is actually SHOWING.
+    ///
+    /// Visibility is part of the question, not a nicety: the DataGrid keeps its realized row
+    /// containers in the visual tree after the collection resets and merely hides them (measured --
+    /// six containers survived a Clear that emptied the grid on screen, which the rendered PNG
+    /// confirms). Counting containers alone would therefore report a cleared grid as still full.
+    /// </summary>
+    private static int RealizedNavigationRows(NavigationHistoryWindow window) =>
+        window.GetVisualDescendants().OfType<DataGridRow>()
+            .Count(r => r.IsVisible && r.Bounds.Height > 0);
+
+    /// <summary>
+    /// What the history grid is DISPLAYING for one entry's column, read out of the realized cell
+    /// rather than off the ViewModel -- asking the ViewModel again would answer the wrong question.
+    /// </summary>
+    private static string NavigationCellText(
+        NavigationHistoryWindow window, NavigationEntry entry, int columnIndex)
+    {
+        var container = window.GetVisualDescendants().OfType<DataGridRow>()
+            .FirstOrDefault(r => ReferenceEquals(r.DataContext, entry));
+        var cells = container?.GetVisualDescendants().OfType<DataGridCell>().ToList();
+        if (cells == null || columnIndex >= cells.Count)
+            return "";
+
+        return cells[columnIndex].GetVisualDescendants().OfType<TextBlock>().FirstOrDefault()?.Text ?? "";
+    }
+
+    private static Point? NavigationRowPoint(NavigationHistoryWindow window, int rowIndex)
+    {
+        var container = window.GetVisualDescendants().OfType<DataGridRow>()
+            .Where(r => r.DataContext is NavigationEntry)
+            .ElementAtOrDefault(rowIndex);
+        var cell = container?.GetVisualDescendants().OfType<DataGridCell>().FirstOrDefault();
+        return cell == null ? null : CenterInWindow(cell, window);
+    }
+
+    private static bool ClickNavigationRow(NavigationHistoryWindow window, int rowIndex)
+    {
+        var point = NavigationRowPoint(window, rowIndex);
+        if (point == null)
+            return false;
+
+        Click(window, point.Value);
+        Pump();
+        return true;
+    }
+
+    /// <summary>
+    /// Two clicks at the same point, which is what the double-tap gesture recognizer needs to see.
+    /// The first one selects the row (and must not navigate); the second is the activation.
+    /// </summary>
+    private static bool DoubleClickNavigationRow(NavigationHistoryWindow window, int rowIndex)
+    {
+        var point = NavigationRowPoint(window, rowIndex);
+        if (point == null)
+            return false;
+
+        Click(window, point.Value);
+        Click(window, point.Value);
+        Pump();
+        return true;
+    }
+
+    // ------------------------------------------------------------------ new-project ROM import window
+
+    /// <summary>Every vector-table slot, in vector-table order. Offset 0: only the names are used here.</summary>
+    private static readonly string[] ImportVectorNames =
+        CpuVectorTable.ComputeVectorTableNamesAndOffsets(0)
+            .Select(entry => entry.VectorTableEntry.Name)
+            .ToArray();
+
+    /// <summary>
+    /// The four slots the 65816 reserves and the SNES never uses. Their labels are always
+    /// generated and the user is offered no way to switch them off, so their rows must render
+    /// TICKED AND NON-INTERACTIVE. That is the appearance being probed for, not a bug.
+    /// </summary>
+    private static readonly string[] ImportAlwaysEnabledVectorNames =
+    [
+        SnesVectorNames.Native_Reserved1__ignored,
+        SnesVectorNames.Native_Reserved2__ignored,
+        SnesVectorNames.Emulation_Reserved1__ignored,
+        SnesVectorNames.Emulation_Reserved2__ignored,
+    ];
+
+    /// <summary>
+    /// Renders the Avalonia "new project from a SNES ROM" window in its three interesting states
+    /// and drives it with simulated input. No ROM is read: the ViewModel takes a caller-supplied
+    /// delegate that turns a map mode into a vector snapshot, so the harness supplies snapshots
+    /// directly and the window sees exactly what the real importer would hand it.
+    ///
+    /// Each scene gets a FRESH window + ViewModel, because the real window is created per
+    /// invocation and completes a task when it closes.
+    /// </summary>
+    private static void SnesImportRomScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[new project / rom import window]");
+
+        // ---- scene 1: detection succeeded, everything readable
+        var (window, vm) = OpenSnesImportRom(
+            detected: RomMapMode.LoRom, detectionSucceeded: true, romSpeedText: "SlowROM",
+            snapshotFor: ReadableImportSnapshot);
+
+        Console.WriteLine($"  detection message: '{TagText(window, "detect-message")}', " +
+                          $"title '{TagText(window, "rom-title")}', speed '{TagText(window, "rom-speed")}'");
+        Capture(window, Path.Combine(outDir, "snesimportrom-default.png"),
+            $"rom import: detection succeeded ({TagText(window, "detect-message")}), 16 vectors readable");
+
+        ProbeImportVectorRowCount(window, report, "import rows (detected)");
+        ProbeImportReservedRowsLocked(window, report);
+        ProbeImportNoEditableText(window, report);
+        ProbeImportMapModeDescriptions(window, vm, report);
+
+        // ---- the checkboxes reach the ViewModel
+        ProbeImportCheckbox(window, report, "bank-regions-check", "import bank-regions checkbox",
+            () => vm.GenerateBankRegions);
+        ProbeImportCheckbox(window, report, "header-flags-check", "import header-flags checkbox",
+            () => vm.GenerateHeaderFlags);
+
+        // ---- scene 2: nothing could be detected. The window still opens, the picker still works,
+        // and every value is a placeholder -- which is also the state in which the four reserved
+        // rows must STILL show as enabled.
+        var (failedWindow, failedVm) = OpenSnesImportRom(
+            detected: RomMapMode.LoRom, detectionSucceeded: false, romSpeedText: "????",
+            snapshotFor: _ => SnesVectorSnapshot.Unreadable(ImportVectorNames));
+
+        Console.WriteLine($"  detection failed: message='{TagText(failedWindow, "detect-message")}', " +
+                          $"status='{TagText(failedWindow, "status-text")}'");
+        Capture(failedWindow, Path.Combine(outDir, "snesimportrom-detection-failed.png"),
+            "rom import: detection failed -- placeholder title/vectors, status line explaining why");
+
+        var failedMessageOk =
+            TagText(failedWindow, "detect-message") == SnesImportRomViewModel.DetectionFailedMessage &&
+            TagText(failedWindow, "status-text") == SnesImportRomViewModel.VectorsUnreadableMessage;
+        Record(report, "import detection failed", failedMessageOk ? "PASS" : "APP-FAIL",
+            $"detect-message='{TagText(failedWindow, "detect-message")}', " +
+            $"status-text='{TagText(failedWindow, "status-text")}'");
+
+        // detection failing is exactly the case that used to force every visible box off; the
+        // reserved four must survive it, because their labels are generated regardless.
+        ProbeImportReservedRowsStillEnabled(failedWindow, failedVm, report);
+
+        // ---- scene 3: detection succeeded, then the user overrules it with a mapping this ROM
+        // cannot be read at. Values fall back to placeholders and the status line says why.
+        var (overrideWindow, overrideVm) = OpenSnesImportRom(
+            detected: RomMapMode.LoRom, detectionSucceeded: true, romSpeedText: "SlowROM",
+            snapshotFor: mode => mode == RomMapMode.LoRom
+                ? ReadableImportSnapshot(mode)
+                : SnesVectorSnapshot.Unreadable(ImportVectorNames));
+
+        ProbeImportMapModeChange(overrideWindow, overrideVm, report);
+        Capture(overrideWindow, Path.Combine(outDir, "snesimportrom-vectors-unreadable.png"),
+            "rom import: mapping overruled to HiROM -- '????' placeholders + the unreadable status line");
+        ProbeImportVectorRowCount(overrideWindow, report, "import rows (unreadable)");
+
+        // ---- confirm / cancel / closed-without-choosing
+        ProbeSnesImportRomAnswers(report);
+
+        window.Close();
+        failedWindow.Close();
+        overrideWindow.Close();
+        Pump();
+    }
+
+    /// <summary>A plausible readable snapshot: a cartridge title and a distinct word per slot.</summary>
+    private static SnesVectorSnapshot ReadableImportSnapshot(RomMapMode mapMode) =>
+        new(
+            CartridgeTitle: "PREVIEW HARNESS ROM  ",
+            VectorsReadable: true,
+            Vectors: ImportVectorNames
+                .Select((name, index) => new SnesVectorValue(name, $"8{index:X03}", IsReadable: true))
+                .ToList());
+
+    private static (SnesImportRomWindow window, SnesImportRomViewModel vm) OpenSnesImportRom(
+        RomMapMode detected, bool detectionSucceeded, string romSpeedText,
+        Func<RomMapMode, SnesVectorSnapshot> snapshotFor)
+    {
+        var vm = new SnesImportRomViewModel(
+            initialSnapshot: snapshotFor(detected),
+            detectedRomMapMode: detected,
+            detectionSucceeded: detectionSucceeded,
+            romSpeedText: romSpeedText,
+            alwaysEnabledVectorNames: ImportAlwaysEnabledVectorNames,
+            // every slot starts ticked; the ViewModel unticks the ones whose value isn't a ROM
+            // address. Same seeding the real importer does.
+            initiallyEnabledVectorNames: ImportVectorNames,
+            recomputeForMapMode: snapshotFor,
+            notificationMarshaller: RunOnUiThread);
+
+        var window = new SnesImportRomWindow();
+        window.AttachViewModel(vm);
+        window.Show();
+        Pump();
+        return (window, vm);
+    }
+
+    /// <summary>
+    /// All sixteen vector rows are on screen. COUNTS ONLY ROWS THAT ARE VISIBLE AND HAVE A
+    /// NON-ZERO HEIGHT: an item container that is present in the visual tree but collapsed is not
+    /// a row the user can see, and counting those has produced phantom rows before.
+    /// </summary>
+    private static void ProbeImportVectorRowCount(Window window, List<string> report, string what)
+    {
+        var containers = window.GetVisualDescendants().OfType<Grid>()
+            .Where(g => Equals(g.Tag, "vector-row"))
+            .ToList();
+        var visible = containers.Count(g => g.IsVisible && g.Bounds.Height > 0);
+
+        Console.WriteLine($"  vector rows: {containers.Count} container(s) in the tree, {visible} visible with height > 0");
+        Record(report, what, visible == ImportVectorNames.Length ? "PASS" : "APP-FAIL",
+            $"{visible} visible row(s) with height > 0 (wanted {ImportVectorNames.Length}); " +
+            $"{containers.Count} container(s) present in the visual tree");
+    }
+
+    /// <summary>
+    /// The four always-on rows render TICKED AND NON-INTERACTIVE. Both halves matter: greyed-out
+    /// says the user has no say, and still-ticked says the label is generated anyway.
+    /// </summary>
+    private static void ProbeImportReservedRowsLocked(Window window, List<string> report)
+    {
+        var found = ImportAlwaysEnabledVectorNames
+            .Select(name => (name, box: FindByTag<CheckBox>(window, name)))
+            .ToList();
+
+        var ok = found.All(entry => entry.box is { IsEnabled: false, IsChecked: true });
+        foreach (var (name, box) in found)
+            Console.WriteLine($"  reserved row {name}: IsChecked={box?.IsChecked}, IsEnabled={box?.IsEnabled}");
+
+        Record(report, "import reserved rows", ok ? "PASS" : "APP-FAIL",
+            string.Join("; ", found.Select(e =>
+                $"{e.name} checked={e.box?.IsChecked} interactive={e.box?.IsEnabled}")) +
+            " (wanted checked=True interactive=False on all four)");
+    }
+
+    /// <summary>
+    /// Detection failing used to force every box on screen off and disabled. The reserved four
+    /// must still be ticked afterwards, and the ViewModel must still report them as the vectors
+    /// to generate labels for.
+    /// </summary>
+    private static void ProbeImportReservedRowsStillEnabled(
+        Window window, SnesImportRomViewModel vm, List<string> report)
+    {
+        var boxesTicked = ImportAlwaysEnabledVectorNames
+            .All(name => FindByTag<CheckBox>(window, name)?.IsChecked == true);
+        var enabledNames = vm.EnabledVectorNames;
+        var vmAgrees = ImportAlwaysEnabledVectorNames.All(enabledNames.Contains);
+
+        Console.WriteLine($"  detection failed: EnabledVectorNames = [{string.Join(", ", enabledNames)}]");
+        Record(report, "import reserved survive fail", boxesTicked && vmAgrees ? "PASS" : "APP-FAIL",
+            $"all four reserved boxes ticked={boxesTicked}, ViewModel still lists them={vmAgrees}, " +
+            $"{enabledNames.Count} vector(s) enabled in total");
+    }
+
+    /// <summary>
+    /// There is no typeable text in this window at all -- which is the whole reason its code-behind
+    /// carries no PushText value-suppression. If a writable box ever appears here, this fails and
+    /// the guard has to be reconsidered.
+    /// </summary>
+    private static void ProbeImportNoEditableText(Window window, List<string> report)
+    {
+        var writable = window.GetVisualDescendants().OfType<TextBox>()
+            .Where(box => !box.IsReadOnly)
+            .ToList();
+
+        foreach (var box in writable)
+            Console.WriteLine($"  writable TextBox: name='{box.Name}', visible={box.IsEffectivelyVisible}, " +
+                              $"enabled={box.IsEffectivelyEnabled}, ancestors=[{Ancestry(box)}]");
+
+        // Reachable means the user can actually put a caret in it. A ComboBox's control template
+        // carries a TextBox part for its editable mode whether or not that mode is on; with
+        // IsEditable false the part is collapsed and cannot be typed into, so it is not a typing
+        // surface this window owns.
+        var reachable = writable.Count(box => box.IsEffectivelyVisible && box.IsEffectivelyEnabled);
+
+        Console.WriteLine($"  writable text boxes in the window: {writable.Count} in the tree, {reachable} reachable");
+
+        Record(report, "import has no typing", reachable == 0 ? "PASS" : "APP-FAIL",
+            $"{reachable} reachable writable TextBox(es) (wanted 0; PushText suppression is only needed when " +
+            $"there are some), out of {writable.Count} present in the template tree");
+    }
+
+    /// <summary>The chain of visual parents above a control, outermost last. Diagnostic only.</summary>
+    private static string Ancestry(Visual visual) =>
+        string.Join(" < ", visual.GetVisualAncestors().Take(4).Select(a => a.GetType().Name));
+
+    /// <summary>
+    /// The picker must show the FRIENDLY text for a map mode, not the enum member name: the
+    /// ViewModel hands out bare RomMapMode values, so a host that forgets to render the
+    /// descriptions offers the user "Sa1Rom" instead of "SA - 1 ROM".
+    /// </summary>
+    private static void ProbeImportMapModeDescriptions(
+        Window window, SnesImportRomViewModel vm, List<string> report)
+    {
+        // Sa1Rom is the sharpest test of the two: its description and its member name differ in
+        // both spelling and punctuation, so no accidental match is possible.
+        const RomMapMode probeMode = RomMapMode.Sa1Rom;
+        var wanted = Util.GetEnumDescription(probeMode);
+
+        var combo = FindByTag<ComboBox>(window, "mapmode-combo");
+        vm.SelectedRomMapMode = probeMode;
+        Pump();
+
+        var rendered = combo == null
+            ? []
+            : combo.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text ?? "").ToList();
+
+        var showsDescription = rendered.Any(text => text == wanted);
+        var showsMemberName = rendered.Any(text => text == probeMode.ToString());
+
+        Console.WriteLine($"  picker set to {probeMode}; rendered text in the combo: " +
+                          $"[{string.Join(" | ", rendered)}]");
+        Record(report, "import mapmode descriptions", showsDescription && !showsMemberName ? "PASS" : "APP-FAIL",
+            $"picker renders '{wanted}'={showsDescription}, renders raw '{probeMode}'={showsMemberName}");
+
+        // put it back so the following probes see the detected mapping again
+        vm.SelectedRomMapMode = vm.DetectedRomMapMode;
+        Pump();
+    }
+
+    /// <summary>
+    /// Choosing a mapping in the picker re-reads everything that depends on it. Driven through the
+    /// widget rather than the ViewModel, so the host's SelectionChanged wiring is what is under
+    /// test; the drop-down popup is not a child of the window's own frame, so the selection is set
+    /// on the control instead of clicked in the list.
+    /// </summary>
+    private static void ProbeImportMapModeChange(
+        Window window, SnesImportRomViewModel vm, List<string> report)
+    {
+        var combo = FindByTag<ComboBox>(window, "mapmode-combo");
+        if (combo?.ItemsSource == null)
+        {
+            Record(report, "import mapmode change", "HARNESS-FAIL", "the map-mode picker has no items");
+            return;
+        }
+
+        var items = combo.ItemsSource.Cast<object>().ToList();
+        var target = items.FirstOrDefault(item =>
+            item?.ToString()?.Contains(RomMapMode.HiRom.ToString(), StringComparison.Ordinal) == true);
+        if (target == null)
+        {
+            Record(report, "import mapmode change", "HARNESS-FAIL",
+                $"no picker entry for {RomMapMode.HiRom} among [{string.Join(" | ", items)}]");
+            return;
+        }
+
+        combo.SelectedItem = target;
+        Pump();
+
+        var values = window.GetVisualDescendants().OfType<Grid>()
+            .Where(g => Equals(g.Tag, "vector-row") && g.IsVisible && g.Bounds.Height > 0)
+            .SelectMany(g => g.GetVisualDescendants().OfType<TextBlock>())
+            .Select(t => t.Text ?? "")
+            .ToList();
+        var allPlaceholders = values.Count(v => v == SnesVectorSnapshot.UnreadablePlaceholder);
+
+        var ok = vm.SelectedRomMapMode == RomMapMode.HiRom &&
+                 TagText(window, "status-text") == SnesImportRomViewModel.VectorsUnreadableMessage &&
+                 TagText(window, "rom-title") == SnesVectorSnapshot.UnreadableCartridgeTitle &&
+                 allPlaceholders == ImportVectorNames.Length;
+
+        Console.WriteLine($"  picked {RomMapMode.HiRom} in the widget; vm.SelectedRomMapMode={vm.SelectedRomMapMode}, " +
+                          $"title='{TagText(window, "rom-title")}', {allPlaceholders} placeholder value(s) on screen");
+        Console.WriteLine($"  status: '{TagText(window, "status-text")}'");
+        Record(report, "import mapmode change", ok ? "PASS" : "APP-FAIL",
+            $"vm.SelectedRomMapMode={vm.SelectedRomMapMode}, {allPlaceholders}/{ImportVectorNames.Length} rows show " +
+            $"'{SnesVectorSnapshot.UnreadablePlaceholder}', status='{TagText(window, "status-text")}'");
+    }
+
+    /// <summary>Click one of the two synthesis checkboxes and confirm the ViewModel heard it.</summary>
+    private static void ProbeImportCheckbox(
+        Window window, List<string> report, string tag, string what, Func<bool> readBack)
+    {
+        var box = FindByTag<CheckBox>(window, tag);
+        var point = box == null ? null : CenterInWindow(box, window);
+        if (point == null)
+        {
+            Record(report, what, "HARNESS-FAIL", $"'{tag}' has no on-screen position");
+            return;
+        }
+
+        var before = readBack();
+        Click(window, point.Value);
+        Pump();
+        var after = readBack();
+
+        Console.WriteLine($"  clicked '{tag}': ViewModel {before} -> {after}, box IsChecked={box!.IsChecked}");
+        var ok = after == !before && box.IsChecked == after;
+        Record(report, what, ok ? "PASS" : "APP-FAIL",
+            $"ViewModel {before} -> {after} (wanted {!before}), widget IsChecked={box.IsChecked}");
+
+        // leave it as it started, so the captured scenes show the defaults
+        Click(window, point.Value);
+        Pump();
+    }
+
+    /// <summary>
+    /// The three ways out of the import window, each on its own window because each completes that
+    /// window's task for good: OK confirms, Cancel declines, and closing it any other way (the X,
+    /// Escape) counts as declining too.
+    /// </summary>
+    private static void ProbeSnesImportRomAnswers(List<string> report)
+    {
+        try
+        {
+            ProbeButtonAnswer(report, "import ok -> confirm", "ok-button", expected: true,
+                open: () => OpenDefaultSnesImportRom().window,
+                completion: w => ((SnesImportRomWindow)w).Completion);
+
+            ProbeButtonAnswer(report, "import cancel", "cancel-button", expected: false,
+                open: () => OpenDefaultSnesImportRom().window,
+                completion: w => ((SnesImportRomWindow)w).Completion);
+
+            var (closedWindow, _) = OpenDefaultSnesImportRom();
+            closedWindow.Close();
+            Pump();
+            var closedOk = closedWindow.Completion.IsCompleted && !closedWindow.Completion.Result;
+            Console.WriteLine("  closed without answering; completion=" +
+                              $"{(closedWindow.Completion.IsCompleted ? closedWindow.Completion.Result.ToString() : "<pending>")}");
+            Record(report, "import close = cancel", closedOk ? "PASS" : "APP-FAIL",
+                $"completion={(closedWindow.Completion.IsCompleted ? closedWindow.Completion.Result.ToString() : "<pending>")} (wanted False)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "import answers", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    private static (SnesImportRomWindow window, SnesImportRomViewModel vm) OpenDefaultSnesImportRom() =>
+        OpenSnesImportRom(RomMapMode.LoRom, detectionSucceeded: true, romSpeedText: "SlowROM",
+            snapshotFor: ReadableImportSnapshot);
+
+    // ------------------------------------------------------------------ export settings window
+
+    /// <summary>Where the imaginary project this screen is exporting lives.</summary>
+    private const string ExportProjectDirectory = @"C:\preview-project";
+
+    /// <summary>The output directory the default settings resolve to, and the only one the stub
+    /// filesystem below says exists.</summary>
+    private const string ExportExistingOutputDirectory = @"C:\preview-project\generated";
+
+    /// <summary>
+    /// Placeholder names the stub template parser accepts. The real parser lives in the
+    /// assembly-writing layer, which this harness does not reference (and neither does the
+    /// ViewModel -- that is why the check arrives as a delegate); this set is just the ones the
+    /// stock template uses, so a template with an unknown placeholder in it reads as invalid.
+    /// </summary>
+    private static readonly HashSet<string> ExportTemplateTokens =
+        new(StringComparer.Ordinal) { "label", "code", "pc", "bytes", "ia", "comment", "" };
+
+    /// <summary>
+    /// Renders the Avalonia export-settings window in four states and drives it with simulated
+    /// input.
+    ///
+    /// Needs NO ROM and no assembly writer: the ViewModel is handed a template-validity check and
+    /// a sample renderer as delegates, so the harness supplies stubs and the window sees exactly
+    /// the shape the real caller would give it. The filesystem is stubbed too -- one directory
+    /// exists, everything else does not -- because the validator asks the disk whether the output
+    /// directory is real, and that answer is what gates the export button.
+    ///
+    /// Each scene gets a FRESH window + ViewModel, because the real window is created per
+    /// invocation and completes a task when it closes.
+    /// </summary>
+    private static void ExportSettingsScenes(string outDir, List<string> report)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[export settings window]");
+
+        // ---- scene 1: the stock settings, pointed at a directory that exists
+        var (window, vm, samples) = OpenExportSettings();
+
+        Console.WriteLine($"  default: template='{vm.LineTemplate}', valid={vm.LineTemplateIsValid}, " +
+                          $"canStartExport={vm.CanStartExport}, sample renders {samples.Count} time(s) so far");
+        Capture(window, Path.Combine(outDir, "exportsettings-default.png"),
+            $"export settings: stock template, output '{vm.OutputPath}' (exists), " +
+            $"{vm.Problems.Count} problem(s), export {(vm.CanStartExport ? "enabled" : "disabled")}");
+
+        ProbeExportSettingsStartGate(window, vm, report);
+        ProbeExportSettingsSampleUpdates(window, vm, samples, report);
+        ProbeExportSettingsAuthorsCommaSurvives(window, vm, report);
+        ProbeExportSettingsOutputPathTyping(window, vm, report);
+
+        // ---- scene 2: a template with a placeholder nothing knows how to render
+        var (invalidWindow, invalidVm, _) = OpenExportSettings(
+            new LogWriterSettings { Format = "%label% %bogus%" });
+
+        Console.WriteLine($"  invalid: valid={invalidVm.LineTemplateIsValid}, " +
+                          $"sample='{FindByTag<TextBox>(invalidWindow, "sample-text-box")?.Text}'");
+        Capture(invalidWindow, Path.Combine(outDir, "exportsettings-invalid-template.png"),
+            "export settings: line template with an unknown placeholder -- sample box says so and " +
+            "the export button is off");
+
+        // ---- scene 3: the settings validator has something to say. The output directory does not
+        // exist on this (stub) disk, which is a problem the old screen only surfaced after it closed.
+        var (problemWindow, problemVm, _) = OpenExportSettings(
+            new LogWriterSettings { FileOrFolderOutPath = "nowhere-at-all" });
+
+        Console.WriteLine($"  problems: [{string.Join(" | ", problemVm.Problems)}], " +
+                          $"canStartExport={problemVm.CanStartExport}");
+        Capture(problemWindow, Path.Combine(outDir, "exportsettings-problems.png"),
+            $"export settings: output directory does not exist -- {problemVm.Problems.Count} " +
+            "validator complaint(s) shown under the fields, export button off");
+        ProbeExportSettingsProblemsAreShown(problemWindow, problemVm, report);
+
+        // ---- scene 4: the structure mode the assembly writer refuses, picked through the widget
+        var (warningWindow, warningVm, _) = OpenExportSettings();
+        ProbeExportSettingsSingleFileWarning(warningWindow, warningVm, report);
+        Capture(warningWindow, Path.Combine(outDir, "exportsettings-single-file-warning.png"),
+            "export settings: structure set to 'All in one file' -- the writer's own refusal text " +
+            "shown in the window");
+
+        // ---- the line template is the box whose echo differs from the keystrokes
+        ProbeExportSettingsTemplateTypingIsNotRewritten(outDir, report);
+        ProbeExportSettingsCaretSurvivesLowerCasing(report);
+
+        window.Close();
+        invalidWindow.Close();
+        problemWindow.Close();
+        warningWindow.Close();
+        Pump();
+    }
+
+    private static (ExportSettingsWindow window, ExportSettingsViewModel vm, List<LogWriterSettings> samples)
+        OpenExportSettings(LogWriterSettings? settings = null)
+    {
+        var samples = new List<LogWriterSettings>();
+
+        var vm = new ExportSettingsViewModel(
+            (settings ?? new LogWriterSettings()) with { BaseOutputPath = ExportProjectDirectory },
+            new ExportStubFilesystem(ExportExistingOutputDirectory),
+            isLineTemplateValid: ExportTemplateIsValid,
+            generateSampleText: s =>
+            {
+                samples.Add(s);
+                return RenderExportSample(s);
+            },
+            notificationMarshaller: RunOnUiThread);
+
+        var window = new ExportSettingsWindow(new AvaloniaFileDialogService());
+        window.AttachViewModel(vm);
+        window.Show();
+        Pump();
+        return (window, vm, samples);
+    }
+
+    /// <summary>
+    /// Stands in for the line-template parser: a template is acceptable when every placeholder in
+    /// it is one this harness has heard of. Placeholders are the odd-numbered pieces of a split on
+    /// '%', which is also how the real template names them, and anything after a ':' in one is a
+    /// width rather than part of the name.
+    /// </summary>
+    private static bool ExportTemplateIsValid(string template)
+    {
+        if (string.IsNullOrWhiteSpace(template))
+            return false;
+
+        var pieces = template.Split('%');
+        for (var i = 1; i < pieces.Length; i += 2)
+        {
+            var name = pieces[i].Split(':')[0];
+            if (!ExportTemplateTokens.Contains(name))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Stands in for the sample renderer. Deliberately built out of settings that are NOT the line
+    /// template, so the sample box visibly answers a change to any of them -- the real one renders
+    /// the whole record too, which is why it is called far more often than a template edit.
+    /// </summary>
+    private static string RenderExportSample(LogWriterSettings settings) =>
+        $"; sample rendered from '{settings.Format}'\r\n" +
+        $"; {settings.DataPerLine} data byte(s) per line, {settings.Structure}, " +
+        $"unlabeled={settings.Unlabeled}\r\n" +
+        (settings.OutputExtraWhitespace ? "main_loop:    lda #$01\r\n" : "main_loop: lda #$01\r\n") +
+        (settings.NewLine ? "\r\n" : "") +
+        "              rts";
+
+    /// <summary>
+    /// A filesystem that exists only in this process: it knows about the directories it was given
+    /// and remembers any it is asked to create. The validator rule that gates the export button
+    /// reads the disk, and a harness that touched the real one would answer differently on every
+    /// machine.
+    /// </summary>
+    private sealed class ExportStubFilesystem(params string[] existingDirectories) : IFilesystemService
+    {
+        private readonly HashSet<string> directories =
+            new(existingDirectories, StringComparer.OrdinalIgnoreCase);
+
+        public bool DirectoryExists(string? outputDirectoryName) =>
+            outputDirectoryName != null && directories.Contains(outputDirectoryName);
+
+        public void CreateDirectory(string name) => directories.Add(name);
+    }
+
+    /// <summary>
+    /// The export button follows the ViewModel's verdict, both ways. This is the visible behaviour
+    /// change the live-validation decision brought in: the button used to be gated on the line
+    /// template alone, and everything else was discovered after the window closed.
+    /// </summary>
+    private static void ProbeExportSettingsStartGate(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var button = FindByTag<Button>(window, "start-export-button");
+        if (button == null)
+        {
+            Record(report, "export start gate", "HARNESS-FAIL", "the export button was not found");
+            return;
+        }
+
+        var enabledWhenValid = button.IsEnabled;
+
+        vm.LineTemplate = "%label% %bogus%";
+        Pump();
+        var disabledWhenInvalid = !button.IsEnabled;
+
+        vm.LineTemplate = LogWriterSettings.DefaultStr;
+        Pump();
+        var reenabled = button.IsEnabled;
+
+        Console.WriteLine($"  export button: valid={enabledWhenValid}, invalid template={!disabledWhenInvalid}, " +
+                          $"valid again={reenabled}");
+        Record(report, "export start gate",
+            enabledWhenValid && disabledWhenInvalid && reenabled ? "PASS" : "APP-FAIL",
+            $"enabled with valid settings={enabledWhenValid}, disabled on an unparseable template=" +
+            $"{disabledWhenInvalid}, enabled again after fixing it={reenabled}");
+    }
+
+    /// <summary>
+    /// The sample box shows what the current settings would write -- and follows a change to ANY of
+    /// them, not only the line template, because the sample is rendered from the whole record.
+    /// </summary>
+    private static void ProbeExportSettingsSampleUpdates(
+        Window window, ExportSettingsViewModel vm, List<LogWriterSettings> samples, List<string> report)
+    {
+        var box = FindByTag<TextBox>(window, "sample-text-box");
+        if (box == null)
+        {
+            Record(report, "export sample box", "HARNESS-FAIL", "the sample box was not found");
+            return;
+        }
+
+        var before = box.Text ?? "";
+        var rendersBefore = samples.Count;
+
+        // a setting that is NOT the template: the sample still has to move.
+        vm.DataPerLine = vm.DataPerLine == 8 ? 4 : 8;
+        Pump();
+        var afterDataPerLine = box.Text ?? "";
+
+        vm.LineTemplate = "%label% %bogus%";
+        Pump();
+        var whenInvalid = box.Text ?? "";
+
+        vm.LineTemplate = LogWriterSettings.DefaultStr;
+        vm.DataPerLine = 8;
+        Pump();
+
+        var movedOnOtherSetting = afterDataPerLine != before;
+        var saysInvalid = whenInvalid == ExportSettingsViewModel.InvalidLineTemplateMessage;
+
+        Console.WriteLine($"  sample box: {rendersBefore} render(s) before the probe, {samples.Count} after; " +
+                          $"changed on a non-template setting={movedOnOtherSetting}");
+        Console.WriteLine($"  sample when the template is unparseable: '{whenInvalid}'");
+        Record(report, "export sample box", movedOnOtherSetting && saysInvalid ? "PASS" : "APP-FAIL",
+            $"followed a bytes-per-line change={movedOnOtherSetting}, showed " +
+            $"'{ExportSettingsViewModel.InvalidLineTemplateMessage}' for an unparseable template={saysInvalid}, " +
+            $"{samples.Count} sample render(s) in total");
+    }
+
+    /// <summary>
+    /// THE COMMA HAS TO SURVIVE. The settings record trims, de-duplicates and SORTS this list as it
+    /// stores it, so a screen that wrote the stored form back per keystroke would turn "a," into
+    /// "a" and make a second author impossible to start -- which is exactly what the old screen did.
+    /// Typed one key at a time, because the failure is one keystroke wide.
+    /// </summary>
+    private static void ProbeExportSettingsAuthorsCommaSurvives(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var box = FindByTag<TextBox>(window, "exclude-authors-box");
+        if (box == null)
+        {
+            Record(report, "export authors comma", "HARNESS-FAIL", "the exclude-authors box was not found");
+            return;
+        }
+
+        const string typed = "zed, alice";
+
+        var firstDivergence = TypeCharByChar(window, box, typed, _ => $"vm='{vm.ExcludedAuthorsText}'");
+        if (firstDivergence == HarnessCouldNotType)
+        {
+            Record(report, "export authors comma", "HARNESS-FAIL",
+                "the exclude-authors box has no on-screen position");
+            return;
+        }
+
+        var keptTyping = firstDivergence == null;
+        // and the sorted, de-duplicated form is what the settings come out as -- normalization
+        // happens on the way out, not under the caret.
+        var normalized = vm.BuildSettings().ExcludedLabelAuthorsList;
+        var normalizedOk = normalized == "alice,zed";
+
+        Console.WriteLine($"  authors box holds '{box.Text}'; BuildSettings gives '{normalized}'");
+        Record(report, "export authors comma", keptTyping ? "PASS" : "APP-FAIL",
+            keptTyping
+                ? $"box held every prefix of '{typed}', commas included"
+                : firstDivergence!);
+        Record(report, "export authors normalize", normalizedOk ? "PASS" : "APP-FAIL",
+            $"BuildSettings normalized to '{normalized}' (wanted 'alice,zed' -- sorted and trimmed), " +
+            $"while the box still reads '{box.Text}'");
+    }
+
+    /// <summary>
+    /// The output path box is rewritten by nothing, so what is typed stays typed -- even though
+    /// every keystroke re-runs the validator and changes what the window says underneath.
+    /// </summary>
+    private static void ProbeExportSettingsOutputPathTyping(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var box = FindByTag<TextBox>(window, "output-path-box");
+        if (box == null)
+        {
+            Record(report, "export path typing", "HARNESS-FAIL", "the output path box was not found");
+            return;
+        }
+
+        const string typed = "generated";
+
+        var firstDivergence = TypeCharByChar(window, box, typed,
+            _ => $"vm='{vm.OutputPath}', problems={vm.Problems.Count}");
+        if (firstDivergence == HarnessCouldNotType)
+        {
+            Record(report, "export path typing", "HARNESS-FAIL",
+                "the output path box has no on-screen position");
+            return;
+        }
+
+        var keptTyping = firstDivergence == null;
+        Record(report, "export path typing", keptTyping ? "PASS" : "APP-FAIL",
+            keptTyping
+                ? $"box held every prefix of '{typed}' while it had the caret"
+                : firstDivergence!);
+    }
+
+    /// <summary>
+    /// What the validator objects to is on screen, in its own words, rather than being found out
+    /// after the window closes.
+    /// </summary>
+    private static void ProbeExportSettingsProblemsAreShown(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var shown = TagText(window, "problems-text");
+        var hasProblems = vm.Problems.Count > 0;
+        var everyProblemShown = vm.Problems.All(p => shown.Contains(p, StringComparison.Ordinal));
+        var button = FindByTag<Button>(window, "start-export-button");
+
+        Console.WriteLine($"  problems on screen: '{shown}'");
+        Record(report, "export problems shown",
+            hasProblems && everyProblemShown && button?.IsEnabled == false ? "PASS" : "APP-FAIL",
+            $"{vm.Problems.Count} problem(s) from the validator, all of them on screen={everyProblemShown}, " +
+            $"export button enabled={button?.IsEnabled}");
+    }
+
+    /// <summary>
+    /// Choosing the structure mode the assembly writer refuses puts its refusal on screen. Driven
+    /// through the widget, so the host's SelectionChanged wiring is what is under test; the
+    /// drop-down popup is not a child of the window's own frame, so the selection is set on the
+    /// control instead of clicked in the list.
+    /// </summary>
+    private static void ProbeExportSettingsSingleFileWarning(
+        Window window, ExportSettingsViewModel vm, List<string> report)
+    {
+        var combo = FindByTag<ComboBox>(window, "structure-combo");
+        if (combo?.ItemsSource == null)
+        {
+            Record(report, "export single-file warning", "HARNESS-FAIL", "the structure picker has no items");
+            return;
+        }
+
+        var quietBefore = TagText(window, "structure-warning") == "";
+
+        var items = combo.ItemsSource.Cast<object>().ToList();
+        var target = items.FirstOrDefault(item =>
+            item?.ToString()?.Contains(
+                LogWriterSettings.FormatStructure.SingleFile.ToString(), StringComparison.Ordinal) == true);
+        if (target == null)
+        {
+            Record(report, "export single-file warning", "HARNESS-FAIL",
+                $"no picker entry for {LogWriterSettings.FormatStructure.SingleFile} among " +
+                $"[{string.Join(" | ", items)}]");
+            return;
+        }
+
+        combo.SelectedItem = target;
+        Pump();
+
+        var warned = TagText(window, "structure-warning");
+        var ok = quietBefore &&
+                 vm.Structure == LogWriterSettings.FormatStructure.SingleFile &&
+                 warned == ExportSettingsViewModel.SingleFileWarningText;
+
+        Console.WriteLine($"  picked 'all in one file': vm.Structure={vm.Structure}, warning='{warned}'");
+        Record(report, "export single-file warning", ok ? "PASS" : "APP-FAIL",
+            $"nothing warned about one-bank-per-file={quietBefore}, vm.Structure={vm.Structure}, " +
+            $"warning matches the writer's own wording={warned == ExportSettingsViewModel.SingleFileWarningText}");
+    }
+
+    /// <summary>
+    /// The line-template box is the one whose echo is NOT what was typed: the ViewModel lower-cases
+    /// the template as it stores it, because the parser looks its placeholders up by name. So the
+    /// box must hold the LOWER-CASED prefix of the keystrokes after every one of them -- never a
+    /// stale value, never the un-normalized one, and never a rewrite that arrives a keystroke late.
+    /// Typed in upper case precisely so the round trip is visible rather than silent.
+    /// </summary>
+    private static void ProbeExportSettingsTemplateTypingIsNotRewritten(string outDir, List<string> report)
+    {
+        ExportSettingsWindow? window = null;
+        try
+        {
+            var (w, vm, _) = OpenExportSettings();
+            window = w;
+
+            var box = FindByTag<TextBox>(window, "line-template-box");
+            if (box == null)
+            {
+                Record(report, "export template typing", "HARNESS-FAIL", "the line template box was not found");
+                return;
+            }
+
+            const string typed = "%LABEL% %CODE%";
+
+            var firstDivergence = TypeCharByChar(window, box, typed,
+                _ => $"vm='{vm.LineTemplate}'", expect: prefix => prefix.ToLower());
+            if (firstDivergence == HarnessCouldNotType)
+            {
+                Record(report, "export template typing", "HARNESS-FAIL",
+                    "the line template box has no on-screen position");
+                return;
+            }
+
+            var keptTyping = firstDivergence == null;
+            Record(report, "export template typing", keptTyping ? "PASS" : "APP-FAIL",
+                keptTyping
+                    ? $"box held the lower-cased prefix of '{typed}' after every keystroke"
+                    : firstDivergence!);
+
+            var storedOk = vm.LineTemplate == typed.ToLower();
+            Console.WriteLine($"  template box reads '{box.Text}', vm holds '{vm.LineTemplate}'");
+            Record(report, "export template lowercased", storedOk ? "PASS" : "APP-FAIL",
+                $"vm.LineTemplate='{vm.LineTemplate}' (wanted '{typed.ToLower()}')");
+
+            Pump();
+            Capture(window, Path.Combine(outDir, "exportsettings-template-typed.png"),
+                $"export settings: after typing '{typed}' one key at a time (box reads '{box.Text}')");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "export template typing", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
+
+    /// <summary>
+    /// Typing an upper-case letter INTO THE MIDDLE of the line template must not move the caret to
+    /// the end of the box. The lower-casing means the window is handed back a different string from
+    /// the one on screen and has to write it, and a plain assignment to a TextBox's Text drops the
+    /// caret at the end -- so every capital typed mid-string would throw the rest of the word to the
+    /// end of the line. This is the check on the write helper that puts the caret back.
+    /// </summary>
+    private static void ProbeExportSettingsCaretSurvivesLowerCasing(List<string> report)
+    {
+        ExportSettingsWindow? window = null;
+        try
+        {
+            var (w, vm, _) = OpenExportSettings();
+            window = w;
+
+            var box = FindByTag<TextBox>(window, "line-template-box");
+            var point = box == null ? null : CenterInWindow(box, window);
+            if (box == null || point == null)
+            {
+                Record(report, "export template caret", "HARNESS-FAIL",
+                    "the line template box has no on-screen position");
+                return;
+            }
+
+            TypeIntoBox(window, box, "abcd");
+            box.CaretIndex = 2;
+            Pump();
+
+            window.KeyTextInput("X");
+            Pump();
+
+            var textOk = box.Text == "abxcd";
+            var caretOk = box.CaretIndex == 3;
+
+            Console.WriteLine($"  typed 'X' between 'ab' and 'cd': box='{box.Text}', caret={box.CaretIndex}, " +
+                              $"vm='{vm.LineTemplate}'");
+            Record(report, "export template caret", textOk && caretOk ? "PASS" : "APP-FAIL",
+                $"box='{box.Text}' (wanted 'abxcd'), caret={box.CaretIndex} (wanted 3 -- just after the " +
+                "character typed, not at the end of the box)");
+        }
+        catch (Exception ex)
+        {
+            Record(report, "export template caret", "EXCEPTION", ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            window?.Close();
+            Pump();
+        }
+    }
 
     // ------------------------------------------------------------------ headless plumbing
 

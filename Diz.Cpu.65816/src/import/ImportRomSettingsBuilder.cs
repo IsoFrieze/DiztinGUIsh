@@ -33,7 +33,16 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
     public RomMapMode OptionSelectedRomMapMode
     {
         get => optionSelectedRomMapMode;
-        set => this.SetField(PropertyChanged, ref optionSelectedRomMapMode, value);
+        set
+        {
+            if (!this.SetField(PropertyChanged, ref optionSelectedRomMapMode, value))
+                return;
+
+            // the vector table sits at a different ROM offset under each mapping, so the cached
+            // entries describe the OLD mapping until they're rebuilt. Everything GenerateSettings()
+            // derives from them would otherwise point at the wrong bytes.
+            RegenerateCachedVectorTableEntries();
+        }
     }
 
     public bool OptionGenerateSelectedVectorTableLabels
@@ -48,8 +57,24 @@ public class SnesRomImportSettingsBuilder : ISnesRomImportSettingsBuilder
         set => this.SetField(PropertyChanged, ref optionGenerateBankRegions, value);
     }
 
-    private int? RomSettingOffset => 
-        Input.AnalysisResults == null ? null : RomUtil.GetRomSettingOffset(Input.AnalysisResults.RomMapMode);
+    // Where the ROM settings header (and therefore the vector table) lives, AT THE MAPPING THE
+    // USER SELECTED -- not the one detection guessed at. Detection only seeds the selection; once
+    // the user overrules it, every offset derived from it has to move too, or the import produces
+    // a project tagged with one mapping and labelled/flagged using another's offsets.
+    // Null until the ROM has been analysed at all, and null when the selected mapping puts that
+    // header outside the file -- a small ROM read as HiROM has no header to find, and everything
+    // downstream would otherwise read past the end of it.
+    private int? RomSettingOffset
+    {
+        get
+        {
+            if (Input.AnalysisResults == null || Input.RomBytes == null)
+                return null;
+
+            var offset = RomUtil.GetRomSettingOffset(OptionSelectedRomMapMode);
+            return offset > 0 && offset <= Input.RomBytes.Count ? offset : null;
+        }
+    }
 
     // ALL vector table entries (native and emulation) for the currently selected Rom Map Mode
     // (including unused/deselected/etc)

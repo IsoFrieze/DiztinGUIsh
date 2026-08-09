@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Diz.Ui.Avalonia.AboutWindow"
+        x:CompileBindings="False"
+        Title="About Diz"
+        Width="785" Height="376"
+        CanResize="False"
+        SizeToContent="Manual"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True"
+        FontSize="12">
+
+    <!--
+      Version and build information about the running application. NO ViewModel, on purpose:
+      nothing here is editable, nothing is entered, and the two strings come straight from the
+      app's version source. An empty ViewModel would be ceremony with nothing in it.
+
+      The logo is a project resource of this assembly rather than the bitmap the toolkit-native
+      window embeds in its own resources: that one is a System.Drawing.Bitmap, and this assembly
+      deliberately has no System.Drawing reference (a window is entirely one toolkit). The two
+      backends' About boxes are therefore allowed to differ visually.
+
+      The product name is a literal. The toolkit-native window used to ship the designer's
+      "Product Name" placeholder here, with a copyright row and a company row next to it that
+      were blanked at runtime and left two empty rows behind. Both are gone in either backend:
+      the name says what the application is, and the empty rows are not laid out at all.
+
+      Styled like the other Avalonia windows here: compact, FontSize 12, light theme (pinned
+      application-wide in DizAvaloniaApp).
+    -->
+
+    <Grid ColumnDefinitions="299,*">
+
+        <!-- ===== the logo, filling the left column top to bottom ===== -->
+        <Image Grid.Column="0" x:Name="LogoImage" Tag="logo-image"
+               Source="avares://Diz.Ui.Avalonia/resource/diz-logo2-big.png"
+               Stretch="Uniform" />
+
+        <Border Grid.Column="1" Padding="8,6,8,8">
+            <DockPanel>
+
+                <!-- ============ bottom bar: OK ============ -->
+                <Button DockPanel.Dock="Bottom" x:Name="OkButton" Tag="ok-button" Content="OK"
+                        Width="93" Height="27" Margin="0,8,0,0"
+                        HorizontalAlignment="Right"
+                        IsDefault="True" IsCancel="True" Click="OkButton_Click" />
+
+                <TextBlock DockPanel.Dock="Top" x:Name="ProductNameText" Tag="product-name-text"
+                           Text="DiztinGUIsh" FontWeight="Bold" Height="20"
+                           VerticalAlignment="Center" />
+
+                <TextBlock DockPanel.Dock="Top" x:Name="VersionText" Tag="version-text"
+                           Height="20" Margin="0,3,0,3" VerticalAlignment="Center" />
+
+                <!-- ===== the build description: read-only, scrollable, never wrapped ===== -->
+                <TextBox x:Name="DescriptionText" Tag="description-text"
+                         IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         FontFamily="Consolas,Menlo,Monospace" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

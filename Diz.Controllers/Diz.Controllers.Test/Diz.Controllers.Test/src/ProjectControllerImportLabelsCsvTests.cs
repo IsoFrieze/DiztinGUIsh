@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.IO;
@@ -36,6 +36,9 @@ public class ProjectControllerImportLabelsCsvTests : ContainerFixture
             commonGuiMock.Object,
             new Mock<IFilesystemService>().Object,
             new Mock<IControllerFactory>().Object,
+            new Mock<IViewFactory>().Object,
+            _ => null!,
+            () => null!,
             _ => null!,
             () => null!);
 

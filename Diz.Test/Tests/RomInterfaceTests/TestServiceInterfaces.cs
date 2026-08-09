@@ -30,7 +30,7 @@ public class TestServiceInterfaces : ContainerFixture
     private static void MockGuiInterfaces(IServiceRegistry serviceRegistry)
     {
         serviceRegistry.Register(_ => new Mock<ICommonGui>().Object);
-        serviceRegistry.Register(_ => new Mock<IImportRomDialogView>().Object);
+        serviceRegistry.Register(_ => new Mock<ISnesImportRomView>().Object);
     }
 
     [Theory(Skip = "Useful more for debugging registrations, less so as a comprehensive unit test"), MemberData(nameof(Interfaces))]

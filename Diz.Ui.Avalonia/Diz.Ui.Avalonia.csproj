@@ -33,6 +33,15 @@
         <InternalsVisibleTo Include="Diz.Ui.Avalonia.Preview" />
     </ItemGroup>
 
+    <!-- Images this assembly's windows load through avares:// URIs. Its own copy on purpose:
+         the WinForms About box embeds the logo as a System.Drawing.Bitmap in its .resx, and
+         System.Drawing is deliberately absent here (a window is entirely one toolkit), so there
+         is nothing to share. The two logos are the same artwork at the same size but are not
+         byte-identical, and the two About boxes are allowed to differ visually. -->
+    <ItemGroup>
+        <AvaloniaResource Include="resource\**" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\Diz.Controllers\Diz.Controllers\Diz.Controllers.csproj" />
         <ProjectReference Include="..\Diz.Core\Diz.Core.csproj" />

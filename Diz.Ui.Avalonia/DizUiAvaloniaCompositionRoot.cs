@@ -6,9 +6,10 @@ namespace Diz.Ui.Avalonia;
 
 /// <summary>
 /// The Avalonia LABEL-EDITOR BACKEND (new-ui plan step 5/6): exactly the
-/// backend-selectable registrations (LabelEditorView, RegionEditorView, MarkManyView, GotoView,
-/// HarshAutoStepView,
-/// MisalignmentCheckerView, InOutPointCheckerView, ProgressBarView, IFileDialogService), each
+/// backend-selectable registrations (LabelEditorView, RegionEditorView, NavigationHistoryView,
+/// MarkManyView, GotoView, HarshAutoStepView, SnesImportRomView,
+/// MisalignmentCheckerView, InOutPointCheckerView, ExportSettingsView, AboutView, ProgressBarView,
+/// IFileDialogService), each
 /// named with the exact IViewFactory method-name
 /// string. The app registers EITHER this
 /// root OR <c>DizUiWinformsBackendCompositionRoot</c> via an explicit if/else branch in
@@ -38,6 +39,13 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         // IViewFactory.GetRegionEditorView().
         serviceRegistry.Register<IRegionListView, AvaloniaRegionListView>("RegionEditorView");
 
+        // the navigation-history window. Long-lived and hide-on-close like the region editor, and
+        // one per resolve for the same reason -- each owner hands its view the ViewModel it owns,
+        // so a shared instance would leave one main window displaying the other's history. Name
+        // must match IViewFactory.GetNavigationHistoryView().
+        serviceRegistry.Register<INavigationHistoryView, AvaloniaNavigationHistoryView>(
+            "NavigationHistoryView");
+
         // new-ui plan step 6, Part C: the Avalonia progress popup (a separate top-level
         // Avalonia window). Name must match IViewFactory.GetProgressBarView().
         serviceRegistry.Register<IProgressView, AvaloniaProgressView>("ProgressBarView");
@@ -61,5 +69,24 @@ public class DizUiAvaloniaCompositionRoot : ICompositionRoot
         // the in/out-point rescan confirmation, same per-invocation lifetime. Name must match
         // IViewFactory.GetInOutPointCheckerView().
         serviceRegistry.Register<IInOutPointCheckerView, AvaloniaInOutPointCheckerView>("InOutPointCheckerView");
+
+        // the new-project ROM import window, same per-invocation lifetime -- the importer resolves
+        // a second one to re-show the same ViewModel when the user declines its confirmation
+        // prompt. Name must match IViewFactory.GetSnesImportRomView().
+        serviceRegistry.Register<ISnesImportRomView, AvaloniaSnesImportRomView>("SnesImportRomView");
+
+        // the export-settings window, same per-invocation lifetime -- the caller resolves a second
+        // one to re-show the same ViewModel when what was chosen still is not exportable. Takes the
+        // file-dialog service by its concrete type, because it points the picker at its own window
+        // while it is open. Name must match IViewFactory.GetExportSettingsView().
+        serviceRegistry.Register<IExportSettingsView>(
+            factory => new AvaloniaExportSettingsView(factory.GetInstance<AvaloniaFileDialogService>()),
+            "ExportSettingsView");
+
+        // the About window. SINGLETON, unlike every other window here: it hides rather than
+        // closes and the service keeps it, so picking Help -> About repeatedly brings the same
+        // window forward instead of stacking a new one behind the last. Name must match
+        // IViewFactory.GetAboutView().
+        serviceRegistry.RegisterSingleton<IAboutView, AvaloniaAboutView>("AboutView");
     }
 }

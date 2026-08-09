@@ -37,9 +37,9 @@ public interface ISampleProjectLoader
 // note: this is an autofactory, so the names of the methods map to registrations (strings)
 public interface IViewFactory
 {
-    IImportRomDialogView GetImportRomView();
+    ISnesImportRomView GetSnesImportRomView();
     IProgressView GetProgressBarView();
-    ILogCreatorSettingsEditorView GetExportDisassemblyView();
+    IExportSettingsView GetExportSettingsView();
     ILabelEditorView GetLabelEditorView();
     IMarkManyView GetMarkManyView();
     IGotoView GetGotoView();
@@ -47,13 +47,12 @@ public interface IViewFactory
     IMisalignmentCheckerView GetMisalignmentCheckerView();
     IInOutPointCheckerView GetInOutPointCheckerView();
     IMainGridWindowView GetMainGridWindowView();
-    IFormViewer GetAboutView();
+    IAboutView GetAboutView();
     IRegionListView GetRegionEditorView();
+    INavigationHistoryView GetNavigationHistoryView();
 }
     
 public interface IControllerFactory
 {
-    ILogCreatorSettingsEditorController GetAssemblyExporterSettingsController();
-    IImportRomDialogController GetImportRomDialogController();
     ILargeFilesReaderController GetLargeFileReaderProgressController();
 }

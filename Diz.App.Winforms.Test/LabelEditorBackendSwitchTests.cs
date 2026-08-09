@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using Diz.App.Winforms;
+using Diz.Controllers.importers;
 using Diz.Controllers.interfaces;
 using Diz.Core.util;
 using Diz.Ui.Avalonia;
@@ -21,10 +22,11 @@ namespace Diz.App.Winforms.Test;
 ///
 /// Step 6 replaced the old last-registration-wins ordering trick with an EXPLICIT if/else
 /// branch that registers EITHER the WinForms backend root OR the Avalonia backend root -- never
-/// both. So each backend must resolve ALL NINE backend-selectable seams (LabelEditorView,
-/// RegionEditorView, MarkManyView, GotoView, HarshAutoStepView, MisalignmentCheckerView,
-/// InOutPointCheckerView, ProgressBarView, IFileDialogService) to its own toolkit's types, and
-/// never the other's. If someone breaks or reorders the branch (e.g. registers both roots),
+/// both. So each backend must resolve ALL ELEVEN backend-selectable seams (LabelEditorView,
+/// RegionEditorView, NavigationHistoryView, MarkManyView, GotoView, HarshAutoStepView,
+/// SnesImportRomView, MisalignmentCheckerView, InOutPointCheckerView, ExportSettingsView,
+/// AboutView, ProgressBarView, IFileDialogService) to its
+/// own toolkit's types, and never the other's. If someone breaks or reorders the branch (e.g. registers both roots),
 /// these type assertions fail.
 ///
 /// Resolution constructs the real view objects headlessly: the WinForms path builds the
@@ -51,16 +53,24 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<LabelsViewControl>();
         container.GetInstance<IRegionListView>("RegionEditorView")
             .Should().BeOfType<RegionListViewControl>();
+        container.GetInstance<INavigationHistoryView>("NavigationHistoryView")
+            .Should().BeOfType<NavigationHistoryViewControl>();
         container.GetInstance<IMarkManyView>("MarkManyView")
             .Should().BeOfType<WinformsMarkManyView>();
         container.GetInstance<IGotoView>("GotoView")
             .Should().BeOfType<WinformsGotoView>();
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<WinformsHarshAutoStepView>();
+        container.GetInstance<ISnesImportRomView>("SnesImportRomView")
+            .Should().BeOfType<WinformsSnesImportRomView>();
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
             .Should().BeOfType<WinformsMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
             .Should().BeOfType<WinformsInOutPointCheckerView>();
+        container.GetInstance<IExportSettingsView>("ExportSettingsView")
+            .Should().BeOfType<WinformsExportSettingsView>();
+        container.GetInstance<IAboutView>("AboutView")
+            .Should().BeOfType<WinformsAboutView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
@@ -76,16 +86,25 @@ public class LabelEditorBackendSwitchTests
             .Should().BeOfType<AvaloniaLabelEditorView>();
         container.GetInstance<IRegionListView>("RegionEditorView")
             .Should().BeOfType<AvaloniaRegionListView>();
+        container.GetInstance<INavigationHistoryView>("NavigationHistoryView")
+            .Should().BeOfType<AvaloniaNavigationHistoryView>();
         container.GetInstance<IMarkManyView>("MarkManyView")
             .Should().BeOfType<AvaloniaMarkManyView>();
         container.GetInstance<IGotoView>("GotoView")
             .Should().BeOfType<AvaloniaGotoView>();
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<AvaloniaHarshAutoStepView>();
+
+        container.GetInstance<ISnesImportRomView>("SnesImportRomView")
+            .Should().BeOfType<AvaloniaSnesImportRomView>();
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
             .Should().BeOfType<AvaloniaMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
             .Should().BeOfType<AvaloniaInOutPointCheckerView>();
+        container.GetInstance<IExportSettingsView>("ExportSettingsView")
+            .Should().BeOfType<AvaloniaExportSettingsView>();
+        container.GetInstance<IAboutView>("AboutView")
+            .Should().BeOfType<AvaloniaAboutView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<AvaloniaProgressView>();
         container.GetInstance<IFileDialogService>()
@@ -100,25 +119,107 @@ public class LabelEditorBackendSwitchTests
         // TUI backend: only the label editor is TUI...
         container.GetInstance<ILabelEditorView>("LabelEditorView")
             .Should().BeOfType<TuiLabelEditorView>();
-        // ...the region editor, mark-many window, goto window, harsh-auto-step window, the two
-        // checker windows, progress popup and file dialogs stay WinForms (registered explicitly
-        // in the tui branch, not via the WinForms backend root).
+        // ...the region editor, the navigation history, mark-many window, goto window,
+        // harsh-auto-step window, the two checker windows, progress popup and file dialogs stay
+        // WinForms (registered explicitly in the tui branch, not via the WinForms backend root).
         container.GetInstance<IRegionListView>("RegionEditorView")
             .Should().BeOfType<RegionListViewControl>();
+        container.GetInstance<INavigationHistoryView>("NavigationHistoryView")
+            .Should().BeOfType<NavigationHistoryViewControl>();
         container.GetInstance<IMarkManyView>("MarkManyView")
             .Should().BeOfType<WinformsMarkManyView>();
         container.GetInstance<IGotoView>("GotoView")
             .Should().BeOfType<WinformsGotoView>();
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView")
             .Should().BeOfType<WinformsHarshAutoStepView>();
+        container.GetInstance<ISnesImportRomView>("SnesImportRomView")
+            .Should().BeOfType<WinformsSnesImportRomView>();
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView")
             .Should().BeOfType<WinformsMisalignmentCheckerView>();
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView")
             .Should().BeOfType<WinformsInOutPointCheckerView>();
+        container.GetInstance<IExportSettingsView>("ExportSettingsView")
+            .Should().BeOfType<WinformsExportSettingsView>();
+        container.GetInstance<IAboutView>("AboutView")
+            .Should().BeOfType<WinformsAboutView>();
         container.GetInstance<IProgressView>("ProgressBarView")
             .Should().BeOfType<ProgressDialog>();
         container.GetInstance<IFileDialogService>()
             .Should().BeOfType<WinformsFileDialogService>();
+    }
+
+    /// <summary>
+    /// The About window is the one seam here that IS shared: it hides rather than closes and its
+    /// view service keeps it, so picking Help -> About repeatedly brings the same window forward
+    /// instead of stacking a new one behind the last. A per-invocation registration would restore
+    /// exactly the stacking this replaced, and nothing else would fail.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void AboutView_IsASingleSharedInstance(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        var first = container.GetInstance<IAboutView>("AboutView");
+        var second = container.GetInstance<IAboutView>("AboutView");
+
+        second.Should().BeSameAs(first);
+    }
+
+    /// <summary>
+    /// Same unchecked-string risk as the other registrations: "AboutView" has to match the
+    /// auto-factory method name exactly, and nothing checks that at compile time. This resolves
+    /// through the factory itself -- the path Help -> About actually takes -- so a typo fails
+    /// here instead of at the user's first click.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ViewFactory_HandsOutAnAboutView_OnEveryBackend(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        container.GetInstance<IViewFactory>().GetAboutView().Should().NotBeNull();
+    }
+
+    /// <summary>
+    /// The export-settings window is resolved fresh for every invocation and thrown away
+    /// afterwards, so two resolutions must never hand back the same object -- the caller resolves
+    /// a second one to re-show the same settings when what was chosen still is not exportable, and
+    /// a shared instance would hand back a window whose task has already completed.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ExportSettingsView_ResolvesAFreshInstanceEachTime(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        var first = container.GetInstance<IExportSettingsView>("ExportSettingsView");
+        var second = container.GetInstance<IExportSettingsView>("ExportSettingsView");
+
+        second.Should().NotBeSameAs(first);
+    }
+
+    /// <summary>
+    /// Same unchecked-string risk as the other registrations: "ExportSettingsView" has to match the
+    /// auto-factory method name exactly, and nothing checks that at compile time. This resolves
+    /// through the factory itself -- the path the export flow actually takes -- so a typo fails
+    /// here instead of at the user's first File -> Export.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ViewFactory_HandsOutAnExportSettingsView_OnEveryBackend(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        container.GetInstance<IViewFactory>().GetExportSettingsView().Should().NotBeNull();
     }
 
     /// <summary>
@@ -345,17 +446,61 @@ public class LabelEditorBackendSwitchTests
         container.GetInstance<IViewFactory>().GetRegionEditorView().Should().NotBeNull();
     }
 
+    /// <summary>
+    /// The navigation-history window is NOT a per-invocation dialog: MainWindow resolves one in
+    /// its constructor and keeps it for the whole run, the same shape the label and region editors
+    /// have. So this deliberately does NOT assert the per-invocation seams' "fresh instance each
+    /// time" contract, which would be the wrong requirement to write down for a cached window.
+    ///
+    /// What DOES have to hold is that the registration is not a SINGLETON. Each owner hands its
+    /// view the NavigationHistoryViewModel it owns, so two owners sharing one instance would leave
+    /// one main window displaying -- and driving -- the other's history.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void NavigationHistoryView_IsNotSharedBetweenOwners(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        var first = container.GetInstance<INavigationHistoryView>("NavigationHistoryView");
+        var second = container.GetInstance<INavigationHistoryView>("NavigationHistoryView");
+
+        second.Should().NotBeSameAs(first);
+    }
+
+    /// <summary>
+    /// Same unchecked-string risk as the other registrations: "NavigationHistoryView" has to match
+    /// the auto-factory method name exactly, and nothing checks that at compile time. This resolves
+    /// through the factory itself -- the path MainWindow's CONSTRUCTOR actually takes -- so a typo
+    /// fails here instead of taking the whole main window down at startup.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void ViewFactory_HandsOutANavigationHistoryView_OnEveryBackend(LabelEditorBackendKind backend)
+    {
+        using var container = CreateAppContainer(backend);
+
+        container.GetInstance<IViewFactory>().GetNavigationHistoryView().Should().NotBeNull();
+    }
+
     [Fact]
     public void AvaloniaBackend_DoesNotInitializeAvalonia_JustByResolvingTheView()
     {
         using var container = CreateAppContainer(LabelEditorBackendKind.Avalonia);
         container.GetInstance<ILabelEditorView>("LabelEditorView");
         container.GetInstance<IRegionListView>("RegionEditorView");
+        container.GetInstance<INavigationHistoryView>("NavigationHistoryView");
         container.GetInstance<IMarkManyView>("MarkManyView");
         container.GetInstance<IGotoView>("GotoView");
         container.GetInstance<IHarshAutoStepView>("HarshAutoStepView");
         container.GetInstance<IMisalignmentCheckerView>("MisalignmentCheckerView");
         container.GetInstance<IInOutPointCheckerView>("InOutPointCheckerView");
+        container.GetInstance<IExportSettingsView>("ExportSettingsView");
+        container.GetInstance<IAboutView>("AboutView");
 
         // the timing constraint from Phase 0: Avalonia must not come up before the
         // message loop / DPI setup. Resolution happens in MainWindow's ctor, so it must
@@ -394,5 +539,26 @@ public class LabelEditorBackendSwitchTests
         {
             Environment.SetEnvironmentVariable(LabelEditorBackend.EnvVarName, original);
         }
+    }
+
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    [InlineData(LabelEditorBackendKind.Tui)]
+    public void EveryBackendResolvesTheRomImporterRegistryWithTheSnesImporterInIt(
+        LabelEditorBackendKind backend)
+    {
+        // the registry is collected from every IRomImporter registration, and both its consumers
+        // take it as Func<RomImporterRegistry> so it is built at the moment it is used. Neither
+        // shape is exercised anywhere else at startup: a broken registration would first show up
+        // as the main window failing to construct, or as the New Project picker throwing.
+        using var container = CreateAppContainer(backend);
+
+        var registry = container.GetInstance<Func<RomImporterRegistry>>()();
+
+        registry.Importers.Should().ContainSingle()
+            .Which.Should().BeOfType<SnesRomImporter>();
+
+        registry.BuildFileDialogFilter().Should().Contain("*.smc").And.Contain("*.*");
     }
 }
