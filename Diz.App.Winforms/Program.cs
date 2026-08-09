@@ -13,10 +13,17 @@ using Diz.Ui.Winforms.util;
 
 namespace Diz.App.Winforms;
 
-internal static class Program
+public static class Program
 {
     [STAThread]
-    private static void Main(string[] args)
+    private static void Main(string[] args) => Run(args, LabelEditorBackendKind.WinForms);
+
+    /// <summary>
+    /// The whole startup path, shared by every Diz exe. <paramref name="defaultBackend"/> is the
+    /// UI backend this exe launches with when DIZ_LABEL_EDITOR doesn't name one; the env var still
+    /// wins when it does. Diz.AvaloniaUI-Beta.exe is exactly this app with a different default.
+    /// </summary>
+    public static void Run(string[] args, LabelEditorBackendKind defaultBackend)
     {
         #if DEBUG_EXTRA_CRASH_HANDLING
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException); // dangerous
@@ -54,7 +61,8 @@ internal static class Program
         // new-ui plan step 5: DIZ_LABEL_EDITOR=avalonia selects the Avalonia label editor.
         // Warm up Avalonia on first idle (never before SetupDpiStuff -- Phase 0 constraint);
         // the view itself would also lazy-initialize on first Show as a safety net.
-        if (LabelEditorBackend.FromEnvironment() == LabelEditorBackendKind.Avalonia)
+        var labelEditorBackend = LabelEditorBackend.FromEnvironment(defaultBackend);
+        if (labelEditorBackend == LabelEditorBackendKind.Avalonia)
         {
             LabelEditorBackend.ArmAvaloniaPreInitOnFirstIdle();
 
@@ -65,7 +73,8 @@ internal static class Program
             System.Windows.Forms.Application.AddMessageFilter(new AvaloniaKeyboardMessageFilter());
         }
 
-        var serviceFactory = DizWinformsRegisterServices.CreateServiceFactoryAndRegisterTypes();
+        var serviceFactory =
+            DizWinformsRegisterServices.CreateServiceFactoryAndRegisterTypes(labelEditorBackend);
         DizAppCommon.StartApp(serviceFactory, args);
     }
 

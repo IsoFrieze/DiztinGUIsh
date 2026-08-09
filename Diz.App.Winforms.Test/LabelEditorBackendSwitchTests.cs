@@ -542,6 +542,71 @@ public class LabelEditorBackendSwitchTests
     }
 
     [Theory]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData("   ", false)]
+    [InlineData("garbage", false)]
+    [InlineData("winforms", true)]
+    [InlineData("WinForms", true)]
+    [InlineData("  winforms  ", true)]
+    [InlineData("avalonia", true)]
+    [InlineData("tui", true)]
+    public void TryParse_ReportsWhetherTheValueNamedABackend(string? value, bool expected) =>
+        LabelEditorBackend.TryParse(value, out _).Should().Be(expected);
+
+    /// <summary>
+    /// Diz ships two exes off the same code: Diz.App.Winforms.exe defaults to WinForms and
+    /// Diz.AvaloniaUI-Beta.exe defaults to Avalonia (each passes its default to Program.Run).
+    /// DIZ_LABEL_EDITOR has to beat BOTH defaults -- including naming "winforms" to pull the beta
+    /// exe back to the old UI -- and an unset or misspelled value has to leave the exe's own
+    /// default alone rather than collapsing everything to WinForms.
+    /// </summary>
+    [Theory]
+    // env unset or unrecognized: whatever this exe was built to default to survives
+    [InlineData(null, LabelEditorBackendKind.WinForms, LabelEditorBackendKind.WinForms)]
+    [InlineData(null, LabelEditorBackendKind.Avalonia, LabelEditorBackendKind.Avalonia)]
+    [InlineData("", LabelEditorBackendKind.Avalonia, LabelEditorBackendKind.Avalonia)]
+    [InlineData("garbage", LabelEditorBackendKind.Avalonia, LabelEditorBackendKind.Avalonia)]
+    // env names a backend: it wins, in either exe, in either direction
+    [InlineData("winforms", LabelEditorBackendKind.Avalonia, LabelEditorBackendKind.WinForms)]
+    [InlineData("avalonia", LabelEditorBackendKind.WinForms, LabelEditorBackendKind.Avalonia)]
+    [InlineData("tui", LabelEditorBackendKind.Avalonia, LabelEditorBackendKind.Tui)]
+    [InlineData("  WinForms  ", LabelEditorBackendKind.Avalonia, LabelEditorBackendKind.WinForms)]
+    public void FromEnvironment_EnvVarBeatsThePerExeDefault(
+        string? envValue, LabelEditorBackendKind exeDefault, LabelEditorBackendKind expected)
+    {
+        var original = Environment.GetEnvironmentVariable(LabelEditorBackend.EnvVarName);
+        try
+        {
+            Environment.SetEnvironmentVariable(LabelEditorBackend.EnvVarName, envValue);
+            LabelEditorBackend.FromEnvironment(exeDefault).Should().Be(expected);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(LabelEditorBackend.EnvVarName, original);
+        }
+    }
+
+    /// <summary>
+    /// The other half of the per-exe default: the backend Program.Run resolves has to reach the
+    /// container. This goes through the real service-factory entry point rather than
+    /// RegisterDizUiServices directly, so a default that stopped being forwarded would fail here.
+    /// </summary>
+    [Theory]
+    [InlineData(LabelEditorBackendKind.WinForms)]
+    [InlineData(LabelEditorBackendKind.Avalonia)]
+    public void ServiceFactory_RegistersTheBackendItIsGiven(LabelEditorBackendKind backend)
+    {
+        var factory = DizWinformsRegisterServices.CreateServiceFactoryAndRegisterTypes(backend);
+
+        var expected = backend == LabelEditorBackendKind.Avalonia
+            ? typeof(AvaloniaLabelEditorView)
+            : typeof(LabelsViewControl);
+
+        factory.GetInstance<ILabelEditorView>("LabelEditorView").Should().BeOfType(expected);
+    }
+
+    [Theory]
     [InlineData(LabelEditorBackendKind.WinForms)]
     [InlineData(LabelEditorBackendKind.Avalonia)]
     [InlineData(LabelEditorBackendKind.Tui)]

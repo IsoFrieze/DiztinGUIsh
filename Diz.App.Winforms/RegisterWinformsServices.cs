@@ -12,10 +12,13 @@ namespace Diz.App.Winforms;
 
 public static class DizWinformsRegisterServices
 {
-    public static IServiceFactory CreateServiceFactoryAndRegisterTypes()
+    // the backend arrives already resolved (env var vs. this exe's default) rather than being read
+    // from the environment here: each exe has a different default, so only the caller knows it.
+    public static IServiceFactory CreateServiceFactoryAndRegisterTypes(
+        LabelEditorBackendKind labelEditorBackend)
     {
         var serviceProvider = DizServiceProvider.CreateServiceContainer();
-        RegisterDizUiServices(serviceProvider, LabelEditorBackend.FromEnvironment());
+        RegisterDizUiServices(serviceProvider, labelEditorBackend);
 
         return serviceProvider;
     }

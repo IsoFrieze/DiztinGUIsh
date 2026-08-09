@@ -24,6 +24,10 @@ public enum LabelEditorBackendKind
 /// Example (PowerShell):
 ///     $env:DIZ_LABEL_EDITOR = "avalonia"; .\Diz.App.Winforms.exe
 ///
+/// Each exe supplies its own default (Diz.AvaloniaUI-Beta.exe defaults to avalonia,
+/// Diz.App.Winforms.exe to winforms); the env var, when it names a backend we recognize,
+/// overrides that default in every exe.
+///
 /// Mechanism: when avalonia is selected, DizWinformsRegisterServices additionally loads
 /// DizUiAvaloniaCompositionRoot AFTER the WinForms composition root; its "LabelEditorView"
 /// (and IFileDialogService) registrations override the WinForms ones, and everything else
@@ -35,18 +39,42 @@ public static class LabelEditorBackend
 {
     public const string EnvVarName = "DIZ_LABEL_EDITOR";
 
-    public static LabelEditorBackendKind Parse(string? value)
+    public static LabelEditorBackendKind Parse(string? value) =>
+        TryParse(value, out var backend) ? backend : LabelEditorBackendKind.WinForms;
+
+    /// <summary>
+    /// Recognize a backend name, reporting whether it was one at all. The "was it one at all"
+    /// part is what lets an unset or misspelled value fall through to a caller-supplied default
+    /// instead of silently meaning "winforms".
+    /// </summary>
+    public static bool TryParse(string? value, out LabelEditorBackendKind backend)
     {
         var trimmed = value?.Trim();
         if (string.Equals(trimmed, "avalonia", StringComparison.OrdinalIgnoreCase))
-            return LabelEditorBackendKind.Avalonia;
+        {
+            backend = LabelEditorBackendKind.Avalonia;
+            return true;
+        }
         if (string.Equals(trimmed, "tui", StringComparison.OrdinalIgnoreCase))
-            return LabelEditorBackendKind.Tui;
-        return LabelEditorBackendKind.WinForms;
+        {
+            backend = LabelEditorBackendKind.Tui;
+            return true;
+        }
+        if (string.Equals(trimmed, "winforms", StringComparison.OrdinalIgnoreCase))
+        {
+            backend = LabelEditorBackendKind.WinForms;
+            return true;
+        }
+
+        backend = LabelEditorBackendKind.WinForms;
+        return false;
     }
 
-    public static LabelEditorBackendKind FromEnvironment() =>
-        Parse(Environment.GetEnvironmentVariable(EnvVarName));
+    public static LabelEditorBackendKind FromEnvironment(
+        LabelEditorBackendKind defaultBackend = LabelEditorBackendKind.WinForms) =>
+        TryParse(Environment.GetEnvironmentVariable(EnvVarName), out var backend)
+            ? backend
+            : defaultBackend;
 
     private static bool armed;
 

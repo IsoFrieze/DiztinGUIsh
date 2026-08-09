@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- The same app as Diz.App.Winforms, launched with the Avalonia UI backend as its default.
+         It is a second exe rather than a flag so the beta UI can be handed out and double-clicked
+         without anyone having to set an environment variable first; DIZ_LABEL_EDITOR still
+         overrides the default here, exactly as it does in Diz.App.Winforms.exe.
+
+         AssemblyName is deliberately NOT the project/folder name: the shipped exe has to be
+         called Diz.AvaloniaUI-Beta.exe. -->
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <UseWindowsForms>true</UseWindowsForms>
+        <AssemblyName>Diz.AvaloniaUI-Beta</AssemblyName>
+        <RootNamespace>Diz.App.AvaloniaBeta</RootNamespace>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <ApplicationIcon>..\Diz.App.Winforms\resource\diz-icon2-magenta-med32x32.ico</ApplicationIcon>
+        <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- referencing the exe project, not a copy of it: this app IS Diz.App.Winforms, and the
+             only difference is the default handed to Program.Run. Referencing an exe project is
+             legal on modern .NET; the entry point comes from this project's own source. -->
+        <ProjectReference Include="..\Diz.App.Winforms\Diz.App.Winforms.csproj" />
+    </ItemGroup>
+
+</Project>
